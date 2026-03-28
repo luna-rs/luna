@@ -3,6 +3,7 @@ package io.luna.util.parser.impl;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
+import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
@@ -46,8 +47,10 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         int deathAnimation = token.get("death_animation").getAsInt();
         int[] skills = GsonUtils.getAsType(token.get("skills"), int[].class);
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
+        EquipmentBonus defaultAttackType = token.has("default_attack_bonus") ?
+                EquipmentBonus.valueOf(token.get("default_attack_bonus").getAsString()) : null;
         return new NpcCombatDefinition(id, respawnTicks, aggressive, poisonous, combatLevel, hitpoints, maximumHit,
-                attackSpeed, attackAnimation, defenceAnimation, deathAnimation, skills, bonuses);
+                attackSpeed, attackAnimation, defenceAnimation, deathAnimation, skills, bonuses, defaultAttackType);
     }
 
     @Override

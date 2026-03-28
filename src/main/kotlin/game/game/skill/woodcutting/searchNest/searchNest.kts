@@ -12,7 +12,7 @@ fun searchNest(plr: Player, nest: Nest) {
         plr.inventory.replace(nest.id, 5075)
         plr.inventory.add(nest.pickItem())
     } else {
-        plr.sendMessage(Messages.INVENTORY_FULL)
+        plr.sendMessage(Messages.inventoryFull())
     }
 }
 

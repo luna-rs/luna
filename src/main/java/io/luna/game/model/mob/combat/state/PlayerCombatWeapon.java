@@ -1,12 +1,14 @@
-package io.luna.game.model.mob.combat;
+package io.luna.game.model.mob.combat.state;
 
 import io.luna.game.model.def.WeaponDefinition;
-import io.luna.game.model.def.WeaponStyleDefinition;
+import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment;
-import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.combat.CombatStance;
+import io.luna.game.model.mob.combat.CombatStyle;
+import io.luna.game.model.mob.combat.Weapon;
 import io.luna.game.model.mob.varp.Varp;
 
 import java.util.Optional;
@@ -17,13 +19,13 @@ import static java.util.Objects.requireNonNull;
  * Holds a player's currently resolved combat weapon state.
  * <p>
  * This type acts as a cached view over the player's equipped weapon and exposes the active {@link WeaponDefinition},
- * {@link WeaponTypeDefinition}, and selected {@link WeaponStyleDefinition} used by the combat system.
+ * {@link WeaponTypeDefinition}, and selected {@link CombatStyleDefinition} used by the combat system.
  * <p>
  * When no weapon is equipped, this instance falls back to the unarmed definitions.
  *
  * @author lare96
  */
-public final class CombatWeapon {
+public final class PlayerCombatWeapon {
 
     /**
      * The player that owns this combat weapon state.
@@ -49,20 +51,20 @@ public final class CombatWeapon {
     /**
      * The currently selected combat style definition for the equipped weapon type.
      */
-    private WeaponStyleDefinition styleDef;
+    private CombatStyleDefinition styleDef;
 
     /**
-     * Creates a new {@link CombatWeapon} for {@code player}.
+     * Creates a new {@link PlayerCombatWeapon} for {@code player}.
      * <p>
      * New instances begin in the unarmed state with the default unarmed punch style selected.
      *
      * @param player The player that owns this combat weapon state.
      */
-    public CombatWeapon(Player player) {
+    public PlayerCombatWeapon(Player player) {
         this.player = player;
         def = WeaponDefinition.getUnarmed();
         typeDef = WeaponTypeDefinition.getUnarmed();
-        styleDef = requireNonNull(WeaponStyleDefinition.ALL.get(CombatStyle.UNARMED_PUNCH));
+        styleDef = requireNonNull(CombatStyleDefinition.ALL.get(CombatStyle.UNARMED_PUNCH));
     }
 
     /**
@@ -72,7 +74,7 @@ public final class CombatWeapon {
      * equipped item has no corresponding {@link WeaponDefinition}, this method falls back to the unarmed definitions.
      * <p>
      * After the new weapon type is resolved, this method selects a new {@link #styleDef} by searching the available
-     * styles for one whose {@link WeaponStyleDefinition#getStance()} matches {@code lastStance}. If no matching stance
+     * styles for one whose {@link CombatStyleDefinition#getStance()} matches {@code lastStance}. If no matching stance
      * is found, the first style in the weapon type's style list is selected as a fallback.
      *
      * @param lastStance The previously selected combat stance to preserve if possible.
@@ -91,8 +93,8 @@ public final class CombatWeapon {
 
         //  TODO What combat style is selected if a matching stance can't be found? For now, we default to slot 0, which
         //   is usually the accurate style.
-        WeaponStyleDefinition newStyle = typeDef.getStyles().get(0);
-        for (WeaponStyleDefinition style : typeDef.getStyles()) {
+        CombatStyleDefinition newStyle = typeDef.getStyles().get(0);
+        for (CombatStyleDefinition style : typeDef.getStyles()) {
             if (style.getStance() == lastStance) {
                 newStyle = style;
                 break;
@@ -105,20 +107,29 @@ public final class CombatWeapon {
      * Changes the selected combat style based on an interface button click.
      * <p>
      * This method searches the current weapon type's available styles for one whose
-     * {@link WeaponStyleDefinition#getButton()} matches {@code buttonIdClicked}. If a match is found, {@link #styleDef}
+     * {@link CombatStyleDefinition#getButton()} matches {@code buttonIdClicked}. If a match is found, {@link #styleDef}
      * is updated to that style. Otherwise, the current style remains unchanged.
      *
      * @param buttonIdClicked The button identifier that was clicked on the combat interface.
      */
     public void changeStyle(int buttonIdClicked) {
-        for (WeaponStyleDefinition style : typeDef.getStyles()) {
+        for (CombatStyleDefinition style : typeDef.getStyles()) {
             if (style.getButton() == buttonIdClicked) {
                 styleDef = style;
                 break;
             }
         }
+        refreshStyleButton();
+    }
+
+
+    public void refreshStyleButton() {
         int config = styleDef.getConfig();
         player.sendVarp(new Varp(43, config));
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
     /**
@@ -136,20 +147,16 @@ public final class CombatWeapon {
     public int getRange() {
         return styleDef.getRange();
     }
-
+    public int getSpeed() {
+        return styleDef.getSpeed();
+    }
+    public boolean isRanged() {
+        return getRange() > 2;
+    }
     public Weapon getType() {
         return typeDef.getType();
     }
 
-    public CombatDamageType getDamageType() {
-        if (styleDef.getType() == CombatStyle.STAFF_AUTOCAST) {
-            // todo or if we have a spell selected and we're attacking
-            return CombatDamageType.MAGIC;
-        } else if (styleDef.getBonus() == EquipmentBonus.RANGED_ATTACK) {
-            return CombatDamageType.RANGED;
-        }
-        return CombatDamageType.MELEE;
-    }
 
     /**
      * Returns the resolved weapon definition for the currently equipped weapon.
@@ -174,7 +181,7 @@ public final class CombatWeapon {
      *
      * @return The current combat style definition.
      */
-    public WeaponStyleDefinition getStyleDef() {
+    public CombatStyleDefinition getStyleDef() {
         return requireNonNull(styleDef, "Combat style definition should never be null.");
     }
 }

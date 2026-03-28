@@ -70,7 +70,7 @@ public abstract class Action<T extends Mob> {
     /**
      * Current lifecycle state of this action within the {@link ActionQueue}.
      */
-    private ActionState state;
+    private ActionState state = ActionState.NEW;
 
     /**
      * Tick delay between executions.
@@ -296,5 +296,12 @@ public abstract class Action<T extends Mob> {
      */
     public int getExecutions() {
         return executions;
+    }
+
+    /**
+     * @return {@code true} if this action has been interrupted or completed.
+     */
+    public boolean isFinished() {
+        return state == ActionState.COMPLETED || state == ActionState.INTERRUPTED;
     }
 }

@@ -1,4 +1,4 @@
-package engine.combat.prayer;
+package engine.combat.prayer
 
 import com.google.common.collect.ImmutableSet
 import engine.combat.prayer.CombatPrayer.Companion.BASE_RESISTANCE

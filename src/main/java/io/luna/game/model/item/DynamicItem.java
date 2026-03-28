@@ -9,11 +9,11 @@ import static java.util.Objects.requireNonNull;
 /**
  * Represents an {@link Item} with a stateful {@link AttributeMap}.
  * <p>
- * Unlike regular items, {@code DynamicItem} instances can carry arbitrary attributes that persist
- * across containers (such as inventories, banks, and trade screens) and even when converted to
- * {@link GroundItem} or back. Because of this, they are always treated as <b>non-stackable</b> and
- * have a maximum quantity of {@code 1} within any {@link ItemContainer}. When a {@code DynamicItem} is
- * removed by reference from containers, only the item matching the exact reference will be removed.
+ * Unlike regular items, {@code DynamicItem} instances can carry arbitrary attributes that persist across containers
+ * (such as inventories, banks, and trade screens) and even when converted to {@link GroundItem} or back. Because of
+ * this, they are always treated as <b>non-stackable</b> and have a maximum quantity of {@code 1} within any
+ * {@link ItemContainer}. When a {@code DynamicItem} is removed by reference from containers, only the item matching
+ * the exact reference will be removed.
  * </p>
  * <p>
  * Example use cases include:
@@ -25,7 +25,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author lare96
  */
-public final class DynamicItem extends Item implements Attributable {
+public class DynamicItem extends Item implements Attributable {
 
     /**
      * The attribute map.
@@ -66,7 +66,7 @@ public final class DynamicItem extends Item implements Attributable {
      * {@link DynamicItem} types are only equal by reference.
      */
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         return obj == this;
     }
 
@@ -74,7 +74,7 @@ public final class DynamicItem extends Item implements Attributable {
      * {@link DynamicItem} types use the default system identity hashcode.
      */
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return System.identityHashCode(this);
     }
 

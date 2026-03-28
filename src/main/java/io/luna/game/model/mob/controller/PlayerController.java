@@ -5,7 +5,6 @@ import io.luna.game.LogoutService;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.combat.PlayerCombatContext;
 
 /**
  * A base controller that can intercept and regulate core {@link Player} behaviour.
@@ -98,17 +97,20 @@ public class PlayerController {
     /**
      * Called when the player attempts to enter combat with another {@link Mob}.
      * <p>
-     * By default, this validates standard combat eligibility via {@link PlayerCombatContext#checkCombatMob(Mob)} and
-     * {@link PlayerCombatContext#checkMultiCombat(Mob)}.
+     * By default, this validates standard combat eligibility by determining if the victim is a {@link Player}.
      * <p>
      * Controllers may override this to enforce region-specific combat rules such as wilderness level checks,
      * safe zones, or minigame combat restrictions.
      *
-     * @param other The target mob the player is attempting to attack.
+     * @param victim The target mob the player is attempting to attack.
      * @return {@code true} if combat may proceed, otherwise {@code false}.
      */
-    public boolean combat(Mob other) {
-        return player.getCombat().checkCombatMob(other) && player.getCombat().checkMultiCombat(other);
+    public boolean combat(Mob victim) {
+        if (victim instanceof Player) {
+            player.sendMessage("You cannot attack players here.");
+            return false;
+        }
+        return true;
     }
 
     /**

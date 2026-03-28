@@ -12,7 +12,7 @@ import io.luna.game.model.area.Area;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.combat.NpcCombatContext;
+import io.luna.game.model.mob.combat.state.NpcCombatContext;
 import io.luna.game.model.mob.wandering.DumbWanderingAction;
 import io.luna.game.model.mob.wandering.PatrolAction;
 import io.luna.game.model.mob.wandering.SmartWanderingAction;
@@ -87,6 +87,12 @@ public class Npc extends Mob {
      * The combat context holding important combat data.
      */
     protected final NpcCombatContext combat = new NpcCombatContext(this);
+
+    /**
+     * The max hit override.
+     */
+    private int maxHit;
+
 
     /**
      * Creates a new {@link Npc}.
@@ -388,15 +394,14 @@ public class Npc extends Mob {
     public void startWandering(int radius, WanderingFrequency frequency) {
         checkArgument(radius >= 0, "Radius must be 0 or above.");
 
-        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
         setDefaultDirection(Optional.empty());
 
         Area wanderingArea = Area.of(basePosition, radius);
         if (wanderingArea.size() >= 4096) {
             // If our wandering area is bigger than 64x64, use smart wanderer.
-            actions.submit(new SmartWanderingAction(this, wanderingArea, frequency));
+            actions.submitIfAbsent(new SmartWanderingAction(this, wanderingArea, frequency));
         } else {
-            actions.submit(new DumbWanderingAction(this, wanderingArea, frequency));
+            actions.submitIfAbsent(new DumbWanderingAction(this, wanderingArea, frequency));
         }
     }
 
@@ -409,10 +414,9 @@ public class Npc extends Mob {
      * @param patrolBuilder The builder used to create the patrol action to submit.
      */
     public void startPatrolling(PatrolAction.Builder patrolBuilder) {
-        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
         setDefaultDirection(Optional.empty());
 
-        actions.submit(patrolBuilder.build());
+        actions.submitIfAbsent(patrolBuilder.build());
     }
 
     /**
@@ -424,4 +428,19 @@ public class Npc extends Mob {
         return localHumans;
     }
 
+    /**
+     * @return The max hit override.
+     */
+    public int getMaxHit() {
+        return maxHit;
+    }
+
+    /**
+     * Sets the max hit override.
+     *
+     * @param maxHit The new max hit, will override definitions.
+     */
+    public void setMaxHit(int maxHit) {
+        this.maxHit = maxHit;
+    }
 }

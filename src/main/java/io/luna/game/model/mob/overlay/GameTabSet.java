@@ -176,7 +176,7 @@ public final class GameTabSet {
      */
     public void reset(TabIndex index) {
         if (index == TabIndex.MAGIC) {
-            set(index, player.getSpellbook().getWidgetId());
+            set(index, player.getSpellbook().getDefaultWidget());
         } else {
             set(index, index.defaultTabId);
         }

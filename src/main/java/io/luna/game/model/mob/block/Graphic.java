@@ -5,7 +5,6 @@ package io.luna.game.model.mob.block;
  * <p>
  * Graphics correspond to temporary visual effects such as spell casts, projectile impacts, teleport effects, and
  * other overlay animations. They are displayed independently of the mob's main animation sequence.
- * </p>
  *
  * @author lare96
  */
@@ -35,13 +34,13 @@ public final class Graphic {
      * Creates a new graphic.
      *
      * @param id The graphic ID.
-     * @param delay Delay before display.
      * @param height The graphic height/layer.
+     * @param delay Delay before display.
      */
-    public Graphic(int id, int delay, int height) {
+    public Graphic(int id, int height, int delay) {
         this.id = id;
-        this.delay = delay;
         this.height = height;
+        this.delay = delay;
     }
 
     /**
@@ -51,7 +50,7 @@ public final class Graphic {
      * @param height The graphic height.
      */
     public Graphic(int id, int height) {
-        this(id, 0, height);
+        this(id, height, 0);
     }
 
     /**

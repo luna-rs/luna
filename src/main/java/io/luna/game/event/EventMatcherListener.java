@@ -1,13 +1,14 @@
 package io.luna.game.event;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -36,7 +37,7 @@ public final class EventMatcherListener<E extends Event> {
     /**
      * The interaction policy generator for this listener.
      */
-    private final Function<Player, InteractionPolicy> interaction;
+    private final BiFunction<Player, Entity, InteractionPolicy> interaction;
 
     /**
      * Creates a new {@link EventMatcherListener}.
@@ -44,7 +45,7 @@ public final class EventMatcherListener<E extends Event> {
      * @param listener The callback to run when a matching event is dispatched.
      * @param interaction The interaction policy generator for this listener.
      */
-    public EventMatcherListener(Consumer<E> listener, Function<Player, InteractionPolicy> interaction) {
+    public EventMatcherListener(Consumer<E> listener, BiFunction<Player, Entity, InteractionPolicy> interaction) {
         this.listener = listener;
         this.interaction = interaction;
         script = null;
@@ -95,7 +96,7 @@ public final class EventMatcherListener<E extends Event> {
     /**
      * @return The interaction policy generator for this listener.
      */
-    public Function<Player, InteractionPolicy> getInteraction() {
+    public BiFunction<Player, Entity, InteractionPolicy> getInteraction() {
         return interaction;
     }
 }

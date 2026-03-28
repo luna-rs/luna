@@ -1,4 +1,4 @@
-package game.item.jewelleryTeleport
+package game.item.degradable.jewellery
 
 import api.predef.*
 import api.predef.ext.*

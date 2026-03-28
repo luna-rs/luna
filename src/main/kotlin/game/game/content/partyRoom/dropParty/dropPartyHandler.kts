@@ -4,10 +4,10 @@ import api.predef.*
 import api.predef.ext.*
 import game.content.partyRoom.dropParty.DropPartyOption.BalloonObject
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
+import game.player.Messages
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.EntityState
-import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
@@ -51,7 +51,7 @@ fun withdraw(plr: Player, event: WidgetItemClickEvent, amount: Int) {
     val finalAmt = if (amount > chestAmt) chestAmt else amount
     val removeItem = Item(event.itemId, finalAmt)
     if (!plr.inventory.hasSpaceFor(removeItem)) {
-        plr.sendMessage(Inventory.INVENTORY_FULL_MESSAGE)
+        plr.sendMessage(Messages.inventoryFull())
         return
     }
     if (plr.depositItems.remove(removeItem)) {

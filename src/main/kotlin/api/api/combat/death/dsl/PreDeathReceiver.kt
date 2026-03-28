@@ -27,7 +27,6 @@ class PreDeathReceiver(val receiver: DeathHookReceiver<*>) {
             victim.overlays.closeWindows()
         }
         victim.hitpoints.level = 0
-        victim.combat.stopCombatTimer()
         victim.combat.damageStack.clear()
         victim.actions.interruptWeak()
         victim.combat.poisonSeverity = 0

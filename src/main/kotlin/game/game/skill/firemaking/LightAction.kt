@@ -14,7 +14,7 @@ import game.player.Sound
  *
  * @author lare96
  */
-abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Player>(plr, ActionType.WEAK) {
+abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Player>(plr, ActionType.WEAK, false, 1) {
 
     /**
      * The animation delay.

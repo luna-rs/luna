@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.combat;
+package io.luna.game.model.mob.combat.damage;
 
 /**
  * The primary combat damage categories used by the combat system.

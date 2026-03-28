@@ -89,7 +89,7 @@ public final class RandomUtils {
      */
     public static boolean rollPercent(double value) {
         value = Math.max(0.0, Math.min(value, 1.0));
-        return ThreadLocalRandom.current().nextDouble() < value;
+        return ThreadLocalRandom.current().nextDouble() <= value;
     }
 
     /**

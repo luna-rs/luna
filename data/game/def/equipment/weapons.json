@@ -5,8 +5,7 @@
   },
   {
     "id": 3094,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 3095,
@@ -257,43 +256,35 @@
   },
   {
     "id": 1219,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1221,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1223,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1225,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1227,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1229,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1231,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1233,
-    "type": "DAGGER",
-    "poison": "MELEE"
+    "type": "DAGGER"
   },
   {
     "id": 1235,
@@ -329,13 +320,11 @@
   },
   {
     "id": 1251,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1253,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1255,
@@ -343,23 +332,19 @@
   },
   {
     "id": 1257,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1259,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1261,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1263,
-    "type": "UNARMED",
-    "poison": "MELEE"
+    "type": "UNARMED"
   },
   {
     "id": 1265,
@@ -943,203 +928,163 @@
   },
   {
     "id": 5628,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5629,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5630,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5631,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5632,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5633,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5634,
-    "type": "DART",
-    "poison": "RANGED_PLUS"
+    "type": "DART"
   },
   {
     "id": 5635,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5636,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5637,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5638,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5639,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5640,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5641,
-    "type": "DART",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "DART"
   },
   {
     "id": 5642,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5643,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5644,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5645,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5646,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5647,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5648,
-    "type": "UNARMED",
-    "poison": "MELEE_PLUS_PLUS"
+    "type": "UNARMED"
   },
   {
     "id": 5649,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5650,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5651,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5652,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5653,
-    "type": "JAVELIN",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "JAVELIN"
   },
   {
     "id": 5654,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5655,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5656,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5657,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5658,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5659,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5660,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5661,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5662,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5663,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5664,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5665,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5666,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5667,
-    "type": "KNIFE",
-    "poison": "RANGED_PLUS_PLUS"
+    "type": "KNIFE"
   },
   {
     "id": 5668,
@@ -1167,8 +1112,7 @@
   },
   {
     "id": 5680,
-    "type": "DAGGER",
-    "poison": "MELEE_PLUS"
+    "type": "DAGGER"
   },
   {
     "id": 5682,
@@ -1204,8 +1148,7 @@
   },
   {
     "id": 5698,
-    "type": "DAGGER",
-    "poison": "MELEE_PLUS_PLUS"
+    "type": "DAGGER"
   },
   {
     "id": 4675,
@@ -1289,8 +1232,7 @@
   },
   {
     "id": 5730,
-    "type": "UNARMED",
-    "poison": "MELEE_PLUS_PLUS"
+    "type": "UNARMED"
   },
   {
     "id": 4710,
@@ -1546,18 +1488,15 @@
   },
   {
     "id": 812,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 813,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 814,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 4910,
@@ -1565,8 +1504,7 @@
   },
   {
     "id": 815,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 4911,
@@ -1574,8 +1512,7 @@
   },
   {
     "id": 816,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 4912,
@@ -1583,8 +1520,7 @@
   },
   {
     "id": 817,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 4913,
@@ -1592,8 +1528,7 @@
   },
   {
     "id": 818,
-    "type": "DART",
-    "poison": "RANGED"
+    "type": "DART"
   },
   {
     "id": 825,
@@ -1625,28 +1560,23 @@
   },
   {
     "id": 831,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 832,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 833,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 834,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 835,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 2883,
@@ -1654,8 +1584,7 @@
   },
   {
     "id": 836,
-    "type": "JAVELIN",
-    "poison": "RANGED"
+    "type": "JAVELIN"
   },
   {
     "id": 837,
@@ -1846,38 +1775,31 @@
   },
   {
     "id": 870,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 871,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 872,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 873,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 874,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 875,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 876,
-    "type": "KNIFE",
-    "poison": "RANGED"
+    "type": "KNIFE"
   },
   {
     "id": 4982,

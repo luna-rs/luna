@@ -16,7 +16,7 @@ import io.luna.game.model.mob.Player
 class TeleBlockAction(plr: Player) : Action<Player>(plr, ActionType.SOFT, false, 1) {
 
     override fun run(): Boolean {
-        if (mob.combat.decrementTeleBlock() < 1) {
+        if (mob.combat.magic.decrementTeleBlock() < 1) {
             mob.sendMessage("Your Tele Block has expired.")
             return true
         }

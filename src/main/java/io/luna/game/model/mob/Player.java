@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import engine.controllers.WildernessLocatableController;
 import game.item.consumable.potion.PotionCountdownTimer;
 import game.player.Messages;
 import game.player.Sound;
@@ -29,8 +30,8 @@ import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.combat.CombatContext;
-import io.luna.game.model.mob.combat.PlayerCombatContext;
+import io.luna.game.model.mob.combat.state.CombatContext;
+import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -474,7 +475,7 @@ public class Player extends Mob {
             }
         }
 
-        if (bank.hasSpaceFor(item)) {
+        if (bank.hasSpaceFor(item) && !controllers.contains(WildernessLocatableController.INSTANCE)) {
             bank.add(item);
             sendMessage(name + "(x" + item.getAmount() + ")" + " has been deposited into your bank.");
         } else {
@@ -512,9 +513,6 @@ public class Player extends Mob {
      * @param msg The message or {@link Messages} enum to send.
      */
     public void sendMessage(Object msg) {
-        if (msg instanceof Messages) {
-            msg = ((Messages) msg).getText();
-        }
         queue(new GameChatboxMessageWriter(msg));
     }
 

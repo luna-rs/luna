@@ -70,7 +70,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
             loot += thievable.drops.roll(mob, obj)
         }
         if (!mob.inventory.hasSpaceForAll(loot)) {
-            mob.sendMessage(Messages.INVENTORY_FULL)
+            mob.sendMessage(Messages.inventoryFull())
             return true
         }
         mob.interact(obj)

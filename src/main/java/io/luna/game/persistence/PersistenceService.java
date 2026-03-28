@@ -210,6 +210,9 @@ public final class PersistenceService extends AbstractIdleService {
             // Send all requests to a worker.
             var timer = Stopwatch.createStarted();
             for (Player player : world.getPlayerMap().values()) {
+                if(player.isBot()) {
+                    continue;
+                }
                 String username = player.getUsername();
                 if (world.getLogoutService().hasRequest(username)) {
                     // The LogoutService will handle the saving.

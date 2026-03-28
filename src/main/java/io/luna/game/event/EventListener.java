@@ -2,15 +2,14 @@ package io.luna.game.event;
 
 import com.google.common.base.MoreObjects;
 import io.luna.game.model.Entity;
-import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -53,7 +52,7 @@ public final class EventListener<E extends Event> {
     /**
      * The interaction policy generator for this listener.
      */
-    private final Function<Player, InteractionPolicy> policy;
+    private final BiFunction<Player, Entity, InteractionPolicy> policy;
 
     /**
      * Creates a new {@link EventListener}.
@@ -63,7 +62,7 @@ public final class EventListener<E extends Event> {
      * @param priority The dispatch priority.
      * @param policy The interaction policy generator for this listener.
      */
-    public EventListener(Class<E> eventType, Consumer<E> listener, EventPriority priority, Function<Player, InteractionPolicy> policy) {
+    public EventListener(Class<E> eventType, Consumer<E> listener, EventPriority priority, BiFunction<Player, Entity, InteractionPolicy> policy) {
         this.eventType = eventType;
         this.listener = listener;
         this.priority = priority;
@@ -139,7 +138,7 @@ public final class EventListener<E extends Event> {
     /**
      * @return The interaction policy generator for this listener.
      */
-    public Function<Player, InteractionPolicy> getPolicy() {
+    public BiFunction<Player, Entity, InteractionPolicy> getPolicy() {
         return policy;
     }
 }

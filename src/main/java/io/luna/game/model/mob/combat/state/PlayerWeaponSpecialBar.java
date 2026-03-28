@@ -1,9 +1,13 @@
-package io.luna.game.model.mob.combat;
+package io.luna.game.model.mob.combat.state;
 
+import api.combat.weapons.SpecialAttackHandler;
+import api.combat.weapons.dsl.SpecialAttackReceiver;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.def.WeaponSpecialBarDefinition;
+import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.net.msg.out.WidgetPositionMessageWriter;
 
@@ -15,7 +19,7 @@ import io.luna.net.msg.out.WidgetPositionMessageWriter;
  *
  * @author lare96
  */
-public final class CombatSpecialBar {
+public final class PlayerWeaponSpecialBar {
 
     /**
      * The total number of segments in the special attack meter.
@@ -64,7 +68,7 @@ public final class CombatSpecialBar {
     /**
      * The current special attack energy, from {@code 0} to {@code 100}.
      */
-    private int energy;
+    private int energy = 100;
 
     /**
      * {@code true} if special attack mode is currently enabled.
@@ -72,12 +76,17 @@ public final class CombatSpecialBar {
     private boolean activated;
 
     /**
-     * Creates a new {@link CombatSpecialBar}.
+     * If this special bar is locked and can't be toggled.
+     */
+    private boolean locked;
+
+    /**
+     * Creates a new {@link PlayerWeaponSpecialBar}.
      *
      * @param player the player this special bar belongs to.
      * @param combat the owning combat context.
      */
-    public CombatSpecialBar(Player player, PlayerCombatContext combat) {
+    public PlayerWeaponSpecialBar(Player player, PlayerCombatContext combat) {
         this.player = player;
         this.combat = combat;
     }
@@ -99,6 +108,9 @@ public final class CombatSpecialBar {
      * @return {@code true} if the special attack mode changed state.
      */
     public boolean toggleOn() {
+        if (locked) {
+            return false;
+        }
         if (energy == 0) {
             // TODO Does it only short-circuit here on 0 special energy? Or if you don't have enough for the weapon
             //  regardless?
@@ -111,6 +123,8 @@ public final class CombatSpecialBar {
         if (!activated) {
             player.sendVarp(new Varp(301, 1));
             activated = true;
+            SpecialAttackHandler.INSTANCE.handleActivated(player,
+                    player.getEquipment().computeIdForIndex(Equipment.WEAPON));
             return true;
         }
         return false;
@@ -122,7 +136,7 @@ public final class CombatSpecialBar {
      * @return {@code true} if the special attack mode changed state.
      */
     public boolean toggleOff() {
-        if (activated) {
+        if (activated && !locked) {
             player.sendVarp(new Varp(301, 0));
             activated = false;
             return true;
@@ -171,6 +185,22 @@ public final class CombatSpecialBar {
             return true;
         }
         return false;
+    }
+
+    public CombatAttack<Player> getSpecialAttack() {
+        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        if (weaponId == -1) {
+            return null;
+        }
+        SpecialAttackReceiver receiver = SpecialAttackHandler.INSTANCE.get(weaponId);
+        if (receiver == null) {
+            return null;
+        }/*
+        switch (receiver.getType()) {
+            case MELEE:
+                return new PlayerMeleeCombatAttack()
+        }*/
+        return null;
     }
 
     /**
@@ -225,5 +255,21 @@ public final class CombatSpecialBar {
      */
     public boolean isActivated() {
         return activated;
+    }
+
+    /**
+     * @return If this special bar is locked and can't be toggled.
+     */
+    public boolean isLocked() {
+        return locked;
+    }
+
+    /**
+     * Sets if this special bar is locked and can't be toggled.
+     *
+     * @param locked If this special bar is locked and can't be toggled.
+     */
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * A {@link Definition} describing the interface and combat style metadata for a {@link Weapon} type.
  * <p>
  * Weapon type definitions map a weapon category to its interface id, attack style line, available
- * {@link WeaponStyleDefinition} entries, and an optional {@link WeaponSpecialBarDefinition}.
+ * {@link CombatStyleDefinition} entries, and an optional {@link WeaponSpecialBarDefinition}.
  *
  * @author lare96
  */
@@ -42,14 +42,14 @@ public final class WeaponTypeDefinition implements Definition {
     /**
      * Adds a pending {@link WeaponTypeDefinition} to be published when {@link #lock()} is invoked.
      * <p>
-     * This also registers all child {@link WeaponStyleDefinition} instances belonging to the weapon type.
+     * This also registers all child {@link CombatStyleDefinition} instances belonging to the weapon type.
      *
      * @param def The definition to add.
      */
     public static void addWeaponType(WeaponTypeDefinition def) {
         pending.put(def.type, def);
-        for (WeaponStyleDefinition style : def.getStyles()) {
-            WeaponStyleDefinition.addWeaponStyle(style);
+        for (CombatStyleDefinition style : def.getStyles()) {
+            CombatStyleDefinition.addWeaponStyle(style);
         }
     }
 
@@ -63,7 +63,7 @@ public final class WeaponTypeDefinition implements Definition {
         if (ALL.isEmpty()) {
             ALL = ImmutableMap.copyOf(pending);
             pending.clear();
-            WeaponStyleDefinition.lock();
+            CombatStyleDefinition.lock();
         }
     }
 
@@ -95,7 +95,7 @@ public final class WeaponTypeDefinition implements Definition {
     /**
      * The selectable combat styles for this weapon type.
      */
-    private final List<WeaponStyleDefinition> styles;
+    private final List<CombatStyleDefinition> styles;
 
     /**
      * The special attack bar metadata for this weapon type, or {@code null} if none exists.
@@ -105,13 +105,13 @@ public final class WeaponTypeDefinition implements Definition {
     /**
      * Creates a new {@link WeaponTypeDefinition}.
      *
-     * @param type the weapon type this definition belongs to.
-     * @param id the interface id for this weapon type.
-     * @param line the interface line used for combat style display.
-     * @param styles the selectable combat styles for this weapon type.
-     * @param special the special attack bar metadata, or {@code null} if none exists.
+     * @param type The weapon type this definition belongs to.
+     * @param id The interface id for this weapon type.
+     * @param line The interface line used for combat style display.
+     * @param styles The selectable combat styles for this weapon type.
+     * @param special The special attack bar metadata, or {@code null} if none exists.
      */
-    public WeaponTypeDefinition(Weapon type, int id, int line, List<WeaponStyleDefinition> styles, WeaponSpecialBarDefinition special) {
+    public WeaponTypeDefinition(Weapon type, int id, int line, List<CombatStyleDefinition> styles, WeaponSpecialBarDefinition special) {
         this.type = type;
         this.id = id;
         this.line = line;
@@ -141,7 +141,7 @@ public final class WeaponTypeDefinition implements Definition {
     /**
      * @return The combat styles.
      */
-    public List<WeaponStyleDefinition> getStyles() {
+    public List<CombatStyleDefinition> getStyles() {
         return styles;
     }
 

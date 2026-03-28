@@ -1,4 +1,4 @@
-package game.item.jewelleryTeleport
+package game.item.degradable.jewellery
 
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.Position

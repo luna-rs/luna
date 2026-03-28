@@ -16,6 +16,7 @@ import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
+import io.luna.game.model.Entity
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.interact.InteractionPolicy
@@ -30,7 +31,7 @@ typealias EventAction<E> = E.() -> Unit
 /**
  * The player dedicated interaction policy function alias.
  */
-typealias InteractionPolicySupplier = java.util.function.Function<Player, InteractionPolicy>
+typealias InteractionPolicySupplier = java.util.function.BiFunction<Player, Entity, InteractionPolicy>
 
 /**
  * The command key, used to match [CommandEvent]s.

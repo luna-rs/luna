@@ -4,7 +4,7 @@
     "strength": 7,
     "start_graphic": {
       "id": 19,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -41,7 +41,7 @@
     "strength": 10,
     "start_graphic": {
       "id": 18,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -78,7 +78,7 @@
     "strength": 16,
     "start_graphic": {
       "id": 20,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -113,7 +113,7 @@
     "strength": 22,
     "start_graphic": {
       "id": 21,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -146,7 +146,7 @@
     "strength": 31,
     "start_graphic": {
       "id": 22,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -177,7 +177,7 @@
     "strength": 49,
     "start_graphic": {
       "id": 24,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -206,7 +206,7 @@
     "strength": 58,
     "start_graphic": {
       "id": 250,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -237,7 +237,7 @@
     "strength": 10,
     "start_graphic": {
       "id": 28,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -264,7 +264,7 @@
     "strength": 12,
     "start_graphic": {
       "id": 28,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -288,7 +288,7 @@
     "strength": 14,
     "start_graphic": {
       "id": 28,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -312,7 +312,7 @@
     "strength": 48,
     "start_graphic": {
       "id": 28,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -336,7 +336,7 @@
     "strength": 55,
     "start_graphic": {
       "id": 28,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -363,7 +363,7 @@
     "strength": 3,
     "start_graphic": {
       "id": 219,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -387,7 +387,7 @@
     "strength": 4,
     "start_graphic": {
       "id": 220,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -411,7 +411,7 @@
     "strength": 7,
     "start_graphic": {
       "id": 221,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -435,7 +435,7 @@
     "strength": 8,
     "start_graphic": {
       "id": 222,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -459,7 +459,7 @@
     "strength": 10,
     "start_graphic": {
       "id": 223,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -483,7 +483,7 @@
     "strength": 14,
     "start_graphic": {
       "id": 224,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -507,7 +507,7 @@
     "strength": 24,
     "start_graphic": {
       "id": 225,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -531,7 +531,7 @@
     "strength": 1,
     "start_graphic": {
       "id": 232,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -555,7 +555,7 @@
     "strength": 3,
     "start_graphic": {
       "id": 233,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -579,7 +579,7 @@
     "strength": 4,
     "start_graphic": {
       "id": 234,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -603,7 +603,7 @@
     "strength": 6,
     "start_graphic": {
       "id": 273,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -627,7 +627,7 @@
     "strength": 7,
     "start_graphic": {
       "id": 235,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -651,7 +651,7 @@
     "strength": 10,
     "start_graphic": {
       "id": 236,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -675,7 +675,7 @@
     "strength": 14,
     "start_graphic": {
       "id": 237,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -699,7 +699,7 @@
     "strength": 6,
     "start_graphic": {
       "id": 206,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -723,7 +723,7 @@
     "strength": 10,
     "start_graphic": {
       "id": 207,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -747,7 +747,7 @@
     "strength": 12,
     "start_graphic": {
       "id": 208,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -771,7 +771,7 @@
     "strength": 18,
     "start_graphic": {
       "id": 209,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -795,7 +795,7 @@
     "strength": 28,
     "start_graphic": {
       "id": 210,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -819,7 +819,7 @@
     "strength": 42,
     "start_graphic": {
       "id": 211,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -843,7 +843,7 @@
     "strength": 5,
     "start_graphic": {
       "id": 43,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -864,7 +864,7 @@
     "strength": 7,
     "start_graphic": {
       "id": 42,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -885,7 +885,7 @@
     "strength": 11,
     "start_graphic": {
       "id": 44,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -906,7 +906,7 @@
     "strength": 16,
     "start_graphic": {
       "id": 45,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -927,7 +927,7 @@
     "strength": 23,
     "start_graphic": {
       "id": 46,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -948,7 +948,7 @@
     "strength": 26,
     "start_graphic": {
       "id": 48,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {
@@ -969,7 +969,7 @@
     "strength": 50,
     "start_graphic": {
       "id": 0,
-      "height": 6553600,
+      "height": 100,
       "delay": 0
     },
     "projectile": {

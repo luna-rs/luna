@@ -33,7 +33,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
         }
         val item = groundItem.toItem()
         if (!mob.inventory.hasSpaceFor(item)) {
-            mob.sendMessage(Messages.INVENTORY_FULL)
+            mob.sendMessage(Messages.inventoryFull())
             complete()
             return
         }
@@ -84,7 +84,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                 if (groundItem.state == EntityState.INACTIVE) {
                     mob.sendMessage("You were too late!")
                 } else if (!mob.inventory.hasSpaceFor(item)) {
-                    mob.sendMessage(Messages.INVENTORY_FULL)
+                    mob.sendMessage(Messages.inventoryFull())
                 } else if (world.items.unregister(groundItem)) {
                     mob.inventory.add(item)
                 }

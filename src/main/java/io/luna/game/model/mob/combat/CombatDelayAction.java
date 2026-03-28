@@ -5,55 +5,63 @@ import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 
 /**
- * An {@link Action} that advances and tracks a mob's combat attack delay.
+ * An {@link Action} that tracks and advances a mob's combat attack delay.
  * <p>
- * This action runs once per tick while the owning mob remains in combat. Its primary responsibility is to decrement
- * the remaining attack delay stored in the mob's {@link CombatContext} and mark the combat state as ready once the
- * delay has expired.
+ * This action runs once per tick while the owning mob remains in combat. It is responsible for counting down the
+ * remaining attack delay and marking the mob as ready to attack once that delay expires.
  *
  * @author lare96
  */
 public final class CombatDelayAction extends Action<Mob> {
 
     /**
-     * The combat context for the owning mob.
-     */
-    private final CombatContext combat;
-
-    /**
      * Indicates whether the owning mob may currently perform an attack.
      * <p>
-     * This starts as {@code true} so a mob can attack immediately when combat begins, and is set back to {@code true}
-     * once the delay reaches zero.
+     * This starts as {@code true} so combat can begin immediately, and becomes @code true} again once the current
+     * attack delay has elapsed.
      */
     private boolean ready = true;
 
     /**
-     * Creates a new combat delay action for {@code mob}.
+     * The number of ticks remaining before another attack may be performed.
+     */
+    private int attackDelay;
+
+    /**
+     * Creates a new {@link CombatDelayAction} for the specified mob.
      *
-     * @param mob The mob whose attack delay will be processed.
+     * @param mob The mob whose combat delay will be processed.
      */
     public CombatDelayAction(Mob mob) {
         super(mob, ActionType.SOFT, false, 1);
-        combat = mob.getCombat();
     }
 
     @Override
     public void onProcess() {
         // Decrement the attack timer during the process phase so attack readiness is resolved before any combat
         // execution happens this tick.
-        if (combat.decrementAttackDelay() < 1) {
+        if (attackDelay-- < 1) {
             ready = true;
         }
     }
 
     @Override
     public boolean run() {
-        return !combat.inCombat();
+        return !mob.getCombat().inCombat();
     }
 
     /**
-     * Determines whether the owning mob is ready to attack.
+     * Resets the attack delay and marks the owning mob as not ready to attack until the supplied delay has elapsed.
+     *
+     * @param delay The new attack delay, in ticks.
+     */
+    public void reset(int delay) {
+        ready = false;
+        attackDelay = delay;
+    }
+
+    /**
+     * Determines whether the owning mob is currently ready to attack.
      *
      * @return {@code true} if an attack may be performed, otherwise {@code false}.
      */
@@ -62,7 +70,7 @@ public final class CombatDelayAction extends Action<Mob> {
     }
 
     /**
-     * Sets whether the owning mob is ready to attack.
+     * Sets whether the owning mob is currently ready to attack.
      *
      * @param ready {@code true} if an attack may be performed, otherwise {@code false}.
      */

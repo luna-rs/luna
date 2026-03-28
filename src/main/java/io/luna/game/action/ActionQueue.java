@@ -1,17 +1,17 @@
 package io.luna.game.action;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multiset;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 /**
  * Per-mob action scheduler responsible for registering and processing {@link Action}s each game cycle.
@@ -65,7 +65,7 @@ public final class ActionQueue {
      * This set exists purely as an O(1) {@link #contains(Class)} shortcut for “is an action of type X currently
      * queued?”, avoiding a linear scan across {@link #processing} and {@link #executing}.
      */
-    private final Multiset<Class<?>> types = HashMultiset.create();
+    private final Set<String> types = new HashSet<>();
 
     /**
      * Creates a new {@link ActionQueue} for {@code mob}.
@@ -85,10 +85,12 @@ public final class ActionQueue {
      * @param action The action to submit.
      */
     public void submit(Action<?> action) {
-        processing.put(action.actionType, action);
         action.setState(ActionState.PROCESSING);
         action.onSubmit();
-        types.add(action.getClass());
+        if (!action.isFinished()) {
+            types.add(action.getClass().getName());
+            processing.put(action.actionType, action);
+        }
     }
 
     /**
@@ -103,11 +105,9 @@ public final class ActionQueue {
      * @return {@code true} if the action was not already active, and therefore submitted.
      */
     public boolean submitIfAbsent(Action<?> action) {
-        Class<?> type = action.getClass();
-        if (types.add(type)) {
-            processing.put(action.actionType, action);
-            action.setState(ActionState.PROCESSING);
-            action.onSubmit();
+        String type = action.getClass().getName();
+        if (!types.contains(type)) {
+            submit(action);
             return true;
         }
         return false;
@@ -121,8 +121,8 @@ public final class ActionQueue {
      * @param type The exact action class to check for.
      * @return {@code true} if an instance of {@code type} exists in the queue.
      */
-    public boolean contains(Class<? extends Action<?>> type) {
-        return types.contains(type);
+    public boolean contains(Class<?> type) {
+        return types.contains(type.getName());
     }
 
     /**
@@ -245,7 +245,7 @@ public final class ActionQueue {
      * Intended for internal use, removes the specified action type from the cache.
      */
     void removeType(Action<?> action) {
-        types.remove(action.getClass());
+        types.remove(action.getClass().getName());
     }
 
     /**

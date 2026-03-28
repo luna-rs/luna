@@ -21,8 +21,7 @@ class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.S
     /**
      * Performs submission-time logic for the immobilization effect.
      *
-     * If the affected mob is a [Player], a message is sent informing them that
-     * they have been frozen.
+     * If the affected mob is a [Player], a message is sent informing them that they have been frozen.
      */
     override fun onSubmit() {
         if (mob is Player) {

@@ -28,10 +28,5 @@ public enum CombatStance {
     /**
      * A stance focused on defensive combat training.
      */
-    DEFENSIVE,
-
-    /**
-     * A stance used for automatically casting spells.
-     */
-    AUTOCAST
+    DEFENSIVE
 }

@@ -35,12 +35,30 @@ public abstract class WanderingAction extends Action<Mob> {
     }
 
     @Override
+    public final void onSubmit() {
+        if (mob.isWandering()) {
+            // Mob is already wandering.
+            interrupt();
+        } else {
+            mob.setWandering(true);
+        }
+    }
+
+    @Override
     public final boolean run() {
-        if (!mob.getCombat().inCombat() && mob.getWalking().isEmpty() &&
+        if(!mob.isWandering()) {
+            return true;
+        } else if (!mob.getCombat().inCombat() && mob.getWalking().isEmpty() &&
                 mob.getInteractingWith() == null && !mob.isLocked()) {
             wander();
         }
         return false;
+    }
+
+    @Override
+    public final void onFinished() {
+        // Reset wandering flag so we can schedule again in the future.
+        mob.setWandering(false);
     }
 
     /**

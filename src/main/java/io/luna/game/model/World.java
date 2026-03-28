@@ -598,10 +598,11 @@ public final class World {
             for (int y = -radius; y < radius; y++) {
                 ChunkRepository repository = chunks.load(chunk.translate(x, y));
                 Set<V> entities = repository.getAll(entityType);
-
-                for (V entity : entities) {
-                    if (filter.test(entity)) {
-                        found.add(entity);
+                if(entities != null) {
+                    for (V entity : entities) {
+                        if (filter.test(entity)) {
+                            found.add(entity);
+                        }
                     }
                 }
             }
@@ -617,11 +618,11 @@ public final class World {
      * @param <T> The entity type.
      * @return A set of entities within {@link Position#VIEWING_DISTANCE}.
      */
-    public <T extends Entity> HashSet<T> findViewable(Position position, Class<T> type) {
+    public <T extends Entity> HashSet<T> findViewable(Position position, Class<T> type) { // todo rewrite this functions and make easier to use/more efficient
         return find(position, type, HashSet::new,
                 entity -> entity.isWithinDistance(position, Position.VIEWING_DISTANCE),
                 Position.VIEWING_DISTANCE);
-    }
+    } // todo findNearest, findNearestViewable, findAll, find, etc. think of an API for this
 
     /**
      * Finds all entities of {@code type} whose position exactly equals {@code base}.

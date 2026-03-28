@@ -26,7 +26,7 @@ val itemPickup = FileOutputType.ITEM_PICKUP.level
 on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_SIZE) {
     val pickupItem = groundItem.toItem()
     when {
-        !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.INVENTORY_FULL)
+        !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.inventoryFull())
 
         groundItem.state == EntityState.ACTIVE && world.items.unregister(groundItem) -> {
             plr.playSound(Sound.PICKUP_ITEM)

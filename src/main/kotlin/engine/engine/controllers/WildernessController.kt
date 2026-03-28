@@ -1,6 +1,8 @@
 package engine.controllers
 
+import api.attr.Attr
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import game.item.degradable.DegradableItems.ringOfLifeActive
 import game.skill.magic.teleportSpells.TeleportAction
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -17,6 +19,9 @@ import io.luna.game.model.mob.controller.PlayerController
 class WildernessController(private val plr: Player) : PlayerController(plr) {
 
     override fun teleport(action: TeleportAction): Boolean {
+        if(plr.ringOfLifeActive) {
+            return plr.wildernessLevel <= 30
+        }
         if (plr.wildernessLevel >= 20) {
             plr.sendMessage("A mysterious force blocks your teleport spell!")
             plr.sendMessage("You can't use this teleport after level 20 Wilderness.")
@@ -25,14 +30,9 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
         return true
     }
 
-    override fun combat(other: Mob): Boolean {
-        // Wilderness inherits default combat rules.
-        if (!super.combat(other)) {
-            return false
-        }
-
+    override fun combat(victim: Mob): Boolean {
         // Combat level checks not needed for NPCs.
-        if (other is Npc) {
+        if (victim is Npc) {
             return true
         }
 
@@ -40,7 +40,7 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
         val combatLevel = plr.combatLevel
         val wildernessLevel = plr.wildernessLevel
         val attackRange = combatLevel - wildernessLevel..combatLevel + wildernessLevel
-        val attackable = attackRange.contains(other.combatLevel)
+        val attackable = attackRange.contains(victim.combatLevel)
         if (!attackable) {
             plr.sendMessage("Your level difference is too great!")
             plr.sendMessage("You need to move deeper into the Wilderness.")

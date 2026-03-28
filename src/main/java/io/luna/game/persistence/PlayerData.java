@@ -61,6 +61,7 @@ public class PlayerData {
     public int poisonSeverity;
     public int teleBlock;
     public CombatSpell autocast;
+    public boolean autocasting;
 
     /**
      * The username of the player this data belongs to.
@@ -106,8 +107,9 @@ public class PlayerData {
         player.getCombat().getWeapon().refreshWeapon(lastCombatStance);
         player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
         player.getCombat().setPoisonSeverity(poisonSeverity, false);
-        player.getCombat().setTeleBlock(teleBlock, false);
-        player.getCombat().setAutocastSpell(autocast, false);
+        player.getCombat().getMagic().setTeleBlock(teleBlock, false);
+        player.getCombat().getMagic().setAutocastSpell(autocast, false);
+        player.getCombat().getMagic().setAutocasting(autocasting);
     }
 
     /**
@@ -156,8 +158,9 @@ public class PlayerData {
         lastCombatStance = player.getCombat().getWeapon().getStyleDef().getStance();
         specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
         poisonSeverity = player.getCombat().getPoisonSeverity();
-        teleBlock = player.getCombat().getTeleBlock();
-        autocast = player.getCombat().getAutocastSpell().getSpell();
+        teleBlock = player.getCombat().getMagic().getTeleBlock();
+        autocast = player.getCombat().getMagic().getAutocastSpell().getSpell();
+        autocasting = player.getCombat().getMagic().isAutocasting();
         return this;
     }
 

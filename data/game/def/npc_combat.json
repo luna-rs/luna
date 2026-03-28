@@ -29,7 +29,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2,
@@ -61,7 +62,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3,
@@ -93,7 +95,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 4,
@@ -125,7 +128,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 5,
@@ -157,7 +161,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 6,
@@ -189,7 +194,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 7,
@@ -221,7 +227,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 8,
@@ -253,7 +260,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 9,
@@ -317,7 +325,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 11,
@@ -381,7 +390,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 13,
@@ -509,7 +519,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 17,
@@ -605,7 +616,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 20,
@@ -637,7 +649,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 21,
@@ -765,7 +778,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 25,
@@ -797,7 +811,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 26,
@@ -1053,7 +1068,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 44,
@@ -1085,7 +1101,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 45,
@@ -1117,7 +1134,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 46,
@@ -1149,7 +1167,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 47,
@@ -1181,7 +1200,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 48,
@@ -1213,7 +1233,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 49,
@@ -1277,7 +1298,8 @@
       90,
       80,
       70
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 51,
@@ -1341,7 +1363,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 53,
@@ -1373,7 +1396,8 @@
       70,
       60,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 54,
@@ -1405,7 +1429,8 @@
       70,
       60,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 55,
@@ -1437,7 +1462,8 @@
       70,
       60,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 58,
@@ -1469,7 +1495,8 @@
       10,
       15,
       15
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 59,
@@ -1501,7 +1528,8 @@
       -10,
       -10,
       -10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 60,
@@ -1533,7 +1561,8 @@
       -10,
       -10,
       -10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 61,
@@ -1565,7 +1594,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 62,
@@ -1597,7 +1627,8 @@
       10,
       17,
       20
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 63,
@@ -1629,7 +1660,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 64,
@@ -1661,7 +1693,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 65,
@@ -1885,7 +1918,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 73,
@@ -1917,7 +1951,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 74,
@@ -1949,7 +1984,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 75,
@@ -1981,7 +2017,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 76,
@@ -2013,7 +2050,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 77,
@@ -2045,7 +2083,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 78,
@@ -2077,7 +2116,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 79,
@@ -2109,7 +2149,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 81,
@@ -2141,7 +2182,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 82,
@@ -2173,7 +2215,8 @@
       0,
       -10,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 83,
@@ -2205,7 +2248,8 @@
       0,
       -10,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 84,
@@ -2237,7 +2281,8 @@
       0,
       -10,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 85,
@@ -2301,7 +2346,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 87,
@@ -2333,7 +2379,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 88,
@@ -2365,7 +2412,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 89,
@@ -2397,7 +2445,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 90,
@@ -2429,7 +2478,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 91,
@@ -2461,7 +2511,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 92,
@@ -2493,7 +2544,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 93,
@@ -2525,7 +2577,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 94,
@@ -2557,7 +2610,8 @@
       0,
       15,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 95,
@@ -2589,7 +2643,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 96,
@@ -2621,7 +2676,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 97,
@@ -2653,7 +2709,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 99,
@@ -2685,7 +2742,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 100,
@@ -2717,7 +2775,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 101,
@@ -2781,7 +2840,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 103,
@@ -2813,7 +2873,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 104,
@@ -2845,7 +2906,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 105,
@@ -2941,7 +3003,8 @@
       15,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 108,
@@ -2973,7 +3036,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 109,
@@ -3005,7 +3069,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 110,
@@ -3037,7 +3102,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 111,
@@ -3069,7 +3135,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 112,
@@ -3101,7 +3168,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 113,
@@ -3133,7 +3201,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 114,
@@ -3165,7 +3234,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 115,
@@ -3197,7 +3267,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 116,
@@ -3229,7 +3300,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 117,
@@ -3261,7 +3333,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 118,
@@ -3293,7 +3366,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 119,
@@ -3325,7 +3399,8 @@
       25,
       10,
       35
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 120,
@@ -3357,7 +3432,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 121,
@@ -3389,7 +3465,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 122,
@@ -3421,7 +3498,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 123,
@@ -3453,7 +3531,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 124,
@@ -3485,7 +3564,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 125,
@@ -3517,7 +3597,8 @@
       20,
       10,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 126,
@@ -3549,7 +3630,8 @@
       20,
       -5,
       15
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 127,
@@ -3581,7 +3663,8 @@
       15,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 128,
@@ -3613,7 +3696,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 129,
@@ -3709,7 +3793,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 132,
@@ -3741,7 +3826,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 133,
@@ -3773,7 +3859,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 134,
@@ -3805,7 +3892,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 135,
@@ -3869,7 +3957,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 137,
@@ -3901,7 +3990,8 @@
       18,
       15,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 138,
@@ -3933,7 +4023,8 @@
       18,
       15,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 139,
@@ -4029,7 +4120,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 142,
@@ -4061,7 +4153,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 143,
@@ -4093,7 +4186,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 144,
@@ -4125,7 +4219,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 145,
@@ -4157,7 +4252,8 @@
       20,
       10,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 158,
@@ -4189,7 +4285,8 @@
       19,
       15,
       38
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 159,
@@ -4445,7 +4542,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 173,
@@ -4477,7 +4575,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 174,
@@ -4509,7 +4608,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 175,
@@ -4541,7 +4641,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 176,
@@ -4637,7 +4738,8 @@
       70,
       -11,
       72
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 179,
@@ -4669,7 +4771,8 @@
       70,
       -11,
       72
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 180,
@@ -4701,7 +4804,8 @@
       2,
       0,
       2
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 181,
@@ -4733,7 +4837,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 182,
@@ -4765,7 +4870,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 183,
@@ -4797,7 +4903,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 184,
@@ -4829,7 +4936,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 185,
@@ -4861,7 +4969,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 186,
@@ -4893,7 +5002,8 @@
       3,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 187,
@@ -4925,7 +5035,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 188,
@@ -4957,7 +5068,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 189,
@@ -4989,7 +5101,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 190,
@@ -5021,7 +5134,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 191,
@@ -5053,7 +5167,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 192,
@@ -5085,7 +5200,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 193,
@@ -5117,7 +5233,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 194,
@@ -5181,7 +5298,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 196,
@@ -5213,7 +5331,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 197,
@@ -5277,7 +5396,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 201,
@@ -5309,7 +5429,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 202,
@@ -5341,7 +5462,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 203,
@@ -5373,7 +5495,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 204,
@@ -5405,7 +5528,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 205,
@@ -5437,7 +5561,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 206,
@@ -5469,7 +5594,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 221,
@@ -5533,7 +5659,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 224,
@@ -5565,7 +5692,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 237,
@@ -5693,7 +5821,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 254,
@@ -5725,7 +5854,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 255,
@@ -5757,7 +5887,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 256,
@@ -5789,7 +5920,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 258,
@@ -5853,7 +5985,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 270,
@@ -5885,7 +6018,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 271,
@@ -5917,7 +6051,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 272,
@@ -6077,7 +6212,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 282,
@@ -6109,7 +6245,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 283,
@@ -6301,7 +6438,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 352,
@@ -6333,7 +6471,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 353,
@@ -6365,7 +6504,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 354,
@@ -6397,7 +6537,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 357,
@@ -6461,7 +6602,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 361,
@@ -6493,7 +6635,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 362,
@@ -6525,7 +6668,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 363,
@@ -6557,7 +6701,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 365,
@@ -6589,7 +6734,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 369,
@@ -6717,7 +6863,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 391,
@@ -6941,7 +7088,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 408,
@@ -7005,7 +7153,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 413,
@@ -7229,7 +7378,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 420,
@@ -7261,7 +7411,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 421,
@@ -7293,7 +7444,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 422,
@@ -7325,7 +7477,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 423,
@@ -7357,7 +7510,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 424,
@@ -7389,7 +7543,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 425,
@@ -7805,7 +7960,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 439,
@@ -7837,7 +7993,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 440,
@@ -7869,7 +8026,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 441,
@@ -7901,7 +8059,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 442,
@@ -7933,7 +8092,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 443,
@@ -7965,7 +8125,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 444,
@@ -8061,7 +8222,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 447,
@@ -8221,7 +8383,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 475,
@@ -8477,7 +8640,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 493,
@@ -8893,7 +9057,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 667,
@@ -8957,7 +9122,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 677,
@@ -8989,7 +9155,8 @@
       0,
       -10,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 678,
@@ -9021,7 +9188,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 688,
@@ -9213,7 +9381,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 709,
@@ -9245,7 +9414,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 742,
@@ -9309,7 +9479,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 748,
@@ -9341,7 +9512,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 749,
@@ -9373,7 +9545,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 750,
@@ -9405,7 +9578,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 751,
@@ -9437,7 +9611,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 752,
@@ -9469,7 +9644,8 @@
       0,
       -10,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 753,
@@ -9501,7 +9677,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 757,
@@ -9661,7 +9838,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 827,
@@ -10557,7 +10735,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 908,
@@ -10589,7 +10768,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 909,
@@ -10621,7 +10801,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 910,
@@ -10653,7 +10834,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 911,
@@ -10685,7 +10867,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 912,
@@ -10717,7 +10900,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 913,
@@ -10749,7 +10933,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 914,
@@ -10781,7 +10966,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 917,
@@ -11101,7 +11287,8 @@
       40,
       30,
       20
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 950,
@@ -11133,7 +11320,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 951,
@@ -11165,7 +11353,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 955,
@@ -11197,7 +11386,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 977,
@@ -11549,7 +11739,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1007,
@@ -11581,7 +11772,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1009,
@@ -11613,7 +11805,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1015,
@@ -11677,7 +11870,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1018,
@@ -11709,7 +11903,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1019,
@@ -11741,7 +11936,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1020,
@@ -11773,7 +11969,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1021,
@@ -11805,7 +12002,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1022,
@@ -11837,7 +12035,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1023,
@@ -11869,7 +12068,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1024,
@@ -11901,7 +12101,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1025,
@@ -11933,7 +12134,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1026,
@@ -11965,7 +12167,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1027,
@@ -11997,7 +12200,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1028,
@@ -12029,7 +12233,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1029,
@@ -12061,7 +12266,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1030,
@@ -12285,7 +12491,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1045,
@@ -12317,7 +12524,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1046,
@@ -12349,7 +12557,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1047,
@@ -12413,7 +12622,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1065,
@@ -12605,7 +12815,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1077,
@@ -12637,7 +12848,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1081,
@@ -12765,7 +12977,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1087,
@@ -12893,7 +13106,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1095,
@@ -12925,7 +13139,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1096,
@@ -12957,7 +13172,8 @@
       50,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1097,
@@ -12989,7 +13205,8 @@
       40,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1098,
@@ -13021,7 +13238,8 @@
       40,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1101,
@@ -13053,7 +13271,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1102,
@@ -13085,7 +13304,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1103,
@@ -13117,7 +13337,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1104,
@@ -13149,7 +13370,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1105,
@@ -13181,7 +13403,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1106,
@@ -13213,7 +13436,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1107,
@@ -13245,7 +13469,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1108,
@@ -13277,7 +13502,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1109,
@@ -13309,7 +13535,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1110,
@@ -13341,7 +13568,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1111,
@@ -13373,7 +13601,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1112,
@@ -13405,7 +13634,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1115,
@@ -13917,7 +14147,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1131,
@@ -13949,7 +14180,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1132,
@@ -13981,7 +14213,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1133,
@@ -14013,7 +14246,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1134,
@@ -14045,7 +14279,8 @@
       0,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1138,
@@ -14077,7 +14312,8 @@
       10,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1153,
@@ -14109,7 +14345,8 @@
       1,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1154,
@@ -14141,7 +14378,8 @@
       5,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1155,
@@ -14173,7 +14411,8 @@
       5,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1156,
@@ -14205,7 +14444,8 @@
       1,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1157,
@@ -14237,7 +14477,8 @@
       5,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1158,
@@ -14269,7 +14510,8 @@
       100,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1160,
@@ -14301,7 +14543,8 @@
       100,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1172,
@@ -14429,7 +14672,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1193,
@@ -14461,7 +14705,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1194,
@@ -14493,7 +14738,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1195,
@@ -14525,7 +14771,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1196,
@@ -14653,7 +14900,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1203,
@@ -14685,7 +14933,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1204,
@@ -14717,7 +14966,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1217,
@@ -14781,7 +15031,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1219,
@@ -14941,7 +15192,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1228,
@@ -14973,7 +15225,8 @@
       30,
       0,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1229,
@@ -15005,7 +15258,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1230,
@@ -15037,7 +15291,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1231,
@@ -15069,7 +15324,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1232,
@@ -15101,7 +15357,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1233,
@@ -15133,7 +15390,8 @@
       30,
       0,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1234,
@@ -15165,7 +15423,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1235,
@@ -15197,7 +15456,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1239,
@@ -15261,7 +15521,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1241,
@@ -15293,7 +15554,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1243,
@@ -15325,7 +15587,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1244,
@@ -15357,7 +15620,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1245,
@@ -15389,7 +15653,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1246,
@@ -15421,7 +15686,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1247,
@@ -15453,7 +15719,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1248,
@@ -15485,7 +15752,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1249,
@@ -15517,7 +15785,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1250,
@@ -15549,7 +15818,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1257,
@@ -15581,7 +15851,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1258,
@@ -15613,7 +15884,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1261,
@@ -15645,7 +15917,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1262,
@@ -15677,7 +15950,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1264,
@@ -15709,7 +15983,8 @@
       0,
       30,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1265,
@@ -15741,7 +16016,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1267,
@@ -15773,7 +16049,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1279,
@@ -16157,7 +16434,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1318,
@@ -16413,7 +16691,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1338,
@@ -16445,7 +16724,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1339,
@@ -16477,7 +16757,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1340,
@@ -16509,7 +16790,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1341,
@@ -16541,7 +16823,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1342,
@@ -16573,7 +16856,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1343,
@@ -16605,7 +16889,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1347,
@@ -16637,7 +16922,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1351,
@@ -16669,7 +16955,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1352,
@@ -16701,7 +16988,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1353,
@@ -16733,7 +17021,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1354,
@@ -16765,7 +17054,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1355,
@@ -16797,7 +17087,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1356,
@@ -16829,7 +17120,8 @@
       150,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1361,
@@ -17053,7 +17345,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1368,
@@ -17085,7 +17378,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1379,
@@ -17405,7 +17699,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1390,
@@ -17469,7 +17764,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1392,
@@ -17565,7 +17861,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1402,
@@ -17597,7 +17894,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1403,
@@ -17629,7 +17927,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1404,
@@ -17661,7 +17960,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1442,
@@ -18205,7 +18505,8 @@
       0,
       50,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1473,
@@ -18237,7 +18538,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1475,
@@ -18333,7 +18635,8 @@
       15,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1478,
@@ -18365,7 +18668,8 @@
       10,
       17,
       20
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1479,
@@ -18397,7 +18701,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1502,
@@ -18429,7 +18734,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1503,
@@ -18461,7 +18767,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1504,
@@ -18493,7 +18800,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1505,
@@ -18525,7 +18833,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1506,
@@ -18557,7 +18866,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1507,
@@ -18589,7 +18899,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1508,
@@ -18621,7 +18932,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1509,
@@ -18653,7 +18965,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1515,
@@ -18685,7 +18998,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1532,
@@ -18941,7 +19255,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1556,
@@ -18973,7 +19288,8 @@
       35,
       200,
       200
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1558,
@@ -19005,7 +19321,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1559,
@@ -19037,7 +19354,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1560,
@@ -19069,7 +19387,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1561,
@@ -19101,7 +19420,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1562,
@@ -19133,7 +19453,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1563,
@@ -19165,7 +19486,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1564,
@@ -19197,7 +19519,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1565,
@@ -19229,7 +19552,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1566,
@@ -19261,7 +19585,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1575,
@@ -19325,7 +19650,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1583,
@@ -19357,7 +19683,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1584,
@@ -19389,7 +19716,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1585,
@@ -19421,7 +19749,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1586,
@@ -19453,7 +19782,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1587,
@@ -19485,7 +19815,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1588,
@@ -19517,7 +19848,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1589,
@@ -19549,7 +19881,8 @@
       50,
       40,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1590,
@@ -19581,7 +19914,8 @@
       70,
       30,
       90
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1591,
@@ -19613,7 +19947,8 @@
       70,
       30,
       90
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1592,
@@ -19645,7 +19980,8 @@
       70,
       30,
       90
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1593,
@@ -19677,7 +20013,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1594,
@@ -19709,7 +20046,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1600,
@@ -19741,7 +20079,8 @@
       5,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1601,
@@ -19773,7 +20112,8 @@
       5,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1602,
@@ -19805,7 +20145,8 @@
       5,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1603,
@@ -19837,7 +20178,8 @@
       5,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1604,
@@ -19997,7 +20339,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1609,
@@ -20029,7 +20372,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1610,
@@ -20061,7 +20405,8 @@
       0,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1611,
@@ -20093,7 +20438,8 @@
       0,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1612,
@@ -20125,7 +20471,8 @@
       5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1613,
@@ -20157,7 +20504,8 @@
       20,
       0,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1614,
@@ -20189,7 +20537,8 @@
       20,
       0,
       20
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1615,
@@ -20221,7 +20570,8 @@
       20,
       0,
       20
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1616,
@@ -20253,7 +20603,8 @@
       0,
       20,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1617,
@@ -20285,7 +20636,8 @@
       0,
       20,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1618,
@@ -20317,7 +20669,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1619,
@@ -20349,7 +20702,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1620,
@@ -20381,7 +20735,8 @@
       0,
       10,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1621,
@@ -20413,7 +20768,8 @@
       0,
       10,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1622,
@@ -20445,7 +20801,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1623,
@@ -20477,7 +20834,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1624,
@@ -20509,7 +20867,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1625,
@@ -20573,7 +20932,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1627,
@@ -20605,7 +20965,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1628,
@@ -20637,7 +20998,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1629,
@@ -20669,7 +21031,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1630,
@@ -20701,7 +21064,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1631,
@@ -20733,7 +21097,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1632,
@@ -20765,7 +21130,8 @@
       20,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1633,
@@ -20797,7 +21163,8 @@
       10,
       0,
       10
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1634,
@@ -20829,7 +21196,8 @@
       10,
       0,
       10
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1635,
@@ -20861,7 +21229,8 @@
       10,
       0,
       10
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1636,
@@ -20893,7 +21262,8 @@
       10,
       0,
       10
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1637,
@@ -20925,7 +21295,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1638,
@@ -20957,7 +21328,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1639,
@@ -20989,7 +21361,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1640,
@@ -21021,7 +21394,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1641,
@@ -21053,7 +21427,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1642,
@@ -21085,7 +21460,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1643,
@@ -21117,7 +21493,8 @@
       0,
       40,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1644,
@@ -21149,7 +21526,8 @@
       0,
       40,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1645,
@@ -21181,7 +21559,8 @@
       0,
       40,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1646,
@@ -21213,7 +21592,8 @@
       0,
       40,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1647,
@@ -21245,7 +21625,8 @@
       0,
       40,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1648,
@@ -21277,7 +21658,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1649,
@@ -21309,7 +21691,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1650,
@@ -21341,7 +21724,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1651,
@@ -21373,7 +21757,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1652,
@@ -21405,7 +21790,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1653,
@@ -21437,7 +21823,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1654,
@@ -21469,7 +21856,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1655,
@@ -21501,7 +21889,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1656,
@@ -21533,7 +21922,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1657,
@@ -21565,7 +21955,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1676,
@@ -21597,7 +21988,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1677,
@@ -21629,7 +22021,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1678,
@@ -21661,7 +22054,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1681,
@@ -21693,7 +22087,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1691,
@@ -21725,7 +22120,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1692,
@@ -21757,7 +22153,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1693,
@@ -21789,7 +22186,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1698,
@@ -21821,7 +22219,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1710,
@@ -21853,7 +22252,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1711,
@@ -21885,7 +22285,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1712,
@@ -21917,7 +22318,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1757,
@@ -21949,7 +22351,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1758,
@@ -21981,7 +22384,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1766,
@@ -22013,7 +22417,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1767,
@@ -22045,7 +22450,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1768,
@@ -22077,7 +22483,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1769,
@@ -22109,7 +22516,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1770,
@@ -22141,7 +22549,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1771,
@@ -22173,7 +22582,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1772,
@@ -22205,7 +22615,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1773,
@@ -22237,7 +22648,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1774,
@@ -22269,7 +22681,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1775,
@@ -22301,7 +22714,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1776,
@@ -22333,7 +22747,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1795,
@@ -22365,7 +22780,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1796,
@@ -22397,7 +22813,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1797,
@@ -22429,7 +22846,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1802,
@@ -22461,7 +22879,8 @@
       5,
       5,
       50
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1811,
@@ -22525,7 +22944,8 @@
       10,
       -10,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1813,
@@ -22557,7 +22977,8 @@
       10,
       -10,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1814,
@@ -22589,7 +23010,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1815,
@@ -22621,7 +23043,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1816,
@@ -22653,7 +23076,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1817,
@@ -22685,7 +23109,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1818,
@@ -22717,7 +23142,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1822,
@@ -22877,7 +23303,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1828,
@@ -22909,7 +23336,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1829,
@@ -22941,7 +23369,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1831,
@@ -22973,7 +23402,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1832,
@@ -23005,7 +23435,8 @@
       35,
       25,
       95
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1850,
@@ -23037,7 +23468,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1851,
@@ -23069,7 +23501,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1852,
@@ -23101,7 +23534,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1853,
@@ -23133,7 +23567,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1854,
@@ -23165,7 +23600,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1855,
@@ -23197,7 +23633,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 1856,
@@ -23229,7 +23666,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1857,
@@ -23261,7 +23699,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1858,
@@ -23293,7 +23732,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1874,
@@ -23357,7 +23797,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1881,
@@ -23389,7 +23830,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1883,
@@ -23421,7 +23863,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1884,
@@ -23453,7 +23896,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1885,
@@ -23485,7 +23929,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1904,
@@ -23613,7 +24058,8 @@
       35,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 1914,
@@ -23645,7 +24091,8 @@
       150,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1915,
@@ -23677,7 +24124,8 @@
       150,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1919,
@@ -23709,7 +24157,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1926,
@@ -23741,7 +24190,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1931,
@@ -23773,7 +24223,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1936,
@@ -23805,7 +24256,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1937,
@@ -23837,7 +24289,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1938,
@@ -23869,7 +24322,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1939,
@@ -23901,7 +24355,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1940,
@@ -23933,7 +24388,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1941,
@@ -23965,7 +24421,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1942,
@@ -23997,7 +24454,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1951,
@@ -24029,7 +24487,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1952,
@@ -24061,7 +24520,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1953,
@@ -24093,7 +24553,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1954,
@@ -24125,7 +24586,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1955,
@@ -24157,7 +24619,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1956,
@@ -24189,7 +24652,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 1958,
@@ -24221,7 +24685,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1959,
@@ -24253,7 +24718,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1961,
@@ -24285,7 +24751,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1962,
@@ -24317,7 +24784,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1963,
@@ -24349,7 +24817,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1964,
@@ -24381,7 +24850,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1965,
@@ -24413,7 +24883,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1966,
@@ -24445,7 +24916,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1967,
@@ -24477,7 +24949,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1968,
@@ -24509,7 +24982,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1969,
@@ -24541,7 +25015,8 @@
       15,
       15,
       15
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 1973,
@@ -24573,7 +25048,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1974,
@@ -24605,7 +25081,8 @@
       100,
       80,
       120
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1975,
@@ -24637,7 +25114,8 @@
       100,
       80,
       120
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1976,
@@ -24861,7 +25339,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 1997,
@@ -24925,7 +25404,8 @@
       15,
       15,
       15
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2007,
@@ -25085,7 +25565,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2016,
@@ -25117,7 +25598,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2017,
@@ -25149,7 +25631,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2018,
@@ -25181,7 +25664,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2019,
@@ -25213,7 +25697,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2025,
@@ -25245,7 +25730,8 @@
       117,
       73,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2026,
@@ -25277,7 +25763,8 @@
       244,
       -11,
       249
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2027,
@@ -25309,7 +25796,8 @@
       241,
       -11,
       250
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2028,
@@ -25341,7 +25829,8 @@
       90,
       106,
       100
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2029,
@@ -25373,7 +25862,8 @@
       222,
       0,
       221
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2030,
@@ -25405,7 +25895,8 @@
       221,
       0,
       225
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2031,
@@ -25437,7 +25928,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2032,
@@ -25469,7 +25961,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2033,
@@ -25501,7 +25994,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2034,
@@ -25533,7 +26027,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2035,
@@ -25565,7 +26060,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2036,
@@ -25661,7 +26157,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2045,
@@ -25693,7 +26190,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2046,
@@ -25725,7 +26223,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2047,
@@ -25757,7 +26256,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2048,
@@ -25789,7 +26289,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2049,
@@ -25821,7 +26322,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2050,
@@ -25853,7 +26355,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2051,
@@ -25885,7 +26388,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2052,
@@ -25917,7 +26421,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2053,
@@ -25949,7 +26454,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2054,
@@ -25981,7 +26487,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2055,
@@ -26013,7 +26520,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2056,
@@ -26045,7 +26553,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2057,
@@ -26077,7 +26586,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2058,
@@ -26109,7 +26619,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2060,
@@ -26141,7 +26652,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2069,
@@ -26493,7 +27005,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2131,
@@ -26525,7 +27038,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2132,
@@ -26557,7 +27071,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2133,
@@ -26589,7 +27104,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2134,
@@ -26717,7 +27233,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2245,
@@ -26973,7 +27490,8 @@
       18,
       15,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2255,
@@ -27037,7 +27555,8 @@
       76,
       -10,
       79
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2263,
@@ -27069,7 +27588,8 @@
       100,
       50,
       10
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2264,
@@ -27101,7 +27621,8 @@
       70,
       150,
       70
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2265,
@@ -27133,7 +27654,8 @@
       10,
       75,
       75
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2274,
@@ -27165,7 +27687,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2275,
@@ -27197,7 +27720,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2276,
@@ -27229,7 +27753,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2277,
@@ -27261,7 +27786,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2278,
@@ -27293,7 +27819,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2279,
@@ -27325,7 +27852,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2280,
@@ -27357,7 +27885,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2281,
@@ -27389,7 +27918,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2285,
@@ -27453,7 +27983,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2313,
@@ -27485,7 +28016,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2314,
@@ -27517,7 +28049,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2315,
@@ -27549,7 +28082,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2349,
@@ -27869,7 +28403,8 @@
       175,
       -10,
       250
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2454,
@@ -27933,7 +28468,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2456,
@@ -27965,7 +28501,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2457,
@@ -28157,7 +28694,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2464,
@@ -28189,7 +28727,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2465,
@@ -28221,7 +28760,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2466,
@@ -28253,7 +28793,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2467,
@@ -28285,7 +28826,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2468,
@@ -28317,7 +28859,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2489,
@@ -28413,7 +28956,8 @@
       10,
       17,
       20
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2492,
@@ -28445,7 +28989,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2493,
@@ -28573,7 +29118,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2499,
@@ -28893,7 +29439,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2573,
@@ -28957,7 +29504,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2592,
@@ -28989,7 +29537,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2593,
@@ -29021,7 +29570,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2594,
@@ -29053,7 +29603,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2595,
@@ -29085,7 +29636,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2596,
@@ -29117,7 +29669,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2597,
@@ -29149,7 +29702,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2598,
@@ -29181,7 +29735,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2599,
@@ -29213,7 +29768,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2600,
@@ -29245,7 +29801,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2601,
@@ -29277,7 +29834,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2602,
@@ -29309,7 +29867,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2603,
@@ -29341,7 +29900,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2604,
@@ -29565,7 +30125,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2611,
@@ -29597,7 +30158,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2612,
@@ -29629,7 +30191,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2613,
@@ -29661,7 +30224,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2614,
@@ -29693,7 +30257,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2615,
@@ -29725,7 +30290,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2616,
@@ -29757,7 +30323,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2627,
@@ -29789,7 +30356,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2628,
@@ -29821,7 +30389,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2629,
@@ -29853,7 +30422,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2630,
@@ -29885,7 +30455,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2631,
@@ -29917,7 +30488,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2632,
@@ -29949,7 +30521,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2674,
@@ -29981,7 +30554,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2675,
@@ -30013,7 +30587,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2677,
@@ -30045,7 +30620,8 @@
       2,
       0,
       2
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2678,
@@ -30077,7 +30653,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2679,
@@ -30109,7 +30686,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2680,
@@ -30141,7 +30719,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2681,
@@ -30173,7 +30752,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2682,
@@ -30205,7 +30785,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2683,
@@ -30301,7 +30882,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2686,
@@ -30333,7 +30915,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2687,
@@ -30365,7 +30948,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2688,
@@ -30397,7 +30981,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2693,
@@ -30429,7 +31014,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2694,
@@ -30461,7 +31047,8 @@
       -42,
       -42,
       -42
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2695,
@@ -30493,7 +31080,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2696,
@@ -30525,7 +31113,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2697,
@@ -30557,7 +31146,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2698,
@@ -30589,7 +31179,8 @@
       70,
       -11,
       72
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2699,
@@ -30781,7 +31372,8 @@
       0,
       15,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2710,
@@ -30813,7 +31405,8 @@
       0,
       15,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2711,
@@ -30845,7 +31438,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2712,
@@ -30877,7 +31471,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2722,
@@ -30909,7 +31504,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2723,
@@ -30941,7 +31537,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2724,
@@ -30973,7 +31570,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2725,
@@ -31005,7 +31603,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2734,
@@ -31037,7 +31636,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2735,
@@ -31069,7 +31669,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2736,
@@ -31101,7 +31702,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2737,
@@ -31133,7 +31735,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2738,
@@ -31165,7 +31768,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2739,
@@ -31197,7 +31801,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2740,
@@ -31229,7 +31834,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2741,
@@ -31261,7 +31867,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2742,
@@ -31293,7 +31900,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2743,
@@ -31325,7 +31933,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2744,
@@ -31357,7 +31966,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2745,
@@ -31389,7 +31999,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2746,
@@ -31421,7 +32032,8 @@
       0,
       100,
       100
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2777,
@@ -31453,7 +32065,8 @@
       70,
       -11,
       72
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2779,
@@ -31613,7 +32226,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2803,
@@ -31645,7 +32259,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2804,
@@ -31677,7 +32292,8 @@
       15,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2805,
@@ -31709,7 +32325,8 @@
       15,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2806,
@@ -31741,7 +32358,8 @@
       15,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2807,
@@ -31773,7 +32391,8 @@
       5,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2808,
@@ -31805,7 +32424,8 @@
       5,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2837,
@@ -31837,7 +32457,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2838,
@@ -31869,7 +32490,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2839,
@@ -31901,7 +32523,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2840,
@@ -31933,7 +32556,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2841,
@@ -31965,7 +32589,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2842,
@@ -31997,7 +32622,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2843,
@@ -32029,7 +32655,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2844,
@@ -32061,7 +32688,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2845,
@@ -32093,7 +32721,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2846,
@@ -32125,7 +32754,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2847,
@@ -32157,7 +32787,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2848,
@@ -32189,7 +32820,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2849,
@@ -32221,7 +32853,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2850,
@@ -32253,7 +32886,8 @@
       10,
       15,
       15
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2879,
@@ -32317,7 +32951,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 2881,
@@ -32349,7 +32984,8 @@
       10,
       255,
       255
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2882,
@@ -32381,7 +33017,8 @@
       255,
       255,
       10
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 2883,
@@ -32413,7 +33050,8 @@
       255,
       10,
       255
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 2884,
@@ -32477,7 +33115,8 @@
       175,
       -10,
       250
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2887,
@@ -32509,7 +33148,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2888,
@@ -32541,7 +33181,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 2889,
@@ -32701,7 +33342,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 2981,
@@ -32733,7 +33375,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3026,
@@ -33309,7 +33952,8 @@
       90,
       80,
       140
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3069,
@@ -33341,7 +33985,8 @@
       90,
       80,
       140
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3070,
@@ -33373,7 +34018,8 @@
       90,
       80,
       140
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3071,
@@ -33405,7 +34051,8 @@
       90,
       80,
       140
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3072,
@@ -33437,7 +34084,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3073,
@@ -33469,7 +34117,8 @@
       20,
       10,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3153,
@@ -33501,7 +34150,8 @@
       10,
       5,
       10
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3187,
@@ -33533,7 +34183,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3188,
@@ -33565,7 +34216,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3189,
@@ -33597,7 +34249,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3190,
@@ -33629,7 +34282,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3191,
@@ -33661,7 +34315,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3192,
@@ -33693,7 +34348,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3193,
@@ -33725,7 +34381,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3194,
@@ -33757,7 +34414,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3195,
@@ -33789,7 +34447,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3196,
@@ -33821,7 +34480,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3200,
@@ -33853,7 +34513,8 @@
       70,
       70,
       70
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3201,
@@ -33885,7 +34546,8 @@
       10,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3202,
@@ -33917,7 +34579,8 @@
       10,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3219,
@@ -33949,7 +34612,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3220,
@@ -33981,7 +34645,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3221,
@@ -34013,7 +34678,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3222,
@@ -34077,7 +34743,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3224,
@@ -34109,7 +34776,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3225,
@@ -34141,7 +34809,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3226,
@@ -34173,7 +34842,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3227,
@@ -34205,7 +34875,8 @@
       -21,
       -21,
       -21
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3228,
@@ -34269,7 +34940,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3230,
@@ -34301,7 +34973,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3231,
@@ -34333,7 +35006,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3232,
@@ -34365,7 +35039,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3233,
@@ -34397,7 +35072,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3234,
@@ -34589,7 +35265,8 @@
       19,
       -4,
       20
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3242,
@@ -34621,7 +35298,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3243,
@@ -34653,7 +35331,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3244,
@@ -34685,7 +35364,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3245,
@@ -34717,7 +35397,8 @@
       0,
       3,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3246,
@@ -34749,7 +35430,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3247,
@@ -34781,7 +35463,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3248,
@@ -34813,7 +35496,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3249,
@@ -34845,7 +35529,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3250,
@@ -34877,7 +35562,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3251,
@@ -34909,7 +35595,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3252,
@@ -34941,7 +35628,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3253,
@@ -34973,7 +35661,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3255,
@@ -35005,7 +35694,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3256,
@@ -35037,7 +35727,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3257,
@@ -35069,7 +35760,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3258,
@@ -35101,7 +35793,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3259,
@@ -35133,7 +35826,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3260,
@@ -35165,7 +35859,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3261,
@@ -35197,7 +35892,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3262,
@@ -35229,7 +35925,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3263,
@@ -35261,7 +35958,8 @@
       2,
       -3,
       2
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3264,
@@ -35421,7 +36119,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3269,
@@ -35453,7 +36152,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3270,
@@ -35485,7 +36185,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3271,
@@ -35517,7 +36218,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3272,
@@ -35549,7 +36251,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3273,
@@ -35581,7 +36284,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3274,
@@ -35613,7 +36317,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3275,
@@ -35645,7 +36350,8 @@
       0,
       5,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3276,
@@ -35677,7 +36383,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3277,
@@ -35709,7 +36416,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3278,
@@ -35741,7 +36449,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3279,
@@ -35773,7 +36482,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3291,
@@ -35805,7 +36515,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3292,
@@ -35869,7 +36580,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3313,
@@ -36029,7 +36741,8 @@
       10,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3347,
@@ -36061,7 +36774,8 @@
       10,
       20,
       20
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3348,
@@ -36093,7 +36807,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3349,
@@ -36125,7 +36840,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3350,
@@ -36157,7 +36873,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3360,
@@ -36381,7 +37098,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3367,
@@ -36413,7 +37131,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3368,
@@ -36445,7 +37164,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3369,
@@ -36477,7 +37197,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3370,
@@ -36509,7 +37230,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3371,
@@ -36541,7 +37263,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3375,
@@ -36573,7 +37296,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3376,
@@ -36605,7 +37329,8 @@
       50,
       40,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3406,
@@ -36637,7 +37362,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   },
   {
     "id": 3421,
@@ -36829,7 +37555,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3491,
@@ -37789,7 +38516,8 @@
       -5,
       0,
       5
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3582,
@@ -37821,7 +38549,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3583,
@@ -37853,7 +38582,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3584,
@@ -37885,7 +38615,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3585,
@@ -37917,7 +38648,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3586,
@@ -37981,7 +38713,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3588,
@@ -38013,7 +38746,8 @@
       50,
       40,
       30
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3589,
@@ -38045,7 +38779,8 @@
       5,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3590,
@@ -38077,7 +38812,8 @@
       70,
       30,
       90
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3591,
@@ -38109,7 +38845,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3592,
@@ -38141,7 +38878,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3593,
@@ -38173,7 +38911,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3594,
@@ -38205,7 +38944,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3599,
@@ -38333,7 +39073,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3610,
@@ -38365,7 +39106,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3611,
@@ -38397,7 +39139,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3612,
@@ -38525,7 +39268,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3616,
@@ -38557,7 +39301,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3617,
@@ -38749,7 +39494,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3645,
@@ -38781,7 +39527,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3646,
@@ -38813,7 +39560,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3647,
@@ -38845,7 +39593,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3648,
@@ -38877,7 +39626,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3649,
@@ -38909,7 +39659,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3650,
@@ -39101,7 +39852,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3656,
@@ -39133,7 +39885,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3657,
@@ -39165,7 +39918,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3658,
@@ -39197,7 +39951,8 @@
       0,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3659,
@@ -39229,7 +39984,8 @@
       0,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3660,
@@ -39261,7 +40017,8 @@
       0,
       50,
       50
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3661,
@@ -39293,7 +40050,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3662,
@@ -39325,7 +40083,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3663,
@@ -39357,7 +40116,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3664,
@@ -39389,7 +40149,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3665,
@@ -39421,7 +40182,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "SLASH_ATTACK"
   },
   {
     "id": 3666,
@@ -39485,7 +40247,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3668,
@@ -39581,7 +40344,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3673,
@@ -39613,7 +40377,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3675,
@@ -39645,7 +40410,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3676,
@@ -39677,7 +40443,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3727,
@@ -39709,7 +40476,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3728,
@@ -39741,7 +40509,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3729,
@@ -39773,7 +40542,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3730,
@@ -39805,7 +40575,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3731,
@@ -39837,7 +40608,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3732,
@@ -39869,7 +40641,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3733,
@@ -39901,7 +40674,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3734,
@@ -39933,7 +40707,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3735,
@@ -39965,7 +40740,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3736,
@@ -39997,7 +40773,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3737,
@@ -40029,7 +40806,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3738,
@@ -40061,7 +40839,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3739,
@@ -40093,7 +40872,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3740,
@@ -40125,7 +40905,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3741,
@@ -40157,7 +40938,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3742,
@@ -40189,7 +40971,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3743,
@@ -40221,7 +41004,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3744,
@@ -40253,7 +41037,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3745,
@@ -40285,7 +41070,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3746,
@@ -40317,7 +41103,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3747,
@@ -40349,7 +41136,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3748,
@@ -40381,7 +41169,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3749,
@@ -40413,7 +41202,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3750,
@@ -40445,7 +41235,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3751,
@@ -40477,7 +41268,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3752,
@@ -40509,7 +41301,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3753,
@@ -40541,7 +41334,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3754,
@@ -40573,7 +41367,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3755,
@@ -40605,7 +41400,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3756,
@@ -40637,7 +41433,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3757,
@@ -40669,7 +41466,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3758,
@@ -40701,7 +41499,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3759,
@@ -40733,7 +41532,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3760,
@@ -40765,7 +41565,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3761,
@@ -40797,7 +41598,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3762,
@@ -40829,7 +41631,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3763,
@@ -40861,7 +41664,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3764,
@@ -40893,7 +41697,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3765,
@@ -40925,7 +41730,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3766,
@@ -40957,7 +41763,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3767,
@@ -40989,7 +41796,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3768,
@@ -41021,7 +41829,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3769,
@@ -41053,7 +41862,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3770,
@@ -41085,7 +41895,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3771,
@@ -41117,7 +41928,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "RANGED_ATTACK"
   },
   {
     "id": 3772,
@@ -41149,7 +41961,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3773,
@@ -41181,7 +41994,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3774,
@@ -41213,7 +42027,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3775,
@@ -41245,7 +42060,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3776,
@@ -41277,7 +42093,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "default_attack_bonus": "CRUSH_ATTACK"
   },
   {
     "id": 3777,
@@ -41597,7 +42414,8 @@
       100,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3836,
@@ -41629,7 +42447,8 @@
       100,
       10,
       10
-    ]
+    ],
+    "default_attack_bonus": "STAB_ATTACK"
   },
   {
     "id": 3840,
@@ -41821,6 +42640,7 @@
       0,
       15,
       0
-    ]
+    ],
+    "default_attack_bonus": "MAGIC_ATTACK"
   }
 ]
