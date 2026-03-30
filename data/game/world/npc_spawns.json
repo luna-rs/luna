@@ -118774,10 +118774,6 @@
       "x": 3267,
       "y": 3226,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
@@ -118786,10 +118782,6 @@
       "x": 3267,
       "y": 3229,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
@@ -118798,10 +118790,6 @@
       "x": 3268,
       "y": 3226,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
@@ -118810,10 +118798,6 @@
       "x": 3268,
       "y": 3229,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
