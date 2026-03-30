@@ -51,20 +51,3 @@ shopkeeperId.forEach({ npcId ->
             .open()
     }
 })
-
-/**
- * Spawn general store NPC.
- */
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId.get(0),
-        x = 2959,
-        y = 3388
-    )
-        .startWandering(3, WanderingFrequency.NORMAL)
-    world.addNpc(
-        id = shopkeeperId.get(1),
-        x = 2958,
-        y = 3388
-    ).startWandering(3, WanderingFrequency.NORMAL)
-}

@@ -45,11 +45,3 @@ npc1(shopkeeperId) {
             })
         .open()
 }
-
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId,
-        x = 3202,
-        y = 3433)
-        .startWandering(2, WanderingFrequency.NORMAL)
-}

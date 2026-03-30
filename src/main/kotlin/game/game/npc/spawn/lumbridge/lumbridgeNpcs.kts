@@ -197,13 +197,3 @@ fun womenDialogue(plr: Player, targetNpc: Npc) {
             .open()}
     }
 }
-
-on(ServerLaunchEvent::class) {
-    // Hans
-    // TODO make him run around the castle
-    world.addNpc(
-        id = 0,
-        x = 3221,
-        y = 3224)
-        .startWandering(10, WanderingFrequency.NORMAL)
-}
