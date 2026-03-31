@@ -142,7 +142,7 @@ public final class PlayerCombatContext extends CombatContext {
         if (spell == null || spell == CombatSpellDefinition.NONE) {
             throw new IllegalStateException("Combat spell is null or NONE during magic combat state.");
         }
-        List<Item> required = Magic.INSTANCE.checkRequirements(player, spell.getLevel(), spell.getRequired());
+        List<Item> required = Magic.INSTANCE.checkRequirements(player, spell.getLevel(), spell.getRequired(), false);
         if (required == null) {
             if (spell == autocastSpell) {
                 // If the failed spell is our autocasted spell, clear it.
