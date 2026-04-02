@@ -1,4 +1,4 @@
-package api.combat.weapon.dsl
+package api.combat.weapons.dsl
 
 class SpecialAttackReceiver {
 }

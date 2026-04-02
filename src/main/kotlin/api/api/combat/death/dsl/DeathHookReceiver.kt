@@ -54,6 +54,7 @@ class DeathHookReceiver<T : Mob>(val victim: T, val source: Mob?, private val st
      */
     fun preDeath(reset: Boolean = true, action: PreDeathReceiver.() -> Unit) {
         if (stage == DeathStage.PRE_DEATH) {
+            victim.lock()
             val preDeathReceiver = PreDeathReceiver(this)
             if (reset) {
                 preDeathReceiver.reset()
@@ -86,6 +87,7 @@ class DeathHookReceiver<T : Mob>(val victim: T, val source: Mob?, private val st
      */
     fun postDeath(reset: Boolean = true, action: PostDeathReceiver.() -> Unit) {
         if (stage == DeathStage.POST_DEATH) {
+            victim.unlock()
             val postDeathReceiver = PostDeathReceiver(this)
             if (reset) {
                 postDeathReceiver.reset()

@@ -2,17 +2,19 @@ package game.skill.magic
 
 import api.predef.*
 import com.google.common.collect.HashMultiset
+import game.player.Sound
+import game.skill.magic.teleportSpells.TeleportAction
+import game.skill.magic.teleportSpells.TeleportStyle
+import io.luna.Luna
 import io.luna.game.model.LocalSound
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.util.StringUtils
-import game.player.Sound
-import game.skill.magic.teleportSpells.TeleportAction
-import game.skill.magic.teleportSpells.TeleportStyle
 
 /**
  * A collection of utility functions related to the Magic skill.
@@ -23,9 +25,16 @@ object Magic {
 
     /**
      * Checks if [plr] meets the requirements defined by [level] and [requirements]. If they do, a list of runes and
-     * items required for the spell to be cast will be returned. If they don't, [null] will be returned.
+     * items required for the spell to be cast will be returned. If they don't, `null` will be returned. An empty list
+     * signifies no items are required to be removed for the spell to be cast.
      */
-    fun checkRequirements(plr: Player, level: Int, requirements: List<SpellRequirement>): List<Item>? {
+    fun checkRequirements(plr: Player,
+                          level: Int,
+                          requirements: List<SpellRequirement>,
+                          autocast: Boolean = false): List<Item>? {
+        if(Luna.settings().game().betaMode() || plr.rights >= PlayerRights.ADMINISTRATOR) {
+            return emptyList()
+        }
         if (plr.magic.level < level) {
             plr.sendMessage("Your Magic level is not high enough for this spell.")
             return null
@@ -107,7 +116,8 @@ object Magic {
 
         // Runes were leftover, meaning we didn't satisfy the requirements.
         for (rune in runesNeeded.elementSet()) {
-            plr.sendMessage("You do not have enough ${itemName(rune.id)}s to cast this spell.")
+            val runeName = if (autocast) "rune" else itemName(rune.id)
+            plr.sendMessage("You do not have enough ${runeName}s to cast this spell.")
             return null
         }
         return removeItems
@@ -119,20 +129,15 @@ object Magic {
     internal fun regularStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
-            0 -> {
-                val sound = LocalSound.of(
-                    ctx,
-                    // todo sound
-                    Sound.TELEPORT_ALL,
-                    //Sound.TELEPORT_REGULAR,
-                    plr.position,
-                    ChunkUpdatableView.globalView()
-                )
-                sound.display()
-                true
-            }
+            0 -> true
 
             1 -> {
+                // Use a local sound so nearby players can hear.
+                val sound = LocalSound.of(ctx,
+                                          Sound.TELEPORT_REGULAR,
+                                          plr.position,
+                                          ChunkUpdatableView.globalView())
+                sound.display()
                 plr.animation(Animation(714))
                 plr.graphic(Graphic(111, 92))
                 true
@@ -158,14 +163,10 @@ object Magic {
         return when (action.executions) {
             0 -> {
                 plr.animation(Animation(1979))
-                val sound = LocalSound.of(
-                    ctx,
-                    // todo sound
-                    Sound.TELEPORT_ALL,
-                    //Sound.TELEPORT_ANCIENT,
-                    plr.position,
-                    ChunkUpdatableView.globalView()
-                )
+                val sound = LocalSound.of(ctx,
+                                          Sound.TELEPORT_ANCIENT,
+                                          plr.position,
+                                          ChunkUpdatableView.globalView())
                 sound.display()
                 true
             }
@@ -189,11 +190,9 @@ object Magic {
     /**
      * An extension function that enables the underlying player to teleport somewhere.
      */
-    fun Player.teleport(
-        destination: Position,
-        style: TeleportStyle = TeleportStyle.REGULAR,
-        onTeleport: () -> Unit = {}
-    ) {
+    fun Player.teleport(destination: Position,
+                        style: TeleportStyle = TeleportStyle.REGULAR,
+                        onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style = style) {
             override fun onTeleport() {
                 onTeleport()

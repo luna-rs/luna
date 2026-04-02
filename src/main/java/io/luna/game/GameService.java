@@ -253,9 +253,9 @@ public final class GameService extends AbstractScheduledService {
 
     /**
      * Dispatches a server-state event to Kotlin scripts and blocks until any asynchronous work completes.
-     *
-     * <p>This helper creates a temporary background pool, constructs an event (which carries the pool),
-     * posts it, and then waits for all script-launched async tasks to finish.
+     * <p>
+     * This helper creates a temporary background pool, constructs an event (which carries the pool), posts it, and
+     * then waits for all script-launched async tasks to finish.
      *
      * @param eventFunction Produces the event instance (given the temporary pool).
      * @param waitingMessage Log message printed while waiting.
@@ -397,9 +397,9 @@ public final class GameService extends AbstractScheduledService {
 
     /**
      * Submits an asynchronous task to the general-purpose pool.
-     *
-     * <p><strong>Warning:</strong> tasks may not execute immediately due to pool growth limits intended
-     * to mitigate DoS-style workloads. For latency-sensitive tasks, use a dedicated pool.
+     * <p>
+     * <strong>Warning:</strong> tasks may not execute immediately due to pool growth limits intended to mitigate
+     * DoS-style workloads. For latency-sensitive tasks, use a dedicated pool.
      *
      * @param t The task to run.
      * @return A future completed when the task finishes.
@@ -408,16 +408,18 @@ public final class GameService extends AbstractScheduledService {
         return CompletableFuture.runAsync(t, pool);
     }
 
-    /** @return The context instance. */
+    /**
+     * @return The context instance.
+     */
     public LunaContext getContext() {
         return context;
     }
 
     /**
      * Returns an {@link Executor} that guarantees execution on the game thread.
-     *
-     * <p>This can be used when you want “fire-and-forget” marshalling without the overhead of a
-     * {@link CompletableFuture} (see {@link #sync(Supplier)}).
+     * <p>
+     * This can be used when you want “fire-and-forget” marshalling without the overhead of a {@link CompletableFuture}
+     * (see {@link #sync(Supplier)}).
      */
     public Executor getGameExecutor() {
         return gameExecutor;

@@ -155,7 +155,8 @@ object Slayer {
                              {
                                  it.newDialogue().player("Okay, great!")
                                      .npc(master.id, Expression.DEFAULT,
-                                          "Good luck! Don't forget to come back when you need a new assignment.")
+                                          "Good luck! Don't forget to come back when you",
+                                          "need a new assignment.")
                                      .open()
                              })
                     .open()

@@ -71,7 +71,7 @@ public final class InteractionPolicy {
      * @throws IllegalArgumentException If {@code distance} is not valid for {@code type}.
      */
     public InteractionPolicy(InteractionType type, int distance) {
-        checkDistance(distance);
+        checkDistance(type, distance);
         this.type = type;
         this.distance = distance;
     }
@@ -79,10 +79,11 @@ public final class InteractionPolicy {
     /**
      * Validates that {@code distance} is legal for this policy's {@link #type}.
      *
+     * @param type The interaction rule type.
      * @param distance The distance value to validate.
      * @throws IllegalArgumentException If the value is not valid for the current interaction type.
      */
-    private void checkDistance(int distance) {
+    private void checkDistance(InteractionType type, int distance) {
         if (distance < 1 && type == InteractionType.LINE_OF_SIGHT) {
             throw new IllegalArgumentException("LINE_OF_SIGHT interaction type must have a distance >= 1.");
         } else if (distance == 0 && type != InteractionType.SIZE) {

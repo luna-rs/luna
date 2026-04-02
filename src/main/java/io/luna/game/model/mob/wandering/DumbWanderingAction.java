@@ -1,7 +1,5 @@
 package io.luna.game.model.mob.wandering;
 
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionType;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
@@ -10,7 +8,7 @@ import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
 /**
- * A very cheap "random-walk" wandering {@link Action} for mobs.
+ * A very cheap "random-walk" wandering {@link WanderingAction} for mobs.
  * <p>
  * This implementation:
  * <ul>
@@ -25,17 +23,12 @@ import io.luna.util.Rational;
  *
  * @author lare96
  */
-public final class DumbWanderingAction extends Action<Mob> {
+public final class DumbWanderingAction extends WanderingAction {
 
     /**
      * The allowed wander area. The mob will never intentionally step outside this area.
      */
     private final Area area;
-
-    /**
-     * Controls how often this action attempts to take a step.
-     */
-    private final WanderingFrequency frequency;
 
     /**
      * Creates a new {@link DumbWanderingAction}.
@@ -45,15 +38,14 @@ public final class DumbWanderingAction extends Action<Mob> {
      * @param frequency How often to attempt movement.
      */
     public DumbWanderingAction(Mob mob, Area area, WanderingFrequency frequency) {
-        super(mob, ActionType.WEAK, true, 3);
+        super(mob, frequency);
         this.area = area;
-        this.frequency = frequency;
     }
 
     @Override
-    public boolean run() {
+    public void wander() {
         Rational chance = frequency.getChance();
-        if (!mob.isLocked() && RandomUtils.roll(chance)) {
+        if (RandomUtils.roll(chance)) {
             // Try a few times to find a valid 1-tile step without over-spending CPU.
             for (int loop = 0; loop < 5; loop++) {
                 Direction nextDirection = Direction.random();
@@ -65,6 +57,5 @@ public final class DumbWanderingAction extends Action<Mob> {
                 }
             }
         }
-        return false;
     }
 }

@@ -1,0 +1,988 @@
+[
+  {
+    "type": "BRONZE_ARROW",
+    "strength": 7,
+    "start_graphic": {
+      "id": 19,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 10,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      841,
+      839,
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      882,
+      883,
+      5616,
+      5622
+    ]
+  },
+  {
+    "type": "IRON_ARROW",
+    "strength": 10,
+    "start_graphic": {
+      "id": 18,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 9,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      841,
+      839,
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      884,
+      885,
+      5617,
+      5623
+    ]
+  },
+  {
+    "type": "STEEL_ARROW",
+    "strength": 16,
+    "start_graphic": {
+      "id": 20,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 11,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      886,
+      887,
+      5618,
+      5624
+    ]
+  },
+  {
+    "type": "MITHRIL_ARROW",
+    "strength": 22,
+    "start_graphic": {
+      "id": 21,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 12,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      888,
+      889,
+      5619,
+      5625
+    ]
+  },
+  {
+    "type": "ADAMANT_ARROW",
+    "strength": 31,
+    "start_graphic": {
+      "id": 22,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 13,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      890,
+      891,
+      5620,
+      5626
+    ]
+  },
+  {
+    "type": "RUNE_ARROW",
+    "strength": 49,
+    "start_graphic": {
+      "id": 24,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 15,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      857,
+      855,
+      861,
+      859
+    ],
+    "ammo": [
+      892,
+      893,
+      5621,
+      5627
+    ]
+  },
+  {
+    "type": "CRYSTAL_ARROW",
+    "strength": 58,
+    "start_graphic": {
+      "id": 250,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 249,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      4212,
+      4214,
+      4215,
+      4216,
+      4217,
+      4218,
+      4219,
+      4220,
+      4221,
+      4222,
+      4223
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BOLTS",
+    "strength": 10,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      877,
+      878,
+      6061,
+      6062
+    ]
+  },
+  {
+    "type": "BARBED_BOLTS",
+    "strength": 12,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      881
+    ]
+  },
+  {
+    "type": "OPAL_BOLTS",
+    "strength": 14,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      879
+    ]
+  },
+  {
+    "type": "PEARL_BOLTS",
+    "strength": 48,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      880
+    ]
+  },
+  {
+    "type": "BOLT_RACK",
+    "strength": 55,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      4734,
+      4934,
+      4935,
+      4936,
+      4937
+    ],
+    "ammo": [
+      4740
+    ]
+  },
+  {
+    "type": "BRONZE_KNIFE",
+    "strength": 3,
+    "start_graphic": {
+      "id": 219,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 212,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      864,
+      870,
+      5654,
+      5661
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_KNIFE",
+    "strength": 4,
+    "start_graphic": {
+      "id": 220,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 213,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      863,
+      871,
+      5655,
+      5662
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_KNIFE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 221,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 214,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      865,
+      872,
+      5656,
+      5663
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BLACK_KNIFE",
+    "strength": 8,
+    "start_graphic": {
+      "id": 222,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 215,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      869,
+      874,
+      5658,
+      5665
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_KNIFE",
+    "strength": 10,
+    "start_graphic": {
+      "id": 223,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 216,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      866,
+      873,
+      5657,
+      5664
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_KNIFE",
+    "strength": 14,
+    "start_graphic": {
+      "id": 224,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 217,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      867,
+      875,
+      5659,
+      5666
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_KNIFE",
+    "strength": 24,
+    "start_graphic": {
+      "id": 225,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 218,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      868,
+      876,
+      5660,
+      5667
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_DART",
+    "strength": 1,
+    "start_graphic": {
+      "id": 232,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 226,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      806,
+      812,
+      5628,
+      5635
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_DART",
+    "strength": 3,
+    "start_graphic": {
+      "id": 233,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 227,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      807,
+      813,
+      5629,
+      5636
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_DART",
+    "strength": 4,
+    "start_graphic": {
+      "id": 234,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 228,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      808,
+      814,
+      5630,
+      5637
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BLACK_DART",
+    "strength": 6,
+    "start_graphic": {
+      "id": 273,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 273,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      3093,
+      3094,
+      5631,
+      5638
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_DART",
+    "strength": 7,
+    "start_graphic": {
+      "id": 235,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 229,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      809,
+      815,
+      5632,
+      5639
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_DART",
+    "strength": 10,
+    "start_graphic": {
+      "id": 236,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 230,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      810,
+      816,
+      5633,
+      5640
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_DART",
+    "strength": 14,
+    "start_graphic": {
+      "id": 237,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 231,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      811,
+      817,
+      5634,
+      5641
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_JAVELIN",
+    "strength": 6,
+    "start_graphic": {
+      "id": 206,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 200,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      825,
+      831,
+      5642,
+      5648
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_JAVELIN",
+    "strength": 10,
+    "start_graphic": {
+      "id": 207,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 201,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      826,
+      832,
+      5643,
+      5649
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_JAVELIN",
+    "strength": 12,
+    "start_graphic": {
+      "id": 208,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 202,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      827,
+      833,
+      5644,
+      5650
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_JAVELIN",
+    "strength": 18,
+    "start_graphic": {
+      "id": 209,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 203,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      828,
+      834,
+      5645,
+      5651
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_JAVELIN",
+    "strength": 28,
+    "start_graphic": {
+      "id": 210,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 204,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      829,
+      835,
+      5646,
+      5652
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_JAVELIN",
+    "strength": 42,
+    "start_graphic": {
+      "id": 211,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 205,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      830,
+      836,
+      5647,
+      5653
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_THROWNAXE",
+    "strength": 5,
+    "start_graphic": {
+      "id": 43,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 35,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      800
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_THROWNAXE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 42,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 36,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      801
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_THROWNAXE",
+    "strength": 11,
+    "start_graphic": {
+      "id": 44,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 37,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      802
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_THROWNAXE",
+    "strength": 16,
+    "start_graphic": {
+      "id": 45,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 38,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      803
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_THROWNAXE",
+    "strength": 23,
+    "start_graphic": {
+      "id": 46,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 39,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      804
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_THROWNAXE",
+    "strength": 26,
+    "start_graphic": {
+      "id": 48,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 41,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      805
+    ],
+    "ammo": []
+  },
+  {
+    "type": "TOKTZ_XIL_UL",
+    "strength": 50,
+    "start_graphic": {
+      "id": 0,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 442,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      6522
+    ],
+    "ammo": []
+  }
+]

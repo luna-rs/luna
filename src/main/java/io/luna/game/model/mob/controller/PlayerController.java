@@ -3,116 +3,143 @@ package io.luna.game.model.mob.controller;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.LogoutService;
 import io.luna.game.event.impl.ControllableEvent;
-import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.combat.PlayerCombatContext;
 
 /**
- * A model containing a set of listeners that can intercept and terminate basic {@link Player} actions before they
- * happen. Multiple controllers can be registered to a player at the same time.
+ * A base controller that can intercept and regulate core {@link Player} behaviour.
  * <p>
- * Only one instance of a controller exists at a time, meaning anything declared is effectively global (static).
+ * Controllers act as lifecycle hooks that allow systems such as the Wilderness, minigames, dungeons, or special
+ * regions to modify or restrict player actions. Only one controller may be active at a time, and it is evaluated
+ * before actions such as movement, teleporting, combat, logout, or event execution occur.
+ * <p>
+ * Implementations override specific methods to selectively block or alter player behaviour while the controller is
+ * registered.
  *
  * @author lare96
  */
-public abstract class PlayerController {
+public class PlayerController {
 
     /**
-     * Called when this controller is registered.
-     *
-     * @param player The player.
+     * The player this controller is attached to.
      */
-    public void onRegister(Player player) {
+    private final Player player;
+
+    /**
+     * Creates a new {@link PlayerController}.
+     *
+     * @param player The player this controller controls.
+     */
+    public PlayerController(Player player) {
+        this.player = player;
+    }
+
+    /**
+     * Called when this controller is registered to the player.
+     * <p>
+     * Override to initialize controller-specific state, interfaces, or flags.
+     */
+    public void register() {
 
     }
 
     /**
-     * Called when this controller is unregistered.
-     *
-     * @param player The player.
+     * Called when this controller is unregistered from the player.
+     * <p>
+     * Override to clean up any controller-specific state or UI changes.
      */
-    public void onUnregister(Player player) {
+    public void unregister() {
 
     }
 
     /**
-     * Called when the player attempts to move.
-     *
-     * @param player The player.
-     * @param newPos The new position.
-     * @return {@code true} if the player can move to {@code newPos}.
+     * Called once every game tick (~600ms) before the player update cycle.
+     * <p>
+     * Override to apply periodic logic.
      */
-    public boolean canMove(Player player, Position newPos) {
+    public void process() {
+
+    }
+
+    /**
+     * Called whenever the player changes position.
+     * <p>
+     * Useful for region-based logic such as updating wilderness level, triggering area transitions, or enforcing
+     * boundary restrictions.
+     */
+    public void move() {
+
+    }
+
+    /**
+     * Called when {@link LogoutService} attempts to finalize logout.
+     * <p>
+     * This applies to all logout sources, including manual logout, disconnects, and forced logout conditions.
+     *
+     * @return {@code false} to prevent logout, otherwise {@code true}.
+     */
+    public boolean logout() {
         return true;
     }
 
     /**
-     * Called when the {@link LogoutService} attempts to finalize {@code player} for logout. This affects logouts from
-     * all sources: disconnects, x-logs, and trying to logout manually.
+     * Called when a {@link TeleportAction} attempts to move the player.
+     * <p>
+     * Controllers may block teleports in restricted areas such as the Wilderness or minigames.
      *
-     * @param player The player.
-     * @return {@code false} to prevent the player from logging out.
+     * @param action The teleport action being attempted.
+     * @return {@code true} if teleporting is allowed, otherwise {@code false}.
      */
-    public boolean canLogout(Player player) {
+    public boolean teleport(TeleportAction action) {
         return true;
     }
 
     /**
-     * Called when a {@link TeleportAction} attempts to move a player.
+     * Called when the player attempts to enter combat with another {@link Mob}.
+     * <p>
+     * By default, this validates standard combat eligibility via {@link PlayerCombatContext#checkCombatMob(Mob)} and
+     * {@link PlayerCombatContext#checkMultiCombat(Mob)}.
+     * <p>
+     * Controllers may override this to enforce region-specific combat rules such as wilderness level checks,
+     * safe zones, or minigame combat restrictions.
      *
-     * @param player The player.
-     * @param action The teleport action.
-     * @return {@code true} if the action can proceed, {@code false} otherwise.
+     * @param other The target mob the player is attempting to attack.
+     * @return {@code true} if combat may proceed, otherwise {@code false}.
      */
-    public boolean canTeleport(Player player, TeleportAction action) {
-        return true;
+    public boolean combat(Mob other) {
+        return player.getCombat().checkCombatMob(other) && player.getCombat().checkMultiCombat(other);
     }
 
     /**
-     * Called when the {@code player} and {@code other} attempt to enter combat.
+     * Called before a generated {@link ControllableEvent} is processed or posted
+     * to plugins.
+     * <p>
+     * Controllers may terminate or transform events before they execute. This is
+     * useful for restricting commands, blocking interactions, or enforcing area
+     * behaviour rules.
+     * <p>
+     * Example usage:
      *
-     * @param player The player.
-     * @param other The other mob.
-     * @return {@code true} if combat can proceed, {@code false} otherwise.
-     */
-    public boolean canFight(Player player, Mob other) {
-        return false;
-    }
-
-    /**
-     * Called every 600ms before player updating.
-     *
-     * @param player The player.
-     */
-    public void process(Player player) {
-
-    }
-
-    /**
-     * Called before a generated {@link ControllableEvent} is handled or posted to plugins. You can terminate events
-     * before they happen or transform them.
-     *
-     * <pre>
-     * {@code
+     * <pre>{@code
      * @Override
-     * public boolean onEvent(Player player, ControllableEvent event) {
-     *    if(event instanceof CommandEvent) {
-     *        String cmdName = ((CommandEvent) event).getName();
-     *        if(!cmdName.equals("getscore")) {
-     *            player.sendMessage("Only the ::getscore command can be used here!");
-     *            return false;
-     *        }
-     *    }
-     *    return true;
+     * public boolean event(ControllableEvent event) {
+     *     if(event instanceof CommandEvent) {
+     *         String cmdName = ((CommandEvent) event).getName();
+     *         if(!cmdName.equals("getscore")) {
+     *             player.sendMessage("Only the ::getscore command can be used here!");
+     *             return false;
+     *         }
+     *     }
+     *     return true;
      * }
-     * }
-     * </pre>
+     * }</pre>
      *
-     * @param player The player.
-     * @param event The event that can be transformed or terminated.
-     * @return {@code false} if the event should be terminated.
+     * @param event The event that may be transformed or cancelled.
+     * @return {@code false} to terminate the event, otherwise {@code true}.
      */
-    public boolean onEvent(Player player, ControllableEvent event) {
+    public boolean event(ControllableEvent event) {
         return true;
     }
+
 }

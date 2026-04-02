@@ -1,6 +1,5 @@
 package io.luna.game.model;
 
-import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.RegionChangedEvent;
@@ -273,15 +272,6 @@ public abstract class Entity implements Attributable, Locatable {
             case ACTIVE:
                 checkState(position != null, this + " cannot be registered until its position is set.");
 
-                if (type == EntityType.PLAYER) {
-                    Player player = (Player) this;
-                    if (!player.getControllers().checkMovement(position)) {
-                        position = Luna.settings().game().startingPosition();
-                        player.sendMessage("You have been teleported home because you logged out in an invalid area.");
-                        logger.warn("Player {} logged out in unexpected area! Teleporting them back home.", player.getUsername());
-                    }
-                }
-
                 setCurrentChunk();
                 onActive();
                 world.getCollisionManager().updateEntity(this, false);
@@ -338,19 +328,13 @@ public abstract class Entity implements Attributable, Locatable {
     public final void setPosition(Position newPosition) {
         boolean isLocal = this instanceof LocalEntity;
         if (!newPosition.equals(position) && !isLocal) {
+            Region old = position == null ? null : position.getRegion();
+            position = newPosition;
             if (state == EntityState.ACTIVE) {
                 if (type == EntityType.PLAYER) {
                     Player player = (Player) this;
-                    if (!player.getControllers().checkMovement(newPosition)) {
-                        return;
-                    }
+                    player.getControllers().checkPosition();
                 }
-            }
-
-            Region old = position == null ? null : position.getRegion();
-            position = newPosition;
-
-            if (state == EntityState.ACTIVE) {
                 if (old != null) {
                     Region now = newPosition.getRegion();
                     if (!old.equals(now) && this instanceof Player) {

@@ -48,7 +48,7 @@ public final class SkillRestorationAction extends Action<Mob> {
                 done = false;
                 if (level < staticLevel) {
                     nextSkill.addLevels(1, false);
-                } else {
+                } else if(mob instanceof Player) {
                     nextSkill.removeLevels(1);
                 }
             }

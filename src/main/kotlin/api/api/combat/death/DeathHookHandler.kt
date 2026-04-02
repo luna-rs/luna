@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.MobDeathTask.DeathStage
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.controller.ControllerKey
+import io.luna.game.model.mob.controller.PlayerController
 import kotlin.reflect.KClass
 
 private typealias DeathHook<T> = DeathHookReceiver<T>.() -> Unit
@@ -20,7 +20,7 @@ private typealias DeathHook<T> = DeathHookReceiver<T>.() -> Unit
  *
  * Hooks are separated by type and can be registered for:
  *
- *  - **Players**, using a [ControllerKey] that identifies a gameplay controller or zone
+ *  - **Players**, using a [PlayerController] type that identifies a gameplay controller or zone
  *  - **NPCs**, using a numeric NPC identifier
  *  - **Defaults**, which act as fallbacks when no hook is found for the entity
  *
@@ -29,9 +29,9 @@ private typealias DeathHook<T> = DeathHookReceiver<T>.() -> Unit
 object DeathHookHandler {
 
     /**
-     * Registered player death hooks mapped to [ControllerKey] types.
+     * Registered player death hooks mapped to [PlayerController] types.
      */
-    private val playerHooks = HashMap<ControllerKey<*>, DeathHook<Player>>()
+    private val playerHooks = HashMap<Class<out PlayerController>, DeathHook<Player>>()
 
     /**
      * Registered NPC death hooks mapped to their respective IDs.
@@ -51,11 +51,13 @@ object DeathHookHandler {
     /**
      * Registers a player death hook.
      *
-     * @param key The [ControllerKey] identifying the controlling system or zone that owns this hook.
+     * @param key The class type identifying the controlling system or zone that owns this hook.
      * @param hook The callback executed during the death sequence.
      */
-    fun addPlayerHook(key: ControllerKey<*>, hook: DeathHook<Player>) {
-        playerHooks[key] = hook
+    fun addPlayerHook(key: Class<out PlayerController>, hook: DeathHook<Player>) {
+        if(key.isAssignableFrom(PlayerController::class.java)) {
+            playerHooks[key] = hook
+        }
     }
 
     /**
@@ -107,22 +109,20 @@ object DeathHookHandler {
     fun onDeath(victim: Mob, source: Mob?, stage: DeathStage) {
         if (victim is Npc) {
             val receiver = DeathHookReceiver(victim, source, stage)
-            val lookup = npcHooks[victim.id]
-            if (lookup != null) {
-                lookup.invoke(receiver)
+            val hook = npcHooks[victim.id]
+            if (hook != null) {
+                hook.invoke(receiver)
             } else {
                 defaultNpcHook?.invoke(receiver)
             }
         } else if (victim is Player) {
             val receiver = DeathHookReceiver(victim, source, stage)
-            val controllerKeys = victim.controllers.keys()
-            if (controllerKeys.isEmpty()) {
-                // Use default death hook.
+            val type = victim.controllers.primary.javaClass
+            val hook = playerHooks[type]
+            if(hook != null && type != PlayerController::class.java) {
+                 hook.invoke(receiver)
+            } else {
                 defaultPlayerHook?.invoke(receiver)
-                return
-            }
-            for (key in controllerKeys) {
-                playerHooks[key]?.invoke(receiver)
             }
         }
     }

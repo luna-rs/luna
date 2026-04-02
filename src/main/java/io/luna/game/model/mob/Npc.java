@@ -16,6 +16,7 @@ import io.luna.game.model.mob.combat.NpcCombatContext;
 import io.luna.game.model.mob.wandering.DumbWanderingAction;
 import io.luna.game.model.mob.wandering.PatrolAction;
 import io.luna.game.model.mob.wandering.SmartWanderingAction;
+import io.luna.game.model.mob.wandering.WanderingAction;
 import io.luna.game.model.mob.wandering.WanderingFrequency;
 import io.luna.game.model.path.SimplePathfinder;
 
@@ -143,12 +144,12 @@ public class Npc extends Mob {
 
     @Override
     public final int sizeX() {
-        return definition.getSize();
+        return 1;
     }
 
     @Override
     public final int sizeY() {
-        return definition.getSize();
+        return 1;
     }
 
     @Override
@@ -386,11 +387,8 @@ public class Npc extends Mob {
      */
     public void startWandering(int radius, WanderingFrequency frequency) {
         checkArgument(radius >= 0, "Radius must be 0 or above.");
-        if (actions.contains(DumbWanderingAction.class) ||
-                actions.contains(SmartWanderingAction.class) ||
-                actions.contains(PatrolAction.class)) {
-            actions.interruptWeak();
-        }
+
+        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
         setDefaultDirection(Optional.empty());
 
         Area wanderingArea = Area.of(basePosition, radius);
@@ -400,6 +398,21 @@ public class Npc extends Mob {
         } else {
             actions.submit(new DumbWanderingAction(this, wanderingArea, frequency));
         }
+    }
+
+    /**
+     * Starts a patrol route for this NPC.
+     * <p>
+     * Any active {@link WanderingAction} instances are interrupted before the patrol begins, since wandering and
+     * patrolling are mutually exclusive movement states.
+     *
+     * @param patrolBuilder The builder used to create the patrol action to submit.
+     */
+    public void startPatrolling(PatrolAction.Builder patrolBuilder) {
+        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
+        setDefaultDirection(Optional.empty());
+
+        actions.submit(patrolBuilder.build());
     }
 
     /**

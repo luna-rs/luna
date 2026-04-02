@@ -24,15 +24,14 @@ public final class WeaponDefinition implements Definition {
     /**
      * Returns the cached {@link WeaponDefinition} for {@link Weapon#UNARMED}.
      * <p>
-     * The value is resolved on first access by locating the first definition in {@link #ALL} whose {@link #type}
-     * matches {@link Weapon#UNARMED}. The resolved definition is then cached and reused for all subsequent calls.
+     * The value is resolved on first access by creating a dummy definition whose {@link #type} matches
+     * {@link Weapon#UNARMED}. The resolved definition is then cached and reused for all subsequent calls.
      *
      * @return The unarmed weapon definition.
      */
     public static WeaponDefinition getUnarmed() {
         if (unarmed == null) {
-            unarmed = ALL.stream().filter(it ->
-                    it.type == Weapon.UNARMED).findFirst().orElseThrow();
+            unarmed = new WeaponDefinition(-1, Weapon.UNARMED, null, null);
         }
         return unarmed;
     }

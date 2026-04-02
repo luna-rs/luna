@@ -27,6 +27,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class Skill {
 
+    // TODO Don't fire skill change events for NPCs.
+
     /**
      * Ordered, immutable list of all skill names. The index into this list is the skill identifier.
      */
@@ -353,6 +355,9 @@ public final class Skill {
         int oldLevel = level;
 
         level = newLevel;
+        if(set.getMob() instanceof Npc) {
+            staticLevel = level;
+        }
         if (oldLevel == level) {
             return;
         }
@@ -391,6 +396,17 @@ public final class Skill {
         newAmount = Math.max(newAmount, 0);
         setLevel(newAmount);
     }
+
+    // todo documentation
+    public boolean weakenBy(double percent) {
+        int newAmount = (int) (getStaticLevel() - Math.floor(level * percent));
+        if (newAmount >= level) {
+            return false;
+        }
+        setLevel(newAmount);
+        return true;
+    }
+
 
     /**
      * Returns total accumulated experience.

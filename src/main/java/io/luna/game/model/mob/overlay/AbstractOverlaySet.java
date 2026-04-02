@@ -87,7 +87,7 @@ public final class AbstractOverlaySet {
     public void closeWindows(boolean interruptActions) {
         if (interruptActions) {
             player.getActions().interruptWeak();
-            player.resetInteractingWith();
+            player.interact(null);
         }
         if (overlayMap.containsKey(OverlayType.WIDGET_STANDARD) ||
                 overlayMap.containsKey(OverlayType.INPUT)) {

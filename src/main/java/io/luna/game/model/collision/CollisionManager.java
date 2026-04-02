@@ -266,7 +266,7 @@ public final class CollisionManager {
      * @param start The ray start position.
      * @param end The ray end position.
      * @return {@code true} if the ray reaches {@code end} without hitting an impenetrable obstacle,
-     *         otherwise {@code false}.
+     * otherwise {@code false}.
      */
     public boolean raycast(Position start, Position end) {
         return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
@@ -529,9 +529,9 @@ public final class CollisionManager {
      * @param target The target entity.
      * @param policy The interaction policy to test.
      * @return {@code true} if {@code start} has reached {@code target} under {@code policy},
-     *         otherwise {@code false}.
+     * otherwise {@code false}.
      * @throws IllegalArgumentException If the policy distance exceeds
-     *         {@link Position#VIEWING_DISTANCE}.
+     * {@link Position#VIEWING_DISTANCE}.
      */
     public boolean reached(Position start, Entity target, InteractionPolicy policy) {
         int distance = policy.getDistance();
@@ -567,8 +567,8 @@ public final class CollisionManager {
                     // Check if we're within box distance of an object (based on its size).
                     return isWithinBoxDistance(start, target, distance);
                 }
-                // Otherwise, fall back to if we're within distance of the target.
-                return start.isWithinDistance(target.getPosition(), distance);
+                // Otherwise, fall back to line of sight.
+                return start.isWithinDistance(target.getPosition(), distance) && raycast(start, end);
         }
         // Exhaustive code here, realistically should never be reached unless arguments are invalid.
         logger.warn("This section should not be reached! Invalid config [{}, {}, {}].", policy.getType(),

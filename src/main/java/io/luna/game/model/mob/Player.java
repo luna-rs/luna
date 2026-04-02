@@ -29,6 +29,7 @@ import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.combat.CombatContext;
 import io.luna.game.model.mob.combat.PlayerCombatContext;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
@@ -320,6 +321,7 @@ public class Player extends Mob {
 
     @Override
     protected void onActive() {
+        controllers.checkPosition();
         pendingPlacement = true;
         flags.flag(UpdateFlag.APPEARANCE);
         queue(new AssignmentMessageWriter(true));
@@ -648,8 +650,19 @@ public class Player extends Mob {
      * <p>
      * This is the normal way to log a player out and will be handled via {@link LogoutService}.
      * </p>
+     *
+     * @param force If the player should be forced to return to the login screen (whether the game thinks they're
+     * online or not).
      */
-    public void logout() {
+    public void logout(boolean force) {
+        if (!force) {
+            if (!controllers.checkLogout()) {
+                return;
+            } else if (combat.inCombat()) {
+                sendMessage("You must wait until " + CombatContext.COMBAT_TIMER_DURATION + " seconds after combat before logging out.");
+                return;
+            }
+        }
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
@@ -661,7 +674,7 @@ public class Player extends Mob {
      */
     public void forceLogout() {
         client.setForcedLogout(true);
-        logout();
+        logout(true);
     }
 
     /**

@@ -100,14 +100,17 @@ public final class ActionQueue {
      * If an action of the same class is already present, this method does nothing.
      *
      * @param action The action to submit if its concrete type is not already active.
+     * @return {@code true} if the action was not already active, and therefore submitted.
      */
-    public void submitIfAbsent(Action<?> action) {
+    public boolean submitIfAbsent(Action<?> action) {
         Class<?> type = action.getClass();
         if (types.add(type)) {
             processing.put(action.actionType, action);
             action.setState(ActionState.PROCESSING);
             action.onSubmit();
+            return true;
         }
+        return false;
     }
 
     /**

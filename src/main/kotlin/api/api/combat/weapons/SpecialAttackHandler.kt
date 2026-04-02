@@ -1,4 +1,4 @@
-package api.combat.weapon
+package api.combat.weapons
 
 object SpecialAttackHandler {
 

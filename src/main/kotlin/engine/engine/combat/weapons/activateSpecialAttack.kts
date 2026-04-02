@@ -1,4 +1,4 @@
-package engine.combat.weapon
+package engine.combat.weapons
 
 import api.predef.*
 

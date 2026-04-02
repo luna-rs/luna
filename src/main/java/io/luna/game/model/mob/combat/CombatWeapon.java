@@ -77,7 +77,7 @@ public final class CombatWeapon {
      *
      * @param lastStance The previously selected combat stance to preserve if possible.
      */
-    public void changeWeapon(CombatStance lastStance) {
+    public void refreshWeapon(CombatStance lastStance) {
         Item weaponItem = player.getEquipment().get(Equipment.WEAPON);
         if (weaponItem == null) {
             def = WeaponDefinition.getUnarmed();
@@ -119,6 +119,13 @@ public final class CombatWeapon {
         }
         int config = styleDef.getConfig();
         player.sendVarp(new Varp(43, config));
+    }
+
+    /**
+     * @return The current weapon identifier.
+     */
+    public int getId() {
+        return def.getId();
     }
 
     /**

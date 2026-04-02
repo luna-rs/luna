@@ -1,6 +1,7 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import game.player.Sound;
 import game.skill.magic.SpellRequirement;
 import io.luna.game.model.LocalProjectile;
@@ -11,6 +12,7 @@ import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.CombatSpellType;
 
+import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -26,6 +28,36 @@ public final class CombatSpellDefinition implements Definition {
      * The repository containing all loaded {@link CombatSpellDefinition} instances, keyed by spell id.
      */
     public static final MapDefinitionRepository<CombatSpellDefinition> ALL = new MapDefinitionRepository<>();
+
+    /**
+     * A map containing all loaded {@link CombatSpellDefinition} instances, keyed by {@link CombatSpell}.
+     */
+    public static volatile ImmutableMap<CombatSpell, CombatSpellDefinition> SPELLS = ImmutableMap.of();
+
+    /**
+     * A dummy {@link CombatSpellDefinition} representing no selected spell.
+     */
+    public static final CombatSpellDefinition NONE = new CombatSpellDefinition(-1, null, null, 0, 0, 0.0, null, null,
+            null, null, null, ImmutableList.of(), null, null);
+
+    /**
+     * Loads all combat spell definitions and rebuilds the immutable spell lookup table.
+     * <p>
+     * The supplied definitions are first stored in {@link #ALL}, then indexed by their {@link CombatSpell} key into
+     * {@link #SPELLS} for fast lookup at runtime.
+     *
+     * @param definitions The combat spell definitions to load.
+     * @throws IllegalArgumentException If multiple definitions use the same {@link CombatSpell} key.
+     */
+    public static void loadAll(List<CombatSpellDefinition> definitions) {
+        ALL.storeAndLock(definitions);
+
+        ImmutableMap.Builder<CombatSpell, CombatSpellDefinition> spells = ImmutableMap.builder();
+        for (CombatSpellDefinition def : definitions) {
+            spells.put(def.spell, def);
+        }
+        SPELLS = spells.build();
+    }
 
     /**
      * The id for this spell.

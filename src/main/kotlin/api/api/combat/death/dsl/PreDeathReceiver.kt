@@ -1,7 +1,6 @@
 package api.combat.death.dsl
 
 import api.predef.*
-import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 
 /**
@@ -25,10 +24,12 @@ class PreDeathReceiver(val receiver: DeathHookReceiver<*>) {
     fun reset() {
         val victim = receiver.victim
         if (victim is Player) {
-            victim.hitpoints.level = 0
             victim.overlays.closeWindows()
-        } else if (victim is Npc) {
-            victim.actions.interruptWeak()
         }
+        victim.hitpoints.level = 0
+        victim.combat.stopCombatTimer()
+        victim.combat.damageStack.clear()
+        victim.actions.interruptWeak()
+        victim.combat.poisonSeverity = 0
     }
 }

@@ -362,8 +362,25 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Sets the current hitpoints of this mob, clamping the value to {@code >= 0}, and scheduling a
-     * {@link MobDeathTask} if this call transitions the mob from alive to dead.
+     * Gets this mob's current health as a whole-number percentage.
+     * <p>
+     * The returned value is calculated as:
+     * <pre>
+     * floor((current health / total health) * 100)
+     * </pre>
+     * <p>
+     * For example, a mob at {@code 37/99} health returns {@code 37}.
+     *
+     * @return The current health percentage, rounded down to the nearest whole number.
+     */
+    public final int getHealthPercent() {
+        double healthDecimal = (double) getHealth() / (double) getTotalHealth();
+        return (int) Math.floor(healthDecimal * 100d);
+    }
+
+    /**
+     * Sets the current hitpoints of this mob, clamping the value to {@code >= 0}, and scheduling a {@link MobDeathTask}
+     * if this call transitions the mob from alive to dead.
      *
      * @param amount The new hitpoint value.
      */
@@ -527,7 +544,7 @@ public abstract class Mob extends Entity {
     public final void move(Position position) {
         setPosition(position);
         walking.clear();
-        resetInteractingWith();
+        interact(null);
         pendingPlacement = true;
         onMove(position);
     }
@@ -612,15 +629,6 @@ public abstract class Mob extends Entity {
             face(entity.getPosition());
         }
         interactingWith = entity;
-    }
-
-    /**
-     * Clears the current interaction target, if one is set.
-     */
-    public final void resetInteractingWith() {
-        if (interactingWith != null) {
-            interact(null);
-        }
     }
 
     /**

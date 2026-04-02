@@ -2,8 +2,6 @@ package io.luna.game.model.mob.wandering;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionType;
 import io.luna.game.cache.map.MapIndex;
 import io.luna.game.cache.map.MapIndexTable;
 import io.luna.game.cache.map.MapTile;
@@ -22,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * A "smart" wandering {@link Action} that moves a {@link Mob} around an {@link Area} by:
+ * A "smart" {@link WanderingAction} that moves a {@link Mob} around an {@link Area} by:
  * <ul>
  *     <li>Pre-sampling random destinations inside the wander area.</li>
  *     <li>Filtering out obviously invalid tiles (water/blocked tiles from cache + collision blocked tiles).</li>
@@ -33,21 +31,15 @@ import java.util.function.Supplier;
  * This action is intended for larger wander ranges where a single-tile random-walk can look unnatural.
  * It favors "pathing somewhere" behavior while keeping work distributed (destination sampling + async path build +
  * incremental queueing).
- * </p>
  *
  * @author lare96
  */
-public final class SmartWanderingAction extends Action<Mob> {
+public final class SmartWanderingAction extends WanderingAction {
 
     /**
      * The allowed wander area. All sampled destinations must be inside this area.
      */
     private final Area area;
-
-    /**
-     * Controls how often a new slice of waypoints is queued (i.e., how "active" the wander looks).
-     */
-    private final WanderingFrequency frequency;
 
     /**
      * Pre-sampled destination candidates inside {@link #area}. When empty, it is repopulated.
@@ -74,19 +66,18 @@ public final class SmartWanderingAction extends Action<Mob> {
      * @param frequency How often to enqueue movement slices when idle.
      */
     public SmartWanderingAction(Mob mob, Area area, WanderingFrequency frequency) {
-        super(mob, ActionType.WEAK, true, 3);
+        super(mob, frequency);
         this.area = area;
-        this.frequency = frequency;
     }
 
     @Override
-    public boolean run() {
+    public void wander() {
         LunaContext context = world.getContext();
         GameService game = context.getGame();
 
-        // Already moving or still generating waypoints.
-        if (mob.isLocked() || !mob.getWalking().isEmpty() || !waypointFuture.isDone()) {
-            return false;
+        // Still generating waypoints.
+        if (!waypointFuture.isDone()) {
+            return;
         }
 
         // No waypoints, generate new ones.
@@ -96,21 +87,19 @@ public final class SmartWanderingAction extends Action<Mob> {
             // No more pre-computed destinations, generate them.
             if (dest == null) {
                 populateDestinationQueue();
-                return false;
+                return;
             }
 
             // Asynchronously generate path to destination and add waypoints.
             waypointFuture = buildWaypointsAsync(game, dest);
-            return false;
+            return;
         }
 
         Rational chance = frequency.getChance();
         if (RandomUtils.roll(chance)) {
             // We have waypoints, walk through them in batches until the destination is reached.
             queueNextWaypointSlice();
-            return false;
         }
-        return false;
     }
 
     /**

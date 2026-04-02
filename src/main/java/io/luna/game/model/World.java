@@ -16,7 +16,9 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.BotManager;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.object.GameObjectList;
-import io.luna.game.persistence.*;
+import io.luna.game.persistence.GameSerializerManager;
+import io.luna.game.persistence.PersistenceService;
+import io.luna.game.persistence.SqlGameSerializer;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -419,7 +421,7 @@ public final class World {
                     player.asBot().process();
                 }
             } catch (Exception e) {
-                player.logout();
+                player.logout(true);
                 logger.warn("{} could not complete pre-synchronization.", player, e);
             }
         }
@@ -502,7 +504,7 @@ public final class World {
                 player.clearCachedBlock();
                 player.getClient().flush();
             } catch (Exception e) {
-                player.logout();
+                player.logout(true);
                 logger.warn("{} could not complete post-synchronization.", player, e);
             }
         }
@@ -624,9 +626,7 @@ public final class World {
     /**
      * Finds all entities of {@code type} whose position exactly equals {@code base}.
      * <p>
-     * This uses {@link #find(Position, Class, Supplier, Predicate, int)} with {@code distance=1}. That still scans
-     * a few surrounding chunks due to radius math. If this becomes hot, consider adding a dedicated fast path:
-     * load only {@code base.getChunk()} and scan its entity sets.
+     * Faster than using {@link #find(Position, Class, Supplier, Predicate, int)} or one of its overloads.
      *
      * @param base The tile to search.
      * @param type The entity class to find.
@@ -634,7 +634,19 @@ public final class World {
      * @return A set of entities on the exact tile.
      */
     public <T extends Entity> HashSet<T> findOnTile(Position base, Class<T> type) {
-        return find(base, type, HashSet::new, it -> it.getPosition().equals(base), 1);
+        EntityType entityType = EntityType.CLASS_TO_TYPE.get(type);
+        if (entityType == null) {
+            throw new IllegalStateException("Invalid EntityType [" + type.getSimpleName() + "]");
+        }
+        ChunkRepository repository = chunks.load(base.getChunk());
+        Set<T> entities = repository.getAll(entityType);
+        HashSet<T> found = new HashSet<>(entities.size());
+        for(T next : entities) {
+            if(next.getPosition().equals(base)) {
+                found.add(next);
+            }
+        }
+        return found;
     }
 
     /**

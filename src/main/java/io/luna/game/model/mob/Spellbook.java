@@ -25,15 +25,13 @@ public enum Spellbook {
     /**
      * Creates a new {@link Spellbook}.
      *
-     * @param widgetId The root widget id used by the client for this spellbook.
+     * @param widgetId The widget id.
      */
     Spellbook(int widgetId) {
         this.widgetId = widgetId;
     }
 
     /**
-     * Returns the root widget id for this spellbook's interface.
-     *
      * @return The widget id.
      */
     public int getWidgetId() {

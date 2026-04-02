@@ -2,7 +2,6 @@ package io.luna.game.model.mob.combat;
 
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
-import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
@@ -10,9 +9,9 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.interact.InteractionType;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * An {@link Action} that executes the active combat loop for a mob against its current
@@ -68,16 +67,13 @@ public final class CombatAction extends Action<Mob> {
 
         @Override
         public boolean run() {
+            // todo does the actual swing need to be moved here too?? sometimes i notice NPCs attack a little too early
             if (getExecutions() == 0) {
                 // First execution: apply damage.
                 damage.apply();
             } else if (getExecutions() == 1 && victim.getCombat().isAutoRetaliate() &&
                     (victim.getWalking().isEmpty() || victim instanceof Npc)) {
-                // TODO Maybe a "shouldAutoRetaliate" is needed? A retreating NPC should no longer retaliate.
-                //  Retreating should be done in a STRONG action.
-                // TODO Can then do cool things like loop the world when NPC spawn dumps are added, and make all
-                //  spawned guards retreat when leashed too far (along with all other relevant world NPCs).
-
+                // TODO getRetaliationTarget() function might be needed? https://i.imgur.com/Sv21DM3.png
                 // Second execution: if the victim retaliates, and is an NPC or stationary, attack back.
                 victim.getCombat().attack(attacker);
             }
@@ -115,33 +111,42 @@ public final class CombatAction extends Action<Mob> {
                 target.getHealth() == 0) {
             return true;
         }
-        // todo npc retreating
+
+        mob.interact(target);
+
+        // Apply hook from context and short-circuit if necessary.
+        boolean reached = collisionManager.reached(position, target, interactionPolicy);
+        if (!combat.onCombatHook(reached)) {
+            return false;
+        }
+        if (mob instanceof Player)
+            logger.trace("Combat hook cleared.");
 
         // Check if we've reached the target before proceeding. If we have, stop moving.
-        if (!collisionManager.reached(position, target, interactionPolicy)) {
+        if (!reached) {
+            if (mob instanceof Player)
+                logger.trace("We have not reached.");
             if (mob.getWalking().isEmpty()) {
+                if (mob instanceof Player)
+                    logger.trace("Walking is empty, starting chase.");
                 // We haven't reached the target, and we're stationary. Move towards interaction range.
-                mob.getNavigator().walkTo(target, Optional.empty(), false);
+                mob.getActions().submitIfAbsent(new PursuitAction(mob, interactionPolicy));
             }
             return false;
         }
-        mob.getWalking().clear();
 
-        // Ensure proper semantics when we're on the same tile as our target.
-        if (target.getPosition().equals(position)) {
-            if (mob instanceof Player) {
-                // TODO Is this just for melee? Or can you attack with magic/ranged?
-                // Players cannot attack when on the same position.
-                return false;
-            } else if (mob.getWalking().isEmpty()) {
-                Direction dir = target.getLastDirection().opposite();
-                if (!mob.getNavigator().step(dir)) {
-                    mob.getNavigator().stepRandom(false);
-                }
-            }
+        // Reached the entity, check for adjacent obstacle in the way if the policy is close-range melee combat.
+        if (interactionPolicy.getType() == InteractionType.SIZE &&
+                interactionPolicy.getDistance() == 1 && !checkMeleeCollision(target)) {
+            return false;
         }
+        if (mob instanceof Player)
+            logger.trace("Ready to launch attack.");
 
+        // All checks passed, launch attack if ready.
         if (combat.isAttackReady() && Objects.equals(mob.getInteractingWith(), combat.getTarget())) {
+            if (mob instanceof Player)
+                logger.trace("Launching attack.");
             combat.resetAttackDelay();
             combat.resetCombatTimer();
             launchMeleeAttack();
@@ -152,8 +157,10 @@ public final class CombatAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
-        // todo npc retreat back to home if needed
+        // todo NPC that has drifted too far, start wandering back to home? Specialized wandering action for this?
+        // todo maybe a less aggressive version that does it more periodically?
         combat.setTarget(null);
+        mob.interact(null);
     }
 
     /**
@@ -162,10 +169,9 @@ public final class CombatAction extends Action<Mob> {
     private void launchMeleeAttack() {
         Mob victim = combat.getTarget();
         CombatDamage damage = CombatDamage.computed(mob, victim, CombatDamageType.MELEE);
-        // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
 
         mob.animation(combat.getAttackAnimation());
-        victim.animation(combat.getDefenceAnimation());
+        victim.animation(victim.getCombat().getDefenceAnimation());
         victim.getCombat().resetCombatTimer();
         victim.submitAction(new CombatDamageAction(mob, victim, damage));
     }
@@ -174,11 +180,32 @@ public final class CombatAction extends Action<Mob> {
      * Resolves a ranged attack against the current target.
      */
     private void launchRangedAttack() {
+        // todo ammo defs (projectiles, etc)
     }
 
     /**
      * Resolves a magic attack against the current target.
      */
     private void launchMagicAttack() {
+        // todo radius spells won't target if player occupies same pos as caster
+        // todo autocasting interfaces, use <x> spell on <x> setup, current spell vs weapon?
+        // todo apply spells effects from CombatSpellHandler#effect
+    }
+
+    public boolean checkMeleeCollision(Mob target) {
+      /*  Position position = mob.getPosition();
+        Position targetPosition = target.getPosition();
+        Direction dir = Direction.between(position, targetPosition);
+
+        if (dir == Direction.NONE || dir.isDiagonal()) {
+            return false;
+        }
+        for(GameObject object : world.findOnTile(targetPosition, GameObject.class)) {
+            if (CollisionUpdate.unwalkable(object.getDefinition(), object.getObjectType().getId())) {
+                return false;
+            }
+        }*/
+        // TODO Need a way to check collision map for objects only..
+        return true;
     }
 }

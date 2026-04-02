@@ -261,7 +261,6 @@ public final class CollisionMatrix {
      * <p>
      * This method interprets directional collision flags using the same semantics as the original RS2 client,
      * mapping the entity's approach direction to the appropriate directional flag(s) that would prevent movement.
-     * </p>
      *
      * @param x The local X coordinate of the tile being entered.
      * @param y The local Y coordinate of the tile being entered.
