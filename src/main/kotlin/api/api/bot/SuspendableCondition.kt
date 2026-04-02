@@ -52,10 +52,10 @@ class SuspendableCondition(private val cond: () -> Boolean) {
             }
             // Schedule task to check if condition is satisfied.
             if (cond()) {
-                channel.offer(true) // Condition satisfied, send unsuspend signal.
+                channel.trySend(true) // Condition satisfied, send unsuspend signal.
                 it.cancel()
             } else if (it.executionCounter >= Duration.ofSeconds(timeoutSeconds).toTicks()) {
-                channel.offer(false) // Timeout, unsuspend abnormally.
+                channel.trySend(false) // Timeout, unsuspend abnormally.
                 it.cancel()
             }
         }

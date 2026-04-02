@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.6.21"
+    val kotlinVersion = "1.9.25"
 
     java
     application
@@ -26,8 +26,8 @@ dependencies {
     implementation(kotlin("script-runtime"))
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.8.1")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.mockito:mockito-core:5.14.2")
     implementation("mysql:mysql-connector-java:8.0.33")
@@ -45,8 +45,8 @@ application {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 
     sourceSets {
         main {
@@ -79,8 +79,8 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<KotlinCompile>().all {
     // todo Will need this flag in later versions.
-    //kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
+    kotlinOptions.jvmTarget = "21"
 }
 
 tasks.named<Test>("test") {
