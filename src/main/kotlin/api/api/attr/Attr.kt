@@ -6,8 +6,7 @@ import api.attr.json.IndexedItemTypeAdapter
 import api.attr.json.ItemContainerTypeAdapter
 import api.attr.json.ItemTypeAdapter
 import api.predef.*
-import com.google.gson.FieldNamingPolicy
-import com.google.gson.GsonBuilder
+import com.google.gson.*
 import com.google.gson.stream.JsonReader
 import game.skill.slayer.ActiveSlayerTask
 import io.luna.game.TickTimer
@@ -18,6 +17,8 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attributable
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
+import java.lang.reflect.*
+import java.time.*
 import kotlin.reflect.KClass
 
 /**
@@ -28,7 +29,27 @@ import kotlin.reflect.KClass
 object Attr {
 
     init {
-        val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
+        val builder = GsonBuilder()
+            .registerTypeAdapter(Instant::class.java, object : JsonSerializer<Instant> {
+                override fun serialize(src: Instant, typeOfSrc: Type, context: JsonSerializationContext): JsonElement =
+                    JsonPrimitive(src.toString())
+            })
+            .registerTypeAdapter(Instant::class.java, object : JsonDeserializer<Instant> {
+                override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Instant =
+                    Instant.parse(json.asString)
+            })
+            .registerTypeAdapter(Duration::class.java, object : JsonSerializer<Duration> {
+                override fun serialize(src: Duration, typeOfSrc: Type, context: JsonSerializationContext): JsonElement =
+                    JsonPrimitive(src.toString())
+            })
+            .registerTypeAdapter(Duration::class.java, object : JsonDeserializer<Duration> {
+                override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Duration =
+                    Duration.parse(json.asString)
+            })
+            .addReflectionAccessFilter(ReflectionAccessFilter.BLOCK_ALL_PLATFORM)
+            .disableHtmlEscaping()
+            .disableInnerClassSerialization()
+            .setPrettyPrinting()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 
         // Register special types.
