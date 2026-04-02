@@ -30,9 +30,7 @@ enum class EnchantJewelleryType(
             RuneRequirement(Rune.WATER, 1),
             RuneRequirement(Rune.COSMIC, 1)
         ),
-        // todo sound
         sound = Sound.ENCHANT_SAPPHIRE_RING,
-        //sound = Sound.ENCHANT_LVL_1,
         enchantMap = mapOf(
             1637 to EnchantItem(2550, Animation(718), Graphic(238)), // Sapphire ring
             1656 to EnchantItem(3858, Animation(719), Graphic(114, 100)), // Sapphire necklace
@@ -43,9 +41,7 @@ enum class EnchantJewelleryType(
         spellId = 1165,
         level = 27,
         xp = 37.0,
-        // todo sound
-        sound = Sound.ENCHANT_SAPPHIRE_RING,
-        // sound = Sound.ENCHANT_LVL_2,
+        sound = Sound.ENCHANT_EMERALD_RING,
         requirements = listOf(
             RuneRequirement(Rune.AIR, 3),
             RuneRequirement(Rune.COSMIC, 1)
@@ -61,9 +57,7 @@ enum class EnchantJewelleryType(
         spellId = 1176,
         level = 49,
         xp = 59.0,
-        // todo sound
-        sound = Sound.ENCHANT_SAPPHIRE_RING,
-        //sound = Sound.ENCHANT_LVL_3,
+        sound = Sound.ENCHANT_RUBY_RING,
         requirements = listOf(
             RuneRequirement(Rune.FIRE, 5),
             RuneRequirement(Rune.COSMIC, 1)
@@ -77,9 +71,7 @@ enum class EnchantJewelleryType(
         spellId = 1180,
         level = 57,
         xp = 67.0,
-        // todo sound
-        sound = Sound.ENCHANT_SAPPHIRE_RING,
-        //sound = Sound.ENCHANT_LVL_4,
+        sound = Sound.ENCHANT_DIAMOND_RING,
         requirements = listOf(
             RuneRequirement(Rune.EARTH, 10),
             RuneRequirement(Rune.COSMIC, 1)
@@ -93,9 +85,7 @@ enum class EnchantJewelleryType(
         spellId = 1187,
         level = 68,
         xp = 78.0,
-        // todo sound
-        sound = Sound.ENCHANT_SAPPHIRE_RING,
-        //sound = Sound.ENCHANT_LVL_5,
+        sound = Sound.ENCHANT_DRAGON_RING,
         requirements = listOf(
             RuneRequirement(Rune.EARTH, 15),
             RuneRequirement(Rune.WATER, 15),
@@ -110,9 +100,7 @@ enum class EnchantJewelleryType(
         spellId = 6003,
         level = 87,
         xp = 97.0,
-        // todo sound
-        sound = Sound.ENCHANT_SAPPHIRE_RING,
-        //sound = Sound.ENCHANT_LVL_6,
+        sound = Sound.ENCHANT_ONYX_RING,
         requirements = listOf(
             RuneRequirement(Rune.FIRE, 20),
             RuneRequirement(Rune.EARTH, 20),

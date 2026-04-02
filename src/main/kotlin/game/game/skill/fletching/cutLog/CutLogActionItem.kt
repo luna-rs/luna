@@ -44,8 +44,7 @@ class CutLogActionItem(plr: Player,
     override fun execute() {
         val unstrungName = itemName(bow.unstrung)
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
-        // todo sound
-        //mob.playSound(Sound.LIGHT_FIRE)
+        mob.playSound(Sound.FLINT1)
         mob.animation(Animations.CUT_LOG)
         mob.fletching.addExperience(bow.exp)
     }

@@ -16,8 +16,6 @@ enum class CombatPrayer(
     val drain: Int,
     val icon: PrayerIcon = PrayerIcon.NONE,
     val varp: Int,
-    // todo decide on sound
-    //val sound: Sound = Sound.DEACTIVATE_PRAYER,
     val sound: Sound = Sound.CANCEL_PRAYER,
     val group: CombatPrayerGroup? = null
 ) {
@@ -34,9 +32,7 @@ enum class CombatPrayer(
         button = 5610,
         drain = 1,
         varp = 84,
-        // todo decide on sound
         sound = Sound.STRENGTH_BURST,
-        //sound = Sound.BURST_OF_STRENGTH,
         group = CombatPrayerGroup.STRENGTH
     ),
     CLARITY_OF_THOUGHT(
@@ -44,9 +40,7 @@ enum class CombatPrayer(
         button = 5611,
         drain = 1,
         varp = 85,
-        // todo decide on sound
         sound = Sound.CLARITY,
-        //sound = Sound.CLARITY_OF_THOUGHT,
         group = CombatPrayerGroup.ATTACK
     ),
     ROCK_SKIN(

@@ -39,8 +39,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
                 return
             }
             mob.lock()
-            // todo decide on sound
-            //mob.playSound(Sound.BONES_TO_ITEMS)
             mob.playSound(Sound.BONES_TO_BANANAS_ALL)
             world.scheduleOnce(1) {
                 mob.inventory.removeAll(removeItems)

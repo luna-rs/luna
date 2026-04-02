@@ -68,8 +68,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
             messages.removeAll { mob.sendMessage(it); true }
             mob.fishing.addExperience(exp)
             exp = 0.0
-            // todo decide on sound
-            //playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
+            playSound(Sound.FISH_SWIM, Sound.NET)
         }
     }
 

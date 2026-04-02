@@ -54,9 +54,7 @@ class CookFoodActionItem(plr: Player,
         } else {
             mob.sendMessage("You accidentally burn the ${food.formattedName}.")
         }
-        // todo decide on sound
-        // mob.playSound(Sound.COOK_FOOD)
-        mob.playSound(Sound.COOKING_LOOP_1)
+        mob.playSound(Sound.FRY)
     }
 
     override fun remove() = listOf(food.rawItem)

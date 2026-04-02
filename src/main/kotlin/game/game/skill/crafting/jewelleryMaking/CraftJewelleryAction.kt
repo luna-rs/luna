@@ -30,8 +30,7 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
         }
 
     override fun execute() {
-        // todo decide on sound
-        //mob.playSound(Sound.SMELTING)
+        mob.playSound(Sound.TREMOR)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
     }

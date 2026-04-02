@@ -30,8 +30,7 @@ class ProspectOreAction(plr: Player, private val ore: Ore?) : LockedAction(plr) 
                     null -> mob.sendMessage("There is no ore left in the rock.")
                     else -> mob.sendMessage("This rock contains ${ore.typeName.lowercase()}.")
                 }
-                // todo decide on sound
-                // mob.playSound(Sound.PROSPECT_ORE)
+                mob.playSound(Sound.PROSPECT)
                 true
             }
 
