@@ -57,7 +57,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
                     if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
                         mob.sendMessage("You attempt to catch a fish.")
                     }
-                    playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
+                    //playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
                 }
                 true
             }
@@ -68,7 +68,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
             messages.removeAll { mob.sendMessage(it); true }
             mob.fishing.addExperience(exp)
             exp = 0.0
-            playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
+            playSound(Sound.FISH_SWIM, Sound.NET)
         }
     }
 

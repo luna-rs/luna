@@ -28,7 +28,7 @@ fun bury(plr: Player, bone: Bone) {
 
             mob.prayer.addExperience(bone.exp)
             mob.inventory.remove(bone.boneItem)
-            mob.playSound(Sound.BURY_BONE)
+            mob.playSound(Sound.BONES_DOWN)
 
             mob.sendMessage("You dig a hole in the ground...")
             mob.sendMessage("You bury the bones.")

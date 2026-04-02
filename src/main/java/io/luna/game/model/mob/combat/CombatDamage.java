@@ -225,7 +225,7 @@ public final class CombatDamage {
         } else if (type == CombatDamageType.MAGIC) {
             victim.graphic(new Graphic(85));
             if (victim instanceof Player) {
-                ((Player) victim).playSound(Sound.MAGIC_SPLASH);
+                ((Player) victim).playSound(Sound.CF_SPLASH);
             }
         }
         victim.getCombat().getDamageStack().push(this);

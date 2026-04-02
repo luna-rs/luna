@@ -2,7 +2,7 @@ package game.skill.magic
 
 import api.predef.*
 import com.google.common.collect.HashMultiset
-import game.player.Sound
+import game.player.*
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportStyle
 import io.luna.Luna
@@ -134,7 +134,7 @@ object Magic {
             1 -> {
                 // Use a local sound so nearby players can hear.
                 val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_REGULAR,
+                                          Sound.TELEPORT_ALL,
                                           plr.position,
                                           ChunkUpdatableView.globalView())
                 sound.display()
@@ -164,7 +164,7 @@ object Magic {
             0 -> {
                 plr.animation(Animation(1979))
                 val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_ANCIENT,
+                                          Sound.BLOCK_TELEPORT,
                                           plr.position,
                                           ChunkUpdatableView.globalView())
                 sound.display()

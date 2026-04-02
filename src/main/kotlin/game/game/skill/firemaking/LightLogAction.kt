@@ -73,8 +73,9 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
             val firePosition = mob.position
             when {
-                originalDelayTicks < 2 -> mob.playSound(Sound.BURN_LOG_QUICK)
-                else -> mob.playSound(Sound.BURN_LOG)
+                originalDelayTicks < 2 -> mob.playSound(Sound.BREW_STRIKE_AND_LIGHT)
+                //else -> mob.playSound(Sound.BURN_LOG)
+                else -> mob.playSound(Sound.FIRE_CRACKLING_MED)
             }
             mob.firemaking.addExperience(log.exp)
 

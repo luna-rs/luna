@@ -57,7 +57,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 // Ore roll was successful.
                 mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
                 mob.mining.addExperience(ore.exp)
-                mob.playSound(Sound.MINING_COMPLETED)
+                mob.playSound(Sound.MINE_QUICK)
                 deleteAndRespawnRock()
                 complete()
             }
@@ -65,7 +65,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun animation(): Animation {
-        mob.playSound(Sound.MINE_ROCK)
+        mob.playSound(Sound.MINE)
         return pick.animation
     }
 

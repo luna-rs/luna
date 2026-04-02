@@ -37,8 +37,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WIND_STRIKE_CAST",
-    "end_sound": "WIND_STRIKE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1153,
@@ -81,8 +81,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "CONFUSE_CAST",
-    "end_sound": "CONFUSE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1154,
@@ -126,8 +126,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WATER_STRIKE_CAST",
-    "end_sound": "WATER_STRIKE_IMPACT"
+    "start_sound": "WATERSTRIKE_CAST_AND_FIRE",
+    "end_sound": "WATERSTRIKE_HIT"
   },
   {
     "id": 1156,
@@ -171,8 +171,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "EARTH_STRIKE_CAST",
-    "end_sound": "EARTH_STRIKE_IMPACT"
+    "start_sound": "EARTHSTRIKE_CAST_AND_FIRE",
+    "end_sound": "EARTHSTRIKE_HIT"
   },
   {
     "id": 1157,
@@ -215,8 +215,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WEAKEN_CAST",
-    "end_sound": "WEAKEN_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1158,
@@ -260,8 +260,8 @@
         "amount": 3
       }
     ],
-    "start_sound": "FIRE_STRIKE_CAST",
-    "end_sound": "FIRE_STRIKE_IMPACT"
+    "start_sound": "FIREWAVE_CAST_AND_FIRE",
+    "end_sound": "FIRESTRIKE_HIT"
   },
   {
     "id": 1160,
@@ -301,8 +301,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WIND_BOLT_CAST",
-    "end_sound": "WIND_BOLT_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1161,
@@ -345,8 +345,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "CURSE_CAST",
-    "end_sound": "CURSE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1572,
@@ -434,8 +434,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "WATER_BOLT_CAST",
-    "end_sound": "WATER_BOLT_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1166,
@@ -479,8 +479,8 @@
         "amount": 3
       }
     ],
-    "start_sound": "EARTH_BOLT_CAST",
-    "end_sound": "EARTH_BOLT_IMPACT"
+    "start_sound": "EARTHBLAST_CAST_AND_FIRE",
+    "end_sound": "EARTHBOLT_HIT"
   },
   {
     "id": 1169,
@@ -524,8 +524,8 @@
         "amount": 4
       }
     ],
-    "start_sound": "FIRE_BOLT_CAST",
-    "end_sound": "FIRE_BOLT_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1171,
@@ -569,8 +569,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "CRUMBLE_UNDEAD_CAST",
-    "end_sound": "CRUMBLE_UNDEAD_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1172,
@@ -610,8 +610,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WIND_BLAST_CAST",
-    "end_sound": "WIND_BLAST_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1175,
@@ -655,8 +655,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WATER_BLAST_CAST",
-    "end_sound": "WATER_BLAST_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1539,
@@ -701,8 +701,8 @@
         "amount": 5
       }
     ],
-    "start_sound": "IBAN_BLAST_CAST",
-    "end_sound": "IBAN_BLAST_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1582,
@@ -746,8 +746,8 @@
         "amount": 3
       }
     ],
-    "start_sound": "SNARE_CAST",
-    "end_sound": "SNARE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 12037,
@@ -792,8 +792,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "MAGIC_DART_CAST",
-    "end_sound": "MAGIC_DART_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1177,
@@ -837,8 +837,8 @@
         "amount": 4
       }
     ],
-    "start_sound": "EARTH_BLAST_CAST",
-    "end_sound": "EARTH_BLAST_IMPACT"
+    "start_sound": "EARTHBOLT_CAST_AND_FIRE",
+    "end_sound": "EARTHBLAST_HIT"
   },
   {
     "id": 1181,
@@ -882,8 +882,8 @@
         "amount": 5
       }
     ],
-    "start_sound": "FIRE_BLAST_CAST",
-    "end_sound": "FIRE_BLAST_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1190,
@@ -919,8 +919,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "SARADOMIN_STRIKE_CAST",
-    "end_sound": "SARADOMIN_STRIKE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1191,
@@ -956,8 +956,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "CLAWS_OF_GUTHIX_CAST",
-    "end_sound": "CLAWS_OF_GUTHIX_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1192,
@@ -993,8 +993,8 @@
         "amount": 2
       }
     ],
-    "start_sound": "FLAMES_OF_ZAMORAK_CAST",
-    "end_sound": "FLAMES_OF_ZAMORAK_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1183,
@@ -1034,8 +1034,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "WIND_WAVE_CAST",
-    "end_sound": "WIND_WAVE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1185,
@@ -1079,8 +1079,8 @@
         "amount": 7
       }
     ],
-    "start_sound": "WATER_WAVE_CAST",
-    "end_sound": "WATER_WAVE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1542,
@@ -1123,8 +1123,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "VULNERABILITY_CAST",
-    "end_sound": "VULNERABILITY_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1188,
@@ -1168,8 +1168,8 @@
         "amount": 7
       }
     ],
-    "start_sound": "EARTH_WAVE_CAST",
-    "end_sound": "EARTH_WAVE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1543,
@@ -1212,8 +1212,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "ENFEEBLE_CAST",
-    "end_sound": "ENFEEBLE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1189,
@@ -1257,8 +1257,8 @@
         "amount": 7
       }
     ],
-    "start_sound": "FIRE_WAVE_CAST",
-    "end_sound": "FIRE_WAVE_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1592,
@@ -1302,8 +1302,8 @@
         "amount": 4
       }
     ],
-    "start_sound": "ENTANGLE_CAST",
-    "end_sound": "ENTANGLE_IMPACT"
+    "start_sound": "ENTANGLE_CAST_AND_FIRE",
+    "end_sound": "ENTANGLE_HIT"
   },
   {
     "id": 1562,
@@ -1346,8 +1346,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "STUN_CAST",
-    "end_sound": "STUN_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 12445,
@@ -1385,8 +1385,8 @@
         "amount": 1
       }
     ],
-    "start_sound": "TELEBLOCK_CAST",
-    "end_sound": "TELEBLOCK_IMPACT"
+    "start_sound": "NO_SOUND",
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 12939,
@@ -1429,7 +1429,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SMOKE_RUSH_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SMOKE_RUSH_IMPACT",
     "radius": 0
   },
@@ -1474,7 +1474,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SHADOW_RUSH_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SHADOW_RUSH_IMPACT",
     "radius": 0
   },
@@ -1515,7 +1515,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "BLOOD_RUSH_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "BLOOD_RUSH_IMPACT",
     "radius": 0
   },
@@ -1556,7 +1556,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "ICE_RUSH_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "ICE_RUSH_IMPACT",
     "radius": 0
   },
@@ -1593,7 +1593,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SMOKE_BURST_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SMOKE_BURST_IMPACT",
     "radius": 1
   },
@@ -1630,7 +1630,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SHADOW_BURST_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SHADOW_BURST_IMPACT",
     "radius": 1
   },
@@ -1663,7 +1663,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "BLOOD_BURST_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "BLOOD_BURST_IMPACT",
     "radius": 1
   },
@@ -1696,7 +1696,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "ICE_BURST_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "ICE_BURST_IMPACT",
     "radius": 1
   },
@@ -1741,7 +1741,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SMOKE_BLITZ_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SMOKE_BLITZ_IMPACT",
     "radius": 0
   },
@@ -1786,7 +1786,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SHADOW_BLITZ_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SHADOW_BLITZ_IMPACT",
     "radius": 0
   },
@@ -1823,7 +1823,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "BLOOD_BLITZ_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "BLOOD_BLITZ_IMPACT",
     "radius": 0
   },
@@ -1861,7 +1861,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "ICE_BLITZ_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "ICE_BLITZ_IMPACT",
     "radius": 0
   },
@@ -1898,7 +1898,7 @@
         "amount": 4
       }
     ],
-    "start_sound": "SMOKE_BARRAGE_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SMOKE_BARRAGE_IMPACT",
     "radius": 1
   },
@@ -1935,7 +1935,7 @@
         "amount": 4
       }
     ],
-    "start_sound": "SHADOW_BARRAGE_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "SHADOW_BARRAGE_IMPACT",
     "radius": 1
   },
@@ -1968,7 +1968,7 @@
         "amount": 4
       }
     ],
-    "start_sound": "BLOOD_BARRAGE_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "BLOOD_BARRAGE_IMPACT",
     "radius": 1
   },
@@ -2001,7 +2001,7 @@
         "amount": 4
       }
     ],
-    "start_sound": "ICE_BARRAGE_CAST",
+    "start_sound": "NO_SOUND",
     "end_sound": "ICE_BARRAGE_IMPACT",
     "radius": 1
   }

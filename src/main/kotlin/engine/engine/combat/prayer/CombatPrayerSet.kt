@@ -63,12 +63,12 @@ class CombatPrayerSet(private val player: Player) {
 
         // Send varbits, head icons, sounds, relevant messages.
         if (player.prayer.staticLevel < prayer.level) {
-            player.playSound(Sound.PRAYER_LEVEL_TOO_LOW)
+            player.playSound(Sound.PRAYER_OFF)
             player.sendMessage("Your Prayer level is not high enough to use this.")
             return
         } else if (player.prayer.level == 0) {
             player.sendVarp(Varp(prayer.varp, 0))
-            player.playSound(Sound.DEACTIVATE_PRAYER)
+            player.playSound(Sound.CANCEL_PRAYER)
             player.sendMessage("You've run out of prayer points.")
             return
         }
@@ -108,7 +108,7 @@ class CombatPrayerSet(private val player: Player) {
         if (amount > 0 && player is Player) {
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
-                player.playSound(Sound.DEACTIVATE_PRAYER)
+                player.playSound(Sound.CANCEL_PRAYER)
             }
             if (prayer.icon != PrayerIcon.NONE) {
                 player.prayerIcon = PrayerIcon.NONE

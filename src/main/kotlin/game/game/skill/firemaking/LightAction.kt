@@ -64,7 +64,7 @@ abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Pl
     private fun handleLightAnimation() {
         if (--animationDelay <= 0) {
             mob.animation(Animations.FIREMAKING)
-            mob.playSound(Sound.LIGHT_FIRE)
+            mob.playSound(Sound.FLINT1)
             animationDelay = 3
         }
     }

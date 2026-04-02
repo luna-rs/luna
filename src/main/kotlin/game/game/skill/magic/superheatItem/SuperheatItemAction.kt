@@ -54,7 +54,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             val barType = computeBarType()
             if (barType != null) {
                 mob.lock()
-                mob.playSound(Sound.SUPERHEAT)
+                mob.playSound(Sound.SUPERHEAT_ALL)
                 world.scheduleOnce(2) {
                     mob.inventory.removeAll(barType.oreList)
                     mob.inventory.removeAll(removeItems)

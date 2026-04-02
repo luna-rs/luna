@@ -63,7 +63,7 @@ fun craft(plr: Player, rune: CraftableRune) {
 
         plr.animation(craftAnimation)
         plr.graphic(craftGraphic)
-        plr.playSound(Sound.CRAFT_RUNES)
+        plr.playSound(Sound.BIND_RUNES)
         plr.overlays.closeWindows()
 
         plr.runecrafting.addExperience(rune.exp * essenceAmt)
