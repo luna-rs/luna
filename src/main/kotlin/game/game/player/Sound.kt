@@ -7,6 +7,7 @@ package game.player
  * @author hydrozoa
  */
 enum class Sound(val id: Int) {
+    NO_SOUND(-1),
     BAT_DEATH(0),
     BAT_ATTACK(1),
     BAT_HIT(2),
