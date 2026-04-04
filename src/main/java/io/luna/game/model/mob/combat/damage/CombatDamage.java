@@ -106,6 +106,21 @@ public final class CombatDamage {
         }
 
         /**
+         * Rolls and computes damage using the supplied maximum hit.
+         * <p>
+         * A random hit is generated in the inclusive range of {@code 0} to {@code maxHit}, then forwarded to
+         * {@link #computeDamage(OptionalInt)} so the normal damage pipeline can apply any additional processing.
+         *
+         * @param maxHit The maximum possible hit that can be rolled.
+         * @return The computed damage result for the rolled hit
+         */
+        public CombatDamage computeDamage(int maxHit) {
+            maxHit = Math.max(1, maxHit);
+            int roll = RandomUtils.inclusive(maxHit);
+            return computeDamage(OptionalInt.of(roll));
+        }
+
+        /**
          * Computes the final {@link CombatDamage} result for this accuracy state.
          * <p>
          * Accuracy is rolled using the current {@link #accuracy} value. If the hit fails:
