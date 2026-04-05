@@ -46,14 +46,3 @@ npc1(shopkeeperId) {
         })
         .open()
 }
-
-/**
- * Spawn Flynn NPC.
- */
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId,
-        x = 2975,
-        y = 3383
-    ).startWandering(3, WanderingFrequency.NORMAL)
-}
