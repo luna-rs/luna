@@ -1,13 +1,10 @@
 package io.luna.game.model.mob.combat.state;
 
-import api.combat.weapons.SpecialAttackHandler;
-import api.combat.weapons.dsl.SpecialAttackReceiver;
+import api.combat.specialAttack.SpecialAttackHandler;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.def.WeaponSpecialBarDefinition;
-import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.net.msg.out.WidgetPositionMessageWriter;
 
@@ -112,20 +109,16 @@ public final class PlayerWeaponSpecialBar {
             return false;
         }
         if (energy == 0) {
-            // TODO Does it only short-circuit here on 0 special energy? Or if you don't have enough for the weapon
-            //  regardless?
-            // TODO Instant special attacks sent from here? Or do they just ignore the attack delay in the combat loop?
-            //  test which feels better.
-            player.sendMessage("You do not have enough special energy left.");
-            player.sendVarp(new Varp(301, 0));
+            sendEnergyWarning();
             return false;
         }
         if (!activated) {
-            player.sendVarp(new Varp(301, 1));
-            activated = true;
-            SpecialAttackHandler.INSTANCE.handleActivated(player,
-                    player.getEquipment().computeIdForIndex(Equipment.WEAPON));
-            return true;
+            if (SpecialAttackHandler.INSTANCE.handleActivated(player)) {
+                player.sendVarp(new Varp(301, 1));
+                activated = true;
+                return true;
+            }
+            return false;
         }
         return false;
     }
@@ -142,6 +135,18 @@ public final class PlayerWeaponSpecialBar {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Sends the standard special-attack energy warning to the player and resets the related client varp so the
+     * special attack interface is visually updated.
+     * <p>
+     * This is typically used when the player attempts to use a special attack without having enough remaining special
+     * energy.
+     */
+    public void sendEnergyWarning() {
+        player.sendMessage("You do not have enough special energy left.");
+        player.sendVarp(new Varp(301, 0));
     }
 
     /**
@@ -185,22 +190,6 @@ public final class PlayerWeaponSpecialBar {
             return true;
         }
         return false;
-    }
-
-    public CombatAttack<Player> getSpecialAttack() {
-        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
-        if (weaponId == -1) {
-            return null;
-        }
-        SpecialAttackReceiver receiver = SpecialAttackHandler.INSTANCE.get(weaponId);
-        if (receiver == null) {
-            return null;
-        }/*
-        switch (receiver.getType()) {
-            case MELEE:
-                return new PlayerMeleeCombatAttack()
-        }*/
-        return null;
     }
 
     /**
@@ -271,5 +260,12 @@ public final class PlayerWeaponSpecialBar {
      */
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    /**
+     * @return The player this special attack bar belongs to.
+     */
+    public Player getPlayer() {
+        return player;
     }
 }

@@ -1,13 +1,14 @@
 package io.luna.game.model.mob.combat.state;
 
-import io.luna.game.model.def.WeaponDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
+import io.luna.game.model.def.WeaponDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.CombatStyle;
+import io.luna.game.model.mob.combat.SpecialAttackType;
 import io.luna.game.model.mob.combat.Weapon;
 import io.luna.game.model.mob.varp.Varp;
 
@@ -54,6 +55,14 @@ public final class PlayerCombatWeapon {
     private CombatStyleDefinition styleDef;
 
     /**
+     * The resolved special attack type for the currently equipped weapon.
+     * <p>
+     * This is looked up from the equipped weapon's item identifier during {@link #refreshWeapon(CombatStance)} and
+     * will be {@code null} when the player is unarmed or when the weapon has no registered special attack type.
+     */
+    private SpecialAttackType specialAttackType;
+
+    /**
      * Creates a new {@link PlayerCombatWeapon} for {@code player}.
      * <p>
      * New instances begin in the unarmed state with the default unarmed punch style selected.
@@ -91,8 +100,6 @@ public final class PlayerCombatWeapon {
                     .orElse(WeaponTypeDefinition.getUnarmed());
         }
 
-        //  TODO What combat style is selected if a matching stance can't be found? For now, we default to slot 0, which
-        //   is usually the accurate style.
         CombatStyleDefinition newStyle = typeDef.getStyles().get(0);
         for (CombatStyleDefinition style : typeDef.getStyles()) {
             if (style.getStance() == lastStance) {
@@ -101,6 +108,7 @@ public final class PlayerCombatWeapon {
             }
         }
         styleDef = newStyle;
+        specialAttackType = weaponItem == null ? null : SpecialAttackType.IDS.get(weaponItem.getId());
     }
 
     /**
@@ -122,45 +130,60 @@ public final class PlayerCombatWeapon {
         refreshStyleButton();
     }
 
-
+    /**
+     * Refreshes the combat style selection varp on the client.
+     * <p>
+     * The config value is taken from the currently selected {@link #styleDef} and sent using the combat-style varp so
+     * the weapon interface highlights the active attack style button.
+     */
     public void refreshStyleButton() {
         int config = styleDef.getConfig();
         player.sendVarp(new Varp(43, config));
     }
 
+    /**
+     * @return The owning player.
+     */
     public Player getPlayer() {
         return player;
     }
 
     /**
-     * @return The current weapon identifier.
+     * @return The current weapon id.
      */
     public int getId() {
         return def.getId();
     }
 
     /**
-     * Returns the range of the currently equipped weapon and combat style in use.
-     *
      * @return The current attack range.
      */
     public int getRange() {
         return styleDef.getRange();
     }
+
+    /**
+     * @return The attack speed in ticks for the active style.
+     */
     public int getSpeed() {
         return styleDef.getSpeed();
     }
+
+    /**
+     * @return {@code true} if the active style attacks beyond standard melee distance, otherwise {@code false}.
+     */
     public boolean isRanged() {
         return getRange() > 2;
     }
+
+    /**
+     * @return The current weapon type.
+     */
     public Weapon getType() {
         return typeDef.getType();
     }
 
-
     /**
-     * Returns the resolved weapon definition for the currently equipped weapon.
-     *
      * @return The current weapon definition.
      */
     public WeaponDefinition getDef() {
@@ -168,8 +191,6 @@ public final class PlayerCombatWeapon {
     }
 
     /**
-     * Returns the resolved weapon type definition for the currently equipped weapon.
-     *
      * @return The current weapon type definition.
      */
     public WeaponTypeDefinition getTypeDef() {
@@ -177,11 +198,28 @@ public final class PlayerCombatWeapon {
     }
 
     /**
-     * Returns the currently selected combat style definition.
-     *
      * @return The current combat style definition.
      */
     public CombatStyleDefinition getStyleDef() {
         return requireNonNull(styleDef, "Combat style definition should never be null.");
+    }
+
+    /**
+     * @return The current special attack type, or {@code null} if the equipped weapon has no special attack.
+     */
+    public SpecialAttackType getSpecialAttackType() {
+        return specialAttackType;
+    }
+
+    /**
+     * Sets the resolved special attack type for this combat weapon state.
+     * <p>
+     * This can be used to override or manually update the special attack mapping after the weapon state has been
+     * refreshed.
+     *
+     * @param specialAttackType The new special attack type, or {@code null} if none should be active.
+     */
+    public void setSpecialAttackType(SpecialAttackType specialAttackType) {
+        this.specialAttackType = specialAttackType;
     }
 }

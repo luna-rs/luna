@@ -74,6 +74,11 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      */
     private CombatAttack<Player> firstAttack;
 
+
+    private CombatAttack<Player> specialAttack;
+
+    private CombatAttack<Player> instantSpecialAttack;
+
     /**
      * Creates a new {@link PlayerCombatContext}.
      *
@@ -121,6 +126,10 @@ public final class PlayerCombatContext extends CombatContext<Player> {
             firstAttack = null;
             return nextAttack;
         }
+
+        // TODO cached instant special attack
+
+
         // TODO: Special attacks.
         if (magic.isCasting()) {
             // Prepare a magic attack if we're auto-casting or have a spell selected.
@@ -134,17 +143,6 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
     }
 
-    public Animation getDefenceAnimation() {
-        if (player.getEquipment().occupied(Equipment.SHIELD)) {
-            return new Animation(1156);
-        } else if (weapon.getType() == Weapon.STAFF) {
-            return new Animation(420);
-        } else if (weapon.getType() == Weapon.DAGGER) {
-            return new Animation(403);
-        }
-        return new Animation(410);
-    }
-
     @Override
     public boolean isAutoRetaliate() {
         return player.getVarpManager().getValue(PersistentVarp.AUTO_RETALIATE) == 0;
@@ -153,6 +151,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     @Override
     public void onCombatFinished() {
         firstAttack = null;
+        specialAttack = null;
+        instantSpecialAttack = null;
     }
 
     @Override
@@ -162,7 +162,15 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void onNextDefence(Mob attacker, CombatDamage damage) {
-        player.animation(getDefenceAnimation());
+        int animationId = 410;
+        if (player.getEquipment().occupied(Equipment.SHIELD)) {
+            animationId = 1156;
+        } else if (weapon.getType() == Weapon.STAFF) {
+            animationId = 420;
+        } else if (weapon.getType() == Weapon.DAGGER) {
+            animationId = 403;
+        }
+        player.animation(new Animation(animationId));
     }
 
     /**
@@ -250,5 +258,21 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      */
     public void setFirstAttack(CombatAttack<Player> firstAttack) {
         this.firstAttack = firstAttack;
+    }
+
+    public CombatAttack<Player> getSpecialAttack() {
+        return specialAttack;
+    }
+
+    public void setSpecialAttack(CombatAttack<Player> specialAttack) {
+        this.specialAttack = specialAttack;
+    }
+
+    public CombatAttack<Player> getInstantSpecialAttack() {
+        return instantSpecialAttack;
+    }
+
+    public void setInstantSpecialAttack(CombatAttack<Player> instantSpecialAttack) {
+        this.instantSpecialAttack = instantSpecialAttack;
     }
 }
