@@ -11,5 +11,5 @@ activate(type = DRAGON_AXE, drain = 100) {
     animation(Animation(2876, AnimationPriority.HIGH))
     graphic(Graphic(479, 120, 0))
     speak("Chop chop!")
-    woodcutting.level += 3
+    woodcutting.level = woodcutting.staticLevel + 3
 }

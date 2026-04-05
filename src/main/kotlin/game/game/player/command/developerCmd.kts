@@ -197,3 +197,10 @@ cmd("sa", RIGHTS_DEV) {
     plr.combat.specialBar.energy = 100
     plr.combat.specialBar.update()
 }
+
+/**
+ * A command that resets all skill level boosts.
+ */
+cmd("resetboosts", RIGHTS_DEV) {
+    plr.skills.resetAll()
+}
