@@ -1,10 +1,12 @@
 package io.luna.game.model.mob.attr;
 
 import com.google.common.base.CharMatcher;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import io.luna.game.model.Entity;
 
+import java.lang.reflect.Type;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -24,7 +26,19 @@ public final class Attribute<T> {
     /**
      * Global Gson instance used for (de)serialization.
      */
-    private static volatile Gson serializer = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+    private static volatile Gson serializer = new GsonBuilder()
+            .disableHtmlEscaping()
+            .addReflectionAccessFilter(ReflectionAccessFilter.BLOCK_ALL_PLATFORM)
+            .registerTypeAdapter(Instant.class, (JsonSerializer<Instant>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.toString()))
+            .registerTypeAdapter(Instant.class, (JsonDeserializer<Instant>) (json, typeOfT, context) ->
+                    Instant.parse(json.getAsString()))
+            .registerTypeAdapter(Duration.class, (JsonSerializer<Duration>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.toString()))
+            .registerTypeAdapter(Duration.class, (JsonDeserializer<Duration>) (json, typeOfT, context) ->
+                    Duration.parse(json.getAsString()))
+            .setPrettyPrinting()
+            .create();
 
     /**
      * Sets the new JSON serializer.
