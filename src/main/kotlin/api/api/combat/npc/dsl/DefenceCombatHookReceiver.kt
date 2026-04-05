@@ -9,16 +9,16 @@ import io.luna.game.model.mob.Npc
  * This receiver exposes the defending NPC, the attacking mob, and any shared combat-hook helpers inherited from
  * [CombatHookReceiver]. It can also be used to override the defence animation that should play for the current hit.
  *
- * @param attacker The NPC being attacked and processing the defence hook.
- * @param victim The mob that initiated the attack.
+ * @param npc The NPC being attacked and processing the defence hook.
+ * @param other The mob that initiated the attack.
  * @author lare96
  */
-class DefenceCombatHookReceiver(attacker: Npc, victim: Mob) : CombatHookReceiver(attacker, victim) {
+class DefenceCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, other) {
 
     /**
      * Optional defence animation override for this hook execution.
      *
      * When set, this animation should be used instead of the NPC's default block or defence animation.
      */
-    var animationId: Int = attacker.combatDef.attackAnimation
+    var animationId: Int? = npc.combatDef.defenceAnimation
 }

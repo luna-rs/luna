@@ -1,7 +1,5 @@
 package api.combat.npc.dsl
 
-import io.luna.game.model.def.NpcCombatDefinition
-import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.combat.AmmoType
@@ -13,7 +11,6 @@ import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
 import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageType
-import io.luna.game.model.mob.combat.state.NpcCombatContext
 
 /**
  * DSL receiver used to build combat attacks for an NPC combat hook.
@@ -21,11 +18,12 @@ import io.luna.game.model.mob.combat.state.NpcCombatContext
  * This provides convenient access to the attacking NPC, the victim, and commonly used combat-related definitions so
  * hook implementations can build attacks with minimal boilerplate.
  *
- * @param attacker The NPC performing the attack.
- * @param victim The NPC being attacked.
+ * @param npc The NPC performing the attack.
+ * @param other The current combat target.
+ * @param attackReady `true` if the NPC is not awaiting an attack delay, `false` otherwise.
  * @author lare96
  */
-class AttackCombatHookReceiver(attacker: Npc, victim: Mob) : CombatHookReceiver(attacker, victim) {
+class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) : CombatHookReceiver(npc, other) {
 
     /**
      * Creates a magic combat attack using the specified spell.
@@ -38,8 +36,8 @@ class AttackCombatHookReceiver(attacker: Npc, victim: Mob) : CombatHookReceiver(
      */
     fun magic(
         spell: CombatSpell,
-        speed: Int = attacker.combatDef.attackSpeed
-    ) = MagicCombatAttack(attacker, victim, spell, speed)
+        speed: Int = npc.combatDef.attackSpeed
+    ) = MagicCombatAttack(npc, other, spell, speed)
 
     /**
      * Creates a melee combat attack with optional overrides for the attack animation, maximum hit, attack range,
@@ -54,11 +52,11 @@ class AttackCombatHookReceiver(attacker: Npc, victim: Mob) : CombatHookReceiver(
      * @return The configured melee combat attack.
      */
     fun melee(
-        animationId: Int = attacker.combatDef.attackAnimation,
-        maxHit: Int = attacker.combatDef.maximumHit,
+        animationId: Int = npc.combatDef.attackAnimation,
+        maxHit: Int = npc.combatDef.maximumHit,
         range: Int = 1,
-        speed: Int = attacker.combatDef.attackSpeed
-    ) = object : MeleeCombatAttack<Npc>(attacker, victim, animationId, range, speed) {
+        speed: Int = npc.combatDef.attackSpeed
+    ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
 
         /**
          * Computes melee damage against the current victim using standard accuracy and the supplied maximum hit.
@@ -80,12 +78,12 @@ class AttackCombatHookReceiver(attacker: Npc, victim: Mob) : CombatHookReceiver(
      * @return The configured ranged combat attack.
      */
     fun ranged(style: CombatStyle, ammo: AmmoType) =
-        RangedCombatAttack(attacker, victim, style, ammo)
+        RangedCombatAttack(npc, other, style, ammo)
 
     /**
      * Gets the attacker's default combat attack against the current victim.
      *
      * @return The default combat attack produced by the NPC combat context.
      */
-    fun default(): CombatAttack<Npc> = attacker.combat.getDefaultAttack(victim)
+    fun default(): CombatAttack<Npc> = npc.combat.getDefaultAttack(other)
 }

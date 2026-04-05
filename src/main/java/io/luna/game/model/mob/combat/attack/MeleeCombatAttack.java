@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.attack;
 
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
@@ -31,12 +32,12 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
      *
      * @param attacker The mob performing the melee attack.
      * @param victim The mob receiving the melee attack.
-     * @param animation The melee attack animation to play.
+     * @param animationId The melee attack animation to play.
      * @param delay The attack delay, in ticks, applied after execution.
      */
-    public MeleeCombatAttack(T attacker, Mob victim, Animation animation, int range, int delay) {
+    public MeleeCombatAttack(T attacker, Mob victim, int animationId, int range, int delay) {
         super(attacker, victim, new InteractionPolicy(InteractionType.SIZE, range), delay);
-        this.animation = animation;
+        animation = new Animation(animationId, AnimationPriority.HIGH);
     }
 
     @Override
@@ -44,7 +45,6 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
         if(animation != null) {
             attacker.animation(animation);
         }
-        victim.animation(victim.getCombat().getDefenceAnimation());
         victim.submitAction(new CombatDamageAction(nextDamage, false));
     }
 

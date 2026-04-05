@@ -25,7 +25,7 @@ import io.luna.game.model.mob.interact.InteractionPolicy
  */
 fun getInteraction(plr: Player, target: Entity): InteractionPolicy {
     if (target is Mob) {
-        val nextAttack = plr.combat.getNextAttack(target)
+        val nextAttack = plr.combat.getNextAttack(target, plr.combat.isAttackReady)
         plr.combat.firstAttack = nextAttack
         return nextAttack.interactionPolicy
     } else {
@@ -45,7 +45,7 @@ on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LIN
     if (plr.contextMenu.contains(OPTION_ATTACK) && targetPlr.hitpoints.level > 0) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
-        plr.combat.firstAttack = plr.combat.getNextAttack(targetPlr)
+        plr.combat.firstAttack = plr.combat.getNextAttack(targetPlr, plr.combat.isAttackReady)
         plr.combat.attack(targetPlr)
     }
 }
@@ -64,7 +64,7 @@ on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_O
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
-        plr.combat.firstAttack = plr.combat.getNextAttack(targetNpc)
+        plr.combat.firstAttack = plr.combat.getNextAttack(targetNpc, plr.combat.isAttackReady)
         plr.combat.attack(targetNpc)
     }
 }

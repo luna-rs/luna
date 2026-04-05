@@ -131,7 +131,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, other, CombatDamageType.MAGIC);
+        // Use spell effect max hit.
+        return CombatDamage.computeAccuracy(attacker, other, CombatDamageType.MAGIC).
+                computeDamage(spellEffect.getMaxHit());
     }
 
     @Override
@@ -159,7 +161,6 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             LocalSound.of(victim, Sound.MAGIC_SPLASH).display();
         }
         victim.submitAction(new CombatDamageAction(nextDamage, true));
-        victim.animation(victim.getCombat().getDefenceAnimation());
     }
 
     /**

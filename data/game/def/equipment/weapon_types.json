@@ -42,19 +42,6 @@
         "exp": [
           "DEFENCE"
         ]
-      },
-      {
-        "type": "STAFF_AUTOCAST",
-        "speed": 5,
-        "animation": -1,
-        "config": 3,
-        "bonus": "MAGIC_ATTACK",
-        "button": -1,
-        "stance": "AUTOCAST",
-        "range": 1,
-        "exp": [
-          "MAGIC"
-        ]
       }
     ]
   },

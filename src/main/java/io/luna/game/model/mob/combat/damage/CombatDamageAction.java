@@ -59,6 +59,7 @@ public final class CombatDamageAction extends Action<Mob> {
             damage.apply();
 
             CombatContext<?> victimCombat = victim.getCombat();
+            victimCombat.onNextDefence(attacker, damage); // TODO if too late, move to onsubmit
             if (victim.isAlive() && victimCombat.isAutoRetaliate()) {
                 if (victimCombat.getTarget() == null || !victim.getActions().contains(CombatAction.class)) {
                     victimCombat.attack(attacker);

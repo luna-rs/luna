@@ -39,17 +39,20 @@ combat(172) {
 // Level 22 and 23 dark wizards.
 combat(3242, 3243) {
     attack {
-        if (rand(5) == 0) {
-            when (rand(2)) {
-                0 -> attacker.speak("Gah!")
-                1 -> attacker.speak("With the power of Zamorak!")
-                2 -> attacker.speak("Be gone!")
+        if(attackReady) {
+            // Only attempt speech when we're ready to launch an attack.
+            if (rand(5) == 0) {
+                when (rand(2)) {
+                    0 -> npc.speak("Gah!")
+                    1 -> npc.speak("With the power of Zamorak!")
+                    2 -> npc.speak("Be gone!")
+                }
             }
         }
 
-        if (rand(2) == 0 && !victim.combat.isImmobilized)
+        if (rand(2) == 0 && !other.combat.isImmobilized)
             magic(CombatSpell.BIND)
-        else if (RandomUtils.roll(Rational.UNCOMMON))
+        else if (RandomUtils.roll(Rational.COMMON))
             magic(if (rand().nextBoolean()) CombatSpell.EARTH_BOLT else CombatSpell.FIRE_BOLT)
         else
             magic(CombatSpell.WATER_BOLT)
@@ -58,9 +61,9 @@ combat(3242, 3243) {
     defend {
         if (rand(5) == 0) {
             when (rand(2)) {
-                0 -> attacker.speak("Agh!")
-                1 -> attacker.speak("You're no match for me!")
-                2 -> attacker.speak("Curse you!")
+                0 -> npc.speak("Agh!")
+                1 -> npc.speak("You're no match for me!")
+                2 -> npc.speak("Curse you!")
             }
         }
     }

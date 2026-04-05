@@ -6,8 +6,6 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
-import io.luna.game.model.mob.block.Animation;
-import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -40,7 +38,7 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
      * @param style The combat style to use for calculations.
      */
     public PlayerMeleeCombatAttack(Player attacker, Mob victim, CombatStyleDefinition style) {
-        super(attacker, victim, new Animation(style.getAnimation(), AnimationPriority.HIGH), style.getRange(), style.getSpeed());
+        super(attacker, victim, style.getAnimation(), style.getRange(), style.getSpeed());
     }
 
     /**

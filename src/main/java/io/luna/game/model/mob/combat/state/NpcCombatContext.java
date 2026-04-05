@@ -1,16 +1,16 @@
 package io.luna.game.model.mob.combat.state;
 
+import api.combat.npc.NpcCombatHandler;
 import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.block.Animation;
-import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
+import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
-import io.luna.util.RandomUtils;
 
 /**
  * A {@link CombatContext} implementation for {@link Npc}s.
@@ -36,45 +36,24 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
-    public int getMaxHit(CombatDamageType type) {
-        return RandomUtils.inclusive(mob.getMaxHit() > 0 ? mob.getMaxHit() : mob.getCombatDef().getMaximumHit());
+    public int getDefaultMaxHit(CombatDamageType type) {
+        return mob.getMaxHit() > 0 ? mob.getMaxHit() : mob.getCombatDef().getMaximumHit();
     }
 
     @Override
-    public CombatAttack<Npc> getNextAttack(Mob victim) {
+    public CombatAttack<?> getNextAttack(Mob victim, boolean attackReady) {
+        return NpcCombatHandler.INSTANCE.supplyAttack(mob, victim, attackReady);
+    }
 
-        /*
-          todo    For the NPCs its
-               - class based hook
-               - id based hook
-               - default melee using its attack animations
-               hook example
-               combat(1) {
-                 ...
-                 attack = {
-                  npc.speak("i kill noobs!")
-                  return@combat RangedCombatAttack(...)
-                 }
-                 defend = {
-                 npc.speak("ow.. noob dealt $damage.rawAmount damage!")
-                 }
-                 maxHit = 100 // generic max hit override
-
-               }
-         */
-        Animation attack = new Animation(mob.getCombatDef().getAttackAnimation(), AnimationPriority.HIGH);
-        return new MeleeCombatAttack<>(mob, victim, attack, 1, mob.getCombatDef().getAttackSpeed());
+    @Override
+    public void onNextDefence(Mob attacker, CombatDamage damage) {
+        NpcCombatHandler.INSTANCE.consumeDefence(mob, attacker);
     }
 
     @Override
     public EquipmentBonus getAttackStyleBonus() {
         EquipmentBonus bonus = mob.getCombatDef().getDefaultAttackBonus();
         return bonus != null ? bonus : mob.getCombatDef().findHighestAttackBonus();
-    }
-
-    @Override
-    public Animation getDefenceAnimation() {
-        return new Animation(mob.getCombatDef().getDefenceAnimation());
     }
 
     @Override
@@ -104,10 +83,27 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         return true;
     }
 
-    @Override
-    public void onCombatFinished() {
-        // TODO Do regular NPCs like "Man" travel back to their spawn area after combat? Or can they be leashed
-        //  indefinitely? Or do they retreat?
+    /**
+     * Creates the default melee attack for this NPC against the specified victim.
+     * <p>
+     * The default attack uses the NPC's configured attack animation, a melee range of {@code 1}, and the attack speed
+     * from the combat definition.
+     *
+     * @param victim the current combat target
+     * @return the default melee combat attack for this NPC
+     */
+    public CombatAttack<Npc> getDefaultAttack(Mob victim) {
+        return new MeleeCombatAttack<>(mob, victim, mob.getCombatDef().getAttackAnimation(), 1, mob.getCombatDef().getAttackSpeed());
+    }
+
+    /**
+     * Plays the default defence animation for this NPC.
+     * <p>
+     * The animation ID is taken directly from the NPC's combat definition.
+     */
+    public void handleDefaultDefence() {
+        int id = mob.getCombatDef().getDefenceAnimation();
+        mob.animation(new Animation(id));
     }
 
     /**

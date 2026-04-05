@@ -14,6 +14,9 @@ import io.luna.game.model.mob.Mob;
  */
 public final class CombatDelayAction extends Action<Mob> {
 
+
+    // todo this should always be running, if it stops and gets restarted mid-ish combat could result in weird delays?
+
     /**
      * Indicates whether the owning mob may currently perform an attack.
      * <p>

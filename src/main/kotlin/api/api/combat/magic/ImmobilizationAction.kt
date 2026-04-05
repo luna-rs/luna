@@ -27,6 +27,7 @@ class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.S
         if (mob is Player) {
             mob.sendMessage("You have been frozen!")
         }
+        mob.walking.clear()
     }
 
     /**

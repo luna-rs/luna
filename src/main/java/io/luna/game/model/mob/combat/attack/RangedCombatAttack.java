@@ -115,7 +115,6 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
         // Deal damage and apply final effects.
         attacker.submitAction(new CombatDamageAction(nextDamage, true));
-        victim.animation(victim.getCombat().getDefenceAnimation());
         if (end != null) {
             victim.graphic(end);
         }

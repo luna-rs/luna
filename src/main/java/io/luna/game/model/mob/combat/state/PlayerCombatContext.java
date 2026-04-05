@@ -20,6 +20,7 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack;
+import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.varp.PersistentVarp;
 
@@ -68,7 +69,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     /**
      * A cached first attack supplied externally, usually by interaction code.
      * <p>
-     * When present, this attack is consumed before normal attack selection logic in {@link #getNextAttack(Mob)}.
+     * When present, this attack is consumed before normal attack selection logic in
+     * {@link CombatContext#getNextAttack(Mob, boolean)}.
      */
     private CombatAttack<Player> firstAttack;
 
@@ -95,7 +97,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public int getMaxHit(CombatDamageType type) {
+    public int getDefaultMaxHit(CombatDamageType type) {
         if (type == CombatDamageType.MAGIC) {
             if (magic.getSelectedSpell() != NONE) {
                 return magic.getSelectedSpell().getMaxHit();
@@ -111,7 +113,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public CombatAttack<Player> getNextAttack(Mob victim) {
+    public CombatAttack<Player> getNextAttack(Mob victim, boolean attackReady) {
 
         // Handle cached initial attack from interaction code.
         if (firstAttack != null) {
@@ -132,7 +134,6 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
     }
 
-    @Override
     public Animation getDefenceAnimation() {
         if (player.getEquipment().occupied(Equipment.SHIELD)) {
             return new Animation(1156);
@@ -157,6 +158,11 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     @Override
     public EquipmentBonus getAttackStyleBonus() {
         return weapon.getStyleDef().getBonus();
+    }
+
+    @Override
+    public void onNextDefence(Mob attacker, CombatDamage damage) {
+        player.animation(getDefenceAnimation());
     }
 
     /**

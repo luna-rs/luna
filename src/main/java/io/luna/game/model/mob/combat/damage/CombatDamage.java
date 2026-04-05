@@ -149,9 +149,10 @@ public final class CombatDamage {
                 int rawAmount = damage.orElse(0);
                 computed = OptionalInt.of(applyProtectionPrayers(rawAmount));
             } else {
-                int maxHit = attacker.getCombat().getMaxHit(type);
-                int rolledDamage = maxHit < 1 ? maxHit : RandomUtils.inclusive(maxHit);
-                computed = maxHit > 0 ? OptionalInt.of(applyProtectionPrayers(rolledDamage)) : OptionalInt.of(maxHit);
+                int maxHit = attacker.getCombat().getDefaultMaxHit(type);
+                int rolledDamage = maxHit < 1 ? 0 : RandomUtils.inclusive(maxHit);
+                int normalized = Math.max(0, applyProtectionPrayers(rolledDamage));
+                computed = OptionalInt.of(normalized);
             }
             return new CombatDamage(attacker, victim, type, computed);
         }

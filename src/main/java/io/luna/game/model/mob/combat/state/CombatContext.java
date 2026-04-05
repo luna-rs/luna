@@ -8,11 +8,11 @@ import io.luna.game.action.ActionState;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.CombatDelayAction;
 import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageStack;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
@@ -50,7 +50,17 @@ public abstract class CombatContext<T extends Mob> {
      */
     protected Mob target;
 
+    /**
+     * The mob that should be attacked automatically if auto-retaliate is triggered, or {@code null} if no retaliate
+     * target is pending.
+     */
     protected Mob autoRetaliateTarget;
+
+    /**
+     * The last mob this mob exchanged combat with, or {@code null} if none is tracked.
+     * <p>
+     * This is used for single-combat validation and combat ownership checks.
+     */
     protected Mob lastCombatWith;
 
     /**
@@ -77,24 +87,37 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Computes the maximum hit for the supplied combat damage type.
+     * Computes the default maximum hit for the supplied combat damage type.
      *
      * @param type The damage type being evaluated.
-     * @return The maximum hit that can be dealt.
+     * @return The default maximum hit for that damage type.
      */
-    public abstract int getMaxHit(CombatDamageType type);
-
-    // todo combat attack
-    public abstract CombatAttack<?> getNextAttack(Mob victim);
-
-    public abstract EquipmentBonus getAttackStyleBonus();
+    public abstract int getDefaultMaxHit(CombatDamageType type);
 
     /**
-     * Gets the animation played when the owning mob defends against an incoming hit.
+     * Resolves the next attack that should be performed against the supplied victim.
      *
-     * @return The defence animation.
+     * @param victim The current combat target.
+     * @param attackReady {@code true} if the attack delay has elapsed and an attack may be performed immediately,
+     * otherwise {@code false}.
+     * @return The next combat attack to execute.
      */
-    public abstract Animation getDefenceAnimation();
+    public abstract CombatAttack<?> getNextAttack(Mob victim, boolean attackReady);
+
+    /**
+     * Applies subclass-specific defence logic when the owning mob receives damage.
+     *
+     * @param attacker The mob dealing the damage.
+     * @param damage The incoming combat damage being processed.
+     */
+    public abstract void onNextDefence(Mob attacker, CombatDamage damage);
+
+    /**
+     * Gets the attack-style bonus currently used for accuracy calculations.
+     *
+     * @return The active attack-style equipment bonus.
+     */
+    public abstract EquipmentBonus getAttackStyleBonus();
 
     /**
      * Determines whether the owning mob should automatically retaliate when attacked.
@@ -119,7 +142,6 @@ public abstract class CombatContext<T extends Mob> {
                 return;
             }
         }
-        // todo differentiate
         target = enemy;
         mob.getActions().submitIfAbsent(new CombatAction(mob));
     }
@@ -140,7 +162,6 @@ public abstract class CombatContext<T extends Mob> {
      * @return {@code true} if combat is allowed; {@code false} otherwise.
      */
     public boolean checkMultiCombat(Mob victim) {
-        // todo when target dies, if its equal to last combat, clear last combat with
         boolean attackerInMulti = MultiCombatAreaListener.INSTANCE.inside(mob.getPosition());
         boolean victimInMulti = MultiCombatAreaListener.INSTANCE.inside(victim.getPosition());
         if (attackerInMulti && victimInMulti) {
@@ -176,9 +197,22 @@ public abstract class CombatContext<T extends Mob> {
         return true;
     }
 
-    // called when combataction ends
+    /**
+     * Invoked when combat processing finishes for the owning mob.
+     * <p>
+     * Subclasses may override this to clear temporary state or perform post-combat cleanup.
+     */
     public void onCombatFinished() {
 
+    }
+
+    /**
+     * Determines whether the owning mob may perform an attack this tick.
+     *
+     * @return {@code true} if the combat delay is ready, otherwise {@code false}.
+     */
+    public boolean isAttackReady() {
+        return getDelay().isReady();
     }
 
     /**
@@ -197,7 +231,12 @@ public abstract class CombatContext<T extends Mob> {
         return attackDelay;
     }
 
-    public Stopwatch stopCombatTimer() {
+    /**
+     * Gets the stopwatch used to track how long the owning mob has remained in combat.
+     *
+     * @return The combat timer stopwatch.
+     */
+    public Stopwatch getTimer() {
         return combatTimer;
     }
 
@@ -320,22 +359,41 @@ public abstract class CombatContext<T extends Mob> {
         return mob.getActions().contains(ImmobilizationAction.class);
     }
 
+    /**
+     * @return The owning mob.
+     */
     public T getMob() {
         return mob;
     }
 
+    /**
+     * @return The mob to retaliate against, or {@code null} if none is set.
+     */
     public Mob getAutoRetaliateTarget() {
         return autoRetaliateTarget;
     }
 
+    /**
+     * Sets the pending auto-retaliate target.
+     *
+     * @param autoRetaliateTarget The mob to retaliate against, or {@code null} to clear it.
+     */
     public void setAutoRetaliateTarget(Mob autoRetaliateTarget) {
         this.autoRetaliateTarget = autoRetaliateTarget;
     }
 
+    /**
+     * @return The last tracked combat opponent, or {@code null} if none is set.
+     */
     public Mob getLastCombatWith() {
         return lastCombatWith;
     }
 
+    /**
+     * Sets the last mob this mob was in combat with.
+     *
+     * @param lastAttackedBy The last tracked combat opponent.
+     */
     public void setLastCombatWith(Mob lastAttackedBy) {
         this.lastCombatWith = lastAttackedBy;
     }

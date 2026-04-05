@@ -6,6 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat;
 
 /**
@@ -76,6 +77,11 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
         return damage;
+    }
+
+    @Override
+    public CombatDamage calculateDamage(Mob other) {
+        return CombatDamage.computed(attacker, victim, CombatDamageType.MAGIC);
     }
 
     /**
