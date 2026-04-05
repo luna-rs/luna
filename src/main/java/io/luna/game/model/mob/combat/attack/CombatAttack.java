@@ -122,6 +122,15 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
+     * Called when the damage from this attack turn is applied to the {@link #victim}.
+     *
+     * @param damage The damage that was applied to the victim.
+     */
+    public void onAttackArrived(CombatDamage damage) {
+
+    }
+
+    /**
      * Called when a projectile-based attack is launched.
      * <p>
      * Subclasses may override this to display a projectile or perform other logic that should occur at launch time.

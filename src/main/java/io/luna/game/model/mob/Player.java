@@ -817,6 +817,15 @@ public class Player extends Mob {
     }
 
     /**
+     * Sets the current run energy percentage and updates the client.
+     *
+     * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
+     */
+    public void setRunEnergy(double newRunEnergy) {
+        setRunEnergy(newRunEnergy, true);
+    }
+
+    /**
      * Sets the current run energy percentage and optionally updates the client.
      *
      * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
