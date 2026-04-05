@@ -85,11 +85,3 @@ fun noThanksDialogue(plr: Player, targetNpc: Npc) {
         .npc(targetNpc.id, "Well, please return if ", "you change your mind.")
         .open()
 }
-
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId,
-        x = 3205,
-        y = 3417)
-        .startWandering(3, WanderingFrequency.NORMAL)
-}
