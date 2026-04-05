@@ -1,6 +1,6 @@
-package api.combat.weapons
+package api.combat.specialAttack
 
-import api.combat.weapons.dsl.SpecialAttackReceiver
+import api.combat.specialAttack.dsl.SpecialAttackReceiver
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
@@ -28,7 +28,7 @@ class SpecialActivationAction(plr: Player, private val receiver: SpecialAttackRe
      * @return `true` after the special attack has been processed.
      */
     override fun run(): Boolean {
-        receiver.activate!!.invoke(mob)
+        receiver.attack(mob.combat, mob)
         mob.combat.specialBar.isLocked = false
         mob.combat.specialBar.drain(receiver.drain!!, true)
         return true

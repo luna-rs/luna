@@ -1,6 +1,10 @@
 package io.luna.game.model.mob.combat;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Enumerates special attack types and the item IDs that can trigger them.
@@ -167,6 +171,19 @@ public enum SpecialAttackType {
      * <p>Description: Pushes the target back and stuns them for 3 seconds. This attack deals no damage.
      */
     DRAGON_SPEAR(1249, 1263, 3176, 5716, 5730);
+
+    /**
+     * A map of all weapon IDs to their special attack types.
+     */
+    public static final ImmutableMap<Integer, SpecialAttackType> IDS;
+
+    static {
+        Map<Integer, SpecialAttackType> ids = new HashMap<>();
+        for (SpecialAttackType type : values()) {
+            type.getIds().forEach(id -> ids.put(id, type));
+        }
+        IDS = ImmutableMap.copyOf(ids);
+    }
 
     /**
      * All supported wieldable item IDs that map to this special attack type.
