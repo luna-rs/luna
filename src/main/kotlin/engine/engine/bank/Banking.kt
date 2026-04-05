@@ -36,7 +36,7 @@ object Banking {
     /**
      * Loads all banking objects based on definitions from the cache.
      */
-    internal fun loadBankingObjects() {
+    fun loadBankingObjects() {
         for (definition in GameObjectDefinition.ALL) {
             val name = definition.name
             val actions = definition.actions
@@ -51,7 +51,7 @@ object Banking {
     /**
      * Loads all banking npcs based on definitions from the cache.
      */
-    internal fun loadBankingNpcs() {
+    fun loadBankingNpcs() {
         NpcDefinition.ALL
             .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
             .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id) }

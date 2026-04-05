@@ -1,12 +1,12 @@
-package game.bot.injector
+package game.bot.scripts
 
 import api.plugin.dsl.plugin
 
 plugin {
-    name = "Bot injectors"
+    name = "Bot scripts"
     description =
         """
-        A plugin that registers all bot context injectors.
+        A plugin that registers all bot scripts to be persisted.
         """
     version = "1.0"
     authors += "lare96"

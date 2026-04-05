@@ -34,7 +34,7 @@ class CombatPrayerSet(private val player: Player) {
      * - When a prayer is ready to deduct a point, its count will be `1`.
      * - When a prayer is not present in this set, it is considered inactive.
      */
-    internal val active = HashMultiset.create<CombatPrayer>()
+    val active: HashMultiset<CombatPrayer> = HashMultiset.create()
 
     /**
      * Activates [prayer] and ensures any mutually-exclusive prayers in the same [CombatPrayer.group] are deactivated.
@@ -138,7 +138,7 @@ class CombatPrayerSet(private val player: Player) {
      *
      * @return `true` if the prayer had a counter available to decrement (i.e., it was present and one unit was removed).
      */
-    internal fun drain(prayer: CombatPrayer): Boolean {
+    fun drain(prayer: CombatPrayer): Boolean {
         return active.remove(prayer, 1) == 1
     }
 
@@ -150,7 +150,7 @@ class CombatPrayerSet(private val player: Player) {
      * @param resistance The effective resistance value to use. Defaults to [computeResistance].
      * @return The number of ticks per drain cycle.
      */
-    internal fun computeDrainTicks(prayer: CombatPrayer, resistance: Int = computeResistance()) =
+    fun computeDrainTicks(prayer: CombatPrayer, resistance: Int = computeResistance()) =
         (((0.6 * (resistance / prayer.drain)) * 1000) / 600).toInt()
 
     /**

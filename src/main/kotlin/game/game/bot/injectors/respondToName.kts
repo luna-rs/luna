@@ -1,4 +1,4 @@
-package game.bot.injector
+package game.bot.injectors
 
 import api.predef.*
 import api.predef.ext.*

@@ -49,7 +49,7 @@ open class SuspendableFuture(internal val channel: Channel<Boolean>) {
      * @param value `true` if the condition was met or task succeeded, `false` for timeout or failure.
      * @return This future for chaining.
      */
-    internal fun signal(value: Boolean): SuspendableFuture {
+    fun signal(value: Boolean): SuspendableFuture {
         channel.offer(value)
         return this
     }

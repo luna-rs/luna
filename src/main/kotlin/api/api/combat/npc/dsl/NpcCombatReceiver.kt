@@ -18,14 +18,14 @@ class NpcCombatReceiver {
      *
      * Defaults to the NPC's standard combat attack when no custom attack hook is registered.
      */
-    internal var attack: AttackCombatHookReceiver.() -> CombatAttack<out Npc> = { default() }
+    var attack: AttackCombatHookReceiver.() -> CombatAttack<out Npc> = { default() }
 
     /**
      * Defence hook callback.
      *
      * Defaults to a no-op when no custom defence hook is registered.
      */
-    internal var defend: DefenceCombatHookReceiver.() -> Unit = { }
+    var defend: DefenceCombatHookReceiver.() -> Unit = { }
 
     /**
      * Registers the attack hook for this NPC combat receiver.

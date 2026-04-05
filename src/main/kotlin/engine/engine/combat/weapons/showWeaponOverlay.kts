@@ -5,6 +5,7 @@ import api.combat.CombatHandler.updateModelAnimations
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import game.skill.magic.Staff
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.def.CombatSpellDefinition
@@ -13,8 +14,8 @@ import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.varp.Varp
 
-// On weapon equipment changes, check combat and auto-cast related interfaces.
-on(EquipmentChangeEvent::class) {
+// Engine level event for weapon equipment changes. Refreshes combat and auto-cast related systems.
+on(EquipmentChangeEvent::class, EventPriority.HIGH) {
     if (index == Equipment.WEAPON) {
         val weapon = plr.combat.weapon
 
@@ -24,13 +25,13 @@ on(EquipmentChangeEvent::class) {
         weapon.updateModelAnimations()
 
         if (plr.inWilderness() || (newItem != null && weapon.type == Weapon.STAFF && // If we're equipping a staff.
-                    plr.combat.magic.autocastSpell != CombatSpellDefinition.NONE && // And have a spell selected.
+                    plr.combat.magic.autocastSpell != CombatSpellDefinition.NONE && // And have an auto-cast spell selected.
                     plr.spellbook == Spellbook.ANCIENT && // And using the ancient spell book.
-                    newItem.id !in Staff.AUTOCAST_ANCIENTS)
-        ) { // And we cannot cast ancient spells with this staff.
+                    newItem.id !in Staff.AUTOCAST_ANCIENTS)) { // And we cannot cast ancient spells with this staff.
             // Or we're in the wilderness, clear auto-casted spell.
             plr.combat.magic.autocastSpell = CombatSpellDefinition.NONE
         }
+        plr.combat.specialBar.toggleOff()
     }
 
     // Resolve new ammo, if applicable.

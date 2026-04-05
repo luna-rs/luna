@@ -169,7 +169,7 @@ object Magic {
      * @return `true` if the action should continue processing on the next execution step, or `false` if the teleport
      * sequence has finished.
      */
-    internal fun regularStyle(action: TeleportAction): Boolean {
+    fun regularStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
             0 -> true
@@ -208,7 +208,7 @@ object Magic {
      * @return `true` if the action should continue processing on the next execution step, or `false` if the teleport
      * sequence has finished.
      */
-    internal fun ancientStyle(action: TeleportAction): Boolean {
+    fun ancientStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
             0 -> {

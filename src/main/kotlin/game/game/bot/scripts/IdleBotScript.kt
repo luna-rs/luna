@@ -1,4 +1,4 @@
-package game.bot.script
+package game.bot.scripts
 
 import api.bot.BotScript
 import api.bot.Suspendable.delay
@@ -12,7 +12,7 @@ import api.predef.ext.*
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
 import engine.interaction.follow.MobFollowAction
-import game.bot.script.IdleBotScript.InputData
+import game.bot.scripts.IdleBotScript.InputData
 import engine.widget.settings.Emote
 import io.luna.Luna
 import io.luna.game.model.Position

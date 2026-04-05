@@ -120,7 +120,7 @@ object Attr {
     /**
      * Validates and reads a json member. Intended to be used within [TypeAdapter]s.
      */
-    internal fun <E> readJsonMember(reader: JsonReader, expected: String, valueProducer: (JsonReader) -> E): E {
+    fun <E> readJsonMember(reader: JsonReader, expected: String, valueProducer: (JsonReader) -> E): E {
         val next = reader.nextName()
         return if (next.equals(expected)) valueProducer(reader) else
             throw IllegalArgumentException("Expected [$expected], got [$next]")

@@ -21,7 +21,7 @@ class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 
         /**
          * An attribute holding the wine fermenting task.
          */
-        internal var Player.wineFermentTask by Attr.nullableObj(FermentWineTask::class)
+        var Player.wineFermentTask by Attr.nullableObj(FermentWineTask::class)
 
         /**
          * A reference to the wine data.

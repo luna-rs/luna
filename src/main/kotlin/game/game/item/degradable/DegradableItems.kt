@@ -75,7 +75,7 @@ object DegradableItems {
      *
      * This value persists with the item and is decremented according to the degradation rules for that item type.
      */
-    internal var DynamicItem.charges by Attr.int()
+    var DynamicItem.charges by Attr.int()
         .persist("charges")
 
     /**
@@ -175,7 +175,7 @@ object DegradableItems {
      * `null` if the item fully degraded and disappeared.
      * @return `true` if the equipment slot was changed by degradation; `false` otherwise.
      */
-    internal fun degrade(
+    fun degrade(
         plr: Player,
         index: Int,
         initialCharges: Int,

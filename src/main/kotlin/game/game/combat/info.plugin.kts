@@ -1,12 +1,12 @@
-package game.combat.npcHooks
+package game.combat
 
 import api.plugin.dsl.plugin
 
 plugin {
-    name = "NPC combat hooks"
+    name = "Combat"
     description =
         """
-        A plugin that enables all advanced NPC combat (spell casting, ranged, bosses, etc).
+        The main combat plugin that enables special attacks and NPC combat hooks.
         """
     version = "1.0"
     authors += "lare96"

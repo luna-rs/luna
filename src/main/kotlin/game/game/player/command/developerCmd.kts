@@ -3,7 +3,11 @@ package game.player.command
 import api.predef.*
 import api.predef.ext.*
 import game.content.crystalChest.CrystalChestDropTable
+import io.luna.Luna
+import io.luna.game.action.Action
+import io.luna.game.action.ActionType
 import io.luna.game.model.Position
+import io.luna.game.model.area.Area
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -14,9 +18,12 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
 import io.luna.game.model.mob.varp.Varp
+import io.luna.game.model.mob.wandering.SmartWanderingAction
+import io.luna.game.model.mob.wandering.WanderingFrequency
 import io.luna.game.model.`object`.ObjectType
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
+import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
 
 
@@ -43,13 +50,28 @@ cmd("dumpcache", RIGHTS_DEV) {
  * A command that creates and logs in bots. Arguments for amount and if their equipment should be randomized.
  */
 cmd("bots", RIGHTS_DEV) {
+    val username = "nhb"
     val count = if (args.isNotEmpty()) asInt(0) else 1
     val randomEquipment = if (args.size == 2) parseBoolean(args[1]) else false
+    val array = WanderingFrequency.values()
+    plr.submitAction(SmartWanderingAction(plr, Area.of(plr.position, 250), WanderingFrequency.NORMAL))
     repeat(count) {
-        val bot = Bot.Builder(ctx).build()
-        bot.login()
-        if (randomEquipment) {
-            bot.randomizeEquipment()
+        val bot = Bot.Builder(ctx).setUsername(username + it).build()
+        bot.login().thenRun {
+            bot.randomize()
+            bot.submitAction(object : Action<Player>(bot, ActionType.SOFT, false, 5) {
+                override fun run(): Boolean {
+                    val npc = world.findViewable(bot.position, Npc::class).firstOrNull()
+                    if (!bot.combat.inCombat() && npc != null && npc.definition.actions.contains("Attack") && npc.combatLevel > 0 && npc.isAlive) {
+                        bot.combat.attack(npc)
+                    }
+                    delay = RandomUtils.inclusive(5, 25)
+                    return false
+                }
+            })
+            bot.submitAction(SmartWanderingAction(bot,
+                                                  Area.of(Luna.settings().game().startingPosition(), 250),
+                                                  RandomUtils.random(array)))
         }
     }
 }

@@ -1,7 +1,6 @@
-package game.bot.script
+package game.bot.scripts
 
 import api.bot.BotScript
-import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot

@@ -71,7 +71,7 @@ object FishingSpotHandler : Task(false, 100) {
      * world.addNpc(id = 316, x = 3222, y = 3222)
      * ```
      */
-    internal fun add(spawn: Boolean = false, action: FishingSpotReceiver.() -> Unit) {
+    fun add(spawn: Boolean = false, action: FishingSpotReceiver.() -> Unit) {
         val receiver = FishingSpotReceiver()
         action(receiver)
 

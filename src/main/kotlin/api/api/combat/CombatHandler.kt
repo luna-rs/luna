@@ -1,6 +1,5 @@
 package api.combat
 
-import api.combat.weapons.SpecialAttackHandler
 import api.predef.*
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.mob.block.PlayerModelAnimation
@@ -54,7 +53,8 @@ object CombatHandler {
                                                  " " + ItemDefinition.ALL.retrieve(id).name, typeDef.line))
         val special = typeDef.special
         if (special != null) {
-            if (id != null && SpecialAttackHandler.contains(id)) {
+            // Only proceed if the interface supports the special bar.
+            if (specialAttackType != null) {
                 // Only show special bar if the item has a special attack.
                 player.queue(WidgetVisibilityMessageWriter(special.bar, false))
                 player.combat.specialBar.update()
