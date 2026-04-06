@@ -4,12 +4,10 @@ import api.combat.magic.ImmobilizationAction;
 import com.google.common.base.Stopwatch;
 import engine.controllers.MultiCombatAreaListener;
 import game.item.consumable.potion.PotionEffect;
-import io.luna.game.action.ActionState;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
-import io.luna.game.model.mob.combat.CombatDelayAction;
 import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -64,16 +62,18 @@ public abstract class CombatContext<T extends Mob> {
     protected Mob lastCombatWith;
 
     /**
-     * The number of ticks remaining before another attack may be performed.
-     */
-    private CombatDelayAction attackDelay;
-
-    /**
      * The current poison severity.
      * <p>
      * A value greater than {@code 0} indicates that the mob is poisoned.
      */
     private int poisonSeverity;
+
+    /**
+     * The number of game ticks remaining before this mob may perform another attack.
+     * <p>
+     * A value of {@code 0} or less means the mob is currently able to attack.
+     */
+    private int attackDelay;
 
     /**
      * Creates a new {@link CombatContext} for the supplied mob.
@@ -83,7 +83,6 @@ public abstract class CombatContext<T extends Mob> {
     public CombatContext(T mob) {
         this.mob = mob;
         damageStack = new CombatDamageStack(mob);
-        attackDelay = new CombatDelayAction(mob);
     }
 
     /**
@@ -125,6 +124,16 @@ public abstract class CombatContext<T extends Mob> {
      * @return {@code true} if auto-retaliate is enabled, otherwise {@code false}.
      */
     public abstract boolean isAutoRetaliate();
+
+    /**
+     * Creates the default attack for this mob against the specified victim.
+     * <p>
+     * The default attack uses the mob's default configured attack animation, range, and attack speed.
+     *
+     * @param victim The current combat target.
+     * @return The default combat attack.
+     */
+    public abstract CombatAttack<?> getDefaultAttack(Mob victim);
 
     /**
      * Starts attacking the supplied enemy.
@@ -207,31 +216,6 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Determines whether the owning mob may perform an attack this tick.
-     *
-     * @return {@code true} if the combat delay is ready, otherwise {@code false}.
-     */
-    public boolean isAttackReady() {
-        return getDelay().isReady();
-    }
-
-    /**
-     * Gets the active {@link CombatDelayAction}, creating and submitting one if needed.
-     *
-     * @return The active combat delay action.
-     */
-    public CombatDelayAction getDelay() {
-        if (attackDelay == null || attackDelay.getState() == ActionState.COMPLETED ||
-                attackDelay.getState() == ActionState.INTERRUPTED) {
-            attackDelay = new CombatDelayAction(mob);
-        }
-        if (attackDelay.getState() == ActionState.NEW) {
-            mob.getActions().submitIfAbsent(attackDelay);
-        }
-        return attackDelay;
-    }
-
-    /**
      * Gets the stopwatch used to track how long the owning mob has remained in combat.
      *
      * @return The combat timer stopwatch.
@@ -261,7 +245,6 @@ public abstract class CombatContext<T extends Mob> {
     public final boolean inCombat() {
         return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= COMBAT_TIMER_DURATION;
     }
-
 
     /**
      * @return The combat damage stack.
@@ -396,5 +379,39 @@ public abstract class CombatContext<T extends Mob> {
      */
     public void setLastCombatWith(Mob lastAttackedBy) {
         this.lastCombatWith = lastAttackedBy;
+    }
+
+    /**
+     * @return The current attack delay in game ticks.
+     */
+    public int getAttackDelay() {
+        return attackDelay;
+    }
+
+    /**
+     * Processes one tick of attack delay.
+     * <p>
+     * This decrements the remaining delay so the mob moves closer to being able to attack again.
+     */
+    public void processAttackDelay() {
+        attackDelay--;
+    }
+
+    /**
+     * Sets the number of ticks that must elapse before this mob may attack again.
+     *
+     * @param attackDelay The new attack delay in game ticks.
+     */
+    public void setAttackDelay(int attackDelay) {
+        this.attackDelay = attackDelay;
+    }
+
+    /**
+     * Determines whether this mob may perform an attack immediately.
+     *
+     * @return {@code true} if the attack delay has fully elapsed, otherwise {@code false}.
+     */
+    public boolean isAttackReady() {
+        return attackDelay <= 0;
     }
 }

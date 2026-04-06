@@ -83,15 +83,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         return true;
     }
 
-    /**
-     * Creates the default melee attack for this NPC against the specified victim.
-     * <p>
-     * The default attack uses the NPC's configured attack animation, a melee range of {@code 1}, and the attack speed
-     * from the combat definition.
-     *
-     * @param victim the current combat target
-     * @return the default melee combat attack for this NPC
-     */
+    @Override
     public CombatAttack<Npc> getDefaultAttack(Mob victim) {
         return new MeleeCombatAttack<>(mob, victim, mob.getCombatDef().getAttackAnimation(), 1, mob.getCombatDef().getAttackSpeed());
     }

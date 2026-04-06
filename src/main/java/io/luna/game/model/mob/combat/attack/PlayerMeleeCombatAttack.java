@@ -52,6 +52,19 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
         this(attacker, victim, style.getDef());
     }
 
+    /**
+     * Creates a new {@link MeleeCombatAttack}.
+     *
+     * @param attacker The player performing the melee attack.
+     * @param victim The mob receiving the melee attack.
+     * @param animationId The melee attack animation to play.
+     * @param range The range of the melee attack.
+     * @param delay The attack delay, in ticks, applied after execution.
+     */
+    public PlayerMeleeCombatAttack(Player attacker, Mob victim, int animationId, int range, int delay) {
+        super(attacker, victim, animationId, range, delay);
+    }
+
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
 

@@ -16,7 +16,7 @@ attack(type = ABYSSAL_WHIP,
         victim.graphic(Graphic(341, 100, 0))
         if (victim is Player) {
             val removeEnergy = floor(victim.runEnergy * 0.10)
-            if(removeEnergy > 0) {
+            if (removeEnergy > 0) {
                 victim.runEnergy -= removeEnergy
                 attacker.runEnergy += removeEnergy
             }

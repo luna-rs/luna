@@ -40,7 +40,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * The number of ticks that must pass before the attacker can attack again.
      */
-    protected final int delay;
+    protected int delay;
 
     /**
      * The final prepared damage for this attack.
@@ -101,7 +101,7 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        attacker.getCombat().getDelay().reset(delay);
+        attacker.getCombat().setAttackDelay(delay);
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);
@@ -173,7 +173,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * @return The attacking mob.
      */
-    public Mob getAttacker() {
+    public T getAttacker() {
         return attacker;
     }
 
@@ -196,6 +196,15 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public int getDelay() {
         return delay;
+    }
+
+    /**
+     * Sets the attack delay, in ticks.
+     *
+     * @param delay The new delay.
+     */
+    public void setDelay(int delay) {
+        this.delay = delay;
     }
 
     /**

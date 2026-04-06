@@ -79,8 +79,8 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Resolve the next usable combat attack against this target.
-        boolean attackReady = combat.getDelay().isReady();
-        CombatAttack<?> attack = mob.getCombat().getNextAttack(target, attackReady);
+        boolean ready = combat.isAttackReady();
+        CombatAttack<?> attack = mob.getCombat().getNextAttack(target, ready);
         if (attack == null) {
             return clearTarget();
         }
@@ -109,7 +109,7 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Attack as soon as the combat delay permits it.
-        if (attackReady) {
+        if (ready) {
             mob.interact(target);
             attack.apply();
             return false;
@@ -122,7 +122,6 @@ public final class CombatAction extends Action<Mob> {
         combat.onCombatFinished();
         combat.setTarget(null);
         combat.setAutoRetaliateTarget(null);
-        combat.getTimer().stop();
         mob.interact(null);
     }
 
