@@ -10,6 +10,7 @@ import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
 import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 /**
@@ -20,10 +21,9 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  *
  * @param npc The NPC performing the attack.
  * @param other The current combat target.
- * @param attackReady `true` if the NPC is not awaiting an attack delay, `false` otherwise.
  * @author lare96
  */
-class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) : CombatHookReceiver(npc, other) {
+class AttackCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, other) {
 
     /**
      * Creates a magic combat attack using the specified spell.
@@ -64,9 +64,9 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) :
          * @param other The target passed by the combat system.
          * @return The computed melee damage result.
          */
-        override fun calculateDamage(other: Mob?): CombatDamage {
-            return CombatDamage.computeAccuracy(attacker, victim, CombatDamageType.MELEE)
-                .computeDamage(maxHit)
+        override fun calculateDamage(other: Mob): CombatDamage {
+            return CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)
+                .setBaseMaxHit(maxHit).build().resolve()
         }
     }
 

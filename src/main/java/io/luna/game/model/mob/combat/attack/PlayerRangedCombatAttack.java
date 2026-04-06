@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.combat.attack;
 
+import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
@@ -7,12 +8,15 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
+
+import java.util.function.BiFunction;
 
 /**
  * A {@link RangedCombatAttack} implementation for ranged attacks performed by {@link Player}s.
@@ -68,6 +72,26 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         this(attacker, victim, attacker.getCombat().getStyleDef(), attacker.getCombat().getAmmoDef());
     }
 
+    /**
+     * Creates a new {@link RangedCombatAttack}.
+     *
+     * @param attacker The player performing the ranged attack.
+     * @param victim The mob receiving the ranged attack.
+     * @param animationId The firing animation identifier.
+     * @param start The graphic displayed on the attacker when the attack begins, or {@code null} if none.
+     * @param projectileFunction Creates the projectile to display from attacker to victim, or {@code null} if none.
+     * @param end The graphic displayed on the victim when the hit lands, or {@code null} if none.
+     * @param speed The attack delay, in ticks, applied after execution.
+     * @param range The attack range.
+     */
+    public PlayerRangedCombatAttack(Player attacker, Mob victim, int animationId, Graphic start,
+                                    BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end,
+                                    int speed, int range) {
+        super(attacker, victim, animationId, start, projectileFunction, end, speed, range);
+        style = null;
+        ammo = null;
+    }
+
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
         PlayerCombatContext combat = attacker.getCombat();
@@ -96,8 +120,11 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
     public void onProjectileReached() {
         super.onProjectileReached(); // Call superclass no matter what.
 
-        int index = ammo.isAmmoless() ? Equipment.WEAPON :
-                ammo.isNeedsWeapon() ? Equipment.AMMUNITION : -1;
+        int index = -1;
+        if (ammo != null) {
+            index = ammo.isAmmoless() ? Equipment.WEAPON :
+                    ammo.isNeedsWeapon() ? Equipment.AMMUNITION : -1;
+        }
         if (index == -1) {
             // No valid poison source could be determined for this ammo configuration.
             return;

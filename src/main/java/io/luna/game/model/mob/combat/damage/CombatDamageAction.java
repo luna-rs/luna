@@ -4,7 +4,7 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.combat.CombatAction;
-import io.luna.game.model.mob.combat.state.CombatContext;
+import io.luna.game.model.mob.combat.attack.CombatAttack;
 
 /**
  * An {@link Action} that applies a resolved {@link CombatDamage} hit to its victim and then performs auto-retaliate
@@ -40,14 +40,21 @@ public final class CombatDamageAction extends Action<Mob> {
     private final CombatDamage damage;
 
     /**
+     * The source of the resolved damage.
+     */
+    private final CombatAttack<?> source;
+
+    /**
      * Creates a new {@link CombatDamageAction}.
      *
      * @param damage The resolved combat damage to apply.
+     * @param source The source of the resolved damage.
      * @param instant {@code true} if the action should execute instantly, otherwise {@code false}.
      */
-    public CombatDamageAction(CombatDamage damage, boolean instant) {
+    public CombatDamageAction(CombatDamage damage, CombatAttack<?> source, boolean instant) {
         super(damage.getVictim(), ActionType.SOFT, instant, 1);
         this.damage = damage;
+        this.source = source;
         attacker = damage.getAttacker();
         victim = damage.getVictim();
     }
@@ -55,16 +62,19 @@ public final class CombatDamageAction extends Action<Mob> {
     @Override
     public boolean run() {
         if (victim.isAlive()) {
-            // Apply the hit, then determine whether the victim should retaliate.
+            // Apply the hit.
             damage.apply();
 
-            CombatContext<?> victimCombat = victim.getCombat();
-            victimCombat.onNextDefence(attacker, damage); // TODO if too late, move to onsubmit
-            if (victim.isAlive() && victimCombat.isAutoRetaliate()) {
-                if (victimCombat.getTarget() == null || !victim.getActions().contains(CombatAction.class)) {
-                    victimCombat.attack(attacker);
+            // Apply on-hit listeners.
+            source.onAttackArrived(damage);
+            victim.getCombat().onNextDefence(attacker, damage);
+
+            // Determine whether the victim should retaliate.
+            if (victim.isAlive() && victim.getCombat().isAutoRetaliate()) {
+                if (victim.getCombat().getTarget() == null || !victim.getActions().contains(CombatAction.class)) {
+                    victim.getCombat().attack(attacker);
                 } else {
-                    victimCombat.setAutoRetaliateTarget(attacker);
+                    victim.getCombat().setAutoRetaliateTarget(attacker);
                 }
             }
         }

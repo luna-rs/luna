@@ -11,6 +11,7 @@ import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
@@ -132,8 +133,8 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     @Override
     public CombatDamage calculateDamage(Mob other) {
         // Use spell effect max hit.
-        return CombatDamage.computeAccuracy(attacker, other, CombatDamageType.MAGIC).
-                computeDamage(spellEffect.getMaxHit());
+        return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC).
+                setBaseMaxHit(spellEffect.getMaxHit()).build().resolve();
     }
 
     @Override
@@ -160,7 +161,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.MAGIC_SPLASH).display();
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, true));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, true));
     }
 
     /**
@@ -195,7 +196,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
                 if (effectDamage == null) {
                     continue;
                 }
-                effectDamage.getVictim().submitAction(new CombatDamageAction(effectDamage, true));
+                effectDamage.getVictim().submitAction(new CombatDamageAction(effectDamage, this, true));
                 if (end != null) {
                     effectDamage.getVictim().graphic(end);
                 }

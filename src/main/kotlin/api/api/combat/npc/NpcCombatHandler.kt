@@ -6,7 +6,6 @@ import api.combat.npc.dsl.NpcCombatReceiver
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.combat.CombatDelayAction
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import kotlin.reflect.KClass
 
@@ -79,12 +78,11 @@ object NpcCombatHandler {
      *
      * @param attacker The NPC performing the attack.
      * @param victim The current combat target.
-     * @param attackReady `true` if [CombatDelayAction.ready] is flagged.
      * @return The resolved combat attack.
      */
-    fun supplyAttack(attacker: Npc, victim: Mob, attackReady: Boolean): CombatAttack<out Npc> {
+    fun supplyAttack(attacker: Npc, victim: Mob): CombatAttack<out Npc> {
         return resolve(attacker) {
-            val receiver = AttackCombatHookReceiver(attacker, victim, attackReady)
+            val receiver = AttackCombatHookReceiver(attacker, victim)
             it.attack(receiver) // Invoke attack receiver.
         } ?: attacker.combat.getDefaultAttack(victim) // Otherwise, do default attack.
     }

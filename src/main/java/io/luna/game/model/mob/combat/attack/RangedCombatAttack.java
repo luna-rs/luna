@@ -60,6 +60,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
      * @param projectileFunction Creates the projectile to display from attacker to victim, or {@code null} if none.
      * @param end The graphic displayed on the victim when the hit lands, or {@code null} if none.
      * @param speed The attack delay, in ticks, applied after execution.
+     * @param range The attack range.
      */
     public RangedCombatAttack(T attacker, Mob victim, int animationId, Graphic start,
                               BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end, int speed, int range) {
@@ -112,9 +113,8 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public void onProjectileReached() {
-
         // Deal damage and apply final effects.
-        attacker.submitAction(new CombatDamageAction(nextDamage, true));
+        attacker.submitAction(new CombatDamageAction(nextDamage,this, true));
         if (end != null) {
             victim.graphic(end);
         }
