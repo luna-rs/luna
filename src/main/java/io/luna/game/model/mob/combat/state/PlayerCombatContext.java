@@ -1,6 +1,9 @@
 package io.luna.game.model.mob.combat.state;
 
 import api.combat.magic.TeleBlockAction;
+import api.combat.specialAttack.SpecialAttackHandler;
+import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
+import api.combat.specialAttack.dsl.SpecialAttackDataReceiver;
 import engine.combat.prayer.CombatPrayerSet;
 import game.item.degradable.DegradableItems;
 import io.luna.game.model.def.AmmoDefinition;
@@ -70,14 +73,9 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * A cached first attack supplied externally, usually by interaction code.
      * <p>
      * When present, this attack is consumed before normal attack selection logic in
-     * {@link CombatContext#getNextAttack(Mob, boolean)}.
+     * {@link CombatContext#getNextAttack(Mob)}.
      */
     private CombatAttack<Player> firstAttack;
-
-
-    private CombatAttack<Player> specialAttack;
-
-    private CombatAttack<Player> instantSpecialAttack;
 
     /**
      * Creates a new {@link PlayerCombatContext}.
@@ -118,7 +116,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public CombatAttack<Player> getNextAttack(Mob victim, boolean attackReady) {
+    public CombatAttack<Player> getNextAttack(Mob victim) {
 
         // Handle cached initial attack from interaction code.
         if (firstAttack != null) {
@@ -127,20 +125,16 @@ public final class PlayerCombatContext extends CombatContext<Player> {
             return nextAttack;
         }
 
-        // TODO cached instant special attack
-
-
-        // TODO: Special attacks.
-        if (magic.isCasting()) {
-            // Prepare a magic attack if we're auto-casting or have a spell selected.
-            boolean selected = magic.getSelectedSpell() != NONE;
-            CombatSpellDefinition castSpell = selected ? magic.getSelectedSpell() : magic.getAutocastSpell();
-            return new PlayerMagicCombatAttack(player, victim, castSpell, selected);
-        } else if (weapon.isRanged()) {
-            return new PlayerRangedCombatAttack(player, victim);
-        } else {
-            return new PlayerMeleeCombatAttack(player, victim, weapon.getStyleDef());
+        // Handle a special attack if applicable.
+        if (specialBar.isActivated() && !magic.isCasting()) {
+            SpecialAttackDataReceiver receiver = SpecialAttackHandler.INSTANCE.specialAttackData(this);
+            CombatAttack<Player> attack =
+                    receiver.getAttackTransformer().invoke(new SpecialAttackBuilderReceiver(mob, victim, receiver));
+            if (attack != null) {
+                return attack;
+            }
         }
+        return getDefaultAttack(victim);
     }
 
     @Override
@@ -151,8 +145,6 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     @Override
     public void onCombatFinished() {
         firstAttack = null;
-        specialAttack = null;
-        instantSpecialAttack = null;
     }
 
     @Override
@@ -172,6 +164,21 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
         player.animation(new Animation(animationId));
     }
+
+    @Override
+    public CombatAttack<Player> getDefaultAttack(Mob victim) {
+        if (magic.isCasting()) {
+            // Prepare a magic attack if we're auto-casting or have a spell selected.
+            boolean selected = magic.getSelectedSpell() != NONE;
+            CombatSpellDefinition castSpell = selected ? magic.getSelectedSpell() : magic.getAutocastSpell();
+            return new PlayerMagicCombatAttack(player, victim, castSpell, selected);
+        } else if (weapon.isRanged()) {
+            return new PlayerRangedCombatAttack(player, victim);
+        } else {
+            return new PlayerMeleeCombatAttack(player, victim, weapon.getStyleDef());
+        }
+    }
+
 
     /**
      * Restores persistent combat status actions after the player logs in.
@@ -258,21 +265,5 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      */
     public void setFirstAttack(CombatAttack<Player> firstAttack) {
         this.firstAttack = firstAttack;
-    }
-
-    public CombatAttack<Player> getSpecialAttack() {
-        return specialAttack;
-    }
-
-    public void setSpecialAttack(CombatAttack<Player> specialAttack) {
-        this.specialAttack = specialAttack;
-    }
-
-    public CombatAttack<Player> getInstantSpecialAttack() {
-        return instantSpecialAttack;
-    }
-
-    public void setInstantSpecialAttack(CombatAttack<Player> instantSpecialAttack) {
-        this.instantSpecialAttack = instantSpecialAttack;
     }
 }

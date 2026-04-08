@@ -26,7 +26,7 @@ fun loadItems() {
             logger.debug("Recovered ${loadedItems.size()} previously stored drop party items.")
             Files.deleteIfExists(ITEMS_FILE)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.catching(e)
         }
     }
 }

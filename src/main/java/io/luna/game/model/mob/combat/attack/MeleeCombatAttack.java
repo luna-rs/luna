@@ -5,6 +5,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
@@ -45,11 +46,11 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
         if(animation != null) {
             attacker.animation(animation);
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, false));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, false));
     }
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, other, CombatDamageType.MELEE);
+        return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE).build().resolve();
     }
 }

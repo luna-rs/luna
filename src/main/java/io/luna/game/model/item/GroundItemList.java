@@ -348,7 +348,6 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
         boolean changed = false;
         while (it.hasNext()) {
             GroundItem existing = it.next();
-            System.out.println(existing);
             if (existing.getId() == item.getId()
                     && existing.getView().equals(item.getView())) {
                 existing.hide();

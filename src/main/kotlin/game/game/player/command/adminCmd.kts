@@ -68,7 +68,7 @@ cmd("teleobj", RIGHTS_ADMIN) {
     val list = ArrayList<Position>()
     while (it.hasNext()) {
         val obj = it.next()
-        if ((id != null && obj.id == id) || obj.definition.name.equals(name, true)) {
+        if ((id != null && obj.id == id) || obj.def().name.equals(name, true)) {
             list += obj.position
         }
     }

@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
 import api.combat.specialAttack.SpecialAttackHandler;
+import io.luna.Luna;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.def.WeaponSpecialBarDefinition;
@@ -47,7 +48,7 @@ public final class PlayerWeaponSpecialBar {
 
         @Override
         public boolean run() {
-            restore(10);
+            restore(Luna.settings().game().betaMode() ? 100 : 10);
             return energy >= 100;
         }
     }
@@ -108,8 +109,7 @@ public final class PlayerWeaponSpecialBar {
         if (locked) {
             return false;
         }
-        if (energy == 0) {
-            sendEnergyWarning();
+        if (!checkEnergy(1)) {
             return false;
         }
         if (!activated) {
@@ -130,23 +130,29 @@ public final class PlayerWeaponSpecialBar {
      */
     public boolean toggleOff() {
         if (activated && !locked) {
-            player.sendVarp(new Varp(301, 0));
-            activated = false;
+            forceOff();
             return true;
         }
         return false;
     }
 
     /**
-     * Sends the standard special-attack energy warning to the player and resets the related client varp so the
-     * special attack interface is visually updated.
+     * Verifies that the player has at least the specified amount of special attack energy available.
      * <p>
-     * This is typically used when the player attempts to use a special attack without having enough remaining special
-     * energy.
+     * If the player's current energy is below the required amount, a warning message is sent and the special
+     * attack bar is forcibly toggled off.
+     *
+     * @param amount The amount of special attack energy required.
+     * @return {@code true} if the player has enough energy, otherwise {@code false}.
      */
-    public void sendEnergyWarning() {
-        player.sendMessage("You do not have enough special energy left.");
-        player.sendVarp(new Varp(301, 0));
+    public boolean checkEnergy(int amount) {
+        if (energy < amount) {
+            // We don't have enough energy.
+            player.sendMessage("You do not have enough special energy left.");
+            forceOff();
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -237,6 +243,14 @@ public final class PlayerWeaponSpecialBar {
             specialEnergy = 0;
         }
         energy = specialEnergy;
+    }
+
+    /**
+     * Forcibly toggles special attack button off for the player.
+     */
+    public void forceOff() {
+        player.sendVarp(new Varp(301, 0));
+        activated = false;
     }
 
     /**

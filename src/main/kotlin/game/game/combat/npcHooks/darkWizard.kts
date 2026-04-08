@@ -39,14 +39,12 @@ combat(172) {
 // Level 22 and 23 dark wizards.
 combat(3242, 3243) {
     attack {
-        if(attackReady) {
-            // Only attempt speech when we're ready to launch an attack.
-            if (rand(5) == 0) {
-                when (rand(2)) {
-                    0 -> npc.speak("Gah!")
-                    1 -> npc.speak("With the power of Zamorak!")
-                    2 -> npc.speak("Be gone!")
-                }
+        // Only attempt speech when we're ready to launch an attack (throttling).
+        if (combat.isAttackReady && rand(10) == 0) {
+            when (rand(2)) {
+                0 -> npc.speak("Gah!")
+                1 -> npc.speak("With the power of Zamorak!")
+                2 -> npc.speak("Be gone!")
             }
         }
 
@@ -59,7 +57,7 @@ combat(3242, 3243) {
     }
 
     defend {
-        if (rand(5) == 0) {
+        if (rand(10) == 0) {
             when (rand(2)) {
                 0 -> npc.speak("Agh!")
                 1 -> npc.speak("You're no match for me!")

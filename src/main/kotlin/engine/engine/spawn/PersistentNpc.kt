@@ -18,7 +18,7 @@ class PersistentNpc(id: Int, position: Position,
     override fun onActive() {
         if (wanderingRadius != null && wanderingFrequency != null) {
             startWandering(wanderingRadius, wanderingFrequency);
-        } else if (definition.name.equals("Imp")) {
+        } else if (def().name.equals("Imp")) {
             startWandering(1500, WanderingFrequency.NORMAL);
         }
         if (respawnAfter != null) {

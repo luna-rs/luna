@@ -10,6 +10,7 @@ import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
 import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 /**
@@ -20,10 +21,9 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  *
  * @param npc The NPC performing the attack.
  * @param other The current combat target.
- * @param attackReady `true` if the NPC is not awaiting an attack delay, `false` otherwise.
  * @author lare96
  */
-class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) : CombatHookReceiver(npc, other) {
+class AttackCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, other) {
 
     /**
      * Creates a magic combat attack using the specified spell.
@@ -36,7 +36,7 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) :
      */
     fun magic(
         spell: CombatSpell,
-        speed: Int = npc.combatDef.attackSpeed
+        speed: Int = npc.combatDef().attackSpeed
     ) = MagicCombatAttack(npc, other, spell, speed)
 
     /**
@@ -52,10 +52,10 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) :
      * @return The configured melee combat attack.
      */
     fun melee(
-        animationId: Int = npc.combatDef.attackAnimation,
-        maxHit: Int = npc.combatDef.maximumHit,
+        animationId: Int = npc.combatDef().attackAnimation,
+        maxHit: Int = npc.combatDef().maximumHit,
         range: Int = 1,
-        speed: Int = npc.combatDef.attackSpeed
+        speed: Int = npc.combatDef().attackSpeed
     ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
 
         /**
@@ -64,9 +64,9 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob, val attackReady: Boolean) :
          * @param other The target passed by the combat system.
          * @return The computed melee damage result.
          */
-        override fun calculateDamage(other: Mob?): CombatDamage {
-            return CombatDamage.computeAccuracy(attacker, victim, CombatDamageType.MELEE)
-                .computeDamage(maxHit)
+        override fun calculateDamage(other: Mob): CombatDamage {
+            return CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)
+                .setBaseMaxHit(maxHit).build().resolve()
         }
     }
 

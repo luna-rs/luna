@@ -106,7 +106,7 @@ object FishingSpotHandler : Task(false, 100) {
             gameService.sync { world.addNpc(npc) }
             return npc
         } else {
-            return world.npcs.find { it.position == home && it.id == id && it.definition.name == "Fishing spot" }
+            return world.locator.findNpcsOnTile(home) { it.id == id && it.def().name == "Fishing spot" }.firstOrNull()
         }
     }
 }

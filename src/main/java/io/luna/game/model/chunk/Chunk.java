@@ -107,7 +107,7 @@ public final class Chunk implements Locatable {
      * @return The absolute base position of this chunk.
      */
     @Override
-    public Position absLocation() {
+    public Position abs() {
         return getAbsPosition();
     }
 

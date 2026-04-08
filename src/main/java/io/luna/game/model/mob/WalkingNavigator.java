@@ -212,7 +212,7 @@ public class WalkingNavigator {
      * @return A future that completes once the path has been computed and queued.
      */
     public CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
-        CompletableFuture<Void> result = findPath(mob.getPosition(), destination.absLocation(), pathfinder, async)
+        CompletableFuture<Void> result = findPath(mob.getPosition(), destination.abs(), pathfinder, async)
                 .thenAcceptAsync(path -> mob.getWalking().addPath(path), mob.getService().getGameExecutor());
         return handleExceptions(destination, result, null);
     }

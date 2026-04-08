@@ -37,12 +37,12 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public int getDefaultMaxHit(CombatDamageType type) {
-        return mob.getMaxHit() > 0 ? mob.getMaxHit() : mob.getCombatDef().getMaximumHit();
+        return mob.getMaxHit() > 0 ? mob.getMaxHit() : mob.combatDef().getMaximumHit();
     }
 
     @Override
-    public CombatAttack<?> getNextAttack(Mob victim, boolean attackReady) {
-        return NpcCombatHandler.INSTANCE.supplyAttack(mob, victim, attackReady);
+    public CombatAttack<?> getNextAttack(Mob victim) {
+        return NpcCombatHandler.INSTANCE.supplyAttack(mob, victim);
     }
 
     @Override
@@ -52,8 +52,8 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public EquipmentBonus getAttackStyleBonus() {
-        EquipmentBonus bonus = mob.getCombatDef().getDefaultAttackBonus();
-        return bonus != null ? bonus : mob.getCombatDef().findHighestAttackBonus();
+        EquipmentBonus bonus = mob.combatDef().getDefaultAttackBonus();
+        return bonus != null ? bonus : mob.combatDef().findHighestAttackBonus();
     }
 
     @Override
@@ -83,17 +83,9 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         return true;
     }
 
-    /**
-     * Creates the default melee attack for this NPC against the specified victim.
-     * <p>
-     * The default attack uses the NPC's configured attack animation, a melee range of {@code 1}, and the attack speed
-     * from the combat definition.
-     *
-     * @param victim the current combat target
-     * @return the default melee combat attack for this NPC
-     */
+    @Override
     public CombatAttack<Npc> getDefaultAttack(Mob victim) {
-        return new MeleeCombatAttack<>(mob, victim, mob.getCombatDef().getAttackAnimation(), 1, mob.getCombatDef().getAttackSpeed());
+        return new MeleeCombatAttack<>(mob, victim, mob.combatDef().getAttackAnimation(), 1, mob.combatDef().getAttackSpeed());
     }
 
     /**
@@ -102,7 +94,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * The animation ID is taken directly from the NPC's combat definition.
      */
     public void handleDefaultDefence() {
-        int id = mob.getCombatDef().getDefenceAnimation();
+        int id = mob.combatDef().getDefenceAnimation();
         mob.animation(new Animation(id));
     }
 

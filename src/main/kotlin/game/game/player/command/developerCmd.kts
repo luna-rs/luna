@@ -60,8 +60,8 @@ cmd("bots", RIGHTS_DEV) {
             bot.randomize()
             bot.submitAction(object : Action<Player>(bot, ActionType.SOFT, false, 5) {
                 override fun run(): Boolean {
-                    val npc = world.findViewable(bot.position, Npc::class).firstOrNull()
-                    if (!bot.combat.inCombat() && npc != null && npc.definition.actions.contains("Attack") && npc.combatLevel > 0 && npc.isAlive) {
+                    val npc = world.locator.findViewableNpcs(bot).firstOrNull()
+                    if (!bot.combat.inCombat() && npc != null && npc.def().actions.contains("Attack") && npc.combatLevel > 0 && npc.isAlive) {
                         bot.combat.attack(npc)
                     }
                     delay = RandomUtils.inclusive(5, 25)

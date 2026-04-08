@@ -34,7 +34,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
 
     override fun execute() {
         if (mob.thieving.level < thievable.level) {
-            mob.sendMessage("You need a Thieving level of ${thievable.level} to pickpocket ${addArticle(target.definition.name)}.")
+            mob.sendMessage("You need a Thieving level of ${thievable.level} to pickpocket ${addArticle(target.def().name)}.")
             return
         } else if (target.state == EntityState.INACTIVE) {
             return
@@ -53,7 +53,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
         world.scheduleOnce(1) {
             if (mob.state != EntityState.INACTIVE && target.state != EntityState.INACTIVE) {
                 if (Thieving.canPickpocket(mob, thievable)) {
-                    mob.sendMessage("You pick the ${target.definition.name}'s pocket.")
+                    mob.sendMessage("You pick the ${target.def().name}'s pocket.")
                     mob.thieving.addExperience(thievable.xp)
                     mob.animation(Animations.PICKPOCKET)
                     mob.inventory.addAll(loot)

@@ -11,6 +11,7 @@ import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
@@ -60,6 +61,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
      * @param projectileFunction Creates the projectile to display from attacker to victim, or {@code null} if none.
      * @param end The graphic displayed on the victim when the hit lands, or {@code null} if none.
      * @param speed The attack delay, in ticks, applied after execution.
+     * @param range The attack range.
      */
     public RangedCombatAttack(T attacker, Mob victim, int animationId, Graphic start,
                               BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end, int speed, int range) {
@@ -97,7 +99,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, other, CombatDamageType.RANGED);
+        return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.RANGED).build().resolve();
     }
 
     @Override
@@ -112,9 +114,8 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public void onProjectileReached() {
-
         // Deal damage and apply final effects.
-        attacker.submitAction(new CombatDamageAction(nextDamage, true));
+        attacker.submitAction(new CombatDamageAction(nextDamage,this, true));
         if (end != null) {
             victim.graphic(end);
         }

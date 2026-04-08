@@ -54,7 +54,7 @@ public interface Locatable {
      *
      * @return An absolute {@link Position} that anchors this locatable in the world.
      */
-    Position absLocation();
+    Position abs();
 
     /**
      * Returns the relative X coordinate for this locatable.
