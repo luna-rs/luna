@@ -2,8 +2,9 @@ package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.activation
 import api.predef.*
-import io.luna.game.model.mob.block.*
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_BATTLE_AXE
 
 // Rampage
@@ -15,11 +16,15 @@ activation(type = DRAGON_BATTLE_AXE, drain = 100) {
     val defenceDrain = (defence.level * 0.1).toInt()
     val rangedDrain = (ranged.level * 0.1).toInt()
     val magicDrain = (magic.level * 0.1).toInt()
-    val strengthBoost = 10 + ((attackDrain+defenceDrain+rangedDrain+magicDrain) / 4)
+    val strengthBoost = 10 + ((attackDrain + defenceDrain + rangedDrain + magicDrain) / 4)
 
     attack.level -= attackDrain
     defence.level -= defenceDrain
     ranged.level -= rangedDrain
     magic.level -= magicDrain
-    strength.level = strength.staticLevel + strengthBoost
+
+    val newLevel = strength.staticLevel + strengthBoost
+    if (newLevel > strength.level) {
+        strength.level = newLevel
+    }
 }
