@@ -396,7 +396,7 @@ public final class Skill {
 
     // todo documentation
     public boolean weakenBy(double percent) {
-        int newAmount = (int) (getStaticLevel() - Math.floor(level * percent));
+        int newAmount = (int) (getStaticLevel() - Math.floor(getStaticLevel() * percent));
         if (newAmount >= level) {
             return false;
         }
