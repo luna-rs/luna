@@ -605,6 +605,7 @@ public final class WorldLocator {
     private <T extends Mob> List<T> computeVisibleMobsFor(EntityType type, Player player) {
         return find(type, player.getPosition(), Position.VIEWING_DISTANCE, mob -> mob.isViewableFrom(player), ArrayList::new);
     }
+
     /**
      * Performs a bounded outward chunk-ring search for the nearest entity of
      * {@code type} that satisfies {@code filter}.
