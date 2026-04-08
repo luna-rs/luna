@@ -31,12 +31,12 @@ The commit messages that accompany your code changes are an important piece of d
 ## Submitting Your Change
 
 After you submit your pull request, a Luna core developer will review it. It is normal that this takes several iterations, so don't get discouraged by change requests. They ensure the high quality code that we all enjoy.
-If you do not get feedback after 3 days, feel free to ping `@lare96` on our [Discord server](https://discord.gg/udCqykV).
+If you do not get feedback after 3 days, feel free to ping `@lare96` on our [Discord server](https://discord.gg/bqkGY7cmVX).
 
 When submitting pull requests, please
 - Follow the current programming style present in the code (conventions, etc.)
 - <b>Do not</b> submit white space changes as it makes it very hard to see the relevant changes you've made
-- Make sure all new `.java` files have a simple Javadoc class comment, preferably with at least a paragraph describing what the class is for.
+- Include your @author tags when submitting `.kt` or `.java` files. Why not memorialize your name in the codebase!
 - A few unit tests would help a lot as well — someone has to do it.
 
 ## Getting Help
