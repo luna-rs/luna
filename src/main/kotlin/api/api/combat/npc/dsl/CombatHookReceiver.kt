@@ -25,10 +25,10 @@ open class CombatHookReceiver(val npc: Npc, val other: Mob) {
     /**
      * Cached NPC definition for the attacker.
      */
-    val def: NpcDefinition = npc.definition
+    val def: NpcDefinition = npc.def()
 
     /**
      * Cached combat definition for the attacker.
      */
-    val combatDef: NpcCombatDefinition = npc.combatDef
+    val combatDef: NpcCombatDefinition = npc.combatDef()
 }

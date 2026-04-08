@@ -52,7 +52,7 @@ on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LIN
 
 // "Attack" context menu option on npcs.
 on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
-    val def = targetNpc.definition
+    val def = targetNpc.def()
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         plr.combat.attack(targetNpc)
     }
@@ -60,7 +60,7 @@ on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> get
 
 // Use magic spell on NPC.
 on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
-    val def = targetNpc.definition
+    val def = targetNpc.def()
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }

@@ -11,6 +11,7 @@ import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
@@ -98,7 +99,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, other, CombatDamageType.RANGED);
+        return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.RANGED).build().resolve();
     }
 
     @Override

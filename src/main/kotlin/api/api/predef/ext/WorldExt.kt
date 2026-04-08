@@ -190,23 +190,3 @@ fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
 fun World.scheduleOnce(duration: Duration, action: (Task) -> Unit) {
     scheduleOnce(duration.toTicks(), action)
 }
-
-/**
- * Forwards to [World.find] with [KClass] instead of [Class].
- */
-fun <T : Entity> World.find(base: Position, type: KClass<T>, cond: (T) -> Boolean, distance: Int): MutableSet<T> =
-    find(base, type.java, { HashSet() }, cond, distance)
-
-/**
- * Forwards to [World.findViewable] with [KClass] instead of [Class].
- */
-fun <T : Entity> World.findViewable(base: Position, type: KClass<T>, cond: ((T) -> Boolean)? = null): MutableSet<T> =
-    if (cond == null) world.findViewable(base, type.java) else
-        world.findViewable(base, type.java).filterTo(HashSet(), cond)
-
-/**
- * Forwards to [World.findOnTile] with [KClass] instead of [Class].
- */
-fun <T : Entity> World.findOnTile(position: Position, type: KClass<T>, cond: ((T) -> Boolean)? = null): MutableSet<T> =
-    if (cond == null) findOnTile(position, type) else
-        findOnTile(position, type.java).filterTo(HashSet(), cond)

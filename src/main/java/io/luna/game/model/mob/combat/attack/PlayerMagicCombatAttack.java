@@ -10,6 +10,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat;
 
@@ -107,7 +108,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, victim, CombatDamageType.MAGIC);
+        return new CombatDamageRequest.Builder(attacker, victim, CombatDamageType.MAGIC).build().resolve();
     }
 
     /**

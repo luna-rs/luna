@@ -527,7 +527,7 @@ public final class CollisionMatrix {
         if (objectType == ObjectType.DEFAULT ||
                 objectType == ObjectType.DIAGONAL_DEFAULT ||
                 objectType == ObjectType.GROUND_DECORATION) {
-            GameObjectDefinition def = object.getDefinition();
+            GameObjectDefinition def = object.def();
             ObjectDirection objectDirection = object.getDirection();
             int sizeX;
             int sizeY;

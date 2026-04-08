@@ -25,7 +25,7 @@ import java.util.List;
  *     <li>random sampling via {@link #randomPosition()}</li>
  * </ul>
  * <p>
- * <b>Anchor position:</b> Each area has an "anchor" used to satisfy {@link Locatable#absLocation()} and to provide
+ * <b>Anchor position:</b> Each area has an "anchor" used to satisfy {@link Locatable#abs()} and to provide
  * {@link #getX()} / {@link #getY()} coordinates. If not set explicitly, it is lazily initialized to a random
  * position within the area.
  *
@@ -105,7 +105,7 @@ public abstract class Area implements Locatable {
     private ImmutableList<Position> positions;
 
     /**
-     * Anchor position used to satisfy {@link #absLocation()} and {@link Locatable} coordinates.
+     * Anchor position used to satisfy {@link #abs()} and {@link Locatable} coordinates.
      */
     private Position anchorPosition;
 
@@ -115,7 +115,7 @@ public abstract class Area implements Locatable {
      * @return The anchor position.
      */
     @Override
-    public final Position absLocation() {
+    public final Position abs() {
         return getAnchorPosition();
     }
 

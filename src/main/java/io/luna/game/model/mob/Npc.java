@@ -305,7 +305,7 @@ public class Npc extends Mob {
      *
      * @return The current NPC definition.
      */
-    public NpcDefinition getDefinition() {
+    public NpcDefinition def() {
         return definition;
     }
 
@@ -314,7 +314,7 @@ public class Npc extends Mob {
      *
      * @return An {@link Optional} containing the combat definition, or empty if none exists.
      */
-    public NpcCombatDefinition getCombatDef() {
+    public NpcCombatDefinition combatDef() {
         return combatDefinition.orElse(NpcCombatDefinition.ALL.retrieve(1));
     }
 

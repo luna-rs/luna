@@ -71,7 +71,7 @@ public final class BotContextInjectorManager {
             }
 
             int radius = event.contextRadius(bot);
-            Position position = locatable.absLocation();
+            Position position = locatable.abs();
             if (position == null) {
                 continue;
             }

@@ -34,8 +34,8 @@ val SMOKE_SPELLS_POISON_CHANCE = Rational(1, 8)
  */
 inline fun <reified T : Mob> forRadiusMobs(victim: T, radius: Int, action: (Mob) -> Unit) {
     val area = Area.of(victim.position, radius)
-    val classType = EntityType.CLASS_TO_TYPE.inverse()[victim.type]!!
-    for (mob in victim.world.findViewable(victim.position, classType as Class<T>)) {
+    val viewable: Set<T> = world.locator.findViewable(victim.type, victim.position)
+    for (mob in viewable) {
         if (mob != victim && area.contains(mob) && mob.inMultiArea()) {
             action(mob)
         }

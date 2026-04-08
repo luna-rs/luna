@@ -36,7 +36,7 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, o
      */
     fun magic(
         spell: CombatSpell,
-        speed: Int = npc.combatDef.attackSpeed
+        speed: Int = npc.combatDef().attackSpeed
     ) = MagicCombatAttack(npc, other, spell, speed)
 
     /**
@@ -52,10 +52,10 @@ class AttackCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, o
      * @return The configured melee combat attack.
      */
     fun melee(
-        animationId: Int = npc.combatDef.attackAnimation,
-        maxHit: Int = npc.combatDef.maximumHit,
+        animationId: Int = npc.combatDef().attackAnimation,
+        maxHit: Int = npc.combatDef().maximumHit,
         range: Int = 1,
-        speed: Int = npc.combatDef.attackSpeed
+        speed: Int = npc.combatDef().attackSpeed
     ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
 
         /**

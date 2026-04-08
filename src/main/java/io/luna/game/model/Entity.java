@@ -3,7 +3,6 @@ package io.luna.game.model;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.RegionChangedEvent;
-import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
@@ -12,10 +11,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.attr.Attributable;
 import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.plugin.PluginManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.Comparator;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -49,33 +44,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public abstract class Entity implements Attributable, Locatable {
-
-    /**
-     * Sorts entities by distance from a base entity (closest first).
-     * <p>
-     * Useful for "nearest entity" selection and prioritizing updates.
-     */
-    public static final class EntityDistanceComparator implements Comparator<Entity> {
-
-        private final PositionDistanceComparator comparator;
-
-        /**
-         * @param base The base entity used as the distance origin.
-         */
-        public EntityDistanceComparator(Entity base) {
-            comparator = new PositionDistanceComparator(base.position);
-        }
-
-        @Override
-        public int compare(Entity o1, Entity o2) {
-            return comparator.compare(o1.position, o2.position);
-        }
-    }
-
-    /**
-     * The logger.
-     */
-    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The context instance this entity belongs to.
@@ -177,7 +145,7 @@ public abstract class Entity implements Attributable, Locatable {
     }
 
     @Override
-    public final Position absLocation() {
+    public final Position abs() {
         return position;
     }
 
@@ -399,35 +367,54 @@ public abstract class Entity implements Attributable, Locatable {
     public boolean hasAttributes() {
         return attributes != null && attributes.size() > 0;
     }
-
+    /**
+     * @return The owning Luna context.
+     */
     public LunaContext getContext() {
         return context;
     }
 
+    /**
+     * @return The plugin manager.
+     */
     public final PluginManager getPlugins() {
         return plugins;
     }
 
+    /**
+     * @return The game service.
+     */
     public final GameService getService() {
         return service;
     }
 
+    /**
+     * @return The world.
+     */
     public final World getWorld() {
         return world;
     }
 
+    /**
+     * @return The entity type.
+     */
     public EntityType getType() {
         return type;
     }
 
+    /**
+     * @return The entity state.
+     */
     public final EntityState getState() {
         return state;
     }
 
+    /**
+     * @return The current position.
+     */
     public final Position getPosition() {
         return position;
     }
-
     /**
      * @return The current chunk (requires that this entity is registered/active).
      */
