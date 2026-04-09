@@ -203,11 +203,11 @@ enum class Potion(val fourDose: Int,
          */
         private fun Player.onZamorakBrew() {
             val removeHp = 2 + (0.10 * hitpoints.staticLevel).toInt()
-            attack.addLevels(2 + (0.20 * attack.staticLevel).toInt(), true)
-            strength.addLevels(2 + (0.12 * strength.staticLevel).toInt(), true)
-            defence.removeLevels(2 + (0.10 * defence.staticLevel).toInt())
+            attack.boost(2 + (0.20 * attack.staticLevel).toInt())
+            strength.boost(2 + (0.12 * strength.staticLevel).toInt())
+            defence.weaken(2 + (0.10 * defence.staticLevel).toInt())
             damage(removeHp)
-            prayer.addLevels((0.10 * prayer.staticLevel).toInt(), true)
+            prayer.boost((0.10 * prayer.staticLevel).toInt())
         }
 
         /**
@@ -215,12 +215,12 @@ enum class Potion(val fourDose: Int,
          */
         private fun Player.onSaradominBrew() {
             val removeHp = 2 + (0.15 * hitpoints.staticLevel).toInt()
-            defence.addLevels(2 + (0.20 * defence.staticLevel).toInt(), true)
+            defence.boost(2 + (0.20 * defence.staticLevel).toInt())
             damage(removeHp)
-            attack.removeLevels((0.10 * attack.staticLevel).toInt())
-            strength.removeLevels((0.10 * strength.staticLevel).toInt())
-            magic.removeLevels((0.10 * magic.staticLevel).toInt())
-            ranged.removeLevels((0.10 * ranged.staticLevel).toInt())
+            attack.weaken((0.10 * attack.staticLevel).toInt())
+            strength.weaken((0.10 * strength.staticLevel).toInt())
+            magic.weaken((0.10 * magic.staticLevel).toInt())
+            ranged.weaken((0.10 * ranged.staticLevel).toInt())
         }
 
         /**
@@ -238,7 +238,7 @@ enum class Potion(val fourDose: Int,
          */
         private fun Player.onPrayerPotion() {
             val prayer = skill(SKILL_PRAYER)
-            prayer.addLevels(7 + (prayer.staticLevel / 4), false)
+            prayer.adjustLevel(7 + (prayer.staticLevel / 4))
         }
 
         /**
@@ -246,7 +246,7 @@ enum class Potion(val fourDose: Int,
          */
         private fun Player.onSkillPotion(skillId: Int) {
             val skill = skill(skillId)
-            skill.addLevels(3, true)
+            skill.boost(3)
         }
 
         /**
@@ -261,7 +261,7 @@ enum class Potion(val fourDose: Int,
          * Invoked when a restore or super restore potion is sipped.
          */
         private fun Player.onRestorePotion(superPotion: Boolean) {
-            fun boost(level: Int): Int {
+            fun calculateBoost(level: Int): Int {
                 val amount = if (superPotion) 8 + (0.25 * level)
                 else 10 + (0.30 * level)
                 return amount.toInt()
@@ -269,11 +269,11 @@ enum class Potion(val fourDose: Int,
 
             skills.stream()
                 .filter { it.id != SKILL_PRAYER && it.id != SKILL_HITPOINTS }
-                .forEach { it.addLevels(boost(it.staticLevel), false) }
+                .forEach { it.adjustLevel(calculateBoost(it.staticLevel)) }
 
             if (superPotion) {
                 // If super restore is being sipped, restore prayer as well.
-                prayer.addLevels(8 + (prayer.staticLevel / 4), false)
+                prayer.adjustLevel(8 + (prayer.staticLevel / 4))
             }
         }
 
@@ -293,7 +293,7 @@ enum class Potion(val fourDose: Int,
             else 3 + (0.10 * level)
 
             val skill = skill(skillId)
-            skill.addLevels(boostAmount(skill.staticLevel).toInt(), true)
+            skill.boost(boostAmount(skill.staticLevel).toInt())
         }
     }
 

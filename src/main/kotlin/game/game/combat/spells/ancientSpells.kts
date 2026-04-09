@@ -1,11 +1,10 @@
-package engine.combat.magic
+package game.combat.spells
 
 import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
 import api.combat.magic.CombatSpellHandler.weaken
 import api.predef.*
 import engine.controllers.Controllers.inMultiArea
-import io.luna.game.model.EntityType
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
@@ -87,7 +86,7 @@ fun heal(attacker: Mob, damage: CombatDamage, attack: MagicCombatAttack<*>) {
             return
         }
 
-        attacker.hitpoints.addLevels(healAmount, false)
+        attacker.hitpoints.adjustLevel(healAmount)
     }
 
     heal(damage)

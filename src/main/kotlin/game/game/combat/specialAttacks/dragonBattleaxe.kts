@@ -7,7 +7,6 @@ import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_BATTLE_AXE
 
-// Rampage
 activation(type = DRAGON_BATTLE_AXE, drain = 100) {
     animation(Animation(1056, AnimationPriority.HIGH))
     graphic(Graphic(246, 0, 0))
@@ -23,8 +22,5 @@ activation(type = DRAGON_BATTLE_AXE, drain = 100) {
     ranged.level -= rangedDrain
     magic.level -= magicDrain
 
-    val newLevel = strength.staticLevel + strengthBoost
-    if (newLevel > strength.level) {
-        strength.level = newLevel
-    }
+    strength.boost(strengthBoost)
 }

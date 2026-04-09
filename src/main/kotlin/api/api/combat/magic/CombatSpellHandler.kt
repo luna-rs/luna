@@ -9,6 +9,7 @@ import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat
+import kotlin.math.floor
 
 /**
  * A registry and helper container for combat spell side effect handlers.
@@ -39,7 +40,8 @@ object CombatSpellHandler {
      * @param percent The fraction of the skill to weaken by.
      */
     fun weaken(mob: Mob, skill: Skill, percent: Double) {
-        val result = skill.weakenBy(percent)
+        val amount = floor(skill.staticLevel * percent).toInt()
+        val result = skill.weaken(amount)
         if (mob is Player && result) {
             mob.sendMessage("You have been weakened!")
         }

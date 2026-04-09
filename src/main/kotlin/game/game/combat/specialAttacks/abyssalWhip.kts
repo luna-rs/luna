@@ -6,7 +6,6 @@ import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.ABYSSAL_WHIP
 import kotlin.math.floor
 
-// Energy drain special attack.
 attack(type = ABYSSAL_WHIP,
        drain = 50,
        attackBonus = 0.25) {

@@ -1,4 +1,4 @@
-package engine.combat.magic
+package game.combat.spells
 
 import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
