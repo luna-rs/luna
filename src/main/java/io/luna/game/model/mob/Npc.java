@@ -89,10 +89,14 @@ public class Npc extends Mob {
     protected final NpcCombatContext combat = new NpcCombatContext(this);
 
     /**
+     * The NPC aggression handler.
+     */
+    protected final NpcAggression aggression = new NpcAggression(this);
+
+    /**
      * The max hit override.
      */
     private int maxHit;
-
 
     /**
      * Creates a new {@link Npc}.
@@ -442,5 +446,26 @@ public class Npc extends Mob {
      */
     public void setMaxHit(int maxHit) {
         this.maxHit = maxHit;
+    }
+
+    /**
+     * @return The NPC aggression handler.
+     */
+    public NpcAggression getAggression() {
+        return aggression;
+    }
+
+    /**
+     * @return The NPC aggression profile.
+     */
+    public NpcAggressionProfile getAggressionProfile() {
+        return combatDef().getAggression();
+    }
+
+    /**
+     * @return {@code true} if this NPC is a boss.
+     */
+    public boolean isBoss() {
+        return NpcCombatContext.isBoss(id);
     }
 }

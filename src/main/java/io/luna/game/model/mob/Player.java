@@ -269,6 +269,11 @@ public class Player extends Mob {
     private final PlayerCombatContext combat = new PlayerCombatContext(this);
 
     /**
+     * The aggression tolerance handler.
+     */
+    private final PlayerAggressionTolerance tolerance = new PlayerAggressionTolerance(this);
+
+    /**
      * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
      * @param context The global context instance.
@@ -1457,5 +1462,12 @@ public class Player extends Mob {
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
         flags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The aggression tolerance handler.
+     */
+    public PlayerAggressionTolerance getTolerance() {
+        return tolerance;
     }
 }

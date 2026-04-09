@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
 import api.combat.npc.NpcCombatHandler;
+import com.google.common.collect.ImmutableSet;
 import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
@@ -12,6 +13,8 @@ import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
+import java.util.Set;
+
 /**
  * A {@link CombatContext} implementation for {@link Npc}s.
  * <p>
@@ -20,6 +23,30 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType;
  * @author lare96
  */
 public final class NpcCombatContext extends CombatContext<Npc> {
+
+    /**
+     * Cached immutable set of NPC ids that should be treated as bosses.
+     */
+    private static volatile ImmutableSet<Integer> BOSSES = ImmutableSet.of();
+
+    /**
+     * Replaces the current boss id set with an immutable snapshot of the supplied ids.
+     *
+     * @param bosses The boss ids to cache.
+     */
+    public static void setBosses(Set<Integer> bosses) {
+        BOSSES = ImmutableSet.copyOf(bosses);
+    }
+
+    /**
+     * Checks whether the given npc id is currently registered as a boss.
+     *
+     * @param id The npc id to test.
+     * @return {@code true} if the id exists in the cached boss set, otherwise {@code false}.
+     */
+    public static boolean isBoss(int id) {
+        return BOSSES.contains(id);
+    }
 
     /**
      * The retreating policy of this mob.
@@ -86,6 +113,13 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     @Override
     public CombatAttack<Npc> getDefaultAttack(Mob victim) {
         return new MeleeCombatAttack<>(mob, victim, mob.combatDef().getAttackAnimation(), 1, mob.combatDef().getAttackSpeed());
+    }
+
+    @Override
+    public boolean isAttackable() {
+        return mob.isAlive() &&
+                mob.combatDef().getLevel() > 0 &&
+                mob.def().getActions().contains("Attack");
     }
 
     /**

@@ -8,6 +8,7 @@ import io.luna.game.LogoutService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerAggressionTolerance;
 import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
@@ -62,6 +63,7 @@ public class PlayerData {
     public int teleBlock;
     public CombatSpell autocast;
     public boolean autocasting;
+    public PlayerAggressionTolerance tolerance;
 
     /**
      * The username of the player this data belongs to.
@@ -110,6 +112,7 @@ public class PlayerData {
         player.getCombat().getMagic().setTeleBlock(teleBlock, false);
         player.getCombat().getMagic().setAutocastSpell(autocast, false);
         player.getCombat().getMagic().setAutocasting(autocasting);
+        player.getTolerance().load(tolerance);
     }
 
     /**
@@ -161,6 +164,7 @@ public class PlayerData {
         teleBlock = player.getCombat().getMagic().getTeleBlock();
         autocast = player.getCombat().getMagic().getAutocastSpell().getSpell();
         autocasting = player.getCombat().getMagic().isAutocasting();
+        tolerance = player.getTolerance();
         return this;
     }
 

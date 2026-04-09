@@ -345,7 +345,7 @@ public final class Skill {
      */
     public void setLevel(int newLevel) {
         if (newLevel < 1) {
-            newLevel = 1;
+            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
         }
 
         int oldLevel = level;
@@ -373,8 +373,9 @@ public final class Skill {
      */
     public void adjustLevel(int amount) {
         int newLevel = level + amount;
+
         if (newLevel < 1) {
-            newLevel = 1;
+            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
         } else if (newLevel > getStaticLevel()) {
             newLevel = getStaticLevel();
         }

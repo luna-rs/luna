@@ -398,6 +398,7 @@ public final class World {
                     continue;
                 }
                 npc.getWalking().process();
+                npc.getAggression().process();
                 npc.getCombat().processAttackDelay();
                 npc.getActions().process();
             } catch (Exception e) {
@@ -414,6 +415,7 @@ public final class World {
             try {
                 player.getControllers().process();
                 player.getWalking().process();
+                player.getTolerance().process();
                 player.getCombat().processAttackDelay();
                 player.getActions().process();
 

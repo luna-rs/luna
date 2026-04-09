@@ -1,0 +1,74 @@
+[
+  // Main repeatable bosses.
+  50,   // King black dragon.
+  1158, // Kalphite Queen.
+  1160, // Kalphite Queen.
+  2025, // Ahrim the Blighted.
+  2026, // Dharok the Wretched.
+  2027, // Guthan the Infested.
+  2028, // Karil the Tainted.
+  2029, // Torag the Corrupted.
+  2030, // Verac the Defiled.
+  2745, // TzTok-Jad.
+  2881, // Dagannoth Supreme.
+  2882, // Dagannoth Prime.
+  2883, // Dagannoth Rex.
+  3200, // Chaos Elemental.
+  3340, // Giant Mole.
+  3835, // Kalphite Queen.
+  3836, // Kalphite Queen.
+
+  // Notable quest / encounter bosses and attackable combat variants.
+  221,  // Black Knight Titan.
+  258,  // General Khazard.
+  269,  // Bouncer.
+  477,  // Khazard warlord.
+  507,  // Nazastarool.
+  508,  // Nazastarool.
+  509,  // Nazastarool.
+  667,  // Chronozon.
+  742,  // Elvarg.
+  757,  // Count Draynor.
+  795,  // Ice Queen.
+  879,  // Delrith.
+  907,  // Kolodion.
+  908,  // Kolodion.
+  909,  // Kolodion.
+  910,  // Kolodion.
+  911,  // Kolodion.
+  934,  // Nezikchened.
+  1115, // Troll General.
+  1116, // Troll General.
+  1117, // Troll General.
+  1125, // Dad.
+  1351, // Dagannoth mother.
+  1352, // Dagannoth mother.
+  1353, // Dagannoth mother.
+  1354, // Dagannoth mother.
+  1355, // Dagannoth mother.
+  1356, // Dagannoth mother.
+  1472, // Jungle Demon.
+  1540, // Treus Dayth.
+  1802, // Slagilith.
+  1913, // Kamil.
+  1914, // Dessous.
+  1915, // Dessous.
+  1974, // Damis.
+  1975, // Damis.
+  1977, // Fareed.
+  2060, // Slash Bash.
+  2919, // Agrith Naar.
+  3313, // Tanglefoot.
+  3491, // Culinaromancer.
+  3493, // Agrith-Na-Na.
+  3494, // Flambeed.
+  3495, // Karamel.
+  3496, // Dessourt.
+  3497, // Gelatinnoth Mother.
+  3498, // Gelatinnoth Mother.
+  3499, // Gelatinnoth Mother.
+  3500, // Gelatinnoth Mother.
+  3501, // Gelatinnoth Mother.
+  3502, // Gelatinnoth Mother.
+  3847  // Sea Troll Queen.
+]

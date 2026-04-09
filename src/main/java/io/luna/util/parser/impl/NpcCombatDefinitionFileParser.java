@@ -1,9 +1,12 @@
 package io.luna.util.parser.impl;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
+import io.luna.game.model.mob.NpcAggressionProfile;
+import io.luna.game.model.mob.NpcAggressionProfile.NpcAggressionPolicy;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
@@ -29,14 +32,14 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
      * Creates a new {@link NpcCombatDefinitionFileParser}.
      */
     public NpcCombatDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "npc_combat.json"));
+        super(Paths.get("data", "game", "def", "npcs", "npc_combat.json"));
     }
 
     @Override
     public NpcCombatDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int respawnTicks = token.get("respawn_ticks").getAsInt();
-        boolean aggressive = token.get("aggressive?").getAsBoolean();
+        NpcAggressionProfile aggression = readProfile(token.get("aggression"));
         boolean poisonous = token.get("poisonous?").getAsBoolean();
         int combatLevel = token.get("level").getAsInt();
         int hitpoints = token.get("hitpoints").getAsInt();
@@ -49,13 +52,24 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
         EquipmentBonus defaultAttackType = token.has("default_attack_bonus") ?
                 EquipmentBonus.valueOf(token.get("default_attack_bonus").getAsString()) : null;
-        return new NpcCombatDefinition(id, respawnTicks, aggressive, poisonous, combatLevel, hitpoints, maximumHit,
-                attackSpeed, attackAnimation, defenceAnimation, deathAnimation, skills, bonuses, defaultAttackType);
+        return new NpcCombatDefinition(id, respawnTicks, poisonous, combatLevel, hitpoints, maximumHit,
+                attackSpeed, attackAnimation, defenceAnimation, deathAnimation, skills, bonuses, defaultAttackType,
+                aggression);
     }
 
     @Override
     public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) {
         NpcCombatDefinition.ALL.storeAndLock(tokenObjects);
         logger.debug("Loaded {} NPC combat definitions!", box(tokenObjects.size()));
+    }
+
+    private NpcAggressionProfile readProfile(JsonElement element) {
+        if (element.isJsonNull()) {
+            return null;
+        }
+        JsonObject object = element.getAsJsonObject();
+        NpcAggressionPolicy policy = NpcAggressionPolicy.valueOf(object.get("policy").getAsString());
+        int toleranceMinutes = object.get("tolerance_minutes").getAsInt();
+        return new NpcAggressionProfile(policy, toleranceMinutes);
     }
 }
