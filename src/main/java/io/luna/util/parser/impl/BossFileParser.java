@@ -1,10 +1,12 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonObject;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
-import io.luna.util.parser.JsonFileParser;
+import io.luna.util.GsonUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
@@ -13,22 +15,20 @@ import java.util.HashSet;
  *
  * @author lare96
  */
-public final class BossFileParser extends JsonFileParser<Integer> {
+public final class BossFileParser implements Runnable {
 
     /**
-     * Creates a new {@link BossFileParser}.
+     * The logger.
      */
-    public BossFileParser() {
-        super(Paths.get("data", "game", "def", "npcs", "bosses.jsonc"));
-    }
+    private static final Logger logger = LogManager.getLogger();
 
     @Override
-    public Integer convert(JsonObject token) {
-        return token.getAsInt();
-    }
-
-    @Override
-    public void onCompleted(ImmutableList<Integer> tokenObjects) {
-        NpcCombatContext.setBosses(new HashSet<>(tokenObjects));
+    public void run() {
+        try {
+            Path file = Paths.get("data", "game", "def", "npcs", "bosses.jsonc");
+            NpcCombatContext.setBosses(GsonUtils.readAsType(file, HashSet.class));
+        } catch (IOException e) {
+            logger.catching(e);
+        }
     }
 }

@@ -20,6 +20,7 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.AmmoDefinitionFileParser;
+import io.luna.util.parser.impl.BossFileParser;
 import io.luna.util.parser.impl.CombatSpellDefinitionFileParser;
 import io.luna.util.parser.impl.DegradableItemDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
@@ -196,6 +197,7 @@ public final class LunaServer {
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new AmmoDefinitionFileParser());
         taskList.add(new DegradableItemDefinitionFileParser());
+        taskList.add(new BossFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
