@@ -134,6 +134,11 @@ public abstract class CombatContext<T extends Mob> {
     public abstract CombatAttack<?> getDefaultAttack(Mob victim);
 
     /**
+     * @return {@code true} if this mob is valid and able to enter combat.
+     */
+    public abstract boolean isAttackable();
+
+    /**
      * Starts attacking the supplied enemy.
      * <p>
      * If the owning mob is a {@link Player}, combat initiation is first validated by the player's active controllers.

@@ -35,14 +35,14 @@ fun getInteraction(plr: Player, target: Entity): InteractionPolicy {
 
 // "Attack" context menu option on players.
 on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
-    if (plr.contextMenu.contains(OPTION_ATTACK) && targetPlr.hitpoints.level > 0) {
+    if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
         plr.combat.attack(targetPlr)
     }
 }
 
 // Use magic spell on player.
 on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
-    if (plr.contextMenu.contains(OPTION_ATTACK) && targetPlr.hitpoints.level > 0) {
+    if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
         plr.combat.firstAttack = plr.combat.getNextAttack(targetPlr)
@@ -52,16 +52,14 @@ on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LIN
 
 // "Attack" context menu option on npcs.
 on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
-    val def = targetNpc.def()
-    if (def.combatLevel > 0 && def.actions.contains("Attack")) {
+    if (plr.combat.isAttackable && targetNpc.combat.isAttackable) {
         plr.combat.attack(targetNpc)
     }
 }
 
 // Use magic spell on NPC.
 on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
-    val def = targetNpc.def()
-    if (def.combatLevel > 0 && def.actions.contains("Attack")) {
+    if (plr.combat.isAttackable && targetNpc.combat.isAttackable) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
         plr.combat.firstAttack = plr.combat.getNextAttack(targetNpc)

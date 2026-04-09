@@ -177,26 +177,6 @@ public abstract class Entity implements Attributable, Locatable {
     public abstract int sizeY();
 
     /**
-     * Determines if {@code other} is within this entity's view distance rules.
-     *
-     * @param other The entity to test visibility against.
-     * @return {@code true} if {@code other} is viewable.
-     */
-    public boolean isViewableFrom(Entity other) {
-        return position.isViewable(other.position);
-    }
-
-    /**
-     * Computes the maximum axis distance (chebyshev distance) between this entity and {@code other}.
-     *
-     * @param other The other entity.
-     * @return The longest distance between positions in tiles.
-     */
-    public int computeLongestDistance(Entity other) {
-        return position.computeLongestDistance(other.position);
-    }
-
-    /**
      * Hook invoked when transitioning into {@link EntityState#ACTIVE}.
      * <p>
      * Override to initialize state that requires the entity to be registered (e.g., starting updates).
@@ -257,28 +237,6 @@ public abstract class Entity implements Attributable, Locatable {
     }
 
     /**
-     * Determines if {@code other} is within {@code radius} tiles.
-     *
-     * @param other The other entity.
-     * @param radius Maximum allowed distance in tiles.
-     * @return {@code true} if within {@code radius}.
-     */
-    public boolean isWithinDistance(Entity other, int radius) {
-        return isWithinDistance(other.position, radius);
-    }
-
-    /**
-     * Determines if {@code other} is within {@code radius} tiles.
-     *
-     * @param other The other position.
-     * @param radius Maximum allowed distance in tiles.
-     * @return {@code true} if within {@code radius}.
-     */
-    public boolean isWithinDistance(Position other, int radius) {
-        return position.isWithinDistance(other, radius);
-    }
-
-    /**
      * Updates this entity's position and performs chunk/region checks when applicable.
      * <p>
      * When {@link EntityState#ACTIVE}:
@@ -302,6 +260,7 @@ public abstract class Entity implements Attributable, Locatable {
                 if (type == EntityType.PLAYER) {
                     Player player = (Player) this;
                     player.getControllers().checkPosition();
+                    player.getTolerance().refresh();
                 }
                 if (old != null) {
                     Region now = newPosition.getRegion();

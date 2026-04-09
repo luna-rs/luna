@@ -13,6 +13,7 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
@@ -179,6 +180,10 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
     }
 
+    @Override
+    public boolean isAttackable() {
+        return player.isAlive() && player.getContextMenu().contains(PlayerContextMenuOption.ATTACK);
+    }
 
     /**
      * Restores persistent combat status actions after the player logs in.

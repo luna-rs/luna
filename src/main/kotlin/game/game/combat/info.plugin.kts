@@ -6,7 +6,7 @@ plugin {
     name = "Combat"
     description =
         """
-        The main combat plugin that enables special attacks and NPC combat hooks.
+        The main combat plugin that enables combat hooks (special attacks, NPCs, spells).
         """
     version = "1.0"
     authors += "lare96"
