@@ -410,6 +410,20 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
+     * Extends the current attack delay after food is eaten.
+     * <p>
+     * This only applies an additional delay if an attack cooldown is already active. If the current attack delay is
+     * zero or less, no delay is added.
+     *
+     * @param delay The additional delay to add.
+     */
+    public void addFoodDelay(int delay) {
+        if (attackDelay > 0) {
+            attackDelay += delay;
+        }
+    }
+
+    /**
      * Determines whether this mob may perform an attack immediately.
      *
      * @return {@code true} if the attack delay has fully elapsed, otherwise {@code false}.
