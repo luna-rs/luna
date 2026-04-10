@@ -12,8 +12,7 @@ import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.block.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
@@ -61,8 +60,8 @@ cmd("bots", RIGHTS_DEV) {
             bot.randomize()
             bot.submitAction(object : Action<Player>(bot, ActionType.SOFT, false, 5) {
                 override fun run(): Boolean {
-                    val npc = world.findViewable(bot.position, Npc::class).firstOrNull()
-                    if (!bot.combat.inCombat() && npc != null && npc.definition.actions.contains("Attack") && npc.combatLevel > 0 && npc.isAlive) {
+                    val npc = world.locator.findViewableNpcs(bot).firstOrNull()
+                    if (!bot.combat.inCombat() && npc != null && npc.def().actions.contains("Attack") && npc.combatLevel > 0 && npc.isAlive) {
                         bot.combat.attack(npc)
                     }
                     delay = RandomUtils.inclusive(5, 25)
@@ -189,4 +188,19 @@ cmd("graphic", RIGHTS_DEV) {
 cmd("animation", RIGHTS_DEV) {
     val id = asInt(0)
     plr.animation(Animation(id))
+}
+
+/**
+ * A command that restores special attack energy fully.
+ */
+cmd("sa", RIGHTS_DEV) {
+    plr.combat.specialBar.energy = 100
+    plr.combat.specialBar.update()
+}
+
+/**
+ * A command that resets all skill level boosts.
+ */
+cmd("resetboosts", RIGHTS_DEV) {
+    plr.skills.resetAll()
 }

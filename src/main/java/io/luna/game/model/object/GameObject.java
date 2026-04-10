@@ -203,7 +203,7 @@ public class GameObject extends StationaryEntity {
     /**
      * @return The definition.
      */
-    public final GameObjectDefinition getDefinition() {
+    public final GameObjectDefinition def() {
         return definition;
     }
 

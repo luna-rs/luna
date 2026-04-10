@@ -40,7 +40,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * The number of ticks that must pass before the attacker can attack again.
      */
-    protected final int delay;
+    protected int delay;
 
     /**
      * The final prepared damage for this attack.
@@ -49,6 +49,11 @@ public abstract class CombatAttack<T extends Mob> {
      * passed through {@link #onAttack(CombatDamage)}.
      */
     protected CombatDamage nextDamage;
+
+    /**
+     * If this attack should ignore the attack delay (attack instantly, do not reset attack delay after).
+     */
+    private boolean ignoreAttackDelay;
 
     /**
      * Creates a new {@link CombatAttack}.
@@ -101,7 +106,11 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        attacker.getCombat().getDelay().reset(delay);
+        if(!isIgnoreAttackDelay()) {
+            // TODO Wiki states if you open with an instant special attack (gmaul) it will still give you the
+            //  delay after. We can simulate this behaviour by adding an additional "|| combat.isAttackReady()" check.
+            attacker.getCombat().setAttackDelay(delay);
+        }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);
@@ -119,6 +128,15 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public CombatDamage onAttack(CombatDamage damage) {
         return damage;
+    }
+
+    /**
+     * Called when the damage from this attack turn is applied to the {@link #victim}.
+     *
+     * @param damage The damage that was applied to the victim.
+     */
+    public void onAttackArrived(CombatDamage damage) {
+
     }
 
     /**
@@ -164,7 +182,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * @return The attacking mob.
      */
-    public Mob getAttacker() {
+    public T getAttacker() {
         return attacker;
     }
 
@@ -190,9 +208,34 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
+     * Sets the attack delay, in ticks.
+     *
+     * @param delay The new delay.
+     */
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+
+    /**
      * @return The prepared damage, or {@code null} if not yet assigned or if the attack was cancelled.
      */
     public CombatDamage getNextDamage() {
         return nextDamage;
+    }
+
+    /**
+     * @return {@code true} if this attack should ignore the attack delay.
+     */
+    public boolean isIgnoreAttackDelay() {
+        return ignoreAttackDelay;
+    }
+
+    /**
+     * Sets if this attack should ignore the attack delay.
+     *
+     * @param ignoreAttackDelay The new value.
+     */
+    public void setIgnoreAttackDelay(boolean ignoreAttackDelay) {
+        this.ignoreAttackDelay = ignoreAttackDelay;
     }
 }

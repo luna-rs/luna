@@ -3,6 +3,8 @@ package io.luna.game.model;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.chunk.Chunk;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Represents something that occupies a location in the RS2 world.
  * <p>
@@ -46,6 +48,46 @@ public interface Locatable {
     }
 
     /**
+     * Determines whether this locatable is within a square distance of another locatable.
+     * <p>
+     * Both positions must be on the same plane. Distance is evaluated using axis-aligned tile deltas rather
+     * than Euclidean distance, so this returns {@code true} only if both the X and Y differences are less than
+     * or equal to {@code distance}.
+     * <p>
+     * In other words, this performs a Chebyshev-style range check over world coordinates.
+     *
+     * @param other The other locatable to compare against.
+     * @param distance The maximum allowed tile distance on both axes. Must be non-negative.
+     * @return {@code true} if both locatables are on the same plane and within {@code distance} tiles on both
+     * the X and Y axes, otherwise {@code false}.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    default boolean isWithinDistance(Locatable other, int distance) {
+        checkArgument(distance >= 0, "Distance must be non-negative.");
+        Position abs = abs();
+        Position otherAbs = other.abs();
+
+        if (abs.getZ() != otherAbs.getZ()) {
+            return false;
+        }
+        int deltaX = Math.abs(otherAbs.getX() - abs.getX());
+        int deltaY = Math.abs(otherAbs.getY() - abs.getY());
+        return deltaX <= distance && deltaY <= distance;
+    }
+
+    /**
+     * Determines whether this locatable is within standard viewing distance of another locatable.
+     * <p>
+     * This is a convenience wrapper around {@link #isWithinDistance(Locatable, int)} using {@link Position#VIEWING_DISTANCE}.
+     *
+     * @param other The other locatable to compare against.
+     * @return {@code true} if {@code other} is within standard view distance and on the same plane, otherwise {@code false}.
+     */
+    default boolean isViewableFrom(Locatable other) {
+        return isWithinDistance(other, Position.VIEWING_DISTANCE);
+    }
+
+    /**
      * Returns an absolute world {@link Position} that represents this locatable.
      * <p>
      * For multi-tile or abstract locatables (for example, regions or areas), this should return a stable anchor
@@ -54,7 +96,7 @@ public interface Locatable {
      *
      * @return An absolute {@link Position} that anchors this locatable in the world.
      */
-    Position absLocation();
+    Position abs();
 
     /**
      * Returns the relative X coordinate for this locatable.

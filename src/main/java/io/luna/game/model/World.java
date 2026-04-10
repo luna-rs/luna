@@ -4,9 +4,7 @@ import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.LoginService;
 import io.luna.game.LogoutService;
-import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
-import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
@@ -29,21 +27,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * The primary world state container and tick processor.
@@ -223,6 +216,11 @@ public final class World {
     private final GroundItemList items = new GroundItemList(this);
 
     /**
+     * Entity lookup manager.
+     */
+    private final WorldLocator locator = new WorldLocator(this);
+
+    /**
      * Synchronization barrier used by {@link #synchronize()} to block until all per-player update tasks complete.
      * <p>
      * Initialized with 1 party for the game thread.
@@ -400,6 +398,8 @@ public final class World {
                     continue;
                 }
                 npc.getWalking().process();
+                npc.getAggression().process();
+                npc.getCombat().processAttackDelay();
                 npc.getActions().process();
             } catch (Exception e) {
                 npcList.remove(npc);
@@ -415,6 +415,8 @@ public final class World {
             try {
                 player.getControllers().process();
                 player.getWalking().process();
+                player.getTolerance().process();
+                player.getCombat().processAttackDelay();
                 player.getActions().process();
 
                 if (player.isBot()) {
@@ -460,9 +462,8 @@ public final class World {
                 player.updateLocalView(player.getPosition());
 
                 // Prepare local mobs for updating and encode them using our thread pool.
-                Collection<Player> localPlayers = chunks.findUpdateMobs(player, Player.class);
-                Collection<Npc> localNpcs = chunks.findUpdateMobs(player, Npc.class);
-
+                List<Player> localPlayers = locator.computeVisiblePlayersFor(player);
+                List<Npc> localNpcs = locator.computeVisibleNpcsFor(player);
                 updatePool.execute(new PlayerSynchronizationTask(player, localPlayers, localNpcs));
             } catch (Exception e) {
                 logger.error("Error occurred while preparing player update request.", e);
@@ -557,100 +558,6 @@ public final class World {
     }
 
     /**
-     * Finds entities near {@code base} within {@code distance} tiles.
-     * <p>
-     * This is a chunk-based spatial query:
-     * <ol>
-     *     <li>Computes a chunk radius large enough to cover {@code distance}.</li>
-     *     <li>Loads each chunk repository in that radius.</li>
-     *     <li>Scans entities of the requested type and applies {@code filter}.</li>
-     *     <li>Adds matches to a collection produced by {@code out}.</li>
-     * </ol>
-     * <p>
-     * Complexity is roughly {@code O(chunks_scanned + entities_scanned)}. Keep {@code distance} small in hot paths.
-     *
-     * @param base The base position to search around.
-     * @param type The entity class to search for.
-     * @param out A supplier for the output collection instance.
-     * @param filter A predicate to filter matches.
-     * @param distance The search radius in tiles (must be {@code >= 1}).
-     * @param <V> The entity type.
-     * @param <C> The output collection type.
-     * @return The output collection containing all matching entities.
-     * @throws IllegalArgumentException if {@code distance < 1}.
-     */
-    public <V extends Entity, C extends Collection<V>> C find(
-            Position base,
-            Class<V> type,
-            Supplier<C> out,
-            Predicate<? super V> filter,
-            int distance) {
-
-        checkArgument(distance > 0, "[distance] cannot be below 1.");
-
-        int radius = Math.floorDiv(distance, Chunk.SIZE) + 2;
-        C found = out.get();
-
-        EntityType entityType = EntityType.CLASS_TO_TYPE.get(type);
-        Chunk chunk = base.getChunk();
-
-        for (int x = -radius; x < radius; x++) {
-            for (int y = -radius; y < radius; y++) {
-                ChunkRepository repository = chunks.load(chunk.translate(x, y));
-                Set<V> entities = repository.getAll(entityType);
-                if(entities != null) {
-                    for (V entity : entities) {
-                        if (filter.test(entity)) {
-                            found.add(entity);
-                        }
-                    }
-                }
-            }
-        }
-        return found;
-    }
-
-    /**
-     * Finds entities of {@code type} that are within viewing distance of {@code position}.
-     *
-     * @param position The base position.
-     * @param type The entity class to find.
-     * @param <T> The entity type.
-     * @return A set of entities within {@link Position#VIEWING_DISTANCE}.
-     */
-    public <T extends Entity> HashSet<T> findViewable(Position position, Class<T> type) { // todo rewrite this functions and make easier to use/more efficient
-        return find(position, type, HashSet::new,
-                entity -> entity.isWithinDistance(position, Position.VIEWING_DISTANCE),
-                Position.VIEWING_DISTANCE);
-    } // todo findNearest, findNearestViewable, findAll, find, etc. think of an API for this
-
-    /**
-     * Finds all entities of {@code type} whose position exactly equals {@code base}.
-     * <p>
-     * Faster than using {@link #find(Position, Class, Supplier, Predicate, int)} or one of its overloads.
-     *
-     * @param base The tile to search.
-     * @param type The entity class to find.
-     * @param <T> The entity type.
-     * @return A set of entities on the exact tile.
-     */
-    public <T extends Entity> HashSet<T> findOnTile(Position base, Class<T> type) {
-        EntityType entityType = EntityType.CLASS_TO_TYPE.get(type);
-        if (entityType == null) {
-            throw new IllegalStateException("Invalid EntityType [" + type.getSimpleName() + "]");
-        }
-        ChunkRepository repository = chunks.load(base.getChunk());
-        Set<T> entities = repository.getAll(entityType);
-        HashSet<T> found = new HashSet<>(entities.size());
-        for(T next : entities) {
-            if(next.getPosition().equals(base)) {
-                found.add(next);
-            }
-        }
-        return found;
-    }
-
-    /**
      * @return The runtime context.
      */
     public LunaContext getContext() {
@@ -725,6 +632,13 @@ public final class World {
      */
     public GroundItemList getItems() {
         return items;
+    }
+
+    /**
+     * @return The entity lookup manager.
+     */
+    public WorldLocator getLocator() {
+        return locator;
     }
 
     /**

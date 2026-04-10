@@ -1,5 +1,6 @@
 package io.luna.game.model.chunk;
 
+import com.google.common.collect.ImmutableMap;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityState;
@@ -64,7 +65,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * The entities currently inside this chunk, grouped by {@link EntityType}.
      */
-    private final Map<EntityType, Set<Entity>> entities;
+    private final ImmutableMap<EntityType, Set<Entity>> entities;
 
     /**
      * Cached persistent update requests for {@link StationaryEntity} types in this chunk.
@@ -110,10 +111,11 @@ public final class ChunkRepository implements Iterable<Entity> {
         this.world = world;
         this.chunk = chunk;
 
-        entities = new EnumMap<>(EntityType.class);
+        EnumMap<EntityType, Set<Entity>> map = new EnumMap<>(EntityType.class);
         for (EntityType type : EntityType.ALL) {
-            entities.put(type, new HashSet<>());
+            map.put(type, new HashSet<>());
         }
+        entities = ImmutableMap.copyOf(map);
 
         untraversable = !world.getContext()
                 .getCache()

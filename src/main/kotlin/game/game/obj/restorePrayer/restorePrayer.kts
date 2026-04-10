@@ -16,7 +16,7 @@ fun restore(plr: Player) {
     if (prayer.level < prayer.staticLevel) {
         prayer.level = prayer.staticLevel
         plr.animation(Animations.PRAY)
-        plr.playSound(Sound.RECHARGE_PRAYER)
+        plr.playSound(Sound.PRAYER_RECHARGE)
         plr.sendMessage("You recharge your prayer points.")
     } else {
         plr.sendMessage("You already have full prayer points.")

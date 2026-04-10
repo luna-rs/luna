@@ -20,5 +20,5 @@ class DefenceCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, 
      *
      * When set, this animation should be used instead of the NPC's default block or defence animation.
      */
-    var animationId: Int? = npc.combatDef.defenceAnimation
+    var animationId: Int? = npc.combatDef().defenceAnimation
 }

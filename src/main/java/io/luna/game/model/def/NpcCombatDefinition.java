@@ -2,6 +2,7 @@ package io.luna.game.model.def;
 
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.NpcAggressionProfile;
 
 import java.util.Arrays;
 
@@ -53,11 +54,6 @@ public final class NpcCombatDefinition implements Definition {
      * Respawn delay, in ticks, after this NPC dies.
      */
     private final int respawnTime;
-
-    /**
-     * Whether this NPC will automatically attack eligible players.
-     */
-    private final boolean aggressive;
 
     /**
      * Whether this NPC can apply poison on hit.
@@ -125,11 +121,17 @@ public final class NpcCombatDefinition implements Definition {
     private final EquipmentBonus defaultAttackType;
 
     /**
+     * The aggression profile that defines when this NPC will automatically attack players.
+     * <p>
+     * A {@code null} value indicates that this NPC has no special aggression behavior configured.
+     */
+    private final NpcAggressionProfile aggression;
+
+    /**
      * Creates a new {@link NpcCombatDefinition}.
      *
      * @param id The NPC id this definition belongs to.
      * @param respawnTime The respawn delay in ticks.
-     * @param aggressive Whether the NPC is aggressive.
      * @param poisonous Whether the NPC can poison targets.
      * @param level The displayed combat level.
      * @param hitpoints The hitpoints value.
@@ -141,13 +143,13 @@ public final class NpcCombatDefinition implements Definition {
      * @param skills The combat skill level array; defensively copied.
      * @param bonuses The combat bonus array; defensively copied.
      * @param defaultAttackType The default attack bonus/type for this NPC.
+     * @param aggression The aggression profile for this NPC, or {@code null} if none is configured.
      */
-    public NpcCombatDefinition(int id, int respawnTime, boolean aggressive, boolean poisonous, int level,
+    public NpcCombatDefinition(int id, int respawnTime, boolean poisonous, int level,
                                int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
-                               int deathAnimation, int[] skills, int[] bonuses, EquipmentBonus defaultAttackType) {
+                               int deathAnimation, int[] skills, int[] bonuses, EquipmentBonus defaultAttackType, NpcAggressionProfile aggression) {
         this.id = id;
         this.respawnTime = respawnTime;
-        this.aggressive = aggressive;
         this.poisonous = poisonous;
         this.level = level;
         this.hitpoints = hitpoints;
@@ -159,6 +161,7 @@ public final class NpcCombatDefinition implements Definition {
         this.skills = Arrays.copyOf(skills, skills.length);
         this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
         this.defaultAttackType = defaultAttackType;
+        this.aggression = aggression;
     }
 
     @Override
@@ -171,13 +174,6 @@ public final class NpcCombatDefinition implements Definition {
      */
     public int getRespawnTime() {
         return respawnTime;
-    }
-
-    /**
-     * @return {@code true} if this NPC auto-attacks eligible targets.
-     */
-    public boolean isAggressive() {
-        return aggressive;
     }
 
     /**
@@ -234,6 +230,13 @@ public final class NpcCombatDefinition implements Definition {
      */
     public int getDeathAnimation() {
         return deathAnimation;
+    }
+
+    /**
+     * @return The aggression profile, or {@code null} if this NPC is not configured to be aggressive.
+     */
+    public NpcAggressionProfile getAggression() {
+        return aggression;
     }
 
     /**

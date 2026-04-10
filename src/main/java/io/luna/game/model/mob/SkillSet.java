@@ -43,7 +43,7 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * The maximum amount of experience a single skill may hold.
      */
-    public static final int MAXIMUM_EXPERIENCE = 200_000_000;
+    public static final double MAXIMUM_EXPERIENCE = 200_000_000;
 
     /**
      * Returns the cumulative experience required to reach {@code level}.

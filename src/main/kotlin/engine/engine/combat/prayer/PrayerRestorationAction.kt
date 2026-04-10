@@ -3,7 +3,6 @@ package engine.combat.prayer
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 
@@ -29,7 +28,7 @@ abstract class PrayerRestorationAction(private val player: Player, private val p
         override fun execute() {
             val hp = mob.hitpoints
             if (hp.level < hp.staticLevel) {
-                hp.addLevels(1, false)
+                hp.adjustLevel(1)
             }
         }
     }
@@ -54,7 +53,7 @@ abstract class PrayerRestorationAction(private val player: Player, private val p
                 val level = skill.level
                 val staticLevel = skill.staticLevel
                 if (level < staticLevel) {
-                    skill.addLevels(1, false)
+                    skill.adjustLevel(1)
                 }
             }
         }

@@ -1,4 +1,4 @@
-package engine.combat.magic
+package engine.combat.autocast
 
 import api.combat.CombatHandler.displayCombatOverlay
 import api.combat.magic.CombatSpellHandler.resetAutocast

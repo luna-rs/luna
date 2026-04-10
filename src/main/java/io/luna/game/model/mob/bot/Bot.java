@@ -194,6 +194,11 @@ public final class Bot extends Player {
      */
     private long cycles;
 
+    private boolean debug;
+
+    // TODO Optional debugging mode for bots that allows player updating processing (for stress testing).
+    //  Also a stress testing bot command.
+
     /**
      * Creates a new {@link Bot}.
      *

@@ -32,7 +32,7 @@ on(DropItemEvent::class, EventPriority.HIGH) {
         val drop = GroundItem(ctx, item, plr.position, ChunkUpdatableView.localView(plr))
         if (world.items.register(drop)) {
             plr.inventory[index] = null
-            plr.playSound(Sound.DROP_ITEM)
+            plr.playSound(Sound.PUT_DOWN)
             plr.overlays.closeWindows()
         } else {
             plr.sendMessage("You cannot drop this here.")

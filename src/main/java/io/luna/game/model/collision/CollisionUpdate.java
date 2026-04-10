@@ -224,7 +224,7 @@ public final class CollisionUpdate {
          * @param object The object whose presence should contribute collision data.
          */
         public void object(GameObject object) {
-            GameObjectDefinition definition = object.getDefinition();
+            GameObjectDefinition definition = object.def();
             Position position = object.getPosition();
             int type = object.getObjectType().getId();
 

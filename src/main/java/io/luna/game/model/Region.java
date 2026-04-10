@@ -128,7 +128,7 @@ public final class Region implements Locatable {
     }
 
     @Override
-    public Position absLocation() {
+    public Position abs() {
         return getAbsPosition();
     }
 

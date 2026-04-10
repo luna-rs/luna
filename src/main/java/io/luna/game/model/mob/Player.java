@@ -269,6 +269,11 @@ public class Player extends Mob {
     private final PlayerCombatContext combat = new PlayerCombatContext(this);
 
     /**
+     * The aggression tolerance handler.
+     */
+    private final PlayerAggressionTolerance tolerance = new PlayerAggressionTolerance(this);
+
+    /**
      * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
      * @param context The global context instance.
@@ -386,14 +391,14 @@ public class Player extends Mob {
         // TODO Do more research into combat sounds.
         if (hit.getDamage() > 0) {
             // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
-            playRandomSound(
+           /* playRandomSound(
                     Sound.TAKE_DAMAGE,
                     Sound.TAKE_DAMAGE_2,
                     Sound.TAKE_DAMAGE_3,
                     Sound.TAKE_DAMAGE_4
-            );
+            );*/
         } else {
-            playSound(Sound.UNARMED_BLOCK);
+            //playSound(Sound.UNARMED_BLOCK);
         }
     }
 
@@ -814,6 +819,15 @@ public class Player extends Mob {
      */
     public double getRunEnergy() {
         return runEnergy;
+    }
+
+    /**
+     * Sets the current run energy percentage and updates the client.
+     *
+     * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
+     */
+    public void setRunEnergy(double newRunEnergy) {
+        setRunEnergy(newRunEnergy, true);
     }
 
     /**
@@ -1448,5 +1462,12 @@ public class Player extends Mob {
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
         flags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The aggression tolerance handler.
+     */
+    public PlayerAggressionTolerance getTolerance() {
+        return tolerance;
     }
 }

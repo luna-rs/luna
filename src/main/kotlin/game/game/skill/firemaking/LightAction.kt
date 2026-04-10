@@ -15,6 +15,7 @@ import game.player.Sound
  * @author lare96
  */
 abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Player>(plr, ActionType.WEAK, false, 1) {
+    // todo sounds FLINT1, FIRE_LIT,     TINDERBOX_STRIKE(2017),
 
     /**
      * The animation delay.
@@ -64,7 +65,7 @@ abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Pl
     private fun handleLightAnimation() {
         if (--animationDelay <= 0) {
             mob.animation(Animations.FIREMAKING)
-            mob.playSound(Sound.LIGHT_FIRE)
+           // mob.playSound(Sound.LIGHT_FIRE)
             animationDelay = 3
         }
     }

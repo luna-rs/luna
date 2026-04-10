@@ -18,6 +18,7 @@ import game.skill.fishing.Tool
 class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
     InventoryAction(msg.plr, false, tool.speed, Int.MAX_VALUE) {
 
+        // todo sounds     FISHING_CAST(377), FISH_SWIM(378), NET(379),CATCH(238), ?
     /**
      * The messages to send on harvest.
      */
@@ -57,7 +58,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
                     if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
                         mob.sendMessage("You attempt to catch a fish.")
                     }
-                    playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
+                   // playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
                 }
                 true
             }
@@ -68,7 +69,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
             messages.removeAll { mob.sendMessage(it); true }
             mob.fishing.addExperience(exp)
             exp = 0.0
-            playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
+           // playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
         }
     }
 

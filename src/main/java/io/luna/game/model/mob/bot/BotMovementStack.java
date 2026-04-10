@@ -144,7 +144,7 @@ public final class BotMovementStack {
                             if (target instanceof Entity) {
                                 size = ((Entity) target).size();
                             }
-                            if (bot.getPosition().isWithinDistance(target.absLocation(), size)) {
+                            if (bot.getPosition().isWithinDistance(target.abs(), size)) {
                                 walkResult.complete(true);
                             } else {
                                 walkResult.complete(false);

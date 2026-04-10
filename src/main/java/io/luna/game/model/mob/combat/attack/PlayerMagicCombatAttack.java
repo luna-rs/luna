@@ -1,13 +1,20 @@
 package io.luna.game.model.mob.combat.attack;
 
+import game.player.Sound;
+import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat;
+
+import java.util.function.BiFunction;
 
 /**
  * A {@link MagicCombatAttack} implementation for player-cast magic attacks.
@@ -51,6 +58,26 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         this(attacker, victim, spell.getDef(), selectedSpell);
     }
 
+    /**
+     * Creates a new {@link PlayerMagicCombatAttack} using explicit visual and effect data.
+     *
+     * @param attacker The player casting the spell.
+     * @param victim The target being attacked.
+     * @param cast The cast animation to play.
+     * @param start The starting graphic to display on the attacker, or {@code null} if none.
+     * @param projectileFunction Produces the projectile to launch, or {@code null} if the spell has no projectile.
+     * @param end The ending graphic to display on a successful impact, or {@code null} if none.
+     * @param impactSound The sound to play on a successful impact, or {@code null} if none.
+     * @param spellEffect The spell definition used to resolve spell-specific effects.
+     * @param speed The attack delay, in ticks, applied after execution.
+     */
+    public PlayerMagicCombatAttack(Player attacker, Mob victim, Animation cast, Graphic start,
+                                   BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end,
+                                   Sound impactSound, CombatSpell spellEffect, int speed) {
+        super(attacker, victim, cast, start, projectileFunction, end, impactSound, spellEffect, speed);
+        magic = attacker.getCombat().getMagic();
+    }
+
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
         if (!magic.removeRunes(spellEffect)) {
@@ -81,7 +108,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public CombatDamage calculateDamage(Mob other) {
-        return CombatDamage.computed(attacker, victim, CombatDamageType.MAGIC);
+        return new CombatDamageRequest.Builder(attacker, victim, CombatDamageType.MAGIC).build().resolve();
     }
 
     /**

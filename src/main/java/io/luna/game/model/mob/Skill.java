@@ -14,19 +14,22 @@ import java.util.stream.IntStream;
 /**
  * Represents a single skill within a {@link SkillSet}.
  * <p>
- * Each skill tracks three related values:
+ * A skill stores both permanent progression and temporary state:
  * <ul>
- *     <li>Its immutable skill {@link #id}</li>
- *     <li>Its current dynamic {@link #level}, which may be temporarily boosted or drained</li>
- *     <li>Its total {@link #experience}, from which the static level is derived</li>
+ *     <li>The immutable {@link #id} that identifies the skill.</li>
+ *     <li>The current dynamic {@link #level}, which may be boosted or drained.</li>
+ *     <li>The total accumulated {@link #experience}, from which the static level is derived.</li>
  * </ul>
+ * The static level is calculated lazily from experience and cached in {@link #staticLevel}.
  *
  * @author lare96
  */
 public final class Skill {
 
     /**
-     * Ordered, immutable list of all skill names. The index into this list is the skill identifier.
+     * Ordered, immutable list of all skill names.
+     * <p>
+     * The index of each entry is that skill's identifier.
      */
     public static final ImmutableList<String> NAMES = ImmutableList.of(
             "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
@@ -35,21 +38,19 @@ public final class Skill {
     );
 
     /**
-     * The range of skill identifiers considered in combat level calculations.
+     * Inclusive range of skill identifiers used in combat level calculations.
      */
     public static final Range<Integer> COMBAT_IDS = Range.closed(0, 6);
 
     /**
-     * Maps skill name -> skill identifier.
+     * Immutable mapping of skill name to skill identifier.
      * <p>
-     * Built from {@link #NAMES} in the static initializer.
+     * This is derived from {@link #NAMES} during class initialization.
      */
     public static final ImmutableMap<String, Integer> NAME_TO_ID;
 
     /**
      * Immutable list of all skill identifiers.
-     * <p>
-     * This is effectively {@code 0..NAMES.size()-1} but derived from {@link #NAME_TO_ID} for convenience.
      */
     public static final ImmutableList<Integer> IDS;
 
@@ -159,24 +160,23 @@ public final class Skill {
     public static final int RUNECRAFTING = 20;
 
     /**
-     * Retrieves the skill name for {@code id}.
+     * Retrieves the display name for a skill identifier.
      *
-     * @param id The skill identifier (0-based).
-     * @return The skill name.
-     * @throws IndexOutOfBoundsException if {@code id} is not a valid skill identifier.
+     * @param id The skill identifier.
+     * @return The skill name at {@code id}.
+     * @throws IndexOutOfBoundsException If {@code id} is not a valid skill identifier.
      */
     public static String getName(int id) {
         return NAMES.get(id);
     }
 
     /**
-     * Retrieves the skill identifier for {@code name}, or {@code -1} if none were found.
+     * Retrieves the identifier for a skill name.
      * <p>
      * Matching is exact and case-sensitive.
      *
-     * @param name The skill name (must match an entry in {@link #NAMES}).
-     * @return The skill identifier, {@code -1} if none were found.
-     * @throws NullPointerException if {@code name} is {@code null}.
+     * @param name The skill name.
+     * @return The matching identifier, or {@code -1} if no identifier exists for {@code name}.
      */
     public static int getId(String name) {
         Integer id = NAME_TO_ID.get(name);
@@ -184,17 +184,16 @@ public final class Skill {
     }
 
     /**
-     * Determines whether {@code id} is a combat skill.
+     * Determines if a skill identifier is considered a combat skill.
      *
      * @param id The skill identifier.
-     * @return {@code true} if {@code id} is in {@link #COMBAT_IDS}.
+     * @return {@code true} if {@code id} is within {@link #COMBAT_IDS}.
      */
     public static boolean isCombatSkill(int id) {
         return COMBAT_IDS.contains(id);
     }
 
     static {
-        // Build and set [name -> identifier] cache.
         NAME_TO_ID = IntStream.range(0, NAMES.size()).boxed()
                 .collect(ImmutableMap.toImmutableMap(NAMES::get, Function.identity()));
         IDS = ImmutableList.copyOf(NAME_TO_ID.values());
@@ -206,38 +205,33 @@ public final class Skill {
     private transient final SkillSet set;
 
     /**
-     * The skill identifier (0-based index into {@link #NAMES}).
+     * The skill identifier.
      */
     private transient final int id;
 
     /**
-     * Cached static (experience-based) level.
+     * Cached static level derived from {@link #experience}.
      * <p>
-     * This is computed lazily from {@link #experience} and cached to avoid repeated {@link SkillSet#levelForExperience(int)}
-     * calls. It is invalidated by setting {@code staticLevel = -1} whenever experience changes.
+     * A value of {@code -1} indicates that the cached level is invalid and must be recomputed.
      */
     private transient int staticLevel = -1;
 
     /**
-     * The dynamic (temporarily modified) level.
+     * The current dynamic level.
      * <p>
-     * This may be higher or lower than the static level due to buffs/drains. Restoration may move this back toward
-     * {@link #getStaticLevel()} over time.
+     * This may temporarily differ from the static level due to boosts, drains, or restoration.
      */
     private int level = 1;
 
     /**
-     * Total accumulated experience for this skill.
-     * <p>
-     * Bounded to {@code [0, SkillSet.MAXIMUM_EXPERIENCE]} by {@link #setExperience(double)}.
+     * The total accumulated experience for this skill.
      */
     private double experience;
 
     /**
-     * Creates a new {@link Skill}.
+     * Creates a new skill instance.
      * <p>
-     * Hitpoints starts at level 10 with 1300 experience (classic RuneScape default), while other skills start at
-     * level 1 with 0 experience.
+     * Hitpoints starts at level 10 with 1300 experience. All other skills start at level 1 with 0 experience.
      *
      * @param id The skill identifier.
      * @param set The owning skill set.
@@ -260,23 +254,24 @@ public final class Skill {
     /**
      * Adds experience to this skill.
      * <p>
-     * For non-bot mobs, experience is multiplied by the configured game experience multiplier. Bots receive experience
-     * at a fixed multiplier of {@code 1.0} (no bonus).
+     * Non-positive amounts are ignored.
+     * <p>
+     * For non-bot mobs, the raw amount is multiplied by the configured game experience multiplier.
+     * Bots always receive experience using a multiplier of {@code 1.0}.
      *
      * @param amount The raw amount of experience to add.
-     * @throws IllegalArgumentException if {@code amount <= 0}.
      */
     public void addExperience(double amount) {
-        if(amount > 0) {
+        if (amount > 0) {
             double multiplier = set.getMob() instanceof Bot ? 1.0 : Luna.settings().game().experienceMultiplier();
             setExperience(experience + (amount * multiplier));
         }
     }
 
     /**
-     * Posts a {@link SkillChangeEvent} to plugins if event firing is enabled.
+     * Fires a {@link SkillChangeEvent} if this skill set is currently configured to do so.
      * <p>
-     * The event includes the previous values so listeners can compute deltas or react to level-ups.
+     * The previous experience, static level, and dynamic level are included so listeners can compute deltas.
      *
      * @param oldExperience The previous experience value.
      * @param oldStaticLevel The previous static level.
@@ -291,7 +286,7 @@ public final class Skill {
     }
 
     /**
-     * @return The skill name (from {@link #NAMES}).
+     * @return The skill name from {@link #NAMES}.
      */
     public String getName() {
         return NAMES.get(id);
@@ -305,24 +300,23 @@ public final class Skill {
     }
 
     /**
-     * Returns the static (experience-based) skill level.
+     * Returns the static level derived from total experience.
      * <p>
-     * This is computed lazily and cached. The cache is invalidated whenever experience changes.
+     * The value is computed lazily and cached until experience changes.
      *
-     * @return The experience-based level.
+     * @return The static experience-based level.
      */
     public int getStaticLevel() {
         if (staticLevel == -1) {
-            // The value hasn't been computed yet, do it now.
             staticLevel = SkillSet.levelForExperience((int) experience);
         }
         return staticLevel;
     }
 
     /**
-     * Sets the static (experience-based) level by converting the desired level into experience.
+     * Sets the static level by converting the level into its corresponding experience value.
      *
-     * @param level The target static level.
+     * @param level The new static level.
      */
     public void setStaticLevel(int level) {
         setExperience(SkillSet.experienceForLevel(level));
@@ -330,29 +324,34 @@ public final class Skill {
     }
 
     /**
-     * @return The current dynamic level.
+     * Returns the current dynamic level.
+     *
+     * @return The current level, including temporary boosts or drains.
      */
     public int getLevel() {
         return level;
     }
 
     /**
-     * Sets the dynamic (temporarily modified) skill level.
+     * Sets the dynamic level for this skill.
      * <p>
-     * The level is clamped to a minimum of {@code 0}. If the value does not change, no events are fired and restoration
-     * is not scheduled.
+     * Values lower than {@code 1} are clamped to {@code 1}.
+     * <p>
+     * If the level does not change, no listeners are notified and no restoration is scheduled.
+     * <p>
+     * For NPCs, setting the dynamic level also updates the cached static level to match.
      *
      * @param newLevel The new dynamic level.
      */
     public void setLevel(int newLevel) {
-        if (newLevel < 0) {
-            newLevel = 0;
+        if (newLevel < 1) {
+            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
         }
 
         int oldLevel = level;
 
         level = newLevel;
-        if(set.getMob() instanceof Npc) {
+        if (set.getMob() instanceof Npc) {
             staticLevel = level;
         }
         if (oldLevel == level) {
@@ -363,47 +362,61 @@ public final class Skill {
     }
 
     /**
-     * Increases the dynamic skill level by {@code amount}.
+     * Adjusts the current dynamic level by a signed amount.
      * <p>
-     * If {@code exceedStaticLevel} is {@code false}, the result is capped at {@link #getStaticLevel()}.
+     * Positive values raise the level and negative values lower it. The resulting value is clamped into the range
+     * {@code [1, getStaticLevel()]}.
      * <p>
-     * If {@code exceedStaticLevel} is {@code true}, the result is capped at {@code getStaticLevel() + amount}.
+     * This method cannot boost beyond the current static level.
      *
-     * @param amount The amount to increase by.
-     * @param exceedStaticLevel If {@code true}, allow the boost above the static level (up to {@code static + amount});
-     * otherwise cap at the static level.
+     * @param amount The signed adjustment to apply.
      */
-    public void addLevels(int amount, boolean exceedStaticLevel) {
-        int bound = exceedStaticLevel ? getStaticLevel() + amount : getStaticLevel();
-        int newAmount = getLevel() + amount;
+    public void adjustLevel(int amount) {
+        int newLevel = level + amount;
 
-        newAmount = Math.min(newAmount, bound);
-        setLevel(newAmount);
+        if (newLevel < 1) {
+            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
+        } else if (newLevel > getStaticLevel()) {
+            newLevel = getStaticLevel();
+        }
+        setLevel(newLevel);
     }
 
     /**
-     * Decreases the dynamic skill level by {@code amount}.
+     * Applies a temporary boost relative to the static level.
      * <p>
-     * The result is clamped to a minimum of {@code 0}.
+     * The target level is {@code getStaticLevel() + amount}. If this skill is already at or above that value, nothing
+     * changes and {@code false} is returned.
      *
-     * @param amount The amount to remove.
+     * @param amount The amount to boost above the static level.
+     * @return {@code true} if the boost was applied, otherwise {@code false}.
      */
-    public void removeLevels(int amount) {
-        int newAmount = getLevel() - amount;
-        newAmount = Math.max(newAmount, 0);
-        setLevel(newAmount);
-    }
-
-    // todo documentation
-    public boolean weakenBy(double percent) {
-        int newAmount = (int) (getStaticLevel() - Math.floor(level * percent));
-        if (newAmount >= level) {
+    public boolean boost(int amount) {
+        int newLevel = getStaticLevel() + amount;
+        if (level >= newLevel) {
             return false;
         }
-        setLevel(newAmount);
+        setLevel(newLevel);
         return true;
     }
 
+    /**
+     * Applies a temporary drain relative to the static level.
+     * <p>
+     * The target level is {@code getStaticLevel() - amount}. If this skill is already at or below that value,
+     * nothing changes and {@code false} is returned.
+     *
+     * @param amount The amount to drain below the static level.
+     * @return {@code true} if the drain was applied, otherwise {@code false}.
+     */
+    public boolean weaken(int amount) {
+        int newLevel = getStaticLevel() - amount;
+        if (level <= newLevel) {
+            return false;
+        }
+        setLevel(newLevel);
+        return true;
+    }
 
     /**
      * Returns total accumulated experience.
@@ -417,9 +430,10 @@ public final class Skill {
     /**
      * Sets total accumulated experience for this skill.
      * <p>
-     * The value is clamped into {@code [0, SkillSet.MAXIMUM_EXPERIENCE]}. If the value does not change, nothing happens.
+     * The value is clamped into the range {@code [0, SkillSet.MAXIMUM_EXPERIENCE]}.
+     * If the experience does not change, this method returns immediately.
      * <p>
-     * If the value changes, the cached static level is invalidated and listeners may be notified.
+     * When the value changes, the cached static level is invalidated and listeners are notified.
      *
      * @param newExperience The new experience value.
      */

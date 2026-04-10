@@ -1,11 +1,10 @@
-package engine.combat.magic
+package game.combat.spells
 
 import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
 import api.combat.magic.CombatSpellHandler.weaken
 import api.predef.*
 import engine.controllers.Controllers.inMultiArea
-import io.luna.game.model.EntityType
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
@@ -34,8 +33,8 @@ val SMOKE_SPELLS_POISON_CHANCE = Rational(1, 8)
  */
 inline fun <reified T : Mob> forRadiusMobs(victim: T, radius: Int, action: (Mob) -> Unit) {
     val area = Area.of(victim.position, radius)
-    val classType = EntityType.CLASS_TO_TYPE.inverse()[victim.type]!!
-    for (mob in victim.world.findViewable(victim.position, classType as Class<T>)) {
+    val viewable: Set<T> = world.locator.findViewable(victim.type, victim.position)
+    for (mob in viewable) {
         if (mob != victim && area.contains(mob) && mob.inMultiArea()) {
             action(mob)
         }
@@ -87,7 +86,7 @@ fun heal(attacker: Mob, damage: CombatDamage, attack: MagicCombatAttack<*>) {
             return
         }
 
-        attacker.hitpoints.addLevels(healAmount, false)
+        attacker.hitpoints.adjustLevel(healAmount)
     }
 
     heal(damage)

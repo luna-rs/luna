@@ -38,7 +38,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
                 // Increase HP.
                 val hp = plr.hitpoints
                 if (hp.level < hp.staticLevel) {
-                    hp.addLevels(food.heal, false)
+                    hp.adjustLevel(food.heal)
                     plr.sendMessage(food.healMessage(name))
                 }
             }
