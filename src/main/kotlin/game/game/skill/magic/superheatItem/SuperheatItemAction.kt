@@ -21,7 +21,7 @@ import game.skill.smithing.BarType
  * @author lare96
  */
 class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.superheatDelay, 5) {
-
+        // todo sound SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support
     companion object {
 
         /**
@@ -54,7 +54,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             val barType = computeBarType()
             if (barType != null) {
                 mob.lock()
-                mob.playSound(Sound.SUPERHEAT)
+               // mob.playSound(Sound.SUPERHEAT)
                 world.scheduleOnce(2) {
                     mob.inventory.removeAll(barType.oreList)
                     mob.inventory.removeAll(removeItems)

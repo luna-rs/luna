@@ -64,7 +64,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                 } else {
                     val stunDuration = Duration.ofSeconds(thievable.stun).toTicks()
 
-                    mob.playSound(Sound.PICKPOCKET_FAILED)
+                    mob.playSound(Sound.STUNNED)
                     mob.sendMessage("You have been stunned.");
                     mob.animation(Animation(424))
                     mob.graphic(Graphic(80, 60, 5))

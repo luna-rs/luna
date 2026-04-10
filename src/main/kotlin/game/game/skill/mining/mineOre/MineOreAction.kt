@@ -24,6 +24,7 @@ import game.skill.mining.Pickaxe
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
     AnimatedInventoryAction(plr, 1, 4, Int.MAX_VALUE) {
 
+        // todo sounds MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5,
     override fun executeIf(start: Boolean) = when {
         mob.mining.level < ore.level -> {
             // Check if we have required level.
@@ -57,7 +58,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 // Ore roll was successful.
                 mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
                 mob.mining.addExperience(ore.exp)
-                mob.playSound(Sound.MINING_COMPLETED)
+              //  mob.playSound(Sound.MINING_COMPLETED)
                 deleteAndRespawnRock()
                 complete()
             }
@@ -65,7 +66,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun animation(): Animation {
-        mob.playSound(Sound.MINE_ROCK)
+       // mob.playSound(Sound.MINE_ROCK)
         return pick.animation
     }
 

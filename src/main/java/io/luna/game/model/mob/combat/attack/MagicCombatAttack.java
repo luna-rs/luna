@@ -159,7 +159,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         } else {
             // The hit splashed, so play the standard splash effect.
             victim.graphic(new Graphic(85, 100));
-            LocalSound.of(victim, Sound.MAGIC_SPLASH).display();
+            LocalSound.of(victim, Sound.SPELLFAIL).display();
         }
         victim.submitAction(new CombatDamageAction(nextDamage, this, true));
     }

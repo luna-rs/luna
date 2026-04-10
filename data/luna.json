@@ -19,7 +19,7 @@
     "password": "guMQRNYf44fxERs4uHxLCWjCQ"
   },
   "logging": {
-    "root_level": "DEBUG",
+    "root_level": "TRACE",
     "format_type": "VERBOSE",
     "output_type": "MIXED",
     "active_file_logs": [

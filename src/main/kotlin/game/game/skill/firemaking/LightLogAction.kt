@@ -16,7 +16,7 @@ import io.luna.game.model.`object`.ObjectType
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
-
+ // todo sounds FLINT1, FIRE_LIT,     TINDERBOX_STRIKE(2017),
     /**
      * The position that the log will be placed on.
      */
@@ -74,8 +74,8 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
             val firePosition = mob.position
             when {
-                originalDelayTicks < 2 -> mob.playSound(Sound.BURN_LOG_QUICK)
-                else -> mob.playSound(Sound.BURN_LOG)
+                originalDelayTicks < 2 -> {} //mob.playSound(Sound.BURN_LOG_QUICK)
+                else -> {}//mob.playSound(Sound.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
 

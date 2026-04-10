@@ -391,14 +391,14 @@ public class Player extends Mob {
         // TODO Do more research into combat sounds.
         if (hit.getDamage() > 0) {
             // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
-            playRandomSound(
+           /* playRandomSound(
                     Sound.TAKE_DAMAGE,
                     Sound.TAKE_DAMAGE_2,
                     Sound.TAKE_DAMAGE_3,
                     Sound.TAKE_DAMAGE_4
-            );
+            );*/
         } else {
-            playSound(Sound.UNARMED_BLOCK);
+            //playSound(Sound.UNARMED_BLOCK);
         }
     }
 
