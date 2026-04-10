@@ -6,7 +6,6 @@ import com.google.common.collect.Range;
 import io.luna.Luna;
 import io.luna.game.event.impl.SkillChangeEvent;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.plugin.PluginManager;
 
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -278,10 +277,10 @@ public final class Skill {
      * @param oldLevel The previous dynamic level.
      */
     private void notifyListeners(double oldExperience, int oldStaticLevel, int oldLevel) {
-        if (set.isFiringEvents()) {
-            Mob mob = set.getMob();
-            PluginManager plugins = mob.getPlugins();
-            plugins.post(new SkillChangeEvent(mob, oldExperience, oldStaticLevel, oldLevel, id));
+        Mob mob = set.getMob();
+        if (set.isFiringEvents() && mob instanceof Player) {
+            Player player = (Player) mob;
+            player.getPlugins().post(new SkillChangeEvent(player, oldExperience, oldStaticLevel, oldLevel, id));
         }
     }
 
