@@ -46,7 +46,7 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
         if(animation != null) {
             attacker.animation(animation);
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, this, false));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, true));
     }
 
     @Override
