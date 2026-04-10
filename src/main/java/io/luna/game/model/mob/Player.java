@@ -1362,6 +1362,9 @@ public class Player extends Mob {
      * @return The creation instant.
      */
     public Instant getCreatedAt() {
+        if(createdAt == null) {
+            createdAt = Instant.now();
+        }
         return createdAt;
     }
 
