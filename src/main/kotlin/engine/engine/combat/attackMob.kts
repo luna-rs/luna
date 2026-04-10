@@ -1,16 +1,15 @@
 package engine.combat
 
 import api.predef.*
-import io.luna.game.event.EventPriority
+import io.luna.game.event.*
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent
 import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent
 import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
-import io.luna.game.model.Entity
-import io.luna.game.model.def.CombatSpellDefinition
-import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.*
+import io.luna.game.model.def.*
+import io.luna.game.model.mob.*
+import io.luna.game.model.mob.interact.*
 
 /**
  * Resolves the interaction policy to use when a player initiates combat against a target.
@@ -52,7 +51,7 @@ on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LIN
 
 // "Attack" context menu option on npcs.
 on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
-    if (plr.combat.isAttackable && targetNpc.combat.isAttackable) {
+    if (targetNpc.combat.isAttackable) {
         plr.combat.attack(targetNpc)
     }
 }
