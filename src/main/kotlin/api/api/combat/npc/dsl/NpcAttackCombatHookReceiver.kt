@@ -55,7 +55,8 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
         animationId: Int = npc.combatDef().attackAnimation,
         maxHit: Int = npc.combatDef().maximumHit,
         range: Int = 1,
-        speed: Int = npc.combatDef().attackSpeed
+        speed: Int = npc.combatDef().attackSpeed,
+        launch: MeleeCombatAttack<Npc>.(CombatDamage?) -> CombatDamage? = { it },
     ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
 
         /**
@@ -67,6 +68,10 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
         override fun calculateDamage(other: Mob): CombatDamage {
             return CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)
                 .setBaseMaxHit(maxHit).build().resolve()
+        }
+
+        override fun onAttack(damage: CombatDamage?): CombatDamage? {
+            return launch(this, damage)
         }
     }
 
