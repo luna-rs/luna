@@ -31974,7 +31974,7 @@
     "id": 7390,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [

@@ -15,7 +15,7 @@ import io.luna.game.model.mob.combat.state.NpcCombatContext
  * @param npc The NPC executing the combat hook.
  * @param other The current combat enemy of the NPC.
  */
-open class CombatHookReceiver(val npc: Npc, val other: Mob) {
+open class NpcCombatHookReceiver(val npc: Npc, val other: Mob) {
 
     /**
      * Cached combat context for the attacking NPC.

@@ -23,7 +23,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * @param other The current combat target.
  * @author lare96
  */
-class AttackCombatHookReceiver(npc: Npc, other: Mob) : CombatHookReceiver(npc, other) {
+class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(npc, other) {
 
     /**
      * Creates a magic combat attack using the specified spell.

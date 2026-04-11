@@ -1,12 +1,13 @@
 package api.combat.npc
 
-import api.combat.npc.dsl.AttackCombatHookReceiver
-import api.combat.npc.dsl.DefenceCombatHookReceiver
+import api.combat.npc.dsl.NpcAttackCombatHookReceiver
+import api.combat.npc.dsl.NpcDefenceCombatHookReceiver
 import api.combat.npc.dsl.NpcCombatReceiver
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import kotlin.reflect.KClass
 
 /**
@@ -82,7 +83,7 @@ object NpcCombatHandler {
      */
     fun supplyAttack(attacker: Npc, victim: Mob): CombatAttack<out Npc> {
         return resolve(attacker) {
-            val receiver = AttackCombatHookReceiver(attacker, victim)
+            val receiver = NpcAttackCombatHookReceiver(attacker, victim)
             it.attack(receiver) // Invoke attack receiver.
         } ?: attacker.combat.getDefaultAttack(victim) // Otherwise, do default attack.
     }
@@ -95,11 +96,13 @@ object NpcCombatHandler {
      *
      * @param npc The NPC receiving the hit.
      * @param other The attacking mob.
+     * @param action The action that launched the damage.
      */
-    fun consumeDefence(npc: Npc, other: Mob) {
+    fun consumeDefence(npc: Npc, other: Mob, action: CombatDamageAction) {
         resolve(npc) {
-            val receiver = DefenceCombatHookReceiver(npc, other)
+            val receiver = NpcDefenceCombatHookReceiver(npc, other, action)
             it.defend(receiver) // Invoke defence receiver, handle defence animation if necessary.
+            action.damage = receiver.damage
             if (receiver.animationId != null) {
                 npc.animation(Animation(receiver.animationId!!))
             }

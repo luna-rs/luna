@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
 import api.combat.magic.TeleBlockAction;
+import api.combat.player.PlayerCombatHandler;
 import api.combat.specialAttack.SpecialAttackHandler;
 import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
 import api.combat.specialAttack.dsl.SpecialAttackDataReceiver;
@@ -14,7 +15,6 @@ import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
-import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.combat.CombatStance;
@@ -25,6 +25,7 @@ import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.varp.PersistentVarp;
 
@@ -126,6 +127,12 @@ public final class PlayerCombatContext extends CombatContext<Player> {
             return nextAttack;
         }
 
+        // Combat hooks from scripts always take first priority.
+        CombatAttack<Player> hook = PlayerCombatHandler.INSTANCE.supplyAttack(player, victim);
+        if (hook != null) {
+            return hook;
+        }
+
         // Handle a special attack if applicable.
         if (specialBar.isActivated() && !magic.isCasting()) {
             SpecialAttackDataReceiver receiver = SpecialAttackHandler.INSTANCE.specialAttackData(this);
@@ -154,16 +161,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public void onNextDefence(Mob attacker, CombatDamage damage) {
-        int animationId = 410;
-        if (player.getEquipment().occupied(Equipment.SHIELD)) {
-            animationId = 1156;
-        } else if (weapon.getType() == Weapon.STAFF) {
-            animationId = 420;
-        } else if (weapon.getType() == Weapon.DAGGER) {
-            animationId = 403;
-        }
-        player.animation(new Animation(animationId));
+    public void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action) {
+        PlayerCombatHandler.INSTANCE.consumeDefence(mob, attacker, action);
     }
 
     @Override
@@ -198,6 +197,23 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         if (magic.getTeleBlock() > 0) {
             player.getActions().submitIfAbsent(new TeleBlockAction(player));
         }
+    }
+
+    /**
+     * Gets the default defence animation ID based on current equipment.
+     *
+     * @return The animation ID.
+     */
+    public int getDefenceAnimation() {
+        int animationId = 410;
+        if (player.getEquipment().occupied(Equipment.SHIELD)) {
+            animationId = 1156;
+        } else if (weapon.getType() == Weapon.STAFF) {
+            animationId = 420;
+        } else if (weapon.getType() == Weapon.DAGGER) {
+            animationId = 403;
+        }
+        return animationId;
     }
 
     /**

@@ -11,6 +11,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
 import java.util.Set;
@@ -73,8 +74,8 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
-    public void onNextDefence(Mob attacker, CombatDamage damage) {
-        NpcCombatHandler.INSTANCE.consumeDefence(mob, attacker);
+    public void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action) {
+        NpcCombatHandler.INSTANCE.consumeDefence(mob, attacker, action);
     }
 
     @Override

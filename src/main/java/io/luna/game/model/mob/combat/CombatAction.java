@@ -69,7 +69,7 @@ public final class CombatAction extends Action<Mob> {
 
         // Stop combat if the current target is no longer valid.
         Mob target = combat.getTarget();
-        if (target == null || !target.isAlive()) {
+        if (target == null || !target.isAlive() || combat.isDisabled()) {
             return clearTarget();
         }
 

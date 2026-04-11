@@ -37,7 +37,7 @@ public final class CombatDamageAction extends Action<Mob> {
     /**
      * The resolved combat damage to apply.
      */
-    private final CombatDamage damage;
+    private CombatDamage damage;
 
     /**
      * The source of the resolved damage.
@@ -61,7 +61,7 @@ public final class CombatDamageAction extends Action<Mob> {
 
     @Override
     public void onSubmit() {
-        if(isInstant() && run()) {
+        if (isInstant() && run()) {
             complete();
         }
     }
@@ -69,12 +69,13 @@ public final class CombatDamageAction extends Action<Mob> {
     @Override
     public boolean run() {
         if (victim.isAlive()) {
-            // Apply the hit.
-            damage.apply();
+            victim.getCombat().onNextDefence(attacker, damage, this);
 
-            // Apply on-hit listeners.
-            source.onAttackArrived(damage);
-            victim.getCombat().onNextDefence(attacker, damage);
+            // Apply the hit.
+            if (damage != null) {
+                damage.apply();
+                source.onAttackArrived(damage);
+            }
 
             // Determine whether the victim should retaliate.
             if (victim.isAlive() && victim.getCombat().isAutoRetaliate()) {
@@ -86,5 +87,17 @@ public final class CombatDamageAction extends Action<Mob> {
             }
         }
         return true;
+    }
+
+    public CombatDamage getDamage() {
+        return damage;
+    }
+
+    public void setDamage(CombatDamage damage) {
+        this.damage = damage;
+    }
+
+    public CombatAttack<?> getSource() {
+        return source;
     }
 }

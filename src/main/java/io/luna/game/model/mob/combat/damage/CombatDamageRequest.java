@@ -240,10 +240,8 @@ public final class CombatDamageRequest {
         baseAccuracy += flatBonusAccuracy;
 
         OptionalInt computedDamage;
-        if (RandomUtils.rollPercent(baseAccuracy)) {
-            if (damageDisabled) {
-                computedDamage = OptionalInt.of(-1);
-            } else {
+        if (!damageDisabled) {
+            if (RandomUtils.rollPercent(baseAccuracy)) {
                 int baseMaxHit = maxHit.orElse(attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
 
@@ -257,11 +255,13 @@ public final class CombatDamageRequest {
                 }
                 damage += flatBonusDamage;
                 computedDamage = OptionalInt.of(Math.max(0, damage));
+            } else if (type == CombatDamageType.MAGIC) {
+                computedDamage = OptionalInt.empty();
+            } else {
+                computedDamage = OptionalInt.of(0);
             }
-        } else if (type == CombatDamageType.MAGIC) {
-            computedDamage = OptionalInt.empty();
         } else {
-            computedDamage = OptionalInt.of(0);
+            computedDamage = OptionalInt.of(-1);
         }
         return new CombatDamage(attacker, victim, type, computedDamage);
     }

@@ -11,6 +11,7 @@ import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageStack;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
@@ -75,6 +76,8 @@ public abstract class CombatContext<T extends Mob> {
      */
     private int attackDelay;
 
+    private boolean disabled;
+
     /**
      * Creates a new {@link CombatContext} for the supplied mob.
      *
@@ -106,8 +109,9 @@ public abstract class CombatContext<T extends Mob> {
      *
      * @param attacker The mob dealing the damage.
      * @param damage The incoming combat damage being processed.
+     * @param action The action that launched the damage application.
      */
-    public abstract void onNextDefence(Mob attacker, CombatDamage damage);
+    public abstract void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action);
 
     /**
      * Gets the attack-style bonus currently used for accuracy calculations.
@@ -432,5 +436,13 @@ public abstract class CombatContext<T extends Mob> {
      */
     public boolean isAttackReady() {
         return attackDelay <= 0;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 }
