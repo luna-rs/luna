@@ -707,7 +707,6 @@ public abstract class Mob extends Entity {
         pendingPlacement = false;
         pendingBlockData = new UpdateBlockData.Builder(this);
         if (defaultDirection != null) {
-            //position.translate(1, defaultDirection, tmp);
             pendingBlockData.face(position.translate(1, defaultDirection));
         }
         flags.clear();
