@@ -3,6 +3,7 @@ package game.combat.npcHooks
 import api.combat.npc.NpcCombatHandler.combat
 import api.combat.player.PlayerCombatHandler.playerAttack
 import io.luna.Luna
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -30,9 +31,14 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         CombatAttack<Player>(player, victim, InteractionPolicy(InteractionType.SIZE, 1), 1) {
 
         override fun attack() {
-            attacker.animation(Animation(1755, AnimationPriority.HIGH))
-            attacker.sendMessage("You smash the Gargoyle into pieces using your Rock hammer.")
-            victim.submitAction(CombatDamageAction(nextDamage, this, true))
+            attacker.submitAction(object : LockedAction(attacker, false, 2) {
+                override fun run(): Boolean {
+                    attacker.animation(Animation(1755, AnimationPriority.HIGH))
+                    attacker.sendMessage("You smash the Gargoyle into pieces using your Rock hammer.")
+                    victim.submitAction(CombatDamageAction(nextDamage, this@GargoyleSmashAttack, true))
+                    return true
+                }
+            })
         }
 
         override fun calculateDamage(other: Mob): CombatDamage? {
