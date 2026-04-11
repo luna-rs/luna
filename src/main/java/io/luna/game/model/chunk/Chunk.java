@@ -84,7 +84,7 @@ public final class Chunk implements Locatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y);
+        return 31 * x + y;
     }
 
     @Override

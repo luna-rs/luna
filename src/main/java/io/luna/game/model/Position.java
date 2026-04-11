@@ -104,7 +104,10 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, z);
+        int result = x;
+        result = 31 * result + y;
+        result = 31 * result + z;
+        return result;
     }
 
     @Override
