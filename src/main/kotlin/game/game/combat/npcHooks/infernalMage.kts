@@ -1,3 +1,5 @@
+package game.combat.npcHooks
+
 import api.combat.npc.NpcCombatHandler.combat
 import io.luna.game.model.mob.combat.CombatSpell
 
