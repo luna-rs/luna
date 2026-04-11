@@ -96,8 +96,7 @@ public final class ExactMovement {
      */
     public static ExactMovement to(Player player, int amountX, int amountY, int durationTicks) {
         Position pos = player.getPosition();
-        Position dest = new Position(0,0,0);
-        pos.translate(amountX, amountY, dest);
+        Position dest = pos.translate(amountX, amountY);
         durationTicks = (durationTicks * 600) / 30; // Convert to client’s expected movement units.
         return new ExactMovement(player.getLastRegion(),
                 pos, dest, 0, durationTicks, Direction.between(pos, dest));
