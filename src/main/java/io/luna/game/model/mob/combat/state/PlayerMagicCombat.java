@@ -16,6 +16,7 @@ import static io.luna.game.model.def.CombatSpellDefinition.NONE;
 import static java.util.Objects.requireNonNullElse;
 
 public class PlayerMagicCombat {
+    // TODO DOCUMENTATION
     private final Player player;
     /**
      * The remaining Tele Block duration in ticks.
@@ -129,11 +130,6 @@ public class PlayerMagicCombat {
     }
 
     public void refreshAutocast() {
-        PlayerCombatWeapon weapon = player.getCombat().getWeapon();
-        if (weapon.getType() != Weapon.STAFF) {
-            // Not currently wielding a weapon, no autocast interface to refresh.
-            return;
-        }
         boolean spellSelected = autocastSpell != NONE;
         String name = !spellSelected ? "none set" : autocastSpell.getSpell().getFormattedName();
         if (!autocasting && !spellSelected) {

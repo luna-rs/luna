@@ -128,21 +128,6 @@ public class LocalProjectile extends LocalEntity {
         }
 
         /**
-         * Convenience method to set a duration expressed in <em>server ticks</em> (600ms) and convert it to client ticks.
-         * <p>
-         * This sets {@code ticksToStart = 0} and computes {@code ticksToEnd}.
-         *
-         * @param durationTicks Duration in server ticks.
-         */
-        public TargetBuilder setDurationTicks(int durationTicks) {
-            int ticksToMs = durationTicks * 600;
-            int msToClientTicks = ticksToMs / 20;
-            ticksToStart = 0;
-            ticksToEnd = msToClientTicks;
-            return this;
-        }
-
-        /**
          * Sets the initial slope/angle parameter controlling projectile arc shape.
          *
          * @param initialSlope The slope value.

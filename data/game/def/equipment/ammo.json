@@ -10,10 +10,10 @@
     "projectile": {
       "id": 10,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       841,
@@ -47,10 +47,10 @@
     "projectile": {
       "id": 9,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       841,
@@ -84,10 +84,10 @@
     "projectile": {
       "id": 11,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       843,
@@ -119,10 +119,10 @@
     "projectile": {
       "id": 12,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       849,
@@ -152,10 +152,10 @@
     "projectile": {
       "id": 13,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       853,
@@ -183,10 +183,10 @@
     "projectile": {
       "id": 15,
       "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       857,

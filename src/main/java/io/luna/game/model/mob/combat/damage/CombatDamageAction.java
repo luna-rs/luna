@@ -60,6 +60,13 @@ public final class CombatDamageAction extends Action<Mob> {
     }
 
     @Override
+    public void onSubmit() {
+        if(isInstant() && run()) {
+            complete();
+        }
+    }
+
+    @Override
     public boolean run() {
         if (victim.isAlive()) {
             // Apply the hit.

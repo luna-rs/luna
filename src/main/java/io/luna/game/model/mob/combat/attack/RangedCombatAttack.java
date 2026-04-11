@@ -94,7 +94,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(0, 1);
+        launchProjectile(0, 2);
     }
 
     @Override
