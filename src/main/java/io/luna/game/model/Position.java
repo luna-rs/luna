@@ -104,10 +104,7 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        int result = x;
-        result = 31 * result + y;
-        result = 31 * result + z;
-        return result;
+        return (z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF);
     }
 
     @Override
