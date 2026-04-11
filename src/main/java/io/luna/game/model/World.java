@@ -414,10 +414,10 @@ public final class World {
         for (Player player : playerList) {
             try {
                 player.getControllers().process();
-                player.getWalking().process();
+                player.getActions().process();
                 player.getTolerance().process();
                 player.getCombat().processAttackDelay();
-                player.getActions().process();
+                player.getWalking().process();
 
                 if (player.isBot()) {
                     player.asBot().process();

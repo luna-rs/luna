@@ -68,6 +68,12 @@ public final class ActionQueue {
     private final Set<String> types = new HashSet<>();
 
     /**
+     * If actions are currently being run. Used to normalize processing delays when actions are scheduled within
+     * actions.
+     */
+    private boolean running;
+
+    /**
      * Creates a new {@link ActionQueue} for {@code mob}.
      *
      * @param mob The mob that owns this action queue.
@@ -90,6 +96,10 @@ public final class ActionQueue {
         if (!action.isFinished()) {
             types.add(action.getClass().getName());
             processing.put(action.actionType, action);
+            if (running) {
+                // Normalize delays when actions are scheduled within actions.
+                action.counter = 0;
+            }
         }
     }
 
@@ -218,27 +228,33 @@ public final class ActionQueue {
         }
 
         // 5) Execution stage: poll until all queued actions are handled.
-        for (; ; ) {
-            Action<?> action = executing.poll();
-            if (action == null) {
-                break;
-            }
+        running = true;
+        try {
+            for (; ; ) {
+                Action<?> action = executing.poll();
+                if (action == null) {
+                    break;
+                }
 
-            // NORMAL actions are skipped if a modal interface is open.
-            boolean skipForInterface =
-                    action.actionType == ActionType.NORMAL &&
-                            mob.getType() == EntityType.PLAYER &&
-                            mob.asPlr().getOverlays().hasWindow();
+                // NORMAL actions are skipped if a modal interface is open.
+                boolean skipForInterface =
+                        action.actionType == ActionType.NORMAL &&
+                                mob.getType() == EntityType.PLAYER &&
+                                mob.asPlr().getOverlays().hasWindow();
 
-            if (skipForInterface || action.getState() != ActionState.PROCESSING) {
-                continue;
-            }
+                if (skipForInterface || action.getState() != ActionState.PROCESSING) {
+                    continue;
+                }
 
-            // Action completed normally this cycle.
-            if (action.isComplete()) {
-                action.complete();
+                // Action completed normally this cycle.
+                if (action.isComplete()) {
+                    action.complete();
+                }
             }
+        } finally {
+            running = false;
         }
+
     }
 
     /**

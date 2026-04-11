@@ -85,7 +85,7 @@ public abstract class Action<T extends Mob> {
      * Initialized to {@code -1} because action processing occurs after player input; this keeps the first cycle
      * timing consistent with "instant" actions.
      */
-    private int counter = -1;
+    int counter = -1;
 
     /**
      * Number of times {@link #run()} has been invoked.
