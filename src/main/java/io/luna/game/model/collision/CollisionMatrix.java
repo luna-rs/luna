@@ -44,6 +44,11 @@ public final class CollisionMatrix {
     private static final short ALL_MOBS_BLOCKED = (short) 0b11111111_00000000;
 
     /**
+     * Setting this to true causes the CollisionMatrix to be extra careful with its internal state, making it easier to catch bugs
+     */
+    private static final boolean debug = false;
+
+    /**
      * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
      *
      * @param count The number of matrices to create.
@@ -326,8 +331,10 @@ public final class CollisionMatrix {
      * @throws ArrayIndexOutOfBoundsException If (x, y) is out of range for this matrix.
      */
     private int indexOf(int x, int y) {
-        Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
-        Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        if (debug) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
+            Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        }
         return y * width + x;
     }
 
