@@ -439,8 +439,6 @@ public final class CollisionManager {
         bridges.add(position);
     }
 
-    private Position tmp = new Position(0,0,0);
-
     /**
      * Returns whether an entity of {@code type} may move one step from {@code position} in {@code direction}.
      * <p>
@@ -458,8 +456,7 @@ public final class CollisionManager {
                                Direction direction,
                                boolean safe) {
 
-        position.translate(1, direction, tmp);
-        Position next = tmp;
+        Position next = position.translate(1, direction);
         ChunkRepository repository = chunks.load(next);
 
         if (!repository.traversable(next, type, direction, safe)) {
