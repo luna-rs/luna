@@ -96,10 +96,6 @@ public final class ActionQueue {
         if (!action.isFinished()) {
             types.add(action.getClass().getName());
             processing.put(action.actionType, action);
-            if (running) {
-                // Normalize delays when actions are scheduled within actions.
-                action.counter = 0;
-            }
         }
     }
 
@@ -219,6 +215,7 @@ public final class ActionQueue {
             if (action.getState() != ActionState.PROCESSING) {
                 continue;
             }
+            action.processed = true;
             executing.add(action);
         }
 
@@ -228,33 +225,40 @@ public final class ActionQueue {
         }
 
         // 5) Execution stage: poll until all queued actions are handled.
-        running = true;
-        try {
-            for (; ; ) {
-                Action<?> action = executing.poll();
-                if (action == null) {
-                    break;
-                }
-
-                // NORMAL actions are skipped if a modal interface is open.
-                boolean skipForInterface =
-                        action.actionType == ActionType.NORMAL &&
-                                mob.getType() == EntityType.PLAYER &&
-                                mob.asPlr().getOverlays().hasWindow();
-
-                if (skipForInterface || action.getState() != ActionState.PROCESSING) {
-                    continue;
-                }
-
-                // Action completed normally this cycle.
-                if (action.isComplete()) {
-                    action.complete();
-                }
+        for (; ; ) {
+            Action<?> action = executing.poll();
+            if (action == null) {
+                break;
             }
-        } finally {
-            running = false;
-        }
 
+            // NORMAL actions are skipped if a modal interface is open.
+            boolean skipForInterface =
+                    action.actionType == ActionType.NORMAL &&
+                            mob.getType() == EntityType.PLAYER &&
+                            mob.asPlr().getOverlays().hasWindow();
+
+            if (skipForInterface || action.getState() != ActionState.PROCESSING) {
+                continue;
+            }
+
+            // Action completed normally this cycle.
+            if (action.isComplete()) {
+                action.complete();
+            }
+        }
+    }
+
+    /**
+     * Normalizes all delays when actions are scheduled within actions.
+     */
+    public void normalize() {
+        for (Action<?> action : processing.values()) {
+            if (action.processed) {
+                action.processed = false;
+            } else {
+                action.counter = 0;
+            }
+        }
     }
 
     /**

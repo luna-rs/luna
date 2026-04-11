@@ -95,6 +95,11 @@ public abstract class Action<T extends Mob> {
     private int executions;
 
     /**
+     * If this action has been processed yet this cycle.
+     */
+    boolean processed;
+
+    /**
      * Creates a new {@link Action}.
      *
      * @param mob The mob assigned to this action.

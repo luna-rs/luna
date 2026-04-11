@@ -397,10 +397,10 @@ public final class World {
                     // Skip pre-processing for locked NPCs.
                     continue;
                 }
-                npc.getWalking().process();
                 npc.getAggression().process();
                 npc.getCombat().processAttackDelay();
                 npc.getActions().process();
+                npc.getWalking().process();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn("{} could not complete pre-synchronization.", npc, e);
@@ -414,9 +414,9 @@ public final class World {
         for (Player player : playerList) {
             try {
                 player.getControllers().process();
-                player.getActions().process();
                 player.getTolerance().process();
                 player.getCombat().processAttackDelay();
+                player.getActions().process();
                 player.getWalking().process();
 
                 if (player.isBot()) {
@@ -492,6 +492,7 @@ public final class World {
             try {
                 npc.resetFlags();
                 npc.clearCachedBlock();
+                npc.getActions().normalize();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn("{} could not complete post-synchronization.", npc, e);
@@ -504,6 +505,7 @@ public final class World {
                 player.resetFlags();
                 player.clearCachedBlock();
                 player.getClient().flush();
+                player.getActions().normalize();
             } catch (Exception e) {
                 player.logout(true);
                 logger.warn("{} could not complete post-synchronization.", player, e);
