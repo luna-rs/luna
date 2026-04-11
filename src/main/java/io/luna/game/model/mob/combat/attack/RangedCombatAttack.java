@@ -65,7 +65,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
      */
     public RangedCombatAttack(T attacker, Mob victim, int animationId, Graphic start,
                               BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end, int speed, int range) {
-        super(attacker,victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, range), speed);
+        super(attacker, victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, range), speed);
 
         this.start = start;
         this.projectileFunction = projectileFunction;
@@ -83,7 +83,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
      */
     public RangedCombatAttack(T attacker, Mob victim, CombatStyle styleType, AmmoType ammoType) {
         this(attacker, victim, styleType.getDef().getAnimation(), ammoType.getDef().getStartGraphic(),
-                ammoType.getDef().getProjectile(), ammoType.getDef().getEndGraphic(),styleType.getDef().getSpeed(),
+                ammoType.getDef().getProjectile(), ammoType.getDef().getEndGraphic(), styleType.getDef().getSpeed(),
                 styleType.getDef().getRange());
     }
 
@@ -94,7 +94,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile();
+        launchProjectile(0, 1);
     }
 
     @Override
@@ -115,7 +115,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
     @Override
     public void onProjectileReached() {
         // Deal damage and apply final effects.
-        attacker.submitAction(new CombatDamageAction(nextDamage,this, true));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, true));
         if (end != null) {
             victim.graphic(end);
         }

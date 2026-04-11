@@ -106,7 +106,7 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        if(!isIgnoreAttackDelay()) {
+        if (!isIgnoreAttackDelay()) {
             // TODO Wiki states if you open with an instant special attack (gmaul) it will still give you the
             //  delay after. We can simulate this behaviour by adding an additional "|| combat.isAttackReady()" check.
             attacker.getCombat().setAttackDelay(delay);
@@ -163,14 +163,17 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This helper invokes {@link #onProjectileLaunched()} on the first action execution and {@link #onProjectileReached()}
      * on the third execution, then completes.
+     *
+     * @param launchTicks The execution counter to run {@link #onProjectileLaunched()} on ({@code ticks - 1}).
+     * @param arrivalTicks The execution counter to run {@link #onProjectileReached()} on ({@code ticks - 1}).
      */
-    protected final void launchProjectile() {
+    protected final void launchProjectile(int launchTicks, int arrivalTicks) {
         attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, 1) {
             @Override
             public boolean run() {
-                if (getExecutions() == 0) {
+                if (getExecutions() == launchTicks) {
                     onProjectileLaunched();
-                } else if (getExecutions() == 2) {
+                } else if (getExecutions() == arrivalTicks) {
                     onProjectileReached();
                     return true;
                 }

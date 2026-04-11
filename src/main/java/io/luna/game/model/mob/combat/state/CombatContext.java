@@ -397,7 +397,9 @@ public abstract class CombatContext<T extends Mob> {
      * This decrements the remaining delay so the mob moves closer to being able to attack again.
      */
     public void processAttackDelay() {
-        attackDelay--;
+        if (attackDelay > 0) {
+            attackDelay--;
+        }
     }
 
     /**

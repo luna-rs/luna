@@ -58,7 +58,7 @@ on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> get
 
 // Use magic spell on NPC.
 on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
-    if (plr.combat.isAttackable && targetNpc.combat.isAttackable) {
+    if (targetNpc.combat.isAttackable) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
         plr.combat.firstAttack = plr.combat.getNextAttack(targetNpc)

@@ -127,7 +127,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile();
+        launchProjectile(1, 3);
     }
 
     @Override
