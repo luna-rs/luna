@@ -30,6 +30,8 @@ on(EquipmentChangeEvent::class, EventPriority.HIGH) {
                     newItem.id !in Staff.AUTOCAST_ANCIENTS)) { // And we cannot cast ancient spells with this staff.
             // Or we're in the wilderness, clear auto-casted spell.
             plr.combat.magic.autocastSpell = CombatSpellDefinition.NONE
+        } else if (weapon.type == Weapon.STAFF) {
+            plr.combat.magic.refreshAutocast()
         }
         plr.combat.specialBar.toggleOff()
     }
