@@ -439,6 +439,8 @@ public final class CollisionManager {
         bridges.add(position);
     }
 
+    private Position tmp = new Position(0,0,0);
+
     /**
      * Returns whether an entity of {@code type} may move one step from {@code position} in {@code direction}.
      * <p>
@@ -456,7 +458,8 @@ public final class CollisionManager {
                                Direction direction,
                                boolean safe) {
 
-        Position next = position.translate(1, direction);
+        position.translate(1, direction, tmp);
+        Position next = tmp;
         ChunkRepository repository = chunks.load(next);
 
         if (!repository.traversable(next, type, direction, safe)) {
@@ -466,7 +469,7 @@ public final class CollisionManager {
         // For diagonals, both orthogonal components must also be traversable.
         if (direction.isDiagonal()) {
             for (Direction component : Direction.diagonalComponents(direction)) {
-                next = position.translate(1, component);
+                position.translate(1, component, next);
 
                 Chunk nextChunk = next.getChunk();
                 if (!repository.getChunk().equals(nextChunk)) {

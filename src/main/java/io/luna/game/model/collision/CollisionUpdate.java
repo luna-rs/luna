@@ -204,8 +204,10 @@ public final class CollisionUpdate {
             ImmutableList<Direction> directions = Direction.diagonalComponents(orientation);
             tile(position, impenetrable, directions);
 
+            Position tmp = new Position(0,0,0);
             for (Direction direction : directions) {
-                tile(position.translate(1, direction), impenetrable, ImmutableList.of(direction.opposite()));
+                position.translate(1, direction, tmp);
+                tile(tmp, impenetrable, ImmutableList.of(direction.opposite()));
             }
         }
 
