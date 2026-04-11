@@ -58,6 +58,11 @@ public final class Position implements Locatable {
     private int z;
 
     /**
+     * Setting this to true causes the Position to be extra careful with its internal state, making it easier to catch bugs
+     */
+    private static final boolean debug = false;
+
+    /**
      * Creates a new {@link Position}.
      *
      * @param x The x coordinate.
@@ -66,7 +71,9 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        if (debug) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        }
         this.x = x;
         this.y = y;
         this.z = z;
