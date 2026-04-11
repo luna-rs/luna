@@ -19,7 +19,15 @@ import io.luna.game.model.mob.interact.InteractionType
 
 // Only register hooks if slayer equipment is required.
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
+
+    /**
+     * If the hitpoints fall below this amount, the gargoyle will turn to stone.
+     */
     val HITPOINTS_THRESHOLD = 9
+
+    /**
+     * The rock hammer item ID.
+     */
     val ROCK_HAMMER = 4162
 
     /**
