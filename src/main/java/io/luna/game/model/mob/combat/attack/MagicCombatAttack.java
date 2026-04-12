@@ -128,7 +128,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(1, 3);
+        launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
     }
 
     @Override
@@ -162,7 +162,8 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.SPELLFAIL).display();
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, this, true));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, true)); // todo should make it known or design it better
+        // todo combatdamageaction is required for after effects etc. to be applied
     }
 
     /**

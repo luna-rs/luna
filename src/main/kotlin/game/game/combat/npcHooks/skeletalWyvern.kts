@@ -133,19 +133,14 @@ class WyvernIcyAttack(npc: Npc, other: Mob) : MagicCombatAttack<Npc>(
         val freeze = if (protected) 5 else 10
 
         if (RandomUtils.roll(chance)) {
-            victim.actions.submitIfAbsent(object : ImmobilizationAction(victim, freeze) {
-
-                /**
-                 * Disables the victim's combat when the icy breath freeze starts.
-                 */
-                override fun onSubmit() {
-                    super.onSubmit()
-                    if (victim is Player) {
-                        victim.sendMessage("You are unable to attack.")
-                    }
-                    victim.combat.isDisabled = true
-                }
-
+            /**
+             * Disable the victim's combat once the freeze starts.
+             */
+            victim.combat.isDisabled = true
+            if (victim is Player) {
+                victim.sendMessage("You are unable to attack.")
+            }
+            victim.actions.submit(object : ImmobilizationAction(victim, freeze) {
                 /**
                  * Re-enables the victim's combat once the freeze expires.
                  */

@@ -101,6 +101,7 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
+        // todo onAttack is redundant, do anything within calculate damage?
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);

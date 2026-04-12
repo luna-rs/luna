@@ -44,6 +44,11 @@ public enum AmmoType {
     MITHRIL_ARROW,
 
     /**
+     * Broad arrows.
+     */
+    BROAD_ARROW,
+
+    /**
      * Adamant arrows.
      */
     ADAMANT_ARROW,

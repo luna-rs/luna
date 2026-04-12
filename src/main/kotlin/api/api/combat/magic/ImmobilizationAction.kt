@@ -23,11 +23,17 @@ open class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionT
      *
      * If the affected mob is a [Player], a message is sent informing them that they have been frozen.
      */
-    override fun onSubmit() {
+    final override fun onSubmit() {
+        if(mob.combat.isImmobilized) {
+            interrupt()
+            return
+        }
+
         if (mob is Player) {
             mob.sendMessage("You have been frozen!")
         }
         mob.walking.clear()
+        mob.combat.isImmobilized = true
     }
 
     /**
@@ -38,5 +44,8 @@ open class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionT
      *
      * @return `true`, always.
      */
-    override fun run(): Boolean = true
+    override fun run(): Boolean {
+        mob.combat.isImmobilized = false
+        return true
+    }
 }

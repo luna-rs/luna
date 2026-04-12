@@ -185,7 +185,7 @@ public final class CombatFormula {
 
         Npc npc = victim.asNpc();
         return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 8) *
-                (npc.combatDef().getBonus(EquipmentBonus.MAGIC_DEFENCE) + 64);
+                (npc.combatDef().getMagicDefenceBonus() + 64);
     }
 
     /**
@@ -220,7 +220,7 @@ public final class CombatFormula {
     private static int getOffensiveAccuracyBonus(Mob attacker, EquipmentBonus attackStyleBonus) {
         return attacker instanceof Player ?
                 attacker.asPlr().getEquipment().getBonus(attackStyleBonus) :
-                attacker.asNpc().combatDef().getBonus(attackStyleBonus);
+                attacker.asNpc().combatDef().getAttackBonus();
     }
 
     /**
@@ -231,10 +231,9 @@ public final class CombatFormula {
      * @return The matching defensive bonus.
      */
     private static int getMatchingPhysicalDefenceBonus(Mob victim, EquipmentBonus attackStyleBonus) {
-        EquipmentBonus defenceBonus = attackStyleBonus.getOpposite();
         return victim instanceof Player ?
-                victim.asPlr().getEquipment().getBonus(defenceBonus) :
-                victim.asNpc().combatDef().getBonus(defenceBonus);
+                victim.asPlr().getEquipment().getBonus(attackStyleBonus.getOpposite()) :
+                victim.asNpc().combatDef().getMatchingDefenceBonus(attackStyleBonus);
     }
 
     /**

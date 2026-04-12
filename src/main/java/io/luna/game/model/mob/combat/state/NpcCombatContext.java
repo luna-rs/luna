@@ -55,6 +55,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     private RetreatPolicy retreatPolicy = RetreatPolicy.NONE;
 
     /**
+     * The primary attack bonus type this NPC uses.
+     */
+    private EquipmentBonus attackBonusType;
+
+    /**
      * Creates a new {@link NpcCombatContext}.
      *
      * @param npc The owning mob.
@@ -80,8 +85,10 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public EquipmentBonus getAttackStyleBonus() {
-        EquipmentBonus bonus = mob.combatDef().getDefaultAttackBonus();
-        return bonus != null ? bonus : mob.combatDef().findHighestAttackBonus();
+        if(attackBonusType != null) {
+            return attackBonusType;
+        }
+        return EquipmentBonus.SLASH_ATTACK;
     }
 
     @Override
@@ -119,8 +126,13 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     @Override
     public boolean isAttackable() {
         return mob.isAlive() &&
-                mob.combatDef().getLevel() > 0 &&
+                mob.def().getCombatLevel() > 0 &&
                 mob.def().getActions().contains("Attack");
+    }
+
+    @Override
+    public void onCombatFinished() {
+        attackBonusType = null;
     }
 
     /**
@@ -165,5 +177,14 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      */
     public void setRetreatPolicy(RetreatPolicy retreatPolicy) {
         this.retreatPolicy = retreatPolicy;
+    }
+
+    /**
+     * Sets the primary attack bonus type.
+     *
+     * @param attackBonusType The attack bonus type to assign.
+     */
+    public void setAttackBonusType(EquipmentBonus attackBonusType) {
+        this.attackBonusType = attackBonusType;
     }
 }

@@ -179,7 +179,7 @@ public class NpcAggression {
     private boolean checkPolicy(Player player, NpcAggressionPolicy policy) {
         switch (policy) {
             case COMBAT_LEVEL:
-                return player.getCombatLevel() <= attacker.combatDef().getLevel() * 2;
+                return player.getCombatLevel() <= attacker.def().getCombatLevel() * 2;
             case WEARING_GUTHIX:
                 return !player.getEquipment().containsAnyIds(GUTHIX_ITEMS);
             case WEARING_ZAMORAK:

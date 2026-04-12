@@ -76,7 +76,19 @@ public abstract class CombatContext<T extends Mob> {
      */
     private int attackDelay;
 
+    /**
+     * Indicates whether this entity is fully disabled.
+     * <p>
+     * A disabled entity is prevented from performing its normal actions until the disabled state is cleared.
+     */
     private boolean disabled;
+
+    /**
+     * Indicates whether this entity is currently immobilized.
+     * <p>
+     * An immobilized entity may still exist and process other logic, but it cannot move until this state is removed.
+     */
+    private boolean immobilized;
 
     /**
      * Creates a new {@link CombatContext} for the supplied mob.
@@ -339,6 +351,15 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
+     * Sets whether this entity is immobilized.
+     *
+     * @param immobilized {@code true} to prevent movement, {@code false} to allow movement again.
+     */
+    public void setImmobilized(boolean immobilized) {
+        this.immobilized = immobilized;
+    }
+
+    /**
      * Determines whether the owning mob is currently immobilized.
      * <p>
      * Immobilization is represented by the presence of an active {@link ImmobilizationAction}.
@@ -346,7 +367,7 @@ public abstract class CombatContext<T extends Mob> {
      * @return {@code true} if the mob is immobilized, otherwise {@code false}.
      */
     public final boolean isImmobilized() {
-        return mob.getActions().contains(ImmobilizationAction.class);
+        return immobilized;
     }
 
     /**
