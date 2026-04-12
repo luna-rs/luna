@@ -45,17 +45,17 @@ public final class Position implements Locatable {
     /**
      * The x tile coordinate.
      */
-    private int x;
+    private final int x;
 
     /**
      * The y tile coordinate.
      */
-    private int y;
+    private final int y;
 
     /**
      * The height level (plane).
      */
-    private int z;
+    private final int z;
 
     /**
      * Setting this to true causes the Position to be extra careful with its internal state, making it easier to catch bugs
@@ -193,53 +193,6 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Allocation safe version of translate. The idea here is that we don't allocate a new object by having the caller
-     * supply the object to store the result.
-     *
-     * @param amountX   amount to translate
-     * @param amountY   amount to translate
-     * @param dest      Position object to store result in
-     * @return          Outputs the result, the same object as dest parameter
-     */
-    public Position translate(int amountX, int amountY, Position dest) {
-        return translate(amountX, amountY, 0, dest);
-    }
-
-    /**
-     * Allocation safe version of translate. The idea here is that we don't allocate a new object by having the caller
-     * supply the object to store the result.
-     *
-     * @param amount The number of tiles to move.
-     * @param direction The direction.
-     * @param dest The position to store the result.
-     * @return The translated position.
-     */
-    public Position translate(int amount, Direction direction, Position dest) {
-        return translate(amount * direction.getTranslateX(), amount * direction.getTranslateY(), 0, dest);
-    }
-
-    /**
-     * Allocation safe version of translate. The idea here is that we don't allocate a new object by having the caller
-     * supply the object to store the result.
-     *
-     * @param amountX   amount to translate
-     * @param amountY   amount to translate
-     * @param amountZ   amount to translate
-     * @param dest      Position object to store result in
-     * @return          Outputs the result, the same object as dest parameter
-     */
-    public Position translate(int amountX, int amountY, int amountZ, Position dest) {
-        if (amountX == 0 && amountY == 0 && amountZ == 0) {
-            return this;
-        }
-
-        dest.x = x + amountX;
-        dest.y = y + amountY;
-        dest.z = z + amountZ;
-        return dest;
-    }
-
-    /**
      * Returns a new position translated by the specified amounts.
      * <p>
      * If no translation is applied, this instance is returned.
@@ -373,18 +326,13 @@ public final class Position implements Locatable {
         return z;
     }
 
+    /**
+     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
+     *
+     * @param newZ The new height level.
+     * @return The new position.
+     */
     public Position setZ(int newZ) {
-        this.z = newZ;
-        return this;
-    }
-
-    public Position setX(int x) {
-        this.x = x;
-        return this;
-    }
-
-    public Position setY(int y) {
-        this.y = y;
-        return this;
+        return new Position(x, y, newZ);
     }
 }

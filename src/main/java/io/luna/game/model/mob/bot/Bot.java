@@ -322,7 +322,7 @@ public final class Bot extends Player {
     public void randomize() {
         randomizeAppearance();
         randomizeSkills();
-        //randomizeEquipment();
+        randomizeEquipment();
     }
 
     /**

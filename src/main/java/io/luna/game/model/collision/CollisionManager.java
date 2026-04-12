@@ -466,7 +466,7 @@ public final class CollisionManager {
         // For diagonals, both orthogonal components must also be traversable.
         if (direction.isDiagonal()) {
             for (Direction component : Direction.diagonalComponents(direction)) {
-                position.translate(1, component, next);
+                next = position.translate(1, component);
 
                 Chunk nextChunk = next.getChunk();
                 if (!repository.getChunk().equals(nextChunk)) {

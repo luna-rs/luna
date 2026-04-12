@@ -30,8 +30,6 @@ public final class DumbWanderingAction extends WanderingAction {
      */
     private final Area area;
 
-    private Position tmp = new Position(0,0,0);
-
     /**
      * Creates a new {@link DumbWanderingAction}.
      *
@@ -51,10 +49,10 @@ public final class DumbWanderingAction extends WanderingAction {
             // Try a few times to find a valid 1-tile step without over-spending CPU.
             for (int loop = 0; loop < 5; loop++) {
                 Direction nextDirection = Direction.random();
-                mob.getPosition().translate(1, nextDirection, tmp);
+                Position nextPos = mob.getPosition().translate(1, nextDirection);
 
                 // Stay inside wander bounds and respect collision/pathing rules.
-                if (area.contains(tmp) && mob.getNavigator().step(nextDirection)) {
+                if (area.contains(nextPos) && mob.getNavigator().step(nextDirection)) {
                     break;
                 }
             }
