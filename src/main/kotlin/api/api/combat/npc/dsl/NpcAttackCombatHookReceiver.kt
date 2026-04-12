@@ -49,6 +49,7 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
      * @param maxHit The maximum damage this attack can deal.
      * @param range The maximum melee distance allowed for the attack.
      * @param speed The attack delay in ticks.
+     * @param launch The listener applied when the melee attack is actually launched.
      * @return The configured melee combat attack.
      */
     fun melee(
