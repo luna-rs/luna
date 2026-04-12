@@ -50,8 +50,6 @@ public final class Luna {
             // Load settings first so logging/bootstrap can reference them if needed.
             settings = loadSettings();
 
-            boolean devMode = settings.game().runtimeMode() == LunaRuntime.DEVELOPMENT;
-
             // Set Position and CollisionMatrix debug mode based on runtime mode.
             if (settings.game().runtimeMode() == LunaRuntime.DEVELOPMENT) {
                 Position.setDebug(true);
