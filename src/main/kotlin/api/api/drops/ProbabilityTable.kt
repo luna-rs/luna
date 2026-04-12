@@ -39,12 +39,6 @@ class ProbabilityTable<T>(private val entries: List<Pair<Double, T>>) {
         }
 
         val totalChance = entries.sumOf { it.first }
-        if (totalChance > 1.0) {
-            logger.warn(
-                "Absolute selection is invalid when total chance exceeds 1.0. Falling back to relative mode instead."
-            )
-        }
-
         val roll = if (totalChance > 1.0) rand().nextDouble(totalChance) else rand().nextDouble()
         var current = 0.0
 
