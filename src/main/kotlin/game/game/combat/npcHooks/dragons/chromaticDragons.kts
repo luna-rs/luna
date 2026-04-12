@@ -3,7 +3,7 @@ package game.combat.npcHooks.dragons
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
 
-// Chromatic dragons have a small chance to deal dragonfire.
+// Green, blue, red, and black adult dragons.
 combat(941, 55, 53, 54) {
     attack {
         if (rand(5) == 0) {

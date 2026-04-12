@@ -3,6 +3,7 @@ package io.luna.game.model.mob.interact;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
+import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent;
@@ -179,9 +180,9 @@ public final class InteractionAction extends Action<Player> {
         }
 
         if (!pending.isEmpty()) {
-            boolean combatEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
-                    event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent;
-            onReached(target instanceof Mob, combatEvent, trigger, pending);
+            boolean instantEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
+                    event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent || event instanceof PickupItemEvent;
+            onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
         } else if (mob.getWalking().isEmpty()) {
             onStanding();

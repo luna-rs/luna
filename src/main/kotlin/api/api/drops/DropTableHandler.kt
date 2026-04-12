@@ -7,11 +7,7 @@ import api.drops.dsl.SpecializedTableReceiver
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState
-import io.luna.game.model.chunk.ChunkUpdatableView
-import io.luna.game.model.item.GroundItem
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.Player
 import io.luna.util.Rational
 import kotlin.reflect.KClass
 
@@ -47,6 +43,11 @@ object DropTableHandler {
      * @return The drop table for [npc].
      */
     fun getDropTable(npc: Npc): MergedDropTable? = npcTypeMap.getOrDefault(npc.javaClass, npcIdMap[npc.id])
+
+    /**
+     * @return The drop table for [npc].
+     */
+    fun getDropTable(npc: Int): MergedDropTable? = npcIdMap[npc]
 
     /**
      * Constructs a generic drop table using a DSL-style builder.

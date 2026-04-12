@@ -1,19 +1,21 @@
 package game.player.command
 
+import api.drops.DropTableHandler
 import api.predef.*
 import api.predef.ext.*
-import game.content.crystalChest.CrystalChestDropTable
 import io.luna.Luna
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
+import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.*
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
@@ -133,12 +135,18 @@ cmd("obj", RIGHTS_DEV) {
  * Simulates drops for whichever table is implemented.
  */
 cmd("roll", RIGHTS_DEV) {
-    val times = asInt(0)
-    plr.overlays.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest x $times'") {
+    val npc = asInt(0)
+    val times = asInt(1)
+    val npcName = NpcDefinition.ALL[npc].orElseThrow().name
+    plr.overlays.open(object : DynamicBankInterface("'$npcName x $times'") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> {
             val items = arrayListOf<Item>()
-            repeat(times) {
-                items += CrystalChestDropTable.roll(plr, plr)
+            val npcInstance = Npc(ctx, npc, plr.position)
+            val table = DropTableHandler.getDropTable(npc)
+            if (table != null) {
+                repeat(times) {
+                    items.addAll(table.roll(npcInstance, plr))
+                }
             }
             return items
         }
