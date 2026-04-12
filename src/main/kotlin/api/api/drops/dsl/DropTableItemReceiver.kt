@@ -29,7 +29,7 @@ class DropTableItemReceiver(val items: ArrayList<DropTableItem>, private val not
     /**
      * Adds a chance to receive nothing as a drop.
      */
-    infix fun nothing(chance: Rational) {
+    infix fun nothing(chance: Double) {
         items += DropTableItem(-1, 0, chance)
     }
 

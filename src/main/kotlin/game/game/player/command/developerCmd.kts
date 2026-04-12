@@ -136,7 +136,9 @@ cmd("obj", RIGHTS_DEV) {
  */
 cmd("roll", RIGHTS_DEV) {
     val npc = asInt(0)
-    val times = asInt(1)
+    var times = asInt(1)
+    if(times > 50_000)
+        times = 50_000
     val npcName = NpcDefinition.ALL[npc].orElseThrow().name
     plr.overlays.open(object : DynamicBankInterface("'$npcName x $times'") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> {

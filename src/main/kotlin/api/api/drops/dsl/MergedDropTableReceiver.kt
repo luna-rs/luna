@@ -17,7 +17,7 @@ class MergedDropTableReceiver(val tables: ArrayList<DropTable>) {
     /**
      * Builds a [SimpleDropTable] to be used within the drop table set.
      */
-    fun table(chance: Rational = ALWAYS, receiver: DropTableItemReceiver.() -> Unit) {
+    fun table(chance: Double = ALWAYS, receiver: DropTableItemReceiver.() -> Unit) {
         tables += DropTableHandler.createSimple(chance, receiver)
     }
 

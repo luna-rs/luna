@@ -75,12 +75,6 @@ public class GroundItem extends StationaryEntity {
         super(context, position, EntityType.ITEM, view);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
-
-        // Non-stackable ground items must be represented one-by-one.
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        checkArgument(def.isStackable() || amount == 1,
-                "Non-stackable ground items [" + def.getName() + "] have a maximum amount of 1.");
-
         this.id = id;
         this.amount = amount;
     }

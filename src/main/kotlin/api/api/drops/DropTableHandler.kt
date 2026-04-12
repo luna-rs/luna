@@ -69,7 +69,7 @@ object DropTableHandler {
      * @param action The block defining the drop table items.
      * @return A simple drop table instance.
      */
-    fun createSimple(chance: Rational = Rational.ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
+    fun createSimple(chance: Double = ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
         return create(action).table { SimpleDropTable(table, chance) }
     }
 
@@ -81,7 +81,7 @@ object DropTableHandler {
      * @return A simple drop table with one item.
      */
     fun createSingleton(
-        chance: Rational = Rational.ALWAYS,
+        chance: Double = ALWAYS,
         action: DropTableItemReceiver.() -> DropTableItemChanceReceiver,
     ): SimpleDropTable {
         return createSimple { action(this).chance(chance) }

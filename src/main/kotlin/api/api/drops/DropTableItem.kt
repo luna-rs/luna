@@ -13,7 +13,7 @@ import io.luna.util.Rational
  * @property chance The probability of dropping this item.
  * @author lare96
  */
-class DropTableItem(val id: Int, val amount: IntRange, val chance: Rational) {
+class DropTableItem(val id: Int, val amount: IntRange, val chance: Double) {
 
     companion object {
 
@@ -38,13 +38,13 @@ class DropTableItem(val id: Int, val amount: IntRange, val chance: Rational) {
     }
 
 
-    constructor(name: String, amount: IntRange, chance: Rational, noted: Boolean = false) :
+    constructor(name: String, amount: IntRange, chance: Double, noted: Boolean = false) :
             this(computeId(name, noted), amount, chance)
 
-    constructor(name: String, amount: Int, chance: Rational, noted: Boolean = false) :
+    constructor(name: String, amount: Int, chance: Double, noted: Boolean = false) :
             this(computeId(name, noted), amount..amount, chance)
 
-    constructor(id: Int, amount: Int, chance: Rational) :
+    constructor(id: Int, amount: Int, chance: Double) :
             this(id, amount..amount, chance)
 
     override fun toString(): String {

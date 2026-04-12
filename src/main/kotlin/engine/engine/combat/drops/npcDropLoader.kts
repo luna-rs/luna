@@ -60,13 +60,13 @@ fun loadTable(table: StaticNpcDropTable, subTables: ListMultimap<Int, StaticNpcD
                         continue
                     }
                     // Add regular, non-noted items to this sub-table.
-                    drop.id.x(getAmountRange(drop.quantity)).chance(Rational.fromDouble(drop.rarity))
+                    drop.id.x(getAmountRange(drop.quantity)).chance(drop.rarity)
                 }
 
                 noted {
                     for (drop in noted) {
                         // Add noted items to the noted section of this sub-table.
-                        drop.id.x(getAmountRange(drop.quantity)).chance(Rational.fromDouble(drop.rarity))
+                        drop.id.x(getAmountRange(drop.quantity)).chance(drop.rarity)
                     }
                 }
             }

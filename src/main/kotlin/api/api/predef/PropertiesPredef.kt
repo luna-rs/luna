@@ -219,11 +219,11 @@ val Equipment.ammo: Item?
 
 
 /* Rational properties. */
-val ALWAYS = Rational.ALWAYS
-val VERY_COMMON = Rational.VERY_COMMON
-val COMMON = Rational.COMMON
-val UNCOMMON = Rational.UNCOMMON
-val VERY_UNCOMMON = Rational.VERY_UNCOMMON
-val RARE = Rational.RARE
-val VERY_RARE = Rational.VERY_RARE
-val NEVER = Rational(0, 1)
+val ALWAYS = 1.0
+val VERY_COMMON = Rational.VERY_COMMON.toDouble()
+val COMMON = Rational.COMMON.toDouble()
+val UNCOMMON = Rational.UNCOMMON.toDouble()
+val VERY_UNCOMMON = Rational.VERY_UNCOMMON.toDouble()
+val RARE = Rational.RARE.toDouble()
+val VERY_RARE = Rational.VERY_RARE.toDouble()
+val NEVER = 0.0

@@ -26,7 +26,7 @@ object Suspendable {
     /**
      * Maybes runs [action] based on [prob]. Returns `true` if the action ran.
      */
-    suspend fun maybe(prob: Rational, action: suspend () -> Unit): Boolean {
+    suspend fun maybe(prob: Double, action: suspend () -> Unit): Boolean {
         if (RandomUtils.roll(prob)) {
             action()
             return true
