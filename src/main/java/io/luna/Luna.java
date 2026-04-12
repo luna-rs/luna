@@ -1,5 +1,7 @@
 package io.luna;
 
+import io.luna.game.model.Position;
+import io.luna.game.model.collision.CollisionMatrix;
 import io.luna.util.GsonUtils;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
@@ -47,6 +49,12 @@ public final class Luna {
 
             // Load settings first so logging/bootstrap can reference them if needed.
             settings = loadSettings();
+
+            // Set Position and CollisionMatrix debug mode based on runtime mode.
+            if (settings.game().runtimeMode() == LunaRuntime.DEVELOPMENT) {
+                Position.setDebug(true);
+                CollisionMatrix.setDebug(true);
+            }
 
             // Route Netty's internal logger through the JDK logger (commonly bridged by the hosting environment).
             InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);

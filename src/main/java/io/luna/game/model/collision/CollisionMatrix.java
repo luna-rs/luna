@@ -3,6 +3,8 @@ package io.luna.game.model.collision;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import io.luna.Luna;
+import io.luna.LunaRuntime;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -42,6 +44,11 @@ public final class CollisionMatrix {
      * Bit pattern representing a tile where mobs are blocked but projectiles may still pass.
      */
     private static final short ALL_MOBS_BLOCKED = (short) 0b11111111_00000000;
+
+    /**
+     * Setting this to true causes the CollisionMatrix to be extra careful with its internal state, making it easier to catch bugs
+     */
+    private static boolean debug = false;
 
     /**
      * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
@@ -326,8 +333,10 @@ public final class CollisionMatrix {
      * @throws ArrayIndexOutOfBoundsException If (x, y) is out of range for this matrix.
      */
     private int indexOf(int x, int y) {
-        Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
-        Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        if (debug) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
+            Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        }
         return y * width + x;
     }
 
@@ -603,5 +612,14 @@ public final class CollisionMatrix {
      */
     public CollisionMatrix copy() {
         return new CollisionMatrix(width, length, Arrays.copyOf(matrix, matrix.length));
+    }
+
+    /**
+     * Sets the debug flag for all {@link CollisionMatrix} instances.
+     *
+     * @param debug The new debug flag.
+     */
+    public static void setDebug(boolean debug) {
+        CollisionMatrix.debug = debug;
     }
 }
