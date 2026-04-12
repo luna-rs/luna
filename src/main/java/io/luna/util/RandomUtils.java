@@ -231,6 +231,18 @@ public final class RandomUtils {
         return inclusive(low, high);
     }
 
+    /**
+     * Returns a randomly chosen boolean value.
+     * <p>
+     * Each invocation uses {@link ThreadLocalRandom#current()} and produces either {@code true} or {@code false}
+     * with equal probability.
+     *
+     * @return A random boolean value.
+     */
+    public static boolean random() {
+        return ThreadLocalRandom.current().nextBoolean();
+    }
+
     /* Shuffle overloads for all supported types. */
     public static <T> T[] shuffle(T[] array) {
         for (int i = array.length - 1; i > 0; i--) {
