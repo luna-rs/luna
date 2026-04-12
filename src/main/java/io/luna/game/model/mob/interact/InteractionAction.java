@@ -184,8 +184,11 @@ public final class InteractionAction extends Action<Player> {
                     event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent || event instanceof PickupItemEvent;
             onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
-        } else if (mob.getWalking().isEmpty()) {
+        } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
             onStanding();
+            return true;
+        } else if (listeners.isEmpty()) {
+            mob.sendMessage("No listener for "+event.getClass().getSimpleName()+"("+event.target().toString()+")");
             return true;
         }
         return false;
