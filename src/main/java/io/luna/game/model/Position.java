@@ -60,7 +60,7 @@ public final class Position implements Locatable {
     /**
      * Setting this to true causes the Position to be extra careful with its internal state, making it easier to catch bugs
      */
-    private static final boolean debug = false;
+    private static boolean debug = false;
 
     /**
      * Creates a new {@link Position}.
@@ -334,5 +334,14 @@ public final class Position implements Locatable {
      */
     public Position setZ(int newZ) {
         return new Position(x, y, newZ);
+    }
+
+    /**
+     * Sets the debug flag for all {@link Position} instances.
+     *
+     * @param debug The new debug flag.
+     */
+    public static void setDebug(boolean debug) {
+        Position.debug = debug;
     }
 }

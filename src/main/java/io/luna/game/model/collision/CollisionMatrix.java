@@ -3,6 +3,8 @@ package io.luna.game.model.collision;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import io.luna.Luna;
+import io.luna.LunaRuntime;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -46,7 +48,7 @@ public final class CollisionMatrix {
     /**
      * Setting this to true causes the CollisionMatrix to be extra careful with its internal state, making it easier to catch bugs
      */
-    private static final boolean debug = false;
+    private static boolean debug = false;
 
     /**
      * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
@@ -610,5 +612,14 @@ public final class CollisionMatrix {
      */
     public CollisionMatrix copy() {
         return new CollisionMatrix(width, length, Arrays.copyOf(matrix, matrix.length));
+    }
+
+    /**
+     * Sets the debug flag for all {@link CollisionMatrix} instances.
+     *
+     * @param debug The new debug flag.
+     */
+    public static void setDebug(boolean debug) {
+        CollisionMatrix.debug = debug;
     }
 }
