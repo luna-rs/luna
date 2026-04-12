@@ -23,18 +23,13 @@ val ROTTEN_FOOD = Item(2959)
  */
 val BONUS_DAMAGE_RANGE = 1..5
 
-// A small chance to deal extra damage and spoil food upon attack.
 combat(1053, 3609, 3610, 3611) {
-    // Determine how the ghast will attack.
     attack {
-        // Use a melee attack.
         melee {
-            // Right when the attack launches, try to spoil some enemy food and deal bonus damage.
             if (RandomUtils.roll(ROT_FOOD_CHANCE)) {
                 // Not 100% faithful to old rs, but good enough?
                 other.damage(rand(BONUS_DAMAGE_RANGE))
                 if (other is Player) {
-                    println(other)
                     for ((index, item) in other.inventory.withIndex()) {
                         if (item != null && Food.COOKED_TO_FOOD.containsKey(item.id)) {
                             other.inventory[index] = ROTTEN_FOOD

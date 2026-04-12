@@ -16,7 +16,7 @@ import io.luna.game.model.mob.Player
  * @param mob The mob being immobilized.
  * @param delay The duration of the immobilization effect in ticks.
  */
-class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.SOFT, false, delay) {
+open class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.SOFT, false, delay) {
 
     /**
      * Performs submission-time logic for the immobilization effect.

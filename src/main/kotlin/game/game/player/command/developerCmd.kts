@@ -13,6 +13,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.*
+import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
@@ -179,7 +180,7 @@ cmd("sound", RIGHTS_DEV) {
  */
 cmd("graphic", RIGHTS_DEV) {
     val id = asInt(0)
-    plr.graphic(Graphic(id))
+    plr.graphic(Graphic(id, 100, 0))
 }
 
 /**
@@ -188,6 +189,21 @@ cmd("graphic", RIGHTS_DEV) {
 cmd("animation", RIGHTS_DEV) {
     val id = asInt(0)
     plr.animation(Animation(id))
+}
+
+cmd("npcanim") {
+    val npcId = asInt(0)
+    val animationId = asInt(1)
+
+    var npc = world.locator.findNearestNpc(plr) { it.id == npcId }
+    if (npc == null) {
+        npc = world.addNpc(npcId, plr.position.x, plr.position.y)
+        world.scheduleOnce(5) {
+            npc.animation(Animation(animationId, AnimationPriority.HIGH))
+        }
+    } else {
+        npc.animation(Animation(animationId, AnimationPriority.HIGH))
+    }
 }
 
 /**

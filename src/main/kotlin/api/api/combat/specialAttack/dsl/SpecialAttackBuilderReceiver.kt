@@ -145,6 +145,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param impactSound The sound played when the spell impacts.
      * @param spellEffect The combat spell logic applied on hit.
      * @param speed The spell travel or attack speed in ticks.
+     * @param distance The distance required for interaction.
      * @return A configured magic combat attack instance.
      */
     fun magic(attacker: Player,
@@ -155,9 +156,10 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
               end: Graphic,
               impactSound: Sound,
               spellEffect: CombatSpell,
-              speed: Int): PlayerMagicCombatAttack {
+              speed: Int,
+              distance: Int): PlayerMagicCombatAttack {
         return object : PlayerMagicCombatAttack(attacker, victim, cast, start, projectileFunction, end, impactSound,
-                                                spellEffect, speed) {
+                                                spellEffect, speed, distance) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -180,7 +182,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      */
     fun magic(spell: CombatSpellDefinition): PlayerMagicCombatAttack {
         return magic(attacker, victim, spell.castAnimation, spell.startGraphic, spell.projectile,
-                     spell.endGraphic, spell.endSound, spell.spell, 4)
+                     spell.endGraphic, spell.endSound, spell.spell, 4, 10)
     }
 
     /**
@@ -206,7 +208,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             // Attack can go through, drain special attack energy, run launch listener.
             attacker.combat.specialBar.drain(receiver.drain, true)
             receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack))
-            if(receiver.instant) {
+            if (receiver.instant) {
                 attack.isIgnoreAttackDelay = true
             }
             return newDamage

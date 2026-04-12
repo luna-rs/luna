@@ -83,17 +83,18 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      * @param impactSound The sound to play on a successful impact, or {@code null} if none.
      * @param spellEffect The spell definition used to resolve spell-specific effects.
      * @param speed The attack delay, in ticks, applied after execution.
+     * @param distance The distance required for interaction.
      */
     public MagicCombatAttack(T attacker, Mob victim, Animation cast, Graphic start,
                              BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end, Sound impactSound,
-                             CombatSpell spellEffect, int speed) {
-        super(attacker, victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10), speed);
+                             CombatSpell spellEffect, int speed, int distance) {
+        super(attacker, victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, distance), speed);
         this.cast = cast;
         this.start = start;
         this.projectileFunction = projectileFunction;
         this.end = end;
         this.impactSound = impactSound;
-        this.spellEffect = spellEffect.getDef();
+        this.spellEffect = spellEffect == null ? null : spellEffect.getDef();
     }
 
     /**
@@ -106,7 +107,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      */
     public MagicCombatAttack(T attacker, Mob victim, CombatSpellDefinition spell, int speed) {
         this(attacker, victim, spell.getCastAnimation(), spell.getStartGraphic(), spell.getProjectile(),
-                spell.getEndGraphic(), spell.getEndSound(), spell.getSpell(), speed);
+                spell.getEndGraphic(), spell.getEndSound(), spell.getSpell(), speed, 10);
     }
 
     /**
@@ -156,7 +157,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             if (impactSound != null) {
                 LocalSound.of(victim, impactSound).display();
             }
-        } else {
+        } else if (spellEffect != null) { // No spell effect = no need for splash.
             // The hit splashed, so play the standard splash effect.
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.SPELLFAIL).display();

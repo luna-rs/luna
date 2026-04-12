@@ -39,30 +39,11 @@ combat(172) {
 // Level 22 and 23 dark wizards.
 combat(3242, 3243) {
     attack {
-        // Only attempt speech when we're ready to launch an attack (throttling).
-        if (combat.isAttackReady && rand(10) == 0) {
-            when (rand(2)) {
-                0 -> npc.speak("Gah!")
-                1 -> npc.speak("With the power of Zamorak!")
-                2 -> npc.speak("Be gone!")
-            }
-        }
-
         if (rand(2) == 0 && !other.combat.isImmobilized)
             magic(CombatSpell.BIND)
-        else if (RandomUtils.roll(Rational.COMMON))
-            magic(if (rand().nextBoolean()) CombatSpell.EARTH_BOLT else CombatSpell.FIRE_BOLT)
+        else if (RandomUtils.roll(Rational.UNCOMMON))
+            magic(if (rand().nextBoolean()) CombatSpell.WIND_BOLT else CombatSpell.WATER_BOLT)
         else
-            magic(CombatSpell.WATER_BOLT)
-    }
-
-    defend {
-        if (rand(10) == 0) {
-            when (rand(2)) {
-                0 -> npc.speak("Agh!")
-                1 -> npc.speak("You're no match for me!")
-                2 -> npc.speak("Curse you!")
-            }
-        }
+            magic(CombatSpell.FIRE_STRIKE)
     }
 }
