@@ -41,31 +41,33 @@ fun load(loadedDrops: Array<StaticNpcDropTable>) {
  * @param subTables All drops grouped by their table identifier.
  */
 fun loadTable(table: StaticNpcDropTable, subTables: ListMultimap<Int, StaticNpcDrop>) {
-    DropTableHandler.createNpc(table.id) {
-        // Load generic Ring of Wealth-based drop tables.
-        when (table.rare) {
-            "GEM" -> tables += GenericDropTables.gemDropTable(chance = 2 of 128)
-            "RARE" -> tables += GenericDropTables.rareDropTable(chance = 5 of 128)
-        }
+    for (id in table.ids) {
+        DropTableHandler.createNpc(id) {
+            // Load generic Ring of Wealth-based drop tables.
+            when (table.rare) {
+                "GEM" -> tables += GenericDropTables.gemDropTable(chance = 2 of 128)
+                "RARE" -> tables += GenericDropTables.rareDropTable(chance = 5 of 128)
+            }
 
-        for (entry in subTables.asMap().entries) {
-            // Create a new DSL table for each unique table ID.
-            table {
-                val noted = ArrayList<StaticNpcDrop>()
+            for (entry in subTables.asMap().entries) {
+                // Create a new DSL table for each unique table ID.
+                table {
+                    val noted = ArrayList<StaticNpcDrop>()
 
-                for (drop in entry.value) {
-                    if (drop.noted) {
-                        noted += drop
-                        continue
-                    }
-                    // Add regular, non-noted items to this sub-table.
-                    drop.id.x(getAmountRange(drop.quantity)).chance(drop.rarity)
-                }
-
-                noted {
-                    for (drop in noted) {
-                        // Add noted items to the noted section of this sub-table.
+                    for (drop in entry.value) {
+                        if (drop.noted) {
+                            noted += drop
+                            continue
+                        }
+                        // Add regular, non-noted items to this sub-table.
                         drop.id.x(getAmountRange(drop.quantity)).chance(drop.rarity)
+                    }
+
+                    noted {
+                        for (drop in noted) {
+                            // Add noted items to the noted section of this sub-table.
+                            drop.id.x(getAmountRange(drop.quantity)).chance(drop.rarity)
+                        }
                     }
                 }
             }
@@ -105,7 +107,7 @@ fun getAmountRange(amount: String): IntRange {
    registration occurs on the game thread.
  */
 on(ServerLaunchEvent::class) {
-    val dropsPath = Paths.get("data", "game", "def", "npcs", "drops.json")
+    val dropsPath = Paths.get("data", "game", "def", "npcs", "drops.jsonc")
     CompletableFuture
         .supplyAsync({ GsonUtils.readAsType(dropsPath, Array<StaticNpcDropTable>::class.java) }, taskPool)
         .thenAcceptAsync({ load(it) }, gameService.gameExecutor)
