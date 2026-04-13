@@ -77,45 +77,133 @@ fun button(id: Int,
            action: EventAction<ButtonClickEvent>) =
     Matcher.get<ButtonClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
 
-/** The [NpcFirstClickEvent] matcher function. */
-fun npc1(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcFirstClickEvent>) =
-    Matcher.get<NpcFirstClickEvent, Int>().set(id, action, interaction)
+/**
+ * The [NpcFirstClickEvent] matcher function.
+ */
+fun npc1(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcFirstClickEvent>
+) = Matcher.get<NpcFirstClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
 
-fun npc1(id: Int,
-         action: EventAction<NpcFirstClickEvent>) =
-    npc1(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc1(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, interaction, true, action)
 
-/** The [NpcSecondClickEvent] matcher function. */
-fun npc2(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcSecondClickEvent>) =
-    Matcher.get<NpcSecondClickEvent, Int>().set(id, action, interaction)
+fun npc1(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, InteractionPolicy.STANDARD_SIZE, focus, action)
 
-fun npc2(id: Int,
-         action: EventAction<NpcSecondClickEvent>) =
-    npc2(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc1(
+    id: Int,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, InteractionPolicy.STANDARD_SIZE, true, action)
 
-/** The [NpcThirdClickEvent] matcher function. */
-fun npc3(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcThirdClickEvent>) =
-    Matcher.get<NpcThirdClickEvent, Int>().set(id, action, interaction)
+/**
+ * The [NpcSecondClickEvent] matcher function.
+ */
+fun npc2(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcSecondClickEvent>
+) = Matcher.get<NpcSecondClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
 
-fun npc3(id: Int,
-         action: EventAction<NpcThirdClickEvent>) =
-    npc3(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc2(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, interaction, true, action)
 
-/** The [NpcFourthClickEvent] matcher function. */
-fun npc4(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcFourthClickEvent>) =
-    Matcher.get<NpcFourthClickEvent, Int>().set(id, action, interaction)
+fun npc2(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, InteractionPolicy.STANDARD_SIZE, focus, action)
 
-fun npc4(id: Int,
-         action: EventAction<NpcFourthClickEvent>) =
-    npc4(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc2(
+    id: Int,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, InteractionPolicy.STANDARD_SIZE, true, action)
+
+/**
+ * The [NpcThirdClickEvent] matcher function.
+ */
+fun npc3(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcThirdClickEvent>
+) = Matcher.get<NpcThirdClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
+
+fun npc3(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, interaction, true, action)
+
+fun npc3(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, InteractionPolicy.STANDARD_SIZE, focus, action)
+
+fun npc3(
+    id: Int,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, InteractionPolicy.STANDARD_SIZE, true, action)
+
+/**
+ * The [NpcFourthClickEvent] matcher function.
+ */
+fun npc4(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcFourthClickEvent>
+) = Matcher.get<NpcFourthClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
+
+fun npc4(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, interaction, true, action)
+
+fun npc4(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, InteractionPolicy.STANDARD_SIZE, focus, action)
+
+fun npc4(
+    id: Int,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, InteractionPolicy.STANDARD_SIZE, true, action)
 
 /**
  * The [GroundItemSecondClickEvent] matcher function.
