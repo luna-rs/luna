@@ -3,11 +3,11 @@ package engine.combat.drops
 import api.drops.DropTableHandler
 import api.drops.GenericDropTables
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.util.GsonUtils
-import io.luna.util.Rational
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
@@ -44,9 +44,8 @@ fun loadTable(table: StaticNpcDropTable, subTables: ListMultimap<Int, StaticNpcD
     DropTableHandler.createNpc(table.id) {
         // Load generic Ring of Wealth-based drop tables.
         when (table.rare) {
-            "GEM" -> tables += GenericDropTables.gemDropTable()
-            "MEGA_RARE" -> tables += GenericDropTables.megaRareDropTable()
-            "RARE" -> tables += GenericDropTables.rareDropTable()
+            "GEM" -> tables += GenericDropTables.gemDropTable(chance = 2 of 128)
+            "RARE" -> tables += GenericDropTables.rareDropTable(chance = 5 of 128)
         }
 
         for (entry in subTables.asMap().entries) {
