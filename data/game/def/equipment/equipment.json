@@ -13529,7 +13529,7 @@
     "id": 3140,
     "index": 4,
     "two_handed?": false,
-    "full_body?": true,
+    "full_body?": false,
     "full_helmet?": false,
     "requirements": [
       {
@@ -19469,7 +19469,7 @@
     "id": 4728,
     "index": 4,
     "two_handed?": false,
-    "full_body?": true,
+    "full_body?": false,
     "full_helmet?": false,
     "requirements": [
       {
@@ -19831,7 +19831,7 @@
     "id": 4757,
     "index": 4,
     "two_handed?": false,
-    "full_body?": true,
+    "full_body?": false,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20212,6 +20212,28 @@
     ]
   },
   {
+    "id": 4860,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4862,
     "index": 3,
     "two_handed?": false,
@@ -20336,10 +20358,32 @@
     ]
   },
   {
+    "id": 4866,
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4868,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20370,7 +20414,7 @@
     "id": 4869,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20401,7 +20445,7 @@
     "id": 4870,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20432,7 +20476,7 @@
     "id": 4871,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20454,6 +20498,28 @@
       37,
       63,
       30,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4872,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0
@@ -20584,6 +20650,28 @@
     ]
   },
   {
+    "id": 4878,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4880,
     "index": 0,
     "two_handed?": false,
@@ -20687,6 +20775,28 @@
       44,
       -1,
       51,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4884,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -20816,10 +20926,32 @@
     ]
   },
   {
+    "id": 4890,
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4892,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20846,7 +20978,7 @@
     "id": 4893,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20873,7 +21005,7 @@
     "id": 4894,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20900,7 +21032,7 @@
     "id": 4895,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20919,6 +21051,28 @@
       107,
       -6,
       132,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4896,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -21032,6 +21186,28 @@
     ]
   },
   {
+    "id": 4902,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4904,
     "index": 0,
     "two_handed?": false,
@@ -21135,6 +21311,28 @@
       54,
       -1,
       62,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4908,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -21248,6 +21446,28 @@
     ]
   },
   {
+    "id": 4914,
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4916,
     "index": 4,
     "two_handed?": false,
@@ -21356,6 +21576,28 @@
     ]
   },
   {
+    "id": 4920,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4922,
     "index": 7,
     "two_handed?": false,
@@ -21459,6 +21701,28 @@
       73,
       -4,
       82,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4926,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -21588,6 +21852,28 @@
     ]
   },
   {
+    "id": 4932,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4934,
     "index": 3,
     "two_handed?": true,
@@ -21696,10 +21982,32 @@
     ]
   },
   {
+    "id": 4938,
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4940,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21730,7 +22038,7 @@
     "id": 4941,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21761,7 +22069,7 @@
     "id": 4942,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21792,7 +22100,7 @@
     "id": 4943,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21815,6 +22123,28 @@
       50,
       65,
       57,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4944,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -21944,6 +22274,28 @@
     ]
   },
   {
+    "id": 4950,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4952,
     "index": 0,
     "two_handed?": false,
@@ -22047,6 +22399,28 @@
       54,
       -1,
       62,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4956,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -22176,10 +22550,32 @@
     ]
   },
   {
+    "id": 4962,
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4964,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -22206,7 +22602,7 @@
     "id": 4965,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -22233,7 +22629,7 @@
     "id": 4966,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -22260,7 +22656,7 @@
     "id": 4967,
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -22279,6 +22675,28 @@
       107,
       -6,
       132,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4968,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0
     ]
@@ -22392,6 +22810,28 @@
     ]
   },
   {
+    "id": 4974,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4976,
     "index": 0,
     "two_handed?": false,
@@ -22497,6 +22937,28 @@
       56,
       0,
       3
+    ]
+  },
+  {
+    "id": 4980,
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
     ]
   },
   {
@@ -22608,6 +23070,28 @@
     ]
   },
   {
+    "id": 4986,
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4988,
     "index": 4,
     "two_handed?": false,
@@ -22716,6 +23200,28 @@
     ]
   },
   {
+    "id": 4992,
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 4994,
     "index": 7,
     "two_handed?": false,
@@ -22821,6 +23327,28 @@
       84,
       0,
       4
+    ]
+  },
+  {
+    "id": 4998,
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
     ]
   },
   {
