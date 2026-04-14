@@ -139,7 +139,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     }
 
     @Override
-    public void onProjectileLaunched() {
+    public final void onProjectileLaunched() {
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
             projectile.display();
@@ -147,9 +147,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     }
 
     @Override
-    public void onProjectileReached() {
-        if (nextDamage.getAmount().isPresent()) {
-            // The hit landed successfully, so apply spell effects and successful impact visuals.
+    public final void onProjectileReached() {
+        if (nextDamage.getAmount().isPresent() || spellEffect == null) {
+            // The hit landed or is a non-spell book magic attack and requires a 0 hitsplat.
             applyEffects();
             if (end != null) {
                 victim.graphic(end);
@@ -157,11 +157,16 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             if (impactSound != null) {
                 LocalSound.of(victim, impactSound).display();
             }
-        } else if (spellEffect != null) { // No spell effect = no need for splash.
+            if(spellEffect == null && nextDamage.getAmount().isEmpty()) {
+                // Spell isn't from spell book and missed. Non-spell book magic attacks don't splash.
+                nextDamage = CombatDamageRequest.zero(attacker, victim, CombatDamageType.MAGIC).resolve();
+            }
+        } else {
             // The hit splashed, so play the standard splash effect.
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.SPELLFAIL).display();
         }
+        System.out.println(nextDamage.getAmount());
         victim.submitAction(new CombatDamageAction(nextDamage, this, true)); // todo should make it known or design it better
         // todo combatdamageaction is required for after effects etc. to be applied
     }
