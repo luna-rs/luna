@@ -3,6 +3,7 @@ package game.combat.npcHooks
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
 import game.player.Sound
+import io.luna.Luna
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -75,8 +76,9 @@ class AberrantSpectreMagicAttack(attacker: Npc, victim: Mob) : MagicCombatAttack
     /**
      * Whether the victim is protected by a nose peg.
      */
-    private val protected = victim is Player && victim.equipment.head?.id == NOSE_PEG
-    
+    private val protected = !Luna.settings().skills().slayerEquipmentNeeded() ||
+            (victim is Player && victim.equipment.head?.id == NOSE_PEG)
+
     override fun calculateDamage(other: Mob?): CombatDamage {
         val request = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MAGIC)
 

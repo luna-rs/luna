@@ -7,9 +7,19 @@ import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_BATTLE_AXE
 
+/**
+ * The animation played during the special attack.
+ */
+val ANIMATION = Animation(1056, AnimationPriority.HIGH)
+
+/**
+ * The graphic played during the special attack.
+ */
+val GRAPHIC = Graphic(246, 0, 0)
+
 activation(type = DRAGON_BATTLE_AXE, drain = 100) {
-    animation(Animation(1056, AnimationPriority.HIGH))
-    graphic(Graphic(246, 0, 0))
+    animation(ANIMATION)
+    graphic(GRAPHIC)
     speak("Raarrrrrgggggghhhhhhh!")
     val attackDrain = (attack.level * 0.1).toInt()
     val defenceDrain = (defence.level * 0.1).toInt()
