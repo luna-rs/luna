@@ -524,10 +524,10 @@ public abstract class Mob extends Entity {
         }
 
         Hit hit = new Hit(amount, type, getHealth(), getTotalHealth());
-        if (pendingBlockData.getHit1() != null) {
-            hit2(hit);
-        } else {
+        if (pendingBlockData.getHit1() == null) {
             hit1(hit);
+        } else {
+            hit2(hit);
         }
         onHit(hit);
     }
