@@ -1,5 +1,6 @@
 package api.bot
 
+import api.predef.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.net.msg.GameMessageWriter
@@ -27,7 +28,7 @@ object Suspendable {
      * Maybes runs [action] based on [prob]. Returns `true` if the action ran.
      */
     suspend fun maybe(prob: Double, action: suspend () -> Unit): Boolean {
-        if (RandomUtils.roll(prob)) {
+        if (rand(prob)) {
             action()
             return true
         }

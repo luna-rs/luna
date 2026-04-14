@@ -41,7 +41,7 @@ combat(3242, 3243) {
     attack {
         if (rand(2) == 0 && !other.combat.isImmobilized)
             magic(CombatSpell.BIND)
-        else if (RandomUtils.roll(Rational.UNCOMMON))
+        else if (rand(UNCOMMON))
             magic(if (rand().nextBoolean()) CombatSpell.WIND_BOLT else CombatSpell.WATER_BOLT)
         else
             magic(CombatSpell.FIRE_STRIKE)

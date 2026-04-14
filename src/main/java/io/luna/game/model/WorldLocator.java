@@ -571,6 +571,16 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds the nearest player.
+     *
+     * @param base The origin of the search.
+     * @return The nearest player, or {@code null} if no player is online.
+     */
+    public Player findNearestPlayer(Locatable base) {
+        return findNearest(EntityType.PLAYER, base, player -> true);
+    }
+
+    /**
      * Computes the list of players visible to {@code player}.
      * <p>
      * This is typically used when building player update state for the current cycle.

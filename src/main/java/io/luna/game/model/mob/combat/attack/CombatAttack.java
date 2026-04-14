@@ -102,6 +102,7 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public final void apply() {
         // todo onAttack is redundant, do anything within calculate damage?
+        // todo maybe just only pass the builder until attack is ready to run?
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);
@@ -136,7 +137,7 @@ public abstract class CombatAttack<T extends Mob> {
      *
      * @param damage The damage that was applied to the victim.
      */
-    public void onAttackArrived(CombatDamage damage) {
+    public void onDamageApplied(CombatDamage damage) {
 
     }
 

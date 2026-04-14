@@ -4,6 +4,7 @@ import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
 import api.combat.magic.CombatSpellHandler.weaken
 import api.predef.*
+import api.predef.ext.*
 import engine.controllers.Controllers.inMultiArea
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
@@ -11,14 +12,12 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
 import kotlin.math.floor
 
 /**
  * The chance for a smoke spell to apply poison.
  */
-val SMOKE_SPELLS_POISON_CHANCE = Rational(1, 8)
+val SMOKE_SPELLS_POISON_CHANCE = 1 of 8
 
 /**
  * Iterates nearby viewable mobs of the same runtime type as the supplied victim, limited to a radius around
@@ -31,11 +30,11 @@ val SMOKE_SPELLS_POISON_CHANCE = Rational(1, 8)
  * @param radius The search radius around the victim.
  * @param action The action to perform for each matching nearby mob.
  */
-inline fun <reified T : Mob> forRadiusMobs(victim: T, radius: Int, action: (Mob) -> Unit) {
+inline fun <reified T : Mob> forRadiusMobs(attacker: Mob, victim: T, radius: Int, action: (Mob) -> Unit) {
     val area = Area.of(victim.position, radius)
     val viewable: Set<T> = world.locator.findViewable(victim.type, victim.position)
     for (mob in viewable) {
-        if (mob != victim && area.contains(mob) && mob.inMultiArea()) {
+        if (mob != victim && mob != attacker && area.contains(mob) && mob.inMultiArea()) {
             action(mob)
         }
     }
@@ -53,13 +52,13 @@ inline fun <reified T : Mob> forRadiusMobs(victim: T, radius: Int, action: (Mob)
  */
 fun poison(victim: Mob, severity: Int, attack: MagicCombatAttack<*>) {
     fun poison(mob: Mob) {
-        if (RandomUtils.roll(SMOKE_SPELLS_POISON_CHANCE)) {
+        if (rand(SMOKE_SPELLS_POISON_CHANCE)) {
             mob.combat.poisonSeverity = severity
         }
     }
     poison(victim)
     if (attack.spellEffect.radius > 0 && attack.attacker.inMultiArea()) {
-        forRadiusMobs(victim, attack.spellEffect.radius) {
+        forRadiusMobs(attack.attacker, victim, attack.spellEffect.radius) {
             poison(it)
             attack.damageList += attack.calculateDamage(it)
         }
@@ -94,7 +93,7 @@ fun heal(attacker: Mob, damage: CombatDamage, attack: MagicCombatAttack<*>) {
         attacker.sendMessage("You drain some of your opponent's health.")
     }
     if (attack.spellEffect.radius > 0 && attack.attacker.inMultiArea()) {
-        forRadiusMobs(attack.victim, attack.spellEffect.radius) {
+        forRadiusMobs(attack.attacker, attack.victim, attack.spellEffect.radius) {
             val mobDamage = attack.calculateDamage(it)
             heal(mobDamage)
             attack.damageList += mobDamage
@@ -113,7 +112,7 @@ fun heal(attacker: Mob, damage: CombatDamage, attack: MagicCombatAttack<*>) {
 fun weakenAll(victim: Mob, skill: Int, percent: Double, attack: MagicCombatAttack<*>) {
     weaken(victim, victim.skill(skill), percent)
     if (attack.spellEffect.radius > 0 && attack.attacker.inMultiArea()) {
-        forRadiusMobs(victim, attack.spellEffect.radius) {
+        forRadiusMobs(attack.attacker, victim, attack.spellEffect.radius) {
             weaken(victim, victim.skill(skill), percent)
             attack.damageList += attack.calculateDamage(it)
         }
@@ -130,7 +129,7 @@ fun weakenAll(victim: Mob, skill: Int, percent: Double, attack: MagicCombatAttac
 fun immobilizeAll(victim: Mob, ticks: Int, attack: MagicCombatAttack<*>) {
     immobilize(victim, ticks)
     if (attack.spellEffect.radius > 0 && attack.attacker.inMultiArea()) {
-        forRadiusMobs(victim, attack.spellEffect.radius) {
+        forRadiusMobs(attack.attacker, victim, attack.spellEffect.radius) {
             immobilize(it, ticks)
             attack.damageList += attack.calculateDamage(it)
         }

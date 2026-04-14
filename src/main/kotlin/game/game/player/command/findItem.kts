@@ -44,7 +44,7 @@ class SearchResultInterface(private val searchToken: String) :
 fun spawn(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
     val id = msg.itemId
-    val item = Item(id, amount ?: Int.MAX_VALUE)
+    val item = Item(id, amount ?: 100_000)
     plr.giveItem(item)
 }
 

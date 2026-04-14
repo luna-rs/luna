@@ -24,8 +24,7 @@ import kotlin.math.floor
  * - An antifire potion
  * - Protect from Magic
  *
- * The total protection value is then used to reduce both the attack's effective
- * accuracy and maximum damage.
+ * The total protection value is then used to reduce both the attack's effective accuracy and maximum damage.
  *
  * @param attacker The dragon performing the attack.
  * @param victim The target of the attack.
@@ -103,7 +102,7 @@ class DragonFireCombatAttack(
             .resolve()
     }
 
-    override fun onAttackArrived(damage: CombatDamage?) {
+    override fun onDamageApplied(damage: CombatDamage?) {
         if (damage != null && damage.amount.isPresent && victim is Player) {
             if (protection >= 0.8) {
                 victim.sendMessage("Your shield absorbs most of the dragon fire!")

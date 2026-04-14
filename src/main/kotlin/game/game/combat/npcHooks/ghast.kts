@@ -2,6 +2,7 @@ package game.combat.npcHooks
 
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
+import api.predef.ext.*
 import game.skill.cooking.cookFood.Food
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -11,7 +12,7 @@ import io.luna.util.Rational
 /**
  * The chance that a piece of food will be spoiled and bonus damage applied.
  */
-val ROT_FOOD_CHANCE = Rational(3, 10)
+val ROT_FOOD_CHANCE = 3 of 10
 
 /**
  * The rotten food item.
@@ -26,7 +27,7 @@ val BONUS_DAMAGE_RANGE = 1..5
 combat(1053, 3609, 3610, 3611) {
     attack {
         melee {
-            if (RandomUtils.roll(ROT_FOOD_CHANCE)) {
+            if (rand(ROT_FOOD_CHANCE)) {
                 // Not 100% faithful to old rs, but good enough?
                 other.damage(rand(BONUS_DAMAGE_RANGE))
                 if (other is Player) {

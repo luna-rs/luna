@@ -46,7 +46,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param speed The attack speed in ticks.
      * @return A configured melee combat attack instance.
      */
-    fun melee(animationId: Int, range: Int, speed: Int): PlayerMeleeCombatAttack {
+    fun melee(animationId: Int, range: Int = attacker.combat.weapon.range, speed: Int = attacker.combat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
@@ -56,7 +56,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.MELEE)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }
@@ -106,7 +106,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.RANGED)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }
@@ -168,7 +168,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.MAGIC)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }

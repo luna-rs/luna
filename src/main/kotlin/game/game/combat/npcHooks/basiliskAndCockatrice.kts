@@ -36,20 +36,20 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
             attack {
                 melee {
                     if (other is Player && other.equipment.shield?.id != MIRROR_SHIELD) {
-                        if (RandomUtils.random()) {
-                            if (RandomUtils.random()) {
+                        if (randBoolean()) {
+                            if (randBoolean()) {
                                 other.attack.adjustLevel(-rand(10, 20))
                             }
-                            if (RandomUtils.random()) {
+                            if (randBoolean()) {
                                 other.strength.adjustLevel(-rand(10, 20))
                             }
-                            if (RandomUtils.random()) {
+                            if (randBoolean()) {
                                 other.defence.adjustLevel(-rand(10, 20))
                             }
-                            if (RandomUtils.random()) {
+                            if (randBoolean()) {
                                 other.ranged.adjustLevel(-rand(10, 20))
                             }
-                            if (RandomUtils.random()) {
+                            if (randBoolean()) {
                                 other.magic.adjustLevel(-rand(10, 20))
                             }
                             other.sendMessage("You have been weakened.")

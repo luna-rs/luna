@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -274,11 +275,11 @@ public final class Bot extends Player {
                     if (data != null) {
                         temporary = false;
                     }
+                    loadData(data);
+                    if (data == null) {
+                        position = spawnPosition;
+                    }
                     if (world.getPlayers().add(this)) {
-                        loadData(data);
-                        if (data == null) {
-                            setPosition(spawnPosition);
-                        }
                         world.getBots().add(this);
                         setState(EntityState.ACTIVE);
                         log("I'm alive!");
@@ -342,6 +343,7 @@ public final class Bot extends Player {
                     ? ThreadLocalRandom.current().nextInt(1, 100)
                     : ThreadLocalRandom.current().nextInt(50, 100);
             skill.setStaticLevel(level);
+            skill.setLevel(level);
         }
     }
 
@@ -349,8 +351,17 @@ public final class Bot extends Player {
      * Randomizes the bot’s currently equipped items.
      */
     public void randomizeEquipment() {
+        randomizeEquipment(def -> true);
+    }
+
+    /**
+     * Randomizes the bot’s currently equipped items, only factoring in filtered items.
+     *
+     * @param filter The filter to apply.
+     */
+    public void randomizeEquipment(Predicate<EquipmentDefinition> filter) {
         ArrayListMultimap<Integer, EquipmentDefinition> eligible = ArrayListMultimap.create();
-        EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this))
+        EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this) && filter.test(def))
                 .forEach(def -> eligible.put(def.getIndex(), def));
 
         for (int index = 0; index < getEquipment().capacity(); index++) {
@@ -358,6 +369,16 @@ public final class Bot extends Player {
             if (def != null) {
                 getEquipment().set(index, new Item(def.getId()));
             }
+        }
+    }
+
+    /**
+     * Maxes the bot’s skill levels.
+     */
+    public void maxSkills() {
+        for (Skill skill : skills) {
+            skill.setStaticLevel(99);
+            skill.setLevel(99);
         }
     }
 

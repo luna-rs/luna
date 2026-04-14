@@ -464,6 +464,11 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
+        if(this.disabled != disabled) {
+            this.disabled = disabled;
+            if (this.disabled) {
+                mob.interact(null);
+            }
+        }
     }
 }

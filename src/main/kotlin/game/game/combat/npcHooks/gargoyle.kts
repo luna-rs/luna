@@ -74,8 +74,6 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                 damage = null
                 npc.walking.isLocked = true
                 npc.combat.isDisabled = true
-                npc.interact(null)
-                npc.lock(2)
                 npc.transform(1611)
                 npc.health = 1
             }

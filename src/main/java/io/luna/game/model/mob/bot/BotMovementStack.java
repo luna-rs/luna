@@ -6,6 +6,8 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.mob.WalkingNavigator;
 import io.luna.game.model.mob.WalkingQueue;
+import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.task.Task;
 
 import java.util.concurrent.CompletableFuture;
@@ -201,7 +203,10 @@ public final class BotMovementStack {
      */
     private BotMovementRequest createRequest(Locatable target) {
         bot.log("Generating new movement path to " + target + ".");
-        return new BotMovementRequest(bot.getNavigator().walk(target, true), target);
+        // TODO Redo nicely?
+        return new BotMovementRequest(target instanceof Entity ?
+                bot.getNavigator().walkUntilReached((Entity) target, new InteractionPolicy(InteractionType.SIZE, ((Entity) target).size()), true) :
+                bot.getNavigator().walk(target, true), target);
     }
 
     /**

@@ -34,7 +34,7 @@ abstract class HarvestableResource : GameResource() {
     /**
      * Determines the chance of the resource object being exhausted.
      */
-    open fun computeExhaustionChance(): Rational = Rational.ALWAYS
+    open fun computeExhaustionChance(): Double = ALWAYS
 
     /**
      * Harvests this resource for [plr] and schedules a task to respawn it.

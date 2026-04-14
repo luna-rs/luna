@@ -3,6 +3,7 @@ package game.combat.npcHooks
 import api.combat.magic.ImmobilizationAction
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
+import api.predef.ext.*
 import game.player.Sound
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
@@ -17,8 +18,6 @@ import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
 
 /**
  * The shield item id that protects players from the full effect of skeletal wyvern icy breath.
@@ -110,12 +109,9 @@ class WyvernIcyAttack(npc: Npc, other: Mob) : MagicCombatAttack<Npc>(
     /**
      * Tracks whether the current victim is protected from the full icy breath effect.
      */
-    private var protected = false
+    private var protected = other is Player && other.equipment.shield?.id == ICY_BREATH_SHIELD
 
     override fun calculateDamage(other: Mob?): CombatDamage {
-        // Determine if the victim is protected.
-        protected = other is Player && other.equipment.shield?.id == ICY_BREATH_SHIELD
-
         // Build the damage request based on protection.
         val request = CombatDamageRequest.Builder(attacker, victim, CombatDamageType.MAGIC)
         if (!protected) {
@@ -128,23 +124,19 @@ class WyvernIcyAttack(npc: Npc, other: Mob) : MagicCombatAttack<Npc>(
         return request.build().resolve()
     }
 
-    override fun onProjectileReached() {
-        val chance = if (protected) Rational(1, 7) else Rational.ALWAYS
+    override fun onDamageApplied(damage: CombatDamage?) {
+        val chance = if (protected) 1 of 7 else ALWAYS
         val freeze = if (protected) 5 else 10
 
-        if (RandomUtils.roll(chance)) {
-            /**
-             * Disable the victim's combat once the freeze starts.
-             */
+        if (rand(chance)) {
+            // Disable the victim's combat once the freeze starts.
             victim.combat.isDisabled = true
             if (victim is Player) {
                 victim.sendMessage("You are unable to attack.")
             }
             victim.actions.submit(object : ImmobilizationAction(victim, freeze) {
-                /**
-                 * Re-enables the victim's combat once the freeze expires.
-                 */
                 override fun onFinished() {
+                    // Re-enables the victim's combat once the freeze expires.
                     victim.combat.isDisabled = false
                 }
             })

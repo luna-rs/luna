@@ -74,7 +74,7 @@ public final class CombatDamageAction extends Action<Mob> {
             // Apply the hit.
             if (damage != null) {
                 damage.apply();
-                source.onAttackArrived(damage);
+                source.onDamageApplied(damage);
             }
 
             // Determine whether the victim should retaliate.

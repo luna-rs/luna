@@ -27,7 +27,7 @@ abstract class DropTable(private val chance: Double = ALWAYS) : Iterable<DropTab
      */
    open fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
         val allItems = mutableListOf<Item>()
-        if (RandomUtils.roll(chance) && canRollOnTable(mob, source)) {
+        if (rand(chance) && canRollOnTable(mob, source)) {
             val items = computeTable(mob, source).filterNot {
                 val alwaysDrop = it.chance >= 1.0
                 if (alwaysDrop) {
@@ -56,7 +56,7 @@ abstract class DropTable(private val chance: Double = ALWAYS) : Iterable<DropTab
             items.isEmpty() -> null
             items.size == 1 -> {
                 val item = items.first()
-                if (RandomUtils.roll(item.chance)) item.toItem() else null
+                if (rand(item.chance)) item.toItem() else null
             }
 
             else -> ProbabilityTable(items.map { it.chance to it }).roll()?.toItem()

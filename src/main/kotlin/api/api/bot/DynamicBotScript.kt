@@ -15,9 +15,8 @@ import io.luna.game.model.mob.bot.script.BotScriptSnapshot
  * - The script is always serialized as a `null` snapshot.
  * - During load, the script is treated as a [VoidBotScript] and is skipped.
  *
- * This makes {@code DynamicBotScript} ideal for:
- * - Ephemeral behaviours (e.g., temporary tasks, experimentation).
- * - Transient state machines that can be safely reconstructed on login.
+ * @param bot The bot this script will be applied to.
+ * @author lare96
  */
 abstract class DynamicBotScript(bot: Bot) : BotScript<Void?>(bot) {
 

@@ -6,8 +6,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.util.RandomUtils.roll
-import io.luna.util.Rational
 
 /**
  * Provides standardized drop tables for common loot types, heavily inspired by the
@@ -116,7 +114,7 @@ object GenericDropTables {
 
                     // Increased drop rate for mega rare table if wearing RoW.
                     val megaRareChance = if (wearingRow) 1 of 65 else 1 of 128
-                    if (roll(megaRareChance)) {
+                    if (rand(megaRareChance)) {
                         table = megaRareDropTable().computeTable(mob, source)
                     }
 
