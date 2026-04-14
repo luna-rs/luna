@@ -36,9 +36,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         plr.combat.ranged.ammo.type == AmmoType.BROAD_ARROW && plr.combat.weapon.isRanged
 
     for (id in TUROTH + KURASK) {
-        /**
-         * Handles Turoth and Kurask combat restrictions.
-         *
+        /*
          * When slayer equipment restrictions are enabled, players must use either a leaf-bladed spear or broad arrows
          * from a ranged weapon to deal damage. Any other attack is negated.
          */
