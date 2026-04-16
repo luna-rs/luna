@@ -16414,6 +16414,10 @@
       {
         "name": "Defence",
         "level": 20
+      },
+      {
+        "name": "Slayer",
+        "level": 25
       }
     ],
     "bonuses": [
