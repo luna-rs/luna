@@ -98,7 +98,7 @@ object SpecialAttackHandler {
         // Hide special attack modulators from activation specials.
         val receiver = SpecialAttackDataReceiver(drain = drain,
                                                  activationOnly = true)
-        receiver.launchedTransformer = { action(attacker) }
+        receiver.launchedTransformer = { action(attacker); damage }
         specialAttacks[type] = receiver
     }
 

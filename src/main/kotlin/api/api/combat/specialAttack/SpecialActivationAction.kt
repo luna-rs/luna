@@ -20,7 +20,7 @@ class SpecialActivationAction(plr: Player, private val receiver: SpecialAttackDa
     Action<Player>(plr, ActionType.SOFT, false, 2) {
 
     override fun run(): Boolean {
-        receiver.launchedTransformer(SpecialAttackLaunchedReceiver(mob, mob, null))
+        receiver.launchedTransformer(SpecialAttackLaunchedReceiver(mob, mob, null, null) )
         mob.combat.specialBar.isLocked = false
         mob.combat.specialBar.drain(receiver.drain, true)
         return true

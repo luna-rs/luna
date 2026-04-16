@@ -46,7 +46,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param speed The attack speed in ticks.
      * @return A configured melee combat attack instance.
      */
-    fun melee(animationId: Int, range: Int = attacker.combat.weapon.range, speed: Int = attacker.combat.weapon.speed): PlayerMeleeCombatAttack {
+    fun melee(animationId: Int,
+              range: Int = attacker.combat.weapon.range,
+              speed: Int = attacker.combat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
@@ -93,7 +95,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                animationId: Int,
                start: Graphic,
                projectileFunction: BiFunction<Mob, Mob, LocalProjectile>,
-               end: Graphic,
+               end: Graphic?,
                speed: Int,
                range: Int): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
@@ -203,11 +205,11 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          damage: CombatDamage?,
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
-        val newDamage = action(damage)
+        var newDamage = action(damage)
         if (newDamage != null && attacker.combat.specialBar.checkEnergy(receiver.drain)) {
             // Attack can go through, drain special attack energy, run launch listener.
             attacker.combat.specialBar.drain(receiver.drain, true)
-            receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack))
+            newDamage = receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack, newDamage))
             if (receiver.instant) {
                 attack.isIgnoreAttackDelay = true
             }

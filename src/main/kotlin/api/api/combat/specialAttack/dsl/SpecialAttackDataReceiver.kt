@@ -3,6 +3,7 @@ package api.combat.specialAttack.dsl
 import api.predef.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 /**
@@ -54,7 +55,7 @@ class SpecialAttackDataReceiver(
      *
      * The callback runs in a [SpecialAttackLaunchedReceiver] context containing the attacker and current victim.
      */
-    var launchedTransformer: SpecialAttackLaunchedReceiver.() -> Unit = {}
+    var launchedTransformer: SpecialAttackLaunchedReceiver.() -> CombatDamage? = { damage }
 
     /**
      * Callback invoked when the special attack hit arrives on the victim.
@@ -80,7 +81,7 @@ class SpecialAttackDataReceiver(
      *
      * @param launchedTransformer The callback to run after launch.
      */
-    fun launched(launchedTransformer: SpecialAttackLaunchedReceiver.() -> Unit) {
+    fun launched(launchedTransformer: SpecialAttackLaunchedReceiver.() -> CombatDamage?) {
         this.launchedTransformer = launchedTransformer
     }
 
