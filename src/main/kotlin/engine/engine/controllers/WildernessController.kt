@@ -1,8 +1,7 @@
 package engine.controllers
 
-import api.attr.Attr
 import engine.controllers.WildernessLocatableController.wildernessLevel
-import game.item.degradable.DegradableItems.ringOfLifeActive
+import game.item.degradable.DegradableEquipmentHandler.ringOfLifeActive
 import game.skill.magic.teleportSpells.TeleportAction
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc

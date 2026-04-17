@@ -113,4 +113,16 @@ object SpecialAttackHandler {
         val type = weapon.specialAttackType
         return requireNotNull(specialAttacks[type]) { " No receiver for special attack type $type." }
     }
+
+    /**
+     * Returns every weapon id registered across all special attack definitions.
+     *
+     * This flattens the weapon id arrays from each special attack entry into a single list in iteration order.
+     * Duplicate ids are **not** preserved if the same weapon id appears in more than one entry.
+     *
+     * @return A list containing all registered weapon ids.
+     */
+    fun getAllWeaponIds(): Set<Int> {
+        return specialAttacks.keys.flatMap { it.ids }.toSet()
+    }
 }

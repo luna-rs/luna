@@ -166,7 +166,6 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.SPELLFAIL).display();
         }
-        System.out.println(nextDamage.getAmount());
         victim.submitAction(new CombatDamageAction(nextDamage, this, true)); // todo should make it known or design it better
         // todo combatdamageaction is required for after effects etc. to be applied
     }

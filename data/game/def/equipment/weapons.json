@@ -37,7 +37,7 @@
   },
   {
     "id": 35,
-    "type": "UNARMED"
+    "type": "LONGSWORD"
   },
   {
     "id": 4151,
@@ -50,12 +50,7 @@
   },
   {
     "id": 4153,
-    "type": "WARHAMMER",
-    "model": {
-      "standing": 1662,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "WARHAMMER"
   },
   {
     "id": 4158,
@@ -76,31 +71,31 @@
   },
   {
     "id": 3170,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3171,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3172,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3173,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3174,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3175,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 3176,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 4212,
@@ -108,12 +103,7 @@
   },
   {
     "id": 3190,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4214,
@@ -125,12 +115,7 @@
   },
   {
     "id": 3192,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4216,
@@ -142,12 +127,7 @@
   },
   {
     "id": 3194,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4218,
@@ -159,12 +139,7 @@
   },
   {
     "id": 3196,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4220,
@@ -176,12 +151,7 @@
   },
   {
     "id": 3198,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4222,
@@ -193,34 +163,19 @@
   },
   {
     "id": 3200,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 3202,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 3204,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 4236,
-    "type": "UNARMED"
+    "type": "LONGBOW"
   },
   {
     "id": 1203,
@@ -320,31 +275,31 @@
   },
   {
     "id": 1251,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1253,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1255,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1257,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1259,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1261,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1263,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 1265,
@@ -432,75 +387,35 @@
   },
   {
     "id": 1305,
-    "type": "LONGSWORD",
-    "model": {
-      "standing": 809,
-      "walking": -1,
-      "running": -1
-    }
+    "type": "LONGSWORD"
   },
   {
     "id": 1307,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1309,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1311,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1313,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1315,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1317,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1319,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 1321,
@@ -620,7 +535,7 @@
   },
   {
     "id": 2402,
-    "type": "UNARMED"
+    "type": "LONGSWORD"
   },
   {
     "id": 1379,
@@ -696,7 +611,7 @@
   },
   {
     "id": 6523,
-    "type": "UNARMED"
+    "type": "SWORD"
   },
   {
     "id": 1405,
@@ -704,11 +619,11 @@
   },
   {
     "id": 6525,
-    "type": "UNARMED"
+    "type": "DAGGER"
   },
   {
     "id": 6526,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 1407,
@@ -716,7 +631,7 @@
   },
   {
     "id": 6527,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 6528,
@@ -768,7 +683,7 @@
   },
   {
     "id": 2460,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 4508,
@@ -776,15 +691,15 @@
   },
   {
     "id": 2462,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2464,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2466,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 6562,
@@ -796,23 +711,23 @@
   },
   {
     "id": 2468,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2470,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2472,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2474,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 2476,
-    "type": "UNARMED"
+    "type": "MACE"
   },
   {
     "id": 6587,
@@ -840,12 +755,7 @@
   },
   {
     "id": 6599,
-    "type": "HALBERD",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "HALBERD"
   },
   {
     "id": 6601,
@@ -865,16 +775,11 @@
   },
   {
     "id": 6609,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 466,
-    "type": "UNARMED"
+    "type": "PICKAXE"
   },
   {
     "id": 6611,
@@ -890,11 +795,11 @@
   },
   {
     "id": 4582,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 4584,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 4587,
@@ -902,25 +807,15 @@
   },
   {
     "id": 7668,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 7671,
-    "type": "UNARMED",
-    "model": {
-      "standing": 3677,
-      "walking": 3680,
-      "running": -1
-    }
+    "type": "CLAWS"
   },
   {
     "id": 7673,
-    "type": "UNARMED",
-    "model": {
-      "standing": 3677,
-      "walking": 3680,
-      "running": -1
-    }
+    "type": "CLAWS"
   },
   {
     "id": 7675,
@@ -1008,7 +903,7 @@
   },
   {
     "id": 5648,
-    "type": "UNARMED"
+    "type": "JAVELIN"
   },
   {
     "id": 5649,
@@ -1160,7 +1055,7 @@
   },
   {
     "id": 6724,
-    "type": "UNARMED"
+    "type": "LONGBOW"
   },
   {
     "id": 5702,
@@ -1168,27 +1063,27 @@
   },
   {
     "id": 5704,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5706,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5708,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5710,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5712,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5714,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 6739,
@@ -1196,81 +1091,71 @@
   },
   {
     "id": 5716,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5718,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5720,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 6745,
-    "type": "UNARMED"
+    "type": "LONGSWORD"
   },
   {
     "id": 5722,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 6746,
-    "type": "UNARMED"
+    "type": "LONGSWORD"
   },
   {
     "id": 5724,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5726,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5728,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5730,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 4710,
-    "type": "STAFF",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "STAFF"
   },
   {
     "id": 5734,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 5736,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 6760,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 6762,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 6764,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 4718,
-    "type": "BATTLEAXE",
-    "model": {
-      "standing": 2065,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "BATTLEAXE"
   },
   {
     "id": 4726,
@@ -1278,16 +1163,11 @@
   },
   {
     "id": 7804,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 4734,
-    "type": "CROSSBOW",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 7806,
@@ -1311,12 +1191,7 @@
   },
   {
     "id": 4755,
-    "type": "WHIP",
-    "model": {
-      "standing": 1832,
-      "walking": 1830,
-      "running": 1831
-    }
+    "type": "WHIP"
   },
   {
     "id": 667,
@@ -1324,11 +1199,11 @@
   },
   {
     "id": 6818,
-    "type": "UNARMED"
+    "type": "TWO_HANDED_SWORD"
   },
   {
     "id": 4827,
-    "type": "UNARMED"
+    "type": "LONGBOW"
   },
   {
     "id": 746,
@@ -1344,20 +1219,15 @@
   },
   {
     "id": 6908,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 4862,
-    "type": "UNARMED",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "STAFF"
   },
   {
     "id": 6910,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 767,
@@ -1365,38 +1235,23 @@
   },
   {
     "id": 4863,
-    "type": "UNARMED",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "STAFF"
   },
   {
     "id": 4864,
-    "type": "UNARMED",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "STAFF"
   },
   {
     "id": 6912,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 4865,
-    "type": "UNARMED",
-    "model": {
-      "standing": 809,
-      "walking": 1146,
-      "running": 1210
-    }
+    "type": "STAFF"
   },
   {
     "id": 6914,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 772,
@@ -1404,39 +1259,19 @@
   },
   {
     "id": 4886,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2065,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "BATTLEAXE"
   },
   {
     "id": 4887,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2065,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "BATTLEAXE"
   },
   {
     "id": 4888,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2065,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "BATTLEAXE"
   },
   {
     "id": 4889,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2065,
-      "walking": 1663,
-      "running": 1664
-    }
+    "type": "BATTLEAXE"
   },
   {
     "id": 800,
@@ -1500,7 +1335,7 @@
   },
   {
     "id": 4910,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 815,
@@ -1508,7 +1343,7 @@
   },
   {
     "id": 4911,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 816,
@@ -1516,7 +1351,7 @@
   },
   {
     "id": 4912,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 817,
@@ -1524,7 +1359,7 @@
   },
   {
     "id": 4913,
-    "type": "UNARMED"
+    "type": "SPEAR"
   },
   {
     "id": 818,
@@ -1544,7 +1379,7 @@
   },
   {
     "id": 3899,
-    "type": "UNARMED"
+    "type": "SCIMITAR"
   },
   {
     "id": 828,
@@ -1580,7 +1415,7 @@
   },
   {
     "id": 2883,
-    "type": "UNARMED"
+    "type": "LONGBOW"
   },
   {
     "id": 836,
@@ -1588,43 +1423,23 @@
   },
   {
     "id": 837,
-    "type": "CROSSBOW",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 4934,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 839,
-    "type": "UNARMED"
+    "type": "LONGBOW"
   },
   {
     "id": 4935,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 4936,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 841,
@@ -1632,106 +1447,51 @@
   },
   {
     "id": 4937,
-    "type": "UNARMED",
-    "model": {
-      "standing": 2074,
-      "walking": 2076,
-      "running": 2077
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 843,
-    "type": "SHORTBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "SHORTBOW"
   },
   {
     "id": 845,
-    "type": "LONGBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "LONGBOW"
   },
   {
     "id": 847,
-    "type": "LONGBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "LONGBOW"
   },
   {
     "id": 849,
-    "type": "SHORTBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "SHORTBOW"
   },
   {
     "id": 851,
-    "type": "LONGBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "LONGBOW"
   },
   {
     "id": 853,
-    "type": "SHORTBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "SHORTBOW"
   },
   {
     "id": 855,
-    "type": "LONGBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "LONGBOW"
   },
   {
     "id": 857,
-    "type": "SHORTBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "SHORTBOW"
   },
   {
     "id": 859,
-    "type": "LONGBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "LONGBOW"
   },
   {
     "id": 861,
-    "type": "SHORTBOW",
-    "model": {
-      "standing": 808,
-      "walking": 819,
-      "running": 824
-    }
+    "type": "SHORTBOW"
   },
   {
     "id": 4958,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 863,
@@ -1739,7 +1499,7 @@
   },
   {
     "id": 4959,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 864,
@@ -1747,7 +1507,7 @@
   },
   {
     "id": 4960,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 865,
@@ -1755,7 +1515,7 @@
   },
   {
     "id": 4961,
-    "type": "UNARMED"
+    "type": "WARHAMMER"
   },
   {
     "id": 866,
@@ -1803,51 +1563,31 @@
   },
   {
     "id": 4982,
-    "type": "UNARMED",
-    "model": {
-      "standing": 1832,
-      "walking": 1830,
-      "running": 1831
-    }
+    "type": "WHIP"
   },
   {
     "id": 4983,
-    "type": "UNARMED",
-    "model": {
-      "standing": 1832,
-      "walking": 1830,
-      "running": 1831
-    }
+    "type": "WHIP"
   },
   {
     "id": 4984,
-    "type": "UNARMED",
-    "model": {
-      "standing": 1832,
-      "walking": 1830,
-      "running": 1831
-    }
+    "type": "WHIP"
   },
   {
     "id": 4985,
-    "type": "UNARMED",
-    "model": {
-      "standing": 1832,
-      "walking": 1830,
-      "running": 1831
-    }
+    "type": "WHIP"
   },
   {
     "id": 2952,
-    "type": "UNARMED"
+    "type": "DAGGER"
   },
   {
     "id": 2961,
-    "type": "UNARMED"
+    "type": "SCIMITAR"
   },
   {
     "id": 2963,
-    "type": "UNARMED"
+    "type": "SCIMITAR"
   },
   {
     "id": 5016,
@@ -1855,7 +1595,7 @@
   },
   {
     "id": 2997,
-    "type": "UNARMED"
+    "type": "CLAWS"
   },
   {
     "id": 5056,
@@ -1871,7 +1611,7 @@
   },
   {
     "id": 6082,
-    "type": "UNARMED",
+    "type": "CROSSBOW",
     "model": {
       "standing": 2316,
       "walking": 2317,
@@ -1884,11 +1624,11 @@
   },
   {
     "id": 4037,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 4039,
-    "type": "UNARMED"
+    "type": "STAFF"
   },
   {
     "id": 4068,
@@ -1904,11 +1644,6 @@
   },
   {
     "id": 7158,
-    "type": "TWO_HANDED_SWORD",
-    "model": {
-      "standing": 2561,
-      "walking": 2064,
-      "running": 2563
-    }
+    "type": "TWO_HANDED_SWORD"
   }
 ]

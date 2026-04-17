@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.luna.game.model.def.WeaponSpecialBarDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
+import io.luna.game.model.def.WeaponModelAnimationDefinition;
+import io.luna.game.model.def.WeaponSpecialBarDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Skill;
@@ -69,7 +70,8 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             styles.add(new CombatStyleDefinition(styleType, speed, animation, config, bonus, button, stance, range, exp));
         }
         WeaponSpecialBarDefinition specialBar = GsonUtils.getAsType(token.get("special"), WeaponSpecialBarDefinition.class);
-        return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar);
+        WeaponModelAnimationDefinition model = token.has("model") ? readModel(token.get("model").getAsJsonObject()) : null;
+        return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar, model);
     }
 
     @Override
