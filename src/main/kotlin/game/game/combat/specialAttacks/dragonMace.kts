@@ -21,5 +21,5 @@ attack(type = DRAGON_MACE,
 
     attack { melee(ANIMATION) }
 
-    launched { attacker.graphic(GRAPHIC) }
+    launched { attacker.graphic(GRAPHIC); damage }
 }

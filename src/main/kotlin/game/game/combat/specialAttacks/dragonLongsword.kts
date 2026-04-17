@@ -20,5 +20,5 @@ attack(type = DRAGON_LONGSWORD,
 
     attack { melee(ANIMATION) }
 
-    launched { attacker.graphic(GRAPHIC) }
+    launched { attacker.graphic(GRAPHIC); damage }
 }

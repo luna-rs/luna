@@ -29,12 +29,13 @@ attack(type = DRAGON_DAGGER,
     launched {
         attacker.graphic(GRAPHIC)
 
-        val damage = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE)
+        val secondHit = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE)
             .setPercentBonusDamage(damageBonus)
             .setFlatBonusAccuracy(attackBonus)
             .build()
             .resolve()
 
-        damage.apply()
+        secondHit.apply()
+        damage
     }
 }

@@ -61,7 +61,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         } else {
             player.sendMessage("I need a Rock hammer to finish this creature off.")
             player.combat.target = null
-            null
+            nothing()
         }
     }
 
