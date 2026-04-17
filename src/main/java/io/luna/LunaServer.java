@@ -22,7 +22,6 @@ import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.AmmoDefinitionFileParser;
 import io.luna.util.parser.impl.BossFileParser;
 import io.luna.util.parser.impl.CombatSpellDefinitionFileParser;
-import io.luna.util.parser.impl.DegradableItemDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
@@ -196,7 +195,6 @@ public final class LunaServer {
         taskList.add(new CombatSpellDefinitionFileParser());
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new AmmoDefinitionFileParser());
-        taskList.add(new DegradableItemDefinitionFileParser());
         taskList.add(new BossFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
 

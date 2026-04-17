@@ -6,7 +6,6 @@ import api.combat.specialAttack.SpecialAttackHandler;
 import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
 import api.combat.specialAttack.dsl.SpecialAttackDataReceiver;
 import engine.combat.prayer.CombatPrayerSet;
-import game.item.degradable.DegradableItems;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -96,8 +95,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public boolean onCombatProcess(boolean reached) {
-        // Handle Barrows degradation and check controllers to make sure we can attack.
-        DegradableItems.INSTANCE.handleBarrowsEquipment(player);
+        // Handle combat hooks and check controllers to make sure we can attack.
+        PlayerCombatHandler.INSTANCE.consumeCombat(player);
         return target != null && player.getControllers().checkCombat(target);
     }
 
