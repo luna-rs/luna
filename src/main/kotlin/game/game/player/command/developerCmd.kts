@@ -1,22 +1,30 @@
 package game.player.command
 
+import api.combat.specialAttack.SpecialAttackHandler
 import api.drops.DropTableHandler
 import api.predef.*
 import api.predef.ext.*
+import game.bot.scripts.PkBotScript
 import io.luna.Luna
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
+import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
+import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
 import io.luna.game.model.mob.varp.Varp
@@ -27,6 +35,7 @@ import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
 import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
+import java.time.Duration
 
 
 /**
@@ -131,13 +140,123 @@ cmd("obj", RIGHTS_DEV) {
                     plr = plr)
 }
 
+// TODO add commands below to custom bot testing mode
+// TODO modes:
+//  IDLE, LOCAL_WANDERING, GLOBAL_WANDERING, PKING (done below), SKILLING (do later)
+cmd("ok") {
+    val bot = Bot.Builder(ctx).setUsername("elite111111")
+        .setSpawnPosition(plr.position).build()
+    bot.maxSkills()
+    bot.login()
+
+}
+
+cmd("findfight") {
+    val choices = ArrayList<Position>()
+    for (next in world.players) {
+        if (next.combat.inCombat()) {
+            choices += next.position
+        }
+    }
+    plr.move(choices.random())
+}
+cmd("pkbots") {
+    val amount = asInt(0)
+    gameService.submit {
+        val positions = Area.of(2944, 3519, 3392, 3966).computePositions()
+        repeat(amount) { loops ->
+            var pos: Position? = null
+            while (pos == null) {
+                pos = positions.random()
+                if (world.collisionManager.isBlocked(pos, true)) {
+                    pos = null
+                }
+            }
+            val bot = Bot.Builder(ctx).setUsername("elitepk$loops")
+                .setSpawnPosition(pos).build()
+            val possibleWeapons = SpecialAttackHandler.getAllWeaponIds()
+            bot.login().thenRun {
+                bot.inventory.clear()
+                bot.inventory.add(Item(391, rand(1, 20)))
+                val specialWeapon = possibleWeapons.random() // todo finish more specials
+                bot.inventory[0] = if (randBoolean()) Item(1215) else Item(specialWeapon)
+                bot.inventory[2] = item("Super defence(4)")
+                bot.inventory[3] = item("Prayer potion(4)")
+                bot.equipment.amulet = item("Amulet of fury")
+                bot.randomizeAppearance()
+                bot.maxSkills()
+                bot.randomizeEquipment { def -> // todo if 2h selected, delete shield slot.. lol
+                    def.index == Equipment.HANDS || def.index == Equipment.CAPE || def.index == Equipment.BOOTS ||
+                            def.index == Equipment.RING || def.index == Equipment.AMMUNITION ||
+                            def.index == Equipment.AMULET ||
+                            def.requirements.map { it.level > 40 }.isNotEmpty()
+                }
+                if (bot.equipment.weapon?.equipDef?.isTwoHanded == true) {
+                    bot.equipment.shield = null
+                }
+                bot.inventory[1] =
+                    if (bot.combat.weapon.isRanged) item("Super ranged(4)") else item("Super strength(4)")
+                if (rand(1 of 3)) {
+                    // op mages lol..
+                    bot.inventory[1] = item("Super defence(4)")
+                    bot.inventory[2] = item("Magic potion(4)")
+                    if (rand().nextBoolean()) {
+                        val end = if (rand().nextBoolean()) "(t)" else "(g)"
+                        bot.equipment.head = item("Wizard hat $end")
+                        bot.equipment.chest = item("Wizard robe $end")
+                        bot.equipment.legs = item("Blue skirt $end")
+                        bot.equipment.amulet = item("Amulet of fury")
+                        bot.equipment.ring = item("Seers ring")
+                        bot.equipment.feet = item("Wizard boots")
+                    } else {
+                        bot.equipment.head = item("Ghostly hood")
+                        bot.equipment.chest = Item(6107)
+                        bot.equipment.legs = Item(6108)
+                        bot.equipment.amulet = item("Amulet of magic")
+                        bot.equipment.ring = item("Seers ring")
+                        bot.equipment.cape = item("Ghostly cloak")
+                        bot.equipment.hands = item("Ghostly gloves")
+                        bot.equipment.feet = item("Ghostly boots")
+                    }
+
+                    if (rand().nextBoolean()) {
+                        bot.equipment.weapon = item("Ancient staff")
+                        bot.spellbook = Spellbook.ANCIENT
+                        bot.combat.magic.autocastSpell = listOf(
+                            CombatSpell.ICE_BARRAGE,
+                            CombatSpell.ICE_BLITZ,
+                            CombatSpell.BLOOD_BARRAGE
+                        ).random().def
+                    } else {
+                        bot.equipment.weapon = Item(
+                            EquipmentDefinition.ALL.filter {
+                                it.index == Equipment.WEAPON && WeaponDefinition.ALL.get(it.id)
+                                    .filter { it.type == Weapon.STAFF }.isPresent
+                            }.random().id
+                        )
+                        // todo for some reason not seeing any regular mage bots???
+                        bot.spellbook = Spellbook.REGULAR
+                        bot.combat.magic.autocastSpell = listOf(
+                            CombatSpell.EARTH_BLAST,
+                            CombatSpell.FIRE_BLAST,
+                            CombatSpell.FIRE_WAVE
+                        ).random().def
+                    }
+                    bot.combat.magic.isAutocasting = true
+                }
+                bot.scriptStack.push(PkBotScript(bot, Duration.ofHours(10)))
+            }
+        }
+    }
+}
+
 /**
  * Simulates drops for whichever table is implemented.
  */
 cmd("roll", RIGHTS_DEV) {
     val npc = asInt(0)
     var times = asInt(1)
-    if(times > 50_000)
+    if (times > 50_000)
         times = 50_000
     val npcName = NpcDefinition.ALL[npc].orElseThrow().name
     plr.overlays.open(object : DynamicBankInterface("'$npcName x $times'") {
@@ -154,6 +273,7 @@ cmd("roll", RIGHTS_DEV) {
         }
     })
 }
+
 
 /**
  * A command that sends the current position.

@@ -2,11 +2,11 @@ package engine.widget
 
 import api.predef.*
 import game.item.degradable.DegradableDropWarningDialogue
+import game.item.degradable.DegradableEquipmentHandler
 import game.player.Sound
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.DropItemEvent
 import io.luna.game.model.chunk.ChunkUpdatableView
-import io.luna.game.model.def.DegradableItemDefinition
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.util.logging.LoggingSettings.FileOutputType
@@ -26,7 +26,7 @@ val itemDrop = FileOutputType.ITEM_DROP.level
 on(DropItemEvent::class, EventPriority.HIGH) {
     val item = plr.inventory[index]
     val itemDef = item.itemDef
-    if(DegradableItemDefinition.DROP_RESTRICTED.contains(item.id)) {
+    if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
         plr.overlays.open(DegradableDropWarningDialogue(index, item.id))
     } else if (itemDef.isTradeable && !itemDef.inventoryActions.contains("Destroy")) {
         val drop = GroundItem(ctx, item, plr.position, ChunkUpdatableView.localView(plr))

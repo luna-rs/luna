@@ -187,7 +187,7 @@ public final class InteractionAction extends Action<Player> {
             onStanding();
             return true;
         } else if (listeners.isEmpty()) {
-            mob.sendMessage("No listener for "+event.getClass().getSimpleName()+"("+event.target().toString()+")");
+            mob.sendMessage("Nothing interesting happens.");
             return true;
         }
         return false;

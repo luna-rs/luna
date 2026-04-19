@@ -90,6 +90,10 @@ public abstract class CombatContext<T extends Mob> {
      */
     private boolean immobilized;
 
+    private CombatAttack<?> lastAttackApplied;
+
+    private CombatDamage lastDamageReceived; // todo documentation
+
     /**
      * Creates a new {@link CombatContext} for the supplied mob.
      *
@@ -464,11 +468,27 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     public void setDisabled(boolean disabled) {
-        if(this.disabled != disabled) {
+        if (this.disabled != disabled) {
             this.disabled = disabled;
             if (this.disabled) {
                 mob.interact(null);
             }
         }
+    }
+
+    public CombatAttack<?> getLastAttackApplied() {
+        return lastAttackApplied;
+    }
+
+    public void setLastAttackApplied(CombatAttack<?> lastAttackApplied) {
+        this.lastAttackApplied = lastAttackApplied;
+    }
+
+    public CombatDamage getLastDamageReceived() {
+        return lastDamageReceived;
+    }
+
+    public void setLastDamageReceived(CombatDamage lastDamageReceived) {
+        this.lastDamageReceived = lastDamageReceived;
     }
 }

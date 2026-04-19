@@ -1,6 +1,7 @@
 package game.skill.fishing
 
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import game.skill.fishing.Fish.*
 
 /**
@@ -91,5 +92,6 @@ enum class Tool(val id: Int,
 
     companion object {
         val ALL: ImmutableList<Tool> = ImmutableList.copyOf(values())
+        val ALL_IDS: ImmutableSet<Int> = ImmutableSet.copyOf(ALL.map { it.id })
     }
 }

@@ -10,4 +10,5 @@ on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
     scriptManager.addScript(LogoutBotScript::class) { bot, data -> LogoutBotScript(bot, data) }
+    scriptManager.addScript(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
 }

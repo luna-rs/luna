@@ -451,4 +451,11 @@ public final class Skill {
         staticLevel = -1;
         notifyListeners(oldExperience, oldStaticLevel, level);
     }
+
+    /**
+     * @return {@code true} if the dynamic level is greater than the static level.
+     */
+    public boolean isBoosted() {
+        return level > getStaticLevel();
+    }
 }

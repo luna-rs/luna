@@ -69,12 +69,12 @@ public final class CombatDamageAction extends Action<Mob> {
     @Override
     public boolean run() {
         if (victim.isAlive()) {
+            // todo difference between this and source.ondamageapplied? why this here and not in combatdamage?
             victim.getCombat().onNextDefence(attacker, damage, this);
 
             // Apply the hit.
             if (damage != null) {
-                damage.apply();
-                source.onDamageApplied(damage);
+                damage.apply(source);
             }
 
             // Determine whether the victim should retaliate.

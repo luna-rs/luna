@@ -93,6 +93,13 @@ class CombatPrayerSet(private val player: Player) {
         }
     }
 
+    // todo documentation
+    fun forceActivate(prayer: CombatPrayer) {
+        if(!active.contains(prayer)) {
+            activate(prayer)
+        }
+    }
+
     /**
      * Deactivates [prayer].
      *

@@ -35,7 +35,7 @@ attack(type = DRAGON_DAGGER,
             .build()
             .resolve()
 
-        secondHit.apply()
+        secondHit.apply(attack)
         damage
     }
 }

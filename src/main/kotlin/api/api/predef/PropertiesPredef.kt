@@ -184,38 +184,49 @@ val Mob.runecrafting: Skill
     get() = skill(SKILL_RUNECRAFTING)
 
 /* Equipment extension properties. */
-val Equipment.head: Item?
+var Equipment.head: Item?
     get() = this[Equipment.HEAD]
+    set(value) { this[Equipment.HEAD] = value }
 
-val Equipment.cape: Item?
+var Equipment.cape: Item?
     get() = this[Equipment.CAPE]
+    set(value) { this[Equipment.CAPE] = value }
 
-val Equipment.amulet: Item?
+var Equipment.amulet: Item?
     get() = this[Equipment.AMULET]
+    set(value) { this[Equipment.AMULET] = value }
 
-val Equipment.weapon: Item?
+var Equipment.weapon: Item?
     get() = this[Equipment.WEAPON]
+    set(value) { this[Equipment.WEAPON] = value }
 
-val Equipment.chest: Item?
+var Equipment.chest: Item?
     get() = this[Equipment.CHEST]
+    set(value) { this[Equipment.CHEST] = value }
 
-val Equipment.shield: Item?
+var Equipment.shield: Item?
     get() = this[Equipment.SHIELD]
+    set(value) { this[Equipment.SHIELD] = value }
 
-val Equipment.legs: Item?
+var Equipment.legs: Item?
     get() = this[Equipment.LEGS]
+    set(value) { this[Equipment.LEGS] = value }
 
-val Equipment.hands: Item?
+var Equipment.hands: Item?
     get() = this[Equipment.HANDS]
+    set(value) { this[Equipment.HANDS] = value }
 
-val Equipment.feet: Item?
+var Equipment.feet: Item?
     get() = this[Equipment.BOOTS]
+    set(value) { this[Equipment.BOOTS] = value }
 
-val Equipment.ring: Item?
+var Equipment.ring: Item?
     get() = this[Equipment.RING]
+    set(value) { this[Equipment.RING] = value }
 
-val Equipment.ammo: Item?
+var Equipment.ammo: Item?
     get() = this[Equipment.AMMUNITION]
+    set(value) { this[Equipment.AMMUNITION] = value }
 
 
 /* Rational properties. */
