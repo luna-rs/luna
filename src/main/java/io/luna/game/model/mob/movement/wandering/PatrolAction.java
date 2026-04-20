@@ -1,12 +1,14 @@
-package io.luna.game.model.mob.wandering;
+package io.luna.game.model.mob.movement.wandering;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.WalkingNavigator;
-import io.luna.game.model.mob.WalkingQueue;
-import io.luna.game.model.path.AStarPathfinder;
-import io.luna.game.model.path.PlayerPathfinder;
+import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.movement.NavigationRequest;
+import io.luna.game.model.mob.movement.NavigationResult;
+import io.luna.game.model.mob.movement.PathfinderType;
+import io.luna.game.model.mob.movement.WalkingNavigator;
+import io.luna.game.model.mob.movement.WalkingQueue;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
@@ -156,13 +158,6 @@ public final class PatrolAction extends WanderingAction {
     private int lastWaypointIndex;
 
     /**
-     * Handle to the asynchronous pathfinding job for the current/next waypoint.
-     * <p>
-     * This is initialised as a completed future so that the first execution can schedule a new path immediately.
-     */
-    private CompletableFuture<Void> pathJob = CompletableFuture.completedFuture(null);
-
-    /**
      * Creates a new {@link PatrolAction}.
      * <p>
      * The constructor is private; use {@link Builder} to construct instances.
@@ -185,13 +180,13 @@ public final class PatrolAction extends WanderingAction {
     public void wander() {
         // Already moving, in combat, interacting, or still generating path to waypoints.
         Rational chance = frequency.getChance();
-        if (pathJob.isDone() && RandomUtils.roll(chance)) {
+        if (!mob.getNavigator().isActive() && RandomUtils.roll(chance)) {
             int targetIndex = scrambleRoute ? RandomUtils.exclusive(0, waypoints.size()) : nextWaypointIndex;
             if (scrambleRoute && targetIndex == lastWaypointIndex) {
                 // If we've already pathed to this waypoint last, re-roll on next execution.
                 return;
             }
-            pathJob = computeAndQueuePathAsync(waypoints.get(targetIndex));
+            computeAndQueuePathAsync(waypoints.get(targetIndex));
             lastWaypointIndex = targetIndex;
 
             // Check if end of route has been reached, if so reset.
@@ -211,8 +206,9 @@ public final class PatrolAction extends WanderingAction {
      * @return A {@link CompletableFuture} that completes once the path has been queued, or completes exceptionally
      * if pathfinding fails.
      */
-    private CompletableFuture<Void> computeAndQueuePathAsync(Position dest) {
-        AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
-        return mob.getNavigator().walk(dest, pf, true);
+    private CompletableFuture<NavigationResult> computeAndQueuePathAsync(Position dest) {
+        var request = NavigationRequest.builder(mob).async(true).pathfinder(PathfinderType.PLAYER).
+                continuous(false).target(dest).policy(InteractionPolicy.EQUAL_POSITION).build();
+        return mob.getNavigator().submit(request);
     }
 }

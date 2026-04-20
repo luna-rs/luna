@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.wandering;
+package io.luna.game.model.mob.movement.wandering;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
@@ -74,6 +74,9 @@ public final class SmartWanderingAction extends WanderingAction {
     public void wander() {
         LunaContext context = world.getContext();
         GameService game = context.getGame();
+
+        // Ensure no navigation action is running.
+        mob.getNavigator().cancel();
 
         // Still generating waypoints.
         if (!waypointFuture.isDone()) {
@@ -186,6 +189,6 @@ public final class SmartWanderingAction extends WanderingAction {
             stepsLeft--;
             path.add(position);
         }
-        mob.getWalking().addPath(path);
+        mob.getWalking().replacePath(path);
     }
 }

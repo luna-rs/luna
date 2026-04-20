@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.wandering;
+package io.luna.game.model.mob.movement.wandering;
 
 import io.luna.util.Rational;
 

@@ -50,7 +50,7 @@ open class SuspendableFuture(internal val channel: Channel<Boolean>) {
      * @return This future for chaining.
      */
     fun signal(value: Boolean): SuspendableFuture {
-        channel.offer(value)
+        channel.trySend(value)
         return this
     }
 

@@ -1,9 +1,13 @@
-package io.luna.game.model.mob;
+package io.luna.game.model.mob.movement;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -134,7 +138,7 @@ public final class WalkingQueue {
      *
      * @param path The path to walk as a sequence of absolute {@link Position} tiles.
      */
-    public void addPath(Deque<Position> path) {
+    public void replacePath(Deque<Position> path) {
         if (!path.isEmpty()) {
             addFirst(path.poll());
             for (; ; ) {
