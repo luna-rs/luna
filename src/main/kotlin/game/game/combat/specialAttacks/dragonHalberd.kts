@@ -60,7 +60,6 @@ attack(type = DRAGON_HALBERD,
 
     launched {
         if (victim.size() > 1) {
-            println(victim.size())
             // Deal additional hit against large targets.
             resolveDamage(attacker, victim, true).apply(attack)
         } else if (attacker.inMultiArea() && victim.inMultiArea()) {
