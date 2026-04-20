@@ -15,7 +15,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 val MAX_PLAYER_TARGETS = 3
-val MAX_NPC_TARGETS = 15
+val MAX_NPC_TARGETS = 10
 
 /**
  * The dragon mace special attack animation id.
@@ -43,8 +43,14 @@ fun resolveAdjacentTiles(from: Locatable, to: Locatable): Pair<Position, Positio
     return toPos.translate(1, adjacent.first) to toPos.translate(1, adjacent.second)
 }
 
-fun resolveDamage(attacker: Player, victim: Mob): CombatDamage =
-    CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).setPercentBonusDamage(0.10).build().resolve()
+fun resolveDamage(attacker: Player, victim: Mob, reducedAccuracy: Boolean = false): CombatDamage  {
+    val request = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).setPercentBonusDamage(0.10)
+    if(reducedAccuracy) {
+        request.setFlatBonusAccuracy(-0.25)
+    }
+    return request.build().resolve()
+}
+
 
 attack(type = DRAGON_HALBERD,
        drain = 30,
@@ -54,8 +60,9 @@ attack(type = DRAGON_HALBERD,
 
     launched {
         if (victim.size() > 1) {
+            println(victim.size())
             // Deal additional hit against large targets.
-            resolveDamage(attacker, victim).apply(attack)
+            resolveDamage(attacker, victim, true).apply(attack)
         } else if (attacker.inMultiArea() && victim.inMultiArea()) {
             // Deal damage to adjacent targets in multi-combat.
             val (tile1, tile2) = resolveAdjacentTiles(attacker, victim)
@@ -69,7 +76,7 @@ attack(type = DRAGON_HALBERD,
             var targets = if (victim is Player) MAX_PLAYER_TARGETS else MAX_NPC_TARGETS
             for (other in local) {
                 // Apply damage to filtered targets.
-                resolveDamage(attacker, victim).apply(attack)
+                resolveDamage(attacker, other).apply(attack)
                 if (--targets < 1) {
                     // Maximum number of targets damaged.
                     break
