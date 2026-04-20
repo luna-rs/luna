@@ -303,6 +303,11 @@ enum class Potion(val fourDose: Int,
     val formattedName = itemName(fourDose).dropLast(3)
 
     /**
+     * All the doses as an immutable list.
+     */
+    val doses = listOf(oneDose, twoDose, threeDose, fourDose)
+
+    /**
      * Invoked when [plr] takes a sip of the underlying potion.
      */
     open fun effect(plr: Player) {

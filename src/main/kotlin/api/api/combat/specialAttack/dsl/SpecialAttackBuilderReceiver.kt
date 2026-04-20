@@ -46,7 +46,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param speed The attack speed in ticks.
      * @return A configured melee combat attack instance.
      */
-    fun melee(animationId: Int, range: Int, speed: Int): PlayerMeleeCombatAttack {
+    fun melee(animationId: Int,
+              range: Int = attacker.combat.weapon.range,
+              speed: Int = attacker.combat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
@@ -56,7 +58,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.MELEE)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }
@@ -93,7 +95,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                animationId: Int,
                start: Graphic,
                projectileFunction: BiFunction<Mob, Mob, LocalProjectile>,
-               end: Graphic,
+               end: Graphic?,
                speed: Int,
                range: Int): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
@@ -106,7 +108,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.RANGED)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }
@@ -145,6 +147,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param impactSound The sound played when the spell impacts.
      * @param spellEffect The combat spell logic applied on hit.
      * @param speed The spell travel or attack speed in ticks.
+     * @param distance The distance required for interaction.
      * @return A configured magic combat attack instance.
      */
     fun magic(attacker: Player,
@@ -155,9 +158,10 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
               end: Graphic,
               impactSound: Sound,
               spellEffect: CombatSpell,
-              speed: Int): PlayerMagicCombatAttack {
+              speed: Int,
+              distance: Int): PlayerMagicCombatAttack {
         return object : PlayerMagicCombatAttack(attacker, victim, cast, start, projectileFunction, end, impactSound,
-                                                spellEffect, speed) {
+                                                spellEffect, speed, distance) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -166,7 +170,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.MAGIC)
             }
 
-            override fun onAttackArrived(damage: CombatDamage) {
+            override fun onDamageApplied(damage: CombatDamage) {
                 attackArrived(damage)
             }
         }
@@ -180,7 +184,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      */
     fun magic(spell: CombatSpellDefinition): PlayerMagicCombatAttack {
         return magic(attacker, victim, spell.castAnimation, spell.startGraphic, spell.projectile,
-                     spell.endGraphic, spell.endSound, spell.spell, 4)
+                     spell.endGraphic, spell.endSound, spell.spell, 4, 10)
     }
 
     /**
@@ -201,12 +205,12 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          damage: CombatDamage?,
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
-        val newDamage = action(damage)
+        var newDamage = action(damage)
         if (newDamage != null && attacker.combat.specialBar.checkEnergy(receiver.drain)) {
             // Attack can go through, drain special attack energy, run launch listener.
             attacker.combat.specialBar.drain(receiver.drain, true)
-            receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack))
-            if(receiver.instant) {
+            newDamage = receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack, newDamage))
+            if (receiver.instant) {
                 attack.isIgnoreAttackDelay = true
             }
             return newDamage

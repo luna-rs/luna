@@ -43,7 +43,12 @@
           "DEFENCE"
         ]
       }
-    ]
+    ],
+    "default_model": {
+      "running": 1210,
+      "standing": 809,
+      "walking": 1146
+    }
   },
   {
     "type": "WARHAMMER",
@@ -93,6 +98,11 @@
     "special": {
       "bar": 7474,
       "meter": 7486
+    },
+    "default_model": {
+      "running": 1664,
+      "standing": 1662,
+      "walking": 1663
     }
   },
   {
@@ -215,6 +225,11 @@
     "special": {
       "bar": 7499,
       "meter": 7511
+    },
+    "default_model": {
+      "running": 1664,
+      "standing": 2065,
+      "walking": 1663
     }
   },
   {
@@ -266,6 +281,11 @@
     "special": {
       "bar": 7524,
       "meter": 7536
+    },
+    "default_model": {
+      "running": 2077,
+      "standing": 2074,
+      "walking": 2076
     }
   },
   {
@@ -317,6 +337,11 @@
     "special": {
       "bar": 7549,
       "meter": 7561
+    },
+    "default_model": {
+      "running": 824,
+      "standing": 808,
+      "walking": 819
     }
   },
   {
@@ -368,6 +393,11 @@
     "special": {
       "bar": 7549,
       "meter": 7561
+    },
+    "default_model": {
+      "running": 824,
+      "standing": 808,
+      "walking": 819
     }
   },
   {
@@ -683,6 +713,11 @@
     "special": {
       "bar": 7599,
       "meter": 7611
+    },
+    "default_model": {
+      "running": -1,
+      "standing": 809,
+      "walking": -1
     }
   },
   {
@@ -923,6 +958,11 @@
     "special": {
       "bar": 7699,
       "meter": 7711
+    },
+    "default_model": {
+      "running": 2563,
+      "standing": 2561,
+      "walking": 2064
     }
   },
   {
@@ -1045,6 +1085,11 @@
     "special": {
       "bar": 7800,
       "meter": 7812
+    },
+    "default_model": {
+      "running": -1,
+      "standing": 3677,
+      "walking": 3680
     }
   },
   {
@@ -1095,6 +1140,11 @@
     "special": {
       "bar": 8493,
       "meter": 8505
+    },
+    "default_model": {
+      "running": 1210,
+      "standing": 809,
+      "walking": 1146
     }
   },
   {
@@ -1191,6 +1241,11 @@
     "special": {
       "bar": 12323,
       "meter": 12335
+    },
+    "default_model": {
+      "running": 1831,
+      "standing": 1832,
+      "walking": 1830
     }
   },
   {

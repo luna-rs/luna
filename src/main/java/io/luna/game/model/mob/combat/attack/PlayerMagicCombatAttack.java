@@ -70,11 +70,12 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
      * @param impactSound The sound to play on a successful impact, or {@code null} if none.
      * @param spellEffect The spell definition used to resolve spell-specific effects.
      * @param speed The attack delay, in ticks, applied after execution.
+     * @param distance The distance required for interaction.
      */
     public PlayerMagicCombatAttack(Player attacker, Mob victim, Animation cast, Graphic start,
                                    BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end,
-                                   Sound impactSound, CombatSpell spellEffect, int speed) {
-        super(attacker, victim, cast, start, projectileFunction, end, impactSound, spellEffect, speed);
+                                   Sound impactSound, CombatSpell spellEffect, int speed, int distance) {
+        super(attacker, victim, cast, start, projectileFunction, end, impactSound, spellEffect, speed, distance);
         magic = attacker.getCombat().getMagic();
     }
 

@@ -72,15 +72,19 @@ object CombatHandler {
      * Otherwise, the default player model animations are restored.
      */
     fun PlayerCombatWeapon.updateModelAnimations() {
-        val model = def.model
+        var model = def.model // Try weapon-linked model.
+        if (model == null) {
+            model = def.typeDef.defaultModel // Try weapon interface linked model.
+        }
         if (model != null) {
-            // Set the player model animations to the weapon animations.
+            // We found a match, set the player model animations.
             player.model = PlayerModelAnimation.Builder()
                 .setStandingId(model.standing)
                 .setWalkingId(model.walking)
                 .setRunningId(model.running)
                 .build()
         } else {
+            // No model data for this weapon/interface, use default values.
             player.model = PlayerModelAnimation.DEFAULT
         }
     }

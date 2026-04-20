@@ -1,11 +1,9 @@
 package io.luna.game.model.mob.combat.state;
 
-import game.item.degradable.DegradableItems;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.combat.AmmoType;
 
 import static io.luna.game.model.def.AmmoDefinition.UNEQUIPPED;
 import static java.util.Objects.requireNonNullElse;
@@ -92,14 +90,9 @@ public class PlayerRangedCombat {
             if (rangedWeapon.getItemDef().isStackable()) {
                 // We are using a stackable weapon like knives or throwing axes.
                 player.getEquipment().set(Equipment.WEAPON, decrementAmmo(rangedWeapon));
-                return true;
-            } else if (ammo.getType() == AmmoType.CRYSTAL_ARROW) {
-                // We are using a crystal bow.
-                return DegradableItems.INSTANCE.handleCrystalBow(player);
-            } else {
-                // Not stackable, doesn't degrade, so it doesn't use ammo.
-                return true;
             }
+            // It doesn't use ammo, or it degrades in a hook somewhere else.
+            return true;
         }
         throw new IllegalStateException("No valid ranged ammo/weapon is equipped while in ranging combat state.");
     }

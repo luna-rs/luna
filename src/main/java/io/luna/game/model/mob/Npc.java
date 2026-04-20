@@ -169,7 +169,7 @@ public class Npc extends Mob {
 
     @Override
     public int getCombatLevel() {
-        return combatDefinition.map(NpcCombatDefinition::getLevel).orElse(0);
+        return definition.getCombatLevel();
     }
 
     @Override
@@ -263,11 +263,11 @@ public class Npc extends Mob {
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
 
-            attack.setLevel(def.getSkill(NpcCombatDefinition.ATTACK));
-            strength.setLevel(def.getSkill(NpcCombatDefinition.STRENGTH));
-            defence.setLevel(def.getSkill(NpcCombatDefinition.DEFENCE));
-            ranged.setLevel(def.getSkill(NpcCombatDefinition.RANGED));
-            magic.setLevel(def.getSkill(NpcCombatDefinition.MAGIC));
+            attack.setLevel(def.getAttackLevel());
+            strength.setLevel(def.getStrengthLevel());
+            defence.setLevel(def.getDefenceLevel());
+            ranged.setLevel(def.getRangedLevel());
+            magic.setLevel(def.getMagicLevel());
             hitpoints.setLevel(def.getHitpoints());
         });
     }

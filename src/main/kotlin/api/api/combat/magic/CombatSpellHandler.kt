@@ -57,7 +57,7 @@ object CombatSpellHandler {
      * @param ticks The immobilization duration in ticks.
      */
     fun immobilize(mob: Mob, ticks: Int) {
-        mob.actions.submitIfAbsent(ImmobilizationAction(mob, ticks))
+        mob.actions.submit(ImmobilizationAction(mob, ticks))
     }
 
     /**

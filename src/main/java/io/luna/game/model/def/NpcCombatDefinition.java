@@ -7,41 +7,17 @@ import io.luna.game.model.mob.NpcAggressionProfile;
 import java.util.Arrays;
 
 /**
- * A definition describing combat-related data for an attackable {@link Npc}.
+ * A definition containing all combat-related data for an attackable {@link Npc}.
+ * <p>
+ * This definition stores combat stats, offensive and defensive bonuses, animations, respawn timing, poison flags, and
+ * aggression behavior used by the combat system.
  *
  * @author lare96
  */
 public final class NpcCombatDefinition implements Definition {
 
-    /* -------- Skill index constants -------- */
-
     /**
-     * Skill array index for Attack.
-     */
-    public static final int ATTACK = 0;
-
-    /**
-     * Skill array index for Strength.
-     */
-    public static final int STRENGTH = 1;
-
-    /**
-     * Skill array index for Defence.
-     */
-    public static final int DEFENCE = 2;
-
-    /**
-     * Skill array index for Ranged.
-     */
-    public static final int RANGED = 3;
-
-    /**
-     * Skill array index for Magic.
-     */
-    public static final int MAGIC = 4;
-
-    /**
-     * Repository of {@link NpcCombatDefinition}s keyed by NPC id.
+     * Repository of {@link NpcCombatDefinition} instances keyed by NPC id.
      */
     public static final DefinitionRepository<NpcCombatDefinition> ALL = new MapDefinitionRepository<>();
 
@@ -51,21 +27,28 @@ public final class NpcCombatDefinition implements Definition {
     private final int id;
 
     /**
-     * Respawn delay, in ticks, after this NPC dies.
+     * The respawn delay, in ticks, after this NPC dies.
      */
     private final int respawnTime;
 
     /**
-     * Whether this NPC can apply poison on hit.
+     * The aggression profile that determines when this NPC will automatically attack players.
      * <p>
-     * Poison mechanics and severity are defined elsewhere.
+     * A {@code null} value means this NPC has no aggression profile configured.
+     */
+    private final NpcAggressionProfile aggression;
+
+    /**
+     * Whether this NPC can inflict poison on successful hits.
+     * <p>
+     * Poison severity and application behavior are handled elsewhere.
      */
     private final boolean poisonous;
 
     /**
-     * The combat level displayed for this NPC.
+     * Whether this NPC is immune to poison.
      */
-    private final int level;
+    private final boolean immunePoison;
 
     /**
      * The NPC's hitpoints value.
@@ -73,95 +56,128 @@ public final class NpcCombatDefinition implements Definition {
     private final int hitpoints;
 
     /**
-     * The maximum hit this NPC can deal.
+     * The maximum damage this NPC can deal with a single hit.
      */
     private final int maximumHit;
 
     /**
-     * Attack delay, in ticks, between consecutive attacks.
+     * The delay, in ticks, between this NPC's attacks.
      */
     private final int attackSpeed;
 
     /**
-     * Animation id played when this NPC attacks.
+     * The animation id played when this NPC attacks.
      */
     private final int attackAnimation;
 
     /**
-     * Animation id played when this NPC blocks or defends.
+     * The animation id played when this NPC blocks or defends.
      */
     private final int defenceAnimation;
 
     /**
-     * Animation id played when this NPC dies.
+     * The animation id played when this NPC dies.
      */
     private final int deathAnimation;
 
     /**
-     * Combat skill level array.
+     * The NPC's generic attack bonus value.
+     */
+    private final int attackBonus;
+
+    /**
+     * The NPC's magic attack bonus value.
+     */
+    private final int magicBonus;
+
+    /**
+     * The NPC's ranged attack bonus value.
+     */
+    private final int rangedBonus;
+
+    /**
+     * Combat skill levels for this NPC.
      * <p>
-     * Expected ordering is defined by the skill index constants:
-     * {@link #ATTACK}, {@link #STRENGTH}, {@link #DEFENCE}, {@link #RANGED}, and {@link #MAGIC}.
+     * Expected ordering:
+     * <ul>
+     *     <li>index 0 = Attack</li>
+     *     <li>index 1 = Strength</li>
+     *     <li>index 2 = Defence</li>
+     *     <li>index 3 = Ranged</li>
+     *     <li>index 4 = Magic</li>
+     * </ul>
      */
     private final int[] skills;
 
     /**
-     * Combat bonus array.
+     * Defensive and strength bonuses for this NPC.
      * <p>
-     * Expected ordering matches {@link EquipmentBonus} index order.
+     * Expected ordering:
+     * <ul>
+     *     <li>index 0 = Stab defence</li>
+     *     <li>index 1 = Slash defence</li>
+     *     <li>index 2 = Crush defence</li>
+     *     <li>index 3 = Magic defence</li>
+     *     <li>index 4 = Ranged defence</li>
+     *     <li>index 5 = Strength bonus</li>
+     * </ul>
      */
     private final int[] bonuses;
-
-    /**
-     * The default attack bonus/type for this NPC.
-     * <p>
-     * This is used as the preferred attack style classification when the NPC's combat logic needs a default attack
-     * bonus rather than deriving one dynamically from its bonus array.
-     */
-    private final EquipmentBonus defaultAttackType;
-
-    /**
-     * The aggression profile that defines when this NPC will automatically attack players.
-     * <p>
-     * A {@code null} value indicates that this NPC has no special aggression behavior configured.
-     */
-    private final NpcAggressionProfile aggression;
 
     /**
      * Creates a new {@link NpcCombatDefinition}.
      *
      * @param id The NPC id this definition belongs to.
-     * @param respawnTime The respawn delay in ticks.
-     * @param poisonous Whether the NPC can poison targets.
-     * @param level The displayed combat level.
-     * @param hitpoints The hitpoints value.
-     * @param maximumHit The maximum hit value.
-     * @param attackSpeed The attack delay in ticks.
-     * @param attackAnimation The attack animation id.
-     * @param defenceAnimation The defence/block animation id.
-     * @param deathAnimation The death animation id.
-     * @param skills The combat skill level array; defensively copied.
-     * @param bonuses The combat bonus array; defensively copied.
-     * @param defaultAttackType The default attack bonus/type for this NPC.
+     * @param respawnTime The respawn delay, in ticks.
      * @param aggression The aggression profile for this NPC, or {@code null} if none is configured.
+     * @param poisonous Whether this NPC can poison targets.
+     * @param immunePoison Whether this NPC is immune to poison.
+     * @param hitpoints The NPC's hitpoints value.
+     * @param maximumHit The maximum damage this NPC can deal.
+     * @param attackSpeed The delay, in ticks, between attacks.
+     * @param attackAnimation The attack animation id.
+     * @param defenceAnimation The defence animation id.
+     * @param deathAnimation The death animation id.
+     * @param attackBonus The generic attack bonus value.
+     * @param magicBonus The magic attack bonus value.
+     * @param rangedBonus The ranged attack bonus value.
+     * @param skills The combat skill level array. This array is defensively copied.
+     * @param bonuses The defensive and strength bonus array. This array is defensively copied.
      */
-    public NpcCombatDefinition(int id, int respawnTime, boolean poisonous, int level,
-                               int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
-                               int deathAnimation, int[] skills, int[] bonuses, EquipmentBonus defaultAttackType, NpcAggressionProfile aggression) {
+    public NpcCombatDefinition(
+            int id,
+            int respawnTime,
+            NpcAggressionProfile aggression,
+            boolean poisonous,
+            boolean immunePoison,
+            int hitpoints,
+            int maximumHit,
+            int attackSpeed,
+            int attackAnimation,
+            int defenceAnimation,
+            int deathAnimation,
+            int attackBonus,
+            int magicBonus,
+            int rangedBonus,
+            int[] skills,
+            int[] bonuses
+    ) {
         this.id = id;
         this.respawnTime = respawnTime;
+        this.aggression = aggression;
         this.poisonous = poisonous;
-        this.level = level;
+        this.immunePoison = immunePoison;
         this.hitpoints = hitpoints;
         this.maximumHit = maximumHit;
         this.attackSpeed = attackSpeed;
         this.attackAnimation = attackAnimation;
         this.defenceAnimation = defenceAnimation;
         this.deathAnimation = deathAnimation;
+        this.attackBonus = attackBonus;
+        this.magicBonus = magicBonus;
+        this.rangedBonus = rangedBonus;
         this.skills = Arrays.copyOf(skills, skills.length);
         this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
-        this.defaultAttackType = defaultAttackType;
-        this.aggression = aggression;
     }
 
     @Override
@@ -177,17 +193,17 @@ public final class NpcCombatDefinition implements Definition {
     }
 
     /**
-     * @return {@code true} if this NPC can apply poison.
+     * @return {@code true} if this NPC can poison targets.
      */
     public boolean isPoisonous() {
         return poisonous;
     }
 
     /**
-     * @return The combat level.
+     * @return {@code true} if this NPC cannot be poisoned.
      */
-    public int getLevel() {
-        return level;
+    public boolean isImmunePoison() {
+        return immunePoison;
     }
 
     /**
@@ -233,60 +249,135 @@ public final class NpcCombatDefinition implements Definition {
     }
 
     /**
-     * @return The aggression profile, or {@code null} if this NPC is not configured to be aggressive.
+     * @return The attack bonus.
+     */
+    public int getAttackBonus() {
+        return attackBonus;
+    }
+
+    /**
+     * @return The magic bonus.
+     */
+    public int getMagicBonus() {
+        return magicBonus;
+    }
+
+    /**
+     * @return The ranged bonus.
+     */
+    public int getRangedBonus() {
+        return rangedBonus;
+    }
+
+    /**
+     * @return The aggression profile, or {@code null} if none is configured.
      */
     public NpcAggressionProfile getAggression() {
         return aggression;
     }
 
     /**
-     * Returns the skill level at the given skill index.
-     * <p>
-     * Callers should use the provided skill index constants such as {@link #ATTACK} and {@link #MAGIC} rather than
-     * hardcoding raw indices.
-     *
-     * @param id The skill index.
-     * @return The skill level value at that index.
-     * @throws ArrayIndexOutOfBoundsException If the supplied index is invalid.
+     * @return The Attack level.
      */
-    public int getSkill(int id) {
-        return skills[id];
+    public int getAttackLevel() {
+        return skills[0];
     }
 
     /**
-     * Returns the combat bonus value for the given bonus type.
-     *
-     * @param bonus The combat bonus to look up.
-     * @return The stored bonus value.
+     * @return The Strength level.
      */
-    public int getBonus(EquipmentBonus bonus) {
-        return bonuses[bonus.getIndex()];
+    public int getStrengthLevel() {
+        return skills[1];
     }
 
     /**
-     * Finds the highest attack bonus present in this NPC's bonus array.
-     * <p>
-     * If no positive bonus is found, this falls back to {@link EquipmentBonus#STAB_ATTACK}.
-     *
-     * @return The highest attack bonus type, or {@link EquipmentBonus#STAB_ATTACK} as a fallback.
+     * @return The Defence level.
      */
-    public EquipmentBonus findHighestAttackBonus() {
-        int lastIndex = -1;
-        int lastBonus = 0;
-        for (int index = 0; index < bonuses.length; index++) {
-            int amount = bonuses[index];
-            if (amount > lastBonus) {
-                lastBonus = amount;
-                lastIndex = index;
-            }
+    public int getDefenceLevel() {
+        return skills[2];
+    }
+
+    /**
+     * @return The Ranged level.
+     */
+    public int getRangedLevel() {
+        return skills[3];
+    }
+
+    /**
+     * @return The Magic level.
+     */
+    public int getMagicLevel() {
+        return skills[4];
+    }
+
+    /**
+     * @return The stab defence bonus.
+     */
+    public int getStabDefenceBonus() {
+        return bonuses[0];
+    }
+
+    /**
+     * @return The slash defence bonus.
+     */
+    public int getSlashDefenceBonus() {
+        return bonuses[1];
+    }
+
+    /**
+     * @return The crush defence bonus.
+     */
+    public int getCrushDefenceBonus() {
+        return bonuses[2];
+    }
+
+    /**
+     * @return The magic defence bonus.
+     */
+    public int getMagicDefenceBonus() {
+        return bonuses[3];
+    }
+
+    /**
+     * @return The ranged defence bonus.
+     */
+    public int getRangedDefenceBonus() {
+        return bonuses[4];
+    }
+
+    /**
+     * @return The strength bonus.
+     */
+    public int getStrengthBonus() {
+        return bonuses[5];
+    }
+
+    /**
+     * Returns the defence bonus that opposes the given attack-style bonus.
+     * <p>
+     * This maps an incoming attack bonus type to its corresponding defensive bonus. For example,
+     * {@link EquipmentBonus#STAB_ATTACK} maps to stab defence, and {@link EquipmentBonus#MAGIC_ATTACK}
+     * maps to magic defence.
+     *
+     * @param attackStyleBonus The attack-style bonus to resolve against.
+     * @return The matching defence bonus value for the supplied attack style.
+     * @throws IllegalArgumentException If the supplied bonus is not a supported attack-style bonus.
+     */
+    public int getMatchingDefenceBonus(EquipmentBonus attackStyleBonus) {
+        switch (attackStyleBonus) {
+            case STAB_ATTACK:
+                return getStabDefenceBonus();
+            case SLASH_ATTACK:
+                return getSlashDefenceBonus();
+            case CRUSH_ATTACK:
+                return getCrushDefenceBonus();
+            case MAGIC_ATTACK:
+                return getMagicDefenceBonus();
+            case RANGED_ATTACK:
+                return getRangedDefenceBonus();
+            default:
+                throw new IllegalArgumentException("Invalid attack style bonus: " + attackStyleBonus);
         }
-        return lastIndex == -1 ? EquipmentBonus.STAB_ATTACK : EquipmentBonus.forIndex(lastIndex);
-    }
-
-    /**
-     * @return The default attack bonus/type.
-     */
-    public EquipmentBonus getDefaultAttackBonus() {
-        return defaultAttackType;
     }
 }

@@ -7,11 +7,7 @@ import api.drops.dsl.SpecializedTableReceiver
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState
-import io.luna.game.model.chunk.ChunkUpdatableView
-import io.luna.game.model.item.GroundItem
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.Player
 import io.luna.util.Rational
 import kotlin.reflect.KClass
 
@@ -49,6 +45,11 @@ object DropTableHandler {
     fun getDropTable(npc: Npc): MergedDropTable? = npcTypeMap.getOrDefault(npc.javaClass, npcIdMap[npc.id])
 
     /**
+     * @return The drop table for [npc].
+     */
+    fun getDropTable(npc: Int): MergedDropTable? = npcIdMap[npc]
+
+    /**
      * Constructs a generic drop table using a DSL-style builder.
      *
      * @param action The block defining the drop table items.
@@ -68,7 +69,7 @@ object DropTableHandler {
      * @param action The block defining the drop table items.
      * @return A simple drop table instance.
      */
-    fun createSimple(chance: Rational = Rational.ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
+    fun createSimple(chance: Double = ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
         return create(action).table { SimpleDropTable(table, chance) }
     }
 
@@ -80,7 +81,7 @@ object DropTableHandler {
      * @return A simple drop table with one item.
      */
     fun createSingleton(
-        chance: Rational = Rational.ALWAYS,
+        chance: Double = ALWAYS,
         action: DropTableItemReceiver.() -> DropTableItemChanceReceiver,
     ): SimpleDropTable {
         return createSimple { action(this).chance(chance) }

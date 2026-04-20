@@ -83,17 +83,18 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      * @param impactSound The sound to play on a successful impact, or {@code null} if none.
      * @param spellEffect The spell definition used to resolve spell-specific effects.
      * @param speed The attack delay, in ticks, applied after execution.
+     * @param distance The distance required for interaction.
      */
     public MagicCombatAttack(T attacker, Mob victim, Animation cast, Graphic start,
                              BiFunction<Mob, Mob, LocalProjectile> projectileFunction, Graphic end, Sound impactSound,
-                             CombatSpell spellEffect, int speed) {
-        super(attacker, victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10), speed);
+                             CombatSpell spellEffect, int speed, int distance) {
+        super(attacker, victim, new InteractionPolicy(InteractionType.LINE_OF_SIGHT, distance), speed);
         this.cast = cast;
         this.start = start;
         this.projectileFunction = projectileFunction;
         this.end = end;
         this.impactSound = impactSound;
-        this.spellEffect = spellEffect.getDef();
+        this.spellEffect = spellEffect == null ? null : spellEffect.getDef();
     }
 
     /**
@@ -106,7 +107,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      */
     public MagicCombatAttack(T attacker, Mob victim, CombatSpellDefinition spell, int speed) {
         this(attacker, victim, spell.getCastAnimation(), spell.getStartGraphic(), spell.getProjectile(),
-                spell.getEndGraphic(), spell.getEndSound(), spell.getSpell(), speed);
+                spell.getEndGraphic(), spell.getEndSound(), spell.getSpell(), speed, 10);
     }
 
     /**
@@ -127,7 +128,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(1, 3);
+        launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
     }
 
     @Override
@@ -138,7 +139,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     }
 
     @Override
-    public void onProjectileLaunched() {
+    public final void onProjectileLaunched() {
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
             projectile.display();
@@ -146,9 +147,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     }
 
     @Override
-    public void onProjectileReached() {
-        if (nextDamage.getAmount().isPresent()) {
-            // The hit landed successfully, so apply spell effects and successful impact visuals.
+    public final void onProjectileReached() {
+        if (nextDamage.getAmount().isPresent() || spellEffect == null) {
+            // The hit landed or is a non-spell book magic attack and requires a 0 hitsplat.
             applyEffects();
             if (end != null) {
                 victim.graphic(end);
@@ -156,12 +157,17 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             if (impactSound != null) {
                 LocalSound.of(victim, impactSound).display();
             }
+            if(spellEffect == null && nextDamage.getAmount().isEmpty()) {
+                // Spell isn't from spell book and missed. Non-spell book magic attacks don't splash.
+                nextDamage = CombatDamageRequest.zero(attacker, victim, CombatDamageType.MAGIC).resolve();
+            }
         } else {
             // The hit splashed, so play the standard splash effect.
             victim.graphic(new Graphic(85, 100));
             LocalSound.of(victim, Sound.SPELLFAIL).display();
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, this, true));
+        victim.submitAction(new CombatDamageAction(nextDamage, this, true)); // todo should make it known or design it better
+        // todo combatdamageaction is required for after effects etc. to be applied
     }
 
     /**

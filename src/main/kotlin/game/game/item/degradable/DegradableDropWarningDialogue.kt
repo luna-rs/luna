@@ -2,7 +2,6 @@ package game.item.degradable
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.def.DegradableItemDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.mob.Player
@@ -38,22 +37,30 @@ class DegradableDropWarningDialogue(val index: Int, val itemId: Int) : DialogueI
     }
 
     /**
-     * Drops the fully degraded form of the dialogue's item for the player.
+     * Removes the item from the player's inventory and drops the result of its final degradation stage.
      *
-     * This walks the degradable item chain starting from [itemId] until it reaches the last defined degradable
-     * stage, closes the player's open windows, and spawns that final item on the ground at the player's position.
+     * The item's degradable set is resolved from [itemId], and the last entry in that chain is used to determine what
+     * should happen when the item is dropped. Any open windows are closed before the inventory slot at [index] is
+     * cleared.
      *
-     * @param plr The player dropping the item.
+     * If the final degradable stage has a valid [DegradableItem.nextId], that item is spawned on the ground at the
+     * player's position and the player is informed that the item degraded completely on drop. Otherwise, no ground
+     * item is created and the player is informed that the item disappeared entirely.
+     *
+     * @param plr The player dropping the degradable item.
      */
     fun dropItem(plr: Player) {
-        var def = DegradableItemDefinition.ALL[itemId].orElse(null)
-        var dropItemId = itemId
-        while (def != null) {
-            dropItemId = def.id
-            def = DegradableItemDefinition.ALL[def.nextId].orElse(null)
-        }
+        val (set, _) = DegradableEquipmentHandler.getDegradable(itemId) ?: return
+        val lastItem = set.items.last()
+
         plr.overlays.closeWindows()
         plr.inventory[index] = null
-        world.addItem(dropItemId, 1, plr.position, plr)
+        if (lastItem.nextId > 0) {
+            world.addItem(lastItem.nextId, 1, plr.position, plr)
+            plr.sendMessage("The item degrades completely as it touches the ground!")
+        } else {
+            plr.sendMessage("The item disappears as it touches the ground!")
+        }
+        return
     }
 }

@@ -1,13 +1,14 @@
 package game.npc.spawn.varrock
 
 import api.predef.*
-import api.predef.ext.*
 import api.shop.dsl.ShopHandler
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.item.shop.*
-import io.luna.game.model.mob.*
+import io.luna.game.model.item.shop.BuyPolicy
+import io.luna.game.model.item.shop.Currency
+import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
-import io.luna.game.model.mob.wandering.*
 
 /**
  * todo make the interfaces work

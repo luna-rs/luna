@@ -50,6 +50,11 @@ class BotActionHandler(val bot: Bot) {
     val widgets = BotWidgetActionHandler(bot, this)
 
     /**
+     * The combat action handler.
+     */
+    val combat = BotCombatActionHandler(bot, this)
+
+    /**
      * Determines if [bot] has [item] in its equipment, inventory, or bank.
      */
     fun has(item: Item): Boolean {

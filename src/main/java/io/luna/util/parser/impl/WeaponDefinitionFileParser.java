@@ -39,12 +39,7 @@ public final class WeaponDefinitionFileParser extends JsonFileParser<WeaponDefin
         int poisonSeverity = token.has("poison") ? token.get("poison").getAsInt() : 0;
         WeaponModelAnimationDefinition model = null;
         if (token.has("model")) {
-            JsonObject modelJson = token.get("model").getAsJsonObject();
-            model = new WeaponModelAnimationDefinition(
-                    modelJson.get("standing").getAsInt(),
-                    modelJson.get("walking").getAsInt(),
-                    modelJson.get("running").getAsInt()
-            );
+            model = readModel(token.get("model").getAsJsonObject());
         }
         return new WeaponDefinition(id, type, poisonSeverity, model);
     }

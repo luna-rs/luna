@@ -1,9 +1,11 @@
 package io.luna.game.model.mob.combat;
 
+import api.combat.player.PlayerCombatHandler;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -69,7 +71,7 @@ public final class CombatAction extends Action<Mob> {
 
         // Stop combat if the current target is no longer valid.
         Mob target = combat.getTarget();
-        if (target == null || !target.isAlive()) {
+        if (target == null || !target.isAlive() || combat.isDisabled()) {
             return clearTarget();
         }
 
@@ -104,6 +106,11 @@ public final class CombatAction extends Action<Mob> {
 
         // Run final close-range combat checks before attacking.
         if (!check()) {
+            return clearTarget();
+        }
+
+        // Check if any listeners preemptively stop the attack.
+        if (mob instanceof Player && PlayerCombatHandler.INSTANCE.testStopAttack((Player) mob, attack)){
             return clearTarget();
         }
 

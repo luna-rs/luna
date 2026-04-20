@@ -6,8 +6,10 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.LocalProjectile.TargetBuilder;
 import io.luna.game.model.chunk.ChunkUpdatableView;
+import io.luna.game.model.def.WeaponModelAnimationDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.util.GsonUtils;
 
 import java.io.BufferedReader;
@@ -107,5 +109,27 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
                         .setInitialSlope(curve)
                         .setView(ChunkUpdatableView.globalView())
                         .build();
+    }
+
+    /**
+     * Parses model data and returns a builder function that creates a {@link PlayerModelAnimation}.
+     * <p>
+     * Expected fields:
+     * <ul>
+     *     <li>{@code standing} - Standing animation ID.</li>
+     *     <li>{@code walking} - Walking animation ID.</li>
+     *     <li>{@code running} - Running animation ID</li>
+     * </ul>
+     * <p>
+     *
+     * @param object The JSON object describing the model animation.
+     * @return The parsed model data.
+     */
+    protected WeaponModelAnimationDefinition readModel(JsonObject object) {
+        return new WeaponModelAnimationDefinition(
+                object.get("standing").getAsInt(),
+                object.get("walking").getAsInt(),
+                object.get("running").getAsInt()
+        );
     }
 }

@@ -1,6 +1,7 @@
 package api.bot
 
 import api.bot.action.BotActionHandler
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
@@ -8,6 +9,7 @@ import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 /**
  * A coroutine-driven base class for bot behaviour scripts.
@@ -27,7 +29,7 @@ import kotlinx.coroutines.launch
  * @author lare96
  */
 abstract class BotScript<T>(val bot: Bot) {
-
+// todo redo docs, scripts now repeatedly loop
     /**
      * Handler for simulated inbound messages to the bot.
      *
@@ -63,13 +65,17 @@ abstract class BotScript<T>(val bot: Bot) {
      */
     private var progress: Job? = null
 
+   open suspend fun init(){} // todo docs, called before run loop
+
     /**
      * The main coroutine body for this script.
      *
      * This function is always executed on the game thread through [GameCoroutineScope] and must be written with that
      * assumption.
      */
-    abstract suspend fun run()
+    abstract suspend fun run(): Boolean
+
+    open suspend fun finish(){}// todo docs, called after run loop, last thing before co-routine completes gracefully
 
     /**
      * Produces a snapshot of this script's persistent state.
@@ -94,9 +100,23 @@ abstract class BotScript<T>(val bot: Bot) {
      * @return `true` if the script was successfully started, `false` if it was already running.
      */
     fun start(): Boolean {
-        if (progress == null || progress!!.isCancelled) {
+        if (progress?.isActive != true) {
             bot.log("Running script {${javaClass.name}}.")
-            progress = GameCoroutineScope.launch { run() }
+            progress = GameCoroutineScope.launch {
+                try {
+                    init()
+                    while (bot.state == EntityState.ACTIVE && isRunning()) {
+                        // Top-level yield: always allow other scripts a chance to run (just in case).
+                        yield()
+                        if (run()) {
+                            // Complete the co-routine when run() returns true.
+                            break
+                        }
+                    }
+                } finally {
+                    finish()
+                }
+            }
             return true
         }
         return false
@@ -114,8 +134,7 @@ abstract class BotScript<T>(val bot: Bot) {
     fun stop(): Boolean {
         if (progress != null && !progress!!.isCompleted && !progress!!.isCancelled) {
             bot.log("Stopping script {${javaClass.name}}.")
-            progress!!.cancel()
-            progress = null
+            progress?.cancel()
             return true
         }
         return false
@@ -145,7 +164,7 @@ abstract class BotScript<T>(val bot: Bot) {
      * @return `true` if the script coroutine is active, `false` otherwise.
      */
     fun isRunning(): Boolean {
-        return progress != null && progress!!.isActive
+        return progress?.isActive == true
     }
 
     /**
@@ -159,7 +178,7 @@ abstract class BotScript<T>(val bot: Bot) {
      * @return `true` if the script was cancelled, `false` otherwise.
      */
     fun isInterrupted(): Boolean {
-        return progress != null && progress!!.isCancelled
+        return progress?.isCancelled == true
     }
 
     /**

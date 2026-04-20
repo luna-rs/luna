@@ -88,7 +88,7 @@ public final class WeaponTypeDefinition implements Definition {
     private final int id;
 
     /**
-     * The interface line used to display the selected combat style for this weapon type.
+     * The interface line used to display the weapon's name.
      */
     private final int line;
 
@@ -103,6 +103,14 @@ public final class WeaponTypeDefinition implements Definition {
     private final WeaponSpecialBarDefinition special;
 
     /**
+     * The default model and animation metadata used by this weapon type.
+     * <p>
+     * This provides the fallback appearance and animation definition associated with the weapon type when no specific
+     * override is being used.
+     */
+    private final WeaponModelAnimationDefinition defaultModel;
+
+    /**
      * Creates a new {@link WeaponTypeDefinition}.
      *
      * @param type The weapon type this definition belongs to.
@@ -110,13 +118,17 @@ public final class WeaponTypeDefinition implements Definition {
      * @param line The interface line used for combat style display.
      * @param styles The selectable combat styles for this weapon type.
      * @param special The special attack bar metadata, or {@code null} if none exists.
+     * @param defaultModel The default model metadata for this weapon type.
      */
-    public WeaponTypeDefinition(Weapon type, int id, int line, List<CombatStyleDefinition> styles, WeaponSpecialBarDefinition special) {
+    public WeaponTypeDefinition(Weapon type, int id, int line, List<CombatStyleDefinition> styles,
+                                WeaponSpecialBarDefinition special,
+                                WeaponModelAnimationDefinition defaultModel) {
         this.type = type;
         this.id = id;
         this.line = line;
         this.styles = styles;
         this.special = special;
+        this.defaultModel = defaultModel;
     }
 
     @Override
@@ -132,7 +144,7 @@ public final class WeaponTypeDefinition implements Definition {
     }
 
     /**
-     * @return The interface line.
+     * @return The weapon name text line ID.
      */
     public int getLine() {
         return line;
@@ -150,5 +162,12 @@ public final class WeaponTypeDefinition implements Definition {
      */
     public WeaponSpecialBarDefinition getSpecial() {
         return special;
+    }
+
+    /**
+     * @return The default model and animation definition.
+     */
+    public WeaponModelAnimationDefinition getDefaultModel() {
+        return defaultModel;
     }
 }

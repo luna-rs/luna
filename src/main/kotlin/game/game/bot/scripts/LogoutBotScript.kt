@@ -2,7 +2,6 @@ package game.bot.scripts
 
 import api.bot.BotScript
 import api.bot.Suspendable.naturalDelay
-import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -12,17 +11,16 @@ import io.luna.game.model.mob.bot.Bot
  */
 class LogoutBotScript(bot: Bot, private var urgent: Boolean) : BotScript<Boolean>(bot) {
 
-    override suspend fun run() {
+    override suspend fun run(): Boolean {
         if (!urgent) {
-            while (bot.state == EntityState.ACTIVE) {
-                bot.output.clickLogout()
-                bot.naturalDelay()
-            }
+            bot.output.clickLogout()
+            bot.naturalDelay()
         } else {
             bot.forceLogout()
             bot.naturalDelay()
         }
-
+        // Script itself cancels co-routine by logging the bot out.
+        return false
     }
 
     override fun snapshot(): Boolean = urgent

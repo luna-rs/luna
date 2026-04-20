@@ -1,8 +1,8 @@
 package game.item.degradable.jewellery
 
 import api.predef.*
-import game.item.degradable.DegradableItems
-import game.item.degradable.DegradableItems.ringOfRecoilCharges
+import game.item.degradable.DegradableEquipmentHandler
+import game.item.degradable.DegradableEquipmentHandler.ringOfRecoilCharges
 import io.luna.game.event.impl.CombatDamageReceivedEvent
 import io.luna.game.model.item.Equipment
 import kotlin.math.floor
@@ -21,7 +21,7 @@ on(CombatDamageReceivedEvent::class) {
         if (plr.ringOfRecoilCharges <= 0) {
             plr.equipment[Equipment.RING] = null
             plr.sendMessage("Your Ring of Recoil shatters.")
-            plr.ringOfRecoilCharges = DegradableItems.RING_OF_RECOIL_CHARGES
+            plr.ringOfRecoilCharges = DegradableEquipmentHandler.RING_OF_RECOIL_CHARGES
         }
     }
 }

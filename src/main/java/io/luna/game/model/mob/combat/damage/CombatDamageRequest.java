@@ -31,6 +31,167 @@ import static com.google.common.base.Preconditions.checkState;
 public final class CombatDamageRequest {
 
     /**
+     * Creates a standard builder for the supplied combat participants and damage type.
+     * <p>
+     * This is a small convenience wrapper around the {@link Builder} constructor so callers can begin custom request
+     * setup without repeating {@code new Builder(...)} at each call site.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @return A new builder for the supplied combat context.
+     */
+    public static Builder builder(Mob attacker, Mob victim, CombatDamageType type) {
+        return new Builder(attacker, victim, type);
+    }
+
+    /**
+     * Creates an always-accurate zero-damage melee hit.
+     * <p>
+     * This is useful for hooks that need to produce a guaranteed hit result without dealing damage, but do not care
+     * about using a specific combat style. If style-specific behaviour matters, use
+     * {@link #zero(Mob, Mob, CombatDamageType)} instead.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @return A resolved request that always lands for {@code 0} melee damage.
+     */
+    public static CombatDamageRequest zero(Mob attacker, Mob victim) {
+        return zero(attacker, victim, CombatDamageType.MELEE);
+    }
+
+    /**
+     * Creates an always-accurate zero-damage hit for the supplied combat style.
+     * <p>
+     * The hit lands with perfect accuracy, uses the supplied combat damage type, and always resolves to numeric
+     * {@code 0} damage.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @return A request that always lands for {@code 0} damage.
+     */
+    public static CombatDamageRequest zero(Mob attacker, Mob victim, CombatDamageType type) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .setBaseMaxHit(0)
+                .build();
+    }
+
+    /**
+     * Creates an always-accurate hit that uses the default max-hit calculation for the supplied combat style.
+     * <p>
+     * This is the standard "land the hit, then let normal damage rules apply" helper. It preserves the normal max-hit
+     * calculation, protection prayer handling, and any other standard request behaviour.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @return An accurate hit using standard damage calculation for the supplied type.
+     */
+    public static CombatDamageRequest damage(Mob attacker, Mob victim, CombatDamageType type) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .build();
+    }
+
+    /**
+     * Creates a forced miss for the supplied combat style.
+     * <p>
+     * This helper guarantees that the hit check fails. For magic, this resolves as a splash. For all other combat
+     * styles, it resolves as a numeric zero hit.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @return A request that always misses.
+     */
+    public static CombatDamageRequest inaccurate(Mob attacker, Mob victim, CombatDamageType type) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(0.0)
+                .setFlatBonusAccuracy(-1.0)
+                .build();
+    }
+
+    /**
+     * Creates an always-accurate hit with a custom base max hit.
+     * <p>
+     * This helper is useful when a hook needs to preserve the standard damage resolution flow while replacing the
+     * formula-derived max hit with a fixed base cap.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @param baseMaxHit The base max hit to use before rolling damage.
+     * @return An accurate hit with a custom base max hit.
+     */
+    public static CombatDamageRequest damage(Mob attacker, Mob victim, CombatDamageType type, int baseMaxHit) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .setBaseMaxHit(baseMaxHit)
+                .build();
+    }
+
+    /**
+     * Creates an always-accurate magic effect hit that does not deal numeric damage.
+     * <p>
+     * This is intended for spells or combat effects that should land successfully while only applying side effects.
+     * The request resolves using the non-damaging hit marker handled by {@link Builder#disableDamage()}.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @return An accurate magic effect hit with damage disabled.
+     */
+    public static CombatDamageRequest effect(Mob attacker, Mob victim) {
+        return builder(attacker, victim, CombatDamageType.MAGIC)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .disableDamage()
+                .build();
+    }
+
+    /**
+     * Creates an always-accurate hit that ignores protection prayers.
+     * <p>
+     * This helper keeps standard damage calculation for the supplied combat style, but bypasses protection prayer
+     * mitigation during final damage resolution.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @return An accurate hit that ignores protection prayers.
+     */
+    public static CombatDamageRequest damageIgnoringPrayers(Mob attacker, Mob victim, CombatDamageType type) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .ignoreProtectionPrayers()
+                .build();
+    }
+
+    /**
+     * Creates an always-accurate hit with a custom base max hit that also ignores protection prayers.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The victim mob.
+     * @param type The combat damage type.
+     * @param baseMaxHit The base max hit to use before rolling damage.
+     * @return An accurate custom-damage hit that ignores protection prayers.
+     */
+    public static CombatDamageRequest damageIgnoringPrayers(Mob attacker, Mob victim, CombatDamageType type,
+                                                            int baseMaxHit) {
+        return builder(attacker, victim, type)
+                .setBaseAccuracy(1.0)
+                .setFlatBonusAccuracy(1.0)
+                .setBaseMaxHit(baseMaxHit)
+                .ignoreProtectionPrayers()
+                .build();
+    }
+
+    /**
      * Builds immutable {@link CombatDamageRequest} instances.
      * <p>
      * The builder begins with formula-driven defaults and allows callers to selectively replace base values or add
@@ -46,6 +207,7 @@ public final class CombatDamageRequest {
         private boolean ignoreProtectionPrayers;
         private double flatBonusAccuracy;
         private double percentBonusDamage;
+        private double percentBonusStrength;
         private int flatBonusDamage;
         private int flatBonusMaxHit;
         private boolean damageDisabled;
@@ -140,7 +302,18 @@ public final class CombatDamageRequest {
             percentBonusDamage = percentAmount;
             return this;
         }
-
+        /**
+         * Sets a percentage-based strength modifier.
+         * <p>
+         * Positive values increase potential max hit, while negative values reduce it.
+         *
+         * @param percentAmount The percentage-based damage modifier to apply.
+         * @return This builder.
+         */
+        public Builder setPercentBonusStrength(double percentAmount) {
+            percentBonusStrength = percentAmount;
+            return this;
+        }
         /**
          * Sets a flat damage modifier.
          * <p>
@@ -185,7 +358,8 @@ public final class CombatDamageRequest {
          */
         public CombatDamageRequest build() {
             return new CombatDamageRequest(attacker, victim, type, accuracy, maxHit, ignoreProtectionPrayers,
-                    flatBonusAccuracy, percentBonusDamage, flatBonusDamage, flatBonusMaxHit, damageDisabled);
+                    flatBonusAccuracy, percentBonusDamage, percentBonusStrength, flatBonusDamage, flatBonusMaxHit,
+                    damageDisabled);
         }
     }
 
@@ -197,6 +371,7 @@ public final class CombatDamageRequest {
     final boolean ignoreProtectionPrayers;
     final double flatBonusAccuracy;
     final double percentBonusDamage;
+    final double percentBonusStrength;
     final int flatBonusDamage;
     final int flatBonusMaxHit;
     final boolean damageDisabled;
@@ -206,7 +381,8 @@ public final class CombatDamageRequest {
      */
     private CombatDamageRequest(Mob attacker, Mob victim, CombatDamageType type, OptionalDouble accuracy,
                                 OptionalInt maxHit, boolean ignoreProtectionPrayers, double flatBonusAccuracy,
-                                double percentBonusDamage, int flatBonusDamage, int flatBonusMaxHit, boolean damageDisabled) {
+                                double percentBonusDamage, double percentBonusStrength, int flatBonusDamage,
+                                int flatBonusMaxHit, boolean damageDisabled) {
         this.attacker = attacker;
         this.victim = victim;
         this.type = type;
@@ -215,6 +391,7 @@ public final class CombatDamageRequest {
         this.ignoreProtectionPrayers = ignoreProtectionPrayers;
         this.flatBonusAccuracy = flatBonusAccuracy;
         this.percentBonusDamage = percentBonusDamage;
+        this.percentBonusStrength = percentBonusStrength;
         this.flatBonusDamage = flatBonusDamage;
         this.flatBonusMaxHit = flatBonusMaxHit;
         this.damageDisabled = damageDisabled;
@@ -237,15 +414,13 @@ public final class CombatDamageRequest {
      */
     public CombatDamage resolve() {
         double baseAccuracy = accuracy.orElse(CombatFormula.calculateHitChance(attacker, victim, type));
-        baseAccuracy += flatBonusAccuracy;
-
+        baseAccuracy +=  flatBonusAccuracy;
         OptionalInt computedDamage;
-        if (RandomUtils.rollPercent(baseAccuracy)) {
-            if (damageDisabled) {
-                computedDamage = OptionalInt.of(-1);
-            } else {
+        if (!damageDisabled) {
+            if (RandomUtils.roll(baseAccuracy)) {
                 int baseMaxHit = maxHit.orElse(attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
+                baseMaxHit += (int) Math.floor(baseMaxHit * percentBonusStrength);
 
                 int damage = baseMaxHit < 1 ? 0 : RandomUtils.inclusive(baseMaxHit);
                 damage = applyPrayer(damage);
@@ -257,11 +432,13 @@ public final class CombatDamageRequest {
                 }
                 damage += flatBonusDamage;
                 computedDamage = OptionalInt.of(Math.max(0, damage));
+            } else if (type == CombatDamageType.MAGIC) {
+                computedDamage = OptionalInt.empty();
+            } else {
+                computedDamage = OptionalInt.of(0);
             }
-        } else if (type == CombatDamageType.MAGIC) {
-            computedDamage = OptionalInt.empty();
         } else {
-            computedDamage = OptionalInt.of(0);
+            computedDamage = OptionalInt.of(-1);
         }
         return new CombatDamage(attacker, victim, type, computedDamage);
     }

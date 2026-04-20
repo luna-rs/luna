@@ -38,7 +38,7 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
      */
     public MeleeCombatAttack(T attacker, Mob victim, int animationId, int range, int delay) {
         super(attacker, victim, new InteractionPolicy(InteractionType.SIZE, range), delay);
-        animation = new Animation(animationId, AnimationPriority.HIGH);
+        animation = animationId == -1 ? null : new Animation(animationId, AnimationPriority.HIGH);
     }
 
     @Override

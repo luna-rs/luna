@@ -28,11 +28,7 @@ public final class RandomUtils {
      * @return {@code true} if the roll succeeds, {@code false} otherwise.
      */
     public static boolean roll(Rational rational) {
-        if (rational.getNumerator() <= 0) {
-            return false;
-        } else if (rational.getNumerator() >= rational.getDenominator()) {
-            return true;
-        } else return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
+        return roll(rational.doubleValue());
     }
 
     /**
@@ -76,7 +72,7 @@ public final class RandomUtils {
      * @param value The percent chance to succeed (0–100).
      * @return {@code true} if successful, {@code false} otherwise.
      */
-    public static boolean rollPercent(int value) {
+    public static boolean roll(int value) {
         value = Math.max(0, Math.min(value, 100));
         return ThreadLocalRandom.current().nextInt(100) < value;
     }
@@ -87,7 +83,7 @@ public final class RandomUtils {
      * @param value The chance to succeed (0.0–1.0).
      * @return {@code true} if successful, {@code false} otherwise.
      */
-    public static boolean rollPercent(double value) {
+    public static boolean roll(double value) {
         value = Math.max(0.0, Math.min(value, 1.0));
         return ThreadLocalRandom.current().nextDouble() <= value;
     }
@@ -233,6 +229,18 @@ public final class RandomUtils {
         if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN)
             return inclusive(low + 1, high - 1);
         return inclusive(low, high);
+    }
+
+    /**
+     * Returns a randomly chosen boolean value.
+     * <p>
+     * Each invocation uses {@link ThreadLocalRandom#current()} and produces either {@code true} or {@code false}
+     * with equal probability.
+     *
+     * @return A random boolean value.
+     */
+    public static boolean random() {
+        return ThreadLocalRandom.current().nextBoolean();
     }
 
     /* Shuffle overloads for all supported types. */

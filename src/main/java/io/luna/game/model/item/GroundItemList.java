@@ -12,10 +12,9 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.task.Task;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 
@@ -136,8 +135,9 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
          * Items are promoted per-tile, in insertion order, until the tile reaches {@link #MAX_ITEMS_PER_TILE}.
          */
         private void processPendingItems() {
-            for (Map.Entry<Position, Collection<GroundItem>> nextEntry : pending.asMap().entrySet()) {
-                List<GroundItem> activeList = active.get(nextEntry.getKey());
+            List<Position> positionList = new ArrayList<>(pending.keys());
+            for (Position position : positionList) {
+                List<GroundItem> activeList = active.get(position);
                 int spaces = MAX_ITEMS_PER_TILE - activeList.size();
                 if (spaces < 1) {
                     /*
@@ -146,7 +146,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                     continue;
                 }
 
-                Iterator<GroundItem> it = nextEntry.getValue().iterator();
+                Iterator<GroundItem> it = pending.get(position).iterator();
                 while (it.hasNext()) {
                     GroundItem pendingItem = it.next();
                     pendingItem.setState(EntityState.ACTIVE);

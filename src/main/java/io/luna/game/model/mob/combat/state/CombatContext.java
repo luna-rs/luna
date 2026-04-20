@@ -11,6 +11,7 @@ import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageStack;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
@@ -76,6 +77,24 @@ public abstract class CombatContext<T extends Mob> {
     private int attackDelay;
 
     /**
+     * Indicates whether this entity is fully disabled.
+     * <p>
+     * A disabled entity is prevented from performing its normal actions until the disabled state is cleared.
+     */
+    private boolean disabled;
+
+    /**
+     * Indicates whether this entity is currently immobilized.
+     * <p>
+     * An immobilized entity may still exist and process other logic, but it cannot move until this state is removed.
+     */
+    private boolean immobilized;
+
+    private CombatAttack<?> lastAttackApplied;
+
+    private CombatDamage lastDamageReceived; // todo documentation
+
+    /**
      * Creates a new {@link CombatContext} for the supplied mob.
      *
      * @param mob The mob that owns this combat context.
@@ -106,8 +125,9 @@ public abstract class CombatContext<T extends Mob> {
      *
      * @param attacker The mob dealing the damage.
      * @param damage The incoming combat damage being processed.
+     * @param action The action that launched the damage application.
      */
-    public abstract void onNextDefence(Mob attacker, CombatDamage damage);
+    public abstract void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action);
 
     /**
      * Gets the attack-style bonus currently used for accuracy calculations.
@@ -335,6 +355,15 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
+     * Sets whether this entity is immobilized.
+     *
+     * @param immobilized {@code true} to prevent movement, {@code false} to allow movement again.
+     */
+    public void setImmobilized(boolean immobilized) {
+        this.immobilized = immobilized;
+    }
+
+    /**
      * Determines whether the owning mob is currently immobilized.
      * <p>
      * Immobilization is represented by the presence of an active {@link ImmobilizationAction}.
@@ -342,7 +371,7 @@ public abstract class CombatContext<T extends Mob> {
      * @return {@code true} if the mob is immobilized, otherwise {@code false}.
      */
     public final boolean isImmobilized() {
-        return mob.getActions().contains(ImmobilizationAction.class);
+        return immobilized;
     }
 
     /**
@@ -432,5 +461,34 @@ public abstract class CombatContext<T extends Mob> {
      */
     public boolean isAttackReady() {
         return attackDelay <= 0;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        if (this.disabled != disabled) {
+            this.disabled = disabled;
+            if (this.disabled) {
+                mob.interact(null);
+            }
+        }
+    }
+
+    public CombatAttack<?> getLastAttackApplied() {
+        return lastAttackApplied;
+    }
+
+    public void setLastAttackApplied(CombatAttack<?> lastAttackApplied) {
+        this.lastAttackApplied = lastAttackApplied;
+    }
+
+    public CombatDamage getLastDamageReceived() {
+        return lastDamageReceived;
+    }
+
+    public void setLastDamageReceived(CombatDamage lastDamageReceived) {
+        this.lastDamageReceived = lastDamageReceived;
     }
 }

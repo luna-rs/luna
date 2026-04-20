@@ -1,6 +1,6 @@
 [
   {
-    "type": "BARROWS",
+    "type": "AHRIMS_HOOD",
     "items": [
       {
         "prev_id": -1,
@@ -26,7 +26,12 @@
         "prev_id": 4858,
         "id": 4859,
         "next_id": 4860
-      },
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_STAFF",
+    "items": [
       {
         "prev_id": -1,
         "id": 4710,
@@ -51,7 +56,12 @@
         "prev_id": 4864,
         "id": 4865,
         "next_id": 4866
-      },
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_ROBETOP",
+    "items": [
       {
         "prev_id": -1,
         "id": 4712,
@@ -76,7 +86,12 @@
         "prev_id": 4870,
         "id": 4871,
         "next_id": 4872
-      },
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_ROBESKIRT",
+    "items": [
       {
         "prev_id": -1,
         "id": 4714,
@@ -101,7 +116,12 @@
         "prev_id": 4876,
         "id": 4877,
         "next_id": 4878
-      },
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_HELM",
+    "items": [
       {
         "prev_id": -1,
         "id": 4716,
@@ -126,7 +146,12 @@
         "prev_id": 4882,
         "id": 4883,
         "next_id": 4884
-      },
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_GREATAXE",
+    "items": [
       {
         "prev_id": -1,
         "id": 4718,
@@ -151,7 +176,12 @@
         "prev_id": 4888,
         "id": 4889,
         "next_id": 4890
-      },
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_PLATEBODY",
+    "items": [
       {
         "prev_id": -1,
         "id": 4720,
@@ -176,7 +206,12 @@
         "prev_id": 4894,
         "id": 4895,
         "next_id": 4896
-      },
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_PLATELEGS",
+    "items": [
       {
         "prev_id": -1,
         "id": 4722,
@@ -201,7 +236,12 @@
         "prev_id": 4900,
         "id": 4901,
         "next_id": 4902
-      },
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_HELM",
+    "items": [
       {
         "prev_id": -1,
         "id": 4724,
@@ -226,7 +266,12 @@
         "prev_id": 4906,
         "id": 4907,
         "next_id": 4908
-      },
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_WARSPEAR",
+    "items": [
       {
         "prev_id": -1,
         "id": 4726,
@@ -251,7 +296,12 @@
         "prev_id": 4912,
         "id": 4913,
         "next_id": 4914
-      },
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_PLATEBODY",
+    "items": [
       {
         "prev_id": -1,
         "id": 4728,
@@ -276,7 +326,12 @@
         "prev_id": 4918,
         "id": 4919,
         "next_id": 4920
-      },
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_CHAINSKIRT",
+    "items": [
       {
         "prev_id": -1,
         "id": 4730,
@@ -301,7 +356,12 @@
         "prev_id": 4924,
         "id": 4925,
         "next_id": 4926
-      },
+      }
+    ]
+  },
+  {
+    "type": "KARILS_COIF",
+    "items": [
       {
         "prev_id": -1,
         "id": 4732,
@@ -326,7 +386,12 @@
         "prev_id": 4930,
         "id": 4931,
         "next_id": 4932
-      },
+      }
+    ]
+  },
+  {
+    "type": "KARILS_CROSSBOW",
+    "items": [
       {
         "prev_id": -1,
         "id": 4734,
@@ -351,7 +416,12 @@
         "prev_id": 4936,
         "id": 4937,
         "next_id": 4938
-      },
+      }
+    ]
+  },
+  {
+    "type": "KARILS_LEATHERTOP",
+    "items": [
       {
         "prev_id": -1,
         "id": 4736,
@@ -376,7 +446,12 @@
         "prev_id": 4942,
         "id": 4943,
         "next_id": 4944
-      },
+      }
+    ]
+  },
+  {
+    "type": "KARILS_LEATHERSKIRT",
+    "items": [
       {
         "prev_id": -1,
         "id": 4738,
@@ -401,7 +476,12 @@
         "prev_id": 4948,
         "id": 4949,
         "next_id": 4950
-      },
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_HELM",
+    "items": [
       {
         "prev_id": -1,
         "id": 4745,
@@ -426,7 +506,12 @@
         "prev_id": 4954,
         "id": 4955,
         "next_id": 4956
-      },
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_HAMMERS",
+    "items": [
       {
         "prev_id": -1,
         "id": 4747,
@@ -451,7 +536,12 @@
         "prev_id": 4960,
         "id": 4961,
         "next_id": 4962
-      },
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_PLATEBODY",
+    "items": [
       {
         "prev_id": -1,
         "id": 4749,
@@ -476,7 +566,12 @@
         "prev_id": 4966,
         "id": 4967,
         "next_id": 4968
-      },
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_PLATELEGS",
+    "items": [
       {
         "prev_id": -1,
         "id": 4751,
@@ -501,7 +596,12 @@
         "prev_id": 4972,
         "id": 4973,
         "next_id": 4974
-      },
+      }
+    ]
+  },
+  {
+    "type": "VERACS_HELM",
+    "items": [
       {
         "prev_id": -1,
         "id": 4753,
@@ -526,7 +626,12 @@
         "prev_id": 4978,
         "id": 4979,
         "next_id": 4980
-      },
+      }
+    ]
+  },
+  {
+    "type": "VERACS_FLAIL",
+    "items": [
       {
         "prev_id": -1,
         "id": 4755,
@@ -551,7 +656,12 @@
         "prev_id": 4984,
         "id": 4985,
         "next_id": 4986
-      },
+      }
+    ]
+  },
+  {
+    "type": "VERACS_BRASSARD",
+    "items": [
       {
         "prev_id": -1,
         "id": 4757,
@@ -576,7 +686,12 @@
         "prev_id": 4990,
         "id": 4991,
         "next_id": 4992
-      },
+      }
+    ]
+  },
+  {
+    "type": "VERACS_PLATESKIRT",
+    "items": [
       {
         "prev_id": -1,
         "id": 4759,
@@ -609,16 +724,6 @@
     "items": [
       {
         "prev_id": -1,
-        "id": 4212,
-        "next_id": 4213
-      },
-      {
-        "prev_id": 4212,
-        "id": 4213,
-        "next_id": 4214
-      },
-      {
-        "prev_id": 4213,
         "id": 4214,
         "next_id": 4215
       },
@@ -665,7 +770,62 @@
       {
         "prev_id": 4222,
         "id": 4223,
-        "next_id": -1
+        "next_id": 4207
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_SHIELD",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4225,
+        "next_id": 4226
+      },
+      {
+        "prev_id": 4225,
+        "id": 4226,
+        "next_id": 4227
+      },
+      {
+        "prev_id": 4226,
+        "id": 4227,
+        "next_id": 4228
+      },
+      {
+        "prev_id": 4227,
+        "id": 4228,
+        "next_id": 4229
+      },
+      {
+        "prev_id": 4228,
+        "id": 4229,
+        "next_id": 4230
+      },
+      {
+        "prev_id": 4229,
+        "id": 4230,
+        "next_id": 4231
+      },
+      {
+        "prev_id": 4230,
+        "id": 4231,
+        "next_id": 4232
+      },
+      {
+        "prev_id": 4231,
+        "id": 4232,
+        "next_id": 4233
+      },
+      {
+        "prev_id": 4232,
+        "id": 4233,
+        "next_id": 4234
+      },
+      {
+        "prev_id": 4233,
+        "id": 4234,
+        "next_id": 4207
       }
     ]
   }

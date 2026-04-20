@@ -18,14 +18,14 @@ class NpcCombatReceiver {
      *
      * Defaults to the NPC's standard combat attack when no custom attack hook is registered.
      */
-    var attack: AttackCombatHookReceiver.() -> CombatAttack<out Npc> = { default() }
+    var attack: NpcAttackCombatHookReceiver.() -> CombatAttack<out Npc> = { default() }
 
     /**
      * Defence hook callback.
      *
      * Defaults to a no-op when no custom defence hook is registered.
      */
-    var defend: DefenceCombatHookReceiver.() -> Unit = { }
+    var defend: NpcDefenceCombatHookReceiver.() -> Unit = { }
 
     /**
      * Registers the attack hook for this NPC combat receiver.
@@ -34,7 +34,7 @@ class NpcCombatReceiver {
      *
      * @param attackSupplier The callback that produces the attack to execute.
      */
-    fun attack(attackSupplier: AttackCombatHookReceiver.() -> CombatAttack<out Npc>) {
+    fun attack(attackSupplier: NpcAttackCombatHookReceiver.() -> CombatAttack<out Npc>) {
         attack = attackSupplier
     }
 
@@ -46,7 +46,7 @@ class NpcCombatReceiver {
      *
      * @param action The callback to execute when the NPC defends against an attack.
      */
-    fun defend(action: DefenceCombatHookReceiver.() -> Unit) {
+    fun defend(action: NpcDefenceCombatHookReceiver.() -> Unit) {
         defend = action
     }
 }

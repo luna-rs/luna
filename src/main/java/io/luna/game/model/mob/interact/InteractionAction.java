@@ -3,6 +3,7 @@ package io.luna.game.model.mob.interact;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
+import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent;
@@ -13,7 +14,6 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 
 import java.util.ArrayList;
@@ -179,12 +179,15 @@ public final class InteractionAction extends Action<Player> {
         }
 
         if (!pending.isEmpty()) {
-            boolean combatEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
-                    event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent;
-            onReached(target instanceof Mob, combatEvent, trigger, pending);
+            boolean instantEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
+                    event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent || event instanceof PickupItemEvent;
+            onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
-        } else if (mob.getWalking().isEmpty()) {
+        } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
             onStanding();
+            return true;
+        } else if (listeners.isEmpty()) {
+            mob.sendMessage("Nothing interesting happens.");
             return true;
         }
         return false;
@@ -201,7 +204,7 @@ public final class InteractionAction extends Action<Player> {
      * @param pending The listeners to execute once the interaction is finalized.
      */
     private void onReached(boolean isMob, boolean combatEvent, InteractionPolicy trigger, List<InteractionActionListener> pending) {
-        boolean moved = moveBeforeInteract(isMob, combatEvent, trigger);
+        boolean moved = moveBeforeInteract(isMob, trigger);
 
         if (getState() == ActionState.INTERRUPTED) {
             // We're immobilized but need movement to interact, end the action and short-circuit.
@@ -224,15 +227,12 @@ public final class InteractionAction extends Action<Player> {
      * This only applies to close {@link InteractionType#SIZE} interactions with distance {@code 1} against mobs or
      * size-{@code 1} entities. In that case, diagonal adjacency may be corrected by stepping to a cardinal tile, and
      * standing on the same tile may be corrected by stepping away.
-     * <p>
-     * For NPC interactions, an {@link NpcFocusAction} is also submitted so the NPC keeps facing and tracking the
-     * player during the interaction.
      *
      * @param isMob {@code true} if the target is a {@link Mob}.
      * @param trigger The interaction policy that triggered the reach.
      * @return {@code true} if corrective movement was started, otherwise {@code false}.
      */
-    private boolean moveBeforeInteract(boolean isMob, boolean combatEvent, InteractionPolicy trigger) {
+    private boolean moveBeforeInteract(boolean isMob, InteractionPolicy trigger) {
         boolean moved = false;
         if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
@@ -261,12 +261,6 @@ public final class InteractionAction extends Action<Player> {
                  */
                 mob.getNavigator().stepRandom(false);
                 moved = true;
-            }
-
-            if (target instanceof Npc && !combatEvent) {
-                // If target is a NPC, make them look at and track the player.
-                Npc npc = (Npc) target;
-                npc.submitAction(new NpcFocusAction(npc, mob));
             }
         }
         return moved;
