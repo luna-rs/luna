@@ -2,9 +2,8 @@ package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
+import io.luna.Luna;
 import io.luna.game.model.chunk.Chunk;
-
-import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -58,11 +57,6 @@ public final class Position implements Locatable {
     private final int z;
 
     /**
-     * Setting this to true causes the Position to be extra careful with its internal state, making it easier to catch bugs
-     */
-    private static boolean debug = false;
-
-    /**
      * Creates a new {@link Position}.
      *
      * @param x The x coordinate.
@@ -71,7 +65,7 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        if (debug) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
             checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
         }
         this.x = x;
@@ -334,14 +328,5 @@ public final class Position implements Locatable {
      */
     public Position setZ(int newZ) {
         return new Position(x, y, newZ);
-    }
-
-    /**
-     * Sets the debug flag for all {@link Position} instances.
-     *
-     * @param debug The new debug flag.
-     */
-    public static void setDebug(boolean debug) {
-        Position.debug = debug;
     }
 }
