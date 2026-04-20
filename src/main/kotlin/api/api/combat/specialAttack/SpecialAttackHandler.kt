@@ -65,7 +65,7 @@ object SpecialAttackHandler {
      * @param damageType The combat damage type used by this special attack.
      * @param instant `true` if this special should behave as an instant special attack.
      * @param attackBonus A flat bonus applied to the special attack's accuracy.
-     * @param damageBonus A percentage-based bonus applied to damage.
+     * @param strengthBonus A percentage-based bonus applied to damage.
      * @param maxHit An optional base max-hit override.
      * @param action The DSL block used to configure the special attack.
      */
@@ -74,10 +74,18 @@ object SpecialAttackHandler {
                damageType: CombatDamageType = CombatDamageType.MELEE,
                instant: Boolean = false,
                attackBonus: Double = 0.0,
+               strengthBonus: Double = 0.0,
                damageBonus: Double = 0.0,
                maxHit: Int? = null,
                action: SpecialAttackDataReceiver.() -> Unit) {
-        val receiver = SpecialAttackDataReceiver(drain, damageType, instant, attackBonus, damageBonus, maxHit, false)
+        val receiver = SpecialAttackDataReceiver(drain,
+                                                 damageType,
+                                                 instant,
+                                                 attackBonus,
+                                                 strengthBonus,
+                                                 damageBonus,
+                                                 maxHit,
+                                                 false)
         action(receiver)
         specialAttacks[type] = receiver
     }

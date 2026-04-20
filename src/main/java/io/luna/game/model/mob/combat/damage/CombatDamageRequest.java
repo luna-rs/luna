@@ -207,6 +207,7 @@ public final class CombatDamageRequest {
         private boolean ignoreProtectionPrayers;
         private double flatBonusAccuracy;
         private double percentBonusDamage;
+        private double percentBonusStrength;
         private int flatBonusDamage;
         private int flatBonusMaxHit;
         private boolean damageDisabled;
@@ -301,7 +302,18 @@ public final class CombatDamageRequest {
             percentBonusDamage = percentAmount;
             return this;
         }
-
+        /**
+         * Sets a percentage-based strength modifier.
+         * <p>
+         * Positive values increase potential max hit, while negative values reduce it.
+         *
+         * @param percentAmount The percentage-based damage modifier to apply.
+         * @return This builder.
+         */
+        public Builder setPercentBonusStrength(double percentAmount) {
+            percentBonusStrength = percentAmount;
+            return this;
+        }
         /**
          * Sets a flat damage modifier.
          * <p>
@@ -346,7 +358,8 @@ public final class CombatDamageRequest {
          */
         public CombatDamageRequest build() {
             return new CombatDamageRequest(attacker, victim, type, accuracy, maxHit, ignoreProtectionPrayers,
-                    flatBonusAccuracy, percentBonusDamage, flatBonusDamage, flatBonusMaxHit, damageDisabled);
+                    flatBonusAccuracy, percentBonusDamage, percentBonusStrength, flatBonusDamage, flatBonusMaxHit,
+                    damageDisabled);
         }
     }
 
@@ -358,6 +371,7 @@ public final class CombatDamageRequest {
     final boolean ignoreProtectionPrayers;
     final double flatBonusAccuracy;
     final double percentBonusDamage;
+    final double percentBonusStrength;
     final int flatBonusDamage;
     final int flatBonusMaxHit;
     final boolean damageDisabled;
@@ -367,7 +381,8 @@ public final class CombatDamageRequest {
      */
     private CombatDamageRequest(Mob attacker, Mob victim, CombatDamageType type, OptionalDouble accuracy,
                                 OptionalInt maxHit, boolean ignoreProtectionPrayers, double flatBonusAccuracy,
-                                double percentBonusDamage, int flatBonusDamage, int flatBonusMaxHit, boolean damageDisabled) {
+                                double percentBonusDamage, double percentBonusStrength, int flatBonusDamage,
+                                int flatBonusMaxHit, boolean damageDisabled) {
         this.attacker = attacker;
         this.victim = victim;
         this.type = type;
@@ -376,6 +391,7 @@ public final class CombatDamageRequest {
         this.ignoreProtectionPrayers = ignoreProtectionPrayers;
         this.flatBonusAccuracy = flatBonusAccuracy;
         this.percentBonusDamage = percentBonusDamage;
+        this.percentBonusStrength = percentBonusStrength;
         this.flatBonusDamage = flatBonusDamage;
         this.flatBonusMaxHit = flatBonusMaxHit;
         this.damageDisabled = damageDisabled;
@@ -404,6 +420,7 @@ public final class CombatDamageRequest {
             if (RandomUtils.roll(baseAccuracy)) {
                 int baseMaxHit = maxHit.orElse(attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
+                baseMaxHit += (int) Math.floor(baseMaxHit * percentBonusStrength);
 
                 int damage = baseMaxHit < 1 ? 0 : RandomUtils.inclusive(baseMaxHit);
                 damage = applyPrayer(damage);
