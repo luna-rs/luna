@@ -93,6 +93,14 @@ public final class WeaponTypeDefinition implements Definition {
     private final int line;
 
     /**
+     * The default model and animation metadata used by this weapon type.
+     * <p>
+     * This provides the fallback appearance and animation definition associated with the weapon type when no specific
+     * override is being used.
+     */
+    private final WeaponModelAnimationDefinition model;
+
+    /**
      * The selectable combat styles for this weapon type.
      */
     private final List<CombatStyleDefinition> styles;
@@ -103,32 +111,23 @@ public final class WeaponTypeDefinition implements Definition {
     private final WeaponSpecialBarDefinition special;
 
     /**
-     * The default model and animation metadata used by this weapon type.
-     * <p>
-     * This provides the fallback appearance and animation definition associated with the weapon type when no specific
-     * override is being used.
-     */
-    private final WeaponModelAnimationDefinition defaultModel;
-
-    /**
      * Creates a new {@link WeaponTypeDefinition}.
      *
      * @param type The weapon type this definition belongs to.
      * @param id The interface id for this weapon type.
      * @param line The interface line used for combat style display.
+     * @param model The default model metadata for this weapon type.
      * @param styles The selectable combat styles for this weapon type.
      * @param special The special attack bar metadata, or {@code null} if none exists.
-     * @param defaultModel The default model metadata for this weapon type.
      */
-    public WeaponTypeDefinition(Weapon type, int id, int line, List<CombatStyleDefinition> styles,
-                                WeaponSpecialBarDefinition special,
-                                WeaponModelAnimationDefinition defaultModel) {
+    public WeaponTypeDefinition(Weapon type, int id, int line, WeaponModelAnimationDefinition model,
+                                List<CombatStyleDefinition> styles, WeaponSpecialBarDefinition special) {
         this.type = type;
         this.id = id;
         this.line = line;
+        this.model = model;
         this.styles = styles;
         this.special = special;
-        this.defaultModel = defaultModel;
     }
 
     @Override
@@ -151,6 +150,13 @@ public final class WeaponTypeDefinition implements Definition {
     }
 
     /**
+     * @return The default model and animation definition.
+     */
+    public WeaponModelAnimationDefinition getModel() {
+        return model;
+    }
+
+    /**
      * @return The combat styles.
      */
     public List<CombatStyleDefinition> getStyles() {
@@ -162,12 +168,5 @@ public final class WeaponTypeDefinition implements Definition {
      */
     public WeaponSpecialBarDefinition getSpecial() {
         return special;
-    }
-
-    /**
-     * @return The default model and animation definition.
-     */
-    public WeaponModelAnimationDefinition getDefaultModel() {
-        return defaultModel;
     }
 }

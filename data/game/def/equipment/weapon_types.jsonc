@@ -1,13 +1,23 @@
+/*
+  Holds data for all weapon interfaces and their combat styles.
+  The "model", "attack_animation", and "defence_animation" properties can be overridden using "weapon_animations.jsonc"
+ */
 [
   {
     "type": "STAFF",
     "id": 328,
     "line": 331,
+    "model": {
+      "running": 1210,
+      "standing": 813,
+      "walking": 1146
+    },
     "styles": [
       {
         "type": "STAFF_BASH",
         "speed": 5,
-        "animation": 406,
+        "attack_animation": 414,
+        "defence_animation": 415,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
         "button": 336,
@@ -20,7 +30,8 @@
       {
         "type": "STAFF_POUND",
         "speed": 5,
-        "animation": 406,
+        "attack_animation": 414,
+        "defence_animation": 415,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
         "button": 335,
@@ -33,7 +44,8 @@
       {
         "type": "STAFF_FOCUS",
         "speed": 5,
-        "animation": 406,
+        "attack_animation": 414,
+        "defence_animation": 415,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 334,
@@ -43,12 +55,7 @@
           "DEFENCE"
         ]
       }
-    ],
-    "default_model": {
-      "running": 1210,
-      "standing": 809,
-      "walking": 1146
-    }
+    ]
   },
   {
     "type": "WARHAMMER",
@@ -58,7 +65,8 @@
       {
         "type": "WARHAMMER_POUND",
         "speed": 6,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 403,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
         "button": 433,
@@ -71,7 +79,8 @@
       {
         "type": "WARHAMMER_PUMMEL",
         "speed": 6,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 403,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
         "button": 432,
@@ -84,7 +93,8 @@
       {
         "type": "WARHAMMER_BLOCK",
         "speed": 6,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 403,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 431,
@@ -98,22 +108,23 @@
     "special": {
       "bar": 7474,
       "meter": 7486
-    },
-    "default_model": {
-      "running": 1664,
-      "standing": 1662,
-      "walking": 1663
     }
   },
   {
     "type": "SCYTHE",
     "id": 776,
     "line": 779,
+    "model": {
+      "standing": 847,
+      "walking": 819,
+      "running": 824
+    },
     "styles": [
       {
         "type": "SCYTHE_REAP",
         "speed": 6,
-        "animation": 408,
+        "attack_animation": 437,
+        "defence_animation": 435,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 782,
@@ -126,7 +137,8 @@
       {
         "type": "SCYTHE_CHOP",
         "speed": 6,
-        "animation": 451,
+        "attack_animation": 451,
+        "defence_animation": 435,
         "config": 1,
         "bonus": "STAB_ATTACK",
         "button": 785,
@@ -139,7 +151,8 @@
       {
         "type": "SCYTHE_JAB",
         "speed": 6,
-        "animation": 412,
+        "attack_animation": 451,
+        "defence_animation": 435,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 784,
@@ -152,7 +165,8 @@
       {
         "type": "SCYTHE_BLOCK",
         "speed": 6,
-        "animation": 408,
+        "attack_animation": 440,
+        "defence_animation": 435,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 783,
@@ -172,7 +186,8 @@
       {
         "type": "BATTLEAXE_CHOP",
         "speed": 6,
-        "animation": 1833,
+        "attack_animation": 1833,
+        "defence_animation": 398,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 1704,
@@ -185,7 +200,8 @@
       {
         "type": "BATTLEAXE_HACK",
         "speed": 6,
-        "animation": 1833,
+        "attack_animation": 1833,
+        "defence_animation": 398,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 1707,
@@ -198,7 +214,8 @@
       {
         "type": "BATTLEAXE_SMASH",
         "speed": 6,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 398,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 1706,
@@ -211,7 +228,8 @@
       {
         "type": "BATTLEAXE_BLOCK",
         "speed": 6,
-        "animation": 1833,
+        "attack_animation": 1833,
+        "defence_animation": 398,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 1705,
@@ -225,22 +243,23 @@
     "special": {
       "bar": 7499,
       "meter": 7511
-    },
-    "default_model": {
-      "running": 1664,
-      "standing": 2065,
-      "walking": 1663
     }
   },
   {
     "type": "CROSSBOW",
     "id": 1749,
     "line": 1752,
+    "model": {
+      "running": 2077,
+      "standing": 2074,
+      "walking": 2076
+    },
     "styles": [
       {
         "type": "CROSSBOW_ACCURATE",
         "speed": 6,
-        "animation": 427,
+        "attack_animation": 427,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 1757,
@@ -253,7 +272,8 @@
       {
         "type": "CROSSBOW_RAPID",
         "speed": 5,
-        "animation": 427,
+        "attack_animation": 427,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 1756,
@@ -266,7 +286,8 @@
       {
         "type": "CROSSBOW_LONGRANGE",
         "speed": 6,
-        "animation": 427,
+        "attack_animation": 427,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 1755,
@@ -281,22 +302,23 @@
     "special": {
       "bar": 7524,
       "meter": 7536
-    },
-    "default_model": {
-      "running": 2077,
-      "standing": 2074,
-      "walking": 2076
     }
   },
   {
     "type": "SHORTBOW",
     "id": 1764,
     "line": 1767,
+    "model": {
+      "running": 824,
+      "standing": 808,
+      "walking": 819
+    },
     "styles": [
       {
         "type": "SHORTBOW_ACCURATE",
         "speed": 4,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 1772,
@@ -309,7 +331,8 @@
       {
         "type": "SHORTBOW_RAPID",
         "speed": 3,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 1771,
@@ -322,7 +345,8 @@
       {
         "type": "SHORTBOW_LONGRANGE",
         "speed": 4,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 1770,
@@ -337,22 +361,23 @@
     "special": {
       "bar": 7549,
       "meter": 7561
-    },
-    "default_model": {
-      "running": 824,
-      "standing": 808,
-      "walking": 819
     }
   },
   {
     "type": "LONGBOW",
     "id": 1764,
     "line": 1767,
+    "model": {
+      "running": 824,
+      "standing": 808,
+      "walking": 819
+    },
     "styles": [
       {
         "type": "LONGBOW_ACCURATE",
         "speed": 6,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 1772,
@@ -365,7 +390,8 @@
       {
         "type": "LONGBOW_RAPID",
         "speed": 5,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 1771,
@@ -378,7 +404,8 @@
       {
         "type": "LONGBOW_LONGRANGE",
         "speed": 6,
-        "animation": 426,
+        "attack_animation": 426,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 1770,
@@ -393,11 +420,6 @@
     "special": {
       "bar": 7549,
       "meter": 7561
-    },
-    "default_model": {
-      "running": 824,
-      "standing": 808,
-      "walking": 819
     }
   },
   {
@@ -408,7 +430,8 @@
       {
         "type": "DAGGER_STAB",
         "speed": 4,
-        "animation": 400,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 0,
         "bonus": "STAB_ATTACK",
         "button": 2282,
@@ -421,7 +444,8 @@
       {
         "type": "DAGGER_LUNGE",
         "speed": 4,
-        "animation": 400,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 1,
         "bonus": "STAB_ATTACK",
         "button": 2285,
@@ -434,7 +458,8 @@
       {
         "type": "DAGGER_SLASH",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 451,
+        "defence_animation": 404,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 2284,
@@ -447,7 +472,8 @@
       {
         "type": "DAGGER_BLOCK",
         "speed": 4,
-        "animation": 400,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 3,
         "bonus": "STAB_ATTACK",
         "button": 2283,
@@ -471,7 +497,8 @@
       {
         "type": "SWORD_STAB",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 386,
+        "defence_animation": 388,
         "config": 0,
         "bonus": "STAB_ATTACK",
         "button": 2282,
@@ -484,7 +511,8 @@
       {
         "type": "SWORD_LUNGE",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 386,
+        "defence_animation": 388,
         "config": 1,
         "bonus": "STAB_ATTACK",
         "button": 2285,
@@ -497,7 +525,8 @@
       {
         "type": "SWORD_SLASH",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 2,
         "bonus": "SLASH_ATTACK",
         "button": 2284,
@@ -510,7 +539,8 @@
       {
         "type": "SWORD_BLOCK",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 3,
         "bonus": "STAB_ATTACK",
         "button": 2283,
@@ -534,7 +564,8 @@
       {
         "type": "SCIMITAR_CHOP",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 2429,
@@ -547,7 +578,8 @@
       {
         "type": "SCIMITAR_SLASH",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 2432,
@@ -560,7 +592,8 @@
       {
         "type": "SCIMITAR_LUNGE",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 386,
+        "defence_animation": 388,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 2431,
@@ -573,7 +606,8 @@
       {
         "type": "SCIMITAR_BLOCK",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 2430,
@@ -597,7 +631,8 @@
       {
         "type": "SICKLE_CHOP",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 2429,
@@ -610,7 +645,8 @@
       {
         "type": "SICKLE_SLASH",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 2432,
@@ -623,7 +659,8 @@
       {
         "type": "SICKLE_LUNGE",
         "speed": 5,
-        "animation": 412,
+        "attack_animation": 386,
+        "defence_animation": 388,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 2431,
@@ -636,7 +673,8 @@
       {
         "type": "SICKLE_BLOCK",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 2430,
@@ -656,11 +694,17 @@
     "type": "LONGSWORD",
     "id": 2423,
     "line": 2426,
+    "model": {
+      "running": -1,
+      "standing": 809,
+      "walking": -1
+    },
     "styles": [
       {
         "type": "LONGSWORD_CHOP",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 2429,
@@ -673,7 +717,8 @@
       {
         "type": "LONGSWORD_SLASH",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 2432,
@@ -686,7 +731,8 @@
       {
         "type": "LONGSWORD_LUNGE",
         "speed": 5,
-        "animation": 412,
+        "attack_animation": 386,
+        "defence_animation": 388,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 2431,
@@ -699,7 +745,8 @@
       {
         "type": "LONGSWORD_BLOCK",
         "speed": 5,
-        "animation": 451,
+        "attack_animation": 390,
+        "defence_animation": 388,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 2430,
@@ -713,11 +760,6 @@
     "special": {
       "bar": 7599,
       "meter": 7611
-    },
-    "default_model": {
-      "running": -1,
-      "standing": 809,
-      "walking": -1
     }
   },
   {
@@ -728,7 +770,8 @@
       {
         "type": "MACE_POUND",
         "speed": 4,
-        "animation": 1833,
+        "attack_animation": 401,
+        "defence_animation": 404,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
         "button": 3802,
@@ -741,7 +784,8 @@
       {
         "type": "MACE_PUMMEL",
         "speed": 4,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 404,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
         "button": 3805,
@@ -754,7 +798,8 @@
       {
         "type": "MACE_SPIKE",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 3804,
@@ -767,7 +812,8 @@
       {
         "type": "MACE_BLOCK",
         "speed": 4,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 404,
         "config": 3,
         "bonus": "CRUSH_ATTACK",
         "button": 3803,
@@ -791,7 +837,8 @@
       {
         "type": "KNIFE_ACCURATE",
         "speed": 3,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 4454,
@@ -804,7 +851,8 @@
       {
         "type": "KNIFE_RAPID",
         "speed": 2,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 4453,
@@ -817,7 +865,8 @@
       {
         "type": "KNIFE_LONGRANGE",
         "speed": 3,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 4452,
@@ -838,11 +887,17 @@
     "type": "SPEAR",
     "id": 4679,
     "line": 4682,
+    "model": {
+      "running": 1210,
+      "standing": 813,
+      "walking": 1146
+    },
     "styles": [
       {
         "type": "SPEAR_LUNGE",
         "speed": 4,
-        "animation": 2080,
+        "attack_animation": 381,
+        "defence_animation": 383,
         "config": 0,
         "bonus": "STAB_ATTACK",
         "button": 4685,
@@ -855,7 +910,8 @@
       {
         "type": "SPEAR_SWIPE",
         "speed": 4,
-        "animation": 2081,
+        "attack_animation": 380,
+        "defence_animation": 383,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 4688,
@@ -868,7 +924,8 @@
       {
         "type": "SPEAR_POUND",
         "speed": 4,
-        "animation": 2082,
+        "attack_animation": 382,
+        "defence_animation": 383,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 4687,
@@ -881,7 +938,8 @@
       {
         "type": "SPEAR_BLOCK",
         "speed": 4,
-        "animation": 2080,
+        "attack_animation": 381,
+        "defence_animation": 383,
         "config": 3,
         "bonus": "STAB_ATTACK",
         "button": 4686,
@@ -901,11 +959,17 @@
     "type": "TWO_HANDED_SWORD",
     "id": 4705,
     "line": 4708,
+    "model": {
+      "running": 2563,
+      "standing": 2561,
+      "walking": 2064
+    },
     "styles": [
       {
         "type": "TWO_HANDED_SWORD_CHOP",
         "speed": 7,
-        "animation": 407,
+        "attack_animation": 407,
+        "defence_animation": 411,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 4711,
@@ -918,7 +982,8 @@
       {
         "type": "TWO_HANDED_SWORD_SLASH",
         "speed": 7,
-        "animation": 407,
+        "attack_animation": 407,
+        "defence_animation": 411,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 4714,
@@ -931,7 +996,8 @@
       {
         "type": "TWO_HANDED_SWORD_SMASH",
         "speed": 7,
-        "animation": 406,
+        "attack_animation": 406,
+        "defence_animation": 411,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 4713,
@@ -944,7 +1010,8 @@
       {
         "type": "TWO_HANDED_SWORD_BLOCK",
         "speed": 7,
-        "animation": 407,
+        "attack_animation": 407,
+        "defence_animation": 411,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 4712,
@@ -958,11 +1025,6 @@
     "special": {
       "bar": 7699,
       "meter": 7711
-    },
-    "default_model": {
-      "running": 2563,
-      "standing": 2561,
-      "walking": 2064
     }
   },
   {
@@ -973,7 +1035,8 @@
       {
         "type": "PICKAXE_SPIKE",
         "speed": 5,
-        "animation": 412,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 0,
         "bonus": "STAB_ATTACK",
         "button": 5576,
@@ -986,7 +1049,8 @@
       {
         "type": "PICKAXE_IMPALE",
         "speed": 5,
-        "animation": 412,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 1,
         "bonus": "STAB_ATTACK",
         "button": 5579,
@@ -999,7 +1063,8 @@
       {
         "type": "PICKAXE_SMASH",
         "speed": 5,
-        "animation": 401,
+        "attack_animation": 401,
+        "defence_animation": 404,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 5578,
@@ -1012,7 +1077,8 @@
       {
         "type": "PICKAXE_BLOCK",
         "speed": 5,
-        "animation": 412,
+        "attack_animation": 400,
+        "defence_animation": 404,
         "config": 3,
         "bonus": "STAB_ATTACK",
         "button": 5577,
@@ -1032,7 +1098,8 @@
       {
         "type": "CLAWS_CHOP",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 451,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 7768,
@@ -1045,7 +1112,8 @@
       {
         "type": "CLAWS_SLASH",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 451,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 7771,
@@ -1058,7 +1126,8 @@
       {
         "type": "CLAWS_LUNGE",
         "speed": 4,
-        "animation": 412,
+        "attack_animation": 412,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 7770,
@@ -1071,7 +1140,8 @@
       {
         "type": "CLAWS_BLOCK",
         "speed": 4,
-        "animation": 451,
+        "attack_animation": 451,
+        "defence_animation": -1,
         "config": 3,
         "bonus": "SLASH_ATTACK",
         "button": 7769,
@@ -1085,22 +1155,23 @@
     "special": {
       "bar": 7800,
       "meter": 7812
-    },
-    "default_model": {
-      "running": -1,
-      "standing": 3677,
-      "walking": 3680
     }
   },
   {
     "type": "HALBERD",
     "id": 8460,
     "line": 8463,
+    "model": {
+      "running": 1210,
+      "standing": 809,
+      "walking": 1146
+    },
     "styles": [
       {
         "type": "HALBERD_JAB",
         "speed": 7,
-        "animation": 412,
+        "attack_animation": 412,
+        "defence_animation": 415,
         "config": 0,
         "bonus": "STAB_ATTACK",
         "button": 8466,
@@ -1113,7 +1184,8 @@
       {
         "type": "HALBERD_SWIPE",
         "speed": 7,
-        "animation": 440,
+        "attack_animation": 440,
+        "defence_animation": 415,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 8468,
@@ -1126,7 +1198,8 @@
       {
         "type": "HALBERD_FEND",
         "speed": 7,
-        "animation": 412,
+        "attack_animation": 412,
+        "defence_animation": 415,
         "config": 2,
         "bonus": "STAB_ATTACK",
         "button": 8467,
@@ -1140,11 +1213,6 @@
     "special": {
       "bar": 8493,
       "meter": 8505
-    },
-    "default_model": {
-      "running": 1210,
-      "standing": 809,
-      "walking": 1146
     }
   },
   {
@@ -1155,7 +1223,8 @@
       {
         "type": "UNARMED_PUNCH",
         "speed": 4,
-        "animation": 422,
+        "attack_animation": 422,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
         "button": 5860,
@@ -1168,7 +1237,8 @@
       {
         "type": "UNARMED_KICK",
         "speed": 4,
-        "animation": 423,
+        "attack_animation": 423,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
         "button": 5862,
@@ -1181,7 +1251,8 @@
       {
         "type": "UNARMED_BLOCK",
         "speed": 4,
-        "animation": 422,
+        "attack_animation": 422,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
         "button": 5861,
@@ -1197,11 +1268,17 @@
     "type": "WHIP",
     "id": 12290,
     "line": 12293,
+    "model": {
+      "running": 1831,
+      "standing": 1832,
+      "walking": 1830
+    },
     "styles": [
       {
         "type": "WHIP_FLICK",
         "speed": 4,
-        "animation": 1658,
+        "attack_animation": 1658,
+        "defence_animation": 1659,
         "config": 0,
         "bonus": "SLASH_ATTACK",
         "button": 12298,
@@ -1214,7 +1291,8 @@
       {
         "type": "WHIP_LASH",
         "speed": 4,
-        "animation": 1658,
+        "attack_animation": 1658,
+        "defence_animation": 1659,
         "config": 1,
         "bonus": "SLASH_ATTACK",
         "button": 12297,
@@ -1227,7 +1305,8 @@
       {
         "type": "WHIP_DEFLECT",
         "speed": 4,
-        "animation": 1658,
+        "attack_animation": 1658,
+        "defence_animation": 1659,
         "config": 2,
         "bonus": "SLASH_ATTACK",
         "button": 12296,
@@ -1241,11 +1320,6 @@
     "special": {
       "bar": 12323,
       "meter": 12335
-    },
-    "default_model": {
-      "running": 1831,
-      "standing": 1832,
-      "walking": 1830
     }
   },
   {
@@ -1256,7 +1330,8 @@
       {
         "type": "THROWN_AXE_ACCURATE",
         "speed": 5,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 4454,
@@ -1269,7 +1344,8 @@
       {
         "type": "THROWN_AXE_RAPID",
         "speed": 5,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 4453,
@@ -1282,7 +1358,8 @@
       {
         "type": "THROWN_AXE_LONGRANGE",
         "speed": 5,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 4452,
@@ -1307,7 +1384,8 @@
       {
         "type": "DART_ACCURATE",
         "speed": 3,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 4454,
@@ -1320,7 +1398,8 @@
       {
         "type": "DART_RAPID",
         "speed": 2,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 1,
         "bonus": "RANGED_ATTACK",
         "button": 4453,
@@ -1333,7 +1412,8 @@
       {
         "type": "DART_LONGRANGE",
         "speed": 3,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 4452,
@@ -1358,7 +1438,8 @@
       {
         "type": "JAVELIN_ACCURATE",
         "speed": 6,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 0,
         "bonus": "RANGED_ATTACK",
         "button": 4454,
@@ -1371,7 +1452,8 @@
       {
         "type": "JAVELIN_RAPID",
         "speed": 5,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 2,
         "bonus": "RANGED_ATTACK",
         "button": 4453,
@@ -1384,7 +1466,8 @@
       {
         "type": "JAVELIN_LONGRANGE",
         "speed": 6,
-        "animation": 806,
+        "attack_animation": 806,
+        "defence_animation": -1,
         "config": 3,
         "bonus": "RANGED_ATTACK",
         "button": 4452,

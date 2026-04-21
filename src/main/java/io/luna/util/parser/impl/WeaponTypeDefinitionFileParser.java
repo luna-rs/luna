@@ -45,7 +45,7 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
      * Creates a new {@link WeaponTypeDefinitionFileParser}.
      */
     public WeaponTypeDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "weapon_types.json"));
+        super(Paths.get("data", "game", "def", "equipment", "weapon_types.jsonc"));
     }
 
     @Override
@@ -53,13 +53,15 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
         Weapon weaponType = Weapon.valueOf(token.get("type").getAsString());
         int id = token.get("id").getAsInt();
         int line = token.get("line").getAsInt();
+        WeaponModelAnimationDefinition model = token.has("model") ? readModel(token.get("model").getAsJsonObject()) : null;
         JsonArray jsonStyles = token.get("styles").getAsJsonArray();
         List<CombatStyleDefinition> styles = new ArrayList<>(jsonStyles.size());
         for (JsonElement element : jsonStyles) {
             JsonObject obj = element.getAsJsonObject();
             CombatStyle styleType = CombatStyle.valueOf(obj.get("type").getAsString());
             int speed = obj.get("speed").getAsInt();
-            int animation = obj.get("animation").getAsInt();
+            int attackAnimation = obj.get("attack_animation").getAsInt();
+            int defenceAnimation = obj.get("defence_animation").getAsInt();
             int config = obj.get("config").getAsInt();
             EquipmentBonus bonus = EquipmentBonus.valueOf(obj.get("bonus").getAsString());
             int button = obj.has("button") ? obj.get("button").getAsInt() : -1;
@@ -67,11 +69,11 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             int range = obj.get("range").getAsInt();
             ImmutableList<Integer> exp = Arrays.stream(GsonUtils.getAsType(obj.get("exp"), String[].class)).
                     map(Skill::getId).collect(ImmutableList.toImmutableList());
-            styles.add(new CombatStyleDefinition(styleType, speed, animation, config, bonus, button, stance, range, exp));
+            styles.add(new CombatStyleDefinition(styleType, speed, attackAnimation, defenceAnimation, config, bonus,
+                    button, stance, range, exp));
         }
         WeaponSpecialBarDefinition specialBar = GsonUtils.getAsType(token.get("special"), WeaponSpecialBarDefinition.class);
-        WeaponModelAnimationDefinition model = token.has("model") ? readModel(token.get("model").getAsJsonObject()) : null;
-        return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar, model);
+        return new WeaponTypeDefinition(weaponType, id, line, model, styles, specialBar);
     }
 
     @Override
