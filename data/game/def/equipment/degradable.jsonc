@@ -1,0 +1,948 @@
+/*
+  This definition file is used for resolving degradable equipment data.
+
+  "type" allows for controlling how the equipment is degraded, as well as signifying the type of degradable equipment.
+  "prev_id" being -1 signifies the initial item in a chain.
+*/
+[
+  {
+    "type": "AHRIMS_HOOD",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4708, // Ahrims hood
+        "next_id": 4856 // Ahrims hood 100
+      },
+      {
+        "prev_id": 4708, // Ahrims hood
+        "id": 4856, // Ahrims hood 100
+        "next_id": 4857 // Ahrims hood 75
+      },
+      {
+        "prev_id": 4856, // Ahrims hood 100
+        "id": 4857, // Ahrims hood 75
+        "next_id": 4858 // Ahrims hood 50
+      },
+      {
+        "prev_id": 4857, // Ahrims hood 75
+        "id": 4858, // Ahrims hood 50
+        "next_id": 4859 // Ahrims hood 25
+      },
+      {
+        "prev_id": 4858, // Ahrims hood 50
+        "id": 4859, // Ahrims hood 25
+        "next_id": 4860 // Ahrims hood 0
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_STAFF",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4710, // Ahrims staff
+        "next_id": 4862 // Ahrims staff 100
+      },
+      {
+        "prev_id": 4710, // Ahrims staff
+        "id": 4862, // Ahrims staff 100
+        "next_id": 4863 // Ahrims staff 75
+      },
+      {
+        "prev_id": 4862, // Ahrims staff 100
+        "id": 4863, // Ahrims staff 75
+        "next_id": 4864 // Ahrims staff 50
+      },
+      {
+        "prev_id": 4863, // Ahrims staff 75
+        "id": 4864, // Ahrims staff 50
+        "next_id": 4865 // Ahrims staff 25
+      },
+      {
+        "prev_id": 4864, // Ahrims staff 50
+        "id": 4865, // Ahrims staff 25
+        "next_id": 4866 // Ahrims staff 0
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_ROBETOP",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4712, // Ahrims robetop
+        "next_id": 4868 // Ahrims top 100
+      },
+      {
+        "prev_id": 4712, // Ahrims robetop
+        "id": 4868, // Ahrims top 100
+        "next_id": 4869 // Ahrims top 75
+      },
+      {
+        "prev_id": 4868, // Ahrims top 100
+        "id": 4869, // Ahrims top 75
+        "next_id": 4870 // Ahrims top 50
+      },
+      {
+        "prev_id": 4869, // Ahrims top 75
+        "id": 4870, // Ahrims top 50
+        "next_id": 4871 // Ahrims top 25
+      },
+      {
+        "prev_id": 4870, // Ahrims top 50
+        "id": 4871, // Ahrims top 25
+        "next_id": 4872 // Ahrims top 0
+      }
+    ]
+  },
+  {
+    "type": "AHRIMS_ROBESKIRT",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4714, // Ahrims robeskirt
+        "next_id": 4874 // Ahrims skirt 100
+      },
+      {
+        "prev_id": 4714, // Ahrims robeskirt
+        "id": 4874, // Ahrims skirt 100
+        "next_id": 4875 // Ahrims skirt 75
+      },
+      {
+        "prev_id": 4874, // Ahrims skirt 100
+        "id": 4875, // Ahrims skirt 75
+        "next_id": 4876 // Ahrims skirt 50
+      },
+      {
+        "prev_id": 4875, // Ahrims skirt 75
+        "id": 4876, // Ahrims skirt 50
+        "next_id": 4877 // Ahrims skirt 25
+      },
+      {
+        "prev_id": 4876, // Ahrims skirt 50
+        "id": 4877, // Ahrims skirt 25
+        "next_id": 4878 // Ahrims skirt 0
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_HELM",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4716, // Dharoks helm
+        "next_id": 4880 // Dharoks helm 100
+      },
+      {
+        "prev_id": 4716, // Dharoks helm
+        "id": 4880, // Dharoks helm 100
+        "next_id": 4881 // Dharoks helm 75
+      },
+      {
+        "prev_id": 4880, // Dharoks helm 100
+        "id": 4881, // Dharoks helm 75
+        "next_id": 4882 // Dharoks helm 50
+      },
+      {
+        "prev_id": 4881, // Dharoks helm 75
+        "id": 4882, // Dharoks helm 50
+        "next_id": 4883 // Dharoks helm 25
+      },
+      {
+        "prev_id": 4882, // Dharoks helm 50
+        "id": 4883, // Dharoks helm 25
+        "next_id": 4884 // Dharoks helm 0
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_GREATAXE",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4718, // Dharoks greataxe
+        "next_id": 4886 // Dharoks axe 100
+      },
+      {
+        "prev_id": 4718, // Dharoks greataxe
+        "id": 4886, // Dharoks axe 100
+        "next_id": 4887 // Dharoks axe 75
+      },
+      {
+        "prev_id": 4886, // Dharoks axe 100
+        "id": 4887, // Dharoks axe 75
+        "next_id": 4888 // Dharoks axe 50
+      },
+      {
+        "prev_id": 4887, // Dharoks axe 75
+        "id": 4888, // Dharoks axe 50
+        "next_id": 4889 // Dharoks axe 25
+      },
+      {
+        "prev_id": 4888, // Dharoks axe 50
+        "id": 4889, // Dharoks axe 25
+        "next_id": 4890 // Dharoks axe 0
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_PLATEBODY",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4720, // Dharoks platebody
+        "next_id": 4892 // Dharoks body 100
+      },
+      {
+        "prev_id": 4720, // Dharoks platebody
+        "id": 4892, // Dharoks body 100
+        "next_id": 4893 // Dharoks body 75
+      },
+      {
+        "prev_id": 4892, // Dharoks body 100
+        "id": 4893, // Dharoks body 75
+        "next_id": 4894 // Dharoks body 50
+      },
+      {
+        "prev_id": 4893, // Dharoks body 75
+        "id": 4894, // Dharoks body 50
+        "next_id": 4895 // Dharoks body 25
+      },
+      {
+        "prev_id": 4894, // Dharoks body 50
+        "id": 4895, // Dharoks body 25
+        "next_id": 4896 // Dharoks body 0
+      }
+    ]
+  },
+  {
+    "type": "DHAROKS_PLATELEGS",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4722, // Dharoks platelegs
+        "next_id": 4898 // Dharoks legs 100
+      },
+      {
+        "prev_id": 4722, // Dharoks platelegs
+        "id": 4898, // Dharoks legs 100
+        "next_id": 4899 // Dharoks legs 75
+      },
+      {
+        "prev_id": 4898, // Dharoks legs 100
+        "id": 4899, // Dharoks legs 75
+        "next_id": 4900 // Dharoks legs 50
+      },
+      {
+        "prev_id": 4899, // Dharoks legs 75
+        "id": 4900, // Dharoks legs 50
+        "next_id": 4901 // Dharoks legs 25
+      },
+      {
+        "prev_id": 4900, // Dharoks legs 50
+        "id": 4901, // Dharoks legs 25
+        "next_id": 4902 // Dharoks legs 0
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_HELM",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4724, // Guthans helm
+        "next_id": 4904 // Guthans helm 100
+      },
+      {
+        "prev_id": 4724, // Guthans helm
+        "id": 4904, // Guthans helm 100
+        "next_id": 4905 // Guthans helm 75
+      },
+      {
+        "prev_id": 4904, // Guthans helm 100
+        "id": 4905, // Guthans helm 75
+        "next_id": 4906 // Guthans helm 50
+      },
+      {
+        "prev_id": 4905, // Guthans helm 75
+        "id": 4906, // Guthans helm 50
+        "next_id": 4907 // Guthans helm 25
+      },
+      {
+        "prev_id": 4906, // Guthans helm 50
+        "id": 4907, // Guthans helm 25
+        "next_id": 4908 // Guthans helm 0
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_WARSPEAR",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4726, // Guthans warspear
+        "next_id": 4910 // Guthans spear 100
+      },
+      {
+        "prev_id": 4726, // Guthans warspear
+        "id": 4910, // Guthans spear 100
+        "next_id": 4911 // Guthans spear 75
+      },
+      {
+        "prev_id": 4910, // Guthans spear 100
+        "id": 4911, // Guthans spear 75
+        "next_id": 4912 // Guthans spear 50
+      },
+      {
+        "prev_id": 4911, // Guthans spear 75
+        "id": 4912, // Guthans spear 50
+        "next_id": 4913 // Guthans spear 25
+      },
+      {
+        "prev_id": 4912, // Guthans spear 50
+        "id": 4913, // Guthans spear 25
+        "next_id": 4914 // Guthans spear 0
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_PLATEBODY",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4728, // Guthans platebody
+        "next_id": 4916 // Guthans body 100
+      },
+      {
+        "prev_id": 4728, // Guthans platebody
+        "id": 4916, // Guthans body 100
+        "next_id": 4917 // Guthans body 75
+      },
+      {
+        "prev_id": 4916, // Guthans body 100
+        "id": 4917, // Guthans body 75
+        "next_id": 4918 // Guthans body 50
+      },
+      {
+        "prev_id": 4917, // Guthans body 75
+        "id": 4918, // Guthans body 50
+        "next_id": 4919 // Guthans body 25
+      },
+      {
+        "prev_id": 4918, // Guthans body 50
+        "id": 4919, // Guthans body 25
+        "next_id": 4920 // Guthans body 0
+      }
+    ]
+  },
+  {
+    "type": "GUTHANS_CHAINSKIRT",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4730, // Guthans chainskirt
+        "next_id": 4922 // Guthans skirt 100
+      },
+      {
+        "prev_id": 4730, // Guthans chainskirt
+        "id": 4922, // Guthans skirt 100
+        "next_id": 4923 // Guthans skirt 75
+      },
+      {
+        "prev_id": 4922, // Guthans skirt 100
+        "id": 4923, // Guthans skirt 75
+        "next_id": 4924 // Guthans skirt 50
+      },
+      {
+        "prev_id": 4923, // Guthans skirt 75
+        "id": 4924, // Guthans skirt 50
+        "next_id": 4925 // Guthans skirt 25
+      },
+      {
+        "prev_id": 4924, // Guthans skirt 50
+        "id": 4925, // Guthans skirt 25
+        "next_id": 4926 // Guthans skirt 0
+      }
+    ]
+  },
+  {
+    "type": "KARILS_COIF",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4732, // Karils coif
+        "next_id": 4928 // Karils coif 100
+      },
+      {
+        "prev_id": 4732, // Karils coif
+        "id": 4928, // Karils coif 100
+        "next_id": 4929 // Karils coif 75
+      },
+      {
+        "prev_id": 4928, // Karils coif 100
+        "id": 4929, // Karils coif 75
+        "next_id": 4930 // Karils coif 50
+      },
+      {
+        "prev_id": 4929, // Karils coif 75
+        "id": 4930, // Karils coif 50
+        "next_id": 4931 // Karils coif 25
+      },
+      {
+        "prev_id": 4930, // Karils coif 50
+        "id": 4931, // Karils coif 25
+        "next_id": 4932 // Karils coif 0
+      }
+    ]
+  },
+  {
+    "type": "KARILS_CROSSBOW",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4734, // Karils crossbow
+        "next_id": 4934 // Karils x-bow 100
+      },
+      {
+        "prev_id": 4734, // Karils crossbow
+        "id": 4934, // Karils x-bow 100
+        "next_id": 4935 // Karils x-bow 75
+      },
+      {
+        "prev_id": 4934, // Karils x-bow 100
+        "id": 4935, // Karils x-bow 75
+        "next_id": 4936 // Karils x-bow 50
+      },
+      {
+        "prev_id": 4935, // Karils x-bow 75
+        "id": 4936, // Karils x-bow 50
+        "next_id": 4937 // Karils x-bow 25
+      },
+      {
+        "prev_id": 4936, // Karils x-bow 50
+        "id": 4937, // Karils x-bow 25
+        "next_id": 4938 // Karils x-bow 0
+      }
+    ]
+  },
+  {
+    "type": "KARILS_LEATHERTOP",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4736, // Karils leathertop
+        "next_id": 4940 // Karils top 100
+      },
+      {
+        "prev_id": 4736, // Karils leathertop
+        "id": 4940, // Karils top 100
+        "next_id": 4941 // Karils top 75
+      },
+      {
+        "prev_id": 4940, // Karils top 100
+        "id": 4941, // Karils top 75
+        "next_id": 4942 // Karils top 50
+      },
+      {
+        "prev_id": 4941, // Karils top 75
+        "id": 4942, // Karils top 50
+        "next_id": 4943 // Karils top 25
+      },
+      {
+        "prev_id": 4942, // Karils top 50
+        "id": 4943, // Karils top 25
+        "next_id": 4944 // Karils top 0
+      }
+    ]
+  },
+  {
+    "type": "KARILS_LEATHERSKIRT",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4738, // Karils leatherskirt
+        "next_id": 4946 // Karils skirt 100
+      },
+      {
+        "prev_id": 4738, // Karils leatherskirt
+        "id": 4946, // Karils skirt 100
+        "next_id": 4947 // Karils skirt 75
+      },
+      {
+        "prev_id": 4946, // Karils skirt 100
+        "id": 4947, // Karils skirt 75
+        "next_id": 4948 // Karils skirt 50
+      },
+      {
+        "prev_id": 4947, // Karils skirt 75
+        "id": 4948, // Karils skirt 50
+        "next_id": 4949 // Karils skirt 25
+      },
+      {
+        "prev_id": 4948, // Karils skirt 50
+        "id": 4949, // Karils skirt 25
+        "next_id": 4950 // Karils skirt 0
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_HELM",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4745, // Torags helm
+        "next_id": 4952 // Torags helm 100
+      },
+      {
+        "prev_id": 4745, // Torags helm
+        "id": 4952, // Torags helm 100
+        "next_id": 4953 // Torags helm 75
+      },
+      {
+        "prev_id": 4952, // Torags helm 100
+        "id": 4953, // Torags helm 75
+        "next_id": 4954 // Torags helm 50
+      },
+      {
+        "prev_id": 4953, // Torags helm 75
+        "id": 4954, // Torags helm 50
+        "next_id": 4955 // Torags helm 25
+      },
+      {
+        "prev_id": 4954, // Torags helm 50
+        "id": 4955, // Torags helm 25
+        "next_id": 4956 // Torags helm 0
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_HAMMERS",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4747, // Torags hammers
+        "next_id": 4958 // Torags hammer 100
+      },
+      {
+        "prev_id": 4747, // Torags hammers
+        "id": 4958, // Torags hammer 100
+        "next_id": 4959 // Torags hammer 75
+      },
+      {
+        "prev_id": 4958, // Torags hammer 100
+        "id": 4959, // Torags hammer 75
+        "next_id": 4960 // Torags hammer 50
+      },
+      {
+        "prev_id": 4959, // Torags hammer 75
+        "id": 4960, // Torags hammer 50
+        "next_id": 4961 // Torags hammer 25
+      },
+      {
+        "prev_id": 4960, // Torags hammer 50
+        "id": 4961, // Torags hammer 25
+        "next_id": 4962 // Torags hammer 0
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_PLATEBODY",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4749, // Torags platebody
+        "next_id": 4964 // Torags body 100
+      },
+      {
+        "prev_id": 4749, // Torags platebody
+        "id": 4964, // Torags body 100
+        "next_id": 4965 // Torags body 75
+      },
+      {
+        "prev_id": 4964, // Torags body 100
+        "id": 4965, // Torags body 75
+        "next_id": 4966 // Torags body 50
+      },
+      {
+        "prev_id": 4965, // Torags body 75
+        "id": 4966, // Torags body 50
+        "next_id": 4967 // Torags body 25
+      },
+      {
+        "prev_id": 4966, // Torags body 50
+        "id": 4967, // Torags body 25
+        "next_id": 4968 // Torags body 0
+      }
+    ]
+  },
+  {
+    "type": "TORAGS_PLATELEGS",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4751, // Torags platelegs
+        "next_id": 4970 // Torags legs 100
+      },
+      {
+        "prev_id": 4751, // Torags platelegs
+        "id": 4970, // Torags legs 100
+        "next_id": 4971 // Torags legs 75
+      },
+      {
+        "prev_id": 4970, // Torags legs 100
+        "id": 4971, // Torags legs 75
+        "next_id": 4972 // Torags legs 50
+      },
+      {
+        "prev_id": 4971, // Torags legs 75
+        "id": 4972, // Torags legs 50
+        "next_id": 4973 // Torags legs 25
+      },
+      {
+        "prev_id": 4972, // Torags legs 50
+        "id": 4973, // Torags legs 25
+        "next_id": 4974 // Torags legs 0
+      }
+    ]
+  },
+  {
+    "type": "VERACS_HELM",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4753, // Veracs helm
+        "next_id": 4976 // Veracs helm 100
+      },
+      {
+        "prev_id": 4753, // Veracs helm
+        "id": 4976, // Veracs helm 100
+        "next_id": 4977 // Veracs helm 75
+      },
+      {
+        "prev_id": 4976, // Veracs helm 100
+        "id": 4977, // Veracs helm 75
+        "next_id": 4978 // Veracs helm 50
+      },
+      {
+        "prev_id": 4977, // Veracs helm 75
+        "id": 4978, // Veracs helm 50
+        "next_id": 4979 // Veracs helm 25
+      },
+      {
+        "prev_id": 4978, // Veracs helm 50
+        "id": 4979, // Veracs helm 25
+        "next_id": 4980 // Veracs helm 0
+      }
+    ]
+  },
+  {
+    "type": "VERACS_FLAIL",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4755, // Veracs flail
+        "next_id": 4982 // Veracs flail 100
+      },
+      {
+        "prev_id": 4755, // Veracs flail
+        "id": 4982, // Veracs flail 100
+        "next_id": 4983 // Veracs flail 75
+      },
+      {
+        "prev_id": 4982, // Veracs flail 100
+        "id": 4983, // Veracs flail 75
+        "next_id": 4984 // Veracs flail 50
+      },
+      {
+        "prev_id": 4983, // Veracs flail 75
+        "id": 4984, // Veracs flail 50
+        "next_id": 4985 // Veracs flail 25
+      },
+      {
+        "prev_id": 4984, // Veracs flail 50
+        "id": 4985, // Veracs flail 25
+        "next_id": 4986 // Veracs flail 0
+      }
+    ]
+  },
+  {
+    "type": "VERACS_BRASSARD",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4757, // Veracs brassard
+        "next_id": 4988 // Veracs top 100
+      },
+      {
+        "prev_id": 4757, // Veracs brassard
+        "id": 4988, // Veracs top 100
+        "next_id": 4989 // Veracs top 75
+      },
+      {
+        "prev_id": 4988, // Veracs top 100
+        "id": 4989, // Veracs top 75
+        "next_id": 4990 // Veracs top 50
+      },
+      {
+        "prev_id": 4989, // Veracs top 75
+        "id": 4990, // Veracs top 50
+        "next_id": 4991 // Veracs top 25
+      },
+      {
+        "prev_id": 4990, // Veracs top 50
+        "id": 4991, // Veracs top 25
+        "next_id": 4992 // Veracs top 0
+      }
+    ]
+  },
+  {
+    "type": "VERACS_PLATESKIRT",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4759, // Veracs plateskirt
+        "next_id": 4994 // Veracs skirt 100
+      },
+      {
+        "prev_id": 4759, // Veracs plateskirt
+        "id": 4994, // Veracs skirt 100
+        "next_id": 4995 // Veracs skirt 75
+      },
+      {
+        "prev_id": 4994, // Veracs skirt 100
+        "id": 4995, // Veracs skirt 75
+        "next_id": 4996 // Veracs skirt 50
+      },
+      {
+        "prev_id": 4995, // Veracs skirt 75
+        "id": 4996, // Veracs skirt 50
+        "next_id": 4997 // Veracs skirt 25
+      },
+      {
+        "prev_id": 4996, // Veracs skirt 50
+        "id": 4997, // Veracs skirt 25
+        "next_id": 4998 // Veracs skirt 0
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_BOW_FULL",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4214, // Crystal bow full
+        "next_id": 4215 // Crystal bow 9/10
+      },
+      {
+        "prev_id": 4214, // Crystal bow full
+        "id": 4215, // Crystal bow 9/10
+        "next_id": 4216 // Crystal bow 8/10
+      },
+      {
+        "prev_id": 4215, // Crystal bow 9/10
+        "id": 4216, // Crystal bow 8/10
+        "next_id": 4217 // Crystal bow 7/10
+      },
+      {
+        "prev_id": 4216, // Crystal bow 8/10
+        "id": 4217, // Crystal bow 7/10
+        "next_id": 4218 // Crystal bow 6/10
+      },
+      {
+        "prev_id": 4217, // Crystal bow 7/10
+        "id": 4218, // Crystal bow 6/10
+        "next_id": 4219 // Crystal bow 5/10
+      },
+      {
+        "prev_id": 4218, // Crystal bow 6/10
+        "id": 4219, // Crystal bow 5/10
+        "next_id": 4220 // Crystal bow 4/10
+      },
+      {
+        "prev_id": 4219, // Crystal bow 5/10
+        "id": 4220, // Crystal bow 4/10
+        "next_id": 4221 // Crystal bow 3/10
+      },
+      {
+        "prev_id": 4220, // Crystal bow 4/10
+        "id": 4221, // Crystal bow 3/10
+        "next_id": 4222 // Crystal bow 2/10
+      },
+      {
+        "prev_id": 4221, // Crystal bow 3/10
+        "id": 4222, // Crystal bow 2/10
+        "next_id": 4223 // Crystal bow 1/10
+      },
+      {
+        "prev_id": 4222, // Crystal bow 2/10
+        "id": 4223, // Crystal bow 1/10
+        "next_id": 4207 // Crystal seed
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_BOW_NEW",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4212, // New crystal bow
+        "next_id": 4215 // Crystal bow 9/10
+      },
+      {
+        "prev_id": 4212, // New crystal bow
+        "id": 4215, // Crystal bow 9/10
+        "next_id": 4216 // Crystal bow 8/10
+      },
+      {
+        "prev_id": 4215, // Crystal bow 9/10
+        "id": 4216, // Crystal bow 8/10
+        "next_id": 4217 // Crystal bow 7/10
+      },
+      {
+        "prev_id": 4216, // Crystal bow 8/10
+        "id": 4217, // Crystal bow 7/10
+        "next_id": 4218 // Crystal bow 6/10
+      },
+      {
+        "prev_id": 4217, // Crystal bow 7/10
+        "id": 4218, // Crystal bow 6/10
+        "next_id": 4219 // Crystal bow 5/10
+      },
+      {
+        "prev_id": 4218, // Crystal bow 6/10
+        "id": 4219, // Crystal bow 5/10
+        "next_id": 4220 // Crystal bow 4/10
+      },
+      {
+        "prev_id": 4219, // Crystal bow 5/10
+        "id": 4220, // Crystal bow 4/10
+        "next_id": 4221 // Crystal bow 3/10
+      },
+      {
+        "prev_id": 4220, // Crystal bow 4/10
+        "id": 4221, // Crystal bow 3/10
+        "next_id": 4222 // Crystal bow 2/10
+      },
+      {
+        "prev_id": 4221, // Crystal bow 3/10
+        "id": 4222, // Crystal bow 2/10
+        "next_id": 4223 // Crystal bow 1/10
+      },
+      {
+        "prev_id": 4222, // Crystal bow 2/10
+        "id": 4223, // Crystal bow 1/10
+        "next_id": 4207 // Crystal seed
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_SHIELD_FULL",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4225, // Crystal shield full
+        "next_id": 4226 // Crystal shield 9/10
+      },
+      {
+        "prev_id": 4225, // Crystal shield full
+        "id": 4226, // Crystal shield 9/10
+        "next_id": 4227 // Crystal shield 8/10
+      },
+      {
+        "prev_id": 4226, // Crystal shield 9/10
+        "id": 4227, // Crystal shield 8/10
+        "next_id": 4228 // Crystal shield 7/10
+      },
+      {
+        "prev_id": 4227, // Crystal shield 8/10
+        "id": 4228, // Crystal shield 7/10
+        "next_id": 4229 // Crystal shield 6/10
+      },
+      {
+        "prev_id": 4228, // Crystal shield 7/10
+        "id": 4229, // Crystal shield 6/10
+        "next_id": 4230 // Crystal shield 5/10
+      },
+      {
+        "prev_id": 4229, // Crystal shield 6/10
+        "id": 4230, // Crystal shield 5/10
+        "next_id": 4231 // Crystal shield 4/10
+      },
+      {
+        "prev_id": 4230, // Crystal shield 5/10
+        "id": 4231, // Crystal shield 4/10
+        "next_id": 4232 // Crystal shield 3/10
+      },
+      {
+        "prev_id": 4231, // Crystal shield 4/10
+        "id": 4232, // Crystal shield 3/10
+        "next_id": 4233 // Crystal shield 2/10
+      },
+      {
+        "prev_id": 4232, // Crystal shield 3/10
+        "id": 4233, // Crystal shield 2/10
+        "next_id": 4234 // Crystal shield 1/10
+      },
+      {
+        "prev_id": 4233, // Crystal shield 2/10
+        "id": 4234, // Crystal shield 1/10
+        "next_id": 4207 // Crystal seed
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_SHIELD_NEW",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4224, // New crystal shield
+        "next_id": 4226 // Crystal shield 9/10
+      },
+      {
+        "prev_id": 4224, // New crystal shield
+        "id": 4226, // Crystal shield 9/10
+        "next_id": 4227 // Crystal shield 8/10
+      },
+      {
+        "prev_id": 4226, // Crystal shield 9/10
+        "id": 4227, // Crystal shield 8/10
+        "next_id": 4228 // Crystal shield 7/10
+      },
+      {
+        "prev_id": 4227, // Crystal shield 8/10
+        "id": 4228, // Crystal shield 7/10
+        "next_id": 4229 // Crystal shield 6/10
+      },
+      {
+        "prev_id": 4228, // Crystal shield 7/10
+        "id": 4229, // Crystal shield 6/10
+        "next_id": 4230 // Crystal shield 5/10
+      },
+      {
+        "prev_id": 4229, // Crystal shield 6/10
+        "id": 4230, // Crystal shield 5/10
+        "next_id": 4231 // Crystal shield 4/10
+      },
+      {
+        "prev_id": 4230, // Crystal shield 5/10
+        "id": 4231, // Crystal shield 4/10
+        "next_id": 4232 // Crystal shield 3/10
+      },
+      {
+        "prev_id": 4231, // Crystal shield 4/10
+        "id": 4232, // Crystal shield 3/10
+        "next_id": 4233 // Crystal shield 2/10
+      },
+      {
+        "prev_id": 4232, // Crystal shield 3/10
+        "id": 4233, // Crystal shield 2/10
+        "next_id": 4234 // Crystal shield 1/10
+      },
+      {
+        "prev_id": 4233, // Crystal shield 2/10
+        "id": 4234, // Crystal shield 1/10
+        "next_id": 4207 // Crystal seed
+      }
+    ]
+  }
+]
