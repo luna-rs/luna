@@ -3,6 +3,8 @@
 
   "type" allows for controlling how the equipment is degraded, as well as signifying the type of degradable equipment.
   "prev_id" being -1 signifies the initial item in a chain.
+
+  Use the file to add new degradable equipment. Hooks for how the equipment is degraded must be added manually.
 */
 [
   {
