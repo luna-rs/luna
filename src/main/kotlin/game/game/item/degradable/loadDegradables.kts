@@ -10,7 +10,7 @@ import java.nio.file.Paths
  *
  * This file is loaded during server startup and contains the degradable item chains used by [DegradableEquipmentHandler].
  */
-val PATH = Paths.get("data", "game", "def", "equipment", "degradable.json")
+val PATH = Paths.get("data", "game", "def", "equipment", "degradable.jsonc")
 
 // Loads degradable equipment when the server finishes launching.
 on(ServerLaunchEvent::class) {
