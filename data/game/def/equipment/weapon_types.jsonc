@@ -1,1487 +1,1635 @@
 /*
-  Holds data for all weapon interfaces and their combat styles.
-  The "model", "attack_animation", and "defence_animation" properties can be overridden using "weapon_animations.jsonc"
- */
+  This definition file is used for resolving the combat style interface of weapons.
+
+  Use this file when weapons do not display the correct interface on the combat tab.
+*/
 [
   {
-    "type": "STAFF",
-    "id": 328,
-    "line": 331,
-    "model": {
-      "running": 1210,
-      "standing": 813,
-      "walking": 1146
-    },
-    "styles": [
-      {
-        "type": "STAFF_BASH",
-        "speed": 5,
-        "attack_animation": 414,
-        "defence_animation": 415,
-        "config": 0,
-        "bonus": "CRUSH_ATTACK",
-        "button": 336,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "STAFF_POUND",
-        "speed": 5,
-        "attack_animation": 414,
-        "defence_animation": 415,
-        "config": 1,
-        "bonus": "CRUSH_ATTACK",
-        "button": 335,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "STAFF_FOCUS",
-        "speed": 5,
-        "attack_animation": 414,
-        "defence_animation": 415,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 334,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ]
+    "id": 3093,
+    "type": "DART"
   },
   {
-    "type": "WARHAMMER",
-    "id": 425,
-    "line": 428,
-    "styles": [
-      {
-        "type": "WARHAMMER_POUND",
-        "speed": 6,
-        "attack_animation": 401,
-        "defence_animation": 403,
-        "config": 0,
-        "bonus": "CRUSH_ATTACK",
-        "button": 433,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "WARHAMMER_PUMMEL",
-        "speed": 6,
-        "attack_animation": 401,
-        "defence_animation": 403,
-        "config": 1,
-        "bonus": "CRUSH_ATTACK",
-        "button": 432,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "WARHAMMER_BLOCK",
-        "speed": 6,
-        "attack_animation": 401,
-        "defence_animation": 403,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 431,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7474,
-      "meter": 7486
-    }
+    "id": 3094,
+    "type": "DART"
   },
   {
-    "type": "SCYTHE",
-    "id": 776,
-    "line": 779,
-    "model": {
-      "standing": 847,
-      "walking": 819,
-      "running": 824
-    },
-    "styles": [
-      {
-        "type": "SCYTHE_REAP",
-        "speed": 6,
-        "attack_animation": 437,
-        "defence_animation": 435,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 782,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "SCYTHE_CHOP",
-        "speed": 6,
-        "attack_animation": 451,
-        "defence_animation": 435,
-        "config": 1,
-        "bonus": "STAB_ATTACK",
-        "button": 785,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SCYTHE_JAB",
-        "speed": 6,
-        "attack_animation": 451,
-        "defence_animation": 435,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 784,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SCYTHE_BLOCK",
-        "speed": 6,
-        "attack_animation": 440,
-        "defence_animation": 435,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 783,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ]
+    "id": 3095,
+    "type": "CLAWS"
   },
   {
-    "type": "BATTLEAXE",
-    "id": 1698,
-    "line": 1701,
-    "styles": [
-      {
-        "type": "BATTLEAXE_CHOP",
-        "speed": 6,
-        "attack_animation": 1833,
-        "defence_animation": 398,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 1704,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "BATTLEAXE_HACK",
-        "speed": 6,
-        "attack_animation": 1833,
-        "defence_animation": 398,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 1707,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "BATTLEAXE_SMASH",
-        "speed": 6,
-        "attack_animation": 401,
-        "defence_animation": 398,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 1706,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "BATTLEAXE_BLOCK",
-        "speed": 6,
-        "attack_animation": 1833,
-        "defence_animation": 398,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 1705,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7499,
-      "meter": 7511
-    }
+    "id": 3096,
+    "type": "CLAWS"
   },
   {
-    "type": "CROSSBOW",
-    "id": 1749,
-    "line": 1752,
-    "model": {
-      "running": 2077,
-      "standing": 2074,
-      "walking": 2076
-    },
-    "styles": [
-      {
-        "type": "CROSSBOW_ACCURATE",
-        "speed": 6,
-        "attack_animation": 427,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 1757,
-        "stance": "ACCURATE",
-        "range": 7,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "CROSSBOW_RAPID",
-        "speed": 5,
-        "attack_animation": 427,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 1756,
-        "stance": "AGGRESSIVE",
-        "range": 7,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "CROSSBOW_LONGRANGE",
-        "speed": 6,
-        "attack_animation": 427,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 1755,
-        "stance": "DEFENSIVE",
-        "range": 9,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7524,
-      "meter": 7536
-    }
+    "id": 3097,
+    "type": "CLAWS"
   },
   {
-    "type": "SHORTBOW",
-    "id": 1764,
-    "line": 1767,
-    "model": {
-      "running": 824,
-      "standing": 808,
-      "walking": 819
-    },
-    "styles": [
-      {
-        "type": "SHORTBOW_ACCURATE",
-        "speed": 4,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 1772,
-        "stance": "ACCURATE",
-        "range": 7,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "SHORTBOW_RAPID",
-        "speed": 3,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 1771,
-        "stance": "AGGRESSIVE",
-        "range": 7,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "SHORTBOW_LONGRANGE",
-        "speed": 4,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 1770,
-        "stance": "DEFENSIVE",
-        "range": 9,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7549,
-      "meter": 7561
-    }
+    "id": 3098,
+    "type": "CLAWS"
   },
   {
-    "type": "LONGBOW",
-    "id": 1764,
-    "line": 1767,
-    "model": {
-      "running": 824,
-      "standing": 808,
-      "walking": 819
-    },
-    "styles": [
-      {
-        "type": "LONGBOW_ACCURATE",
-        "speed": 6,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 1772,
-        "stance": "ACCURATE",
-        "range": 10,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "LONGBOW_RAPID",
-        "speed": 5,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 1771,
-        "stance": "AGGRESSIVE",
-        "range": 10,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "LONGBOW_LONGRANGE",
-        "speed": 6,
-        "attack_animation": 426,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 1770,
-        "stance": "DEFENSIVE",
-        "range": 10,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7549,
-      "meter": 7561
-    }
+    "id": 3099,
+    "type": "CLAWS"
   },
   {
-    "type": "DAGGER",
-    "id": 2276,
-    "line": 2279,
-    "styles": [
-      {
-        "type": "DAGGER_STAB",
-        "speed": 4,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 0,
-        "bonus": "STAB_ATTACK",
-        "button": 2282,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "DAGGER_LUNGE",
-        "speed": 4,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 1,
-        "bonus": "STAB_ATTACK",
-        "button": 2285,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "DAGGER_SLASH",
-        "speed": 4,
-        "attack_animation": 451,
-        "defence_animation": 404,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 2284,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "DAGGER_BLOCK",
-        "speed": 4,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 3,
-        "bonus": "STAB_ATTACK",
-        "button": 2283,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7574,
-      "meter": 7586
-    }
+    "id": 3100,
+    "type": "CLAWS"
   },
   {
-    "type": "SWORD",
-    "id": 2276,
-    "line": 2279,
-    "styles": [
-      {
-        "type": "SWORD_STAB",
-        "speed": 4,
-        "attack_animation": 386,
-        "defence_animation": 388,
-        "config": 0,
-        "bonus": "STAB_ATTACK",
-        "button": 2282,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "SWORD_LUNGE",
-        "speed": 4,
-        "attack_animation": 386,
-        "defence_animation": 388,
-        "config": 1,
-        "bonus": "STAB_ATTACK",
-        "button": 2285,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SWORD_SLASH",
-        "speed": 4,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 2,
-        "bonus": "SLASH_ATTACK",
-        "button": 2284,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SWORD_BLOCK",
-        "speed": 4,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 3,
-        "bonus": "STAB_ATTACK",
-        "button": 2283,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7574,
-      "meter": 7586
-    }
+    "id": 3101,
+    "type": "CLAWS"
   },
   {
-    "type": "SCIMITAR",
-    "id": 2423,
-    "line": 2426,
-    "styles": [
-      {
-        "type": "SCIMITAR_CHOP",
-        "speed": 4,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 2429,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "SCIMITAR_SLASH",
-        "speed": 4,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 2432,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SCIMITAR_LUNGE",
-        "speed": 4,
-        "attack_animation": 386,
-        "defence_animation": 388,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 2431,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "SCIMITAR_BLOCK",
-        "speed": 4,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 2430,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7599,
-      "meter": 7611
-    }
+    "id": 35,
+    "type": "LONGSWORD"
   },
   {
-    "type": "SICKLE",
-    "id": 2423,
-    "line": 2426,
-    "styles": [
-      {
-        "type": "SICKLE_CHOP",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 2429,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "SICKLE_SLASH",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 2432,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "SICKLE_LUNGE",
-        "speed": 5,
-        "attack_animation": 386,
-        "defence_animation": 388,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 2431,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "SICKLE_BLOCK",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 2430,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7599,
-      "meter": 7611
-    }
+    "id": 4151,
+    "type": "WHIP"
   },
   {
-    "type": "LONGSWORD",
-    "id": 2423,
-    "line": 2426,
-    "model": {
-      "running": -1,
-      "standing": 809,
-      "walking": -1
-    },
-    "styles": [
-      {
-        "type": "LONGSWORD_CHOP",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 2429,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "LONGSWORD_SLASH",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 2432,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "LONGSWORD_LUNGE",
-        "speed": 5,
-        "attack_animation": 386,
-        "defence_animation": 388,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 2431,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "LONGSWORD_BLOCK",
-        "speed": 5,
-        "attack_animation": 390,
-        "defence_animation": 388,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 2430,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7599,
-      "meter": 7611
-    }
+    "id": 4153,
+    "type": "WARHAMMER"
   },
   {
-    "type": "MACE",
-    "id": 3796,
-    "line": 3799,
-    "styles": [
-      {
-        "type": "MACE_POUND",
-        "speed": 4,
-        "attack_animation": 401,
-        "defence_animation": 404,
-        "config": 0,
-        "bonus": "CRUSH_ATTACK",
-        "button": 3802,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "MACE_PUMMEL",
-        "speed": 4,
-        "attack_animation": 401,
-        "defence_animation": 404,
-        "config": 1,
-        "bonus": "CRUSH_ATTACK",
-        "button": 3805,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "MACE_SPIKE",
-        "speed": 4,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 3804,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "MACE_BLOCK",
-        "speed": 4,
-        "attack_animation": 401,
-        "defence_animation": 404,
-        "config": 3,
-        "bonus": "CRUSH_ATTACK",
-        "button": 3803,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7624,
-      "meter": 7636
-    }
+    "id": 4158,
+    "type": "SPEAR"
   },
   {
-    "type": "KNIFE",
-    "id": 4446,
-    "line": 4449,
-    "styles": [
-      {
-        "type": "KNIFE_ACCURATE",
-        "speed": 3,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 4454,
-        "stance": "ACCURATE",
-        "range": 4,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "KNIFE_RAPID",
-        "speed": 2,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 4453,
-        "stance": "AGGRESSIVE",
-        "range": 4,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "KNIFE_LONGRANGE",
-        "speed": 3,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 4452,
-        "stance": "DEFENSIVE",
-        "range": 6,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7649,
-      "meter": 7661
-    }
+    "id": 4170,
+    "type": "STAFF"
   },
   {
-    "type": "SPEAR",
-    "id": 4679,
-    "line": 4682,
-    "model": {
-      "running": 1210,
-      "standing": 813,
-      "walking": 1146
-    },
-    "styles": [
-      {
-        "type": "SPEAR_LUNGE",
-        "speed": 4,
-        "attack_animation": 381,
-        "defence_animation": 383,
-        "config": 0,
-        "bonus": "STAB_ATTACK",
-        "button": 4685,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "SPEAR_SWIPE",
-        "speed": 4,
-        "attack_animation": 380,
-        "defence_animation": 383,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 4688,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "SPEAR_POUND",
-        "speed": 4,
-        "attack_animation": 382,
-        "defence_animation": 383,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 4687,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "SPEAR_BLOCK",
-        "speed": 4,
-        "attack_animation": 381,
-        "defence_animation": 383,
-        "config": 3,
-        "bonus": "STAB_ATTACK",
-        "button": 4686,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7674,
-      "meter": 7686
-    }
+    "id": 3170,
+    "type": "SPEAR"
   },
   {
-    "type": "TWO_HANDED_SWORD",
-    "id": 4705,
-    "line": 4708,
-    "model": {
-      "running": 2563,
-      "standing": 2561,
-      "walking": 2064
-    },
-    "styles": [
-      {
-        "type": "TWO_HANDED_SWORD_CHOP",
-        "speed": 7,
-        "attack_animation": 407,
-        "defence_animation": 411,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 4711,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "TWO_HANDED_SWORD_SLASH",
-        "speed": 7,
-        "attack_animation": 407,
-        "defence_animation": 411,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 4714,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "TWO_HANDED_SWORD_SMASH",
-        "speed": 7,
-        "attack_animation": 406,
-        "defence_animation": 411,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 4713,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "TWO_HANDED_SWORD_BLOCK",
-        "speed": 7,
-        "attack_animation": 407,
-        "defence_animation": 411,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 4712,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7699,
-      "meter": 7711
-    }
+    "id": 3171,
+    "type": "SPEAR"
   },
   {
-    "type": "PICKAXE",
-    "id": 5570,
-    "line": 5573,
-    "styles": [
-      {
-        "type": "PICKAXE_SPIKE",
-        "speed": 5,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 0,
-        "bonus": "STAB_ATTACK",
-        "button": 5576,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "PICKAXE_IMPALE",
-        "speed": 5,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 1,
-        "bonus": "STAB_ATTACK",
-        "button": 5579,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "PICKAXE_SMASH",
-        "speed": 5,
-        "attack_animation": 401,
-        "defence_animation": 404,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 5578,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "PICKAXE_BLOCK",
-        "speed": 5,
-        "attack_animation": 400,
-        "defence_animation": 404,
-        "config": 3,
-        "bonus": "STAB_ATTACK",
-        "button": 5577,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ]
+    "id": 3172,
+    "type": "SPEAR"
   },
   {
-    "type": "CLAWS",
-    "id": 7762,
-    "line": 7765,
-    "styles": [
-      {
-        "type": "CLAWS_CHOP",
-        "speed": 4,
-        "attack_animation": 451,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 7768,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "CLAWS_SLASH",
-        "speed": 4,
-        "attack_animation": 451,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 7771,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "CLAWS_LUNGE",
-        "speed": 4,
-        "attack_animation": 412,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 7770,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "CLAWS_BLOCK",
-        "speed": 4,
-        "attack_animation": 451,
-        "defence_animation": -1,
-        "config": 3,
-        "bonus": "SLASH_ATTACK",
-        "button": 7769,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7800,
-      "meter": 7812
-    }
+    "id": 3173,
+    "type": "SPEAR"
   },
   {
-    "type": "HALBERD",
-    "id": 8460,
-    "line": 8463,
-    "model": {
-      "running": 1210,
-      "standing": 809,
-      "walking": 1146
-    },
-    "styles": [
-      {
-        "type": "HALBERD_JAB",
-        "speed": 7,
-        "attack_animation": 412,
-        "defence_animation": 415,
-        "config": 0,
-        "bonus": "STAB_ATTACK",
-        "button": 8466,
-        "stance": "CONTROLLED",
-        "range": 2,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "HALBERD_SWIPE",
-        "speed": 7,
-        "attack_animation": 440,
-        "defence_animation": 415,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 8468,
-        "stance": "AGGRESSIVE",
-        "range": 2,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "HALBERD_FEND",
-        "speed": 7,
-        "attack_animation": 412,
-        "defence_animation": 415,
-        "config": 2,
-        "bonus": "STAB_ATTACK",
-        "button": 8467,
-        "stance": "DEFENSIVE",
-        "range": 2,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 8493,
-      "meter": 8505
-    }
+    "id": 3174,
+    "type": "SPEAR"
   },
   {
-    "type": "UNARMED",
-    "id": 5855,
-    "line": 5857,
-    "styles": [
-      {
-        "type": "UNARMED_PUNCH",
-        "speed": 4,
-        "attack_animation": 422,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "CRUSH_ATTACK",
-        "button": 5860,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "UNARMED_KICK",
-        "speed": 4,
-        "attack_animation": 423,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "CRUSH_ATTACK",
-        "button": 5862,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "STRENGTH"
-        ]
-      },
-      {
-        "type": "UNARMED_BLOCK",
-        "speed": 4,
-        "attack_animation": 422,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "CRUSH_ATTACK",
-        "button": 5861,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ]
+    "id": 3175,
+    "type": "SPEAR"
   },
   {
-    "type": "WHIP",
-    "id": 12290,
-    "line": 12293,
-    "model": {
-      "running": 1831,
-      "standing": 1832,
-      "walking": 1830
-    },
-    "styles": [
-      {
-        "type": "WHIP_FLICK",
-        "speed": 4,
-        "attack_animation": 1658,
-        "defence_animation": 1659,
-        "config": 0,
-        "bonus": "SLASH_ATTACK",
-        "button": 12298,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "ATTACK"
-        ]
-      },
-      {
-        "type": "WHIP_LASH",
-        "speed": 4,
-        "attack_animation": 1658,
-        "defence_animation": 1659,
-        "config": 1,
-        "bonus": "SLASH_ATTACK",
-        "button": 12297,
-        "stance": "CONTROLLED",
-        "range": 1,
-        "exp": [
-          "SHARED"
-        ]
-      },
-      {
-        "type": "WHIP_DEFLECT",
-        "speed": 4,
-        "attack_animation": 1658,
-        "defence_animation": 1659,
-        "config": 2,
-        "bonus": "SLASH_ATTACK",
-        "button": 12296,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 12323,
-      "meter": 12335
-    }
+    "id": 3176,
+    "type": "SPEAR"
   },
   {
-    "type": "THROWN_AXE",
-    "id": 4446,
-    "line": 4449,
-    "styles": [
-      {
-        "type": "THROWN_AXE_ACCURATE",
-        "speed": 5,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 4454,
-        "stance": "ACCURATE",
-        "range": 4,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "THROWN_AXE_RAPID",
-        "speed": 5,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 4453,
-        "stance": "AGGRESSIVE",
-        "range": 4,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "THROWN_AXE_LONGRANGE",
-        "speed": 5,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 4452,
-        "stance": "DEFENSIVE",
-        "range": 6,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7649,
-      "meter": 7661
-    }
+    "id": 4212,
+    "type": "SHORTBOW"
   },
   {
-    "type": "DART",
-    "id": 4446,
-    "line": 4449,
-    "styles": [
-      {
-        "type": "DART_ACCURATE",
-        "speed": 3,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 4454,
-        "stance": "ACCURATE",
-        "range": 3,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "DART_RAPID",
-        "speed": 2,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 1,
-        "bonus": "RANGED_ATTACK",
-        "button": 4453,
-        "stance": "AGGRESSIVE",
-        "range": 3,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "DART_LONGRANGE",
-        "speed": 3,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 4452,
-        "stance": "DEFENSIVE",
-        "range": 5,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7649,
-      "meter": 7661
-    }
+    "id": 3190,
+    "type": "HALBERD"
   },
   {
-    "type": "JAVELIN",
-    "id": 4446,
-    "line": 4449,
-    "styles": [
-      {
-        "type": "JAVELIN_ACCURATE",
-        "speed": 6,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 0,
-        "bonus": "RANGED_ATTACK",
-        "button": 4454,
-        "stance": "ACCURATE",
-        "range": 1,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "JAVELIN_RAPID",
-        "speed": 5,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 2,
-        "bonus": "RANGED_ATTACK",
-        "button": 4453,
-        "stance": "AGGRESSIVE",
-        "range": 1,
-        "exp": [
-          "RANGED"
-        ]
-      },
-      {
-        "type": "JAVELIN_LONGRANGE",
-        "speed": 6,
-        "attack_animation": 806,
-        "defence_animation": -1,
-        "config": 3,
-        "bonus": "RANGED_ATTACK",
-        "button": 4452,
-        "stance": "DEFENSIVE",
-        "range": 1,
-        "exp": [
-          "RANGED",
-          "DEFENCE"
-        ]
-      }
-    ],
-    "special": {
-      "bar": 7649,
-      "meter": 7661
-    }
+    "id": 4214,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4215,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3192,
+    "type": "HALBERD"
+  },
+  {
+    "id": 4216,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4217,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3194,
+    "type": "HALBERD"
+  },
+  {
+    "id": 4218,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4219,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3196,
+    "type": "HALBERD"
+  },
+  {
+    "id": 4220,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4221,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3198,
+    "type": "HALBERD"
+  },
+  {
+    "id": 4222,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4223,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3200,
+    "type": "HALBERD"
+  },
+  {
+    "id": 3202,
+    "type": "HALBERD"
+  },
+  {
+    "id": 3204,
+    "type": "HALBERD"
+  },
+  {
+    "id": 4236,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 1203,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1205,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1207,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1209,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1211,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1213,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1215,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1217,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1219,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1221,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1223,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1225,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1227,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1229,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1231,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1233,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1235,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1237,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1239,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1241,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1243,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1245,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1247,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1249,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1251,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1253,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1255,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1257,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1259,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1261,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1263,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1265,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1267,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1269,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1271,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1273,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1275,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1277,
+    "type": "SWORD"
+  },
+  {
+    "id": 1279,
+    "type": "SWORD"
+  },
+  {
+    "id": 1281,
+    "type": "SWORD"
+  },
+  {
+    "id": 1283,
+    "type": "SWORD"
+  },
+  {
+    "id": 1285,
+    "type": "SWORD"
+  },
+  {
+    "id": 1287,
+    "type": "SWORD"
+  },
+  {
+    "id": 1289,
+    "type": "SWORD"
+  },
+  {
+    "id": 1291,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1293,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1295,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1297,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1299,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1301,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1303,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 7447,
+    "type": "KNIFE"
+  },
+  {
+    "id": 1305,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1307,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1309,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1311,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1313,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1315,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1317,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1319,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 1321,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1323,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1325,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1327,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1329,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1331,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1333,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1335,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1337,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1339,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1341,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1343,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1345,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1347,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1349,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1351,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1353,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1355,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1357,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1359,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1361,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1363,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1365,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1367,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1369,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1371,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1373,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1375,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1377,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 2402,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1379,
+    "type": "STAFF"
+  },
+  {
+    "id": 1381,
+    "type": "STAFF"
+  },
+  {
+    "id": 1383,
+    "type": "STAFF"
+  },
+  {
+    "id": 1385,
+    "type": "STAFF"
+  },
+  {
+    "id": 1387,
+    "type": "STAFF"
+  },
+  {
+    "id": 1389,
+    "type": "STAFF"
+  },
+  {
+    "id": 1391,
+    "type": "STAFF"
+  },
+  {
+    "id": 2415,
+    "type": "STAFF"
+  },
+  {
+    "id": 2416,
+    "type": "STAFF"
+  },
+  {
+    "id": 1393,
+    "type": "STAFF"
+  },
+  {
+    "id": 2417,
+    "type": "STAFF"
+  },
+  {
+    "id": 1395,
+    "type": "STAFF"
+  },
+  {
+    "id": 1397,
+    "type": "STAFF"
+  },
+  {
+    "id": 1399,
+    "type": "STAFF"
+  },
+  {
+    "id": 1401,
+    "type": "STAFF"
+  },
+  {
+    "id": 2425,
+    "type": "KNIFE"
+  },
+  {
+    "id": 6522,
+    "type": "KNIFE"
+  },
+  {
+    "id": 1403,
+    "type": "STAFF"
+  },
+  {
+    "id": 6523,
+    "type": "SWORD"
+  },
+  {
+    "id": 1405,
+    "type": "STAFF"
+  },
+  {
+    "id": 6525,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6526,
+    "type": "STAFF"
+  },
+  {
+    "id": 1407,
+    "type": "STAFF"
+  },
+  {
+    "id": 6527,
+    "type": "MACE"
+  },
+  {
+    "id": 6528,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1409,
+    "type": "STAFF"
+  },
+  {
+    "id": 1419,
+    "type": "SCYTHE"
+  },
+  {
+    "id": 1420,
+    "type": "MACE"
+  },
+  {
+    "id": 1422,
+    "type": "MACE"
+  },
+  {
+    "id": 1424,
+    "type": "MACE"
+  },
+  {
+    "id": 1426,
+    "type": "MACE"
+  },
+  {
+    "id": 1428,
+    "type": "MACE"
+  },
+  {
+    "id": 1430,
+    "type": "MACE"
+  },
+  {
+    "id": 4503,
+    "type": "SWORD"
+  },
+  {
+    "id": 1432,
+    "type": "MACE"
+  },
+  {
+    "id": 1434,
+    "type": "MACE"
+  },
+  {
+    "id": 2460,
+    "type": "MACE"
+  },
+  {
+    "id": 4508,
+    "type": "SWORD"
+  },
+  {
+    "id": 2462,
+    "type": "MACE"
+  },
+  {
+    "id": 2464,
+    "type": "MACE"
+  },
+  {
+    "id": 2466,
+    "type": "MACE"
+  },
+  {
+    "id": 6562,
+    "type": "STAFF"
+  },
+  {
+    "id": 6563,
+    "type": "STAFF"
+  },
+  {
+    "id": 2468,
+    "type": "MACE"
+  },
+  {
+    "id": 2470,
+    "type": "MACE"
+  },
+  {
+    "id": 2472,
+    "type": "MACE"
+  },
+  {
+    "id": 2474,
+    "type": "MACE"
+  },
+  {
+    "id": 2476,
+    "type": "MACE"
+  },
+  {
+    "id": 6587,
+    "type": "CLAWS"
+  },
+  {
+    "id": 6589,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 6591,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6593,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6595,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6597,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6599,
+    "type": "HALBERD"
+  },
+  {
+    "id": 6601,
+    "type": "MACE"
+  },
+  {
+    "id": 6603,
+    "type": "STAFF"
+  },
+  {
+    "id": 6605,
+    "type": "SWORD"
+  },
+  {
+    "id": 6607,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 6609,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 466,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 6611,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 6613,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4580,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4582,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4584,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4587,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 7668,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 7671,
+    "type": "CLAWS"
+  },
+  {
+    "id": 7673,
+    "type": "CLAWS"
+  },
+  {
+    "id": 7675,
+    "type": "SWORD"
+  },
+  {
+    "id": 5628,
+    "type": "DART"
+  },
+  {
+    "id": 5629,
+    "type": "DART"
+  },
+  {
+    "id": 5630,
+    "type": "DART"
+  },
+  {
+    "id": 5631,
+    "type": "DART"
+  },
+  {
+    "id": 5632,
+    "type": "DART"
+  },
+  {
+    "id": 5633,
+    "type": "DART"
+  },
+  {
+    "id": 5634,
+    "type": "DART"
+  },
+  {
+    "id": 5635,
+    "type": "DART"
+  },
+  {
+    "id": 5636,
+    "type": "DART"
+  },
+  {
+    "id": 5637,
+    "type": "DART"
+  },
+  {
+    "id": 5638,
+    "type": "DART"
+  },
+  {
+    "id": 5639,
+    "type": "DART"
+  },
+  {
+    "id": 5640,
+    "type": "DART"
+  },
+  {
+    "id": 5641,
+    "type": "DART"
+  },
+  {
+    "id": 5642,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5643,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5644,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5645,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5646,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5647,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5648,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5649,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5650,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5651,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5652,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5653,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 5654,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5655,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5656,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5657,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5658,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5659,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5660,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5661,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5662,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5663,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5664,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5665,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5666,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5667,
+    "type": "KNIFE"
+  },
+  {
+    "id": 5668,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5670,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5672,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5674,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5676,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5678,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5680,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5682,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5684,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5686,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5688,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5690,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5692,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5694,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5696,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5698,
+    "type": "DAGGER"
+  },
+  {
+    "id": 4675,
+    "type": "STAFF"
+  },
+  {
+    "id": 5700,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6724,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 5702,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5704,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5706,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5708,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5710,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5712,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5714,
+    "type": "SPEAR"
+  },
+  {
+    "id": 6739,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5716,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5718,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5720,
+    "type": "SPEAR"
+  },
+  {
+    "id": 6745,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 5722,
+    "type": "SPEAR"
+  },
+  {
+    "id": 6746,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 5724,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5726,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5728,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5730,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4710,
+    "type": "STAFF"
+  },
+  {
+    "id": 5734,
+    "type": "SPEAR"
+  },
+  {
+    "id": 5736,
+    "type": "SPEAR"
+  },
+  {
+    "id": 6760,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 6762,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 6764,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4718,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4726,
+    "type": "SPEAR"
+  },
+  {
+    "id": 7804,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4734,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 7806,
+    "type": "SWORD"
+  },
+  {
+    "id": 7807,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 7808,
+    "type": "MACE"
+  },
+  {
+    "id": 7809,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4747,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4755,
+    "type": "WHIP"
+  },
+  {
+    "id": 667,
+    "type": "SWORD"
+  },
+  {
+    "id": 6818,
+    "type": "TWO_HANDED_SWORD"
+  },
+  {
+    "id": 4827,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 746,
+    "type": "DAGGER"
+  },
+  {
+    "id": 747,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6897,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 6908,
+    "type": "STAFF"
+  },
+  {
+    "id": 4862,
+    "type": "STAFF"
+  },
+  {
+    "id": 6910,
+    "type": "STAFF"
+  },
+  {
+    "id": 767,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 4863,
+    "type": "STAFF"
+  },
+  {
+    "id": 4864,
+    "type": "STAFF"
+  },
+  {
+    "id": 6912,
+    "type": "STAFF"
+  },
+  {
+    "id": 4865,
+    "type": "STAFF"
+  },
+  {
+    "id": 6914,
+    "type": "STAFF"
+  },
+  {
+    "id": 772,
+    "type": "STAFF"
+  },
+  {
+    "id": 4886,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4887,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4888,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4889,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 800,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 801,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 802,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 803,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 804,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 805,
+    "type": "THROWN_AXE"
+  },
+  {
+    "id": 806,
+    "type": "DART"
+  },
+  {
+    "id": 807,
+    "type": "DART"
+  },
+  {
+    "id": 808,
+    "type": "DART"
+  },
+  {
+    "id": 809,
+    "type": "DART"
+  },
+  {
+    "id": 810,
+    "type": "DART"
+  },
+  {
+    "id": 811,
+    "type": "DART"
+  },
+  {
+    "id": 812,
+    "type": "DART"
+  },
+  {
+    "id": 813,
+    "type": "DART"
+  },
+  {
+    "id": 814,
+    "type": "DART"
+  },
+  {
+    "id": 4910,
+    "type": "SPEAR"
+  },
+  {
+    "id": 815,
+    "type": "DART"
+  },
+  {
+    "id": 4911,
+    "type": "SPEAR"
+  },
+  {
+    "id": 816,
+    "type": "DART"
+  },
+  {
+    "id": 4912,
+    "type": "SPEAR"
+  },
+  {
+    "id": 817,
+    "type": "DART"
+  },
+  {
+    "id": 4913,
+    "type": "SPEAR"
+  },
+  {
+    "id": 818,
+    "type": "DART"
+  },
+  {
+    "id": 825,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 826,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 827,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 3899,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 828,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 829,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 830,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 831,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 832,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 833,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 834,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 835,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 2883,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 836,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 837,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 4934,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 839,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 4935,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 4936,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 841,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4937,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 843,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 845,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 847,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 849,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 851,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 853,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 855,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 857,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 859,
+    "type": "LONGBOW"
+  },
+  {
+    "id": 861,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4958,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 863,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4959,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 864,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4960,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 865,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4961,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 866,
+    "type": "KNIFE"
+  },
+  {
+    "id": 867,
+    "type": "KNIFE"
+  },
+  {
+    "id": 868,
+    "type": "KNIFE"
+  },
+  {
+    "id": 869,
+    "type": "KNIFE"
+  },
+  {
+    "id": 870,
+    "type": "KNIFE"
+  },
+  {
+    "id": 871,
+    "type": "KNIFE"
+  },
+  {
+    "id": 872,
+    "type": "KNIFE"
+  },
+  {
+    "id": 873,
+    "type": "KNIFE"
+  },
+  {
+    "id": 874,
+    "type": "KNIFE"
+  },
+  {
+    "id": 875,
+    "type": "KNIFE"
+  },
+  {
+    "id": 876,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4982,
+    "type": "WHIP"
+  },
+  {
+    "id": 4983,
+    "type": "WHIP"
+  },
+  {
+    "id": 4984,
+    "type": "WHIP"
+  },
+  {
+    "id": 4985,
+    "type": "WHIP"
+  },
+  {
+    "id": 2952,
+    "type": "DAGGER"
+  },
+  {
+    "id": 2961,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 2963,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 5016,
+    "type": "SPEAR"
+  },
+  {
+    "id": 2997,
+    "type": "CLAWS"
+  },
+  {
+    "id": 5056,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5057,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5058,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 6082,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 5059,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4037,
+    "type": "STAFF"
+  },
+  {
+    "id": 4039,
+    "type": "STAFF"
+  },
+  {
+    "id": 4068,
+    "type": "SWORD"
+  },
+  {
+    "id": 3053,
+    "type": "STAFF"
+  },
+  {
+    "id": 3054,
+    "type": "STAFF"
+  },
+  {
+    "id": 7158,
+    "type": "TWO_HANDED_SWORD"
   }
 ]

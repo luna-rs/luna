@@ -1,0 +1,59 @@
+/*
+  This definition file is used for resolving weapon model animations, as well as attack and defence
+  combat animations. The model/animation data contained here is always prioritized over the default values
+  contained in the "weapon_types.json" file.
+
+  Use this file when weapons have the wrong model or combat animations.
+*/
+[
+  {
+    "ids": [
+      4153  // Granite maul
+    ],
+    "type": "WARHAMMER",
+    "all_styles": {
+      "attack": 1665,
+      "defend": 1666
+    },
+    "model": {
+      "standing": 1662,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "ids": [
+      5680, // Dragon dagger(+)
+      1231, // Dragon dagger(p)
+      1215, // Dragon dagger
+      5698 // Dragon dagger(s)
+    ],
+    "styles": [
+      {
+        "style": "DAGGER_STAB",
+        "attack": 376,
+        "defence": 379
+      },
+      {
+        "style": "DAGGER_LUNGE",
+        "attack": 376,
+        "defence": 379
+      },
+      {
+        "style": "DAGGER_SLASH",
+        "attack": 377,
+        "defence": 379
+      },
+      {
+        "style": "DAGGER_BLOCK",
+        "attack": 376,
+        "defence": 379
+      }
+    ],
+    "model": {
+      "standing": 1832,
+      "walking": 1660,
+      "running": 1661
+    }
+  }
+]

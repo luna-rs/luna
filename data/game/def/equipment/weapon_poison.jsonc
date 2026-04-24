@@ -1,0 +1,578 @@
+/*
+  This definition file is used for resolving equipment that applies poison to victims. Weapons and ammo apply poison
+  when an attack is received, other types of items will throw an error on startup.
+
+  Poison damage = (severity + 4) / 5
+  Severity is decremented by 1 after each poison application.
+
+  Ie. A severity level of 10 will result in 2 poison damage for five applications, and 1 poison damage for
+   five applications.
+
+  Use this file to make equipment have a chance to poison an attacker or victim when used.
+*/
+[
+  {
+    "id": 812, // Bronze dart(p)
+    "severity": 10
+  },
+  {
+    "id": 813, // Iron dart(p)
+    "severity": 10
+  },
+  {
+    "id": 814, // Steel dart(p)
+    "severity": 10
+  },
+  {
+    "id": 815, // Mithril dart(p)
+    "severity": 10
+  },
+  {
+    "id": 816, // Adamant dart(p)
+    "severity": 10
+  },
+  {
+    "id": 817, // Rune dart(p)
+    "severity": 10
+  },
+  {
+    "id": 818, // Poisoned dart(p)
+    "severity": 10
+  },
+  {
+    "id": 831, // Bronze javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 832, // Iron javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 833, // Steel javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 834, // Mithril javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 835, // Adamant javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 836, // Rune javelin(p)
+    "severity": 10
+  },
+  {
+    "id": 870, // Bronze knife(p)
+    "severity": 10
+  },
+  {
+    "id": 871, // Iron knife(p)
+    "severity": 10
+  },
+  {
+    "id": 872, // Steel knife(p)
+    "severity": 10
+  },
+  {
+    "id": 873, // Mithril knife(p)
+    "severity": 10
+  },
+  {
+    "id": 874, // Black knife(p)
+    "severity": 10
+  },
+  {
+    "id": 875, // Adamant knife(p)
+    "severity": 10
+  },
+  {
+    "id": 876, // Rune knife(p)
+    "severity": 10
+  },
+  {
+    "id": 878, // Bolts(p)
+    "severity": 10
+  },
+  {
+    "id": 883, // Bronze arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 885, // Iron arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 887, // Steel arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 889, // Mithril arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 891, // Adamant arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 893, // Rune arrow(p)
+    "severity": 10
+  },
+  {
+    "id": 1219, // Iron dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1221, // Bronze dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1223, // Steel dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1225, // Mithril dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1227, // Adamant dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1229, // Rune dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1231, // Dragon dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1233, // Black dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1235, // Poisoned dagger(p)
+    "severity": 20
+  },
+  {
+    "id": 1251, // Bronze spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1253, // Iron spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1255, // Steel spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1257, // Mithril spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1259, // Adamant spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1261, // Rune spear(p)
+    "severity": 20
+  },
+  {
+    "id": 1263, // Dragon spear(p)
+    "severity": 20
+  },
+  {
+    "id": 3094, // Black dart(p)
+    "severity": 10
+  },
+  {
+    "id": 3170, // Bronze spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3171, // Iron spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3172, // Steel spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3173, // Mithril spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3174, // Adamant spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3175, // Rune spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 3176, // Dragon spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 4582, // Black spear(p)
+    "severity": 20
+  },
+  {
+    "id": 4584, // Black spear(kp)
+    "severity": 30
+  },
+  {
+    "id": 5616, // Bronze arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5617, // Iron arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5618, // Steel arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5619, // Mithril arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5620, // Adamant arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5621, // Rune arrow(+)
+    "severity": 12
+  },
+  {
+    "id": 5622, // Bronze arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5623, // Iron arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5624, // Steel arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5625, // Mithril arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5626, // Adamant arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5627, // Rune arrow(s)
+    "severity": 15
+  },
+  {
+    "id": 5628, // Bronze dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5629, // Iron dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5630, // Steel dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5631, // Black dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5632, // Mithril dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5633, // Adamant dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5634, // Rune dart(+)
+    "severity": 12
+  },
+  {
+    "id": 5635, // Bronze dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5636, // Iron dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5637, // Steel dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5638, // Black dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5639, // Mithril dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5640, // Adamant dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5641, // Rune dart(s)
+    "severity": 15
+  },
+  {
+    "id": 5642, // Bronze javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5643, // Iron javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5644, // Steel javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5645, // Mithril javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5646, // Adamant javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5647, // Rune javelin(+)
+    "severity": 12
+  },
+  {
+    "id": 5648, // Bronze javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5649, // Iron javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5650, // Steel javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5651, // Mithril javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5652, // Adamant javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5653, // Rune javelin(s)
+    "severity": 15
+  },
+  {
+    "id": 5654, // Bronze knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5655, // Iron knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5656, // Steel knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5657, // Mithril knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5658, // Black knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5659, // Adamant knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5660, // Rune knife(+)
+    "severity": 12
+  },
+  {
+    "id": 5661, // Bronze knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5662, // Iron knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5663, // Steel knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5664, // Mithril knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5665, // Black knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5666, // Adamant knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5667, // Rune knife(s)
+    "severity": 15
+  },
+  {
+    "id": 5668, // Iron dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5670, // Bronze dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5672, // Steel dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5674, // Mithril dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5676, // Adamant dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5678, // Rune dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5680, // Dragon dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5682, // Black dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5684, // Poisoned dagger(+)
+    "severity": 25
+  },
+  {
+    "id": 5686, // Iron dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5688, // Bronze dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5690, // Steel dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5692, // Mithril dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5694, // Adamant dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5696, // Rune dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5698, // Dragon dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5700, // Black dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5702, // Poisoned dagger(s)
+    "severity": 30
+  },
+  {
+    "id": 5704, // Bronze spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5706, // Iron spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5708, // Steel spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5710, // Mithril spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5712, // Adamant spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5714, // Rune spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5716, // Dragon spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5718, // Bronze spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5720, // Iron spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5722, // Steel spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5724, // Mithril spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5726, // Adamant spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5728, // Rune spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5730, // Dragon spear(s)
+    "severity": 30
+  },
+  {
+    "id": 5734, // Black spear(+)
+    "severity": 25
+  },
+  {
+    "id": 5736, // Black spear(s)
+    "severity": 30
+  },
+  {
+    "id": 6061, // Bolts(+)
+    "severity": 12
+  },
+  {
+    "id": 6062, // Bolts(s)
+    "severity": 15
+  }
+]

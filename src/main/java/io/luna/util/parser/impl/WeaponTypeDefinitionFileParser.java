@@ -45,7 +45,7 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
      * Creates a new {@link WeaponTypeDefinitionFileParser}.
      */
     public WeaponTypeDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "weapon_types.jsonc"));
+        super(Paths.get("data", "game", "def", "equipment", "weapon_type_data.jsonc"));
     }
 
     @Override
