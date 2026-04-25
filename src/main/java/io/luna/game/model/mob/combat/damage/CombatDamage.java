@@ -46,6 +46,9 @@ public final class CombatDamage {
      */
     private final OptionalInt amount;
 
+    // todo docs, the source, can be null
+   // private final CombatAttack<?> source;
+
     /**
      * Creates a new resolved combat hit.
      *
@@ -59,6 +62,7 @@ public final class CombatDamage {
         this.victim = victim;
         this.type = type;
         this.amount = amount;
+       // this.source = source;
     }
 
     /**
@@ -77,8 +81,10 @@ public final class CombatDamage {
             }
             victim.damage(rawAmount);
         }
-        source.onDamageApplied(this);
+        // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync
         victim.getCombat().getDamageStack().push(this);
+        source.onDamageApplied(this);
+        victim.getCombat().setLastAttackReceived(source);
         victim.getCombat().setLastDamageReceived(this);
     }
 

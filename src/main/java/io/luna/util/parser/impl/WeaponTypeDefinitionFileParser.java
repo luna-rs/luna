@@ -5,7 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.CombatStyleDefinition;
-import io.luna.game.model.def.WeaponModelAnimationDefinition;
+import io.luna.game.model.def.WeaponModelDefinition;
 import io.luna.game.model.def.WeaponSpecialBarDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
@@ -53,7 +53,7 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
         Weapon weaponType = Weapon.valueOf(token.get("type").getAsString());
         int id = token.get("id").getAsInt();
         int line = token.get("line").getAsInt();
-        WeaponModelAnimationDefinition model = token.has("model") ? readModel(token.get("model").getAsJsonObject()) : null;
+        WeaponModelDefinition model = token.has("model") ? readModel(token.get("model").getAsJsonObject()) : null;
         JsonArray jsonStyles = token.get("styles").getAsJsonArray();
         List<CombatStyleDefinition> styles = new ArrayList<>(jsonStyles.size());
         for (JsonElement element : jsonStyles) {

@@ -2,7 +2,10 @@ package io.luna.util.parser.impl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
+import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
+import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.item.Equipment;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,13 +30,19 @@ public final class EquipmentPoisonDefinitionFileParser extends JsonFileParser<Eq
      * Creates a new {@link EquipmentPoisonDefinitionFileParser}.
      */
     public EquipmentPoisonDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "poison.json"));
+        super(Paths.get("data", "game", "def", "equipment", "weapon_poison.jsonc"));
     }
 
     @Override
     public EquipmentPoisonDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int severity = token.get("severity").getAsInt();
+        int index = EquipmentDefinition.ALL.retrieve(id).getIndex();
+        if (index != Equipment.WEAPON && index != Equipment.AMMUNITION) {
+            String name = ItemDefinition.ALL.retrieve(id).getName();
+            throw new IllegalStateException(
+                    "(" + id + " | " + name + ") Only ammo and weapons are permitted in weapon_poison.jsonc");
+        }
         return new EquipmentPoisonDefinition(id, severity);
     }
 

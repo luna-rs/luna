@@ -74,7 +74,7 @@ object CombatHandler {
     fun PlayerCombatWeapon.updateModelAnimations() {
         var model = def.model // Try weapon-linked model.
         if (model == null) {
-            model = def.typeDef.defaultModel // Try weapon interface linked model.
+            model = def.typeDef.model // Try weapon interface linked model.
         }
         if (model != null) {
             // We found a match, set the player model animations.

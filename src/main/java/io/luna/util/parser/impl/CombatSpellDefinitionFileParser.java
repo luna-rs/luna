@@ -43,7 +43,7 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
      * Creates a new {@link CombatSpellDefinitionFileParser}.
      */
     public CombatSpellDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "spells.json"));
+        super(Paths.get("data", "game", "def", "spells.jsonc"));
     }
 
     @Override

@@ -64,7 +64,12 @@ public final class CombatStyleDefinition {
     /**
      * The attack animation id used by this combat style.
      */
-    private final int animation;
+    private final int attackAnimation;
+
+    /**
+     * The defence animation id used by this combat style.
+     */
+    private final int defenceAnimation;
 
     /**
      * The interface config value used to display this combat style.
@@ -101,7 +106,8 @@ public final class CombatStyleDefinition {
      *
      * @param type The combat style this definition belongs to.
      * @param speed The attack speed, in ticks.
-     * @param animation The attack animation id.
+     * @param attackAnimation The attack animation id.
+     * @param defenceAnimation The defence animation id.
      * @param config The interface config value.
      * @param bonus The equipment bonus used for accuracy calculations.
      * @param button The button used by this combat style.
@@ -109,11 +115,12 @@ public final class CombatStyleDefinition {
      * @param range The effective range of this combat style.
      * @param exp The skill ids that receive experience.
      */
-    public CombatStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, int button,
-                                 CombatStance stance, int range, ImmutableList<Integer> exp) {
+    public CombatStyleDefinition(CombatStyle type, int speed, int attackAnimation, int defenceAnimation, int config,
+                                 EquipmentBonus bonus, int button, CombatStance stance, int range, ImmutableList<Integer> exp) {
         this.type = type;
         this.speed = speed;
-        this.animation = animation;
+        this.attackAnimation = attackAnimation;
+        this.defenceAnimation = defenceAnimation;
         this.config = config;
         this.bonus = bonus;
         this.button = button;
@@ -139,8 +146,15 @@ public final class CombatStyleDefinition {
     /**
      * @return The attack animation id.
      */
-    public int getAnimation() {
-        return animation;
+    public int getAttackAnimation() {
+        return attackAnimation;
+    }
+
+    /**
+     * @return The defence animation id.
+     */
+    public int getDefenceAnimation() {
+        return defenceAnimation;
     }
 
     /**

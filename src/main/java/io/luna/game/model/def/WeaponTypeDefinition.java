@@ -94,11 +94,8 @@ public final class WeaponTypeDefinition implements Definition {
 
     /**
      * The default model and animation metadata used by this weapon type.
-     * <p>
-     * This provides the fallback appearance and animation definition associated with the weapon type when no specific
-     * override is being used.
      */
-    private final WeaponModelAnimationDefinition model;
+    private final WeaponModelDefinition model;
 
     /**
      * The selectable combat styles for this weapon type.
@@ -120,7 +117,7 @@ public final class WeaponTypeDefinition implements Definition {
      * @param styles The selectable combat styles for this weapon type.
      * @param special The special attack bar metadata, or {@code null} if none exists.
      */
-    public WeaponTypeDefinition(Weapon type, int id, int line, WeaponModelAnimationDefinition model,
+    public WeaponTypeDefinition(Weapon type, int id, int line, WeaponModelDefinition model,
                                 List<CombatStyleDefinition> styles, WeaponSpecialBarDefinition special) {
         this.type = type;
         this.id = id;
@@ -150,9 +147,9 @@ public final class WeaponTypeDefinition implements Definition {
     }
 
     /**
-     * @return The default model and animation definition.
+     * @return The default model definition.
      */
-    public WeaponModelAnimationDefinition getModel() {
+    public WeaponModelDefinition getModel() {
         return model;
     }
 

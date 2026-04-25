@@ -7,7 +7,6 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.combat.AmmoType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack
@@ -16,6 +15,8 @@ import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import io.luna.game.model.mob.combat.state.NpcCombatContext
+import io.luna.game.model.mob.combat.state.PlayerCombatContext
 import java.util.function.BiFunction
 
 /**
@@ -34,6 +35,16 @@ import java.util.function.BiFunction
 class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val receiver: SpecialAttackDataReceiver) {
 
     /**
+     * The attacker's [PlayerCombatContext] instance.
+     */
+    val atkCombat = attacker.combat
+
+    /**
+     * The victim's [NpcCombatContext] instance.
+     */
+    val defCombat = victim.combat
+
+    /**
      * Creates a melee combat attack for this special attack using explicit animation, range, and speed values.
      *
      * The returned attack automatically:
@@ -46,9 +57,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param speed The attack speed in ticks.
      * @return A configured melee combat attack instance.
      */
-    fun melee(animationId: Int,
-              range: Int = attacker.combat.weapon.range,
-              speed: Int = attacker.combat.weapon.speed): PlayerMeleeCombatAttack {
+    fun melee(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.MELEE),
+              range: Int = atkCombat.weapon.range,
+              speed: Int = atkCombat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
@@ -65,14 +76,6 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
     }
 
     /**
-     * @return A melee combat attack using the attacker's active style animation, range, and speed.
-     */
-    fun melee(): PlayerMeleeCombatAttack {
-        val style = attacker.combat.styleDef
-        return melee(style.animation, style.range, style.speed)
-    }
-
-    /**
      * Creates a ranged combat attack for this special attack using explicit projectile and timing data.
      *
      * The returned attack automatically:
@@ -80,8 +83,6 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * - Uses special attack damage calculation through [calculateDamage].
      * - Runs the configured arrival callback through [attackArrived].
      *
-     * @param attacker The player performing the ranged attack.
-     * @param victim The mob targeted by the ranged attack.
      * @param animationId The attack animation id to use.
      * @param start The starting graphic shown when the attack is launched.
      * @param projectileFunction Supplies the projectile that travels from attacker to victim.
@@ -90,14 +91,12 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param range The maximum attack range.
      * @return A configured ranged combat attack instance.
      */
-    fun ranged(attacker: Player,
-               victim: Mob,
-               animationId: Int,
-               start: Graphic,
-               projectileFunction: BiFunction<Mob, Mob, LocalProjectile>,
-               end: Graphic?,
-               speed: Int,
-               range: Int): PlayerRangedCombatAttack {
+    fun ranged(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.RANGED),
+               start: Graphic = atkCombat.ammoDef.startGraphic,
+               projectileFunction: BiFunction<Mob, Mob, LocalProjectile> = atkCombat.ammoDef.projectile,
+               end: Graphic? = atkCombat.ammoDef.endGraphic,
+               speed: Int = atkCombat.weapon.speed,
+               range: Int = atkCombat.weapon.range): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
                                                  speed, range) {
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
@@ -116,21 +115,6 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
     }
 
     /**
-     * Creates a ranged combat attack for this special attack using the attacker's current ammo and combat style data.
-     *
-     * Bolt-rack weapons use animation `2075`; otherwise the current combat-style animation is used.
-     *
-     * @return A ranged combat attack using the attacker's active ammo and style definitions.
-     */
-    fun ranged(): PlayerRangedCombatAttack {
-        val ammo = attacker.combat.ammoDef
-        val style = attacker.combat.styleDef
-        return ranged(attacker, victim, if (ammo.type == AmmoType.BOLT_RACK) 2075 else style.animation,
-                      ammo.startGraphic, ammo.projectile, ammo.endGraphic,
-                      style.speed, style.range)
-    }
-
-    /**
      * Creates a magic combat attack for this special attack using explicit spell visuals and combat data.
      *
      * The returned attack automatically:
@@ -138,8 +122,6 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * - Uses special attack damage calculation through [calculateDamage].
      * - Runs the configured arrival callback through [attackArrived].
      *
-     * @param attacker The player casting the special attack.
-     * @param victim The mob targeted by the spell.
      * @param cast The cast animation.
      * @param start The starting graphic shown when the spell is cast.
      * @param projectileFunction Supplies the projectile that travels from attacker to victim.
@@ -150,9 +132,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param distance The distance required for interaction.
      * @return A configured magic combat attack instance.
      */
-    fun magic(attacker: Player,
-              victim: Mob,
-              cast: Animation,
+    fun magic(cast: Animation,
               start: Graphic,
               projectileFunction: BiFunction<Mob, Mob, LocalProjectile>,
               end: Graphic,
@@ -183,8 +163,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @return A magic combat attack built from the supplied spell definition.
      */
     fun magic(spell: CombatSpellDefinition): PlayerMagicCombatAttack {
-        return magic(attacker, victim, spell.castAnimation, spell.startGraphic, spell.projectile,
-                     spell.endGraphic, spell.endSound, spell.spell, 4, 10)
+        return magic(spell.castAnimation, spell.startGraphic, spell.projectile, spell.endGraphic, spell.endSound,
+                     spell.spell, 4, 10)
     }
 
     /**

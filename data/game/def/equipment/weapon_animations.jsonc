@@ -10,11 +10,23 @@
     "ids": [
       4153  // Granite maul
     ],
-    "type": "WARHAMMER",
-    "all_styles": {
-      "attack": 1665,
-      "defend": 1666
-    },
+    "styles": [
+      {
+        "style": "WARHAMMER_POUND",
+        "attack": 1665,
+        "defence": 1666
+      },
+      {
+        "style": "WARHAMMER_PUMMEL",
+        "attack": 1665,
+        "defence": 1666
+      },
+      {
+        "style": "WARHAMMER_BLOCK",
+        "attack": 1665,
+        "defence": 1666
+      }
+    ],
     "model": {
       "standing": 1662,
       "walking": 1663,

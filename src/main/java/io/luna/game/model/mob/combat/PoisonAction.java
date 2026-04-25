@@ -45,7 +45,8 @@ public final class PoisonAction extends Action<Mob> {
     public boolean run() {
         double severity = combat.decrementPoisonSeverity();
         if (severity > 0) {
-            mob.damage((int) Math.floor((severity + 4.0) / 5.0), HitType.POISON);
+            int damage = (int) Math.floor((severity + 4.0) / 5.0);
+            mob.damage(Math.max(1, damage), HitType.POISON);
             return false;
         }
         return true;

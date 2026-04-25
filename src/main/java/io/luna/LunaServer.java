@@ -187,16 +187,16 @@ public final class LunaServer {
      */
     private void initLaunchTasks() {
         List<Runnable> taskList = new ArrayList<>();
-        taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new EquipmentDefinitionFileParser());
-        taskList.add(new WeaponDefinitionFileParser());
+        taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new WeaponTypeDefinitionFileParser());
+        taskList.add(new WeaponDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
         taskList.add(new CombatSpellDefinitionFileParser());
-        taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new AmmoDefinitionFileParser());
         taskList.add(new BossFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
+        taskList.add(new EquipmentPoisonDefinitionFileParser());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {

@@ -49,6 +49,10 @@ object SpecialAttackHandler {
             plr.actions.submitIfAbsent(SpecialActivationAction(plr, receiver))
         }
         // TODO Instant special attack queuing? Test behaviour in game.
+        // TODO When special is instant and already in combat.. disable toggle off. or basically make it so that if
+        //  combat action is active and player is reached, cannot turn off special, or queuing behaviour where it locks for 1 tick after
+        // TODO see what works, do some debugging
+        // TODO This code should always come before combat processing, so disabling the bar shouldn't be necessary.
         return true
     }
 

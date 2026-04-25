@@ -10,7 +10,6 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
-import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
@@ -79,13 +78,13 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
-    public void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action) {
+    public void onNextDefence(Mob attacker, CombatDamageAction action) {
         NpcCombatHandler.INSTANCE.consumeDefence(mob, attacker, action);
     }
 
     @Override
     public EquipmentBonus getAttackStyleBonus() {
-        if(attackBonusType != null) {
+        if (attackBonusType != null) {
             return attackBonusType;
         }
         return EquipmentBonus.SLASH_ATTACK;
@@ -120,7 +119,8 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public CombatAttack<Npc> getDefaultAttack(Mob victim) {
-        return new MeleeCombatAttack<>(mob, victim, mob.combatDef().getAttackAnimation(), 1, mob.combatDef().getAttackSpeed());
+        return new MeleeCombatAttack<>(mob, victim, getAttackAnimation(CombatDamageType.MELEE), 1,
+                mob.combatDef().getAttackSpeed());
     }
 
     @Override
@@ -135,13 +135,23 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         attackBonusType = null;
     }
 
+    @Override
+    public int getAttackAnimation(CombatDamageType type) {
+        return mob.combatDef().getAttackAnimation();
+    }
+
+    @Override
+    public int getDefenceAnimation(CombatDamageType type) {
+        return mob.combatDef().getDefenceAnimation();
+    }
+
     /**
      * Plays the default defence animation for this NPC.
      * <p>
      * The animation ID is taken directly from the NPC's combat definition.
      */
-    public void handleDefaultDefence() {
-        int id = mob.combatDef().getDefenceAnimation();
+    public void handleDefaultDefence(CombatDamageType type) {
+        int id = getDefenceAnimation(type);
         mob.animation(new Animation(id));
     }
 

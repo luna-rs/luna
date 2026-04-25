@@ -126,7 +126,7 @@ public final class WeaponDefinition implements Definition {
     /**
      * @return The model animation definition, or {@code null} if none exists.
      */
-    public WeaponModelAnimationDefinition getModel() {
+    public WeaponModelDefinition getModel() {
         return null;
     }
 }
