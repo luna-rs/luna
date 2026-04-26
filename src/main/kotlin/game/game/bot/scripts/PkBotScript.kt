@@ -13,14 +13,60 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
-import java.time.Duration
-import java.util.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
-// todo use kotlin duration
+/**
+ * Wilderness PK bot behaviour script.
+ *
+ * This script sends a bot into the Wilderness, moves it through configured PK hotspots, searches for valid player
+ * targets, and reacts to combat encounters. Once the configured [duration] expires, the bot attempts to flee the
+ * Wilderness and finish safely.
+ *
+ * Movement is currently based on manually verified anchor points. Future versions should move more of this into the
+ * zone/area system so bots can recognize caves, gates, one-way routes, high-risk paths, and special escape cases.
+ *
+ * @param bot The bot controlled by this script.
+ * @param duration The maximum amount of time this script should actively PK before fleeing.
+ */
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
 
+    // TODO@1.0 Generate Wilderness area metadata from verified region ids.
+    //  Anchor points can be seeded from each region's base position plus a few verified walkable tiles. Low-level
+    //  anchors should come from the lower Wilderness rows, while deep Wilderness anchors should bias toward gates,
+    //  exits, and safer transition points.
+    //
+    //  Here is a grid of Wilderness region ids in the same layout as the actual OSRS map:
+    //
+    //  11837, 12093, 12349, 12605, 12861, 13117, 13373
+    //  11836, 12092, 12348, 12604, 12860, 13116, 13372
+    //  11835, 12091, 12347, 12603, 12859, 13115, 13371
+    //  11834, 12090, 12346, 12602, 12858, 13114, 13370
+    //  11833, 12089, 12345, 12601, 12857, 13113, 13369
+    //  11832, 12088, 12344, 12600, 12856, 13112, 13368
+    //  11831, 12087, 12343, 12599, 12855, 13111, 13367
+    //
+    //  The last two bottom rows can be used for low-level anchors, while the top two rows represent the highest
+    //  Wilderness areas.
+
+    // TODO@1.0 Separate deep Wilderness from normal Wilderness through the zoning system. If the bot is in a
+    //  DEEP_WILD zone and not inside a cave or special instance, anchor points should prefer access gates,
+    //  area exits, and other verified transition points.
+
+    /**
+     * Shared PK bot constants.
+     */
     companion object {
+
+        /**
+         * Low-level Wilderness anchor points used for entering, escaping, and returning toward safer Wilderness levels.
+         *
+         * These are spread across the lower Wilderness so bots do not always enter or escape through the exact same
+         * tile. They are currently hardcoded, but should eventually be generated from verified Wilderness regions and
+         * area metadata.
+         */
         val LOW_LEVEL_ANCHOR_POINTS = listOf(
             Position(2978, 3607, 0),
             Position(3030, 3611, 0),
@@ -44,9 +90,20 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
         )
     }
 
-    // common areas that the bot will tend to wander/route through
-    // bot will wander amongst anchor points, or just sometimes randomly dumb wander
+    /**
+     * Common Wilderness PK areas that bots can travel through while looking for targets.
+     *
+     * Each area contains a set of region ids used for rough location grouping and a list of anchor points used for
+     * wandering, routing, and hotspot selection.
+     *
+     * @property regions The map region ids covered by this PK area.
+     * @property anchors Known walkable anchor points inside or near this PK area.
+     */
     enum class PkArea(val regions: Set<Int>, val anchors: List<Position>) {
+
+        /**
+         * Lower Wilderness routes near the ditch and early Wilderness combat levels.
+         */
         LOW_LEVEL(regions = setOf(11831, 12087, 12343, 12599, 12855, 13111),
                   anchors = listOf(Position(2962, 3558, 0),
                                    Position(2984, 3563, 0),
@@ -72,6 +129,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                    Position(3287, 3539, 0),
                                    Position(3300, 3554, 0),
                                    Position(3308, 3566, 0))),
+
+        /**
+         * Level-10 Chaos Temple area and the nearby low-to-mid Wilderness routes.
+         */
         CHAOS_TEMPLE_LVL_10(regions = setOf(12856),
                             anchors = listOf(Position(3207, 3587, 0),
                                              Position(3210, 3610, 0),
@@ -83,6 +144,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                              Position(3238, 3600, 0),
                                              Position(3227, 3609, 0),
                                              Position(3229, 3587, 0))),
+
+        /**
+         * Graveyard of Shadows hotspot and surrounding level-20s Wilderness movement routes.
+         */
         GRAVEYARD_OF_SHADOWS(regions = setOf(12601),
                              anchors = listOf(Position(3140, 3705, 0),
                                               Position(3151, 3697, 0),
@@ -99,6 +164,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                               Position(3178, 3671, 0),
                                               Position(3172, 3678, 0),
                                               Position(3185, 3672, 0))),
+
+        /**
+         * Green dragon hotspot routes near the western level-20s Wilderness.
+         */
         GREEN_DRAGONS(regions = setOf(12345, 12601),
                       anchors = listOf(Position(3078, 3707, 0),
                                        Position(3100, 3707, 0),
@@ -113,6 +182,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                        Position(3176, 3696, 0),
                                        Position(3188, 3699, 0),
                                        Position(3082, 3681, 0))),
+
+        /**
+         * Bandit Camp and nearby west Wilderness routes.
+         */
         BANDIT_CAMP(regions = setOf(12089),
                     anchors = listOf(Position(3016, 3657, 0),
                                      Position(3016, 3674, 0),
@@ -125,6 +198,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                      Position(3050, 3708, 0),
                                      Position(3037, 3673, 0),
                                      Position(3038, 3653, 0))),
+
+        /**
+         * Forgotten Cemetery hotspot and surrounding level-30s Wilderness routes.
+         */
         THE_FORGOTTEN_CEMETERY(regions = setOf(11834),
                                anchors = listOf(Position(2958, 3718, 0),
                                                 Position(2973, 3723, 0),
@@ -139,6 +216,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                                 Position(2984, 3752, 0),
                                                 Position(2976, 3735, 0),
                                                 Position(2981, 3734, 0))),
+
+        /**
+         * Western level-20 ruins routes.
+         */
         RUINS_LVL_20(regions = setOf(11833),
                      anchors = listOf(Position(2960, 3653, 0),
                                       Position(2969, 3656, 0),
@@ -150,6 +231,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                       Position(2967, 3695, 0),
                                       Position(2997, 3701, 0),
                                       Position(2981, 3670, 0))),
+
+        /**
+         * Central level-30 ruins routes near Web Chasm.
+         */
         RUINS_LVL_30(regions = setOf(12602),
                      anchors = listOf(Position(3142, 3715, 0),
                                       Position(3156, 3725, 0),
@@ -168,6 +253,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                       Position(3179, 3717, 0),
                                       Position(3162, 3715, 0),
                                       Position(3154, 3715, 0))),
+
+        /**
+         * Deep-west Chaos Temple routes near the level-40 Wilderness area.
+         */
         CHAOS_TEMPLE_LVL_40(regions = setOf(11835),
                             anchors = listOf(Position(2955, 3785, 0),
                                              Position(2976, 3788, 0),
@@ -186,6 +275,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                              Position(2951, 3802, 0),
                                              Position(2959, 3819, 0),
                                              Position(2952, 3820, 0))),
+
+        /**
+         * Lava Maze and surrounding deep Wilderness routes.
+         */
         LAVA_MAZE(regions = setOf(12092, 12348, 12091, 12347),
                   anchors = listOf(Position(3021, 3875, 0),
                                    Position(3040, 3887, 0),
@@ -223,6 +316,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                    Position(3035, 3790, 0),
                                    Position(3039, 3800, 0),
                                    Position(3026, 3829, 0))),
+
+        /**
+         * Demonic Ruins routes in the north-east deep Wilderness.
+         */
         DEMONIC_RUINS(regions = setOf(13116),
                       anchors = listOf(Position(3271, 3894, 0),
                                        Position(3283, 3897, 0),
@@ -234,55 +331,47 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
                                        Position(3276, 3879, 0),
                                        Position(3277, 3886, 0)));
 
+        /**
+         * Immutable list of all configured PK areas.
+         */
         companion object {
             val ALL = ImmutableList.copyOf(values())
         }
-        // TODO Deep wilderness, after doors and gates implementation.
     }
 
+    /**
+     * Absolute script expiry time in nanoseconds.
+     *
+     * Once this time is reached, the bot stops hunting and attempts to flee the Wilderness.
+     */
+    var expireAt: Long = System.nanoTime() + duration.toLong(DurationUnit.NANOSECONDS)
 
-    // locates targets in the wild and starts fights
-    // DO NOT look for players globally... make the bots dumb or smart wander within the wilderness area and/or
-    // go to specialized hotspots (green drags, kbd, rune rocks etc. and alter through that area) while travelling in the wild if a local player appears in its
-    // updating view? then try to attack the target. maybe use patrolaction?
-
-    // ensure we can even attack before targeting... check multi, wild level, etc.
-    var expireAt: Long = System.nanoTime() + duration.toNanos()
-    private val DEBUG = true
-
-    private fun debug(message: String) {
-        if (DEBUG) {
-            println("[${javaClass.simpleName}] $message")
-        }
-    }
-
-    override suspend fun init() {
-        println("???????????")
-    }
     override suspend fun run(): Boolean {
         if (System.nanoTime() > expireAt) {
-            debug("Script expired. Fleeing wilderness.")
+            bot.log("Script expired. Fleeing wilderness.")
             handler.combat.fleeWilderness()
+
             val finished = !bot.inWilderness()
-            debug("fleeWilderness finished=$finished, inWilderness=${bot.inWilderness()}")
+            bot.log("fleeWilderness finished=$finished, inWilderness=${bot.inWilderness()}")
+
             delay(1.seconds, 3.seconds)
             return finished
         }
 
         if (checkCombat()) {
-            debug("checkCombat handled current state.")
+            bot.log("checkCombat handled current state.")
             delay(1.seconds, 3.seconds)
             return false
         }
 
         if (!resetItems()) {
-            debug("resetItems returned false.")
+            bot.log("resetItems returned false.")
             delay(1.seconds, 3.seconds)
             return false
         }
 
         if (!enterWild()) {
-            debug("enterWild returned false.")
+            bot.log("enterWild returned false.")
             delay(1.seconds, 3.seconds)
             return false
         }
@@ -290,12 +379,12 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
         travelToNewArea()
 
         if (!searchAndAttack()) {
-            debug("No target found. Delaying before retry.")
+            bot.log("No target found. Delaying before retry.")
             delay(1.seconds, 3.seconds)
             return false
         }
 
-        debug("Target found. Combat script should now be active.")
+        bot.log("Target found. Combat script should now be active.")
         return bot.combat.inCombat()
     }
 
@@ -304,45 +393,71 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
         if (remaining <= 0) {
             return Duration.ZERO
         }
-        return Duration.ofNanos(remaining)
+        return remaining.nanoseconds
     }
 
+    /**
+     * Handles the bot's current combat state.
+     *
+     * If the bot is attacked outside the Wilderness, it immediately teleports home. Wilderness NPC combat may cause the
+     * bot to flee depending on NPC strength and randomness. Wilderness player combat pushes a dedicated
+     * [CombatBotScript] so the bot can fight back using combat-specific behaviour.
+     *
+     * @return `true` if combat state was handled this tick, otherwise `false`.
+     */
     suspend fun checkCombat(): Boolean {
         val attacker = bot.combat.lastCombatWith
+
         if (bot.combat.inCombat() && attacker != null) {
-            debug(
+            bot.log(
                 "In combat. attacker=${attacker.javaClass.simpleName}, " +
                         "inWilderness=${bot.inWilderness()}, attacker=$attacker"
             )
 
             if (!bot.inWilderness()) {
-                debug("Bot is in combat outside wilderness. Sending home command.")
+                bot.log("Bot is in combat outside wilderness. Sending home command.")
                 output.sendCommand("home")
                 return true
             } else if (attacker is Npc) {
-                val shouldFlee = attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3)
-                debug(
+                val shouldFlee =
+                    attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3) // TODO@1.0 Base on intelligence.
+                bot.log(
                     "Npc attacker=${attacker.id}, npcLevel=${attacker.def().combatLevel}, " +
                             "botLevel=${bot.combatLevel}, shouldFlee=$shouldFlee"
                 )
 
                 if (shouldFlee) {
-                    debug("Fleeing NPC combat.")
+                    bot.log("Fleeing NPC combat.")
                     handler.combat.fleeCombat()
                 } else {
-                    debug("NPC attacker detected, but bot chose not to flee this tick.")
+                    bot.log("NPC attacker detected, but bot chose not to flee this tick.")
+                    bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
                 }
+
                 return true
             } else if (attacker is Player) {
-                debug("Player attacker detected. Pushing CombatBotScript for $attacker")
+                bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
                 bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
                 return true
             }
         }
+
         return false
     }
 
+    /**
+     * Searches nearby viewable players and attacks the first suitable target.
+     *
+     * Candidate targets must be alive, active, and valid according to multi-combat rules. If multiple candidates are
+     * found, the bot may sort them by distance or health to create less predictable target selection.
+     *
+     * @return `true` if a target was selected and attacked, otherwise `false`.
+     */
     fun searchAndAttack(): Boolean {
+
+        /**
+         * Checks whether [other] is a valid target candidate for this bot.
+         */
         fun check(other: Player): Boolean {
             return other.isAlive &&
                     bot.combat.checkMultiCombat(other) &&
@@ -350,12 +465,12 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
         }
 
         if (bot.combat.inCombat()) {
-            debug("Skipping target search because bot is already in combat.")
+            bot.log("Skipping target search because bot is already in combat.")
             return false
         }
 
         if (!bot.inWilderness()) {
-            debug("Skipping target search because bot is not in wilderness.")
+            bot.log("Skipping target search because bot is not in wilderness.")
             return false
         }
 
@@ -366,33 +481,39 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
             }
         }
 
-        debug("Found ${targets.size} candidate targets in view.")
+        bot.log("Found ${targets.size} candidate targets in view.")
 
         if (targets.size > 1) {
             if (rand(1 of 3)) {
-                debug("Sorting candidate targets by distance.")
+                bot.log("Sorting candidate targets by distance.")
                 targets.sortWith(LocatableDistanceComparator(bot))
             } else if (rand(1 of 4)) {
-                debug("Sorting candidate targets by health percent.")
+                bot.log("Sorting candidate targets by health percent.")
                 targets.sortBy { it.healthPercent }
             } else {
-                debug("Leaving candidate targets unsorted.")
+                bot.log("Leaving candidate targets unsorted.")
             }
         }
 
         for (other in targets) {
-            if (other.isAlive && bot.combat.checkMultiCombat(other) && other.state == EntityState.ACTIVE) {
-                debug("Selected target $other. Pushing CombatBotScript.")
+            if (check(other)) {
+                bot.log("Selected target $other. Pushing CombatBotScript.")
                 bot.combat.attack(other)
                 bot.scriptStack.pushHead(CombatBotScript(bot, other))
                 return true
             }
         }
 
-        debug("No valid target selected after filtering.")
+        bot.log("No valid target selected after filtering.")
         return false
     }
 
+    /**
+     * Occasionally sends the bot to a random configured PK area.
+     *
+     * The bot only travels when it is in the Wilderness, not already navigating, not in combat, and has enough tolerance
+     * remaining to justify moving to another hotspot.
+     */
     private suspend fun travelToNewArea() {
         if (!bot.combat.inCombat() &&
             bot.inWilderness() &&
@@ -400,32 +521,49 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
             bot.tolerance.duration.toMinutes() > 10) {
             val area = PkArea.ALL.random()
             val anchor = area.anchors.random()
-            debug("Travelling to new area ${area.name}, anchor=$anchor")
+
+            bot.log("Travelling to new area ${area.name}, anchor=$anchor")
             bot.navigator.navigate(anchor, true).await()
         }
     }
 
+    /**
+     * Verifies and resets the bot's PK supplies.
+     *
+     * This is currently a placeholder. Future logic should verify food, runes, ammunition, teleport options, combat
+     * gear, and other resources required by the bot's combat profile.
+     *
+     * @return `true` if the bot is ready to continue PKing, otherwise `false`.
+     */
     private fun resetItems(): Boolean {
-        debug("resetItems called.")
-        // TODO Make sure we have food and proper combat equipment.
+        bot.log("resetItems called.")
+        // TODO@0.5.0 Make sure we have food and proper combat equipment.
         return true
     }
 
+    /**
+     * Ensures the bot is inside the Wilderness before searching for targets.
+     *
+     * If the bot is outside the Wilderness, it navigates to a random low-level Wilderness anchor and verifies that the
+     * destination actually placed it inside the Wilderness.
+     *
+     * @return `true` if the bot is in the Wilderness, otherwise `false`.
+     */
     private suspend fun enterWild(): Boolean {
         if (!bot.inWilderness()) {
             val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
-            debug("Bot is outside wilderness. Walking to low level anchor $anchor")
+
+            bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
             handler.widgets.clickRunning(true)
             bot.navigator.navigate(anchor, true).await()
 
             if (!bot.inWilderness()) {
-                debug("Reached anchor but bot is still not in wilderness. position=${bot.position}")
+                bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
                 return false
             }
 
-            debug("Bot entered wilderness successfully at position=${bot.position}")
+            bot.log("Bot entered wilderness successfully at position=${bot.position}")
         }
-
         return true
     }
 }
