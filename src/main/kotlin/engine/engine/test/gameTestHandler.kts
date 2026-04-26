@@ -22,6 +22,7 @@ import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 import io.luna.game.model.mob.overlay.NumberInput
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import kotlin.time.Duration.Companion.hours
 
 val COMBAT_FOOD = listOf(Food.MANTA_RAY, Food.SHARK, Food.SWORDFISH, Food.LOBSTER)
 val POSSIBLE_WEAPONS = SpecialAttackHandler.getAllWeaponIds()
@@ -157,7 +158,7 @@ fun startCombatTest(plr: Player) {
             }
             checkEquipment(bot)
             loadInventory(bot)
-            bot.scriptStack.push(PkBotScript(bot, Duration.ofHours(24)))
+            bot.scriptStack.push(PkBotScript(bot, 24.hours))
             botList += bot
         }
     }

@@ -1,9 +1,8 @@
 package api.predef.ext
 
-import engine.interaction.follow.MobFollowAction
+import game.player.Animations
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.block.Animation
-import game.player.Animations
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 
 /**
@@ -18,11 +17,4 @@ fun Mob.animation(animation: Animations) {
  */
 fun Mob.animation(animation: Animations, priority: AnimationPriority) {
     animation(Animation(animation.id, priority))
-}
-
-/**
- * Submits a [MobFollowAction] to the mob's action queue.
- */
-fun Mob.follow(target: Mob) {
-    submitAction(MobFollowAction(this, target))
 }

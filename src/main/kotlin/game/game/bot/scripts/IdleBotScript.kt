@@ -11,7 +11,6 @@ import api.predef.ext.*
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
 import engine.controllers.Controllers.inWilderness
-import engine.interaction.follow.MobFollowAction
 import engine.widget.settings.Emote
 import game.bot.scripts.IdleBotScript.InputData
 import io.luna.Luna
@@ -143,7 +142,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
             // Follow them for a little or until you enter the wilderness.
             val followTime = rand(5, 120)
-            waitFor(followTime.minutes) { bot.inWilderness() || !bot.actions.contains(MobFollowAction::class) }
+            waitFor(followTime.minutes) { bot.inWilderness() || !bot.navigator.isActive }
 
             bot.log("No longer following anyone.")
         }
