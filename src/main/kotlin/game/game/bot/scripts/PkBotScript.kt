@@ -348,11 +348,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
 
     override suspend fun run(): Boolean {
         if (System.nanoTime() > expireAt) {
-            bot.log("Script expired. Fleeing wilderness.")
-            handler.combat.fleeWilderness()
+            bot.log("Script expired. Travelling back home.")
 
-            val finished = !bot.inWilderness()
-            bot.log("fleeWilderness finished=$finished, inWilderness=${bot.inWilderness()}")
+            val finished = handler.travelHome()
+            bot.log("travelHome finished=$finished, inWilderness=${bot.inWilderness()}")
 
             delay(1.seconds, 3.seconds)
             return finished

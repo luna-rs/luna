@@ -79,7 +79,7 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<KotlinCompile>().all {
-    // todo Will need this flag in later versions.
+    // TODO@Lunascape We will need this flag in later Kotlin versions for script files to be recognized.
     //kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
     kotlinOptions.jvmTarget = "11"
 }

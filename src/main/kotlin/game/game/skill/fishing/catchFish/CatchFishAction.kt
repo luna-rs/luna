@@ -18,7 +18,7 @@ import game.skill.fishing.Tool
 class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
     InventoryAction(msg.plr, false, tool.speed, Int.MAX_VALUE) {
 
-        // todo sounds     FISHING_CAST(377), FISH_SWIM(378), NET(379),CATCH(238), ?
+    // TODO@0.5.0 Implement correct sounds: FISHING_CAST(377), FISH_SWIM(378), NET(379), CATCH(238), ?
     /**
      * The messages to send on harvest.
      */

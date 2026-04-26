@@ -388,18 +388,18 @@ public class Player extends Mob {
 
     @Override
     public void onHit(Hit hit) {
-        // TODO Do more research into combat sounds.
-        if (hit.getDamage() > 0) {
-            // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
-           /* playRandomSound(
+        // TODO@0.5.0 Do more research into combat sounds, when different sound effects play.
+
+        /*  if (hit.getDamage() > 0) {
+          playRandomSound(
                     Sound.TAKE_DAMAGE,
                     Sound.TAKE_DAMAGE_2,
                     Sound.TAKE_DAMAGE_3,
                     Sound.TAKE_DAMAGE_4
-            );*/
+            );
         } else {
             //playSound(Sound.UNARMED_BLOCK);
-        }
+        }*/
     }
 
     /**
@@ -1362,7 +1362,7 @@ public class Player extends Mob {
      * @return The creation instant.
      */
     public Instant getCreatedAt() {
-        if(createdAt == null) {
+        if (createdAt == null) {
             createdAt = Instant.now();
         }
         return createdAt;

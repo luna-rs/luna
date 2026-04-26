@@ -57,7 +57,7 @@ val bankStarter = listOf(
     item("Iron axe"),
     item("Hammer"),
     item("Tinderbox")
-    // TODO Farming starter bot items.
+    // TODO@0.5.0 Farming starter bot items.
 )
 
 /**

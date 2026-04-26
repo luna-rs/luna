@@ -20,9 +20,11 @@ public class JingleMessageWriter extends GameMessageWriter {
     private final Jingles jingle;
 
     /**
-     * The last played song.
+     * The last played song (?).
+     * <p>
+     * TODO@0.5.0 Find out exactly what this is used for and implement it. Maybe the previously playing music track?
      */
-    private final int lastPlayed = -1; // TODO Last played song.
+    private final int lastPlayed = -1;
 
     /**
      * Creates a new {@link JingleMessageWriter}.

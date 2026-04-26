@@ -21,7 +21,7 @@ import game.skill.smithing.BarType
  * @author lare96
  */
 class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.superheatDelay, 5) {
-        // todo sound SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support
+    // TODO@0.5.0 Implement correct sounds: SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support.
     companion object {
 
         /**

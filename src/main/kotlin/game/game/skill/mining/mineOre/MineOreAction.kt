@@ -24,7 +24,7 @@ import game.skill.mining.Pickaxe
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
     AnimatedInventoryAction(plr, 1, 4, Int.MAX_VALUE) {
 
-        // todo sounds MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5,
+        // TODO@0.5.0 Implement correct sounds: MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5.
     override fun executeIf(start: Boolean) = when {
         mob.mining.level < ore.level -> {
             // Check if we have required level.

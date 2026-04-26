@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.SuspendableFuture
 import api.predef.*
 import api.predef.ext.*
+import engine.controllers.Controllers.inWilderness
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
@@ -16,6 +17,8 @@ import java.util.*
  * Almost every function will return [SuspendableFuture] which can be used to suspend the underlying coroutine
  * and/or send a signal to the future's channel to unsuspend it. Functions may also block coroutines with sub-tasks
  * before returning.
+ *
+ * @author lare96
  */
 class BotActionHandler(val bot: Bot) {
 
@@ -53,6 +56,30 @@ class BotActionHandler(val bot: Bot) {
      * The combat action handler.
      */
     val combat = BotCombatActionHandler(bot, this)
+
+    /**
+     * Attempts to send the bot home.
+     *
+     * If the bot is inside the Wilderness, it first delegates to [BotCombatActionHandler.fleeWilderness] so the bot can
+     * use Wilderness-specific escape behaviour before teleporting home. Outside the Wilderness, the home command is
+     * sent immediately.
+     *
+     * @return `true` if the home command was sent or the Wilderness escape completed, otherwise `false`.
+     */
+    suspend fun travelHome(): Boolean {
+        // TODO@1.0 Minigame and combat checks, etc.
+        if (bot.inWilderness()) {
+            if (combat.fleeWilderness()) {
+                bot.output.sendCommand("home")
+                return true
+            }
+            return false
+        } else {
+            bot.output.sendCommand("home")
+            return true
+        }
+    }
+
 
     /**
      * Determines if [bot] has [item] in its equipment, inventory, or bank.
