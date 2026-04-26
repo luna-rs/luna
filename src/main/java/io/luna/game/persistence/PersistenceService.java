@@ -181,7 +181,10 @@ public final class PersistenceService extends AbstractIdleService {
      */
     public CompletableFuture<Void> save(String username, PlayerData data) {
         IllegalStateException ex = new IllegalStateException("This player is already being serviced by LogoutService.");
-        if (world.getLogoutService().hasRequest(username)) {
+        if (data == null) {
+            // No data to save.
+            return CompletableFuture.completedFuture(null);
+        } else if (world.getLogoutService().hasRequest(username)) {
             // The LogoutService will handle the saving.
             return CompletableFuture.failedFuture(ex);
         }
@@ -210,7 +213,7 @@ public final class PersistenceService extends AbstractIdleService {
             // Send all requests to a worker.
             var timer = Stopwatch.createStarted();
             for (Player player : world.getPlayerMap().values()) {
-                if(player.isBot()) {
+                if (player.isBot() && player.asBot().isTemporary()) {
                     continue;
                 }
                 String username = player.getUsername();
