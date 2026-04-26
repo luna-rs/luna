@@ -8,6 +8,17 @@
 [
   {
     "ids": [
+      1305 // Dragon longsword
+    ],
+    "styles": [],
+    "model": {
+      "running": 819,
+      "standing": 809,
+      "walking": 824
+    }
+  },
+  {
+    "ids": [
       4153  // Granite maul
     ],
     "styles": [

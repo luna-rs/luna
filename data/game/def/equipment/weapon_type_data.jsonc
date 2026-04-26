@@ -694,11 +694,6 @@
     "type": "LONGSWORD",
     "id": 2423,
     "line": 2426,
-    "model": {
-      "running": -1,
-      "standing": 809,
-      "walking": -1
-    },
     "styles": [
       {
         "type": "LONGSWORD_CHOP",
