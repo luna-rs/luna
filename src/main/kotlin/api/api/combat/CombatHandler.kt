@@ -2,6 +2,7 @@ package api.combat
 
 import api.predef.*
 import io.luna.game.model.def.ItemDefinition
+import io.luna.game.model.def.WeaponAnimationDefinition
 import io.luna.game.model.mob.block.PlayerModelAnimation
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.combat.state.PlayerCombatContext
@@ -72,7 +73,7 @@ object CombatHandler {
      * Otherwise, the default player model animations are restored.
      */
     fun PlayerCombatWeapon.updateModelAnimations() {
-        var model = def.model // Try weapon-linked model.
+        var model = WeaponAnimationDefinition.ALL[id]?.model // Try weapon animation override linked model.
         if (model == null) {
             model = def.typeDef.model // Try weapon interface linked model.
         }
