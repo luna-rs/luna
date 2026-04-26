@@ -13,11 +13,11 @@ import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
-import io.luna.game.model.mob.wandering.DumbWanderingAction;
-import io.luna.game.model.mob.wandering.PatrolAction;
-import io.luna.game.model.mob.wandering.SmartWanderingAction;
-import io.luna.game.model.mob.wandering.WanderingAction;
-import io.luna.game.model.mob.wandering.WanderingFrequency;
+import io.luna.game.model.mob.movement.wandering.DumbWanderingAction;
+import io.luna.game.model.mob.movement.wandering.PatrolAction;
+import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
+import io.luna.game.model.mob.movement.wandering.WanderingAction;
+import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
 import io.luna.game.model.path.SimplePathfinder;
 
 import java.util.Objects;
@@ -92,11 +92,6 @@ public class Npc extends Mob {
      * The NPC aggression handler.
      */
     protected final NpcAggression aggression = new NpcAggression(this);
-
-    /**
-     * The max hit override.
-     */
-    private int maxHit;
 
     /**
      * Creates a new {@link Npc}.
@@ -430,22 +425,6 @@ public class Npc extends Mob {
      */
     public Set<Player> getLocalHumans() {
         return localHumans;
-    }
-
-    /**
-     * @return The max hit override.
-     */
-    public int getMaxHit() {
-        return maxHit;
-    }
-
-    /**
-     * Sets the max hit override.
-     *
-     * @param maxHit The new max hit, will override definitions.
-     */
-    public void setMaxHit(int maxHit) {
-        this.maxHit = maxHit;
     }
 
     /**

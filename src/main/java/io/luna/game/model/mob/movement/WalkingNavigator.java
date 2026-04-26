@@ -13,7 +13,6 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.path.BotPathfinder;
 import io.luna.game.model.path.GamePathfinder;
-import io.luna.game.model.path.InvalidPathException;
 import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.game.model.path.SimplePathfinder;
 import io.luna.util.RandomUtils;
@@ -31,15 +30,14 @@ import java.util.concurrent.ForkJoinPool;
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
 
 /**
- * Handles low-level, optionally asynchronous movement for a {@link Mob}. This class provides two styles of movement:
- * <ul>
- *     <li><b>Stepping</b> - immediate single-tile steps that do not use a pathfinder.</li>
- *     <li><b>Path walking</b> - computes a path using a {@link GamePathfinder} and queues it into the mob's
- *     walking queue.</li>
- * </ul>
+ * Handles walking, stepping, and path-based navigation for a {@link Mob}.
  * <p>
- * Pathfinding can be performed synchronously or asynchronously. When asynchronous, path computation is offloaded to
- * a lightweight, efficient, shared fork-join pool to avoid blocking the game thread.
+ * The navigator supports immediate single-tile steps, direct path walking, and higher-level {@link NavigationRequest}
+ * processing. Pathfinding may be performed synchronously on the calling thread or asynchronously on a shared pathfinding pool.
+ * <p>
+ * Navigation requests are submitted through {@link #submit(NavigationRequest)} and completed through the request's
+ * pending {@link CompletableFuture}. Direct walking helpers are also provided for simple position and entity
+ * movement.
  *
  * @author lare96
  */
@@ -51,27 +49,31 @@ public class WalkingNavigator {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * Shared pathfinding pool.
+     * The shared worker pool used for asynchronous pathfinding.
      * <p>
-     * Uses 2 threads to limit CPU usage. Asynchronous-mode {@link ForkJoinPool} helps with throughput under load.
+     * This pool is intentionally small to avoid letting pathfinding consume too much CPU time under load.
      */
     private static final ForkJoinPool pool = new ForkJoinPool(2, defaultForkJoinWorkerThreadFactory, null, true);
 
     /**
-     * The collision manager.
+     * The collision manager used for step validation and pathfinding.
      */
     private final CollisionManager collisionManager;
 
     /**
-     * The owning mob.
+     * The mob controlled by this navigator.
      */
     private final Mob mob;
 
+    /**
+     * The currently active navigation request.
+     * <p>
+     * A request remains active until its pending future is completed or cancelled.
+     */
     private NavigationRequest active;
 
-
     /**
-     * Creates a navigator for {@code mob}.
+     * Creates a new walking navigator for a mob.
      *
      * @param mob The mob this navigator controls.
      */
@@ -80,12 +82,24 @@ public class WalkingNavigator {
         collisionManager = mob.getWorld().getCollisionManager();
     }
 
-    // must only be called from game thread to be thread safe
+    /**
+     * Submits a navigation request for this mob.
+     * <p>
+     * If the supplied request matches the currently active request, the existing pending result is returned instead
+     * of submitting duplicate navigation work. If another request is already active, it is cancelled before the new
+     * request is started.
+     * <p>
+     * This method should only be called from the game thread, because it mutates the active request and submits
+     * movement actions.
+     *
+     * @param request The navigation request to submit.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> submit(NavigationRequest request) {
         if (request.equals(active)) {
             return active.getPending();
         }
-        if(isActive()) {
+        if (isActive()) {
             cancel();
         }
         active = request;
@@ -93,7 +107,15 @@ public class WalkingNavigator {
         return active.getPending();
     }
 
-    // navigates on top, one-shot
+    /**
+     * Navigates this mob directly onto a position.
+     * <p>
+     * This is a one-shot request that completes once the mob reaches the exact tile or fails to reach it.
+     *
+     * @param position The exact position to navigate to.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigate(Position position, boolean async) {
         var request = NavigationRequest.builder(mob)
                 .async(async)
@@ -104,24 +126,32 @@ public class WalkingNavigator {
         return submit(request);
     }
 
-    // navigates on top with explicit continuous flag
-    public CompletableFuture<NavigationResult> navigate(Position position, boolean async, boolean continuous) {
-        var request = NavigationRequest.builder(mob)
-                .async(async)
-                .continuous(continuous)
-                .policy(new InteractionPolicy(InteractionType.SIZE, 0))
-                .target(position)
-                .build();
-        return submit(request);
-    }
-
-    // navigates to interaction distance from offsetDir, continuous if navigating to mob
+    /**
+     * Navigates this mob to interaction distance from an entity using an optional offset direction.
+     * <p>
+     * Mob targets are tracked continuously by default, while non-mob entity targets are treated as one-shot
+     * navigation requests.
+     *
+     * @param entity The entity to navigate toward.
+     * @param offsetDir The optional offset direction around the entity, or {@code null} to choose automatically.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigate(Entity entity, Direction offsetDir, boolean async) {
         return navigate(entity, offsetDir, async, entity instanceof Mob);
     }
 
-    // navigates to interaction distance from offsetDir with explicit continuous flag
-    public CompletableFuture<NavigationResult> navigate(Entity entity, Direction offsetDir, boolean async, boolean continuous) {
+    /**
+     * Navigates this mob to interaction distance from an entity using an optional offset direction.
+     *
+     * @param entity The entity to navigate toward.
+     * @param offsetDir The optional offset direction around the entity, or {@code null} to choose automatically.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @param continuous {@code true} to keep tracking the entity, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
+    public CompletableFuture<NavigationResult> navigate(Entity entity, Direction offsetDir, boolean async,
+                                                        boolean continuous) {
         var request = NavigationRequest.builder(mob)
                 .async(async)
                 .continuous(continuous)
@@ -132,44 +162,90 @@ public class WalkingNavigator {
         return submit(request);
     }
 
-    // navigate to interaction distance, facing the entity, continuous if navigating to mob
+    /**
+     * Navigates this mob to interaction distance from an entity.
+     * <p>
+     * Mob targets are tracked continuously by default, while non-mob entity targets are treated as one-shot
+     * navigation requests.
+     *
+     * @param entity The entity to navigate toward.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigate(Entity entity, boolean async) {
         return navigate(entity, null, async);
     }
 
-    // navigate to interaction distance, facing the entity, with explicit continuous flag
+    /**
+     * Navigates this mob to interaction distance from an entity.
+     *
+     * @param entity The entity to navigate toward.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @param continuous {@code true} to keep tracking the entity, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigate(Entity entity, boolean async, boolean continuous) {
         return navigate(entity, null, async, continuous);
     }
 
-    // navigate to interaction distance, behind the entity, always continuous
-    public CompletableFuture<NavigationResult> navigateBehind(Mob mob, boolean async) {
-        return navigate(mob, mob.getLastDirection().opposite(), async, true);
+    /**
+     * Navigates this mob behind another mob.
+     * <p>
+     * The destination is based on the target mob's last facing direction. This request is continuous by default.
+     *
+     * @param mob The mob to navigate behind.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
+    public CompletableFuture<NavigationResult> follow(Mob mob, boolean async) {
+        return navigateBehind(mob, async, true);
     }
 
-    // navigate to interaction distance, behind the entity, with explicit continuous flag
+    /**
+     * Navigates this mob behind another mob.
+     *
+     * @param mob The mob to navigate behind.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @param continuous {@code true} to keep tracking the mob, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigateBehind(Mob mob, boolean async, boolean continuous) {
         return navigate(mob, mob.getLastDirection().opposite(), async, continuous);
     }
 
-    // navigate to interaction distance, ahead of the entity, always continuous
+    /**
+     * Navigates this mob ahead of another mob.
+     * <p>
+     * The destination is based on the target mob's last facing direction. This request is continuous by default.
+     *
+     * @param mob The mob to navigate ahead of.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigateAhead(Mob mob, boolean async) {
-        return navigate(mob, mob.getLastDirection(), async, true);
+        return navigateAhead(mob, async, true);
     }
 
-    // navigate to interaction distance, ahead of the entity, with explicit continuous flag
+    /**
+     * Navigates this mob ahead of another mob.
+     *
+     * @param mob The mob to navigate ahead of.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @param continuous {@code true} to keep tracking the mob, otherwise {@code false}.
+     * @return The pending navigation result.
+     */
     public CompletableFuture<NavigationResult> navigateAhead(Mob mob, boolean async, boolean continuous) {
         return navigate(mob, mob.getLastDirection(), async, continuous);
     }
 
     /**
-     * Attempts to queue a single step in {@code direction}.
+     * Attempts to queue a single step in a direction.
      * <p>
-     * This does <b>not</b> invoke a pathfinder. It is a single-step "nudge" that only succeeds if the target tile
-     * is traversable.
+     * This does not invoke a pathfinder. It is a single-step nudge that only succeeds if the destination tile is
+     * traversable.
      *
      * @param direction The direction to step.
-     * @return {@code true} if the step was queued, {@code false} if blocked.
+     * @return {@code true} if the step was queued, otherwise {@code false}.
      */
     public boolean step(Direction direction) {
         if (direction != Direction.NONE && collisionManager.traversable(mob.getPosition(), mob.getType(), direction)) {
@@ -182,8 +258,8 @@ public class WalkingNavigator {
     /**
      * Attempts to queue a single random step.
      *
-     * @param includeDiagonals If {@code true}, considers 8 directions; otherwise only uses NESW.
-     * @return {@code true} if a step was queued, {@code false} if all candidate directions were blocked.
+     * @param includeDiagonals {@code true} to include diagonal directions, otherwise {@code false}.
+     * @return {@code true} if a random step was queued, otherwise {@code false}.
      */
     public boolean stepRandom(boolean includeDiagonals) {
         ImmutableList<Direction> directions = includeDiagonals ? Direction.ALL_EXCEPT_NONE : Direction.NESW;
@@ -200,12 +276,20 @@ public class WalkingNavigator {
         return true;
     }
 
+    /**
+     * Cancels the currently active navigation request, if one exists.
+     */
     public void cancel() {
         if (isActive()) {
             active.getPending().cancel(true);
         }
     }
 
+    /**
+     * Determines whether this navigator currently has an active request.
+     *
+     * @return {@code true} if a navigation request is still pending, otherwise {@code false}.
+     */
     public boolean isActive() {
         if (active != null) {
             return !active.getPending().isDone();
@@ -213,6 +297,9 @@ public class WalkingNavigator {
         return false;
     }
 
+    /**
+     * @return The current navigation target, or {@code null} if no request is active.
+     */
     public Locatable getCurrentTarget() {
         if (isActive()) {
             return active.getTarget();
@@ -220,16 +307,17 @@ public class WalkingNavigator {
         return null;
     }
 
-
     /**
-     * Computes a path from {@code start} to {@code target}. If {@code async} is {@code true}, the path is
-     * computed on {@link #pool}. Otherwise, computation happens immediately in the current thread.
+     * Computes a path from a start position to a target position.
+     * <p>
+     * If {@code async} is {@code true}, pathfinding is performed on the shared pathfinding pool. Otherwise, pathfinding
+     * is performed immediately on the calling thread.
      *
      * @param start The start position.
      * @param target The target position.
      * @param pathfinder The pathfinder to use.
-     * @param async Whether to compute asynchronously.
-     * @return A future containing a validated path (may be empty if blocked/unreachable).
+     * @param async {@code true} to compute asynchronously, otherwise {@code false}.
+     * @return A future containing the computed path, or {@code null} if no valid path was found.
      */
     public CompletableFuture<Deque<Position>> findPath(Position start, Position target,
                                                        GamePathfinder<Position> pathfinder, boolean async) {
@@ -238,8 +326,7 @@ public class WalkingNavigator {
                 : CompletableFuture.completedFuture(pathfinder.find(start, target));
         result = result.thenApply(it -> {
             if (it == null && !start.equals(target)) {
-                // Empty path, no valid route could be found.
-                throw new InvalidPathException(mob, start, target, pathfinder);
+                return null;
             }
             return it;
         });
@@ -247,11 +334,14 @@ public class WalkingNavigator {
     }
 
     /**
-     * Walks to {@code destination} using a specific {@code pathfinder}.
+     * Computes and queues a path to a destination.
+     * <p>
+     * The path is computed using the supplied pathfinder, then applied to the mob's walking queue on the game
+     * executor.
      *
      * @param destination The destination to walk to.
      * @param pathfinder The pathfinder implementation to use.
-     * @param async If {@code true}, pathfinding is performed asynchronously.
+     * @param async {@code true} to perform pathfinding asynchronously, otherwise {@code false}.
      * @return A future that completes once the path has been computed and queued.
      */
     CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
@@ -261,19 +351,17 @@ public class WalkingNavigator {
     }
 
     /**
-     * Selects the default pathfinder to use for this mob.
-     *
+     * Selects the default pathfinder for this mob.
      * <ul>
-     *     <li>{@link Bot} uses {@link BotPathfinder}.</li>
-     *     <li>{@link Player} uses {@link PlayerPathfinder}.</li>
-     *     <li>Other mobs use {@link SimplePathfinder}.</li>
+     *     <li>{@link Bot} mobs use {@link BotPathfinder}.</li>
+     *     <li>{@link Player} mobs use {@link PlayerPathfinder}.</li>
+     *     <li>All other mobs use {@link SimplePathfinder}.</li>
      * </ul>
      *
-     * @return The default pathfinder for the controlled mob.
+     * @return The default pathfinder for this mob.
      */
     GamePathfinder<Position> getDefaultPathfinder() {
         int plane = mob.getPosition().getZ();
-        // todo pathfinder should be a part of the builder request. this is the default
         if (mob instanceof Bot) {
             return new BotPathfinder(collisionManager, plane);
         } else if (mob instanceof Player) {
@@ -284,19 +372,19 @@ public class WalkingNavigator {
     }
 
     /**
-     * Wraps a future with logging and a fallback value when errors occur.
+     * Adds common exception handling to a pathfinding future.
      * <p>
-     * Cancellation is treated as normal control flow and is not logged.
+     * Cancellation is treated as normal control flow and is not logged. Unexpected failures are logged and converted
+     * into {@code null} completion values.
      *
-     * @param target The intended navigation target (used for logging context).
+     * @param target The intended navigation target used for logging context.
      * @param result The future to wrap.
-     * @param <T> The future type.
-     * @return A future that logs unexpected exceptions and returns {@code value} on failure.
+     * @param <T> The future result type.
+     * @return A future that logs unexpected failures and returns {@code null} when recovery is needed.
      */
     <T> CompletableFuture<T> handleExceptions(Locatable target, CompletableFuture<T> result) {
         return result.exceptionally(ex -> {
-            boolean ignored = ex instanceof CancellationException || ex instanceof InvalidPathException ||
-                    ex.getCause() instanceof InvalidPathException;
+            boolean ignored = ex instanceof CancellationException;
             if (!ignored) {
                 logger.error("Pathfinding for mob {} to target {} failed!", mob, target, ex);
             }
@@ -305,16 +393,14 @@ public class WalkingNavigator {
     }
 
     /**
-     * Computes an adjacent offset position around {@code target} based on an approach direction.
+     * Computes an adjacent offset position around an entity.
      * <p>
-     * This is used to find the tile this mob should occupy when moving next to a target without overlapping its bounds.
-     * Both this mob's size and the target's size are taken into account, making it suitable for large NPCs and
-     * other multi-tile entities.
+     * This is used when a mob needs to walk next to an entity instead of walking directly onto its tile. Both this
+     * mob's size and the target entity's size are considered, making this suitable for large NPCs and other
+     * multi-tile entities.
      * <p>
      * If {@code offsetDir} is present, that direction is used directly. Otherwise, the direction is derived from this
      * mob's current position relative to the target.
-     * <p>
-     * The returned position is placed on the same height level as this mob.
      *
      * @param target The target entity to compute an adjacent position around.
      * @param offsetDir The optional direction to approach from.
@@ -335,11 +421,9 @@ public class WalkingNavigator {
         int dx = direction.getTranslateX();
         int dy = direction.getTranslateY();
 
-        // Pick the "near edge" of the target rectangle based on approach direction.
         int targetX = dx <= 0 ? targetPosition.getX() : targetPosition.getX() + targetSizeX - 1;
         int targetY = dy <= 0 ? targetPosition.getY() : targetPosition.getY() + targetSizeY - 1;
 
-        // Offset by this mob's size so we end up adjacent (not overlapping).
         int offsetX;
         if (dx < 0) {
             offsetX = -sizeX;

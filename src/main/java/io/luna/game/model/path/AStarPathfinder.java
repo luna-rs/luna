@@ -98,6 +98,9 @@ public abstract class AStarPathfinder<T extends Locatable> extends GamePathfinde
             }
         } while (!open.isEmpty());
 
+        if(!end.hasParent()) {
+            return null;
+        }
         nodes.clear();
 
         Deque<T> shortest = new ArrayDeque<>();
@@ -111,6 +114,8 @@ public abstract class AStarPathfinder<T extends Locatable> extends GamePathfinde
                 locatable = active.getLocatable();
             }
         }
+
+
         return shortest;
     }
 

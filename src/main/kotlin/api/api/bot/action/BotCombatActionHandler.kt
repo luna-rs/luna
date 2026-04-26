@@ -20,7 +20,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
                 bot.output.sendCommand("home")
                 return true // todo verify bot is actually home before returning
             } else if (bot.walking.isEmpty) {
-                bot.movementStack.walkUntilReached(LOW_LEVEL_ANCHOR_POINTS.random()).await()
+                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true).await()
                 bot.output.sendCommand("home")
                 return true // todo verify bot is actually home before returning
             }

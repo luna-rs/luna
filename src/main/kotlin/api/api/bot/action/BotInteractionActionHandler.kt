@@ -1,12 +1,12 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
-import api.predef.ext.*
 import io.luna.game.model.Entity
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.GroundItemClickMessageReader
 import io.luna.net.msg.`in`.NpcClickMessageReader
@@ -32,7 +32,7 @@ class BotInteractionActionHandler(private val bot: Bot) {
      * @return `false` if the interaction was unsuccessful.
      */
     suspend fun interact(option: Int, target: Entity): Boolean {
-        if (bot.movementStack.walkUntilReached(target).await()) {
+        if (bot.navigator.navigate(target, true).await() == NavigationResult.REACHED) {
             val cond = SuspendableCondition {
                 (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                         bot.isInteractingWith(target)
