@@ -31,7 +31,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      */
     fun eatFood(id: Int = -1): Boolean {
         if (id == -1) {
-            var lastMatching: Pair<Int, Int>? = null
+            var matching: Pair<Int, Int>? = null
 
             for ((index, item) in bot.inventory.withIndex()) {
                 if (item == null) {
@@ -39,13 +39,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
                 }
 
                 if (Food.ID_TO_FOOD.containsKey(item.id)) {
-                    lastMatching = index to item.id
+                    matching = index to item.id
                     break
                 }
             }
 
-            if (lastMatching != null) {
-                bot.output.sendInventoryItemClick(1, lastMatching.first, lastMatching.second)
+            if (matching != null) {
+                bot.output.sendInventoryItemClick(1, matching.first, matching.second)
                 return true
             }
         } else if (Food.ID_TO_FOOD.containsKey(id)) {
@@ -134,7 +134,6 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             bot.combat.magic.selectedSpell = spell.def
             return true
         }
-
         return false
     }
 }
