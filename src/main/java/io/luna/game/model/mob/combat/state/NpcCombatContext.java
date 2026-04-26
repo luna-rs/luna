@@ -59,6 +59,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     private EquipmentBonus attackBonusType;
 
     /**
+     * The max hit override, takes effect when above or equal to 0.
+     */
+    private int maxHit = -1;
+
+    /**
      * Creates a new {@link NpcCombatContext}.
      *
      * @param npc The owning mob.
@@ -69,7 +74,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public int getDefaultMaxHit(CombatDamageType type) {
-        return mob.getMaxHit() > 0 ? mob.getMaxHit() : mob.combatDef().getMaximumHit();
+        return maxHit >= 0 ? maxHit : mob.combatDef().getMaximumHit();
     }
 
     @Override
@@ -196,5 +201,21 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      */
     public void setAttackBonusType(EquipmentBonus attackBonusType) {
         this.attackBonusType = attackBonusType;
+    }
+
+    /**
+     * @return The max hit override, takes effect when above or equal to 0.
+     */
+    public int getMaxHit() {
+        return maxHit;
+    }
+
+    /**
+     * Sets the max hit override, takes effect when above or equal to 0.
+     *
+     * @param maxHit The new max hit, will override definitions.
+     */
+    public void setMaxHit(int maxHit) {
+        this.maxHit = maxHit;
     }
 }
