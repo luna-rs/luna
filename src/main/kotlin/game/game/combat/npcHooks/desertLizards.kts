@@ -9,50 +9,28 @@ import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 
+//Ice cooler -> Same concept as bag of salt for desert lizards under 5hp
+
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
-    /**
-     * The lowest health a rockslug can be reduced to through normal damage.
-     */
     val HITPOINTS_THRESHOLD = 5
+    val ICE_COOLER = 6696
+    val ANIMATION = Animation(1574)
+    val GRAPHIC = Graphic(456, 0, 0)
 
-    /**
-     * The bag of salt item id.
-     */
-    val BAG_OF_SALT = 4161
-
-    /**
-     * The animation played when a player uses salt on a weakened rockslug.
-     */
-    val SALT_ANIMATION = Animation(1574)
-
-    /**
-     * The graphic displayed when salt is used on a weakened rockslug.
-     */
-    val SALT_GRAPHIC = Graphic(327, 0, 0)
-
-    /*
-     * Handles rockslug finishing behaviour.
-     *
-     * When an incoming hit would reduce a rockslug to or below the finishing threshold, the normal damage is cancelled and
-     * the slug is left at 1 hitpoint. If the attacker is a player carrying a bag of salt, the player performs the
-     * salting sequence and the slug is killed shortly after.
-     *
-     * If the player does not have salt, they will always hit 0.
-     */
-    combat(1622, 1623) {
+    combat(2804, 2805, 2806) {
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
                 npc.combat.prepareForExecution()
-                if (other.inventory.remove(BAG_OF_SALT)) {
+                if (other.inventory.remove(ICE_COOLER)) {
                     damage = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
                             if (executions == 0) {
-                                other.animation(SALT_ANIMATION)
-                                npc.graphic(SALT_GRAPHIC)
-                                other.sendMessage("You pour some salt on the Rockslug.")
+                                other.animation(ANIMATION)
+                                npc.graphic(GRAPHIC)
+                                other.sendMessage("You throw some water onto the desert lizard.")
                                 npc.animation(Animation(npc.combatDef().deathAnimation, AnimationPriority.HIGH))
                             } else if (executions == 1) {
                                 npc.health = 0
@@ -68,3 +46,4 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         }
     }
 }
+

@@ -151,6 +151,27 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     /**
+     * Places this mob into an execution-ready state.
+     * <p>
+     * This state is used for NPCs that should not die from normal damage immediately, but instead must be finished
+     * by a special execution action.
+     * <p>
+     * Preparing for execution reduces the mob to {@code 1} health, clears any active poison, disables further combat
+     * processing, locks movement, and clears the current combat target.
+     * <p>
+     * If this mob is already disabled, this method does nothing.
+     */
+    public void prepareForExecution() {
+        if (!isDisabled()) {
+            mob.setHealth(1);
+            setPoisonSeverity(0);
+            setDisabled(true);
+            mob.getWalking().setLocked(true);
+            target = null;
+        }
+    }
+
+    /**
      * Plays the default defence animation for this NPC.
      * <p>
      * The animation ID is taken directly from the NPC's combat definition.

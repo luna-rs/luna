@@ -26,6 +26,7 @@ import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
+import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
@@ -197,6 +198,7 @@ public final class LunaServer {
         taskList.add(new BossFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
         taskList.add(new EquipmentPoisonDefinitionFileParser());
+        taskList.add(new WeaponAnimationDefinitionFileParser());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {
