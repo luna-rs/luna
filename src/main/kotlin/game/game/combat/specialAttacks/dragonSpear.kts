@@ -36,7 +36,6 @@ attack(type = DRAGON_SPEAR,
         if (pushDir == Direction.NONE) {
             pushDir = attacker.lastDirection
         }
-
         // Cancel any pending queued movement for the victim.
         victim.navigator.cancel()
         victim.walking.clear()
@@ -44,7 +43,6 @@ attack(type = DRAGON_SPEAR,
 
         // Stun and move the victim.
         victim.navigator.step(pushDir)
-
         // todo status effects: stunned (equivalent to locked but can still be moved by server)
         // todo stunned should disable walking like immobiliaztion but also eating, equipping items, etc.
         // todo but stunned should still allow the walking queue to move the player
@@ -57,6 +55,6 @@ attack(type = DRAGON_SPEAR,
                 return true
             }
         })
-        CombatDamageRequest.effect(attacker, victim).resolve()
+        CombatDamageRequest.effect(attacker, victim).resolve()// todo status effects: stunned (equivalent to locked)
     }
 }
