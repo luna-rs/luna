@@ -26,8 +26,6 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class Chunk implements Locatable {
 
-    // TODO Bit pack x,y
-
     /**
      * The dimensions of a chunk in tiles.
      */
@@ -84,7 +82,7 @@ public final class Chunk implements Locatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y);
+        return (x << 16) | (y & 0xFFFF);
     }
 
     @Override

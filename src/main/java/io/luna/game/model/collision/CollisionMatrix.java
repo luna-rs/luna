@@ -3,6 +3,8 @@ package io.luna.game.model.collision;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import io.luna.Luna;
+import io.luna.LunaRuntime;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -326,8 +328,10 @@ public final class CollisionMatrix {
      * @throws ArrayIndexOutOfBoundsException If (x, y) is out of range for this matrix.
      */
     private int indexOf(int x, int y) {
-        Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
-        Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
+            Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        }
         return y * width + x;
     }
 
