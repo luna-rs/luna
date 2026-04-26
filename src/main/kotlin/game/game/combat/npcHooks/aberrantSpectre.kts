@@ -35,7 +35,7 @@ val START_GRAPHIC = Graphic(334, 600, 0)
  * Creates the aberrant spectre magic projectile.
  */
 val MAGIC_PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
-    // TODO Projectile looks a bit off.
+    // TODO@0.5.0 Fix projectile values, looks a bit off.
     LocalProjectile.followEntity(ctx)
         .setSourceEntity(mob)
         .setTargetEntity(other)

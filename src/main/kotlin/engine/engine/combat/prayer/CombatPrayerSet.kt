@@ -63,12 +63,12 @@ class CombatPrayerSet(private val player: Player) {
 
         // Send varbits, head icons, sounds, relevant messages.
         if (player.prayer.staticLevel < prayer.level) {
-            player.playSound(Sound.PRAYER_OFF) // todo confirm if correct
+            player.playSound(Sound.PRAYER_OFF) // todo@0.5.0 confirm if correct sound
             player.sendMessage("Your Prayer level is not high enough to use this.")
             return
         } else if (player.prayer.level == 0) {
             player.sendVarp(Varp(prayer.varp, 0))
-            player.playSound(Sound.PRAYER_OFF) // todo confirm if correct
+            player.playSound(Sound.PRAYER_OFF) // todo@0.5.0 confirm if correct sound
             player.sendMessage("Use an altar to recharge your Prayer points.")
             return
         }
@@ -93,9 +93,16 @@ class CombatPrayerSet(private val player: Player) {
         }
     }
 
-    // todo documentation
+    /**
+     * Activates [prayer] if it is not already active.
+     *
+     * This is a safe activation helper for scripts and combat logic that want to ensure a prayer is enabled without
+     * accidentally toggling it off. If [prayer] is already  active, this method does nothing.
+     *
+     * @param prayer The prayer to activate.
+     */
     fun forceActivate(prayer: CombatPrayer) {
-        if(!active.contains(prayer)) {
+        if (!active.contains(prayer)) {
             activate(prayer)
         }
     }

@@ -31,23 +31,23 @@ public final class BotPathfinder extends PlayerPathfinder {
 
     @Override
     public Heuristic getHeuristic() {
-        // TODO Cache when all TODOs are done to ensure thread safety (pass as parameter).
+        // TODO@1.0 Cache when all TODOs are done to ensure thread safety (pass as parameter).
         int roll = ThreadLocalRandom.current().nextInt(100);
         if (roll < 60) {
-            // TODO The most intelligent bots use this heuristic.
+            // TODO@1.0 The most intelligent bots use this heuristic.
             return Heuristic.EUCLIDEAN;
         } else if (roll < 85) {
-            // TODO The bots of average intelligence tend to use this heuristic.
+            // TODO@1.0 The bots of average intelligence tend to use this heuristic.
             return Heuristic.CHEBYSHEV;
         } else {
-            // TODO The lowest intelligence bots use this heuristic.
+            // TODO@1.0 The lowest intelligence bots use this heuristic.
             return Heuristic.MANHATTAN;
         }
     }
 
     @Override
     public int adjustHeuristic(int estimate) {
-        // TODO Greater intelligence = less likely to deviate from their heuristic estimation.
+        // TODO@1.0 Greater intelligence = less likely to deviate from their heuristic estimation.
         return estimate + (ThreadLocalRandom.current().nextBoolean() ? 0 : ThreadLocalRandom.current().nextInt(0, 3));
     }
 }

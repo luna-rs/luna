@@ -16,7 +16,7 @@ val EARMUFFS = 4166
 /**
  * The banshee scream graphic.
  */
-val GRAPHIC = Graphic(337, 150, 0) // TODO Projectile looks a bit weird.
+val GRAPHIC = Graphic(337, 150, 0) // TODO@0.5.0 Projectile looks a bit weird.
 
 combat(1612) {
     attack {

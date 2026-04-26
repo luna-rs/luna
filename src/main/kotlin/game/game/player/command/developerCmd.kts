@@ -159,9 +159,6 @@ cmd("obj", RIGHTS_DEV) {
                     plr = plr)
 }
 
-// TODO add commands below to custom bot testing mode
-// TODO modes:
-//  IDLE, LOCAL_WANDERING, GLOBAL_WANDERING, PKING (done below), SKILLING (do later)
 cmd("ok") {
     val bot = Bot.Builder(ctx).setUsername("elite111111")
         .setSpawnPosition(plr.position).build()

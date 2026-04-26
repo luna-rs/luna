@@ -11,7 +11,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
 
 /**
- * todo make the interfaces work
  * interface id
  *  0 = legs (male)
  *  4731 = legs (female)
@@ -19,6 +18,7 @@ import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
  *  3038 = torso (female)
  * @author hydrozoa
  */
+// TODO@0.5.0 Make the interfaces work.
 
 val shopkeeperId = 548
 

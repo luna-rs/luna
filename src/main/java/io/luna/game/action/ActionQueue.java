@@ -112,7 +112,7 @@ public final class ActionQueue {
      * @param action The action to submit if its concrete type is not already active.
      * @return {@code true} if the action was not already active, and therefore submitted.
      */
-    @Deprecated // todo remove, actions should monitor their own lifecycle
+    @Deprecated // TODO@0.5.0 Remove, actions should monitor their own lifecycle.
     public boolean submitIfAbsent(Action<?> action) {
         checkState(!action.getClass().isAnonymousClass(), "Anonymous classes cannot be used with submitIfAbsent.");
         String type = action.getClass().getName();

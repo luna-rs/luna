@@ -116,7 +116,7 @@ public final class InteractionAction extends Action<Player> {
         this.listeners = listeners;
         this.target = target;
         this.event = event;
-    } // todo navigation action can handle most of this...
+    } // todo navigation action can handle most of this?
     // todo allow for navigation action to use current path? disablePathfinding() and cannot be in continuous mode
 
     @Override

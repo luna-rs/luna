@@ -38,7 +38,6 @@ import java.util.function.IntUnaryOperator;
  * @author lare96
  */
 public final class Equipment extends ItemContainer {
-//todo some bonuses are incorrect, full metal set doesn't make magic bonus -81
 
     /**
      * Represents a single equipment bonus entry and its fixed index in the equipment bonus array.

@@ -100,8 +100,6 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
             return null;
         }
 
-        // TODO Correct weapon sound. Think this can be done with other combat weapons though through JSON.
-
         int rawAmount = damage.getRawAmount();
         Skill ranged = attacker.skill(Skill.RANGED);
         if (combat.getStyleDef().getStance() == CombatStance.DEFENSIVE) {
