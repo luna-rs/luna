@@ -728,8 +728,13 @@
     ]
   },
   {
-    "type": "CRYSTAL_BOW_FULL",
+    "type": "CRYSTAL_BOW",
     "items": [
+      {
+        "prev_id": -1,
+        "id": 4212, // New crystal bow
+        "next_id": 4215 // Crystal bow 9/10
+      },
       {
         "prev_id": -1,
         "id": 4214, // Crystal bow full
@@ -783,117 +788,7 @@
     ]
   },
   {
-    "type": "CRYSTAL_BOW_NEW",
-    "items": [
-      {
-        "prev_id": -1,
-        "id": 4212, // New crystal bow
-        "next_id": 4215 // Crystal bow 9/10
-      },
-      {
-        "prev_id": 4212, // New crystal bow
-        "id": 4215, // Crystal bow 9/10
-        "next_id": 4216 // Crystal bow 8/10
-      },
-      {
-        "prev_id": 4215, // Crystal bow 9/10
-        "id": 4216, // Crystal bow 8/10
-        "next_id": 4217 // Crystal bow 7/10
-      },
-      {
-        "prev_id": 4216, // Crystal bow 8/10
-        "id": 4217, // Crystal bow 7/10
-        "next_id": 4218 // Crystal bow 6/10
-      },
-      {
-        "prev_id": 4217, // Crystal bow 7/10
-        "id": 4218, // Crystal bow 6/10
-        "next_id": 4219 // Crystal bow 5/10
-      },
-      {
-        "prev_id": 4218, // Crystal bow 6/10
-        "id": 4219, // Crystal bow 5/10
-        "next_id": 4220 // Crystal bow 4/10
-      },
-      {
-        "prev_id": 4219, // Crystal bow 5/10
-        "id": 4220, // Crystal bow 4/10
-        "next_id": 4221 // Crystal bow 3/10
-      },
-      {
-        "prev_id": 4220, // Crystal bow 4/10
-        "id": 4221, // Crystal bow 3/10
-        "next_id": 4222 // Crystal bow 2/10
-      },
-      {
-        "prev_id": 4221, // Crystal bow 3/10
-        "id": 4222, // Crystal bow 2/10
-        "next_id": 4223 // Crystal bow 1/10
-      },
-      {
-        "prev_id": 4222, // Crystal bow 2/10
-        "id": 4223, // Crystal bow 1/10
-        "next_id": 4207 // Crystal seed
-      }
-    ]
-  },
-  {
-    "type": "CRYSTAL_SHIELD_FULL",
-    "items": [
-      {
-        "prev_id": -1,
-        "id": 4225, // Crystal shield full
-        "next_id": 4226 // Crystal shield 9/10
-      },
-      {
-        "prev_id": 4225, // Crystal shield full
-        "id": 4226, // Crystal shield 9/10
-        "next_id": 4227 // Crystal shield 8/10
-      },
-      {
-        "prev_id": 4226, // Crystal shield 9/10
-        "id": 4227, // Crystal shield 8/10
-        "next_id": 4228 // Crystal shield 7/10
-      },
-      {
-        "prev_id": 4227, // Crystal shield 8/10
-        "id": 4228, // Crystal shield 7/10
-        "next_id": 4229 // Crystal shield 6/10
-      },
-      {
-        "prev_id": 4228, // Crystal shield 7/10
-        "id": 4229, // Crystal shield 6/10
-        "next_id": 4230 // Crystal shield 5/10
-      },
-      {
-        "prev_id": 4229, // Crystal shield 6/10
-        "id": 4230, // Crystal shield 5/10
-        "next_id": 4231 // Crystal shield 4/10
-      },
-      {
-        "prev_id": 4230, // Crystal shield 5/10
-        "id": 4231, // Crystal shield 4/10
-        "next_id": 4232 // Crystal shield 3/10
-      },
-      {
-        "prev_id": 4231, // Crystal shield 4/10
-        "id": 4232, // Crystal shield 3/10
-        "next_id": 4233 // Crystal shield 2/10
-      },
-      {
-        "prev_id": 4232, // Crystal shield 3/10
-        "id": 4233, // Crystal shield 2/10
-        "next_id": 4234 // Crystal shield 1/10
-      },
-      {
-        "prev_id": 4233, // Crystal shield 2/10
-        "id": 4234, // Crystal shield 1/10
-        "next_id": 4207 // Crystal seed
-      }
-    ]
-  },
-  {
-    "type": "CRYSTAL_SHIELD_NEW",
+    "type": "CRYSTAL_SHIELD",
     "items": [
       {
         "prev_id": -1,
@@ -901,7 +796,12 @@
         "next_id": 4226 // Crystal shield 9/10
       },
       {
-        "prev_id": 4224, // New crystal shield
+        "prev_id": -1,
+        "id": 4225, // Crystal shield full
+        "next_id": 4226 // Crystal shield 9/10
+      },
+      {
+        "prev_id": 4225, // Crystal shield full
         "id": 4226, // Crystal shield 9/10
         "next_id": 4227 // Crystal shield 8/10
       },
