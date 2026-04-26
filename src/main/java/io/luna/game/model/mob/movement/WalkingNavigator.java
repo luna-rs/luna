@@ -191,14 +191,14 @@ public class WalkingNavigator {
     /**
      * Navigates this mob behind another mob.
      * <p>
-     * The destination is based on the target mob's last facing direction. This request is continuous by default.
+     * The destination is based on the target mob's last facing direction. This request is continuous and synchronous
+     * by default.
      *
      * @param mob The mob to navigate behind.
-     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
      * @return The pending navigation result.
      */
-    public CompletableFuture<NavigationResult> follow(Mob mob, boolean async) {
-        return navigateBehind(mob, async, true);
+    public CompletableFuture<NavigationResult> follow(Mob mob) {
+        return navigateBehind(mob, false, true);
     }
 
     /**

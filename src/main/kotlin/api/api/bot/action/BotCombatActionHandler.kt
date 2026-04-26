@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotCombatActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
-    // TODO@0.5.0 More functions like get/equip(Strongest)Weapon, get/equip(Strongest)Armor, etc.
+    // TODO@0.5.0 More functions like get/equip(Strongest)Weapon, get/equip(Strongest)Armor, drinkPotion, etc.
 
     /**
      * Attempts to eat a food item from the bot's inventory.
