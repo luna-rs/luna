@@ -2,9 +2,8 @@ package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
+import io.luna.Luna;
 import io.luna.game.model.chunk.Chunk;
-
-import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -66,7 +65,9 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        }
         this.x = x;
         this.y = y;
         this.z = z;
@@ -104,7 +105,7 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, z);
+        return (z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF);
     }
 
     @Override
@@ -225,16 +226,6 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
-     *
-     * @param newZ The new height level.
-     * @return The new position.
-     */
-    public Position setZ(int newZ) {
-        return new Position(x, y, newZ);
-    }
-
-    /**
      * Returns the chunk X coordinate (8x8 tile partition) for this position.
      *
      * @return The chunk X coordinate.
@@ -327,5 +318,15 @@ public final class Position implements Locatable {
      */
     public int getZ() {
         return z;
+    }
+
+    /**
+     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
+     *
+     * @param newZ The new height level.
+     * @return The new position.
+     */
+    public Position setZ(int newZ) {
+        return new Position(x, y, newZ);
     }
 }
