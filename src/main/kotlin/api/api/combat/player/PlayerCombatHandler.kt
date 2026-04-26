@@ -120,7 +120,7 @@ object PlayerCombatHandler {
      *
      * If a hook's filter matches and its attack supplier returns a non-null [CombatAttack], that attack is returned
      * immediately and normal attack selection is skipped.
-     * 
+     *
      * If a hook matches but returns {@code null}, processing continues to the next hook. If no hook supplies a
      * custom attack, this method returns {@code null} so the caller can fall back to normal attack selection.
      *
@@ -146,8 +146,8 @@ object PlayerCombatHandler {
     /**
      * Applies the first matching defence hook to an incoming combat damage action.
      *
-     * Defence hooks are evaluated in registration order. When a hook matches, it is allowed to mutate the receiver's 
-     * damage and animation values. Those values are then copied back into the supplied [CombatDamageAction], the 
+     * Defence hooks are evaluated in registration order. When a hook matches, it is allowed to mutate the receiver's
+     * damage and animation values. Those values are then copied back into the supplied [CombatDamageAction], the
      * player's defence animation is played, and no further hooks are processed.
      *
      * @param player The defending player.
@@ -160,7 +160,14 @@ object PlayerCombatHandler {
             if (hook.filter(receiver)) {
                 hook.defence(receiver)
                 action.damage = receiver.damage
-                player.animation(Animation(receiver.animationId))
+                if(action.damage != null) {
+                    if (receiver.animationId != null) {
+                        player.animation(Animation(receiver.animationId!!))
+                    } else {
+                        val animationId = player.combat.getDefenceAnimation(action.damage.type)
+                        player.animation(Animation(animationId))
+                    }
+                }
                 return
             }
         }
