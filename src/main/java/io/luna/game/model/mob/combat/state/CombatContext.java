@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.combat.state;
 
-import api.combat.magic.ImmobilizationAction;
 import com.google.common.base.Stopwatch;
 import engine.controllers.MultiCombatAreaListener;
 import game.item.consumable.potion.PotionEffect;
@@ -20,12 +19,13 @@ import java.util.Objects;
 /**
  * Encapsulates combat state and shared combat behavior for a single {@link Mob}.
  *
+ * @param <T> The mob type that owns this combat context.
  * @author lare96
  */
 public abstract class CombatContext<T extends Mob> {
 
     /**
-     * The amount of time a mob will remain in combat after attacking or being attacked.
+     * The number of seconds a mob remains flagged as in combat after its most recent qualifying combat interaction.
      */
     public static final int COMBAT_TIMER_DURATION = 10;
 
@@ -50,13 +50,12 @@ public abstract class CombatContext<T extends Mob> {
     protected Mob target;
 
     /**
-     * The mob that should be attacked automatically if auto-retaliate is triggered, or {@code null} if no retaliate
-     * target is pending.
+     * The mob that should be attacked automatically if auto-retaliate is triggered.
      */
     protected Mob autoRetaliateTarget;
 
     /**
-     * The last mob this mob exchanged combat with, or {@code null} if none is tracked.
+     * The last mob this mob exchanged combat with.
      * <p>
      * This is used for single-combat validation and combat ownership checks.
      */
@@ -77,25 +76,36 @@ public abstract class CombatContext<T extends Mob> {
     private int attackDelay;
 
     /**
-     * Indicates whether this entity is fully disabled.
+     * Indicates whether this mob is fully disabled.
      * <p>
-     * A disabled entity is prevented from performing its normal actions until the disabled state is cleared.
+     * A disabled mob is prevented from performing combat actions until the disabled state is cleared.
      */
     private boolean disabled;
 
     /**
-     * Indicates whether this entity is currently immobilized.
+     * Indicates whether this mob is currently immobilized.
      * <p>
-     * An immobilized entity may still exist and process other logic, but it cannot move until this state is removed.
+     * An immobilized mob may still process other logic, but it cannot move until this state is removed.
      */
     private boolean immobilized;
 
-    private CombatAttack<?> lastAttackApplied;
-
-    private CombatDamage lastDamageReceived; // todo documentation
+    /**
+     * The most recent combat attack that successfully applied to this mob.
+     * <p>
+     * This can be used by combat scripts and post-hit logic to inspect the attack that produced the latest hit.
+     */
+    private CombatAttack<?> lastAttackReceived;
 
     /**
-     * Creates a new {@link CombatContext} for the supplied mob.
+     * The most recent combat damage received by this mob.
+     * <p>
+     * This is updated when damage is applied and can be used by combat scripts, prayers, effects, or listeners
+     * that need to inspect the previous incoming hit.
+     */
+    private CombatDamage lastDamageReceived;
+
+    /**
+     * Creates a new combat context for the supplied mob.
      *
      * @param mob The mob that owns this combat context.
      */
@@ -121,16 +131,15 @@ public abstract class CombatContext<T extends Mob> {
     public abstract CombatAttack<?> getNextAttack(Mob victim);
 
     /**
-     * Applies subclass-specific defence logic when the owning mob receives damage.
+     * Applies subclass-specific defence logic and damage modifications before this mob receives damage.
      *
      * @param attacker The mob dealing the damage.
-     * @param damage The incoming combat damage being processed.
      * @param action The action that launched the damage application.
      */
-    public abstract void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action);
+    public abstract void onNextDefence(Mob attacker, CombatDamageAction action);
 
     /**
-     * Gets the attack-style bonus currently used for accuracy calculations.
+     * Gets the attack-style equipment bonus currently used for accuracy calculations.
      *
      * @return The active attack-style equipment bonus.
      */
@@ -146,7 +155,7 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Creates the default attack for this mob against the specified victim.
      * <p>
-     * The default attack uses the mob's default configured attack animation, range, and attack speed.
+     * The default attack uses the mob's configured attack animation, range, speed, and damage behavior.
      *
      * @param victim The current combat target.
      * @return The default combat attack.
@@ -154,16 +163,33 @@ public abstract class CombatContext<T extends Mob> {
     public abstract CombatAttack<?> getDefaultAttack(Mob victim);
 
     /**
-     * @return {@code true} if this mob is valid and able to enter combat.
+     * Determines whether this mob is currently valid and able to enter combat.
+     *
+     * @return {@code true} if this mob can be attacked, otherwise {@code false}.
      */
     public abstract boolean isAttackable();
+
+    /**
+     * Gets the attack animation used for the supplied damage type.
+     *
+     * @param type The damage type being performed.
+     * @return The attack animation id.
+     */
+    public abstract int getAttackAnimation(CombatDamageType type);
+
+    /**
+     * Gets the defence animation used when receiving the supplied damage type.
+     *
+     * @param type The damage type being received.
+     * @return The defence animation id.
+     */
+    public abstract int getDefenceAnimation(CombatDamageType type);
 
     /**
      * Starts attacking the supplied enemy.
      * <p>
      * If the owning mob is a {@link Player}, combat initiation is first validated by the player's active controllers.
-     * If combat is allowed, the target is set, an interaction is established, and a {@link CombatAction} is submitted
-     * if one is not already active.
+     * If combat is allowed, the target is set and a {@link CombatAction} is submitted if one is not already active.
      *
      * @param enemy The mob to attack.
      */
@@ -179,27 +205,26 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Validates whether the player can initiate combat with the specified {@link Mob} under single-combat rules.
+     * Validates whether this mob can initiate combat with the specified victim under single-combat rules.
      * <p>
-     * If the player isn't already in a multi-combat area, this method enforces standard 317-style single-combat
-     * restrictions:
+     * If both mobs are inside a multi-combat area, combat is allowed. Otherwise, standard single-combat ownership
+     * checks are enforced:
      * <ul>
-     *     <li>If the player is already fighting a different target, they cannot attack another.</li>
-     *     <li>If the target is already fighting someone else, the attack is prevented.</li>
+     *     <li>If this mob is already fighting a different target, the attack is prevented.</li>
+     *     <li>If the victim is already fighting someone else, the attack is prevented.</li>
      * </ul>
-     * <p>
-     * If either condition fails, a message is sent to the player explaining why the attack cannot proceed.
      *
-     * @param victim The {@link Mob} the player is attempting to attack.
-     * @return {@code true} if combat is allowed; {@code false} otherwise.
+     * @param victim The mob this mob is attempting to attack.
+     * @return {@code true} if combat is allowed, otherwise {@code false}.
      */
     public boolean checkMultiCombat(Mob victim) {
         boolean attackerInMulti = MultiCombatAreaListener.INSTANCE.inside(mob.getPosition());
         boolean victimInMulti = MultiCombatAreaListener.INSTANCE.inside(victim.getPosition());
+
         if (attackerInMulti && victimInMulti) {
-            // Both are in multi-area, proceed as normal.
             return true;
         }
+
         if (inCombat() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
             mob.ifPlayer(player -> player.sendMessage("You are already in combat."));
             return false;
@@ -213,16 +238,14 @@ public abstract class CombatContext<T extends Mob> {
         return true;
     }
 
-
     /**
      * Applies subclass-specific combat logic before attack execution proceeds.
      * <p>
-     * This hook runs after target reachability has been evaluated, but before attack readiness is checked and
-     * before the attack is launched. Subclasses may use it to block combat, trigger movement corrections, or prioritize
-     * other behavior such as retreating.
+     * This hook runs after target reachability has been evaluated, but before attack readiness is checked and before
+     * the attack is launched. Subclasses may use it to block combat, trigger movement corrections, or prioritize other
+     * behavior such as retreating.
      *
-     * @param reached {@code true} if the current target has been reached according to the active interaction policy,
-     * otherwise {@code false}.
+     * @param reached {@code true} if the current target has been reached by the active interaction policy.
      * @return {@code true} if combat processing should continue, otherwise {@code false}.
      */
     public boolean onCombatProcess(boolean reached) {
@@ -260,8 +283,8 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Determines whether the owning mob is currently considered in combat.
      * <p>
-     * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION} seconds
-     * have elapsed since the timer was last reset.
+     * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION}
+     * seconds have elapsed since the timer was last reset.
      *
      * @return {@code true} if the mob is still considered in combat, otherwise {@code false}.
      */
@@ -293,14 +316,16 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * @return The poison severity.
+     * @return The current poison severity.
      */
     public final int getPoisonSeverity() {
         return poisonSeverity;
     }
 
     /**
-     * @return The poison severity before decrementing.
+     * Decrements the current poison severity.
+     *
+     * @return The poison severity before it was decremented.
      */
     public final int decrementPoisonSeverity() {
         return poisonSeverity--;
@@ -327,17 +352,15 @@ public abstract class CombatContext<T extends Mob> {
      */
     public final boolean setPoisonSeverity(int newPoisonSeverity, boolean timer) {
         if (newPoisonSeverity > 0) {
-
-            // Check if we're already poisoned.
             if (poisonSeverity > 0) {
                 return false;
             }
 
-            // Check if we have immunity to poison.
             if (mob instanceof Player && PotionEffect.Companion.hasAntiPoison((Player) mob)) {
                 return false;
             }
         }
+
         poisonSeverity = newPoisonSeverity;
         if (poisonSeverity > 0 && timer) {
             mob.getActions().submitIfAbsent(new PoisonAction(mob, true));
@@ -346,8 +369,6 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Determines whether the owning mob is currently poisoned.
-     *
      * @return {@code true} if poison severity is above zero, otherwise {@code false}.
      */
     public final boolean isPoisoned() {
@@ -355,7 +376,7 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Sets whether this entity is immobilized.
+     * Sets whether this mob is immobilized.
      *
      * @param immobilized {@code true} to prevent movement, {@code false} to allow movement again.
      */
@@ -364,10 +385,6 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Determines whether the owning mob is currently immobilized.
-     * <p>
-     * Immobilization is represented by the presence of an active {@link ImmobilizationAction}.
-     *
      * @return {@code true} if the mob is immobilized, otherwise {@code false}.
      */
     public final boolean isImmobilized() {
@@ -405,7 +422,7 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Sets the last mob this mob was in combat with.
+     * Sets the last mob this mob exchanged combat with.
      *
      * @param lastAttackedBy The last tracked combat opponent.
      */
@@ -463,10 +480,22 @@ public abstract class CombatContext<T extends Mob> {
         return attackDelay <= 0;
     }
 
+    /**
+     * Determines whether this mob is currently combat-disabled.
+     *
+     * @return {@code true} if this mob is combat-disabled, otherwise {@code false}.
+     */
     public boolean isDisabled() {
         return disabled;
     }
 
+    /**
+     * Sets whether this mob's combat is disabled.
+     * <p>
+     * When the disabled state is enabled, the mob's current interaction is cleared.
+     *
+     * @param disabled {@code true} to disable this mob, otherwise {@code false}.
+     */
     public void setDisabled(boolean disabled) {
         if (this.disabled != disabled) {
             this.disabled = disabled;
@@ -476,18 +505,38 @@ public abstract class CombatContext<T extends Mob> {
         }
     }
 
-    public CombatAttack<?> getLastAttackApplied() {
-        return lastAttackApplied;
+    /**
+     * Gets the most recent combat attack that applied to this mob.
+     *
+     * @return The last applied combat attack, or {@code null} if none has been tracked.
+     */
+    public CombatAttack<?> getLastAttackReceived() {
+        return lastAttackReceived;
     }
 
-    public void setLastAttackApplied(CombatAttack<?> lastAttackApplied) {
-        this.lastAttackApplied = lastAttackApplied;
+    /**
+     * Sets the most recent combat attack that applied to this mob.
+     *
+     * @param lastAttackReceived The last applied combat attack.
+     */
+    public void setLastAttackReceived(CombatAttack<?> lastAttackReceived) {
+        this.lastAttackReceived = lastAttackReceived;
     }
 
+    /**
+     * Gets the most recent combat damage received by this mob.
+     *
+     * @return The last received combat damage, or {@code null} if none has been tracked.
+     */
     public CombatDamage getLastDamageReceived() {
         return lastDamageReceived;
     }
 
+    /**
+     * Sets the most recent combat damage received by this mob.
+     *
+     * @param lastDamageReceived The last received combat damage.
+     */
     public void setLastDamageReceived(CombatDamage lastDamageReceived) {
         this.lastDamageReceived = lastDamageReceived;
     }

@@ -53,8 +53,8 @@ public final class NpcRetreatAction extends Action<Npc> {
             return true;
         }
 
-        if (!mob.getWalking().isEmpty()) {
-            mob.getNavigator().walk(spawnLocation, true);
+        if (!mob.getNavigator().isActive()) {
+            mob.getNavigator().navigate(spawnLocation, true);
         }
         return false;
     }

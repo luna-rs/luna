@@ -43,7 +43,7 @@ public final class PlayerWeaponSpecialBar {
          * Creates a new {@link SpecialBarRestorationAction}.
          */
         public SpecialBarRestorationAction() {
-            super(player, ActionType.SOFT, false, 50);
+            super(player, ActionType.SOFT, false, Luna.settings().game().betaMode() ? 10 : 50);
         }
 
         @Override

@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.mob.wandering.WanderingFrequency
+import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 import io.luna.util.GsonUtils
 import io.luna.util.parser.JsonFileParser
 import java.nio.file.Paths

@@ -40,9 +40,8 @@ public abstract class GamePathfinder<T extends Locatable> {
     /**
      * Computes a valid path from the origin to the target locatable.
      * <p>
-     * The returned {@link Deque} contains a sequence of intermediate steps. Implementations may return an
-     * empty deque if no path exists.
-     * </p>
+     * The returned {@link Deque} contains a sequence of intermediate steps. Implementations may return {@code null}
+     * if no path exists.
      *
      * @param origin The starting locatable.
      * @param target The target locatable.
@@ -56,7 +55,6 @@ public abstract class GamePathfinder<T extends Locatable> {
      * <p>
      * This is a convenience wrapper around the collision manager's traversability logic. It assumes the moving
      * entity is a {@link EntityType#PLAYER} and performs a single-tile movement check.
-     * </p>
      *
      * @param current The current position.
      * @param direction The direction to test.

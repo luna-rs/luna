@@ -12,20 +12,19 @@ import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
 /**
- * An {@link Action} that moves a {@link Mob} toward its current combat target.
+ * An {@link Action} that moves a {@link Npc} toward its current combat target.
  * <p>
- * This action is used while combat is active but the attacker has not yet reached a valid interaction position.
- * NPCs resolve pursuit manually one step at a time using collision checks, while players delegate pathing to the
- * normal navigator with the supplied {@link InteractionPolicy}.
+ * This action is used while combat is active but the attacker has not yet reached a valid interaction position. It
+ * resolves pursuit manually one step at a time using collision checks.
  * <p>
  * Because this is a weak action, it may be replaced by stronger actions whenever necessary.
  *
  * @author lare96
  */
-public final class PursuitAction extends Action<Mob> {
+public final class PursuitAction extends Action<Npc> {
 
     /**
-     * The combat context for the pursuing mob.
+     * The combat context for the pursuing NPC.
      */
     private final CombatContext<?> combat;
 
@@ -37,17 +36,17 @@ public final class PursuitAction extends Action<Mob> {
     /**
      * Creates a new {@link PursuitAction}.
      *
-     * @param mob The mob performing pursuit.
+     * @param npc The NPC performing pursuit.
      * @param policy The interaction policy used to test valid reachability.
      */
-    public PursuitAction(Mob mob, InteractionPolicy policy) {
-        super(mob, ActionType.WEAK);
+    public PursuitAction(Npc npc, InteractionPolicy policy) {
+        super(npc, ActionType.WEAK);
         this.policy = policy;
-        combat = mob.getCombat();
+        combat = npc.getCombat();
     }
 
     /**
-     * Attempts to queue the next pursuit step for this mob.
+     * Attempts to queue the next pursuit step for this NPC.
      *
      * @return {@code true} if pursuit should stop, otherwise {@code false}.
      */
@@ -63,22 +62,24 @@ public final class PursuitAction extends Action<Mob> {
 
     @Override
     public void onSubmit() {
-        if (mob instanceof Npc) {
-            if (tryStep()) {
-                complete();
-            }
-        } else if (combat.getTarget() != null) {
-            mob.getNavigator().walkUntilReached(combat.getTarget(), policy, false);
+        // Cancel any in-progress navigation while pursuing.
+        mob.getNavigator().cancel();
+
+        if (tryStep()) {
+            complete();
         }
     }
 
     @Override
     public boolean run() {
+        // Cancel any in-progress navigation while pursuing.
+        mob.getNavigator().cancel();
+
         Mob target = combat.getTarget();
         if (!combat.inCombat() || target == null || !mob.isViewableFrom(target)) {
             return true;
         }
-        return !(mob instanceof Npc) || tryStep();
+        return tryStep();
     }
 
     /**

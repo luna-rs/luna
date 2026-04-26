@@ -9,21 +9,21 @@ import engine.combat.prayer.CombatPrayerSet;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
+import io.luna.game.model.def.WeaponAnimationDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
+import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.PoisonAction;
-import io.luna.game.model.mob.combat.Weapon;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack;
-import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.varp.PersistentVarp;
@@ -160,7 +160,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public void onNextDefence(Mob attacker, CombatDamage damage, CombatDamageAction action) {
+    public void onNextDefence(Mob attacker, CombatDamageAction action) {
         PlayerCombatHandler.INSTANCE.consumeDefence(mob, attacker, action);
     }
 
@@ -183,6 +183,48 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         return player.isAlive() && player.getContextMenu().contains(PlayerContextMenuOption.ATTACK);
     }
 
+    @Override
+    public int getAttackAnimation(CombatDamageType type) {
+        if (type == CombatDamageType.RANGED && getAmmoDef().getType() == AmmoType.BOLT_RACK) {
+            // Karils x-bow exception.
+            return 2075;
+        }
+        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        if (weaponId > 0) {
+            WeaponAnimationDefinition weaponAnimationDef = WeaponAnimationDefinition.ALL.get(weaponId);
+            if (weaponAnimationDef != null) {
+                int animation = weaponAnimationDef.getAttackAnimation(weapon.getStyleDef().getType());
+                if(animation != -1) {
+                    return animation;
+                }
+            }
+        }
+        // Otherwise, use the default attack animation from 'weapon_type_data.jsonc'.
+        return weapon.getStyleDef().getAttackAnimation();
+    }
+
+    @Override
+    public int getDefenceAnimation(CombatDamageType type) {
+        int shieldId = player.getEquipment().computeIdForIndex(Equipment.SHIELD);
+        if (shieldId > 0 && type != CombatDamageType.MAGIC) {
+            // Block animation for non-magic based attacks when a shield is equipped.
+            return 1156;
+        }
+
+        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        if (weaponId > 0) {
+            WeaponAnimationDefinition weaponAnimationDef = WeaponAnimationDefinition.ALL.get(weaponId);
+            if (weaponAnimationDef != null) {
+                int animation = weaponAnimationDef.getDefenceAnimation(weapon.getStyleDef().getType());
+                if (animation != -1) {
+                    return animation;
+                }
+            }
+        }
+        // Otherwise, use the default defence animation from 'weapon_type_data.jsonc'.
+        return weapon.getStyleDef().getDefenceAnimation();
+    }
+
     /**
      * Restores persistent combat status actions after the player logs in.
      * <p>
@@ -196,23 +238,6 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         if (magic.getTeleBlock() > 0) {
             player.getActions().submitIfAbsent(new TeleBlockAction(player));
         }
-    }
-
-    /**
-     * Gets the default defence animation ID based on current equipment.
-     *
-     * @return The animation ID.
-     */
-    public int getDefenceAnimation() {
-        int animationId = 410;
-        if (player.getEquipment().occupied(Equipment.SHIELD)) {
-            animationId = 1156;
-        } else if (weapon.getType() == Weapon.STAFF) {
-            animationId = 420;
-        } else if (weapon.getType() == Weapon.DAGGER) {
-            animationId = 403;
-        }
-        return animationId;
     }
 
     /**

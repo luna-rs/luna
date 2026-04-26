@@ -9,9 +9,9 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Graphic;
-import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
@@ -54,7 +54,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      * @param ammo The ammo definition that supplies the projectile and graphics data.
      */
     public PlayerRangedCombatAttack(Player attacker, Mob victim, CombatStyleDefinition style, AmmoDefinition ammo) {
-        super(attacker, victim, ammo.getType() == AmmoType.BOLT_RACK ? 2075 : style.getAnimation(),
+        super(attacker, victim, attacker.getCombat().getAttackAnimation(CombatDamageType.RANGED),
                 ammo.getStartGraphic(), ammo.getProjectile(), ammo.getEndGraphic(),
                 style.getSpeed(), style.getRange());
         this.style = style;

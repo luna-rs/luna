@@ -1,3 +1,8 @@
+/*
+  This definition file is used for resolving the combat style interface of weapons.
+
+  Use this file when weapons do not display the correct interface on the combat tab.
+*/
 [
   {
     "id": 3093,
@@ -41,12 +46,7 @@
   },
   {
     "id": 4151,
-    "type": "WHIP",
-    "model": {
-      "standing": 1832,
-      "walking": 1660,
-      "running": 1661
-    }
+    "type": "WHIP"
   },
   {
     "id": 4153,
@@ -59,15 +59,6 @@
   {
     "id": 4170,
     "type": "STAFF"
-  },
-  {
-    "id": 4178,
-    "type": "WHIP",
-    "model": {
-      "standing": 1832,
-      "walking": 1660,
-      "running": 1661
-    }
   },
   {
     "id": 3170,
@@ -1611,12 +1602,7 @@
   },
   {
     "id": 6082,
-    "type": "CROSSBOW",
-    "model": {
-      "standing": 2316,
-      "walking": 2317,
-      "running": 2322
-    }
+    "type": "CROSSBOW"
   },
   {
     "id": 5059,

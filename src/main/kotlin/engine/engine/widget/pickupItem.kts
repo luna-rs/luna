@@ -23,7 +23,7 @@ val itemPickup = FileOutputType.ITEM_PICKUP.level
 /**
  * Pickup the item.
  */
-on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_SIZE) {
+on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_BIF) {
     val pickupItem = groundItem.toItem()
     when {
         !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.inventoryFull())

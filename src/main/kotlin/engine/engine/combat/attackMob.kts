@@ -40,7 +40,7 @@ on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target
 }
 
 // Use magic spell on player.
-on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
+on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT_BIF) {
     if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
@@ -57,7 +57,7 @@ on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> get
 }
 
 // Use magic spell on NPC.
-on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT) {
+on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT_BIF) {
     if (targetNpc.combat.isAttackable) {
         plr.combat.magic.selectedSpell =
             CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }

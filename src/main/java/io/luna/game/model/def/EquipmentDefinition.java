@@ -2,6 +2,7 @@ package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.gson.JsonObject;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
@@ -134,6 +135,11 @@ public final class EquipmentDefinition implements Definition {
      * Repository of all {@link EquipmentDefinition}s keyed by item id.
      */
     public static final DefinitionRepository<EquipmentDefinition> ALL = new MapDefinitionRepository<>();
+
+    /**
+     * Repository of all {@link EquipmentDefinition}s keyed by equip index.
+     */
+    public static volatile ImmutableListMultimap<Integer, EquipmentDefinition> INDEXES = ImmutableListMultimap.of();
 
     /**
      * The item id this equipment definition belongs to.

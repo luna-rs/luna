@@ -49,8 +49,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         }
 
         override fun calculateDamage(other: Mob): CombatDamage? {
-            return CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE).setBaseMaxHit(0).build()
-                .resolve()
+            return CombatDamageRequest.effect(attacker, victim).resolve()
         }
     }
 
@@ -71,10 +70,8 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
             val amount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - amount <= HITPOINTS_THRESHOLD) {
                 damage = null
-                npc.walking.isLocked = true
-                npc.combat.isDisabled = true
+                npc.combat.prepareForExecution()
                 npc.transform(1611)
-                npc.health = 1
             }
         }
     }

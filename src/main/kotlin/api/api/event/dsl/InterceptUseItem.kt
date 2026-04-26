@@ -17,8 +17,8 @@ class InterceptUseItem(private val id: Int) {
      */
     fun onItem(itemId: Int, action: ItemOnItemEvent.() -> Unit) {
         val matcher = Matcher.get<ItemOnItemEvent, Pair<Int, Int>>()
-        matcher.set(id to itemId, { action(this) }, InteractionPolicy.UNSPECIFIED)
-        matcher.set(itemId to id, { action(this) }, InteractionPolicy.UNSPECIFIED)
+        matcher.set(id to itemId, { action(this) }, InteractionPolicy.UNSPECIFIED_BIF)
+        matcher.set(itemId to id, { action(this) }, InteractionPolicy.UNSPECIFIED_BIF)
     }
 
     /**
@@ -33,7 +33,7 @@ class InterceptUseItem(private val id: Int) {
      * Intercepts an [ItemOnObjectEvent].
      */
     fun onObject(objectId: Int, action: ItemOnObjectEvent.() -> Unit) =
-        onObject(objectId, InteractionPolicy.STANDARD_SIZE, action)
+        onObject(objectId, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
     /**
      * Intercepts an [ItemOnNpcEvent].
@@ -47,7 +47,7 @@ class InterceptUseItem(private val id: Int) {
      * Intercepts an [ItemOnNpcEvent] using the standard interaction policy.
      */
     fun onNpc(npcId: Int, action: ItemOnNpcEvent.() -> Unit) =
-        onNpc(npcId, InteractionPolicy.STANDARD_SIZE, action)
+        onNpc(npcId, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
     /**
      * Intercepts an [ItemOnPlayerEvent].
@@ -61,7 +61,7 @@ class InterceptUseItem(private val id: Int) {
     /**
      * Intercepts an [ItemOnPlayerEvent].
      */
-    fun onPlayer(action: ItemOnPlayerEvent.() -> Unit) = onPlayer(InteractionPolicy.STANDARD_SIZE, action)
+    fun onPlayer(action: ItemOnPlayerEvent.() -> Unit) = onPlayer(InteractionPolicy.STANDARD_SIZE_BIF, action)
 
     /**
      * Intercepts an [ItemOnGroundItemEvent].
@@ -76,5 +76,5 @@ class InterceptUseItem(private val id: Int) {
      * Intercepts an [ItemOnGroundItemEvent].
      */
     fun onGroundItem(itemId: Int, action: ItemOnGroundItemEvent.() -> Unit) =
-        onGroundItem(itemId, InteractionPolicy.STANDARD_SIZE, action)
+        onGroundItem(itemId, InteractionPolicy.STANDARD_SIZE_BIF, action)
 }

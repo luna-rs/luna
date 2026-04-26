@@ -1,4 +1,11 @@
-[ // todo test all spell sounds
+/*
+  Resolves all static spellbook combat spells.
+
+  "spell" assigns the data to a static type within "CombatSpell."
+
+  Use this file to add new static combat spells that can be referenced using "CombatSpell."
+*/
+[
   {
     "id": 1152,
     "button": 1830,

@@ -31,7 +31,7 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
      * Creates a new {@link NpcCombatDefinitionFileParser}.
      */
     public NpcCombatDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "npcs", "npc_combat.json"));
+        super(Paths.get("data", "game", "def", "npcs", "npc_combat.jsonc"));
     }
 
     @Override

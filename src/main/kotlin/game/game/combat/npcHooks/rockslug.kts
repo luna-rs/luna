@@ -44,13 +44,9 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
-
+                npc.combat.prepareForExecution()
                 if (other.inventory.remove(BAG_OF_SALT)) {
                     damage = null
-                    npc.combat.isDisabled = true
-                    npc.walking.isLocked = true
-                    npc.health = 1
-                    other.combat.target = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
                             if (executions == 0) {

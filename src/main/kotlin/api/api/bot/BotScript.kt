@@ -8,6 +8,7 @@ import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
@@ -29,7 +30,7 @@ import kotlinx.coroutines.yield
  * @author lare96
  */
 abstract class BotScript<T>(val bot: Bot) {
-// todo redo docs, scripts now repeatedly loop
+    // todo redo docs, scripts now repeatedly loop
     /**
      * Handler for simulated inbound messages to the bot.
      *
@@ -65,7 +66,7 @@ abstract class BotScript<T>(val bot: Bot) {
      */
     private var progress: Job? = null
 
-   open suspend fun init(){} // todo docs, called before run loop
+    open suspend fun init() {} // todo docs, called before run loop
 
     /**
      * The main coroutine body for this script.
@@ -75,7 +76,7 @@ abstract class BotScript<T>(val bot: Bot) {
      */
     abstract suspend fun run(): Boolean
 
-    open suspend fun finish(){}// todo docs, called after run loop, last thing before co-routine completes gracefully
+    open suspend fun finish() {} // todo docs, called after run loop, last thing before co-routine completes gracefully
 
     /**
      * Produces a snapshot of this script's persistent state.
@@ -105,7 +106,7 @@ abstract class BotScript<T>(val bot: Bot) {
             progress = GameCoroutineScope.launch {
                 try {
                     init()
-                    while (bot.state == EntityState.ACTIVE && isRunning()) {
+                    while (bot.state == EntityState.ACTIVE && isActive) {
                         // Top-level yield: always allow other scripts a chance to run (just in case).
                         yield()
                         if (run()) {

@@ -83,9 +83,9 @@ class SpecialAttackDataReceiver(
      *
      * This callback is invoked after the special attack has been started, with receiver context containing the
      * attacking player and the victim the special was launched against.
-     * <p>
-     * Returning a non-null {@link CombatDamage} queues that damage for processing as part of the special attack.
-     * Returning {@code null} queues no damage, which means no hitsplat is sent for this launch callback result.
+     *
+     * Returning a non-`null` [CombatDamage] queues that damage for processing as part of the special attack.
+     * Returning `null` queues no damage, which means no hitsplat is sent for this launch callback result.
      *
      * @param launchedTransformer The callback to run after launch, optionally returning queued damage.
      */

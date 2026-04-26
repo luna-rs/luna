@@ -9,7 +9,7 @@ package io.luna.game.model.def;
  *
  * @author lare96
  */
-public final class WeaponModelAnimationDefinition {
+public final class WeaponModelDefinition {
 
     /**
      * The standing animation id.
@@ -27,13 +27,13 @@ public final class WeaponModelAnimationDefinition {
     private final int running;
 
     /**
-     * Creates a new {@link WeaponModelAnimationDefinition}.
+     * Creates a new {@link WeaponModelDefinition}.
      *
      * @param standing The standing animation id.
      * @param walking The walking animation id.
      * @param running The running animation id.
      */
-    public WeaponModelAnimationDefinition(int standing, int walking, int running) {
+    public WeaponModelDefinition(int standing, int walking, int running) {
         this.standing = standing;
         this.walking = walking;
         this.running = running;

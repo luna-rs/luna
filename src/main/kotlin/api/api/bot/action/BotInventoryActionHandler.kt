@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
+import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
 import kotlinx.coroutines.future.await
@@ -39,7 +40,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 bot.log("Can't find ${itemName(usedId)} on index ${index}.")
                 return false
             }
-            if (bot.movementStack.walkUntilReached(target).await()) {
+            if (bot.navigator.navigate(target, true).await() == NavigationResult.REACHED) {
                 val cond = SuspendableCondition {
                     (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                             bot.isInteractingWith(target)

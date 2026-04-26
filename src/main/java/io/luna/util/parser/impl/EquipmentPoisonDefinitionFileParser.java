@@ -27,7 +27,7 @@ public final class EquipmentPoisonDefinitionFileParser extends JsonFileParser<Eq
      * Creates a new {@link EquipmentPoisonDefinitionFileParser}.
      */
     public EquipmentPoisonDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "poison.json"));
+        super(Paths.get("data", "game", "def", "equipment", "weapon_poison.jsonc"));
     }
 
     @Override

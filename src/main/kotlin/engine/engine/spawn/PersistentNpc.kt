@@ -3,7 +3,7 @@ package engine.spawn
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.wandering.WanderingFrequency
+import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 
 /**
  * An [Npc] implementation that always respawns at some point after death. Default is `30` seconds.

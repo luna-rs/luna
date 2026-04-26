@@ -5,10 +5,12 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.movement.NavigationRequest;
 
 /**
  * An {@link Action} that drives a mob's active combat loop against its current
@@ -95,10 +97,15 @@ public final class CombatAction extends Action<Mob> {
 
         // Continue pursuing until the target is inside interaction range.
         if (!reached) {
-            if (mob.getWalking().isEmpty()) {
+            if (mob.getWalking().isEmpty() && mob instanceof Npc) {
                 // We are stationary and still not in range, so re-initiate pursuit.
                 mob.interact(target);
-                mob.getActions().submitIfAbsent(new PursuitAction(mob, policy));
+                mob.getActions().submitIfAbsent(new PursuitAction(mob.asNpc(), policy));
+            } else if (!target.equals(mob.getNavigator().getCurrentTarget()) && mob instanceof Player) {
+                // For players, submit a navigation request to track our target if needed.
+                var request = NavigationRequest.builder(mob).policy(policy).continuous(true).
+                        target(combat.getTarget()).build();
+                mob.getNavigator().submit(request);
             }
             // Stay active while combat should continue.
             return !combat.inCombat();
@@ -110,10 +117,13 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Check if any listeners preemptively stop the attack.
-        if (mob instanceof Player && PlayerCombatHandler.INSTANCE.testStopAttack((Player) mob, attack)){
+        if (mob instanceof Player && PlayerCombatHandler.INSTANCE.testStopAttack((Player) mob, attack)) {
             return clearTarget();
         }
-
+        if (mob instanceof Player)
+            System.out.println("debug");
+        //       todo instant specials don't work because: youre setting ignoreattackdelay within attack.apply()!!
+        //     set it further up the chain
         // Attack as soon as the combat delay permits it.
         if (combat.isAttackReady() || attack.isIgnoreAttackDelay()) {
             mob.interact(target);

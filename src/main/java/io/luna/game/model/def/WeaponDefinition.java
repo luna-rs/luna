@@ -68,7 +68,7 @@ public final class WeaponDefinition implements Definition {
      */
     public static WeaponDefinition getUnarmed() {
         if (unarmed == null) {
-            unarmed = new WeaponDefinition(-1, Weapon.UNARMED, 0, null);
+            unarmed = new WeaponDefinition(-1, Weapon.UNARMED);
         }
         return unarmed;
     }
@@ -84,20 +84,6 @@ public final class WeaponDefinition implements Definition {
     private final Weapon type;
 
     /**
-     * The poison severity applied by this weapon.
-     * <p>
-     * A value of {@code 0} typically indicates that the weapon does not apply poison.
-     */
-    private final int poisonSeverity;
-
-    /**
-     * The model animation metadata associated with this weapon.
-     * <p>
-     * This may be {@code null} when no special model animation data is defined.
-     */
-    private final WeaponModelAnimationDefinition model;
-
-    /**
      * Cached {@link WeaponTypeDefinition} resolved from {@link #type}.
      * <p>
      * This field is populated lazily on first access through {@link #getTypeDef()}.
@@ -109,14 +95,10 @@ public final class WeaponDefinition implements Definition {
      *
      * @param id The item id this definition belongs to.
      * @param type The weapon type for the item.
-     * @param poisonSeverity The poison severity applied by the weapon.
-     * @param model The model animation metadata for the weapon, or {@code null} if none exists.
      */
-    public WeaponDefinition(int id, Weapon type, int poisonSeverity, WeaponModelAnimationDefinition model) {
+    public WeaponDefinition(int id, Weapon type) {
         this.id = id;
         this.type = type;
-        this.poisonSeverity = poisonSeverity;
-        this.model = model;
     }
 
     @Override
@@ -139,19 +121,5 @@ public final class WeaponDefinition implements Definition {
             typeDef = WeaponTypeDefinition.ALL.get(type);
         }
         return typeDef;
-    }
-
-    /**
-     * @return The poison severity.
-     */
-    public int getPoisonSeverity() {
-        return poisonSeverity;
-    }
-
-    /**
-     * @return The model animation definition, or {@code null} if none exists.
-     */
-    public WeaponModelAnimationDefinition getModel() {
-        return model;
     }
 }

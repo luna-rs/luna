@@ -78,7 +78,7 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
          * @throws IOException If any errors occur.
          */
         private void load() throws IOException {
-            Path childDefPath = Paths.get("data", "game", "def", "items.json");
+            Path childDefPath = Paths.get("data", "game", "def", "items.jsonc");
             ItemDefinitionChild[] children = GsonUtils.readAsType(childDefPath, ItemDefinitionChild[].class);
             for (ItemDefinitionChild child : children) {
                 repository.put(child.id, child);

@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.LocalProjectile.TargetBuilder;
 import io.luna.game.model.chunk.ChunkUpdatableView;
-import io.luna.game.model.def.WeaponModelAnimationDefinition;
+import io.luna.game.model.def.WeaponModelDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
@@ -125,8 +125,8 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
      * @param object The JSON object describing the model animation.
      * @return The parsed model data.
      */
-    protected WeaponModelAnimationDefinition readModel(JsonObject object) {
-        return new WeaponModelAnimationDefinition(
+    protected WeaponModelDefinition readModel(JsonObject object) {
+        return new WeaponModelDefinition(
                 object.get("standing").getAsInt(),
                 object.get("walking").getAsInt(),
                 object.get("running").getAsInt()

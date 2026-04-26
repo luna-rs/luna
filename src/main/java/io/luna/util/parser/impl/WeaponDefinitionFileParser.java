@@ -3,7 +3,6 @@ package io.luna.util.parser.impl;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.WeaponDefinition;
-import io.luna.game.model.def.WeaponModelAnimationDefinition;
 import io.luna.game.model.mob.combat.Weapon;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
@@ -29,19 +28,14 @@ public final class WeaponDefinitionFileParser extends JsonFileParser<WeaponDefin
      * Creates a new {@link WeaponDefinitionFileParser}.
      */
     public WeaponDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "weapons.json"));
+        super(Paths.get("data", "game", "def", "equipment", "weapon_types.jsonc"));
     }
 
     @Override
     public WeaponDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         Weapon type = Weapon.valueOf(token.get("type").getAsString());
-        int poisonSeverity = token.has("poison") ? token.get("poison").getAsInt() : 0;
-        WeaponModelAnimationDefinition model = null;
-        if (token.has("model")) {
-            model = readModel(token.get("model").getAsJsonObject());
-        }
-        return new WeaponDefinition(id, type, poisonSeverity, model);
+        return new WeaponDefinition(id, type);
     }
 
     @Override

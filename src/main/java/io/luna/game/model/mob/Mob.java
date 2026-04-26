@@ -18,6 +18,8 @@ import io.luna.game.model.mob.block.UpdateBlockData.Builder;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.combat.state.CombatContext;
+import io.luna.game.model.mob.movement.WalkingNavigator;
+import io.luna.game.model.mob.movement.WalkingQueue;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;

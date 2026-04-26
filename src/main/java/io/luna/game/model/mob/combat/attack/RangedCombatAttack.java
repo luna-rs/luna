@@ -82,8 +82,9 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
      * @param ammoType The ammo type enum to resolve into an {@link AmmoDefinition}.
      */
     public RangedCombatAttack(T attacker, Mob victim, CombatStyle styleType, AmmoType ammoType) {
-        this(attacker, victim, styleType.getDef().getAnimation(), ammoType.getDef().getStartGraphic(),
-                ammoType.getDef().getProjectile(), ammoType.getDef().getEndGraphic(), styleType.getDef().getSpeed(),
+        this(attacker, victim, attacker.getCombat().getAttackAnimation(CombatDamageType.RANGED),
+                ammoType.getDef().getStartGraphic(), ammoType.getDef().getProjectile(),
+                ammoType.getDef().getEndGraphic(), styleType.getDef().getSpeed(),
                 styleType.getDef().getRange());
     }
 
