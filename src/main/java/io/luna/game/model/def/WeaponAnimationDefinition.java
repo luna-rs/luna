@@ -12,9 +12,11 @@ import java.util.Map;
 
 /**
  * Defines the combat animations and equipped model data used by one or more weapon item IDs.
+ *
  * <p>
- * Each definition can be shared by multiple item IDs when those weapons use the same attack animations, defensive animation, and
- * equipped model appearance.
+ * Each definition can be shared by multiple item IDs when those weapons use the same attack animations, defence
+ * animations, and equipped model appearance.
+ * </p>
  *
  * @author lare96
  */
@@ -28,10 +30,18 @@ public final class WeaponAnimationDefinition {
     public static volatile ImmutableMap<Integer, WeaponAnimationDefinition> ALL = ImmutableMap.of();
 
     /**
+     * The fallback animation pair used when a combat style does not have an explicit animation mapping.
+     * <p>
+     * The first value is the attack animation ID, and the second value is the defence animation ID.
+     * A value of {@code -1} indicates that no animation override is available.
+     */
+    private static final Pair<Integer, Integer> DEFAULT = new Pair<>(-1, -1);
+
+    /**
      * Loads all parsed weapon animation definitions into the global lookup table.
      * <p>
-     * Each item ID owned by a definition is mapped directly to that definition. If duplicate item IDs are encountered, the later definition in {@code parsedList} will
-     * replace the earlier one.
+     * Each item ID owned by a definition is mapped directly to that definition. If duplicate item IDs are
+     * encountered, the later definition in {@code parsedList} replaces the earlier one.
      *
      * @param parsedList The parsed weapon animation definitions.
      */
@@ -56,7 +66,7 @@ public final class WeaponAnimationDefinition {
      * Each entry maps a {@link CombatStyle} to a pair containing:
      * <ul>
      *     <li>The attack animation ID.</li>
-     *     <li>The defensive animation ID.</li>
+     *     <li>The defence animation ID.</li>
      * </ul>
      */
     private final EnumMap<CombatStyle, Pair<Integer, Integer>> styles;
@@ -67,7 +77,7 @@ public final class WeaponAnimationDefinition {
     private final WeaponModelDefinition model;
 
     /**
-     * Creates a new {@link WeaponAnimationDefinition}.
+     * Creates a new weapon animation definition.
      *
      * @param ids The weapon item IDs that use this definition.
      * @param styles The combat style animation mappings.
@@ -78,6 +88,30 @@ public final class WeaponAnimationDefinition {
         this.ids = ids;
         this.styles = styles;
         this.model = model;
+    }
+
+    /**
+     * Gets the attack animation for a combat style.
+     * <p>
+     * If the supplied style does not have an explicit animation mapping, {@code -1} is returned.
+     *
+     * @param style The combat style to look up.
+     * @return The attack animation ID, or {@code -1} if no mapping exists.
+     */
+    public int getAttackAnimation(CombatStyle style) {
+        return styles.getOrDefault(style, DEFAULT).component1();
+    }
+
+    /**
+     * Gets the defence animation for a combat style.
+     * <p>
+     * If the supplied style does not have an explicit animation mapping, {@code -1} is returned.
+     *
+     * @param style The combat style to look up.
+     * @return The defence animation ID, or {@code -1} if no mapping exists.
+     */
+    public int getDefenceAnimation(CombatStyle style) {
+        return styles.getOrDefault(style, DEFAULT).component2();
     }
 
     /**

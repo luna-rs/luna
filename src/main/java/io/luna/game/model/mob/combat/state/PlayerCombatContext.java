@@ -19,7 +19,6 @@ import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.combat.CombatStance;
-import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack;
@@ -194,9 +193,10 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         if (weaponId > 0) {
             WeaponAnimationDefinition weaponAnimationDef = WeaponAnimationDefinition.ALL.get(weaponId);
             if (weaponAnimationDef != null) {
-                CombatStyle selectedStyle = weapon.getStyleDef().getType();
-                // Try and use override animation from 'weapon_animations.jsonc'.
-                return weaponAnimationDef.getStyles().get(selectedStyle).component1();
+                int animation = weaponAnimationDef.getAttackAnimation(weapon.getStyleDef().getType());
+                if(animation != -1) {
+                    return animation;
+                }
             }
         }
         // Otherwise, use the default attack animation from 'weapon_type_data.jsonc'.
@@ -211,11 +211,15 @@ public final class PlayerCombatContext extends CombatContext<Player> {
             return 1156;
         }
 
-        WeaponAnimationDefinition weaponAnimationDef = WeaponAnimationDefinition.ALL.get(shieldId);
-        if (weaponAnimationDef != null) {
-            CombatStyle selectedStyle = weapon.getStyleDef().getType();
-            // Try and use override animation from 'weapon_animations.jsonc'.
-            return weaponAnimationDef.getStyles().get(selectedStyle).component2();
+        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        if (weaponId > 0) {
+            WeaponAnimationDefinition weaponAnimationDef = WeaponAnimationDefinition.ALL.get(weaponId);
+            if (weaponAnimationDef != null) {
+                int animation = weaponAnimationDef.getDefenceAnimation(weapon.getStyleDef().getType());
+                if (animation != -1) {
+                    return animation;
+                }
+            }
         }
         // Otherwise, use the default defence animation from 'weapon_type_data.jsonc'.
         return weapon.getStyleDef().getDefenceAnimation();

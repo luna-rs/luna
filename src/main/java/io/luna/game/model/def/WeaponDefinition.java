@@ -122,11 +122,4 @@ public final class WeaponDefinition implements Definition {
         }
         return typeDef;
     }
-
-    /**
-     * @return The model animation definition, or {@code null} if none exists.
-     */
-    public WeaponModelDefinition getModel() {
-        return null;
-    }
 }
