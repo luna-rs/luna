@@ -239,6 +239,8 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
         }
         // TODO Deep wilderness, after doors and gates implementation.
     }
+
+
     // locates targets in the wild and starts fights
     // DO NOT look for players globally... make the bots dumb or smart wander within the wilderness area and/or
     // go to specialized hotspots (green drags, kbd, rune rocks etc. and alter through that area) while travelling in the wild if a local player appears in its
@@ -246,100 +248,55 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
 
     // ensure we can even attack before targeting... check multi, wild level, etc.
     var expireAt: Long = System.nanoTime() + duration.toNanos()
-    suspend fun checkCombat(): Boolean {
-        // TODO If health under 50% and no food, leave wilderness.
-        val attacker = bot.combat.lastCombatWith
-        if (bot.combat.inCombat() && attacker != null) {
-            if (!bot.inWilderness()) {
-                // We're not in the wilderness, teleport away from the threat.
-                output.sendCommand("home")
-                return true
-            } else if (attacker is Npc) {
-                if (attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3)) {
-                    // We're in the wild, run away from strong NPCs (or when we don't feel like fighting).
-                    handler.combat.fleeCombat()
-                }
-                return true
-            } else if(attacker is Player) {
-                // We were attacked by a player, fight back.
-                bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
-                return true
-            }
-        }
-        return false
-    }
+    private val DEBUG = true
 
-    fun searchAndAttack(): Boolean {
-        fun check(other: Player) =
-            other.isAlive && bot.combat.checkMultiCombat(other) && other.state == EntityState.ACTIVE
-
-        val targets = ArrayList<Player>()
-        if (!bot.combat.inCombat() && bot.inWilderness()) {
-            for (other in world.locator.findViewablePlayers(bot)) {
-                if (other != bot && check(other)) {
-                    targets += other
-                }
-            }
-        }
-        if (targets.size > 1) {
-            // TODO Intelligent bots much more likely to sort the following ways.
-            if (rand(1 of 3)) {
-                // Sort targets by distance sometimes.
-                Collections.sort(targets, LocatableDistanceComparator(bot))
-            } else if (rand(1 of 4)) {
-                // Sort targets by health percentage sometimes.
-                targets.sortWith { o1, o2 -> o1.healthPercent.compareTo(o2.healthPercent) }
-            }
-        }
-        for (other in targets) {
-            if (other.isAlive && bot.combat.checkMultiCombat(other) && other.state == EntityState.ACTIVE) {
-                bot.scriptStack.pushHead(CombatBotScript(bot, other))
-                return true
-            }
-        }
-        return false
-    }
-
-    fun travelToNewArea() {
-        if (!bot.combat.inCombat() && bot.inWilderness() && !bot.movementStack.isActive && bot.tolerance.duration.toMinutes() > 10) {
-            bot.movementStack.walkUntilReached(PkArea.ALL.random().anchors.random())
+    private fun debug(message: String) {
+        if (DEBUG) {
+            println("[${javaClass.simpleName}] $message")
         }
     }
 
-    fun resetItems(): Boolean {
-        // TODO Make sure we have food and proper combat equipment.
-        return true
+    override suspend fun init() {
+        println("???????????")
     }
-
-    suspend fun enterWild(): Boolean {
-        if (!bot.inWilderness()) {
-            handler.widgets.clickRunning(true)
-            bot.movementStack.walkUntilReached(LOW_LEVEL_ANCHOR_POINTS.random()).await()
-            if (!bot.inWilderness()) {
-                return false
-            }
-        }
-        return true
-    }
-
     override suspend fun run(): Boolean {
         if (System.nanoTime() > expireAt) {
-            // Script duration has ended, leave wilderness and end script.
+            debug("Script expired. Fleeing wilderness.")
             handler.combat.fleeWilderness()
-            return !bot.inWilderness()
+            val finished = !bot.inWilderness()
+            debug("fleeWilderness finished=$finished, inWilderness=${bot.inWilderness()}")
+            delay(1.seconds, 3.seconds)
+            return finished
         }
-        if (checkCombat() || !resetItems() || !enterWild()) {
-            // Script preparation functions.
-            return false
-        }
-        // Main script loop.
-        travelToNewArea()
-        if(!searchAndAttack()) {
+
+        if (checkCombat()) {
+            debug("checkCombat handled current state.")
             delay(1.seconds, 3.seconds)
             return false
-        } else {
-            return true
         }
+
+        if (!resetItems()) {
+            debug("resetItems returned false.")
+            delay(1.seconds, 3.seconds)
+            return false
+        }
+
+        if (!enterWild()) {
+            debug("enterWild returned false.")
+            delay(1.seconds, 3.seconds)
+            return false
+        }
+
+        travelToNewArea()
+
+        if (!searchAndAttack()) {
+            debug("No target found. Delaying before retry.")
+            delay(1.seconds, 3.seconds)
+            return false
+        }
+
+        debug("Target found. Combat script should now be active.")
+        return bot.combat.inCombat()
     }
 
     override fun snapshot(): Duration {
@@ -348,5 +305,127 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript<Duration>(bot) {
             return Duration.ZERO
         }
         return Duration.ofNanos(remaining)
+    }
+
+    suspend fun checkCombat(): Boolean {
+        val attacker = bot.combat.lastCombatWith
+        if (bot.combat.inCombat() && attacker != null) {
+            debug(
+                "In combat. attacker=${attacker.javaClass.simpleName}, " +
+                        "inWilderness=${bot.inWilderness()}, attacker=$attacker"
+            )
+
+            if (!bot.inWilderness()) {
+                debug("Bot is in combat outside wilderness. Sending home command.")
+                output.sendCommand("home")
+                return true
+            } else if (attacker is Npc) {
+                val shouldFlee = attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3)
+                debug(
+                    "Npc attacker=${attacker.id}, npcLevel=${attacker.def().combatLevel}, " +
+                            "botLevel=${bot.combatLevel}, shouldFlee=$shouldFlee"
+                )
+
+                if (shouldFlee) {
+                    debug("Fleeing NPC combat.")
+                    handler.combat.fleeCombat()
+                } else {
+                    debug("NPC attacker detected, but bot chose not to flee this tick.")
+                }
+                return true
+            } else if (attacker is Player) {
+                debug("Player attacker detected. Pushing CombatBotScript for $attacker")
+                bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
+                return true
+            }
+        }
+        return false
+    }
+
+    fun searchAndAttack(): Boolean {
+        fun check(other: Player): Boolean {
+            return other.isAlive &&
+                    bot.combat.checkMultiCombat(other) &&
+                    other.state == EntityState.ACTIVE
+        }
+
+        if (bot.combat.inCombat()) {
+            debug("Skipping target search because bot is already in combat.")
+            return false
+        }
+
+        if (!bot.inWilderness()) {
+            debug("Skipping target search because bot is not in wilderness.")
+            return false
+        }
+
+        val targets = ArrayList<Player>()
+        for (other in world.locator.findViewablePlayers(bot)) {
+            if (other != bot && check(other)) {
+                targets += other
+            }
+        }
+
+        debug("Found ${targets.size} candidate targets in view.")
+
+        if (targets.size > 1) {
+            if (rand(1 of 3)) {
+                debug("Sorting candidate targets by distance.")
+                targets.sortWith(LocatableDistanceComparator(bot))
+            } else if (rand(1 of 4)) {
+                debug("Sorting candidate targets by health percent.")
+                targets.sortBy { it.healthPercent }
+            } else {
+                debug("Leaving candidate targets unsorted.")
+            }
+        }
+
+        for (other in targets) {
+            if (other.isAlive && bot.combat.checkMultiCombat(other) && other.state == EntityState.ACTIVE) {
+                debug("Selected target $other. Pushing CombatBotScript.")
+                bot.combat.attack(other)
+                bot.scriptStack.pushHead(CombatBotScript(bot, other))
+                return true
+            }
+        }
+
+        debug("No valid target selected after filtering.")
+        return false
+    }
+
+    private suspend fun travelToNewArea() {
+        if (!bot.combat.inCombat() &&
+            bot.inWilderness() &&
+            !bot.navigator.isActive &&
+            bot.tolerance.duration.toMinutes() > 10) {
+            val area = PkArea.ALL.random()
+            val anchor = area.anchors.random()
+            debug("Travelling to new area ${area.name}, anchor=$anchor")
+            bot.navigator.navigate(anchor, true).await()
+        }
+    }
+
+    private fun resetItems(): Boolean {
+        debug("resetItems called.")
+        // TODO Make sure we have food and proper combat equipment.
+        return true
+    }
+
+    private suspend fun enterWild(): Boolean {
+        if (!bot.inWilderness()) {
+            val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
+            debug("Bot is outside wilderness. Walking to low level anchor $anchor")
+            handler.widgets.clickRunning(true)
+            bot.navigator.navigate(anchor, true).await()
+
+            if (!bot.inWilderness()) {
+                debug("Reached anchor but bot is still not in wilderness. position=${bot.position}")
+                return false
+            }
+
+            debug("Bot entered wilderness successfully at position=${bot.position}")
+        }
+
+        return true
     }
 }

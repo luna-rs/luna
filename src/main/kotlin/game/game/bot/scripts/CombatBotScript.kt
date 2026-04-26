@@ -14,7 +14,6 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.damage.CombatDamageType
-import kotlin.math.floor
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,8 +24,13 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
     private var previousWeapon: Int? = null
     private var previousShield: Int? = null
 
+    override suspend fun init() {
+        bot.combat.attack(focus)
+        delay(600.milliseconds)
+    }
     override suspend fun run(): Boolean {
         targetEnemy()
+        delay(600.milliseconds, 1200.milliseconds)
 
         if (!bot.combat.inCombat()) {
             // End script if bot isn't in combat.
@@ -35,7 +39,6 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
         eatFood()
         drinkPotion()
         activatePrayer()
-        targetEnemy()
         useSpecialAttack()
         delay(600.milliseconds, 1200.milliseconds)
         return false
@@ -54,6 +57,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
                     focus = local.first()
                 }
             }
+            println(focus)
             bot.combat.attack(focus)
             delay(1200.milliseconds, 3.seconds)
             return
@@ -83,10 +87,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
                     noFood = true
                 }
             }
+            targetEnemy()
         }
     }
 
-    private fun drinkPotion() {
+    private suspend fun drinkPotion() {
         // TODO Saradomin brew, other types of potions.
         val potions = HashSet<Int>()
 
@@ -122,6 +127,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
             if (item != null && item.id in potions) {
                 // Drink one potion per combat cycle.
                 handler.inventory.clickItem(1, item.id, index)
+                targetEnemy()
                 return
             }
         }
@@ -137,7 +143,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
             }
             for (item in bot.inventory) {
                 if (item != null && item.id in SpecialAttackHandler.getAllWeaponIds()) {
-                    specialWeapon = weaponId
+                    specialWeapon = item.id
                     break
                 }
             }
@@ -155,7 +161,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
                 // Could not equip item.
                 return
             }
-            if (bot.combat.weapon.specialAttackType != null) {
+            if (bot.combat.weapon.specialAttackType == null) {
                 // Special attack type wasn't resolved.
                 return
             }
@@ -174,10 +180,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
         }
     }
 
-    private fun activatePrayer() {
+    private suspend fun activatePrayer() {
         if (bot.prayer.level > 0) {
             // TODO Intelligent bots use smite, retribution, and redemption strategically.
-            val prayerPercent = floor(bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble())
+            val prayerPercent = bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble()
             if (prayerPercent < 0.15 && bot.combat.prayers.active.entrySet().size > 2) {
                 // Deactivate all but two low-cost prayers when prayer points fall below 15%
                 bot.combat.prayers.deactivateAll()
@@ -223,17 +229,17 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
         val local = world.locator.findViewableItems(bot) {
             it.isWithinDistance(bot, 10) &&
                     (Food.ID_TO_FOOD.containsKey(it.id) || isValuable(it.id) || Potion.DOSE_TO_POTION.containsKey(it.id) ||
-                         it.def().value > 5000)
+                            it.def().value > 5000)
         }
         var remainingSlots = bot.inventory.computeRemainingSize()
-        for(groundItem in local) {
+        for (groundItem in local) {
             val item = groundItem.toItem()
-            if(bot.inventory.hasSpaceFor(item)) {
-                if(!handler.interactions.interact(1, groundItem)) {
+            if (bot.inventory.hasSpaceFor(item)) {
+                if (!handler.interactions.interact(1, groundItem)) {
                     // Could not loot item, stop here.
                     return
                 }
-                if(--remainingSlots < 1) {
+                if (--remainingSlots < 1) {
                     // We don't have enough inventory space to keep looting.
                     break
                 }
@@ -244,7 +250,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
     private fun isValuable(id: Int): Boolean {
         // TODO In the future, this will become its own dynamic system with bots changing what they find valuable
         //  depending on game resources, popularity, intrinsic value, fashion, etc.
-        return when(id) {
+        return when (id) {
             995 -> true
             else -> false
         }

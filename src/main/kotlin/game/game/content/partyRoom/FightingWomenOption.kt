@@ -110,7 +110,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
                     it.strength.level = RandomUtils.inclusive(50, 99)
                     it.defence.level = RandomUtils.inclusive(1, 50)
                     it.hitpoints.level = RandomUtils.inclusive(125, 175)
-                    it.maxHit = RandomUtils.inclusive(10, 20)
+                    it.combat.maxHit = RandomUtils.inclusive(15, 35)
                     it.animation(TAUNT_ANIMATIONS.random())
                     it.speak(BEFORE_MESSAGES.random())
                 }
