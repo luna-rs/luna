@@ -59,6 +59,16 @@ public final class CombatDamageStack {
     }
 
     /**
+     * Determines whether this damage stack is currently tracking damage for a mob.
+     *
+     * @param mob The mob to check.
+     * @return {@code true} if this stack contains damage entries for {@code mob}, otherwise {@code false}.
+     */
+    public boolean contains(Mob mob) {
+        return buffer.containsKey(mob);
+    }
+
+    /**
      * Returns the total buffered damage dealt by {@code mob}.
      *
      * @param mob The source mob to total damage for.
