@@ -160,12 +160,14 @@ object PlayerCombatHandler {
             if (hook.filter(receiver)) {
                 hook.defence(receiver)
                 action.damage = receiver.damage
-                if(action.damage != null) {
+                if (action.damage != null) {
                     if (receiver.animationId != null) {
                         player.animation(Animation(receiver.animationId!!))
                     } else {
-                        val animationId = player.combat.getDefenceAnimation(action.damage.type)
-                        player.animation(Animation(animationId))
+                        val animationId = player.combat.getDefenceAnimation(action.damage.type, action.damage.rawAmount)
+                        if (animationId > 0) {
+                            player.animation(Animation(animationId))
+                        }
                     }
                 }
                 return

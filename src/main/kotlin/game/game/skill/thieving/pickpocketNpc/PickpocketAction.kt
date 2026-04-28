@@ -20,12 +20,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * A queued player action that attempts to pickpocket a specific [Npc].
- *
- * The action validates the player's Thieving level, checks inventory space for the possible loot,
- * turns the player toward the target, then resolves the pickpocket attempt after a short delay.
- * On success, the player receives loot and experience. On failure, the target performs a single
- * retaliation swing and the player is stunned.
+ * A [QueuedAction] that attempts to pickpocket a specific [Npc].
  *
  * @param plr The player attempting to pickpocket the NPC.
  * @param target The NPC being pickpocketed.
@@ -109,10 +104,13 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
 
         mob.submitAction(object : LockedAction(mob, true, 1) {
             override fun run(): Boolean {
-                val defenceAnimation = Animation(mob.combat.getDefenceAnimation(CombatDamageType.MELEE))
+                val amount = damage.rawAmount
+                val defenceAnimation = mob.combat.getDefenceAnimation(CombatDamageType.MELEE, amount)
 
-                mob.damage(damage.rawAmount)
-                mob.animation(defenceAnimation)
+                mob.damage(amount)
+                if (defenceAnimation > 0) {
+                    mob.animation(Animation(defenceAnimation))
+                }
 
                 // Additionally, stun the player.
                 mob.playSound(Sound.STUNNED)
