@@ -66,7 +66,7 @@ cmd("players") {
  * A command that teleports the player home.
  */
 cmd("home") {
-    if (!plr.combat.magic.isTeleBlocked && plr.teleportDelay.ready(2)) {
+    if (!plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) {
         plr.teleport(Luna.settings().game().startingPosition(), TeleportStyle.REGULAR)
     }
 }

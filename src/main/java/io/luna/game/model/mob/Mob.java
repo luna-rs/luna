@@ -1,6 +1,7 @@
 package io.luna.game.model.mob;
 
 import com.google.common.collect.ImmutableSet;
+import engine.combat.status.StatusAction;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionQueue;
@@ -176,6 +177,11 @@ public abstract class Mob extends Entity {
      * If this mob is currently wandering.
      */
     private boolean wandering;
+
+    /**
+     * The status action managing status effects.
+     */
+    protected final StatusAction status = new StatusAction(this);
 
     /**
      * Creates a new {@link Mob} at a specific starting position.
@@ -887,7 +893,7 @@ public abstract class Mob extends Entity {
      * @return {@code true} if locked, otherwise {@code false}.
      */
     public boolean isLocked() {
-        return locked;
+        return locked || status.isStunned();
     }
 
     /**
@@ -970,5 +976,12 @@ public abstract class Mob extends Entity {
      */
     public void setWandering(boolean wandering) {
         this.wandering = wandering;
+    }
+
+    /**
+     * @return The status action managing status effects.
+     */
+    public StatusAction getStatus() {
+        return status;
     }
 }

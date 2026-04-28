@@ -2,10 +2,7 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import engine.controllers.WildernessLocatableController;
-import game.item.consumable.potion.PotionCountdownTimer;
 import game.player.Messages;
 import game.player.Sound;
 import io.luna.Luna;
@@ -337,6 +334,7 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        status.save();
         pendingPlacement = true;
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
@@ -775,32 +773,6 @@ public class Player extends Mob {
         int delay = (delayTicks * 600) / 30;
         int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
         queue(new SoundMessageWriter(sound.getId(), volume, delay));
-    }
-
-    /**
-     * Serializes all active {@link PotionCountdownTimer} actions to JSON for persistence.
-     *
-     * @return A {@link JsonArray} representing all active potion timers.
-     */
-    public JsonArray savePotionsToJson() {
-        JsonArray array = new JsonArray();
-        for (PotionCountdownTimer timer : actions.getAll(PotionCountdownTimer.class)) {
-            array.add(timer.saveJson());
-        }
-        return array;
-    }
-
-    /**
-     * Restores all {@link PotionCountdownTimer} actions from the given JSON representation.
-     *
-     * @param array A {@link JsonArray} created by {@link #savePotionsToJson()}, or {@code null}.
-     */
-    public void loadPotionsFromJson(JsonArray array) {
-        if (array != null) {
-            for (JsonElement element : array) {
-                PotionCountdownTimer.Companion.loadJson(this, element.getAsJsonObject());
-            }
-        }
     }
 
     /**

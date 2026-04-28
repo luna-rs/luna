@@ -6,6 +6,7 @@ import api.combat.magic.CombatSpellHandler.weaken
 import api.predef.*
 import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
+import engine.combat.status.hooks.TeleBlockStatusEffect
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatSpell
 import kotlin.time.Duration.Companion.seconds
@@ -37,13 +38,13 @@ spell(CombatSpell.STUN) {
 
 // Immobilizing curse spells.
 spell(CombatSpell.BIND) {
-    immobilize(victim, 8)
+    immobilize(victim, 8.ticks)
 }
 spell(CombatSpell.SNARE) {
-    immobilize(victim, 16)
+    immobilize(victim, 16.ticks)
 }
 spell(CombatSpell.ENTANGLE) {
-    immobilize(victim, 24)
+    immobilize(victim, 24.ticks)
 }
 
 // Teleblock curse spell.
@@ -55,7 +56,7 @@ spell(CombatSpell.TELEBLOCK) {
             duration /= 2
         }
         val ticks = duration.seconds.inTicks()
-        if (plr.combat.magic.setTeleBlock(ticks)) {
+        if (plr.status.add(TeleBlockStatusEffect(plr, ticks.ticks))) {
             val time = when (val minutes = duration / 60) {
                 0 -> "under a minute"
                 1 -> "1 minute"

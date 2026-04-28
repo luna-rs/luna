@@ -1,4 +1,4 @@
-package game.combat.npcHooks.dragons
+package game.combat.npcHooks.dragon
 
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*

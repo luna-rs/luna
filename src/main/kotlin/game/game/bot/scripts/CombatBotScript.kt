@@ -7,7 +7,6 @@ import api.combat.specialAttack.SpecialAttackHandler.specialAttackData
 import api.predef.*
 import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
-import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import io.luna.game.model.mob.Mob
@@ -242,8 +241,8 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
 
             if (prayerPercent < 0.15 && bot.combat.prayers.active.entrySet().size > 2) {
                 bot.combat.prayers.deactivateAll()
-                bot.combat.prayers.forceActivate(CombatPrayer.STEEL_SKIN)
-                bot.combat.prayers.forceActivate(CombatPrayer.PROTECT_ITEM)
+                bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
+                bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)
                 return
             }
 
@@ -256,19 +255,19 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
                 }
 
             if (protectionPrayer != null) {
-                bot.combat.prayers.forceActivate(protectionPrayer)
+                bot.combat.prayers.activateIfOff(protectionPrayer)
             } else {
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MELEE, true)
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MISSILES, true)
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MAGIC, true)
             }
 
-            bot.combat.prayers.forceActivate(CombatPrayer.STEEL_SKIN)
-            bot.combat.prayers.forceActivate(CombatPrayer.PROTECT_ITEM)
+            bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
+            bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)
 
             if (!bot.combat.weapon.isRanged && !bot.combat.magic.isAutocasting) {
-                bot.combat.prayers.forceActivate(CombatPrayer.ULTIMATE_STRENGTH)
-                bot.combat.prayers.forceActivate(CombatPrayer.INCREDIBLE_REFLEXES)
+                bot.combat.prayers.activateIfOff(CombatPrayer.ULTIMATE_STRENGTH)
+                bot.combat.prayers.activateIfOff(CombatPrayer.INCREDIBLE_REFLEXES)
             }
         }
     }

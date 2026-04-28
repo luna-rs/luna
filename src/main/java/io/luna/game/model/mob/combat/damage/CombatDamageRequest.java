@@ -46,6 +46,23 @@ public final class CombatDamageRequest {
     }
 
     /**
+     * Creates a standard combat damage request for the given damage type.
+     * <p>
+     * The request uses the normal {@link CombatDamageRequest} builder defaults for accuracy,
+     * damage calculation, and any other unresolved combat properties. Unlike {@link #zero(Mob, Mob)}
+     * or {@link #zero(Mob, Mob, CombatDamageType)}, this does not force the hit to land or force
+     * the damage amount to {@code 0}.
+     *
+     * @param attacker The mob making the attack.
+     * @param victim The mob being attacked.
+     * @param type The combat damage type to use for the request.
+     * @return A combat damage request using the standard builder defaults.
+     */
+    public static CombatDamageRequest standard(Mob attacker, Mob victim, CombatDamageType type) {
+        return builder(attacker, victim, type).build();
+    }
+
+    /**
      * Creates an always-accurate zero-damage melee hit.
      * <p>
      * This is useful for hooks that need to produce a guaranteed hit result without dealing damage, but do not care

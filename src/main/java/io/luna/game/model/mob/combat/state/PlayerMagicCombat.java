@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.combat.state;
 
-import api.combat.magic.TeleBlockAction;
 import game.skill.magic.Magic;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.item.Item;
@@ -33,11 +32,6 @@ public class PlayerMagicCombat {
      * The player that owns this magic combat state.
      */
     private final Player player;
-
-    /**
-     * The remaining Tele Block duration in ticks.
-     */
-    private int teleBlock;
 
     /**
      * {@code true} if autocasting is currently enabled.
@@ -91,64 +85,6 @@ public class PlayerMagicCombat {
         }
 
         player.getInventory().removeAll(required);
-        return true;
-    }
-
-    /**
-     * Determines whether the player is currently Tele Blocked.
-     *
-     * @return {@code true} if the remaining Tele Block duration is greater than zero, otherwise {@code false}.
-     */
-    public boolean isTeleBlocked() {
-        return teleBlock > 0;
-    }
-
-    /**
-     * Decrements the remaining Tele Block duration and returns the previous value.
-     *
-     * @return The Tele Block duration before decrementing.
-     */
-    public int decrementTeleBlock() {
-        return teleBlock--;
-    }
-
-    /**
-     * Returns the remaining Tele Block duration.
-     *
-     * @return The remaining Tele Block duration in ticks.
-     */
-    public int getTeleBlock() {
-        return teleBlock;
-    }
-
-    /**
-     * Sets the Tele Block duration and schedules Tele Block processing.
-     *
-     * @param teleBlock The new Tele Block duration in ticks.
-     * @return {@code true} if the value was updated, otherwise {@code false}.
-     */
-    public boolean setTeleBlock(int teleBlock) {
-        return setTeleBlock(teleBlock, true);
-    }
-
-    /**
-     * Sets the Tele Block duration and optionally schedules Tele Block processing.
-     * <p>
-     * A positive Tele Block duration cannot be applied while another positive Tele Block is already active.
-     *
-     * @param newTeleBlock The new Tele Block duration in ticks.
-     * @param timer {@code true} to submit a {@link TeleBlockAction} when the new value is positive, otherwise {@code false}.
-     * @return {@code true} if the value was updated, otherwise {@code false}.
-     */
-    public boolean setTeleBlock(int newTeleBlock, boolean timer) {
-        if (teleBlock > 0 && newTeleBlock > 0) {
-            return false;
-        }
-
-        teleBlock = newTeleBlock;
-        if (teleBlock > 0 && timer) {
-            player.getActions().submitIfAbsent(new TeleBlockAction(player));
-        }
         return true;
     }
 

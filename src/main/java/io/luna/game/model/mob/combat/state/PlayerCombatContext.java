@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.combat.state;
 
-import api.combat.magic.TeleBlockAction;
 import api.combat.player.PlayerCombatHandler;
 import api.combat.specialAttack.SpecialAttackHandler;
 import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
@@ -19,7 +18,6 @@ import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.combat.CombatStance;
-import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack;
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack;
@@ -223,21 +221,6 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
         // Otherwise, use the default defence animation from 'weapon_type_data.jsonc'.
         return weapon.getStyleDef().getDefenceAnimation();
-    }
-
-    /**
-     * Restores persistent combat status actions after the player logs in.
-     * <p>
-     * If the player still has active status effects stored on login, the corresponding action is resubmitted so the
-     * effect continues processing normally.
-     */
-    public void onLogin() {
-        if (getPoisonSeverity() > 0) {
-            player.getActions().submitIfAbsent(new PoisonAction(player, false));
-        }
-        if (magic.getTeleBlock() > 0) {
-            player.getActions().submitIfAbsent(new TeleBlockAction(player));
-        }
     }
 
     /**

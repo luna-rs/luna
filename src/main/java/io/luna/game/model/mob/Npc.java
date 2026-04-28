@@ -198,6 +198,19 @@ public class Npc extends Mob {
         return new SimplePathfinder(world.getCollisionManager());
     }
 
+    @Override
+    protected final void onActive() {
+        status.load();
+        onSpawn();
+    }
+
+    /**
+     * Run once the NPC has been spawned into the game world.
+     */
+    public void onSpawn() {
+
+    }
+
     /**
      * Determines if the given {@link Entity} is within the viewing cone of this NPC.
      * <p>

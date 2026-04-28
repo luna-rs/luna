@@ -5,6 +5,7 @@ import api.combat.magic.CombatSpellHandler.spell
 import api.combat.magic.CombatSpellHandler.weaken
 import api.predef.*
 import api.predef.ext.*
+import engine.combat.status.hooks.PoisonStatusEffect
 import engine.controllers.Controllers.inMultiArea
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
@@ -13,6 +14,7 @@ import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import kotlin.math.floor
+import kotlin.time.Duration
 
 /**
  * The chance for a smoke spell to apply poison.
@@ -53,7 +55,7 @@ inline fun <reified T : Mob> forRadiusMobs(attacker: Mob, victim: T, radius: Int
 fun poison(victim: Mob, severity: Int, attack: MagicCombatAttack<*>) {
     fun poison(mob: Mob) {
         if (rand(SMOKE_SPELLS_POISON_CHANCE)) {
-            mob.combat.poisonSeverity = severity
+            mob.status.add(PoisonStatusEffect(mob, severity))
         }
     }
     poison(victim)
@@ -126,11 +128,11 @@ fun weakenAll(victim: Mob, skill: Int, percent: Double, attack: MagicCombatAttac
  * @param ticks The number of ticks to immobilize affected targets for.
  * @param attack The active magic attack providing spell metadata and secondary-hit storage.
  */
-fun immobilizeAll(victim: Mob, ticks: Int, attack: MagicCombatAttack<*>) {
-    immobilize(victim, ticks)
+fun immobilizeAll(victim: Mob, duration: Duration, attack: MagicCombatAttack<*>) {
+    immobilize(victim, duration)
     if (attack.spellEffect.radius > 0 && attack.attacker.inMultiArea()) {
         forRadiusMobs(attack.attacker, victim, attack.spellEffect.radius) {
-            immobilize(it, ticks)
+            immobilize(it, duration)
             attack.damageList += attack.calculateDamage(it)
         }
     }
@@ -181,14 +183,14 @@ spell(CombatSpell.SHADOW_BARRAGE) {
 
 // Ice spells.
 spell(CombatSpell.ICE_RUSH) {
-    immobilizeAll(victim, 8, this)
+    immobilizeAll(victim, 8.ticks, this)
 }
 spell(CombatSpell.ICE_BURST) {
-    immobilizeAll(victim, 16, this)
+    immobilizeAll(victim, 16.ticks, this)
 }
 spell(CombatSpell.ICE_BLITZ) {
-    immobilizeAll(victim, 24, this)
+    immobilizeAll(victim, 24.ticks, this)
 }
 spell(CombatSpell.ICE_BARRAGE) {
-    immobilizeAll(victim, 32, this)
+    immobilizeAll(victim, 32.ticks, this)
 }

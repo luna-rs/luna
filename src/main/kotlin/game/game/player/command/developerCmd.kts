@@ -1,30 +1,23 @@
 package game.player.command
 
-import api.combat.specialAttack.SpecialAttackHandler
 import api.drops.DropTableHandler
 import api.predef.*
 import api.predef.ext.*
-import game.bot.scripts.PkBotScript
+import engine.combat.status.hooks.PoisonStatusEffect
 import io.luna.Luna
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
-import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
-import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.combat.CombatSpell
-import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 import io.luna.game.model.mob.overlay.StandardInterface
@@ -35,7 +28,6 @@ import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
 import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
-import java.time.Duration
 
 
 /**

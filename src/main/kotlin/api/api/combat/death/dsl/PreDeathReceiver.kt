@@ -1,6 +1,7 @@
 package api.combat.death.dsl
 
 import api.predef.*
+import engine.combat.status.StatusEffectType
 import io.luna.game.model.mob.Player
 
 /**
@@ -29,6 +30,6 @@ class PreDeathReceiver(val receiver: DeathHookReceiver<*>) {
         victim.hitpoints.level = 0
         victim.combat.damageStack.clear()
         victim.actions.interruptWeak()
-        victim.combat.poisonSeverity = 0
+        victim.status.remove(StatusEffectType.POISONED)
     }
 }

@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.combat.attack;
 
+import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -132,7 +133,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         int id = attacker.getEquipment().computeIdForIndex(index);
         EquipmentPoisonDefinition poisonDef = EquipmentPoisonDefinition.ALL.get(id).orElse(null);
         if (poisonDef != null && nextDamage.getRawAmount() > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
-            victim.getCombat().setPoisonSeverity(poisonDef.getSeverity());
+            victim.getStatus().add(new PoisonStatusEffect(victim, poisonDef.getSeverity()), false);
         }
     }
 

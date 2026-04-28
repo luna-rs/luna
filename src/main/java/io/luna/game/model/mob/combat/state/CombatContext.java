@@ -1,13 +1,13 @@
 package io.luna.game.model.mob.combat.state;
 
 import com.google.common.base.Stopwatch;
+import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
-import game.item.consumable.potion.PotionEffect;
+import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
-import io.luna.game.model.mob.combat.PoisonAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
@@ -62,13 +62,6 @@ public abstract class CombatContext<T extends Mob> {
     protected Mob lastCombatWith;
 
     /**
-     * The current poison severity.
-     * <p>
-     * A value greater than {@code 0} indicates that the mob is poisoned.
-     */
-    private int poisonSeverity;
-
-    /**
      * The number of game ticks remaining before this mob may perform another attack.
      * <p>
      * A value of {@code 0} or less means the mob is currently able to attack.
@@ -81,13 +74,6 @@ public abstract class CombatContext<T extends Mob> {
      * A disabled mob is prevented from performing combat actions until the disabled state is cleared.
      */
     private boolean disabled;
-
-    /**
-     * Indicates whether this mob is currently immobilized.
-     * <p>
-     * An immobilized mob may still process other logic, but it cannot move until this state is removed.
-     */
-    private boolean immobilized;
 
     /**
      * The most recent combat attack that successfully applied to this mob.
@@ -316,82 +302,6 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * @return The current poison severity.
-     */
-    public final int getPoisonSeverity() {
-        return poisonSeverity;
-    }
-
-    /**
-     * Decrements the current poison severity.
-     *
-     * @return The poison severity before it was decremented.
-     */
-    public final int decrementPoisonSeverity() {
-        return poisonSeverity--;
-    }
-
-    /**
-     * Sets the poison severity and starts poison processing if appropriate.
-     *
-     * @param poisonSeverity The new poison severity.
-     */
-    public final void setPoisonSeverity(int poisonSeverity) {
-        setPoisonSeverity(poisonSeverity, true);
-    }
-
-    /**
-     * Sets the poison severity, optionally scheduling poison processing.
-     * <p>
-     * If poison is successfully applied and {@code timer} is {@code true}, a {@link PoisonAction} is submitted if one
-     * is not already active.
-     *
-     * @param newPoisonSeverity The new poison severity.
-     * @param timer {@code true} to start poison processing when poison is applied, otherwise {@code false}.
-     * @return {@code true} if the poison severity was updated, otherwise {@code false}.
-     */
-    public final boolean setPoisonSeverity(int newPoisonSeverity, boolean timer) {
-        if (newPoisonSeverity > 0) {
-            if (poisonSeverity > 0) {
-                return false;
-            }
-
-            if (mob instanceof Player && PotionEffect.Companion.hasAntiPoison((Player) mob)) {
-                return false;
-            }
-        }
-
-        poisonSeverity = newPoisonSeverity;
-        if (poisonSeverity > 0 && timer) {
-            mob.getActions().submitIfAbsent(new PoisonAction(mob, true));
-        }
-        return true;
-    }
-
-    /**
-     * @return {@code true} if poison severity is above zero, otherwise {@code false}.
-     */
-    public final boolean isPoisoned() {
-        return poisonSeverity > 0;
-    }
-
-    /**
-     * Sets whether this mob is immobilized.
-     *
-     * @param immobilized {@code true} to prevent movement, {@code false} to allow movement again.
-     */
-    public void setImmobilized(boolean immobilized) {
-        this.immobilized = immobilized;
-    }
-
-    /**
-     * @return {@code true} if the mob is immobilized, otherwise {@code false}.
-     */
-    public final boolean isImmobilized() {
-        return immobilized;
-    }
-
-    /**
      * @return The owning mob.
      */
     public T getMob() {
@@ -486,7 +396,8 @@ public abstract class CombatContext<T extends Mob> {
      * @return {@code true} if this mob is combat-disabled, otherwise {@code false}.
      */
     public boolean isDisabled() {
-        return disabled;
+        return disabled || mob.isLocked() || mob.getStatus().isStunned() ||
+                mob.getStatus().has(StatusEffectType.IMMOBILIZED, WyvernIcyBreathStatusEffect.class);
     }
 
     /**

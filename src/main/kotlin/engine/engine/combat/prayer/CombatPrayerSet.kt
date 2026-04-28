@@ -5,6 +5,7 @@ import api.predef.ext.*
 import com.google.common.collect.HashMultiset
 import engine.combat.prayer.PrayerRestorationAction.RapidHealAction
 import engine.combat.prayer.PrayerRestorationAction.RapidRestoreAction
+import engine.combat.status.StatusEffectType
 import game.player.Sound
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
@@ -48,6 +49,12 @@ class CombatPrayerSet(private val player: Player) {
      * If [prayer] is already active, this method toggles it off (non-silently).
      */
     fun activate(prayer: CombatPrayer) {
+
+        // Stop here if prayer is disabled.
+        if(StatusEffectType.DRAGON_SCIMITAR in player.status) {
+            player.sendMessage("Your prayers have been disabled by a recent attack.")
+            return
+        }
 
         // Prayer is already active, deactivate non-silently.
         if (active.contains(prayer)) {
@@ -101,7 +108,7 @@ class CombatPrayerSet(private val player: Player) {
      *
      * @param prayer The prayer to activate.
      */
-    fun forceActivate(prayer: CombatPrayer) {
+    fun activateIfOff(prayer: CombatPrayer) {
         if (!active.contains(prayer)) {
             activate(prayer)
         }

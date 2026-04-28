@@ -237,7 +237,7 @@ public final class InteractionAction extends Action<Player> {
         boolean moved = false;
         if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
-            if (mob.getCombat().isImmobilized()) {
+            if (mob.getStatus().isImmobilized()) {
                 // We need to move in order to interact, but we're immobilized.
                 interrupt();
                 return false;
