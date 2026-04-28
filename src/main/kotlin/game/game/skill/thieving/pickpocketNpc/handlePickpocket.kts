@@ -8,7 +8,7 @@ for (def in NpcDefinition.ALL) {
     if (def != null && def.actions.contains("Pickpocket")) {
         val thievable = ThievableNpc.NAME_TO_NPC[def.name]
         if (thievable != null) {
-            npc2(def.id) {
+            npc2(def.id, false) {
                 plr.submitAction(PickpocketAction(plr, targetNpc, thievable))
             }
         }

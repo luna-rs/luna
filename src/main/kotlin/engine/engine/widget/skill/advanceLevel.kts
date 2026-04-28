@@ -134,11 +134,8 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
 
 // Check if they've advanced a level on skill change.
 on(SkillChangeEvent::class, EventPriority.HIGH) {
-    val plr = mob as? Player
-    if (plr != null) {
-        plr.queue(SkillUpdateMessageWriter(id))
-        if (oldStaticLvl < 99) {
-            advanceLevel(plr, id, oldStaticLvl)
-        }
+    plr.queue(SkillUpdateMessageWriter(id))
+    if (oldStaticLvl < 99) {
+        advanceLevel(plr, id, oldStaticLvl)
     }
 }

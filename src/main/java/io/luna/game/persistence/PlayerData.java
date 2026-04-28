@@ -8,6 +8,7 @@ import io.luna.game.LogoutService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerAggressionTolerance;
 import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
@@ -61,6 +62,8 @@ public class PlayerData {
     public int poisonSeverity;
     public int teleBlock;
     public CombatSpell autocast;
+    public boolean autocasting;
+    public PlayerAggressionTolerance tolerance;
 
     /**
      * The username of the player this data belongs to.
@@ -106,8 +109,10 @@ public class PlayerData {
         player.getCombat().getWeapon().refreshWeapon(lastCombatStance);
         player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
         player.getCombat().setPoisonSeverity(poisonSeverity, false);
-        player.getCombat().setTeleBlock(teleBlock, false);
-        player.getCombat().setAutocastSpell(autocast, false);
+        player.getCombat().getMagic().setTeleBlock(teleBlock, false);
+        player.getCombat().getMagic().setAutocastSpell(autocast, false);
+        player.getCombat().getMagic().setAutocasting(autocasting);
+        player.getTolerance().load(tolerance);
     }
 
     /**
@@ -156,8 +161,10 @@ public class PlayerData {
         lastCombatStance = player.getCombat().getWeapon().getStyleDef().getStance();
         specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
         poisonSeverity = player.getCombat().getPoisonSeverity();
-        teleBlock = player.getCombat().getTeleBlock();
-        autocast = player.getCombat().getAutocastSpell().getSpell();
+        teleBlock = player.getCombat().getMagic().getTeleBlock();
+        autocast = player.getCombat().getMagic().getAutocastSpell().getSpell();
+        autocasting = player.getCombat().getMagic().isAutocasting();
+        tolerance = player.getTolerance();
         return this;
     }
 

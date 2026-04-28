@@ -43,9 +43,7 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
     override fun run(): Boolean {
         return when (executions) {
             0 -> {
-                val sound = LocalSound.of(ctx, Sound.TELEOTHER, source.position,
-                                          ChunkUpdatableView.globalView())
-                sound.display()
+                source.playSound(Sound.TELE_OTHER_CAST)
                 source.animation(Animations.CAST_TELEOTHER)
                 source.graphic(Graphic(343, 50))
                 false
@@ -53,6 +51,11 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
 
             1, 2 -> false
             3 -> {
+                val sound = LocalSound.of(ctx,
+                                          Sound.TELEPORT_ALL,
+                                          target.position,
+                                          ChunkUpdatableView.globalView())
+                sound.display()
                 target.graphic(Graphic(342))
                 target.animation(Animations.RECEIVE_TELEOTHER)
                 false

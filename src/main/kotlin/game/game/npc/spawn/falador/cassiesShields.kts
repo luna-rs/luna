@@ -1,11 +1,11 @@
 package game.npc.spawn.falador
 
 import api.predef.*
-import api.predef.ext.*
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import api.shop.dsl.ShopHandler
-import io.luna.game.model.item.shop.*
-import io.luna.game.model.mob.wandering.*
+import io.luna.game.model.item.shop.BuyPolicy
+import io.luna.game.model.item.shop.Currency
+import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
 
 val shopkeeperId = 577
 
@@ -45,15 +45,4 @@ npc1(shopkeeperId) {
             plr.newDialogue().player("No thank you.").open()
         })
         .open()
-}
-
-/**
- * Spawn Flynn NPC.
- */
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId,
-        x = 2975,
-        y = 3383
-    ).startWandering(3, WanderingFrequency.NORMAL)
 }

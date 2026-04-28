@@ -1,54 +1,89 @@
 package io.luna.game.model.mob.interact;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
- * Defines how a player must reach and validate an interaction target.
+ * Defines the reach and distance rules used when interacting with an entity.
  * <p>
- * An {@link InteractionPolicy} pairs an {@link InteractionType} with a distance rule that is used by interaction
- * handling to determine whether the target can be reached or acted upon.
+ * An interaction policy combines an {@link InteractionType} with a distance value. The collision and interaction
+ * systems use this pair to determine whether a player or mob has reached a target and may perform the requested
+ * interaction.
  * <p>
- * Common policy factories are exposed as {@link Function}s so a policy can be created per-player when interaction
- * setup requires it.
+ * Shared policies are exposed as constants where possible. Factory-style policies are exposed as {@link BiFunction}s
+ * for interaction handlers that expect a policy to be resolved from the player and target.
  *
  * @author lare96
  */
 public final class InteractionPolicy {
 
     /**
-     * Standard size-based interaction policy.
+     * A size-aware policy that requires the source to occupy the same effective tile as the target.
      * <p>
-     * Uses {@link InteractionType#SIZE} with a distance of {@code 1}.
+     * This uses {@link InteractionType#SIZE} with a distance of {@code 0}.
      */
-    public static final Function<Player, InteractionPolicy> STANDARD_SIZE =
-            player -> new InteractionPolicy(InteractionType.SIZE, 1);
+    public static final InteractionPolicy EQUAL_POSITION = new InteractionPolicy(InteractionType.SIZE, 0);
 
     /**
-     * Size-based interaction policy that requires occupying the same effective position.
+     * The standard adjacent size-aware interaction policy.
      * <p>
-     * Uses {@link InteractionType#SIZE} with a distance of {@code 0}.
+     * This uses {@link InteractionType#SIZE} with a distance of {@code 1}. It is suitable for most object and mob
+     * interactions where the source only needs to stand next to the target.
      */
-    public static final Function<Player, InteractionPolicy> EQUAL_POSITION_SIZE =
-            player -> new InteractionPolicy(InteractionType.SIZE, 0);
+    public static final InteractionPolicy STANDARD_SIZE = new InteractionPolicy(InteractionType.SIZE, 1);
 
     /**
-     * Standard line-of-sight interaction policy.
+     * The standard line-of-sight interaction policy.
      * <p>
-     * Uses {@link InteractionType#LINE_OF_SIGHT} with a default distance of {@code 10}.
+     * This uses {@link InteractionType#LINE_OF_SIGHT} with a distance of {@code 10}. It is suitable for
+     * ranged, magic, projectile, or other interactions that require both distance and a clear line of sight.
      */
-    public static final Function<Player, InteractionPolicy> STANDARD_LINE_OF_SIGHT =
-            player -> new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10);
+    public static final InteractionPolicy STANDARD_LINE_OF_SIGHT = new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10);
 
     /**
-     * Unspecified interaction policy.
+     * An unrestricted interaction policy.
      * <p>
-     * Uses {@link InteractionType#UNSPECIFIED} with a distance of {@code -1}, indicating that no explicit distance
-     * rule is defined by this policy itself.
+     * This uses {@link InteractionType#UNSPECIFIED} with a distance of {@code -1}. Reach checks using this policy
+     * do not apply explicit distance or collision restrictions.
      */
-    public static final Function<Player, InteractionPolicy> UNSPECIFIED =
-            player -> new InteractionPolicy(InteractionType.UNSPECIFIED, -1);
+    public static final InteractionPolicy UNSPECIFIED = new InteractionPolicy(InteractionType.UNSPECIFIED, -1);
+    /**
+     * A reusable factory that returns the standard adjacent size-aware interaction policy.
+     * <p>
+     * The player and target arguments are ignored because {@link #STANDARD_SIZE} is shared and does not require
+     * per-target state.
+     */
+    public static final BiFunction<Player, Entity, InteractionPolicy> STANDARD_SIZE_BIF =
+            (player, target) -> STANDARD_SIZE;
+
+    /**
+     * A reusable factory that returns the same-tile size-aware interaction policy.
+     * <p>
+     * The player and target arguments are ignored because {@link #EQUAL_POSITION} is shared and does not require
+     * per-target state.
+     */
+    public static final BiFunction<Player, Entity, InteractionPolicy> EQUAL_POSITION_BIF =
+            (player, target) -> EQUAL_POSITION;
+
+    /**
+     * A reusable factory that returns a standard line-of-sight interaction policy.
+     * <p>
+     * This uses {@link InteractionType#LINE_OF_SIGHT} with a distance of {@code 10}. It is suitable for ranged,
+     * magic, projectile, or other interactions that require both distance and a clear raycast.
+     */
+    public static final BiFunction<Player, Entity, InteractionPolicy> STANDARD_LINE_OF_SIGHT_BIF =
+            (player, target) -> STANDARD_LINE_OF_SIGHT;
+
+    /**
+     * A reusable factory that returns an unrestricted interaction policy.
+     * <p>
+     * This uses {@link InteractionType#UNSPECIFIED} with a distance of {@code -1}. Reach checks using this policy
+     * do not apply explicit distance or collision restrictions.
+     */
+    public static final BiFunction<Player, Entity, InteractionPolicy> UNSPECIFIED_BIF =
+            (player, target) -> UNSPECIFIED;
 
     /**
      * The interaction rule type used by this policy.
@@ -56,10 +91,9 @@ public final class InteractionPolicy {
     private final InteractionType type;
 
     /**
-     * The distance constraint associated with {@link #type}.
+     * The distance constraint associated with this policy.
      * <p>
-     * The meaning of this value depends on the interaction type. A value of {@code -1} is reserved for
-     * {@link InteractionType#UNSPECIFIED}.
+     * The meaning of this value depends on {@link #type}. A value of {@code -1} is reserved for {@link InteractionType#UNSPECIFIED}.
      */
     private final int distance;
 
@@ -67,8 +101,8 @@ public final class InteractionPolicy {
      * Creates a new {@link InteractionPolicy}.
      *
      * @param type The interaction rule type.
-     * @param distance The distance constraint for that type.
-     * @throws IllegalArgumentException If {@code distance} is not valid for {@code type}.
+     * @param distance The distance constraint for the interaction rule.
+     * @throws IllegalArgumentException If the distance is not valid for the supplied interaction type.
      */
     public InteractionPolicy(InteractionType type, int distance) {
         checkDistance(type, distance);
@@ -77,11 +111,11 @@ public final class InteractionPolicy {
     }
 
     /**
-     * Validates that {@code distance} is legal for this policy's {@link #type}.
+     * Validates that a distance value is legal for an interaction type.
      *
      * @param type The interaction rule type.
      * @param distance The distance value to validate.
-     * @throws IllegalArgumentException If the value is not valid for the current interaction type.
+     * @throws IllegalArgumentException If the distance is not valid for the supplied interaction type.
      */
     private void checkDistance(InteractionType type, int distance) {
         if (distance < 1 && type == InteractionType.LINE_OF_SIGHT) {
@@ -90,12 +124,13 @@ public final class InteractionPolicy {
             throw new IllegalArgumentException("Only the SIZE interaction type can have a distance == 0.");
         } else if ((distance == -1 && type != InteractionType.UNSPECIFIED) ||
                 (distance != -1 && type == InteractionType.UNSPECIFIED)) {
-            throw new IllegalArgumentException("Only the UNSPECIFIED interaction type can and must have a distance == -1.");
+            throw new IllegalArgumentException(
+                    "Only the UNSPECIFIED interaction type can and must have a distance == -1.");
         }
     }
 
     /**
-     * @return The interaction type.
+     * @return The interaction rule type.
      */
     public InteractionType getType() {
         return type;

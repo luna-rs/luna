@@ -34,14 +34,14 @@ abstract class HarvestableResource : GameResource() {
     /**
      * Determines the chance of the resource object being exhausted.
      */
-    open fun computeExhaustionChance(): Rational = Rational.ALWAYS
+    open fun computeExhaustionChance(): Double = ALWAYS
 
     /**
      * Harvests this resource for [plr] and schedules a task to respawn it.
      */
     fun harvest(plr: Player, gameObject: GameObject) {
         if (plr.inventory.isFull) {
-            plr.sendMessage(Messages.INVENTORY_FULL)
+            plr.sendMessage(Messages.inventoryFull())
         } else {
             plr.submitAction(HarvestActionItem(plr, gameObject, this))
         }

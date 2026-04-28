@@ -1,11 +1,11 @@
 package game.npc.spawn.portSarim
 
 import api.predef.*
-import api.predef.ext.*
 import api.shop.dsl.ShopHandler
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.item.shop.*
-import io.luna.game.model.mob.wandering.*
+import io.luna.game.model.item.shop.BuyPolicy
+import io.luna.game.model.item.shop.Currency
+import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
 
 val shopkeeperId = 558
 
@@ -54,8 +54,3 @@ npc1(shopkeeperId, {
             })
         .open()
 })
-
-on(ServerLaunchEvent::class) {
-    world.addNpc(shopkeeperId, 3015, 3225)
-        .startWandering(3, WanderingFrequency.NORMAL)
-}

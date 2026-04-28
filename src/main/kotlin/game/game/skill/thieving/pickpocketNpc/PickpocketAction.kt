@@ -34,7 +34,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
 
     override fun execute() {
         if (mob.thieving.level < thievable.level) {
-            mob.sendMessage("You need a Thieving level of ${thievable.level} to pickpocket ${addArticle(target.definition.name)}.")
+            mob.sendMessage("You need a Thieving level of ${thievable.level} to pickpocket ${addArticle(target.def().name)}.")
             return
         } else if (target.state == EntityState.INACTIVE) {
             return
@@ -45,7 +45,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
             loot += thievable.drops.roll(mob, target)
         }
         if (!mob.inventory.hasSpaceForAll(loot)) {
-            mob.sendMessage(Messages.INVENTORY_FULL)
+            mob.sendMessage(Messages.inventoryFull())
             return
         }
 
@@ -53,7 +53,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
         world.scheduleOnce(1) {
             if (mob.state != EntityState.INACTIVE && target.state != EntityState.INACTIVE) {
                 if (Thieving.canPickpocket(mob, thievable)) {
-                    mob.sendMessage("You pick the ${target.definition.name}'s pocket.")
+                    mob.sendMessage("You pick the ${target.def().name}'s pocket.")
                     mob.thieving.addExperience(thievable.xp)
                     mob.animation(Animations.PICKPOCKET)
                     mob.inventory.addAll(loot)
@@ -64,10 +64,10 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                 } else {
                     val stunDuration = Duration.ofSeconds(thievable.stun).toTicks()
 
-                    mob.playSound(Sound.PICKPOCKET_FAILED)
+                    mob.playSound(Sound.STUNNED)
                     mob.sendMessage("You have been stunned.");
                     mob.animation(Animation(424))
-                    mob.graphic(Graphic(80, 5, 60))
+                    mob.graphic(Graphic(80, 60, 5))
                     mob.damage(thievable.damage.random())
                     target.animation(Animation(422))
                     target.interact(mob)

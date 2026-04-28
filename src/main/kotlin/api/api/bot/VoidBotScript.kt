@@ -21,5 +21,7 @@ class VoidBotScript(bot: Bot) : DynamicBotScript(bot) {
      * This implementation intentionally does nothing. It exists purely to satisfy the [BotScript] contract while
      * representing an "empty" or discarded dynamic script slot.
      */
-    override suspend fun run() { }
+    override suspend fun run(): Boolean {
+        return true
+    }
 }

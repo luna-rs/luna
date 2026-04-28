@@ -27,37 +27,37 @@ public final class PlayerModelAnimation {
         /**
          * The standing (idle) animation id.
          */
-        private int standingId = 0x328;
+        private int standingId = 808;
 
         /**
          * The standing-and-turning animation id.
          */
-        private int standingTurnId = 0x337;
+        private int standingTurnId = 823;
 
         /**
          * The walking animation id.
          */
-        private int walkingId = 0x333;
+        private int walkingId = 819;
 
         /**
          * The 180-degree turning animation id.
          */
-        private int turning180DegreesId = 0x334;
+        private int turning180DegreesId = 820;
 
         /**
          * The 90-degree clockwise turning animation id.
          */
-        private int turning90DegreesCwId = 0x335;
+        private int turning90DegreesCwId = 821;
 
         /**
          * The 90-degree counter-clockwise turning animation id.
          */
-        private int turning90DegreesCcwId = 0x336;
+        private int turning90DegreesCcwId = 822;
 
         /**
          * The running animation id.
          */
-        private int runningId = 0x338;
+        private int runningId = 824;
 
         /**
          * Sets the standing (idle) animation id.

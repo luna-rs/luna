@@ -2,6 +2,7 @@ package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.gson.JsonObject;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
@@ -39,14 +40,14 @@ public final class EquipmentDefinition implements Definition {
         private final String name;
 
         /**
-         * The internal skill id resolved from {@link #name}.
-         */
-        private final int id;
-
-        /**
          * The minimum level required.
          */
         private final int level;
+
+        /**
+         * The internal skill id resolved from {@link #name}.
+         */
+        private int id;
 
         /**
          * Creates a new {@link Requirement} from JSON data.
@@ -56,13 +57,20 @@ public final class EquipmentDefinition implements Definition {
          *     <li>{@code name}: skill name</li>
          *     <li>{@code level}: required level</li>
          * </ul>
-         *
+         * Note: This constructor is unused, as the requirements are created by gson instantiating via reflection.
          * @param jsonReq The requirement JSON object.
          */
         public Requirement(JsonObject jsonReq) {
             name = jsonReq.get("name").getAsString();
-            id = Skill.getId(name);
             level = jsonReq.get("level").getAsInt();
+            assignSkillId();
+        }
+
+        /**
+         * Assigns the internal skill identifier based on the {@link #name}.
+         */
+        public void assignSkillId() {
+            id = Skill.getId(name);
         }
 
         @Override
@@ -127,6 +135,11 @@ public final class EquipmentDefinition implements Definition {
      * Repository of all {@link EquipmentDefinition}s keyed by item id.
      */
     public static final DefinitionRepository<EquipmentDefinition> ALL = new MapDefinitionRepository<>();
+
+    /**
+     * Repository of all {@link EquipmentDefinition}s keyed by equip index.
+     */
+    public static volatile ImmutableListMultimap<Integer, EquipmentDefinition> INDEXES = ImmutableListMultimap.of();
 
     /**
      * The item id this equipment definition belongs to.

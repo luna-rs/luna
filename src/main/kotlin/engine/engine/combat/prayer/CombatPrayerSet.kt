@@ -34,7 +34,7 @@ class CombatPrayerSet(private val player: Player) {
      * - When a prayer is ready to deduct a point, its count will be `1`.
      * - When a prayer is not present in this set, it is considered inactive.
      */
-    internal val active = HashMultiset.create<CombatPrayer>()
+    val active: HashMultiset<CombatPrayer> = HashMultiset.create()
 
     /**
      * Activates [prayer] and ensures any mutually-exclusive prayers in the same [CombatPrayer.group] are deactivated.
@@ -63,13 +63,13 @@ class CombatPrayerSet(private val player: Player) {
 
         // Send varbits, head icons, sounds, relevant messages.
         if (player.prayer.staticLevel < prayer.level) {
-            player.playSound(Sound.PRAYER_LEVEL_TOO_LOW)
+            player.playSound(Sound.PRAYER_OFF) // todo confirm if correct
             player.sendMessage("Your Prayer level is not high enough to use this.")
             return
         } else if (player.prayer.level == 0) {
             player.sendVarp(Varp(prayer.varp, 0))
-            player.playSound(Sound.DEACTIVATE_PRAYER)
-            player.sendMessage("You've run out of prayer points.")
+            player.playSound(Sound.PRAYER_OFF) // todo confirm if correct
+            player.sendMessage("Use an altar to recharge your Prayer points.")
             return
         }
         player.sendVarp(Varp(prayer.varp, 1))
@@ -93,6 +93,13 @@ class CombatPrayerSet(private val player: Player) {
         }
     }
 
+    // todo documentation
+    fun forceActivate(prayer: CombatPrayer) {
+        if(!active.contains(prayer)) {
+            activate(prayer)
+        }
+    }
+
     /**
      * Deactivates [prayer].
      *
@@ -105,10 +112,10 @@ class CombatPrayerSet(private val player: Player) {
      */
     fun deactivate(prayer: CombatPrayer, silent: Boolean): Boolean {
         val amount = active.setCount(prayer, 0)
-        if (amount > 0 && player is Player) {
+        if (amount > 0) {
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
-                player.playSound(Sound.DEACTIVATE_PRAYER)
+                player.playSound(Sound.CANCEL_PRAYER)
             }
             if (prayer.icon != PrayerIcon.NONE) {
                 player.prayerIcon = PrayerIcon.NONE
@@ -138,7 +145,7 @@ class CombatPrayerSet(private val player: Player) {
      *
      * @return `true` if the prayer had a counter available to decrement (i.e., it was present and one unit was removed).
      */
-    internal fun drain(prayer: CombatPrayer): Boolean {
+    fun drain(prayer: CombatPrayer): Boolean {
         return active.remove(prayer, 1) == 1
     }
 
@@ -150,7 +157,7 @@ class CombatPrayerSet(private val player: Player) {
      * @param resistance The effective resistance value to use. Defaults to [computeResistance].
      * @return The number of ticks per drain cycle.
      */
-    internal fun computeDrainTicks(prayer: CombatPrayer, resistance: Int = computeResistance()) =
+    fun computeDrainTicks(prayer: CombatPrayer, resistance: Int = computeResistance()) =
         (((0.6 * (resistance / prayer.drain)) * 1000) / 600).toInt()
 
     /**

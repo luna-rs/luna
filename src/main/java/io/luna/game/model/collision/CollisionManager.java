@@ -13,6 +13,7 @@ import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 import io.luna.game.model.World;
@@ -513,43 +514,46 @@ public final class CollisionManager {
     }
 
     /**
-     * Returns whether {@code start} has satisfied the supplied interaction policy against {@code target}.
+     * Determines whether a source has reached a target using the supplied interaction policy.
      * <p>
-     * This is the main high-level reach check used by the interaction system. The exact rule depends on the
-     * {@link InteractionType}:
+     * This is the main reachability check used by interactions. It supports simple tile occupation, line-of-sight
+     * checks, and size-aware checks for mobs and objects.
+     * <p>
+     * The policy is resolved as follows:
      * <ul>
-     *     <li>{@link InteractionType#UNSPECIFIED}: always succeeds</li>
-     *     <li>{@link InteractionType#LINE_OF_SIGHT}: requires view range, distance, and a clear
-     *     {@link #raycast(Position, Position)}</li>
-     *     <li>{@link InteractionType#SIZE}: uses size-aware reach logic for mobs and objects, with
-     *     distance-based fallbacks where appropriate</li>
+     *     <li>{@link InteractionType#UNSPECIFIED} always succeeds after the distance sanity check.</li>
+     *     <li>A distance of {@code 0} requires the source and target to occupy the exact same tile.</li>
+     *     <li>Targets outside {@link Position#VIEWING_DISTANCE} are rejected before type-specific checks run.</li>
+     *     <li>{@link InteractionType#LINE_OF_SIGHT} requires the target to be within policy distance and visible
+     *     through a successful {@link #raycast(Position, Position)}.</li>
+     *     <li>{@link InteractionType#SIZE} uses collision-aware reach checks for adjacent mobs and objects, object
+     *     box-distance checks for larger distances, and falls back to line-of-sight for other targets.</li>
      * </ul>
      *
-     * @param start The interacting position.
-     * @param target The target entity.
-     * @param policy The interaction policy to test.
-     * @return {@code true} if {@code start} has reached {@code target} under {@code policy},
-     * otherwise {@code false}.
-     * @throws IllegalArgumentException If the policy distance exceeds
-     * {@link Position#VIEWING_DISTANCE}.
+     * @param source The entity or position attempting to interact.
+     * @param target The entity or position being interacted with.
+     * @param policy The interaction policy that controls distance and reach behavior.
+     * @return {@code true} if the source has reached the target under the supplied policy; otherwise {@code false}.
+     * @throws IllegalArgumentException If the policy distance is greater than {@link Position#VIEWING_DISTANCE}.
      */
-    public boolean reached(Position start, Entity target, InteractionPolicy policy) {
+    public boolean reached(Locatable source, Locatable target, InteractionPolicy policy) {
         int distance = policy.getDistance();
         checkArgument(distance <= Position.VIEWING_DISTANCE, "Distance must be below max viewable range.");
 
-        Position end = target.getPosition();
+        Position start = source.abs();
+        Position end = target.abs();
         if (policy.getType() == InteractionType.UNSPECIFIED) {
             // No checks.
             return true;
         } else if (distance == 0) {
             // Distance of 0 always requires player to occupy tile.
             return start.equals(end);
-        } else if (!start.isViewable(target)) {
+        } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
         }
 
-        CollisionMatrix matrices = target.getChunkRepository().getMatrices()[start.getZ()];
+        CollisionMatrix matrices = world.getChunks().load(end.getChunk()).getMatrices()[start.getZ()];
         switch (policy.getType()) {
             case LINE_OF_SIGHT:
                 // Line of sight requires raycast and being within the distance.
@@ -558,22 +562,22 @@ public final class CollisionManager {
                 if (distance == 1) {
                     if (target instanceof Mob) {
                         // Check if we're right beside a mob.
-                        return matrices.reachedFacingEntity(start, target, 1, 1, OptionalInt.empty());
+                        return matrices.reachedFacingEntity(start, (Mob) target, 1, 1, OptionalInt.empty());
                     } else if (target instanceof GameObject) {
                         // Check if we're right beside an object.
                         return matrices.reachedObject(start, (GameObject) target);
                     }
                 } else if (target instanceof GameObject) {
                     // Check if we're within box distance of an object (based on its size).
-                    return isWithinBoxDistance(start, target, distance);
+                    return isWithinBoxDistance(start, (GameObject) target, distance);
                 }
                 // Otherwise, fall back to line of sight.
-                return start.isWithinDistance(target.getPosition(), distance) && raycast(start, end);
+                return start.isWithinDistance(end, distance) && raycast(start, end);
         }
         // Exhaustive code here, realistically should never be reached unless arguments are invalid.
         logger.warn("This section should not be reached! Invalid config [{}, {}, {}].", policy.getType(),
                 box(policy.getDistance()), target);
-        return start.isWithinDistance(target.getPosition(), distance);
+        return start.isWithinDistance(target, distance);
     }
 
     /**

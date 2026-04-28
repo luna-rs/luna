@@ -12,12 +12,12 @@ import io.luna.game.model.area.Area;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.combat.NpcCombatContext;
-import io.luna.game.model.mob.wandering.DumbWanderingAction;
-import io.luna.game.model.mob.wandering.PatrolAction;
-import io.luna.game.model.mob.wandering.SmartWanderingAction;
-import io.luna.game.model.mob.wandering.WanderingAction;
-import io.luna.game.model.mob.wandering.WanderingFrequency;
+import io.luna.game.model.mob.combat.state.NpcCombatContext;
+import io.luna.game.model.mob.movement.wandering.DumbWanderingAction;
+import io.luna.game.model.mob.movement.wandering.PatrolAction;
+import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
+import io.luna.game.model.mob.movement.wandering.WanderingAction;
+import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
 import io.luna.game.model.path.SimplePathfinder;
 
 import java.util.Objects;
@@ -87,6 +87,11 @@ public class Npc extends Mob {
      * The combat context holding important combat data.
      */
     protected final NpcCombatContext combat = new NpcCombatContext(this);
+
+    /**
+     * The NPC aggression handler.
+     */
+    protected final NpcAggression aggression = new NpcAggression(this);
 
     /**
      * Creates a new {@link Npc}.
@@ -159,7 +164,7 @@ public class Npc extends Mob {
 
     @Override
     public int getCombatLevel() {
-        return combatDefinition.map(NpcCombatDefinition::getLevel).orElse(0);
+        return definition.getCombatLevel();
     }
 
     @Override
@@ -253,11 +258,11 @@ public class Npc extends Mob {
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
 
-            attack.setLevel(def.getSkill(NpcCombatDefinition.ATTACK));
-            strength.setLevel(def.getSkill(NpcCombatDefinition.STRENGTH));
-            defence.setLevel(def.getSkill(NpcCombatDefinition.DEFENCE));
-            ranged.setLevel(def.getSkill(NpcCombatDefinition.RANGED));
-            magic.setLevel(def.getSkill(NpcCombatDefinition.MAGIC));
+            attack.setLevel(def.getAttackLevel());
+            strength.setLevel(def.getStrengthLevel());
+            defence.setLevel(def.getDefenceLevel());
+            ranged.setLevel(def.getRangedLevel());
+            magic.setLevel(def.getMagicLevel());
             hitpoints.setLevel(def.getHitpoints());
         });
     }
@@ -299,7 +304,7 @@ public class Npc extends Mob {
      *
      * @return The current NPC definition.
      */
-    public NpcDefinition getDefinition() {
+    public NpcDefinition def() {
         return definition;
     }
 
@@ -308,7 +313,7 @@ public class Npc extends Mob {
      *
      * @return An {@link Optional} containing the combat definition, or empty if none exists.
      */
-    public NpcCombatDefinition getCombatDef() {
+    public NpcCombatDefinition combatDef() {
         return combatDefinition.orElse(NpcCombatDefinition.ALL.retrieve(1));
     }
 
@@ -388,15 +393,14 @@ public class Npc extends Mob {
     public void startWandering(int radius, WanderingFrequency frequency) {
         checkArgument(radius >= 0, "Radius must be 0 or above.");
 
-        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
         setDefaultDirection(Optional.empty());
 
         Area wanderingArea = Area.of(basePosition, radius);
         if (wanderingArea.size() >= 4096) {
             // If our wandering area is bigger than 64x64, use smart wanderer.
-            actions.submit(new SmartWanderingAction(this, wanderingArea, frequency));
+            actions.submitIfAbsent(new SmartWanderingAction(this, wanderingArea, frequency));
         } else {
-            actions.submit(new DumbWanderingAction(this, wanderingArea, frequency));
+            actions.submitIfAbsent(new DumbWanderingAction(this, wanderingArea, frequency));
         }
     }
 
@@ -409,10 +413,9 @@ public class Npc extends Mob {
      * @param patrolBuilder The builder used to create the patrol action to submit.
      */
     public void startPatrolling(PatrolAction.Builder patrolBuilder) {
-        actions.getAll(WanderingAction.class).forEach(Action::interrupt);
         setDefaultDirection(Optional.empty());
 
-        actions.submit(patrolBuilder.build());
+        actions.submitIfAbsent(patrolBuilder.build());
     }
 
     /**
@@ -424,4 +427,24 @@ public class Npc extends Mob {
         return localHumans;
     }
 
+    /**
+     * @return The NPC aggression handler.
+     */
+    public NpcAggression getAggression() {
+        return aggression;
+    }
+
+    /**
+     * @return The NPC aggression profile.
+     */
+    public NpcAggressionProfile getAggressionProfile() {
+        return combatDef().getAggression();
+    }
+
+    /**
+     * @return {@code true} if this NPC is a boss.
+     */
+    public boolean isBoss() {
+        return NpcCombatContext.isBoss(id);
+    }
 }

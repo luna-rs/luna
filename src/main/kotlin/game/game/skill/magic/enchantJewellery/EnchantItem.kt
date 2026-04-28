@@ -1,5 +1,6 @@
 package game.skill.magic.enchantJewellery
 
+import game.player.Sound
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 
@@ -8,4 +9,4 @@ import io.luna.game.model.mob.block.Graphic
  *
  * @author lare96
  */
-class EnchantItem(val id: Int, val animation: Animation, val graphic: Graphic)
+class EnchantItem(val id: Int, val animation: Animation, val graphic: Graphic, val sound: Sound)

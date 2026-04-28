@@ -19,7 +19,7 @@ class DropTableItemChanceReceiver(val id: Int, val amount: IntRange, val items: 
     /**
      * Builds the chance value for this item.
      */
-    infix fun chance(rational: Rational) {
-        items += DropTableItem(id, amount, rational)
+    infix fun chance(chance: Double) {
+        items += DropTableItem(id, amount, chance)
     }
 }

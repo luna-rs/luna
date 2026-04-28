@@ -61,8 +61,8 @@ object Thieving {
     /**
      * Attempts to roll for rogue equipment.
      */
-    fun rollRogueEquipment(plr: Player, target: Entity, chance: Rational = ALWAYS) {
-        if (RandomUtils.roll(chance)) {
+    fun rollRogueEquipment(plr: Player, target: Entity, chance: Double = ALWAYS) {
+        if (rand(chance)) {
             val rogueLoot = ROGUE_EQUIPMENT_TABLE.roll(plr, target)
             for (item in rogueLoot) {
                 plr.giveItem(item)
@@ -76,6 +76,6 @@ object Thieving {
      */
     fun isDoubleLoot(plr: Player): Boolean {
         val pieces = ROGUE_EQUIPMENT_ITEMS.count { plr.equipment.contains(it.equipDef.index, it.id) }
-        return RandomUtils.rollPercent(if (pieces == 5) 1.0 else pieces * 0.15)
+        return rand(if (pieces == 5) 1.0 else pieces * 0.15)
     }
 }

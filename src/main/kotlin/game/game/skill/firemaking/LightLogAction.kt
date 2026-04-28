@@ -3,6 +3,7 @@ package game.skill.firemaking
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
@@ -15,7 +16,7 @@ import io.luna.game.model.`object`.ObjectType
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
-
+ // todo sounds FLINT1, FIRE_LIT,     TINDERBOX_STRIKE(2017),
     /**
      * The position that the log will be placed on.
      */
@@ -73,23 +74,20 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
             val firePosition = mob.position
             when {
-                originalDelayTicks < 2 -> mob.playSound(Sound.BURN_LOG_QUICK)
-                else -> mob.playSound(Sound.BURN_LOG)
+                originalDelayTicks < 2 -> {} //mob.playSound(Sound.BURN_LOG_QUICK)
+                else -> {}//mob.playSound(Sound.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
 
             // Walk in a non-blocked direction prioritizing west.
             for (dir in WALK_DIRECTIONS) {
                 if (mob.navigator.step(dir)) {
-                    mob.lock()
-                    world.schedule(1) {
-                        if(executions == 2) {
+                    mob.actions.submit(object : LockedAction(mob, false, 1) {
+                        override fun run(): Boolean {
                             mob.face(dir.opposite())
-                        } else if(executions >= 3) {
-                            mob.unlock()
-                            it.cancel()
+                            return true
                         }
-                    }
+                    })
                     break
                 }
             }

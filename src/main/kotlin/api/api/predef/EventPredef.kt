@@ -16,6 +16,7 @@ import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
+import io.luna.game.model.Entity
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.interact.InteractionPolicy
@@ -30,7 +31,7 @@ typealias EventAction<E> = E.() -> Unit
 /**
  * The player dedicated interaction policy function alias.
  */
-typealias InteractionPolicySupplier = java.util.function.Function<Player, InteractionPolicy>
+typealias InteractionPolicySupplier = java.util.function.BiFunction<Player, Entity, InteractionPolicy>
 
 /**
  * The command key, used to match [CommandEvent]s.
@@ -47,14 +48,14 @@ class CommandKey(val name: String, val rights: PlayerRights) {
 /**
  * The main event interception function. Forwards to [InterceptBy].
  */
-fun <E : Event> on(eventClass: KClass<E>, interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED) =
+fun <E : Event> on(eventClass: KClass<E>, interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED_BIF) =
     InterceptBy(eventClass, interaction)
 
 /**
  * The main event interception function. Runs the action without any forwarding.
  */
 fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriority.LOW,
-                   interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED,
+                   interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED_BIF,
                    action: EventAction<E>) {
     scriptListeners += EventListener(eventClass.java, action, priority, interaction)
 }
@@ -74,47 +75,135 @@ fun useItem(id: Int) = InterceptUseItem(id)
  */
 fun button(id: Int,
            action: EventAction<ButtonClickEvent>) =
-    Matcher.get<ButtonClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ButtonClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
-/** The [NpcFirstClickEvent] matcher function. */
-fun npc1(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcFirstClickEvent>) =
-    Matcher.get<NpcFirstClickEvent, Int>().set(id, action, interaction)
+/**
+ * The [NpcFirstClickEvent] matcher function.
+ */
+fun npc1(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcFirstClickEvent>
+) = Matcher.get<NpcFirstClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
 
-fun npc1(id: Int,
-         action: EventAction<NpcFirstClickEvent>) =
-    npc1(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc1(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, interaction, true, action)
 
-/** The [NpcSecondClickEvent] matcher function. */
-fun npc2(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcSecondClickEvent>) =
-    Matcher.get<NpcSecondClickEvent, Int>().set(id, action, interaction)
+fun npc1(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, InteractionPolicy.STANDARD_SIZE_BIF, focus, action)
 
-fun npc2(id: Int,
-         action: EventAction<NpcSecondClickEvent>) =
-    npc2(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc1(
+    id: Int,
+    action: EventAction<NpcFirstClickEvent>
+) = npc1(id, InteractionPolicy.STANDARD_SIZE_BIF, true, action)
 
-/** The [NpcThirdClickEvent] matcher function. */
-fun npc3(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcThirdClickEvent>) =
-    Matcher.get<NpcThirdClickEvent, Int>().set(id, action, interaction)
+/**
+ * The [NpcSecondClickEvent] matcher function.
+ */
+fun npc2(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcSecondClickEvent>
+) = Matcher.get<NpcSecondClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
 
-fun npc3(id: Int,
-         action: EventAction<NpcThirdClickEvent>) =
-    npc3(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc2(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, interaction, true, action)
 
-/** The [NpcFourthClickEvent] matcher function. */
-fun npc4(id: Int,
-         interaction: InteractionPolicySupplier,
-         action: EventAction<NpcFourthClickEvent>) =
-    Matcher.get<NpcFourthClickEvent, Int>().set(id, action, interaction)
+fun npc2(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, InteractionPolicy.STANDARD_SIZE_BIF, focus, action)
 
-fun npc4(id: Int,
-         action: EventAction<NpcFourthClickEvent>) =
-    npc4(id, InteractionPolicy.STANDARD_SIZE, action)
+fun npc2(
+    id: Int,
+    action: EventAction<NpcSecondClickEvent>
+) = npc2(id, InteractionPolicy.STANDARD_SIZE_BIF, true, action)
+
+/**
+ * The [NpcThirdClickEvent] matcher function.
+ */
+fun npc3(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcThirdClickEvent>
+) = Matcher.get<NpcThirdClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
+
+fun npc3(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, interaction, true, action)
+
+fun npc3(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, InteractionPolicy.STANDARD_SIZE_BIF, focus, action)
+
+fun npc3(
+    id: Int,
+    action: EventAction<NpcThirdClickEvent>
+) = npc3(id, InteractionPolicy.STANDARD_SIZE_BIF, true, action)
+
+/**
+ * The [NpcFourthClickEvent] matcher function.
+ */
+fun npc4(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    focus: Boolean,
+    action: EventAction<NpcFourthClickEvent>
+) = Matcher.get<NpcFourthClickEvent, Int>().set(id, {
+    action(this)
+    if (focus) {
+        targetNpc.interact(plr)
+    }
+}, interaction)
+
+fun npc4(
+    id: Int,
+    interaction: InteractionPolicySupplier,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, interaction, true, action)
+
+fun npc4(
+    id: Int,
+    focus: Boolean,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, InteractionPolicy.STANDARD_SIZE_BIF, focus, action)
+
+fun npc4(
+    id: Int,
+    action: EventAction<NpcFourthClickEvent>
+) = npc4(id, InteractionPolicy.STANDARD_SIZE_BIF, true, action)
 
 /**
  * The [GroundItemSecondClickEvent] matcher function.
@@ -126,32 +215,32 @@ fun groundItem2(id: Int,
 
 fun groundItem2(id: Int,
                 action: EventAction<GroundItemSecondClickEvent>) =
-    groundItem2(id, InteractionPolicy.EQUAL_POSITION_SIZE, action)
+    groundItem2(id, InteractionPolicy.EQUAL_POSITION_BIF, action)
 
 /** The [ItemFirstClickEvent] matcher function. */
 fun item1(id: Int,
           action: EventAction<ItemFirstClickEvent>) =
-    Matcher.get<ItemFirstClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ItemFirstClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
 /** The [ItemSecondClickEvent] matcher function. */
 fun item2(id: Int,
           action: EventAction<ItemSecondClickEvent>) =
-    Matcher.get<ItemSecondClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ItemSecondClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
 /** The [ItemThirdClickEvent] matcher function. */
 fun item3(id: Int,
           action: EventAction<ItemThirdClickEvent>) =
-    Matcher.get<ItemThirdClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ItemThirdClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
 /** The [ItemFourthClickEvent] matcher function. */
 fun item4(id: Int,
           action: EventAction<ItemFourthClickEvent>) =
-    Matcher.get<ItemFourthClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ItemFourthClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
 /** The [ItemFifthClickEvent] matcher function. */
 fun item5(id: Int,
           action: EventAction<ItemFifthClickEvent>) =
-    Matcher.get<ItemFifthClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED)
+    Matcher.get<ItemFifthClickEvent, Int>().set(id, action, InteractionPolicy.UNSPECIFIED_BIF)
 
 /** The [ObjectFirstClickEvent] matcher function. */
 fun object1(id: Int,
@@ -161,7 +250,7 @@ fun object1(id: Int,
 
 fun object1(id: Int,
             action: EventAction<ObjectFirstClickEvent>) =
-    object1(id, InteractionPolicy.STANDARD_SIZE, action)
+    object1(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
 /** The [ObjectSecondClickEvent] matcher function. */
 fun object2(id: Int,
@@ -171,7 +260,7 @@ fun object2(id: Int,
 
 fun object2(id: Int,
             action: EventAction<ObjectSecondClickEvent>) =
-    object2(id, InteractionPolicy.STANDARD_SIZE, action)
+    object2(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
 /** The [ObjectThirdClickEvent] matcher function. */
 fun object3(id: Int,
@@ -181,7 +270,7 @@ fun object3(id: Int,
 
 fun object3(id: Int,
             action: EventAction<ObjectThirdClickEvent>) =
-    object3(id, InteractionPolicy.STANDARD_SIZE, action)
+    object3(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
 /**
  * The [CommandEvent] matcher function.
@@ -192,7 +281,7 @@ fun cmd(name: String, rights: PlayerRights = RIGHTS_PLAYER, action: CommandEvent
         if (plr.rights >= rights) {
             action(this)
         }
-    }, InteractionPolicy.UNSPECIFIED)
+    }, InteractionPolicy.UNSPECIFIED_BIF)
 }
 
 /**

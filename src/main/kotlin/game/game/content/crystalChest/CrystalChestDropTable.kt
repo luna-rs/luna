@@ -3,7 +3,7 @@ package game.content.crystalChest
 import api.drops.DropTable
 import api.drops.DropTableHandler
 import api.drops.DropTableItemList
-import api.drops.RationalTable
+import api.drops.ProbabilityTable
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Entity
@@ -144,7 +144,7 @@ object CrystalChestDropTable : DropTable() {
             val plr = mob.asPlr()
 
             // Determine which drop table will be rolled using a rational table.
-            val nodeTable = RationalTable(mutableListOf(
+            val nodeTable = ProbabilityTable(mutableListOf(
                 (34 of 128) to SPINACH_ROLL_TABLE,
                 (12 of 128) to RUNE_TABLE,
                 (12 of 128) to GEM_TABLE,

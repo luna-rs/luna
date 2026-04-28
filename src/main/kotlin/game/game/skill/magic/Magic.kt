@@ -9,6 +9,7 @@ import io.luna.Luna
 import io.luna.game.model.LocalSound
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
@@ -17,22 +18,42 @@ import io.luna.game.model.mob.block.Graphic
 import io.luna.util.StringUtils
 
 /**
- * A collection of utility functions related to the Magic skill.
+ * Contains utility logic for the Magic skill.
  *
  * @author lare96
  */
 object Magic {
 
     /**
-     * Checks if [plr] meets the requirements defined by [level] and [requirements]. If they do, a list of runes and
-     * items required for the spell to be cast will be returned. If they don't, `null` will be returned. An empty list
-     * signifies no items are required to be removed for the spell to be cast.
+     * Checks whether [plr] meets the requirements needed to cast a spell.
+     *
+     * If the player satisfies all requirements, this returns the list of items that should be removed when the spell
+     * is cast. This includes rune costs and any direct item costs defined by the spell.
+     *
+     * Returning `null` means the spell cannot be cast.
+     *
+     * Returning an empty list means the spell can be cast without removing any items, such as when beta mode is
+     * enabled or the player has administrator rights.
+     *
+     * Requirement handling includes:
+     * - Magic level validation
+     * - Item requirements
+     * - Equipment requirements
+     * - Staff rune substitution
+     * - Combination rune substitution
+     * - Standard rune consumption
+     *
+     * @param plr The player attempting to cast the spell.
+     * @param level The minimum Magic level required.
+     * @param requirements The spell requirements to validate.
+     * @param autocast Whether the check is being performed for autocasting.
+     * @return The items to remove if casting is allowed, or `null` if the player does not meet the requirements.
      */
     fun checkRequirements(plr: Player,
                           level: Int,
                           requirements: List<SpellRequirement>,
                           autocast: Boolean = false): List<Item>? {
-        if(Luna.settings().game().betaMode() || plr.rights >= PlayerRights.ADMINISTRATOR) {
+        if (Luna.settings().game().betaMode() || plr.rights >= PlayerRights.ADMINISTRATOR) {
             return emptyList()
         }
         if (plr.magic.level < level) {
@@ -124,9 +145,31 @@ object Magic {
     }
 
     /**
-     * Function for helping [TeleportAction] move the player in a regular spellbook style.
+     * Checks whether [plr] meets the requirements needed to cast [spell].
+     *
+     * This is a convenience overload that uses the spell's configured level requirement and item requirement list.
+     *
+     * @param plr The player attempting to cast the spell.
+     * @param spell The spell definition being checked.
+     * @param autocast Whether the check is being performed for autocasting.
+     * @return The items to remove if casting is allowed, or `null` if the player does not meet the requirements.
      */
-    internal fun regularStyle(action: TeleportAction): Boolean {
+    fun checkRequirements(plr: Player,
+                          spell: CombatSpellDefinition,
+                          autocast: Boolean = false) =
+        checkRequirements(plr, spell.level, spell.required, autocast)
+
+    /**
+     * Processes a teleport using the regular spellbook style.
+     *
+     * This handles the staged teleport sequence for normal spellbook teleports, including sound playback, departure
+     * animation, departure graphic, movement, and arrival animation.
+     *
+     * @param action The teleport action being processed.
+     * @return `true` if the action should continue processing on the next execution step, or `false` if the teleport
+     * sequence has finished.
+     */
+    fun regularStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
             0 -> true
@@ -134,7 +177,7 @@ object Magic {
             1 -> {
                 // Use a local sound so nearby players can hear.
                 val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_REGULAR,
+                                          Sound.TELEPORT_ALL,
                                           plr.position,
                                           ChunkUpdatableView.globalView())
                 sound.display()
@@ -156,15 +199,22 @@ object Magic {
     }
 
     /**
-     * Function for helping [TeleportAction] move the player in ancient spellbook style.
+     * Processes a teleport using the ancient spellbook style.
+     *
+     * This handles the staged teleport sequence for ancient teleports, including departure animation, sound playback,
+     * departure graphic, and movement to the destination.
+     *
+     * @param action The teleport action being processed.
+     * @return `true` if the action should continue processing on the next execution step, or `false` if the teleport
+     * sequence has finished.
      */
-    internal fun ancientStyle(action: TeleportAction): Boolean {
+    fun ancientStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
             0 -> {
                 plr.animation(Animation(1979))
                 val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_ANCIENT,
+                                          Sound.BLOCK_TELEPORT,
                                           plr.position,
                                           ChunkUpdatableView.globalView())
                 sound.display()
@@ -188,7 +238,14 @@ object Magic {
     }
 
     /**
-     * An extension function that enables the underlying player to teleport somewhere.
+     * Teleports this player to [destination] using the given [style].
+     *
+     * This submits a [TeleportAction] for the player and invokes [onTeleport] when the action reaches its completion
+     * hook.
+     *
+     * @param destination The target destination.
+     * @param style The teleport style to use.
+     * @param onTeleport A callback invoked when the teleport finishes.
      */
     fun Player.teleport(destination: Position,
                         style: TeleportStyle = TeleportStyle.REGULAR,

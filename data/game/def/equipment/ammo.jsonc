@@ -1,0 +1,992 @@
+/*
+  This definition file is used for resolving ranged weapon ammo data. This includes "ammoless" ranged weapons, and ammo
+  equipped in the weapon slot.
+*/
+[
+  {
+    "type": "BRONZE_ARROW",
+    "strength": 7,
+    "start_graphic": {
+      "id": 19,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 10,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      841, // Shortbow
+      839, // Longbow
+      843, // Oak shortbow
+      845, // Oak longbow
+      849, // Willow shortbow
+      847, // Willow longbow
+      853, // Maple shortbow
+      851, // Maple longbow
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      882, // Bronze arrow
+      883, // Bronze arrow(p)
+      5616, // Bronze arrow(+)
+      5622 // Bronze arrow(s)
+    ]
+  },
+  {
+    "type": "IRON_ARROW",
+    "strength": 10,
+    "start_graphic": {
+      "id": 18,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 9,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      841, // Shortbow
+      839, // Longbow
+      843, // Oak shortbow
+      845, // Oak longbow
+      849, // Willow shortbow
+      847, // Willow longbow
+      853, // Maple shortbow
+      851, // Maple longbow
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      884, // Iron arrow
+      885, // Iron arrow(p)
+      5617, // Iron arrow(+)
+      5623 // Iron arrow(s)
+    ]
+  },
+  {
+    "type": "STEEL_ARROW",
+    "strength": 16,
+    "start_graphic": {
+      "id": 20,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 11,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      843, // Oak shortbow
+      845, // Oak longbow
+      849, // Willow shortbow
+      847, // Willow longbow
+      853, // Maple shortbow
+      851, // Maple longbow
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      886, // Steel arrow
+      887, // Steel arrow(p)
+      5618, // Steel arrow(+)
+      5624 // Steel arrow(s)
+    ]
+  },
+  {
+    "type": "MITHRIL_ARROW",
+    "strength": 22,
+    "start_graphic": {
+      "id": 21,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 12,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      849, // Willow shortbow
+      847, // Willow longbow
+      853, // Maple shortbow
+      851, // Maple longbow
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      888, // Mithril arrow
+      889, // Mithril arrow(p)
+      5619, // Mithril arrow(+)
+      5625 // Mithril arrow(s)
+    ]
+  },
+  {
+    "type": "ADAMANT_ARROW",
+    "strength": 31,
+    "start_graphic": {
+      "id": 22,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 13,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      853, // Maple shortbow
+      851, // Maple longbow
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      890, // Adamant arrow
+      891, // Adamant arrow(p)
+      5620, // Adamant arrow(+)
+      5626 // Adamant arrow(s)
+    ]
+  },
+  {
+    "type": "RUNE_ARROW",
+    "strength": 49,
+    "start_graphic": {
+      "id": 24,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 15,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      857, // Yew shortbow
+      855, // Yew longbow
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      892, // Rune arrow
+      893, // Rune arrow(p)
+      5621, // Rune arrow(+)
+      5627 // Rune arrow(s)
+    ]
+  },
+  {
+    "type": "CRYSTAL_ARROW",
+    "strength": 58,
+    "start_graphic": {
+      "id": 250,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 249,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      4212, // New crystal bow
+      4214, // Crystal bow full
+      4215, // Crystal bow 9/10
+      4216, // Crystal bow 8/10
+      4217, // Crystal bow 7/10
+      4218, // Crystal bow 6/10
+      4219, // Crystal bow 5/10
+      4220, // Crystal bow 4/10
+      4221, // Crystal bow 3/10
+      4222, // Crystal bow 2/10
+      4223 // Crystal bow 1/10
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BOLTS",
+    "strength": 10,
+    "start_graphic": {
+      "id": 28,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837, // Crossbow
+      767 // Phoenix crossbow
+    ],
+    "ammo": [
+      877, // Bolts
+      878, // Bolts(p)
+      6061, // Bolts(+)
+      6062 // Bolts(s)
+    ]
+  },
+  {
+    "type": "BARBED_BOLTS",
+    "strength": 12,
+    "start_graphic": {
+      "id": 28,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837, // Crossbow
+      767 // Phoenix crossbow
+    ],
+    "ammo": [
+      881 // Barbed bolts
+    ]
+  },
+  {
+    "type": "OPAL_BOLTS",
+    "strength": 14,
+    "start_graphic": {
+      "id": 28,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837, // Crossbow
+      767 // Phoenix crossbow
+    ],
+    "ammo": [
+      879 // Opal bolts
+    ]
+  },
+  {
+    "type": "PEARL_BOLTS",
+    "strength": 48,
+    "start_graphic": {
+      "id": 28,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      837, // Crossbow
+      767 // Phoenix crossbow
+    ],
+    "ammo": [
+      880 // Pearl bolts
+    ]
+  },
+  {
+    "type": "BOLT_RACK",
+    "strength": 55,
+    "start_graphic": {
+      "id": 28,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      4734, // Karils crossbow
+      4934, // Karils x-bow 100
+      4935, // Karils x-bow 75
+      4936, // Karils x-bow 50
+      4937 // Karils x-bow 25
+    ],
+    "ammo": [
+      4740 // Bolt rack
+    ]
+  },
+  {
+    "type": "BRONZE_KNIFE",
+    "strength": 3,
+    "start_graphic": {
+      "id": 219,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 212,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      864, // Bronze knife
+      870, // Bronze knife(p)
+      5654, // Bronze knife(+)
+      5661 // Bronze knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_KNIFE",
+    "strength": 4,
+    "start_graphic": {
+      "id": 220,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 213,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      863, // Iron knife
+      871, // Iron knife(p)
+      5655, // Iron knife(+)
+      5662 // Iron knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_KNIFE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 221,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 214,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      865, // Steel knife
+      872, // Steel knife(p)
+      5656, // Steel knife(+)
+      5663 // Steel knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BLACK_KNIFE",
+    "strength": 8,
+    "start_graphic": {
+      "id": 222,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 215,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      869, // Black knife
+      874, // Black knife(p)
+      5658, // Black knife(+)
+      5665 // Black knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_KNIFE",
+    "strength": 10,
+    "start_graphic": {
+      "id": 223,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 216,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      866, // Mithril knife
+      873, // Mithril knife(p)
+      5657, // Mithril knife(+)
+      5664 // Mithril knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_KNIFE",
+    "strength": 14,
+    "start_graphic": {
+      "id": 224,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 217,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      867, // Adamant knife
+      875, // Adamant knife(p)
+      5659, // Adamant knife(+)
+      5666 // Adamant knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_KNIFE",
+    "strength": 24,
+    "start_graphic": {
+      "id": 225,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 218,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      868, // Rune knife
+      876, // Rune knife(p)
+      5660, // Rune knife(+)
+      5667 // Rune knife(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_DART",
+    "strength": 1,
+    "start_graphic": {
+      "id": 232,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 226,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      806, // Bronze dart
+      812, // Bronze dart(p)
+      5628, // Bronze dart(+)
+      5635 // Bronze dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_DART",
+    "strength": 3,
+    "start_graphic": {
+      "id": 233,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 227,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      807, // Iron dart
+      813, // Iron dart(p)
+      5629, // Iron dart(+)
+      5636 // Iron dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_DART",
+    "strength": 4,
+    "start_graphic": {
+      "id": 234,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 228,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      808, // Steel dart
+      814, // Steel dart(p)
+      5630, // Steel dart(+)
+      5637 // Steel dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BLACK_DART",
+    "strength": 6,
+    "start_graphic": {
+      "id": 273,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 273,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      3093, // Black dart
+      3094, // Black dart(p)
+      5631, // Black dart(+)
+      5638 // Black dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_DART",
+    "strength": 7,
+    "start_graphic": {
+      "id": 235,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 229,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      809, // Mithril dart
+      815, // Mithril dart(p)
+      5632, // Mithril dart(+)
+      5639 // Mithril dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_DART",
+    "strength": 10,
+    "start_graphic": {
+      "id": 236,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 230,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      810, // Adamant dart
+      816, // Adamant dart(p)
+      5633, // Adamant dart(+)
+      5640 // Adamant dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_DART",
+    "strength": 14,
+    "start_graphic": {
+      "id": 237,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 231,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      811, // Rune dart
+      817, // Rune dart(p)
+      5634, // Rune dart(+)
+      5641 // Rune dart(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_JAVELIN",
+    "strength": 6,
+    "start_graphic": {
+      "id": 206,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 200,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      825, // Bronze javelin
+      831, // Bronze javelin(p)
+      5642, // Bronze javelin(+)
+      5648 // Bronze javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_JAVELIN",
+    "strength": 10,
+    "start_graphic": {
+      "id": 207,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 201,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      826, // Iron javelin
+      832, // Iron javelin(p)
+      5643, // Iron javelin(+)
+      5649 // Iron javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_JAVELIN",
+    "strength": 12,
+    "start_graphic": {
+      "id": 208,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 202,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      827, // Steel javelin
+      833, // Steel javelin(p)
+      5644, // Steel javelin(+)
+      5650 // Steel javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_JAVELIN",
+    "strength": 18,
+    "start_graphic": {
+      "id": 209,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 203,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      828, // Mithril javelin
+      834, // Mithril javelin(p)
+      5645, // Mithril javelin(+)
+      5651 // Mithril javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_JAVELIN",
+    "strength": 28,
+    "start_graphic": {
+      "id": 210,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 204,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      829, // Adamant javelin
+      835, // Adamant javelin(p)
+      5646, // Adamant javelin(+)
+      5652 // Adamant javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_JAVELIN",
+    "strength": 42,
+    "start_graphic": {
+      "id": 211,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 205,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "weapons": [
+      830, // Rune javelin
+      836, // Rune javelin(p)
+      5647, // Rune javelin(+)
+      5653 // Rune javelin(s)
+    ],
+    "ammo": []
+  },
+  {
+    "type": "BRONZE_THROWNAXE",
+    "strength": 5,
+    "start_graphic": {
+      "id": 43,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 35,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      800 // Bronze thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "IRON_THROWNAXE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 42,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 36,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      801 // Iron thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "STEEL_THROWNAXE",
+    "strength": 11,
+    "start_graphic": {
+      "id": 44,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 37,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      802 // Steel thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "MITHRIL_THROWNAXE",
+    "strength": 16,
+    "start_graphic": {
+      "id": 45,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 38,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      803 // Mithril thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "ADAMANT_THROWNAXE",
+    "strength": 23,
+    "start_graphic": {
+      "id": 46,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 39,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      804 // Adamnt thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "RUNE_THROWNAXE",
+    "strength": 26,
+    "start_graphic": {
+      "id": 48,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 41,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      805 // Rune thrownaxe
+    ],
+    "ammo": []
+  },
+  {
+    "type": "TOKTZ_XIL_UL",
+    "strength": 50,
+    "start_graphic": {
+      "id": 0,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 442,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "weapons": [
+      6522 // Toktz-xil-ul
+    ],
+    "ammo": []
+  }
+]

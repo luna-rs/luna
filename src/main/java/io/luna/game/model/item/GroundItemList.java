@@ -12,10 +12,9 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.task.Task;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 
@@ -77,8 +76,8 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
         @Override
         protected void execute() {
-            processItems();
             processPendingItems();
+            processItems();
         }
 
         /**
@@ -136,8 +135,9 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
          * Items are promoted per-tile, in insertion order, until the tile reaches {@link #MAX_ITEMS_PER_TILE}.
          */
         private void processPendingItems() {
-            for (Map.Entry<Position, Collection<GroundItem>> nextEntry : pending.asMap().entrySet()) {
-                List<GroundItem> activeList = active.get(nextEntry.getKey());
+            List<Position> positionList = new ArrayList<>(pending.keys());
+            for (Position position : positionList) {
+                List<GroundItem> activeList = active.get(position);
                 int spaces = MAX_ITEMS_PER_TILE - activeList.size();
                 if (spaces < 1) {
                     /*
@@ -146,7 +146,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                     continue;
                 }
 
-                Iterator<GroundItem> it = nextEntry.getValue().iterator();
+                Iterator<GroundItem> it = pending.get(position).iterator();
                 while (it.hasNext()) {
                     GroundItem pendingItem = it.next();
                     pendingItem.setState(EntityState.ACTIVE);
@@ -168,14 +168,14 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     /**
      * Active ground items, keyed by exact tile {@link Position}.
      */
-    private final ListMultimap<Position, GroundItem> active = ArrayListMultimap.create(128, 128);
+    private final ListMultimap<Position, GroundItem> active = ArrayListMultimap.create(128, 12);
 
     /**
      * Overflow queue for tiles that have reached {@link #MAX_ITEMS_PER_TILE}.
      * <p>
      * Items in this multimap are <b>not visible</b> until promoted by {@link ExpirationTask#processPendingItems()}.
      */
-    private final ListMultimap<Position, GroundItem> pending = ArrayListMultimap.create(128, 128);
+    private final ListMultimap<Position, GroundItem> pending = ArrayListMultimap.create(128, 12);
 
     /**
      * If the expiration task has been scheduled.
@@ -352,12 +352,12 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                     && existing.getView().equals(item.getView())) {
                 existing.hide();
                 existing.setState(EntityState.INACTIVE);
+
                 it.remove();
                 changed = true;
-            }
-
-            if (--loops <= 0) {
-                break;
+                if (--loops <= 0) {
+                    break;
+                }
             }
         }
         return changed;

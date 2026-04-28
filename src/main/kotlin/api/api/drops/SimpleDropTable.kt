@@ -16,7 +16,7 @@ import io.luna.util.Rational
  *
  * @author lare96
  */
-class SimpleDropTable(private val items: DropTableItemList, chance: Rational = ALWAYS) : DropTable(chance) {
+    class SimpleDropTable(private val items: DropTableItemList, chance: Double = ALWAYS) : DropTable(chance) {
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList = items
     override fun computePossibleItems(): DropTableItemList = items
 }

@@ -28,7 +28,7 @@ public final class GraphicUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForNpc(ByteMessage msg, UpdateBlockData data) {
         msg.putShort(data.graphic.getId());
-        msg.putInt(data.graphic.getHeight() << 16 | data.graphic.getDelay() & 0xFFFF);
+        msg.putInt(data.graphic.getDelay() << 16 | data.graphic.getHeight() & 0xFFFF);
     }
 
     @Override

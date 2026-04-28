@@ -6,8 +6,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.util.RandomUtils.roll
-import io.luna.util.Rational
 
 /**
  * Provides standardized drop tables for common loot types, heavily inspired by the
@@ -93,7 +91,7 @@ object GenericDropTables {
      * @param chance Chance to roll on this table.
      * @param rowBonus Enables RoW effects programmatically.
      */
-    fun gemDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
+    fun gemDropTable(chance: Double = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
             nothing(1 of 2)
             "Uncut sapphire" x 1 chance (1 of 4)
@@ -116,7 +114,7 @@ object GenericDropTables {
 
                     // Increased drop rate for mega rare table if wearing RoW.
                     val megaRareChance = if (wearingRow) 1 of 65 else 1 of 128
-                    if (roll(megaRareChance)) {
+                    if (rand(megaRareChance)) {
                         table = megaRareDropTable().computeTable(mob, source)
                     }
 
@@ -136,7 +134,7 @@ object GenericDropTables {
      * @param chance Chance to roll on this table.
      * @param rowBonus Enables RoW effects programmatically.
      */
-    fun rareDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
+    fun rareDropTable(chance: Double = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
             "Nature rune" x 40..70 chance (1 of 42)
             "Adamant javelin" x 10..20 chance (1 of 64)
@@ -181,7 +179,7 @@ object GenericDropTables {
      * @param chance Chance to roll on this table.
      * @param rowBonus Enables RoW effects programmatically.
      */
-    fun megaRareDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
+    fun megaRareDropTable(chance: Double = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
             nothing(22 of 25)
             "Rune spear" x 1..5 chance (1 of 16)
@@ -208,7 +206,7 @@ object GenericDropTables {
      * @param combatLevelFactor If true, seed tier is scaled by the mob's combat level.
      * @param chance Chance to roll on this table.
      */
-    fun generalSeedDropTable(combatLevelFactor: Boolean = true, chance: Rational = ALWAYS): DropTable {
+    fun generalSeedDropTable(combatLevelFactor: Boolean = true, chance: Double = ALWAYS): DropTable {
         return DropTableHandler.create {}.table {
             object : DropTable(chance) {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
@@ -247,7 +245,7 @@ object GenericDropTables {
      *
      * @param chance Chance to roll on this table.
      */
-    fun rareSeedDropTable(chance: Rational = ALWAYS): SimpleDropTable {
+    fun rareSeedDropTable(chance: Double = ALWAYS): SimpleDropTable {
         return DropTableHandler.createSimple(chance) {
             "Toadflax seed" x 1 chance (1 of 5)
             "Irit seed" x 1 chance (1 of 7)
@@ -269,7 +267,7 @@ object GenericDropTables {
      *
      * @param chance Chance to roll on this table.
      */
-    fun treeHerbSeedDropTable(chance: Rational): SimpleDropTable {
+    fun treeHerbSeedDropTable(chance: Double): SimpleDropTable {
         return DropTableHandler.createSimple(chance) {
             "Ranarr seed" x 1 chance (1 of 8)
             "Snapdragon seed" x 1 chance (1 of 8)
@@ -292,7 +290,7 @@ object GenericDropTables {
      *
      * @param chance Chance to roll on this table.
      */
-    fun uncommonSeedDropTable(chance: Rational = ALWAYS): DropTable {
+    fun uncommonSeedDropTable(chance: Double = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
             items += generalSeedDropList3
             items += generalSeedDropList4
@@ -307,7 +305,7 @@ object GenericDropTables {
      *
      * @param chance Chance to roll on this table.
      */
-    fun usefulHerbDropTable(chance: Rational = ALWAYS): DropTable {
+    fun usefulHerbDropTable(chance: Double = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
             noted {
                 "Grimy avantoe" x 1..3 chance (1 of 3)
@@ -323,7 +321,7 @@ object GenericDropTables {
      *
      * @param chance Chance to roll on this table.
      */
-    fun herbDropTable(chance: Rational = ALWAYS): DropTable {
+    fun herbDropTable(chance: Double = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
             "Grimy guam leaf" x 1 chance (1 of 4)
             "Grimy marrentill" x 1 chance (1 of 5)

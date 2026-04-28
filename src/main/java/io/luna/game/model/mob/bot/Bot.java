@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.action.BotActionHandler;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
 import io.luna.LunaContext;
@@ -27,9 +26,12 @@ import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
 
@@ -46,6 +48,7 @@ import static java.util.Objects.requireNonNull;
  * @author lare96
  */
 public final class Bot extends Player {
+    // TODO Optional debugging mode for bots that allows player updating processing (for stress testing).
 
     /**
      * The logger.
@@ -160,11 +163,6 @@ public final class Bot extends Player {
     private final BotScriptStack scriptStack;
 
     /**
-     * The movement queue and pathing controller.
-     */
-    private final BotMovementStack movementStack;
-
-    /**
      * The set of visible human players currently within this bot’s viewport.
      */
     private final Set<Player> localHumans = Sets.newConcurrentHashSet();
@@ -211,7 +209,6 @@ public final class Bot extends Player {
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
-        movementStack = new BotMovementStack(this);
         setClient(botClient);
     }
 
@@ -233,7 +230,7 @@ public final class Bot extends Player {
 
     @Override
     public PlayerData createSaveData() {
-        return new BotData(getUsername());
+        return temporary ? null : new BotData(getUsername());
     }
 
     @Override
@@ -269,11 +266,11 @@ public final class Bot extends Player {
                     if (data != null) {
                         temporary = false;
                     }
+                    loadData(data);
+                    if (data == null) {
+                        position = spawnPosition;
+                    }
                     if (world.getPlayers().add(this)) {
-                        loadData(data);
-                        if (data == null) {
-                            setPosition(spawnPosition);
-                        }
                         world.getBots().add(this);
                         setState(EntityState.ACTIVE);
                         log("I'm alive!");
@@ -337,6 +334,7 @@ public final class Bot extends Player {
                     ? ThreadLocalRandom.current().nextInt(1, 100)
                     : ThreadLocalRandom.current().nextInt(50, 100);
             skill.setStaticLevel(level);
+            skill.setLevel(level);
         }
     }
 
@@ -344,15 +342,40 @@ public final class Bot extends Player {
      * Randomizes the bot’s currently equipped items.
      */
     public void randomizeEquipment() {
-        ArrayListMultimap<Integer, EquipmentDefinition> eligible = ArrayListMultimap.create();
-        EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this))
-                .forEach(def -> eligible.put(def.getIndex(), def));
+        randomizeEquipment(def -> true);
+    }
 
+    /**
+     * Randomizes the bot’s currently equipped items, only factoring in filtered items.
+     *
+     * @param filter The filter to apply.
+     */
+    public void randomizeEquipment(Predicate<EquipmentDefinition> filter) {
+        List<EquipmentDefinition> eligible = new ArrayList<>();
         for (int index = 0; index < getEquipment().capacity(); index++) {
-            EquipmentDefinition def = RandomUtils.random(eligible.get(index));
-            if (def != null) {
-                getEquipment().set(index, new Item(def.getId()));
+            List<EquipmentDefinition> defList = EquipmentDefinition.INDEXES.get(index);
+            for (EquipmentDefinition def : defList) {
+                if (def.meetsAllRequirements(this) && filter.test(def)) {
+                    eligible.add(def);
+                }
             }
+
+            EquipmentDefinition def = RandomUtils.random(eligible);
+            if (def != null) {
+                Item equipItem = new Item(def.getId());
+                getEquipment().set(index, equipItem);
+            }
+            eligible.clear();
+        }
+    }
+
+    /**
+     * Maxes the bot’s skill levels.
+     */
+    public void maxSkills() {
+        for (Skill skill : skills) {
+            skill.setStaticLevel(99);
+            skill.setLevel(99);
         }
     }
 
@@ -417,13 +440,6 @@ public final class Bot extends Player {
      */
     public BotScriptStack getScriptStack() {
         return scriptStack;
-    }
-
-    /**
-     * @return The {@link BotMovementStack} controlling this bot’s pathfinding and movement.
-     */
-    public BotMovementStack getMovementStack() {
-        return movementStack;
     }
 
     /**

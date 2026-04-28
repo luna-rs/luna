@@ -1,13 +1,13 @@
 package game.item.consumable.food
 
 import api.predef.*
+import game.player.Sound
+import game.player.item.consume.food.Food
+import game.player.item.consume.food.Food.Companion.lastEat
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.player.Sound
-import game.player.item.consume.food.Food
-import game.player.item.consume.food.Food.Companion.lastEat
 
 /**
  * The food eating animation.
@@ -34,11 +34,17 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
                 plr.animation(eatAnimation)
                 plr.playSound(Sound.EAT)
                 food.effect(plr)
+                plr.combat.addFoodDelay(
+                    when (food) {
+                        Food.KARAMBWAN -> 2
+                        else -> 3
+                    }
+                )
 
                 // Increase HP.
                 val hp = plr.hitpoints
                 if (hp.level < hp.staticLevel) {
-                    hp.addLevels(food.heal, false)
+                    hp.adjustLevel(food.heal)
                     plr.sendMessage(food.healMessage(name))
                 }
             }

@@ -1,0 +1,242 @@
+package io.luna.game.model.mob.combat.state;
+
+import api.combat.npc.NpcCombatHandler;
+import com.google.common.collect.ImmutableSet;
+import io.luna.game.action.impl.NpcRetreatAction;
+import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
+import io.luna.game.model.item.Equipment.EquipmentBonus;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
+import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageType;
+
+import java.util.Set;
+
+/**
+ * A {@link CombatContext} implementation for {@link Npc}s.
+ * <p>
+ * This class provides NPC-specific combat behavior.
+ *
+ * @author lare96
+ */
+public final class NpcCombatContext extends CombatContext<Npc> {
+
+    /**
+     * Cached immutable set of NPC ids that should be treated as bosses.
+     */
+    private static volatile ImmutableSet<Integer> BOSSES = ImmutableSet.of();
+
+    /**
+     * Replaces the current boss id set with an immutable snapshot of the supplied ids.
+     *
+     * @param bosses The boss ids to cache.
+     */
+    public static void setBosses(Set<Integer> bosses) {
+        BOSSES = ImmutableSet.copyOf(bosses);
+    }
+
+    /**
+     * Checks whether the given npc id is currently registered as a boss.
+     *
+     * @param id The npc id to test.
+     * @return {@code true} if the id exists in the cached boss set, otherwise {@code false}.
+     */
+    public static boolean isBoss(int id) {
+        return BOSSES.contains(id);
+    }
+
+    /**
+     * The retreating policy of this mob.
+     */
+    private RetreatPolicy retreatPolicy = RetreatPolicy.NONE;
+
+    /**
+     * The primary attack bonus type this NPC uses.
+     */
+    private EquipmentBonus attackBonusType;
+
+    /**
+     * The max hit override, takes effect when above or equal to 0.
+     */
+    private int maxHit = -1;
+
+    /**
+     * Creates a new {@link NpcCombatContext}.
+     *
+     * @param npc The owning mob.
+     */
+    public NpcCombatContext(Npc npc) {
+        super(npc);
+    }
+
+    @Override
+    public int getDefaultMaxHit(CombatDamageType type) {
+        return maxHit >= 0 ? maxHit : mob.combatDef().getMaximumHit();
+    }
+
+    @Override
+    public CombatAttack<?> getNextAttack(Mob victim) {
+        return NpcCombatHandler.INSTANCE.supplyAttack(mob, victim);
+    }
+
+    @Override
+    public void onNextDefence(Mob attacker, CombatDamageAction action) {
+        NpcCombatHandler.INSTANCE.consumeDefence(mob, attacker, action);
+    }
+
+    @Override
+    public EquipmentBonus getAttackStyleBonus() {
+        if (attackBonusType != null) {
+            return attackBonusType;
+        }
+        return EquipmentBonus.SLASH_ATTACK;
+    }
+
+    @Override
+    public boolean isAutoRetaliate() {
+        return true;
+    }
+
+    @Override
+    public boolean onCombatProcess(boolean reached) {
+        boolean retreat = false;
+        switch (retreatPolicy) {
+            case LOW_HEALTH:
+                if (mob.getHealthPercent() <= 25) {
+                    retreat = true;
+                }
+                break;
+            case DISTANCE:
+                if (!mob.getBasePosition().isViewable(mob)) {
+                    retreat = true;
+                }
+                break;
+        }
+        if (retreat) {
+            mob.getActions().submitIfAbsent(new NpcRetreatAction(mob));
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public CombatAttack<Npc> getDefaultAttack(Mob victim) {
+        return new MeleeCombatAttack<>(mob, victim, getAttackAnimation(CombatDamageType.MELEE), 1,
+                mob.combatDef().getAttackSpeed());
+    }
+
+    @Override
+    public boolean isAttackable() {
+        return mob.isAlive() &&
+                mob.def().getCombatLevel() > 0 &&
+                mob.def().getActions().contains("Attack");
+    }
+
+    @Override
+    public void onCombatFinished() {
+        attackBonusType = null;
+    }
+
+    @Override
+    public int getAttackAnimation(CombatDamageType type) {
+        return mob.combatDef().getAttackAnimation();
+    }
+
+    @Override
+    public int getDefenceAnimation(CombatDamageType type) {
+        return mob.combatDef().getDefenceAnimation();
+    }
+
+    /**
+     * Places this mob into an execution-ready state.
+     * <p>
+     * This state is used for NPCs that should not die from normal damage immediately, but instead must be finished
+     * by a special execution action.
+     * <p>
+     * Preparing for execution reduces the mob to {@code 1} health, clears any active poison, disables further combat
+     * processing, locks movement, and clears the current combat target.
+     * <p>
+     * If this mob is already disabled, this method does nothing.
+     */
+    public void prepareForExecution() {
+        if (!isDisabled()) {
+            mob.setHealth(1);
+            setPoisonSeverity(0);
+            setDisabled(true);
+            mob.getWalking().setLocked(true);
+            target = null;
+        }
+    }
+
+    /**
+     * Plays the default defence animation for this NPC.
+     * <p>
+     * The animation ID is taken directly from the NPC's combat definition.
+     */
+    public void handleDefaultDefence(CombatDamageType type) {
+        int id = getDefenceAnimation(type);
+        mob.animation(new Animation(id));
+    }
+
+    /**
+     * Returns whether this NPC is currently retreating.
+     * <p>
+     * An NPC is considered retreating if its action queue currently contains an active {@link NpcRetreatAction}.
+     *
+     * @return {@code true} if this NPC is retreating, otherwise {@code false}.
+     */
+    public boolean isRetreating() {
+        return mob.getActions().contains(NpcRetreatAction.class);
+    }
+
+    /**
+     * Returns the retreat policy assigned to this mob.
+     * <p>
+     * The retreat policy determines how this NPC behaves when retreat conditions are met, such as whether it flees,
+     * resets, or continues fighting.
+     *
+     * @return The current retreat policy.
+     */
+    public RetreatPolicy getRetreatPolicy() {
+        return retreatPolicy;
+    }
+
+    /**
+     * Sets the retreat policy for this mob.
+     * <p>
+     * The retreat policy controls how this NPC should respond when its retreat logic is triggered.
+     *
+     * @param retreatPolicy The retreat policy to assign.
+     */
+    public void setRetreatPolicy(RetreatPolicy retreatPolicy) {
+        this.retreatPolicy = retreatPolicy;
+    }
+
+    /**
+     * Sets the primary attack bonus type.
+     *
+     * @param attackBonusType The attack bonus type to assign.
+     */
+    public void setAttackBonusType(EquipmentBonus attackBonusType) {
+        this.attackBonusType = attackBonusType;
+    }
+
+    /**
+     * @return The max hit override, takes effect when above or equal to 0.
+     */
+    public int getMaxHit() {
+        return maxHit;
+    }
+
+    /**
+     * Sets the max hit override, takes effect when above or equal to 0.
+     *
+     * @param maxHit The new max hit, will override definitions.
+     */
+    public void setMaxHit(int maxHit) {
+        this.maxHit = maxHit;
+    }
+}

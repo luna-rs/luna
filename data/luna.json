@@ -6,7 +6,7 @@
       "y": 3244
     },
     "experience_multiplier": 1.0,
-    "serializer": "SqlGameSerializer",
+    "serializer": "JsonGameSerializer",
     "port": 43594,
     "connection_limit": 2,
     "password_strength": "DEFAULT",
@@ -19,7 +19,7 @@
     "password": "guMQRNYf44fxERs4uHxLCWjCQ"
   },
   "logging": {
-    "root_level": "DEBUG",
+    "root_level": "TRACE",
     "format_type": "VERBOSE",
     "output_type": "MIXED",
     "active_file_logs": [
@@ -32,7 +32,7 @@
   "skills": {
     "woodcutting_speed": 4,
     "use_317_tree_stumps": false,
-    "slayer_equipment_needed": false,
+    "slayer_equipment_needed": true,
     "max_firemaking_light_ticks": 10,
     "tele_other_throttle_seconds": 30
   }

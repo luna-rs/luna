@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.Locatable;
-import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 
 /**
@@ -9,7 +9,7 @@ import io.luna.game.model.mob.bot.Bot;
  *
  * @author lare96
  */
-public final class SkillChangeEvent extends MobEvent implements InjectableEvent {
+public final class SkillChangeEvent extends PlayerEvent implements InjectableEvent {
 
     /**
      * The old amount of experience.
@@ -34,13 +34,14 @@ public final class SkillChangeEvent extends MobEvent implements InjectableEvent 
     /**
      * Creates a new {@link SkillChangeEvent}.
      *
+     * @param player The player.
      * @param oldExp The old amount of experience.
      * @param oldStaticLvl The old static level.
      * @param oldLvl The old level.
      * @param id The id of the skill that was changed.
      */
-    public SkillChangeEvent(Mob mob, double oldExp, int oldStaticLvl, int oldLvl, int id) {
-        super(mob);
+    public SkillChangeEvent(Player player, double oldExp, int oldStaticLvl, int oldLvl, int id) {
+        super(player);
         this.oldExp = oldExp;
         this.oldStaticLvl = oldStaticLvl;
         this.oldLvl = oldLvl;
@@ -49,7 +50,7 @@ public final class SkillChangeEvent extends MobEvent implements InjectableEvent 
 
     @Override
     public Locatable contextLocatable(Bot bot) {
-        return mob;
+        return plr;
     }
 
     /**
@@ -59,7 +60,7 @@ public final class SkillChangeEvent extends MobEvent implements InjectableEvent 
      */
     public boolean isLevelUp() {
         if(oldStaticLvl < 99) {
-            int newStaticLevel = mob.getSkills().getSkill(id).getStaticLevel();
+            int newStaticLevel = plr.getSkills().getSkill(id).getStaticLevel();
             return newStaticLevel > oldStaticLvl;
         }
         return false;

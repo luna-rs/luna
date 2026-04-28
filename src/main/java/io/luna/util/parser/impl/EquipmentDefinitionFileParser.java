@@ -1,6 +1,9 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
@@ -10,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -29,7 +33,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
      * Creates a new {@link EquipmentDefinitionFileParser}.
      */
     public EquipmentDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "equipment.json"));
+        super(Paths.get("data", "game", "def", "equipment", "equipment.jsonc"));
     }
 
     @Override
@@ -40,6 +44,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
         boolean fullBody = token.get("full_body?").getAsBoolean();
         boolean fullHelmet = token.get("full_helmet?").getAsBoolean();
         Requirement[] requirements = GsonUtils.getAsType(token.get("requirements"), Requirement[].class);
+        Arrays.stream(requirements).forEach(Requirement::assignSkillId);
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
         return new EquipmentDefinition(id, index, twoHanded, fullBody, fullHelmet, requirements, bonuses);
     }
@@ -47,6 +52,11 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
     @Override
     public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) {
         EquipmentDefinition.ALL.storeAndLock(tokenObjects);
+        Multimap<Integer, EquipmentDefinition> map = ArrayListMultimap.create();
+        for(EquipmentDefinition def : tokenObjects) {
+            map.put(def.getIndex(), def);
+        }
+        EquipmentDefinition.INDEXES = ImmutableListMultimap.copyOf(map);
         logger.debug("Loaded {} equipment definitions!", box(tokenObjects.size()));
     }
 }

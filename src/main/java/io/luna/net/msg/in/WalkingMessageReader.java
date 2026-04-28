@@ -53,11 +53,6 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
     @Override
     public boolean validate(Player player, WalkingEvent event) {
-        // Don't bother checking in DEVELOPMENT/BETA mode.
-        if (Luna.settings().game().betaMode()) {
-            return true;
-        }
-
         // Check if we're movement or action locked, or if no steps were recorded.
         if (player.getWalking().isLocked() || event.getSteps().isEmpty()) {
             return false;
@@ -65,12 +60,17 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
         // If we're immobilized, short-circuit here.
         if (player.getCombat().isImmobilized()) {
-            player.sendMessage("You cannot move.");
+            player.sendMessage("A magical force prevents you from moving.");
             if(event.getOrigin() != WalkingOrigin.INTERACTION) {
                 return false;
             }
             // Clear steps either way, so InteractionAction can proceed (if we're in range).
             event.getSteps().clear();
+        }
+
+        // Don't bother checking past here in DEVELOPMENT/BETA mode.
+        if (Luna.settings().game().betaMode()) {
+            return true;
         }
 
         // Check if all steps in the path are valid. A path is considered invalid if it paths through non-traversable

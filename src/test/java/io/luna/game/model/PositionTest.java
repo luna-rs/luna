@@ -13,16 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 final class PositionTest {
 
     @Test
-    void invalidX() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(-1, 1, 1));
-    }
-
-    @Test
-    void invalidY() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(1, -1, 1));
-    }
-
-    @Test
     void invalidUpperZ() {
         assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4),
                 "Z must be in range [0, 3] inclusively.");

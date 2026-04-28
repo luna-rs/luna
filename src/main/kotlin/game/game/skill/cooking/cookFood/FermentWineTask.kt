@@ -24,7 +24,7 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
         /**
          * How many ticks this wine has been fermenting for.
          */
-        internal var DynamicItem.wineFermentCounter by Attr.int().persist("wine_ferment_counter")
+        var DynamicItem.wineFermentCounter by Attr.int().persist("wine_ferment_counter")
     }
 
     /**

@@ -339,7 +339,7 @@ public class Item {
      * @return The item definition (as stored in {@link ItemDefinition#ALL}).
      */
     public ItemDefinition getItemDef() {
-        return ItemDefinition.ALL.retrieve(id);
+        return ItemDefinition.ALL.get(id).orElse(null);
     }
 
     /**
@@ -351,6 +351,6 @@ public class Item {
      * @return The equipment definition for this item.
      */
     public EquipmentDefinition getEquipDef() {
-        return EquipmentDefinition.ALL.retrieve(id);
+        return EquipmentDefinition.ALL.get(id).orElse(null);
     }
 }

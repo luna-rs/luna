@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
@@ -37,6 +38,7 @@ import java.util.function.IntUnaryOperator;
  * @author lare96
  */
 public final class Equipment extends ItemContainer {
+//todo some bonuses are incorrect, full metal set doesn't make magic bonus -81
 
     /**
      * Represents a single equipment bonus entry and its fixed index in the equipment bonus array.
@@ -103,6 +105,11 @@ public final class Equipment extends ItemContainer {
          */
         PRAYER(11);
 
+        /**
+         * A map of equipment bonuses to their identifiers.
+         */
+        public static final ImmutableMap<Integer, EquipmentBonus> ALL;
+
         static {
             STAB_ATTACK.opposite = STAB_DEFENCE;
             SLASH_ATTACK.opposite = SLASH_DEFENCE;
@@ -118,6 +125,22 @@ public final class Equipment extends ItemContainer {
 
             STRENGTH.opposite = STRENGTH;
             PRAYER.opposite = PRAYER;
+
+            ImmutableMap.Builder<Integer, EquipmentBonus> all = ImmutableMap.builder();
+            for (EquipmentBonus bonus : values()) {
+                all.put(bonus.index, bonus);
+            }
+            ALL = all.build();
+        }
+
+        /**
+         * Retrieves the equipment bonus linked to {@code index}.
+         *
+         * @param index The equipment index slot.
+         * @return The linked {@link EquipmentBonus}.
+         */
+        public static EquipmentBonus forIndex(int index) {
+            return ALL.get(index);
         }
 
         /**

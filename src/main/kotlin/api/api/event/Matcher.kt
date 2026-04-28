@@ -8,6 +8,7 @@ import io.luna.game.event.EventMatcherListener
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent
+import io.luna.game.event.impl.InteractableEvent
 import io.luna.game.event.impl.ItemClickEvent
 import io.luna.game.event.impl.ItemClickEvent.*
 import io.luna.game.event.impl.NpcClickEvent
@@ -195,7 +196,10 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
             return emptyList()
         }
         for (it in listeners) {
-            list.add(InteractionActionListener(it.interaction.apply(plr)) { it.apply(msg) })
+            if (msg is InteractableEvent) {
+                val target = msg.target()
+                list.add(InteractionActionListener(it.interaction.apply(plr, target)) { it.apply(msg) })
+            }
         }
         return list
     }

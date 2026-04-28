@@ -2,7 +2,6 @@ package io.luna.game.model.chunk;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.World;
-import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
@@ -34,8 +33,8 @@ import java.util.stream.StreamSupport;
  * <b>Update dispatch:</b> {@link #sendUpdates(Player, Position, boolean)} compares the chunks around the player's old
  * and new positions and:
  * <ul>
- *     <li>sends grouped updates for chunks that remain visible</li>
- *     <li>sends grouped updates + persistent replays for chunks newly entering view</li>
+ *     <li>Sends grouped updates for chunks that remain visible.</li>
+ *     <li>Sends grouped updates + persistent replays for chunks newly entering view.</li>
  * </ul>
  * <p>
  * <b>Reset flow:</b> Any chunk that was sent updates is tracked in {@link #updated}. After all players have been
@@ -107,27 +106,6 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      */
     public ChunkRepository load(Position position) {
         return load(position.getChunk());
-    }
-
-    /**
-     * Finds nearby mobs of {@code type} that should be considered for updates relative to {@code player}.
-     * <p>
-     * This is a convenience wrapper around the world-level query API and typically filters by whether each mob
-     * is viewable from {@code player}.
-     *
-     * @param player The player requesting an update set.
-     * @param type The mob subtype class to search for.
-     * @param <T> The mob subtype.
-     * @return A list of matching mobs.
-     */
-    public <T extends Mob> Collection<T> findUpdateMobs(Player player, Class<T> type) {
-        return world.find(
-                player.getPosition(),
-                type,
-                () -> new ArrayList<>(255),
-                entity -> entity.isViewableFrom(player),
-                Position.VIEWING_DISTANCE
-        );
     }
 
     /**

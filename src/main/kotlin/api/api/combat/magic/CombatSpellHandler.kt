@@ -1,10 +1,15 @@
 package api.combat.magic
 
+import api.combat.CombatHandler.displayCombatOverlay
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.combat.CombatDamage
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.attack.MagicCombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.state.PlayerMagicCombat
+import kotlin.math.floor
 
 /**
  * A registry and helper container for combat spell side effect handlers.
@@ -22,7 +27,7 @@ object CombatSpellHandler {
      *
      * Each listener executes in the context of the resulting [CombatDamage] instance for that spell hit.
      */
-    private val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
+    private val spells = HashMap<CombatSpell, MagicCombatAttack<*>.() -> Unit>()
 
     /**
      * Applies a weakening effect to a mob's skill level.
@@ -35,7 +40,9 @@ object CombatSpellHandler {
      * @param percent The fraction of the skill to weaken by.
      */
     fun weaken(mob: Mob, skill: Skill, percent: Double) {
-        if (mob is Player && skill.weakenBy(percent)) {
+        val amount = floor(skill.staticLevel * percent).toInt()
+        val result = skill.weaken(amount)
+        if (mob is Player && result) {
             mob.sendMessage("You have been weakened!")
         }
     }
@@ -50,7 +57,7 @@ object CombatSpellHandler {
      * @param ticks The immobilization duration in ticks.
      */
     fun immobilize(mob: Mob, ticks: Int) {
-        mob.actions.submitIfAbsent(ImmobilizationAction(mob, ticks))
+        mob.actions.submit(ImmobilizationAction(mob, ticks))
     }
 
     /**
@@ -61,7 +68,7 @@ object CombatSpellHandler {
      * @param spell The spell to register.
      * @param damageListener The listener to invoke for damage dealt by that spell.
      */
-    fun spell(spell: CombatSpell, damageListener: CombatDamage.() -> Unit) {
+    fun spell(spell: CombatSpell, damageListener: MagicCombatAttack<*>.() -> Unit) {
         if (spells.putIfAbsent(spell, damageListener) != null) {
             throw IllegalStateException("A listener already exists for spell $spell.")
         }
@@ -73,9 +80,21 @@ object CombatSpellHandler {
      * If no listener has been registered for the supplied spell, this method does nothing.
      *
      * @param spell The spell whose side effect handler should be executed.
-     * @param damage The combat damage context passed into the spell effect listener.
+     * @param attack The combat damage context passed into the spell effect listener.
      */
-    fun effect(spell: CombatSpell, damage: CombatDamage) {
-        spells[spell]?.invoke(damage)
+    fun effect(spell: CombatSpell, attack: MagicCombatAttack<*>) {
+        spells[spell]?.invoke(attack)
+    }
+
+    /**
+     * Resets the player's current autocast state.
+     *
+     * This disables autocasting, clears the selected autocast spell by resetting it to [CombatSpellDefinition.NONE],
+     * and refreshes the combat overlay so the client reflects the updated state immediately.
+     */
+    fun PlayerMagicCombat.resetAutocast() {
+        isAutocasting = false
+        autocastSpell = CombatSpellDefinition.NONE
+        player.combat.displayCombatOverlay()
     }
 }

@@ -36,7 +36,7 @@ object PunishmentHandler {
     /**
      * The path to the persistent IP ban list file.
      */
-    internal val IP_BANS: Path = Path.of("data", "net", "blacklisted_addresses.txt")
+    val IP_BANS: Path = Path.of("data", "net", "blacklisted_addresses.txt")
 
     /**
      * The logger instance for all punishment-related actions.

@@ -26,11 +26,6 @@ import io.luna.game.model.mob.Player;
 public final class Inventory extends ItemContainer {
 
     /**
-     * The message sent to the player when an add operation cannot proceed due to full inventory.
-     */
-    public static final String INVENTORY_FULL_MESSAGE = Messages.INVENTORY_FULL.getText();
-
-    /**
      * Creates a new {@link Inventory} for {@code player}.
      * <p>
      * Registers listeners that automatically keep the inventory widget in sync and respond to capacity/weight changes.
@@ -39,6 +34,6 @@ public final class Inventory extends ItemContainer {
      */
     public Inventory(Player player) {
         super(28, StackPolicy.STANDARD, 3214);
-        setListeners(new PlayerRefreshListener(player, INVENTORY_FULL_MESSAGE), new WeightListener(player));
+        setListeners(new PlayerRefreshListener(player, Messages.INSTANCE.inventoryFull()), new WeightListener(player));
     }
 }

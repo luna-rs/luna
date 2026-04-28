@@ -64,7 +64,7 @@ internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) 
     /**
      * Manually adds a persistent item to be spawned.
      */
-    internal fun add(item: PersistentGroundItem) {
+    fun add(item: PersistentGroundItem) {
         items.add(item)
     }
 }

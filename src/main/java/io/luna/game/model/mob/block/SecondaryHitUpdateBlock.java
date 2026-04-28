@@ -28,10 +28,10 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForNpc(ByteMessage msg, UpdateBlockData data) {
-        msg.put(data.hit2.getDamage(), ValueType.ADD);
-        msg.put(data.hit2.getType().getOpcode(), ValueType.NEGATE);
-        msg.put(data.hit2.getCurrentHealth(), ValueType.ADD);
-        msg.put(data.hit2.getTotalHealth());
+        msg.put(data.hit2.getDamage(), ValueType.SUBTRACT);
+        msg.put(data.hit2.getType().getOpcode(), ValueType.SUBTRACT);
+        msg.put(data.hit2.getCurrentHealth());
+        msg.put(data.hit2.getTotalHealth(), ValueType.NEGATE);
     }
 
     @Override

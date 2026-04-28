@@ -1,5 +1,9 @@
 package io.luna.game.model.mob.combat;
 
+import io.luna.game.model.def.WeaponDefinition;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * The supported weapon interface categories used by the combat system.
  * <p>
@@ -128,5 +132,20 @@ public enum Weapon {
     /**
      * The javelin weapon type.
      */
-    JAVELIN
+    JAVELIN;
+
+    /**
+     * The cached definition representing this constant.
+     */
+    private WeaponDefinition def;
+
+    /**
+     * @return The cached definition representing this constant.
+     */
+    public WeaponDefinition getDef() {
+        if (def == null) {
+            def = requireNonNull(WeaponDefinition.getWeapons().get(this), this + " has no valid WeaponDefinition.");
+        }
+        return def;
+    }
 }

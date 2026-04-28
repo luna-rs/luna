@@ -5,7 +5,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.util.RandomUtils
-import io.luna.util.Rational
 
 /**
  * Represents a drop table with a fixed chance to roll for item drops. This is the base class for all drop table types
@@ -19,7 +18,7 @@ import io.luna.util.Rational
  *
  * @author lare96
  */
-abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropTableItem> {
+abstract class DropTable(private val chance: Double = ALWAYS) : Iterable<DropTableItem> {
 
     /**
      * Rolls on the drop table based on the provided context [mob] (killer) and [source] (victim).
@@ -28,9 +27,9 @@ abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropT
      */
    open fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
         val allItems = mutableListOf<Item>()
-        if (RandomUtils.roll(chance) && canRollOnTable(mob, source)) {
+        if (rand(chance) && canRollOnTable(mob, source)) {
             val items = computeTable(mob, source).filterNot {
-                val alwaysDrop = it.chance == ALWAYS
+                val alwaysDrop = it.chance >= 1.0
                 if (alwaysDrop) {
                     val alwaysItem = it.toItem()
                     if (alwaysItem != null) {
@@ -57,10 +56,10 @@ abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropT
             items.isEmpty() -> null
             items.size == 1 -> {
                 val item = items.first()
-                if (RandomUtils.roll(item.chance)) item.toItem() else null
+                if (rand(item.chance)) item.toItem() else null
             }
 
-            else -> RationalTable(items.map { it.chance to it }).roll()?.toItem()
+            else -> ProbabilityTable(items.map { it.chance to it }).roll()?.toItem()
         }
     }
 

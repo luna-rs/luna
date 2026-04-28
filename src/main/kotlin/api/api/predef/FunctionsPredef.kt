@@ -1,14 +1,11 @@
 package api.predef
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.ImmutableTable
-import com.google.common.collect.Table
-import io.luna.game.model.Position
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Item
+import io.luna.util.RandomUtils
 import io.luna.util.StringUtils
 import java.text.NumberFormat
 import java.util.*
@@ -113,3 +110,13 @@ fun rand(upperInclusive: Int): Int = rand().nextInt(upperInclusive + 1)
  * Generates a random integer within [range].
  */
 fun rand(range: IntRange) = range.random()
+
+/**
+ * Delegates to [RandomUtils.roll].
+ */
+fun rand(chance: Double) = RandomUtils.roll(chance)
+
+/**
+ * Generates a random boolean.
+ */
+fun randBoolean() = RandomUtils.random()

@@ -38,7 +38,7 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
             mob.magic.addExperience(type.xp)
             mob.animation(enchantItem.animation)
             mob.graphic(enchantItem.graphic)
-            mob.playSound(type.sound)
+            mob.playSound(enchantItem.sound)
             if (itemId == 1702) {
                 mob.sendMessage("You successfully enchant the dragonstone amulet.");
             } else {

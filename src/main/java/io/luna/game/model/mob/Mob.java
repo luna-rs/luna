@@ -6,6 +6,7 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionQueue;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.block.Animation;
@@ -16,7 +17,9 @@ import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateBlockData.Builder;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.combat.CombatContext;
+import io.luna.game.model.mob.combat.state.CombatContext;
+import io.luna.game.model.mob.movement.WalkingNavigator;
+import io.luna.game.model.mob.movement.WalkingQueue;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
@@ -25,6 +28,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -167,6 +171,11 @@ public abstract class Mob extends Entity {
      * The scheduled task controlling a timed action-lock, if any.
      */
     private Task lockTask;
+
+    /**
+     * If this mob is currently wandering.
+     */
+    private boolean wandering;
 
     /**
      * Creates a new {@link Mob} at a specific starting position.
@@ -390,7 +399,6 @@ public abstract class Mob extends Entity {
         hp.setLevel(Math.max(amount, 0));
         if (levelBefore > 0 && hp.getLevel() <= 0) {
             Mob source = getCombat().getDamageStack().getHighestDamage();
-
             world.schedule(new MobDeathTask(this, source));
         }
     }
@@ -511,16 +519,17 @@ public abstract class Mob extends Entity {
 
         // Apply damage to hitpoints (clamped to >= 0).
         if (getHealth() - amount < 0) {
+            amount = getHealth();
             setHealth(0);
         } else {
             addHealth(-amount);
         }
 
         Hit hit = new Hit(amount, type, getHealth(), getTotalHealth());
-        if (pendingBlockData.getHit1() != null) {
-            hit2(hit);
-        } else {
+        if (pendingBlockData.getHit1() == null) {
             hit1(hit);
+        } else {
+            hit2(hit);
         }
         onHit(hit);
     }
@@ -724,8 +733,8 @@ public abstract class Mob extends Entity {
      *
      * @return {@code true} if hitpoints are greater than zero.
      */
-    public boolean isAlive() {
-        return skill(HITPOINTS).getLevel() > 0;
+    public final boolean isAlive() {
+        return state == EntityState.ACTIVE && getHealth() > 0;
     }
 
     /**
@@ -754,6 +763,12 @@ public abstract class Mob extends Entity {
             npcInstance = (Npc) this;
         }
         return npcInstance;
+    }
+
+    public void ifPlayer(Consumer<Player> action) {
+        if (this instanceof Player) {
+            action.accept((Player) this);
+        }
     }
 
     /**
@@ -939,5 +954,21 @@ public abstract class Mob extends Entity {
      */
     public int getTransformId() {
         return transformId;
+    }
+
+    /**
+     * @return {@code true} if this mob is currently wandering.
+     */
+    public boolean isWandering() {
+        return wandering;
+    }
+
+    /**
+     * Sets if this mob is currently wandering.
+     *
+     * @param wandering if this mob is wandering.
+     */
+    public void setWandering(boolean wandering) {
+        this.wandering = wandering;
     }
 }

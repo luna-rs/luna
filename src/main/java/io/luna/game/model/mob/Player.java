@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import engine.controllers.WildernessLocatableController;
 import game.item.consumable.potion.PotionCountdownTimer;
 import game.player.Messages;
 import game.player.Sound;
@@ -29,8 +30,8 @@ import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.combat.CombatContext;
-import io.luna.game.model.mob.combat.PlayerCombatContext;
+import io.luna.game.model.mob.combat.state.CombatContext;
+import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -268,6 +269,11 @@ public class Player extends Mob {
     private final PlayerCombatContext combat = new PlayerCombatContext(this);
 
     /**
+     * The aggression tolerance handler.
+     */
+    private final PlayerAggressionTolerance tolerance = new PlayerAggressionTolerance(this);
+
+    /**
      * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
      * @param context The global context instance.
@@ -385,14 +391,14 @@ public class Player extends Mob {
         // TODO Do more research into combat sounds.
         if (hit.getDamage() > 0) {
             // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
-            playRandomSound(
+           /* playRandomSound(
                     Sound.TAKE_DAMAGE,
                     Sound.TAKE_DAMAGE_2,
                     Sound.TAKE_DAMAGE_3,
                     Sound.TAKE_DAMAGE_4
-            );
+            );*/
         } else {
-            playSound(Sound.UNARMED_BLOCK);
+            //playSound(Sound.UNARMED_BLOCK);
         }
     }
 
@@ -474,7 +480,7 @@ public class Player extends Mob {
             }
         }
 
-        if (bank.hasSpaceFor(item)) {
+        if (bank.hasSpaceFor(item) && !controllers.contains(WildernessLocatableController.INSTANCE)) {
             bank.add(item);
             sendMessage(name + "(x" + item.getAmount() + ")" + " has been deposited into your bank.");
         } else {
@@ -512,9 +518,6 @@ public class Player extends Mob {
      * @param msg The message or {@link Messages} enum to send.
      */
     public void sendMessage(Object msg) {
-        if (msg instanceof Messages) {
-            msg = ((Messages) msg).getText();
-        }
         queue(new GameChatboxMessageWriter(msg));
     }
 
@@ -816,6 +819,15 @@ public class Player extends Mob {
      */
     public double getRunEnergy() {
         return runEnergy;
+    }
+
+    /**
+     * Sets the current run energy percentage and updates the client.
+     *
+     * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
+     */
+    public void setRunEnergy(double newRunEnergy) {
+        setRunEnergy(newRunEnergy, true);
     }
 
     /**
@@ -1350,6 +1362,9 @@ public class Player extends Mob {
      * @return The creation instant.
      */
     public Instant getCreatedAt() {
+        if(createdAt == null) {
+            createdAt = Instant.now();
+        }
         return createdAt;
     }
 
@@ -1450,5 +1465,12 @@ public class Player extends Mob {
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
         flags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The aggression tolerance handler.
+     */
+    public PlayerAggressionTolerance getTolerance() {
+        return tolerance;
     }
 }

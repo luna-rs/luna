@@ -38,8 +38,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     fun homeBank(): GameObject {
         if (homeBanks.isEmpty()) {
             for (position in HOME_BANK_POSITIONS) {
-                val gameObject = world.findOnTile(position, GameObject::class) { Banking.bankingObjects.contains(it.id) }
-                        .firstOrNull()
+                val gameObject = world.locator.findObjectsOnTile(position) { Banking.bankingObjects.contains(it.id) }.firstOrNull()
                 if (gameObject != null) {
                     homeBanks += gameObject
                 }

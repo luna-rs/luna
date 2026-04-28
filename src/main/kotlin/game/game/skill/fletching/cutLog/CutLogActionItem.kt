@@ -19,7 +19,7 @@ class CutLogActionItem(plr: Player,
                        val log: Int,
                        val bow: Bow,
                        makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
-
+// todo sounds     FLETCH_ONCE(812), FLETCH(813),
     override fun add(): List<Item> {
         val unstrungItem =
             when (bow) {
@@ -45,7 +45,7 @@ class CutLogActionItem(plr: Player,
         val unstrungName = itemName(bow.unstrung)
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
-        mob.playSound(Sound.LIGHT_FIRE)
+       //mob.playSound(Sound.LIGHT_FIRE)
         mob.animation(Animations.CUT_LOG)
         mob.fletching.addExperience(bow.exp)
     }

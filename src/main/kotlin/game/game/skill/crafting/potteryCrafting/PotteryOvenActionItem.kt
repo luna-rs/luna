@@ -26,7 +26,7 @@ class PotteryOvenActionItem(val plr: Player, val unfired: Unfired, amount: Int) 
         }
 
     override fun execute() {
-        mob.playSound(Sound.SMELTING)
+        mob.playSound(Sound.FURNACE) // TODO maybe POTTERY?
         mob.animation(Animation(899))
         mob.crafting.addExperience(unfired.firingExp)
         plr.sendMessage("You fire the ${itemName(unfired.firedId)} in the oven.")

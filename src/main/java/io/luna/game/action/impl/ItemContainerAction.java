@@ -1,5 +1,6 @@
 package io.luna.game.action.impl;
 
+import game.player.Messages;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
@@ -208,7 +209,7 @@ public abstract class ItemContainerAction extends Action<Player> {
      * @return Message sent when the container lacks space for the operation.
      */
     public String onInventoryFull() {
-        return Inventory.INVENTORY_FULL_MESSAGE;
+        return Messages.INSTANCE.inventoryFull();
     }
 
     /**

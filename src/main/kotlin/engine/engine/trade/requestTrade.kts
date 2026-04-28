@@ -12,9 +12,8 @@ on(PlayerFourthClickEvent::class)
     .filter { plr.contextMenu.contains(OPTION_TRADE) }
     .then {
         when {
-            targetPlr.combat.inCombat() -> plr.sendMessage("display_name is busy.")
-            plr.overlays.hasWindow() -> plr.sendMessage(Messages.BUSY)
-            targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.INTERACT_BUSY)
+            targetPlr.combat.inCombat() || targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.busy(targetPlr))
+            plr.overlays.hasWindow() -> plr.sendMessage(Messages.busy())
             else -> {
                 plr.sendMessage("Sending trade offer...")
                 if (plr.index == targetPlr.tradingWith) {

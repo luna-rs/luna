@@ -34,7 +34,7 @@ public final class AmmoDefinitionFileParser extends JsonFileParser<AmmoDefinitio
      * Creates a new {@link AmmoDefinitionFileParser}.
      */
     public AmmoDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment", "ammo.json"));
+        super(Paths.get("data", "game", "def", "equipment", "ammo.jsonc"));
     }
 
     @Override

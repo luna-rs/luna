@@ -319,7 +319,6 @@ public final class Rational extends Number implements Comparable<Rational> {
      * Compares this rational to another for ordering.
      * <p>
      * The comparison is performed using the double-precision value of each number.
-     * </p>
      *
      * @param other The other rational to compare against.
      * @return A negative value if less, zero if equal, or positive if greater.

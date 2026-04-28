@@ -71,7 +71,7 @@ object FishingSpotHandler : Task(false, 100) {
      * world.addNpc(id = 316, x = 3222, y = 3222)
      * ```
      */
-    internal fun add(spawn: Boolean = false, action: FishingSpotReceiver.() -> Unit) {
+    fun add(spawn: Boolean = false, action: FishingSpotReceiver.() -> Unit) {
         val receiver = FishingSpotReceiver()
         action(receiver)
 
@@ -106,7 +106,7 @@ object FishingSpotHandler : Task(false, 100) {
             gameService.sync { world.addNpc(npc) }
             return npc
         } else {
-            return world.npcs.find { it.position == home && it.id == id && it.definition.name == "Fishing spot" }
+            return world.locator.findNpcsOnTile(home) { it.id == id && it.def().name == "Fishing spot" }.firstOrNull()
         }
     }
 }

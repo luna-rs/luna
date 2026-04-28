@@ -2,10 +2,8 @@ package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
+import io.luna.Luna;
 import io.luna.game.model.chunk.Chunk;
-
-import java.util.Comparator;
-import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -32,38 +30,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @see Region
  */
 public final class Position implements Locatable {
-
-    // TODO Bit pack x,y,z
-
-    /**
-     * A {@link Comparator} that sorts {@link Position} values by distance from a base position.
-     * <p>
-     * This comparator uses {@link #computeLongestDistance(Position)} (Chebyshev distance) and orders
-     * positions from closest to furthest relative to the base.
-     */
-    public static final class PositionDistanceComparator implements Comparator<Position> {
-
-        /**
-         * The base position used for comparisons.
-         */
-        private final Position base;
-
-        /**
-         * Creates a new {@link PositionDistanceComparator}.
-         *
-         * @param base The base position used to measure distance.
-         */
-        public PositionDistanceComparator(Position base) {
-            this.base = base;
-        }
-
-        @Override
-        public int compare(Position o1, Position o2) {
-            int distance1 = base.computeLongestDistance(o1);
-            int distance2 = base.computeLongestDistance(o2);
-            return Integer.compare(distance1, distance2);
-        }
-    }
 
     /**
      * The maximum number of tiles a player can typically view in any direction.
@@ -99,7 +65,9 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
+            checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        }
         this.x = x;
         this.y = y;
         this.z = z;
@@ -137,7 +105,7 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, z);
+        return (z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF);
     }
 
     @Override
@@ -158,7 +126,7 @@ public final class Position implements Locatable {
      * @return This position.
      */
     @Override
-    public Position absLocation() {
+    public Position abs() {
         return this;
     }
 
@@ -258,16 +226,6 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
-     *
-     * @param newZ The new height level.
-     * @return The new position.
-     */
-    public Position setZ(int newZ) {
-        return new Position(x, y, newZ);
-    }
-
-    /**
      * Returns the chunk X coordinate (8x8 tile partition) for this position.
      *
      * @return The chunk X coordinate.
@@ -360,5 +318,15 @@ public final class Position implements Locatable {
      */
     public int getZ() {
         return z;
+    }
+
+    /**
+     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
+     *
+     * @param newZ The new height level.
+     * @return The new position.
+     */
+    public Position setZ(int newZ) {
+        return new Position(x, y, newZ);
     }
 }

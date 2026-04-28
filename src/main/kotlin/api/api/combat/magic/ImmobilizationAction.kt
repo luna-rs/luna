@@ -16,18 +16,24 @@ import io.luna.game.model.mob.Player
  * @param mob The mob being immobilized.
  * @param delay The duration of the immobilization effect in ticks.
  */
-class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.SOFT, false, delay) {
+open class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.SOFT, false, delay) {
 
     /**
      * Performs submission-time logic for the immobilization effect.
      *
-     * If the affected mob is a [Player], a message is sent informing them that
-     * they have been frozen.
+     * If the affected mob is a [Player], a message is sent informing them that they have been frozen.
      */
-    override fun onSubmit() {
+    final override fun onSubmit() {
+        if(mob.combat.isImmobilized) {
+            interrupt()
+            return
+        }
+
         if (mob is Player) {
             mob.sendMessage("You have been frozen!")
         }
+        mob.walking.clear()
+        mob.combat.isImmobilized = true
     }
 
     /**
@@ -38,5 +44,8 @@ class ImmobilizationAction(mob: Mob, delay: Int) : Action<Mob>(mob, ActionType.S
      *
      * @return `true`, always.
      */
-    override fun run(): Boolean = true
+    override fun run(): Boolean {
+        mob.combat.isImmobilized = false
+        return true
+    }
 }

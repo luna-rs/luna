@@ -176,6 +176,13 @@ enum class Food(val raw: Int,
           chance = 90 to 215,
           burnStopLvl = 99,
           exp = 210.0),
+    MANTA_RAY(raw = 389,
+          cooked = 391,
+          burnt = 393,
+          lvl = 91,
+          chance = 85 to 195,
+          burnStopLvl = 100,
+          exp = 216.3),
     REDBERRY_PIE(raw = 2321,
                  cooked = 2325,
                  burnt = 2329,
@@ -225,6 +232,11 @@ enum class Food(val raw: Int,
          * A map of raw food identifiers to food.
          */
         val RAW_TO_FOOD = values().associateBy { it.raw }
+
+        /**
+         * A map of cooked food identifiers to food.
+         */
+        val COOKED_TO_FOOD = values().associateBy { it.cooked }
     }
 
     /**

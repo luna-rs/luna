@@ -1,15 +1,12 @@
 package game.npc.spawn.lumbridge
 
 import api.predef.*
-import api.predef.ext.*
 import api.shop.dsl.ShopHandler
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.dialogue.Expression
-import io.luna.game.model.item.shop.*
-import io.luna.game.model.mob.wandering.*
 
 val shopkeeperId = 519
 
@@ -54,12 +51,4 @@ npc1(shopkeeperId) {
                     .open()
             })
         .open()
-}
-
-on(ServerLaunchEvent::class) {
-    world.addNpc(
-        id = shopkeeperId,
-        x = 3231,
-        y = 3203)
-        .startWandering(3, WanderingFrequency.NORMAL)
 }
