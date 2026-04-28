@@ -59,7 +59,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         }
 
         // If we're immobilized, short-circuit here.
-        if (player.getCombat().isImmobilized()) {
+        if (player.getStatus().isImmobilized()) {
             player.sendMessage("A magical force prevents you from moving.");
             if(event.getOrigin() != WalkingOrigin.INTERACTION) {
                 return false;

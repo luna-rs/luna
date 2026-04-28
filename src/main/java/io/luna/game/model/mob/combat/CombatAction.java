@@ -151,7 +151,7 @@ public final class CombatAction extends Action<Mob> {
         if (!combat.checkMultiCombat(target)) {
             return false;
         } else if (mob.getPosition().equals(target.getPosition())) {
-            if (mob.getCombat().isImmobilized()) {
+            if (mob.getStatus().isImmobilized()) {
                 // If we're frozen and target is occupying our tile, we cannot attack.
                 return false;
             }

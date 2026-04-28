@@ -42,6 +42,6 @@ on(LoginEvent::class, EventPriority.HIGH) {
     if (Luna.settings().game().betaMode()) {
         plr.sendMessage("Server currently running in ${Luna.settings().game().runtimeMode()} mode.")
     }
-    plr.combat.onLogin()
     plr.tolerance.ensureDefaults()
+    plr.status.load()
 }

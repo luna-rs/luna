@@ -1,8 +1,7 @@
-package game.combat.npcHooks.dragons
+package game.combat.npcHooks.dragon
 
 import api.predef.*
 import engine.combat.prayer.CombatPrayer
-import game.item.consumable.potion.PotionEffect.Companion.hasAntiFire
 import game.player.Sound
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -90,7 +89,7 @@ class DragonFireCombatAttack(
     override fun calculateDamage(other: Mob?): CombatDamage {
         if (other is Player) {
             protection += if (other.equipment.shield?.id == DRAGON_FIRE_SHIELD) 0.80 else 0.0
-            protection += if (other.hasAntiFire()) 0.20 else 0.0
+            protection += if (other.status.isAntiFire()) 0.20 else 0.0
             protection += if (other.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) 0.40 else 0.0
         }
 

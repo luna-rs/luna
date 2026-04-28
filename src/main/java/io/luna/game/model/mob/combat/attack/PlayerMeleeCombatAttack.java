@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.combat.attack;
 
+import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
 import io.luna.game.model.item.Equipment;
@@ -75,7 +76,7 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
         int weaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
         EquipmentPoisonDefinition poisonDef = EquipmentPoisonDefinition.ALL.get(weaponId).orElse(null);
         if (poisonDef != null && rawAmount > 0 && RandomUtils.roll(MELEE_POISON_CHANCE)) {
-            victim.getCombat().setPoisonSeverity(poisonDef.getSeverity());
+            victim.getStatus().add(new PoisonStatusEffect(victim, poisonDef.getSeverity()), false);
         }
 
         // Award XP depending on the combat stance.

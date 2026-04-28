@@ -39,7 +39,7 @@ combat(172) {
 // Level 22 and 23 dark wizards.
 combat(3242, 3243) {
     attack {
-        if (rand(2) == 0 && !other.combat.isImmobilized)
+        if (rand(2) == 0 && !other.status.isImmobilized())
             magic(CombatSpell.BIND)
         else if (rand(UNCOMMON))
             magic(if (rand().nextBoolean()) CombatSpell.WIND_BOLT else CombatSpell.WATER_BOLT)

@@ -3,6 +3,7 @@ package engine.controllers
 import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableSet
+import engine.combat.status.StatusEffectType
 import io.luna.game.model.Locatable
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Player
@@ -33,7 +34,7 @@ object WildernessLocatableController : PlayerAreaListener() {
         plr.contextMenu.hide(OPTION_ATTACK)
         plr.overlays.closeWalkable()
         plr.wildernessLevel = 0
-        plr.combat.magic.teleBlock = 0
+        plr.status.remove(StatusEffectType.TELEBLOCK)
         plr.clearText(199)
         plr.controllers.unregister()
     }

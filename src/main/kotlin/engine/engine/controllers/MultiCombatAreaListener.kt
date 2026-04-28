@@ -51,7 +51,7 @@ object MultiCombatAreaListener : PlayerAreaListener() {
         Region(13876),
 
         // Morytania - East
-        // TODO ???
+        // TODO@05.0 Find missing multi-combat area. Or find a better source with more efficient coords.
 
         // Jail - East of Draynor Village
         Area.of(3106, 3233, 3133, 3261),

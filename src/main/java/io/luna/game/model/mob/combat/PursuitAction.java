@@ -79,6 +79,7 @@ public final class PursuitAction extends Action<Npc> {
         if (!combat.inCombat() || target == null || !mob.isViewableFrom(target)) {
             return true;
         }
+        mob.interact(target);
         return tryStep();
     }
 

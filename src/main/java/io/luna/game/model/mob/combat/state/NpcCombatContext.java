@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.state;
 
 import api.combat.npc.NpcCombatHandler;
 import com.google.common.collect.ImmutableSet;
+import engine.combat.status.StatusEffectType;
 import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
@@ -164,7 +165,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     public void prepareForExecution() {
         if (!isDisabled()) {
             mob.setHealth(1);
-            setPoisonSeverity(0);
+            mob.getStatus().remove(StatusEffectType.POISONED);
             setDisabled(true);
             mob.getWalking().setLocked(true);
             target = null;

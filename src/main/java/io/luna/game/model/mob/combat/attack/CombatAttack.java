@@ -20,6 +20,9 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
  */
 public abstract class CombatAttack<T extends Mob> {
 
+    // TODO@0.5.0 Correct weapon sounds. Think this can be done with other combat weapons though through JSON.
+    //  Or it might be randomized, some tests need to be done.
+
     /**
      * The mob performing the attack.
      */

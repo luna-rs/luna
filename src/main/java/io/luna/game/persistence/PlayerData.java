@@ -105,11 +105,8 @@ public class PlayerData {
         player.setTimePlayed(timePlayed);
         player.setCreatedAt(createdAt);
         player.setPrivacyOptions(privacyOptions);
-        player.loadPotionsFromJson(potions);
         player.getCombat().getWeapon().refreshWeapon(lastCombatStance);
         player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
-        player.getCombat().setPoisonSeverity(poisonSeverity, false);
-        player.getCombat().getMagic().setTeleBlock(teleBlock, false);
         player.getCombat().getMagic().setAutocastSpell(autocast, false);
         player.getCombat().getMagic().setAutocasting(autocasting);
         player.getTolerance().load(tolerance);
@@ -157,11 +154,8 @@ public class PlayerData {
         timePlayed = player.getTimePlayed();
         createdAt = player.getCreatedAt();
         privacyOptions = player.getPrivacyOptions();
-        potions = player.savePotionsToJson();
         lastCombatStance = player.getCombat().getWeapon().getStyleDef().getStance();
         specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
-        poisonSeverity = player.getCombat().getPoisonSeverity();
-        teleBlock = player.getCombat().getMagic().getTeleBlock();
         autocast = player.getCombat().getMagic().getAutocastSpell().getSpell();
         autocasting = player.getCombat().getMagic().isAutocasting();
         tolerance = player.getTolerance();

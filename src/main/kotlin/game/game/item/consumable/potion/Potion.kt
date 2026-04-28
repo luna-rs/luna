@@ -1,9 +1,11 @@
 package game.player.item.consume.potion
 
 import api.predef.*
-import game.item.consumable.potion.PotionCountdownTimer
-import game.item.consumable.potion.PotionEffect
+import api.predef.ext.*
+import engine.combat.status.PotionStatusEffect
+import engine.combat.status.StatusEffectType
 import io.luna.game.model.mob.Player
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * An enum representing potions that can be consumed.
@@ -227,10 +229,7 @@ enum class Potion(val fourDose: Int,
          * Invoked when a potion with anti-poisoning properties is sipped.
          */
         private fun Player.onAntipoison(potion: Potion, immunityDuration: Int) {
-            val potionTimer =
-                PotionCountdownTimer(this, potion, PotionEffect.ANTIPOISON, immunityDuration.toLong())
-            submitAction(potionTimer)
-            combat.poisonSeverity = 0
+            status.add(PotionStatusEffect(this, StatusEffectType.ANTIPOISON, immunityDuration.ticks, potion))
         }
 
         /**
@@ -281,8 +280,7 @@ enum class Potion(val fourDose: Int,
          * Invoked when an anti-fire potion is sipped.
          */
         private fun Player.onAntifirePotion(potion: Potion) {
-            val potionTimer = PotionCountdownTimer(this, potion, PotionEffect.ANTIFIRE, 600)
-            submitAction(potionTimer)
+            status.add(PotionStatusEffect(this, StatusEffectType.ANTIFIRE, 6.minutes, potion))
         }
 
         /**

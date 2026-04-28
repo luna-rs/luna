@@ -15,7 +15,7 @@ class PersistentNpc(id: Int, position: Position,
                     private val wanderingRadius: Int? = null,
                     private val wanderingFrequency: WanderingFrequency? = null) : Npc(ctx, id, position) {
 
-    override fun onActive() {
+    override fun onSpawn() {
         if (wanderingRadius != null && wanderingFrequency != null) {
             startWandering(wanderingRadius, wanderingFrequency);
         } else if (def().name.equals("Imp")) {

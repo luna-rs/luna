@@ -46,7 +46,7 @@ class SpecialAttackDataReceiver(
     var attackTransformer: SpecialAttackBuilderReceiver.() -> CombatAttack<Player>? = {
         when (damageType) {
             CombatDamageType.MELEE -> melee()
-            CombatDamageType.MAGIC -> melee() // TODO Throw exception, or melee based magic attack?
+            CombatDamageType.MAGIC -> melee() // TODO@0.5.0 Throw exception, or melee based magic attack?
             CombatDamageType.RANGED -> ranged()
         }
     }

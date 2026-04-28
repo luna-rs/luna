@@ -1,6 +1,8 @@
 package api.combat.magic
 
 import api.combat.CombatHandler.displayCombatOverlay
+import api.predef.ext.*
+import engine.combat.status.hooks.ImmobilizedStatusEffect
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
@@ -10,6 +12,7 @@ import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat
 import kotlin.math.floor
+import kotlin.time.Duration
 
 /**
  * A registry and helper container for combat spell side effect handlers.
@@ -54,10 +57,10 @@ object CombatSpellHandler {
      * for the supplied duration.
      *
      * @param mob The mob to immobilize.
-     * @param ticks The immobilization duration in ticks.
+     * @param duration The immobilization duration.
      */
-    fun immobilize(mob: Mob, ticks: Int) {
-        mob.actions.submit(ImmobilizationAction(mob, ticks))
+    fun immobilize(mob: Mob, duration: Duration) {
+        mob.status.add(ImmobilizedStatusEffect(mob, duration))
     }
 
     /**

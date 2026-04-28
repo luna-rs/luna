@@ -116,7 +116,8 @@ public final class InteractionAction extends Action<Player> {
         this.listeners = listeners;
         this.target = target;
         this.event = event;
-    }
+    } // todo navigation action can handle most of this?
+    // todo allow for navigation action to use current path? disablePathfinding() and cannot be in continuous mode
 
     @Override
     public void onSubmit() {
@@ -236,7 +237,7 @@ public final class InteractionAction extends Action<Player> {
         boolean moved = false;
         if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
-            if (mob.getCombat().isImmobilized()) {
+            if (mob.getStatus().isImmobilized()) {
                 // We need to move in order to interact, but we're immobilized.
                 interrupt();
                 return false;

@@ -20,13 +20,9 @@ on(ServerLaunchEvent::class) {
 2684=dragon_shield
 
 on(EquipItemEvent::class) {
-    // todo wooden items
-    // todo leather, dhide, items
-    if (index == Equipment.WEAPON) {
-        // todo get from weapon defs
-    } else {
-
-    }
+    // TODO@0.5.0, weapon sounds:
+    //  wooden items
+    //  leather, dhide, items
 
         1343 = equip_shield
     1344 = equip_sword

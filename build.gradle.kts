@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.9.25"
+    val kotlinVersion = "1.7.22"
 
     java
     application
@@ -78,7 +78,7 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<KotlinCompile>().all {
-    // todo Will need this flag in later versions.
+    // TODO@Lunascape We will need this flag in later Kotlin versions for script files to be recognized.
     kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
     kotlinOptions.jvmTarget = "21"
 }

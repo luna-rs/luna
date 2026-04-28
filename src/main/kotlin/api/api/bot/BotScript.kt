@@ -15,90 +15,111 @@ import kotlinx.coroutines.yield
 /**
  * A coroutine-driven base class for bot behaviour scripts.
  *
- * Each [BotScript] represents a single logical “program” that drives a [bot] for some period of time
- * (e.g., woodcutting, banking, combat loop). Scripts are:
- * - Executed on the game thread via a shared [GameCoroutineScope] and [GameCoroutineDispatcher].
- * - Managed by [BotScriptStack], which controls which script is currently active.
- * - Persisted and restored across sessions using [BotScriptSnapshot] and [snapshot].
+ * A script represents one logical bot behaviour, such as woodcutting, fishing, combat, or PKing (scouting). Scripts
+ * are controlled by [BotScriptStack], executed on the game coroutine scope (game thread), and may safely suspend while
+ * waiting for delays, navigation, interactions, or other asynchronous bot actions.
  *
- * The coroutine [run] function contains the main behaviour. It may suspend freely (for delays, pathfinding, waiting
- * on actions, etc) while still respecting the game-thread execution model.
+ * Scripts follow this lifecycle:
  *
- * @param T The snapshot type used to persist this script's state (e.g., a data class or primitive), or `Void?` for
- * scripts that do not persist any data.
- * @property bot The owning bot instance that this script controls.
+ * 1. [start] launches the script coroutine.
+ * 2. [init] runs once before the main loop.
+ * 3. [run] is called repeatedly while the bot is active.
+ * 4. Returning `true` from [run] finishes the script.
+ * 5. [finish] runs before the coroutine exits, including after cancellation.
+ *
+ * The [snapshot] function is used to expose persistent script state so scripts can be saved and restored across
+ * sessions.
+ *
+ * @param T The snapshot type used to persist this script's state.
+ * @property bot The bot controlled by this script.
+ *
  * @author lare96
  */
 abstract class BotScript<T>(val bot: Bot) {
-    // todo redo docs, scripts now repeatedly loop
+
     /**
-     * Handler for simulated inbound messages to the bot.
+     * Handler for simulated inbound client messages.
      *
-     * This provides access to the same input pipeline that a real client would use (e.g., button clicks,
-     * movement actions).
+     * This gives scripts access to the same input pipeline that a normal player client would use for actions such as
+     * button clicks, movement requests, item clicks, and other client-originated messages.
      */
     protected val input: BotInputMessageHandler = bot.botClient.input
 
     /**
-     * Handler for simulated outbound messages from the bot.
+     * Handler for simulated outbound client messages.
      *
-     * This allows scripts to enqueue packets that would normally be sent by a real client (e.g., walking,
-     * interaction, casting spells).
+     * This lets scripts send packet-style actions through the bot client, allowing the bot to interact with the world
+     * through the same broad flow as a real player.
      */
     protected val output: BotOutputMessageHandler = bot.botClient.output
 
     /**
      * High-level action handler for common bot operations.
      *
-     * Encapsulates reusable behaviour (banking, walking, skilling, etc.) so that multiple scripts can share logic
-     * rather than reimplementing the same flows.
+     * This groups reusable bot actions such as banking, shopping, equipment changes, inventory interactions, widget
+     * clicks, entity interactions, and combat utility actions.
      */
     protected val handler: BotActionHandler = bot.actionHandler
 
     /**
-     * The coroutine job tracking this script's execution state.
+     * Coroutine job tracking this script's current execution state.
      *
-     * This is:
-     * - `null` when the script has never been started or has been fully stopped.
-     * - `isActive` while [run] is executing or suspended.
-     * - `isCompleted && !isCancelled` when the script finished normally.
-     * -`isCancelled` when the script was interrupted via [stop].
+     * This value is `null` before the script has ever been started. Once [start] launches the script, this stores the
+     * active job. If the script finishes, is cancelled, or is restarted later, this value reflects the most recent job.
      */
     private var progress: Job? = null
 
-    open suspend fun init() {} // todo docs, called before run loop
+    /**
+     * Initializes this script before the main [run] loop begins.
+     *
+     * This is called once per successful [start] invocation, before the first [run] call. Subclasses can override this
+     * to prepare state, start navigation, attack an initial target, open an interface, or perform any other setup.
+     */
+    open suspend fun init() {}
 
     /**
-     * The main coroutine body for this script.
+     * Executes one cycle of this script.
      *
-     * This function is always executed on the game thread through [GameCoroutineScope] and must be written with that
-     * assumption.
+     * This function is called repeatedly while the bot remains [EntityState.ACTIVE] and the script coroutine remains
+     * active. Returning `false` keeps the script alive and allows the next cycle to run. Returning `true` breaks the
+     * loop and lets the script finish normally.
+     *
+     * Implementations may suspend freely, but should avoid long blocking work because scripts execute through the game
+     * coroutine system.
+     *
+     * @return `true` if the script should finish, otherwise `false` to keep looping.
      */
     abstract suspend fun run(): Boolean
 
-    open suspend fun finish() {} // todo docs, called after run loop, last thing before co-routine completes gracefully
+    /**
+     * Finalizes this script before its coroutine exits.
+     *
+     * This is called from a `finally` block after the main loop ends, so it runs after normal completion and after
+     * cancellation. Subclasses can override this to clear temporary state, close interfaces, stop movement, reset flags,
+     * or release resources.
+     */
+    open suspend fun finish() {}
 
     /**
      * Produces a snapshot of this script's persistent state.
      *
-     * The returned value will be wrapped in a [BotScriptSnapshot] and stored alongside the owning character data,
-     * allowing this script to be restored after a server restart or relog.
+     * The returned value is wrapped in a [BotScriptSnapshot] and stored with the owning bot so the script can be
+     * restored later.
      *
-     * Implementations should:
-     * - Capture only the minimal data needed to resume behaviour (e.g., target position, mode, counters).
-     * - Avoid holding references to live game objects that cannot safely be serialized.
+     * Implementations should only capture minimal serializable state. Avoid storing live world objects, active
+     * coroutine state, or references that cannot safely survive a restart.
      *
-     * @return A serializable snapshot representing the current state of this script.
+     * @return A snapshot representing the current persistent state of this script.
      */
     abstract fun snapshot(): T
 
     /**
-     * Starts this script by launching its [run] coroutine.
+     * Starts this script.
      *
-     * If the script is already running and has not been cancelled, this method is a no-op and returns `false`.
-     * Otherwise, a new [Job] is created in [GameCoroutineScope] and stored in [progress].
+     * If the script is already active, this method does nothing and returns `false`. Otherwise, it launches a new
+     * coroutine, calls [init], repeatedly calls [run], and finally calls [finish] before the coroutine exits.
      *
-     * @return `true` if the script was successfully started, `false` if it was already running.
+     * @return `true` if a new script coroutine was started, otherwise `false`.
      */
     fun start(): Boolean {
         if (progress?.isActive != true) {
@@ -107,10 +128,8 @@ abstract class BotScript<T>(val bot: Bot) {
                 try {
                     init()
                     while (bot.state == EntityState.ACTIVE && isActive) {
-                        // Top-level yield: always allow other scripts a chance to run (just in case).
                         yield()
                         if (run()) {
-                            // Complete the co-routine when run() returns true.
                             break
                         }
                     }
@@ -126,11 +145,10 @@ abstract class BotScript<T>(val bot: Bot) {
     /**
      * Stops this script by cancelling its active coroutine.
      *
-     * If the script is currently running, its [Job] is cancelled, [progress] is cleared, and this method
-     * returns `true`. If the script is idle or already completed/cancelled, this method is a no-op and
-     * returns `false`.
+     * Cancellation causes the running coroutine to exit through its `finally` block, so [finish] is still called. If
+     * the script is not currently running, this method does nothing.
      *
-     * @return `true` if the script was running and has now been stopped, `false` otherwise.
+     * @return `true` if the script was running and cancellation was requested, otherwise `false`.
      */
     fun stop(): Boolean {
         if (progress != null && !progress!!.isCompleted && !progress!!.isCancelled) {
@@ -138,18 +156,16 @@ abstract class BotScript<T>(val bot: Bot) {
             progress?.cancel()
             return true
         }
+
         return false
     }
 
     /**
-     * Returns whether this script has completed normally.
+     * Returns whether this script completed normally.
      *
-     * A script is considered “finished” if:
-     * - [progress] is not `null`.
-     * - The underlying job is `isCompleted`.
-     * - The job was not cancelled (`!isCancelled`).
+     * A script is considered finished when it has a job, that job completed, and it was not cancelled.
      *
-     * @return `true` if the script completed without interruption, `false` otherwise.
+     * @return `true` if the script completed without cancellation, otherwise `false`.
      */
     fun isFinished(): Boolean {
         return progress != null && progress!!.isCompleted && !progress!!.isCancelled
@@ -158,11 +174,7 @@ abstract class BotScript<T>(val bot: Bot) {
     /**
      * Returns whether this script is currently running.
      *
-     * <p>
-     * A script is considered “running” if [progress] is non-null and its job is `isActive`.
-     * </p>
-     *
-     * @return `true` if the script coroutine is active, `false` otherwise.
+     * @return `true` if the script coroutine is active, otherwise `false`.
      */
     fun isRunning(): Boolean {
         return progress?.isActive == true
@@ -171,26 +183,21 @@ abstract class BotScript<T>(val bot: Bot) {
     /**
      * Returns whether this script was interrupted.
      *
-     * <p>
-     * A script is considered “interrupted” if [progress] is non-null and its job has been cancelled
-     * (either explicitly via [stop] or by some other cancellation).
-     * </p>
+     * A script is considered interrupted when its most recent job was cancelled.
      *
-     * @return `true` if the script was cancelled, `false` otherwise.
+     * @return `true` if the script was cancelled, otherwise `false`.
      */
     fun isInterrupted(): Boolean {
         return progress?.isCancelled == true
     }
 
     /**
-     * Returns whether this script is idle and has not yet started.
+     * Returns whether this script has never been started.
      *
-     * <p>
-     * A script is “idle” when no [Job] has been assigned to [progress] (i.e., [start] has never been
-     * successfully invoked, or [stop] has cleared it).
-     * </p>
+     * This only checks whether a job has ever been assigned. A stopped, cancelled, or completed script is not idle
+     * because [progress] still references the most recent job.
      *
-     * @return `true` if the script has no active or completed job, `false` otherwise.
+     * @return `true` if this script has no job, otherwise `false`.
      */
     fun isIdle(): Boolean {
         return progress == null

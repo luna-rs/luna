@@ -106,7 +106,7 @@ enum class ThievableNpc(val level: Int,
             drops = DropTableHandler.createSimple {
                 "Chaos rune" x 2 chance ALWAYS
                 "Coins" x 80 chance ALWAYS
-                // TODO clue scroll hard 1/1000
+                // TODO@0.5.0 Clue scroll (hard) 1/1000
             },
             chance = 40 to 170),
     GNOME(level = 75,
@@ -121,7 +121,7 @@ enum class ThievableNpc(val level: Int,
               "Arrow shaft" x 2..4 chance COMMON
               "Earth rune" x 1 chance UNCOMMON
               "Fire orb" x 1 chance UNCOMMON
-              // TODO medium clue scroll 1/150
+              // TODO@0.5.0 medium clue scroll 1/150
           },
           chance = 43 to 175),
     HERO(level = 80,

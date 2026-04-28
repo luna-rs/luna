@@ -193,8 +193,22 @@ public class Npc extends Mob {
 
     @Override
     public SimplePathfinder getInteractionPf() {
-        // TODO Some NPCs should use the player's intelligent pathfinder.
+        // TODO@0.5.0 Some NPCs should use the player's intelligent pathfinder.
+        // TODO@0.5.0 How does this relate to pursuit action? Is this ever even used?
         return new SimplePathfinder(world.getCollisionManager());
+    }
+
+    @Override
+    protected final void onActive() {
+        status.load();
+        onSpawn();
+    }
+
+    /**
+     * Run once the NPC has been spawned into the game world.
+     */
+    public void onSpawn() {
+
     }
 
     /**

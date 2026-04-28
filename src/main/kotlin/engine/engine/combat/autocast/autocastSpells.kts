@@ -25,7 +25,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 fun invalid(plr: Player): Boolean {
     val weaponId = plr.equipment.weapon?.id
     if (weaponId == null || plr.combat.weapon.type != Weapon.STAFF) {
-        // TODO Flag suspicious? Changing autocast button with no/invalid weapon equipped.
+        // TODO@0.5.0 Write a suspicion system? Flag suspicious? Changing autocast button with no/invalid weapon equipped.
         return true
     } else if (plr.spellbook == Spellbook.ANCIENT && weaponId !in Staff.AUTOCAST_ANCIENTS) {
         plr.sendMessage("You cannot auto-cast Ancient Magicks with this staff.")
@@ -62,7 +62,7 @@ button(349) {
         magic.isAutocasting = !magic.isAutocasting
         magic.refreshAutocast()
     } else {
-        // todo flag suspicious?
+        // todo@0.5.0 flag suspicious?
     }
 }
 

@@ -48,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  * @author lare96
  */
 public final class Bot extends Player {
-    // TODO Optional debugging mode for bots that allows player updating processing (for stress testing).
+    // TODO@0.5.0 Optional debugging mode for bots that allows player updating processing (for stress testing).
 
     /**
      * The logger.

@@ -2,6 +2,7 @@ package game.combat.npcHooks
 
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
+import engine.combat.status.hooks.PoisonStatusEffect
 import io.luna.Luna
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
@@ -29,10 +30,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         attack {
             melee {
                 if (other is Player && other.equipment.hands?.id != SLAYER_GLOVES) {
-                    if (other.combat.poisonSeverity == 0) {
-                        other.combat.poisonSeverity = 20
-                    }
-
+                    other.status.add(PoisonStatusEffect(other, severity = 20), true) // Only if not already poisoned.
                     CombatDamageRequest.Builder(attacker, victim, CombatDamageType.MELEE)
                         .setBaseMaxHit(5)
                         .setFlatBonusDamage(floor(0.125 * other.health).toInt())
