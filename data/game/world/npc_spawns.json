@@ -56904,18 +56904,6 @@
     }
   },
   {
-    "id": 820,
-    "position": {
-      "x": 2737,
-      "y": 3491,
-      "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
-  },
-  {
     "id": 662,
     "position": {
       "x": 2737,
