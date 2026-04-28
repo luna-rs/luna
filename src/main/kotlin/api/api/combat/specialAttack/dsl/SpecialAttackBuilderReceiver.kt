@@ -1,5 +1,6 @@
 package api.combat.specialAttack.dsl
 
+import api.combat.specialAttack.SpecialAttackHandler.specialBarClicks
 import game.player.Sound
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.def.CombatSpellDefinition
@@ -186,13 +187,19 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
         var newDamage = action(damage)
-        if (newDamage != null && attacker.combat.specialBar.checkEnergy(receiver.drain)) {
+        if (newDamage != null) {
             // Attack can go through, drain special attack energy, run launch listener.
-            attacker.combat.specialBar.drain(receiver.drain, true)
-            newDamage = receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack, newDamage))
-            if (receiver.instant) {
-                attack.isIgnoreAttackDelay = true
+            if(!receiver.instant) {
+                if(!attacker.combat.specialBar.checkEnergy(receiver.drain)) {
+                    return null
+                }
+                attacker.combat.specialBar.drain(receiver.drain, true)
+            } else {
+                attacker.specialBarClicks = 0
+                attacker.combat.specialBar.forceOff()
+                attacker.combat.specialBar.isForced = false
             }
+            newDamage = receiver.launchedTransformer(SpecialAttackLaunchedReceiver(attacker, victim, attack, newDamage))
             return newDamage
         }
         return null

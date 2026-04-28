@@ -120,10 +120,7 @@ public final class CombatAction extends Action<Mob> {
         if (mob instanceof Player && PlayerCombatHandler.INSTANCE.testStopAttack((Player) mob, attack)) {
             return clearTarget();
         }
-        if (mob instanceof Player)
-            System.out.println("debug");
-        //       todo instant specials don't work because: youre setting ignoreattackdelay within attack.apply()!!
-        //     set it further up the chain
+
         // Attack as soon as the combat delay permits it.
         if (combat.isAttackReady() || attack.isIgnoreAttackDelay()) {
             mob.interact(target);

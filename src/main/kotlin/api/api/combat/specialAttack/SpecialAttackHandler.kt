@@ -1,6 +1,10 @@
 package api.combat.specialAttack
 
+import api.attr.Attr
 import api.combat.specialAttack.dsl.SpecialAttackDataReceiver
+import api.predef.*
+import api.predef.ext.*
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.SpecialAttackType
 import io.luna.game.model.mob.combat.damage.CombatDamageType
@@ -16,6 +20,8 @@ import io.luna.game.model.mob.combat.state.PlayerCombatContext
  * - Retrieving special attack data for a player's current weapon
  */
 object SpecialAttackHandler {
+
+    var Player.specialBarClicks by Attr.int()
 
     /**
      * All registered special attacks keyed by their weapon special attack type.
@@ -47,12 +53,46 @@ object SpecialAttackHandler {
             // Non-combat special attacks activate after a small delay.
             specialBar.isLocked = true
             plr.actions.submitIfAbsent(SpecialActivationAction(plr, receiver))
+            return true
         }
-        // TODO Instant special attack queuing? Test behaviour in game.
-        // TODO When special is instant and already in combat.. disable toggle off. or basically make it so that if
-        //  combat action is active and player is reached, cannot turn off special, or queuing behaviour where it locks for 1 tick after
-        // TODO see what works, do some debugging
-        // TODO This code should always come before combat processing, so disabling the bar shouldn't be necessary.
+
+        if (receiver.instant && plr.combat.target != null) {
+            when (plr.specialBarClicks) {
+                0 -> {
+                    // Drain special attack energy right away (for instant specials).
+                    if (plr.combat.specialBar.drain(receiver.drain, false)) {
+                        plr.combat.specialBar.isForced = true
+                        plr.specialBarClicks++
+                        return true
+                    }
+                    return false
+                }
+
+                1 -> {
+                    // Lock special bar until queuing behaviour completes.
+                    if (plr.combat.specialBar.drain(receiver.drain, false)) {
+                        world.scheduleOnce(1) { // We use a task because they're run before the combat loop.
+                            if (plr.state == EntityState.ACTIVE) {
+                                // Force special again after one-tick (only if we're still using the same weapon).
+                                if (plr.combat.weapon.specialAttackType == type) {
+                                    plr.combat.specialBar.isForced = true
+                                }
+                                plr.combat.specialBar.isLocked = false
+                            }
+                        }
+                        plr.combat.specialBar.isLocked = true
+                        return true
+                    }
+                    return false
+                }
+
+                else -> {
+                    // Ignore any further clicks.
+                    return false
+                }
+            }
+
+        }
         return true
     }
 

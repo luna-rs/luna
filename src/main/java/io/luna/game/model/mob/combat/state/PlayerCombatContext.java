@@ -131,11 +131,14 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
 
         // Handle a special attack if applicable.
-        if (specialBar.isActivated() && !magic.isCasting()) {
+        if ((specialBar.isActivated() || specialBar.isForced()) && !magic.isCasting()) {
             SpecialAttackDataReceiver receiver = SpecialAttackHandler.INSTANCE.specialAttackData(this);
             CombatAttack<Player> attack =
                     receiver.getAttackTransformer().invoke(new SpecialAttackBuilderReceiver(mob, victim, receiver));
             if (attack != null) {
+                if(receiver.getInstant()) {
+                    attack.setIgnoreAttackDelay(true);
+                }
                 return attack;
             }
         }
