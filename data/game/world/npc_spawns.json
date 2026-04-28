@@ -85872,18 +85872,6 @@
     }
   },
   {
-    "id": 3031,
-    "position": {
-      "x": 2950,
-      "y": 3379,
-      "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
-  },
-  {
     "id": 708,
     "position": {
       "x": 2951,
@@ -86068,18 +86056,6 @@
     "position": {
       "x": 2967,
       "y": 3361,
-      "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 3031,
-    "position": {
-      "x": 2968,
-      "y": 3379,
       "z": 0
     },
     "wander": {
@@ -97986,7 +97962,8 @@
       "x": 3088,
       "y": 3242,
       "z": 0
-    }
+    },
+    "default_direction": "EAST"
   },
   {
     "id": 3820,
@@ -98006,7 +97983,8 @@
       "x": 3090,
       "y": 3242,
       "z": 0
-    }
+    },
+    "default_direction": "EAST"
   },
   {
     "id": 495,
@@ -98014,7 +97992,8 @@
       "x": 3090,
       "y": 3243,
       "z": 0
-    }
+    },
+    "default_direction": "EAST"
   },
   {
     "id": 494,
@@ -98022,7 +98001,8 @@
       "x": 3090,
       "y": 3245,
       "z": 0
-    }
+    },
+    "default_direction": "EAST"
   },
   {
     "id": 2634,
@@ -98030,10 +98010,6 @@
       "x": 3095,
       "y": 3252,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
