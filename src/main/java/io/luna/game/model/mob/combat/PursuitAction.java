@@ -23,6 +23,9 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
  */
 public final class PursuitAction extends Action<Npc> {
 
+    // TODO@0.5.0 NPCs not as responsive when targeted in multi-combat. Only the main NPC acts truly aggressive, with
+    //  others being wildly inconsistent. Why?
+
     /**
      * The combat context for the pursuing NPC.
      */

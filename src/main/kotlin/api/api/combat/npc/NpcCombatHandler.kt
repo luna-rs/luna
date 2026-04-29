@@ -106,7 +106,7 @@ object NpcCombatHandler {
             if (receiver.animationId != null) {
                 npc.animation(Animation(receiver.animationId!!))
             }
-        } ?: npc.combat.handleDefaultDefence(action.damage?.type) // Otherwise do default defence.
+        } ?: npc.combat.handleDefaultDefence(action.damage?.type, action.damage?.rawAmount ?: 0) // Otherwise do default defence.
     }
 
     /**

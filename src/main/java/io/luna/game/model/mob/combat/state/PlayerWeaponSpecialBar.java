@@ -74,6 +74,11 @@ public final class PlayerWeaponSpecialBar {
     private boolean activated;
 
     /**
+     * {@code true} if special attack mode is currently forced.
+     */
+    private boolean forced;
+
+    /**
      * If this special bar is locked and can't be toggled.
      */
     private boolean locked;
@@ -253,11 +258,28 @@ public final class PlayerWeaponSpecialBar {
         activated = false;
     }
 
+
     /**
      * @return {@code true} if special attack mode is currently enabled.
      */
     public boolean isActivated() {
         return activated;
+    }
+
+    /**
+     * @return {@code true} if special attack mode is currently forced.
+     */
+    public boolean isForced() {
+        return forced;
+    }
+
+    /**
+     * Sets if the next special attack is currently forced.
+     *
+     * @param forced If the next special attack is forced.
+     */
+    public void setForced(boolean forced) {
+        this.forced = forced;
     }
 
     /**

@@ -167,9 +167,10 @@ public abstract class CombatContext<T extends Mob> {
      * Gets the defence animation used when receiving the supplied damage type.
      *
      * @param type The damage type being received.
+     * @param damage The damage received.
      * @return The defence animation id.
      */
-    public abstract int getDefenceAnimation(CombatDamageType type);
+    public abstract int getDefenceAnimation(CombatDamageType type, int damage);
 
     /**
      * Starts attacking the supplied enemy.
