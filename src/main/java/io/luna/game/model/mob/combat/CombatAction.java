@@ -45,6 +45,7 @@ public final class CombatAction extends Action<Mob> {
      * @param mob The mob executing combat.
      */
     public CombatAction(Mob mob) {
+        // TODO@0.5.0 Combat should be taken outside of the action system. It needs to run BEFORE all actions.
         super(mob, ActionType.WEAK);
         combat = mob.getCombat();
     }

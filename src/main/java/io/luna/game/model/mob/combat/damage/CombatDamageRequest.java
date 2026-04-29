@@ -435,7 +435,7 @@ public final class CombatDamageRequest {
         OptionalInt computedDamage;
         if (!damageDisabled) {
             if (RandomUtils.roll(baseAccuracy)) {
-                int baseMaxHit = maxHit.orElse(attacker.getCombat().getDefaultMaxHit(type));
+                int baseMaxHit = maxHit.orElseGet(() -> attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
                 baseMaxHit += (int) Math.floor(baseMaxHit * percentBonusStrength);
 

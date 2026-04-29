@@ -71,7 +71,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
-                attackArrived(damage)
+                attackArrived(damage, this)
             }
         }
     }
@@ -109,7 +109,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
-                attackArrived(damage)
+                attackArrived(damage, this)
             }
         }
 
@@ -152,7 +152,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
-                attackArrived(damage)
+                attackArrived(damage, this)
             }
         }
     }
@@ -228,9 +228,10 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
     /**
      * Runs the configured special attack arrival callback for a landed hit.
      *
-     * @param damage The resolved damage that arrived on the victim.
+     * @param damage The resolved damage that was applied to the victim.
+     * @param source The source of the damage.
      */
-    private fun attackArrived(damage: CombatDamage) {
-        receiver.arrivedConsumer(SpecialAttackArrivedReceiver(attacker, victim, damage))
+    private fun attackArrived(damage: CombatDamage, source: CombatAttack<Player>) {
+        receiver.arrivedConsumer(SpecialAttackArrivedReceiver(attacker, victim, damage, source))
     }
 }
