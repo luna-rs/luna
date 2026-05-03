@@ -1,5 +1,7 @@
 package io.luna.game.model;
 
+import api.bot.zone.SubZone;
+import api.bot.zone.Zone;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.RegionChangedEvent;
@@ -10,6 +12,7 @@ import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.attr.Attributable;
 import io.luna.game.model.mob.attr.AttributeMap;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -258,14 +261,22 @@ public abstract class Entity implements Attributable, Locatable {
             position = newPosition;
             if (state == EntityState.ACTIVE) {
                 if (type == EntityType.PLAYER) {
+                    if (old != null) {
+                        Region now = newPosition.getRegion();
+                        if (!old.equals(now)) {
+                            plugins.post(new RegionChangedEvent((Player) this, old, now));
+                            if (this instanceof Bot) {
+                                Bot bot = (Bot) this;
+                                Zone.Companion.updateZone(bot, now.getId());
+                                SubZone.Companion.updateLocalSubZones(bot, now.getId());
+                            }
+                        }
+                    }
                     Player player = (Player) this;
                     player.getControllers().checkPosition();
                     player.getTolerance().refresh();
-                }
-                if (old != null) {
-                    Region now = newPosition.getRegion();
-                    if (!old.equals(now) && this instanceof Player) {
-                        plugins.post(new RegionChangedEvent((Player) this, old, now));
+                    if(player.isBot()) {
+                        SubZone.Companion.updateSubZone(player.asBot());
                     }
                 }
                 setCurrentChunk();
@@ -326,6 +337,7 @@ public abstract class Entity implements Attributable, Locatable {
     public boolean hasAttributes() {
         return attributes != null && attributes.size() > 0;
     }
+
     /**
      * @return The owning Luna context.
      */
@@ -374,6 +386,7 @@ public abstract class Entity implements Attributable, Locatable {
     public final Position getPosition() {
         return position;
     }
+
     /**
      * @return The current chunk (requires that this entity is registered/active).
      */

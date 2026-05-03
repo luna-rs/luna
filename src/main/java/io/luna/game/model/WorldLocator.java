@@ -171,6 +171,66 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all ground items within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching items must satisfy.
+     * @return All matching ground items within range.
+     */
+    public Set<GroundItem> findItems(Locatable base, int distance, boolean sorted, Predicate<GroundItem> filter) {
+        return find(EntityType.ITEM, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all NPCs within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching NPCs must satisfy.
+     * @return All matching NPCs within range.
+     */
+    public Set<Npc> findNpcs(Locatable base, int distance, boolean sorted, Predicate<Npc> filter) {
+        return find(EntityType.NPC, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all objects within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching objects must satisfy.
+     * @return All matching objects within range.
+     */
+    public Set<GameObject> findObjects(Locatable base, int distance, boolean sorted, Predicate<GameObject> filter) {
+        return find(EntityType.OBJECT, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all players within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching players must satisfy.
+     * @return All matching players within range.
+     */
+    public Set<Player> findPlayers(Locatable base, int distance, boolean sorted, Predicate<Player> filter) {
+        return find(EntityType.PLAYER, base, distance, sorted, filter);
+    }
+
+    /**
      * Finds all entities of {@code type} within normal viewing distance of {@code base} that satisfy {@code filter}.
      *
      * @param type The entity type to search for.
@@ -550,7 +610,7 @@ public final class WorldLocator {
      * @param filter Additional filter that matching entities must satisfy.
      * @param <T> The entity type being searched for.
      * @return The nearest matching entity, or {@code null} if none is found.
-     */
+     */ // todo@0.5.0 needs to be maybe request style, but 100% needs a radius cap
     public <T extends Entity> T findNearest(EntityType type, Locatable base, Predicate<T> filter) {
         // Check if entity is within twice the viewable distance first.
         Position abs = base.abs();
@@ -852,6 +912,6 @@ public final class WorldLocator {
      * @return The chunk radius required to cover that distance.
      */
     private int radiusForDistance(int distance) {
-        return Math.floorDiv(distance, Chunk.SIZE) + 2;
+        return Math.floorDiv(distance, Chunk.SIZE) + 1;
     }
 }

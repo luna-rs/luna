@@ -131,8 +131,9 @@ public final class ActionQueue {
      * @param type The exact action class to check for.
      * @return {@code true} if an instance of {@code type} exists in the queue.
      */
-    public boolean contains(Class<?> type) {
-        return types.contains(type.getName());
+    @Deprecated
+    public <T extends Action<?>> boolean contains(Class<T> type) {
+        return first(type) != null;
     }
 
     /**

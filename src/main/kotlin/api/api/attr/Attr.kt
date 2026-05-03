@@ -18,6 +18,7 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attributable
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
+import io.luna.util.markov.MarkovChainTypeAdapterFactory
 import kotlin.reflect.KClass
 
 /**
@@ -37,6 +38,7 @@ object Attr {
         builder.registerTypeAdapter(AttributeMap::class.java, AttributeMapTypeAdapter)
         builder.registerTypeAdapter(IndexedItem::class.java, IndexedItemTypeAdapter)
         builder.registerTypeAdapter(Item::class.java, ItemTypeAdapter)
+        builder.registerTypeAdapterFactory(MarkovChainTypeAdapterFactory())
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())

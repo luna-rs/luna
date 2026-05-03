@@ -1,12 +1,11 @@
 package api.bot.action
 
-import api.bot.Suspendable
+import api.bot.Suspendable.waitFor
+import api.bot.zone.SubZone
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
-import game.bot.scripts.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
-import game.player.item.consume.food.Food
+import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
-import io.luna.Luna
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.movement.NavigationResult
@@ -23,46 +22,6 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     // TODO@0.5.0 More functions like get/equip(Strongest)Weapon, get/equip(Strongest)Armor, drinkPotion, etc.
 
     /**
-     * Attempts to eat a food item from the bot's inventory.
-     *
-     * If [id] is `-1`, the first available food item found in the inventory is eaten. If [id] is supplied, only that
-     * specific food item will be used.
-     *
-     * @param id The food item id to eat, or `-1` to eat the first available food item.
-     * @return `true` if a food item was found and clicked, otherwise `false`.
-     */
-    fun eatFood(id: Int = -1): Boolean {
-        if (id == -1) {
-            var matching: Pair<Int, Int>? = null
-
-            for ((index, item) in bot.inventory.withIndex()) {
-                if (item == null) {
-                    continue
-                }
-
-                if (Food.ID_TO_FOOD.containsKey(item.id)) {
-                    matching = index to item.id
-                    break
-                }
-            }
-
-            if (matching != null) {
-                bot.output.sendInventoryItemClick(1, matching.first, matching.second)
-                return true
-            }
-        } else if (Food.ID_TO_FOOD.containsKey(id)) {
-            val index = bot.inventory.computeIndexForId(id)
-
-            if (index != -1) {
-                bot.output.sendInventoryItemClick(1, index, id)
-                return true
-            }
-        }
-
-        return false
-    }
-
-    /**
      * Attempts to escape from the Wilderness.
      *
      * Low-level Wilderness bots teleport home immediately. Higher-level Wilderness bots first attempt to navigate to
@@ -75,24 +34,34 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     suspend fun fleeWilderness(): Boolean {
         // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
         //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
-        handler.widgets.clickRunning(true)
+        bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
             bot.isWandering = false
             bot.combat.isDisabled = true
 
-            val home = Luna.settings().game().startingPosition()
-
-            if (bot.wildernessLevel < 20 ||
-                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true).await() == NavigationResult.REACHED) {
+            if (bot.wildernessLevel < 20) {
                 bot.output.sendCommand("home")
                 bot.combat.isDisabled = false
-
-                return Suspendable.waitFor(10.seconds) {
-                    bot.isViewableFrom(home)
+                val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                if (success) {
+                    return true
                 }
             }
-            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned.
+
+            val outside = bot.subZone?.outside?.invoke(bot)
+            val parent = bot.subZone?.parent?.invoke(bot)
+            if (outside != null && parent != null) {
+                bot.subZone.leave(bot, parent, outside)
+            }
+
+            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
+            if (bot.subZone == SubZone.HOME ||
+                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true).await() == NavigationResult.REACHED) {
+                bot.output.sendCommand("home")
+                return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+            }
+
             bot.combat.isDisabled = false
             return false
         }
@@ -107,7 +76,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * when critically low on health, or falls back to future reverse-pursuit movement logic.
      */
     suspend fun fleeCombat() {
-        handler.widgets.clickRunning(true)
+        bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()

@@ -3,6 +3,7 @@ package engine.combat.death
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import game.player.Animations
 import game.player.Jingles
@@ -25,6 +26,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.sendMessage("Oh dear, you have died!")
         victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
+        BotReactions.reactToOtherDied(source, victim)
     }
 
     death {

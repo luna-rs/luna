@@ -226,8 +226,8 @@ public final class GameService extends AbstractScheduledService {
 
             // Run the main game loop.
             world.process();
-        } catch (Exception e) {
-            logger.catching(e);
+        } catch (Throwable t) {
+            logger.catching(t);
         }
     }
 

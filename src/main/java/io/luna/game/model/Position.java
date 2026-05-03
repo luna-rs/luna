@@ -300,6 +300,16 @@ public final class Position implements Locatable {
     }
 
     /**
+     * @return The id of the region this position is in.
+     */
+    public int getRegionId() {
+        // Cheaper way to get region ID.
+        int regionX = x / Region.SIZE;
+        int regionY = y / Region.SIZE;
+        return regionX * 256 + regionY;
+    }
+
+    /**
      * @return The x coordinate.
      */
     public int getX() {

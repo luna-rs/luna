@@ -169,7 +169,7 @@ public final class InteractionAction extends Action<Player> {
                 it.remove();
                 continue;
             }
-            if (collisionManager.reached(mob.getPosition(), target, policy)) {
+            if (collisionManager.reached(mob, target, policy)) {
                 // We've reached a listener with a satisfied policy, queue it for later.
                 if (trigger == null) {
                     trigger = policy;

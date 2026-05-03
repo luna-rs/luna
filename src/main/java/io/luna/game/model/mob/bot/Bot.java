@@ -1,6 +1,9 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.action.BotActionHandler;
+import api.bot.zone.SubZone;
+import api.bot.zone.Zone;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
 import io.luna.LunaContext;
@@ -14,15 +17,22 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.LocalMobRepository;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.bot.brain.BotBrain;
+import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
+import io.luna.game.model.mob.bot.brain.BotEmotion;
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType;
+import io.luna.game.model.mob.bot.brain.BotPersonality;
+import io.luna.game.model.mob.bot.brain.BotPreference;
+import io.luna.game.model.mob.bot.brain.BotReflex;
 import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
 import io.luna.game.model.mob.bot.script.BotScriptStack;
+import io.luna.game.model.mob.bot.speech.BotSpeechStack;
 import io.luna.game.persistence.BotData;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.util.RandomUtils;
-import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,71 +46,69 @@ import java.util.function.Predicate;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a fully autonomous {@link Player} controlled entirely by the Luna server.
+ * A fully autonomous {@link Player} controlled by server-side bot systems instead of a real client connection.
  * <p>
- * Bots simulate human players without consuming network bandwidth, allowing them to participate in the world
- * economy, combat, and skilling systems. Each bot executes its own script logic stack, maintains an internal log for
- * debugging, and may interact with real players or other bots through shared systems such as speech and trading.
+ * From the game world's perspective, a bot is still a normal player. It can move, skill, fight, trade, speak,
+ * receive packets, send packets, save data, and participate in regular gameplay systems. The difference is that its
+ * client is simulated by {@link BotClient}, and its decisions are driven by bot-specific behavior layers.
  * <p>
- * All bot logic is processed server-side on the game thread to ensure consistent world state. Asynchronous operations
- * (such as login or data saving) are dispatched through the game’s various thread pools.
+ * The main bot behavior stack is split into several cooperating systems:
+ * <ul>
+ *     <li>{@link BotReflex}, for immediate interrupt-style reactions.</li>
+ *     <li>{@link BotSpeechStack}, for queued, contextual, and randomized speech.</li>
+ *     <li>{@link BotScriptStack}, for active scripted behavior such as skilling or combat.</li>
+ *     <li>{@link BotBrain}, for choosing new work when no script is currently active.</li>
+ *     <li>{@link BotPersonality}, {@link BotPreference}, and {@link BotEmotion}, for long-term behavioral flavor.</li>
+ * </ul>
+ * This lets Luna treat bots as lightweight simulated players while keeping their behavior extensible and debuggable.
  *
  * @author lare96
  */
 public final class Bot extends Player {
+
     // TODO@0.5.0 Optional debugging mode for bots that allows player updating processing (for stress testing).
 
     /**
-     * The logger.
+     * The logger used for bot lifecycle events and diagnostic messages.
      */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A builder for constructing {@link Bot} instances with optional configuration.
+     * Builds {@link Bot} instances with optional overrides for spawn position, persistence, and behavior systems.
+     * <p>
+     * The builder keeps simple bot creation small while still allowing tests, scripted scenarios, and specialized bot
+     * types to provide custom behavior models. Any subsystem not explicitly configured is created during {@link #build()}.
      */
     public static final class Builder {
 
-        /**
-         * Generates a random, non-secure password for bot credentials. Used exclusively for programmatic bot creation.
-         *
-         * @return The generated password.
-         */
-        private static String generatePassword() {
-            int minLength = 6;
-            int maxLength = 8;
-            int length = ThreadLocalRandom.current().nextInt(minLength, maxLength);
-            StringBuilder sb = new StringBuilder(length);
-            for (int count = 0; count < length; count++) {
-                char next = RandomUtils.random(StringUtils.VALID_CHARACTERS);
-                if (ThreadLocalRandom.current().nextBoolean()) {
-                    sb.append(Character.toUpperCase(next));
-                } else {
-                    sb.append(next);
-                }
-            }
-            return sb.toString();
-        }
-
         private final LunaContext context;
+        private final BotManager manager;
         private boolean temporary;
         private String username;
-        private Position position = Luna.settings().game().startingPosition();
+        private Position spawnPosition = Luna.settings().game().startingPosition();
+        private BotReflex reflex;
+        private BotBrain brain;
+        private BotPersonality personality;
+        private BotPreference preferences;
 
         /**
-         * Creates a new {@link Builder}.
+         * Creates a new bot builder bound to the supplied Luna context.
          *
-         * @param context The game context.
+         * @param context The Luna context used to access the world and bot manager.
          */
         public Builder(LunaContext context) {
             this.context = context;
+            manager = context.getWorld().getBotManager();
         }
 
         /**
-         * Sets a username, marking this bot as persistent.
+         * Sets the username assigned to the bot.
+         * <p>
+         * This only checks the active bot repository. Persistent data may still be loaded later during {@link Bot#login()}.
          *
-         * @param username The desired username.
-         * @return This builder instance.
-         * @throws IllegalStateException If another bot with this username is already online.
+         * @param username The username to assign.
+         * @return This builder.
+         * @throws IllegalStateException If an active bot with this username is already online.
          */
         public Builder setUsername(String username) {
             BotRepository repository = context.getWorld().getBots();
@@ -112,21 +120,27 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets the default spawn position.
+         * Sets the fallback spawn position for the bot.
+         * <p>
+         * Persistent bots continue from their saved location when data exists. This position is only used when the bot has
+         * no saved player data, or when the bot is temporary and therefore skips normal persistence loading.
          *
-         * @param spawnPosition The desired spawn location. Only applies for new bots, old bots will log in where they
-         * previously left off.
-         * @return This builder instance.
+         * @param spawnPosition The fallback spawn position.
+         * @return This builder.
+         * @throws NullPointerException If {@code spawnPosition} is {@code null}.
          */
         public Builder setSpawnPosition(Position spawnPosition) {
-            position = requireNonNull(spawnPosition);
+            this.spawnPosition = requireNonNull(spawnPosition);
             return this;
         }
 
         /**
-         * Marks this bot as temporary (non-persistent).
+         * Marks the bot as temporary.
+         * <p>
+         * Temporary bots do not load existing data and return {@code null} from {@link Bot#createSaveData()}, allowing the
+         * normal player persistence pipeline to ignore them.
          *
-         * @return This builder instance.
+         * @return This builder.
          */
         public Builder setTemporary() {
             temporary = true;
@@ -134,84 +148,224 @@ public final class Bot extends Player {
         }
 
         /**
-         * Constructs a fully initialized {@link Bot} instance with generated credentials.
+         * Sets the reflex model used by the bot.
+         * <p>
+         * Reflex processing runs before speech, event injection, script processing, and brain coordination. It is intended
+         * for immediate behavior such as danger avoidance, emergency recovery, or other interrupt-style decisions.
          *
-         * @return The new {@link Bot}.
-         * @throws IllegalStateException If no username was set.
+         * @param reflex The reflex model to assign.
+         * @return This builder.
+         */
+        public Builder setReflex(BotReflex reflex) {
+            this.reflex = reflex;
+            return this;
+        }
+
+        /**
+         * Sets the brain model used by the bot.
+         * <p>
+         * The brain is consulted when the script stack has no remaining work and the bot needs to choose a new activity.
+         *
+         * @param brain The brain model to assign.
+         * @return This builder.
+         */
+        public Builder setBrain(BotBrain brain) {
+            this.brain = brain;
+            return this;
+        }
+
+        /**
+         * Sets the personality profile used by the bot.
+         * <p>
+         * Personality represents long-term behavioral flavor. It may affect generated preferences, emotions, speech style,
+         * activity selection, reaction speed, risk tolerance, and other bot-specific behavior systems.
+         *
+         * @param personality The personality profile to assign.
+         * @return This builder.
+         */
+        public Builder setPersonality(BotPersonality personality) {
+            this.personality = personality;
+            return this;
+        }
+
+        /**
+         * Sets the preference model used by the bot.
+         * <p>
+         * Preferences describe what the bot tends to enjoy, avoid, or prioritize when choosing activities. If omitted, a
+         * smart randomized preference model is generated from the configured personality.
+         *
+         * @param preferences The preference model to assign.
+         * @return This builder.
+         */
+        public Builder setPreferences(BotPreference preferences) {
+            this.preferences = preferences;
+            return this;
+        }
+
+        /**
+         * Constructs a fully initialized {@link Bot} with generated credentials and default behavior subsystems.
+         * <p>
+         * Any missing subsystem is created here. The default profile includes a new {@link BotReflex}, a new
+         * {@link BotBrain}, a smart randomized {@link BotPersonality}, a new {@link BotEmotion}, and a smart randomized
+         * {@link BotPreference}. A username is required because bots still use the normal player credential and persistence
+         * pipeline.
+         *
+         * @return The constructed bot.
+         * @throws IllegalStateException If no username was configured before building.
          */
         public Bot build() {
             if (username == null) {
                 throw new IllegalStateException("Username was not set.");
             }
-            return new Bot(context, username, generatePassword(), position, temporary);
+            if (reflex == null) {
+                reflex = new BotReflex();
+            }
+            if (brain == null) {
+                brain = new BotBrain();
+            }
+            if (personality == null) {
+                personality = new BotPersonality.Builder(manager.getPersonalityManager()).randomizeSmart().build();
+            }
+            if (preferences == null) {
+                preferences = new BotPreference.Builder(manager.getPersonalityManager(), personality).randomizeSmart()
+                        .build();
+            }
+            return new Bot(context, username, "lunaisthebest1997", reflex, brain, personality, preferences,
+                    spawnPosition, temporary);
         }
     }
 
     /**
-     * The log manager responsible for recording and exporting debug messages.
+     * The manager that records and exports this bot's debug log messages.
      */
     private final BotLogManager logManager = new BotLogManager(this);
 
     /**
-     * The global bot manager coordinating all active bots.
+     * The global bot manager that owns active bot registries and shared bot subsystem managers.
      */
     private final BotManager manager;
 
     /**
-     * The script execution stack.
+     * The active script stack that drives scripted bot behavior.
      */
     private final BotScriptStack scriptStack;
 
     /**
-     * The set of visible human players currently within this bot’s viewport.
+     * The human players currently visible to this bot.
+     * <p>
+     * Bots do not use the normal player local-mob update repository, so human visibility is tracked separately.
      */
     private final Set<Player> localHumans = Sets.newConcurrentHashSet();
 
     /**
-     * The simulated client connection for this bot.
+     * The simulated client connection backing this bot.
      */
     private final BotClient botClient;
 
     /**
-     * The handler for direct actions and command execution.
+     * The direct action handler used by scripts and behavior systems to interact with the game world.
      */
     private final BotActionHandler actionHandler = new BotActionHandler(this);
 
     /**
-     * The default spawn position.
+     * The fallback spawn position used when the bot has no saved position data.
      */
     private final Position spawnPosition;
 
     /**
-     * Whether this bot is temporary (non-persistent).
+     * Whether this bot skips normal persistence loading and saving.
      */
-    private boolean temporary;
+    private final boolean temporary;
 
     /**
-     * Internal runtime counter for number of processed game cycles.
+     * The number of bot processing cycles completed since construction.
      */
     private long cycles;
 
     /**
-     * Creates a new {@link Bot}.
-     *
-     * @param context The context instance.
-     * @param username The username.
-     * @param password The password.
-     * @param position The default spawn position.
-     * @param temporary Whether this bot is temporary (non-persistent).
+     * The reflex model used for immediate interrupt-style behavior.
      */
-    private Bot(LunaContext context, String username, String password, Position position, boolean temporary) {
+    private final BotReflex reflex;
+
+    /**
+     * The brain model used to choose new work when the script stack is idle.
+     */
+    private final BotBrain brain;
+
+    /**
+     * The bot's current emotional state model.
+     */
+    private final BotEmotion emotions = new BotEmotion(this);
+
+    /**
+     * The speech stack responsible for queued, contextual, and randomized bot chat.
+     */
+    private final BotSpeechStack speechStack;
+
+    /**
+     * The bot's long-term personality profile.
+     */
+    private BotPersonality personality;
+
+    /**
+     * The bot's long-term activity and behavior preferences.
+     */
+    private final BotPreference preferences;
+
+    /**
+     * The bot's current zone.
+     */
+    private Zone zone;
+
+    /**
+     * The bot's current sub-zone.
+     */
+    private SubZone subZone;
+
+    /**
+     * Local sub-zones in the bots current region.
+     */
+    private ImmutableList<SubZone> localSubZones = ImmutableList.of();
+
+    /**
+     * Creates a new {@link Bot}.
+     * <p>
+     * Construction wires the bot to a simulated client and initializes its script and speech stacks. The bot is not added
+     * to the world until {@link #login()} succeeds.
+     *
+     * @param context The Luna context used to access world and server services.
+     * @param username The bot username.
+     * @param password The generated bot password.
+     * @param reflex The reflex model used for immediate behavior checks.
+     * @param brain The brain model used for high-level activity selection.
+     * @param personality The personality profile assigned to the bot.
+     * @param preferences The preference model assigned to the bot.
+     * @param position The fallback spawn position used when no saved position exists.
+     * @param temporary Whether this bot should skip normal persistence.
+     */
+    private Bot(LunaContext context, String username, String password, BotReflex reflex, BotBrain brain,
+                BotPersonality personality, BotPreference preferences, Position position, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
+        this.reflex = reflex;
+        this.brain = brain;
+        this.personality = personality;
+        this.preferences = preferences;
         this.temporary = temporary;
 
         spawnPosition = position;
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
+        speechStack = new BotSpeechStack(this);
         setClient(botClient);
     }
 
+    /**
+     * Queues an outbound game message through the bot's simulated client.
+     * <p>
+     * This preserves the normal {@link Player#queue(GameMessageWriter)} contract while allowing bots to receive outbound
+     * messages without a real network socket.
+     */
     @Override
     public void queue(GameMessageWriter msg) {
         botClient.queue(msg);
@@ -220,6 +374,7 @@ public final class Bot extends Player {
     @Override
     protected void onInactive() {
         super.onInactive();
+        scriptStack.shutdown();
     }
 
     @Override
@@ -230,19 +385,33 @@ public final class Bot extends Player {
 
     @Override
     public PlayerData createSaveData() {
+        // Temporary bots don't create any data.
         return temporary ? null : new BotData(getUsername());
     }
 
+    /**
+     * Gets the regular local mob repository for this player.
+     * <p>
+     * Bots do not use the normal local-player viewport pipeline because they are not updated like regular players, so
+     * this method is unsupported. Use {@link #getLocalHumans()} for bot-specific human visibility tracking.
+     *
+     * @return This method never returns normally.
+     * @throws IllegalStateException Always thrown because bots do not use a regular local mob repository.
+     */
     @Override
     public LocalMobRepository getLocalMobs() {
         throw new IllegalStateException("Bots are not updated like regular players. Use getLocalHumans() instead.");
     }
 
     /**
-     * Asynchronously attempts to log in this bot, creating a new record if it does not exist.
+     * Asynchronously logs this bot into the world.
+     * <p>
+     * Login fails if the world is full, another player with the same username is online, or the previous save for this
+     * username is still pending. If persistent data exists, it is loaded through the normal player data pipeline. If no
+     * data exists, or if this is a temporary bot, the bot starts at its configured spawn position.
      *
-     * @return A {@link CompletableFuture} resolving to the loaded {@link PlayerData}, or completing exceptionally
-     * if the login fails.
+     * @return A future completed with loaded data, {@code null} for a new or temporary bot, or completed exceptionally
+     * if login validation fails.
      */
     public CompletableFuture<PlayerData> login() {
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
@@ -259,12 +428,11 @@ public final class Bot extends Player {
             future.completeExceptionally(new IllegalStateException("Bot data is still being saved!"));
             return future;
         }
-
         // Load data for bot based on username.
         return world.getPersistenceService().load(username).
                 thenApplyAsync(data -> {
-                    if (data != null) {
-                        temporary = false;
+                    if (temporary) {
+                        data = null;
                     }
                     loadData(data);
                     if (data == null) {
@@ -277,39 +445,65 @@ public final class Bot extends Player {
                         logger.info("{} has logged in.", username);
                         return data;
                     }
-                    return null;
+                    return data;
                 }, service.getGameExecutor());
     }
 
     /**
-     * Executes one processing cycle for this bot.
+     * Processes one game cycle of bot behavior.
      * <p>
-     * This method advances the bot’s script stack, processes contextual injections, and increments the internal
-     * cycle counter.
+     * Bot processing is intentionally layered from highest-priority interruption to lowest-priority planning:
+     * <ol>
+     *     <li>Run reflex behavior for immediate decisions.</li>
+     *     <li>Process speech so the bot can speak while active.</li>
+     *     <li>Inject contextual events from the bot injector manager.</li>
+     *     <li>Process the active script stack.</li>
+     *     <li>Ask the brain for a new coordinator when no script work remains.</li>
+     * </ol>
+     * The cycle counter is incremented in a {@code finally} block so failed or interrupted processing attempts are still
+     * reflected in diagnostics.
      */
     public void process() {
         try {
-            // TODO: Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
-            scriptStack.process();
-            manager.getInjectorManager().injectEvents(this);
+            // TODO@1.0 Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
+            // First process any instincts our bot has.
+            if (reflex.process(this)) {
+                // Process speech before scripts so we can still talk while doing stuff.
+                speechStack.process();
+
+                // Process context injectors before scripts so we can still react to events while doing stuff.
+                manager.getInjectorManager().injectEvents(this);
+
+                // Short-circuit if we still have stuff to do (scripts still in buffer).
+                if (!scriptStack.process()) {
+                    return;
+                }
+
+                // No scripts in buffer, consult brain for something to do.
+                BotCoordinator coordinator = brain.process(this);
+                if (coordinator != null) {
+                    coordinator.accept(this);
+                }
+            }
         } finally {
             cycles++;
         }
     }
 
     /**
-     * Appends a message to this bot’s internal log buffer.
+     * Appends a message to this bot's internal debug log.
      *
-     * @param text The message text.
+     * @param text The message text to record.
      */
     public void log(String text) {
         logManager.log(text);
     }
 
     /**
-     * Randomizes the bot’s appearance, skills, and equipped items.
+     * Randomizes this bot's appearance, skill levels, and equipment.
      * <p>
-     * Primarily used for debugging, testing, or filler bot generation.
+     * This is mostly useful for development, stress testing, filler bot generation, or quickly creating visually distinct
+     * bots without hand-authoring every profile.
      */
     public void randomize() {
         randomizeAppearance();
@@ -318,7 +512,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the bot’s visible appearance.
+     * Randomizes the bot's visible appearance and flags the appearance block for updating.
      */
     public void randomizeAppearance() {
         getAppearance().setValues(PlayerAppearance.random());
@@ -326,7 +520,10 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the bot’s skill levels.
+     * Randomizes every skill to a semi-random static and current level.
+     * <p>
+     * Each skill is assigned either a broad level range or a higher-level biased range. Static and current levels are kept
+     * equal so the bot does not start boosted or drained.
      */
     public void randomizeSkills() {
         for (Skill skill : skills) {
@@ -339,16 +536,19 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the bot’s currently equipped items.
+     * Randomizes the bot's equipment using every equipment definition the bot can currently wear.
      */
     public void randomizeEquipment() {
         randomizeEquipment(def -> true);
     }
 
     /**
-     * Randomizes the bot’s currently equipped items, only factoring in filtered items.
+     * Randomizes the bot's equipment while applying an additional eligibility filter.
+     * <p>
+     * For each equipment slot, this method gathers definitions assigned to that slot, keeps only definitions the bot meets
+     * requirements for and that satisfy {@code filter}, then equips one random eligible item for the slot.
      *
-     * @param filter The filter to apply.
+     * @param filter Additional predicate used to restrict eligible equipment definitions.
      */
     public void randomizeEquipment(Predicate<EquipmentDefinition> filter) {
         List<EquipmentDefinition> eligible = new ArrayList<>();
@@ -370,7 +570,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Maxes the bot’s skill levels.
+     * Sets every skill's static and current level to {@code 99}.
      */
     public void maxSkills() {
         for (Skill skill : skills) {
@@ -380,72 +580,196 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return {@code true} if this bot is temporary (non-persistent).
+     * Returns whether this bot is nervous about its current hitpoints.
+     * <p>
+     * The nervous threshold scales with the bot's confidence. Less confident bots will become nervous at higher health
+     * percentages, while highly confident bots wait until they are closer to low health.
+     * <p>
+     * The threshold is never allowed to drop below {@code 5%}, so even fully confident bots still react when
+     * critically low.
+     *
+     * @return {@code true} if the bot's health percentage is below its personality-based nervous threshold.
+     */
+    public boolean isNervousAboutHp() {
+        double confidence = emotions.isFeeling(EmotionType.SCARED) ? personality.getConfidence() * 0.75
+                : personality.getConfidence();
+        return getHealthPercent() < Math.max(50 * (1.0 - confidence), 5.0);
+    }
+
+    /**
+     * @return {@code true} if this bot is temporary, otherwise {@code false}.
      */
     public boolean isTemporary() {
         return temporary;
     }
 
     /**
-     * @return The {@link BotClient} simulating this bot’s network connection.
+     * @return The bot client.
      */
     public BotClient getBotClient() {
         return botClient;
     }
 
     /**
-     * @return The total number of cycles this bot has processed.
+     * @return The total processed cycle count.
      */
     public long getCycles() {
         return cycles;
     }
 
     /**
-     * @return The input message handler for simulated client packets.
+     * @return The bot input handler.
      */
     public BotInputMessageHandler getInput() {
         return botClient.getInput();
     }
 
     /**
-     * @return The output message handler for simulated server packets.
+     * @return The bot output handler.
      */
     public BotOutputMessageHandler getOutput() {
         return botClient.getOutput();
     }
 
     /**
-     * @return A concurrent set of human players currently visible to this bot.
+     * Gets the concurrent set of human players currently visible to this bot.
+     * <p>
+     * This replaces normal player local-mob tracking for bots.
+     *
+     * @return The visible human player set.
      */
     public Set<Player> getLocalHumans() {
         return localHumans;
     }
 
     /**
-     * @return The log manager responsible for tracking bot activity.
+     * @return The bot log manager.
      */
     public BotLogManager getLogManager() {
         return logManager;
     }
 
     /**
-     * @return The global {@link BotManager} that oversees all bots.
+     * @return The bot manager.
      */
     public BotManager getManager() {
         return manager;
     }
 
     /**
-     * @return The active {@link BotScriptStack} managing this bot’s behavior scripts.
+     * @return The bot script stack.
      */
     public BotScriptStack getScriptStack() {
         return scriptStack;
     }
 
     /**
-     * @return The {@link BotActionHandler} for direct action processing.
+     * @return The bot action handler.
      */
     public BotActionHandler getActionHandler() {
         return actionHandler;
+    }
+
+    /**
+     * @return The bot speech stack.
+     */
+    public BotSpeechStack getSpeechStack() {
+        return speechStack;
+    }
+
+    /**
+     * @return The bot brain.
+     */
+    public BotBrain getBrain() {
+        return brain;
+    }
+
+    /**
+     * @return The bot emotion model.
+     */
+    public BotEmotion getEmotions() {
+        return emotions;
+    }
+
+    /**
+     * @return The bot personality.
+     */
+    public BotPersonality getPersonality() {
+        return personality;
+    }
+
+    /**
+     * Sets the bot's personality profile.
+     * <p>
+     * This changes future behavior decisions that consult personality, but it does not automatically rebuild derived
+     * systems such as preferences unless those systems do that internally.
+     *
+     * @param personality The new personality profile.
+     */
+    public void setPersonality(BotPersonality personality) {
+        this.personality = personality;
+        emotions.clear();
+    }
+
+    /**
+     * @return The bot reflex model.
+     */
+    public BotReflex getReflex() {
+        return reflex;
+    }
+
+    /**
+     * @return The bot preference model.
+     */
+    public BotPreference getPreferences() {
+        return preferences;
+    }
+
+    /**
+     * @return The bot's current {@link Zone}, or {@code null} if no zone has been assigned.
+     */
+    public Zone getZone() {
+        return zone;
+    }
+
+    /**
+     * Sets the main zone this bot is currently assigned to.
+     *
+     * @param zone The new {@link Zone}, or {@code null} to clear the current zone.
+     */
+    public void setZone(Zone zone) {
+        this.zone = zone;
+    }
+
+    /**
+     * @return The bot's current {@link SubZone}, or {@code null} if no sub-zone has been assigned.
+     */
+    public SubZone getSubZone() {
+        return subZone;
+    }
+
+    /**
+     * Sets the sub-zone this bot is currently assigned to.
+     *
+     * @param subZone The new {@link SubZone}, or {@code null} to clear the current sub-zone.
+     */
+    public void setSubZone(SubZone subZone) {
+        this.subZone = subZone;
+    }
+
+    /**
+     * @return An immutable list of local {@link SubZone}s.
+     */
+    public ImmutableList<SubZone> getLocalSubZones() {
+        return localSubZones;
+    }
+
+    /**
+     * Sets the sub-zones currently considered local to this bot.
+     *
+     * @param localSubZones The immutable list of local {@link SubZone}s.
+     */
+    public void setLocalSubZones(ImmutableList<SubZone> localSubZones) {
+        this.localSubZones = localSubZones;
     }
 }

@@ -266,7 +266,7 @@ public final class World {
         collisionManager = new CollisionManager(this);
         botRepository = new BotRepository(this);
         persistenceService = new PersistenceService(this);
-        botManager = new BotManager();
+        botManager = new BotManager(this);
 
         // Initialize the connection pool.
         if (getSerializerManager().getSerializer() instanceof SqlGameSerializer) {
@@ -318,6 +318,9 @@ public final class World {
      */
     public void removePlayer(Player player) {
         playerMap.remove(player.getUsername());
+        if (player.isBot()) {
+            botRepository.remove(player.asBot());
+        }
     }
 
     /**

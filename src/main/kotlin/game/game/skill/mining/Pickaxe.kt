@@ -11,31 +11,31 @@ import io.luna.game.model.mob.block.Animation
  * @author lare96
  */
 enum class Pickaxe(val level: Int,
-                   val itemId: Int,
+                   val id: Int,
                    val animation: Animation,
                    val speed: Int) {
     BRONZE(level = 1,
-           itemId = 1265,
+           id = 1265,
            animation = Animation(625),
            speed = 8),
     IRON(level = 1,
-         itemId = 1267,
+         id = 1267,
          animation = Animation(626),
          speed = 7),
     STEEL(level = 5,
-          itemId = 1269,
+          id = 1269,
           animation = Animation(627),
           speed = 6),
     MITHRIL(level = 20,
-            itemId = 1273,
+            id = 1273,
             animation = Animation(629),
             speed = 5),
     ADAMANT(level = 30,
-            itemId = 1271,
+            id = 1271,
             animation = Animation(628),
             speed = 4),
     RUNE(level = 40,
-         itemId = 1275,
+         id = 1275,
          animation = Animation(624),
          speed = 3);
 
@@ -45,7 +45,7 @@ enum class Pickaxe(val level: Int,
         /**
          * Pickaxe ID -> Pickaxe instance.
          */
-        val ID_TO_PICKAXE = values().associateBy { it.itemId }
+        val ID_TO_PICKAXE = values().associateBy { it.id }
 
         /**
          * Determines which pickaxe to use (based on equipment and inventory).
@@ -77,7 +77,7 @@ enum class Pickaxe(val level: Int,
         /**
          * Does the player have [pick]?
          */
-        fun hasPick(plr: Player, pick: Pickaxe) = plr.equipment[Equipment.WEAPON]?.id == pick.itemId ||
-                plr.inventory.contains(pick.itemId)
+        fun hasPick(plr: Player, pick: Pickaxe) = plr.equipment[Equipment.WEAPON]?.id == pick.id ||
+                plr.inventory.contains(pick.id)
     }
 }

@@ -45,6 +45,7 @@ val equipmentStarter = listOf(
  */
 val bankStarter = listOf(
     item("Anti-dragon shield"),
+    item("Cake", 500),
     item("Staff of air"),
     item("Staff of water"),
     item("Staff of earth"),

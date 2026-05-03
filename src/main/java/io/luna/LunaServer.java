@@ -1,5 +1,6 @@
 package io.luna;
 
+import api.bot.zone.SubZone;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -24,6 +25,7 @@ import io.luna.util.parser.impl.BossFileParser;
 import io.luna.util.parser.impl.CombatSpellDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
+import io.luna.util.parser.impl.ItemNicknameDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
@@ -177,7 +179,7 @@ public final class LunaServer {
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
 
-        logger.info("All services are now running.");
+        logger.info("All core services are now running.");
     }
 
     /**
@@ -188,6 +190,7 @@ public final class LunaServer {
      */
     private void initLaunchTasks() {
         List<Runnable> taskList = new ArrayList<>();
+        taskList.add(SubZone.Companion::findAreaOverlaps);
         taskList.add(new EquipmentDefinitionFileParser());
         taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new WeaponTypeDefinitionFileParser());
@@ -199,6 +202,7 @@ public final class LunaServer {
         taskList.add(() -> context.getWorld().getBots().loadNames());
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new WeaponAnimationDefinitionFileParser());
+        taskList.add(new ItemNicknameDefinitionFileParser());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {

@@ -1,5 +1,7 @@
 package api.bot
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 
@@ -18,7 +20,7 @@ import io.luna.game.model.mob.bot.script.BotScriptSnapshot
  * @param bot The bot this script will be applied to.
  * @author lare96
  */
-abstract class DynamicBotScript(bot: Bot) : BotScript<Void?>(bot) {
+abstract class DynamicBotScript(bot: Bot) : BotScript(bot) {
 
     /**
      * Produces a non-persistent snapshot of this script.
@@ -28,7 +30,7 @@ abstract class DynamicBotScript(bot: Bot) : BotScript<Void?>(bot) {
      *
      * @return Always `null`, indicating no state should be persisted.
      */
-    override fun snapshot(): Void? {
+    final override fun snapshot(): BotScriptData? {
         return null
     }
 }

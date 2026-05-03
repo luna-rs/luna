@@ -27,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param thievable The pickpocket definition used to determine level requirements, loot, experience, stun duration, and success chance.
  * @author lare96
  */
-class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc) :
+class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievingNpcType) :
     QueuedAction<Player>(plr, plr.lastPickpocket, 2) {
 
     companion object {

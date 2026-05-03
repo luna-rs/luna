@@ -7,6 +7,9 @@ import engine.combat.status.StatusEffectType
 import io.luna.game.model.Locatable
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.controller.PlayerAreaListener
 import io.luna.game.model.mob.overlay.WalkableInterface
 
@@ -28,6 +31,10 @@ object WildernessLocatableController : PlayerAreaListener() {
         plr.overlays.open(WalkableInterface(197))
         plr.contextMenu.show(OPTION_ATTACK)
         plr.controllers.register(WildernessController(plr))
+        if(plr is Bot) {
+            // Less confident = more scared when in the wilderness.
+            plr.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.25 * (1.0 - plr.personality.confidence)))
+        }
     }
 
     override fun exit(plr: Player) {

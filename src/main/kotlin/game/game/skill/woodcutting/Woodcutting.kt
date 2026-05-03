@@ -47,7 +47,7 @@ object Woodcutting {
         }
 
         val axes = Axe.VALUES.values
-        val trees = Tree.VALUES.values
+        val trees = Tree.ALL.values
         val levels = listOf(1, 15, 30, 45, 60, 75, 99)
 
         for (level in levels) {

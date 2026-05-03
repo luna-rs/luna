@@ -1,9 +1,12 @@
 package io.luna.game.persistence;
 
+import com.google.gson.JsonObject;
 import io.luna.game.GameService;
 import io.luna.game.LogoutService;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.brain.BotEmotion;
+import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot;
 
 import java.util.List;
@@ -22,6 +25,16 @@ public final class BotData extends PlayerData {
     public List<BotScriptSnapshot<?>> scripts;
 
     /**
+     * The bot's personality.
+     */
+    public BotPersonality personality;
+
+    /**
+     * The bot's emotions.
+     */
+    public JsonObject preferences;
+
+    /**
      * Creates a new {@link BotData}.
      *
      * @param username The username of the bot this data belongs to.
@@ -35,6 +48,8 @@ public final class BotData extends PlayerData {
         super.load(player);
         Bot bot = (Bot) player;
         bot.getScriptStack().load(scripts);
+        bot.setPersonality(personality);
+        bot.getPreferences().load(preferences);
     }
 
     @Override
@@ -42,6 +57,8 @@ public final class BotData extends PlayerData {
         super.save(player);
         Bot bot = (Bot) player;
         scripts = bot.getScriptStack().save();
+        personality = bot.getPersonality();
+        preferences = bot.getPreferences().save();
         return this;
     }
 }

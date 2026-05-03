@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -615,5 +616,34 @@ public final class CollisionManager {
         }
 
         return Math.max(dx, dy) <= distance;
+    }
+
+    /**
+     * Temporary: gets the cardinal direction from the target entity/object toward the interacting position.
+     */
+    @Deprecated
+    public EnumSet<Direction> getInteractionDirections(int packed) {
+        EnumSet<Direction> directions = EnumSet.noneOf(Direction.class);
+        if ((packed & 1) == 0) {
+            directions.add(Direction.NORTH);
+            directions.add(Direction.NORTH_WEST);
+            directions.add(Direction.NORTH_EAST);
+        }
+        if ((packed & 8) == 0) {
+            directions.add(Direction.WEST);
+            directions.add(Direction.NORTH_WEST);
+            directions.add(Direction.SOUTH_WEST);
+        }
+        if ((packed & 4) == 0) {
+            directions.add(Direction.SOUTH);
+            directions.add(Direction.SOUTH_WEST);
+            directions.add(Direction.SOUTH_EAST);
+        }
+        if ((packed & 2) == 0) {
+            directions.add(Direction.EAST);
+            directions.add(Direction.SOUTH_EAST);
+            directions.add(Direction.NORTH_EAST);
+        }
+        return directions;
     }
 }

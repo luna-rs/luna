@@ -1,7 +1,5 @@
 package io.luna;
 
-import io.luna.game.model.Position;
-import io.luna.game.model.collision.CollisionMatrix;
 import io.luna.util.GsonUtils;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
@@ -75,9 +73,7 @@ public final class Luna {
             context.getServer().init();
         } catch (Exception e) {
             logger.fatal("Luna could not be started.", e);
-
-            // Note: non-zero exit code is typically preferable for startup failure.
-            System.exit(0);
+            System.exit(1);
         }
     }
 
@@ -88,7 +84,7 @@ public final class Luna {
      * @throws IOException If the file cannot be read or parsed.
      */
     private static LunaSettings loadSettings() throws IOException {
-        return GsonUtils.readAsType(Paths.get("data", "luna.json"), LunaSettings.class);
+        return GsonUtils.readAsType(Paths.get("data", "luna.jsonc"), LunaSettings.class);
     }
 
     /**

@@ -60,6 +60,32 @@ public final class StringUtils {
     }
 
     /**
+     * Removes trailing ASCII digits from {@code value}, preserving the string up to the last non-numeric character.
+     * <p>
+     * If no trailing digits are removed, or if removing them would produce an empty string, the original string is
+     * returned unchanged.
+     *
+     * @param value The string to trim trailing digits from.
+     * @return The string without trailing digits, or the original string if nothing useful can be removed.
+     */
+    public static String stripTrailingDigits(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+
+        int end = value.length();
+        while (end > 0) {
+            char c = value.charAt(end - 1);
+            if (c < '0' || c > '9') {
+                break;
+            }
+            end--;
+        }
+
+        return end == value.length() || end == 0 ? value : value.substring(0, end);
+    }
+
+    /**
      * Unpacks text received from the client using RuneScape's text compression format.
      *
      * @param message The packed byte array.

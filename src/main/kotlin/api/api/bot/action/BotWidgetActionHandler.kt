@@ -16,9 +16,6 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * @param option The option to click, between 1 and 5.
      */
     fun clickDialogueOption(option: Int): Boolean {
-        if(OptionDialogue::class in bot.overlays) {
-
-        }
         val activeInterface = bot.overlays[OptionDialogue::class] ?: return false
         when (activeInterface.id) {
             14443 ->
@@ -86,18 +83,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * Clicks the widget to either start running or walking. Unsuspends when the bot is either
      * successfully walking or running.
      */
-    suspend fun clickRunning(enabled: Boolean): Boolean {
-        if (enabled == bot.isRunning) {
-            return true
-        }
-        val suspendCond = SuspendableCondition { bot.isRunning == enabled }
-        if (!enabled) {
-            bot.log("Clicking walking button.")
-            bot.output.clickButton(152)
-        } else {
-            bot.log("Clicking running button.")
-            bot.output.clickButton(153)
-        }
-        return suspendCond.submit(5).await()
+    fun clickRunning(enabled: Boolean) {
+        bot.walking.isRunning = enabled
     }
 }

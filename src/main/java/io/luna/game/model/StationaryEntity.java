@@ -8,6 +8,7 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Collections;
@@ -107,9 +108,10 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      */
     public final void hide() {
         if (!hidden) {
+            boolean persistent = this instanceof GameObject && !((GameObject) this).isDynamic();
             int offset = getChunk().offset(position);
             chunkRepository.removeUpdate(this);
-            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, hideMessage(offset), false));
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, hideMessage(offset), persistent));
             hidden = true;
         }
     }

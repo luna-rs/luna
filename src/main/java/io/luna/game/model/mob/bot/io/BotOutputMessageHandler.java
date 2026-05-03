@@ -325,8 +325,8 @@ public final class BotOutputMessageHandler {
                 opcode = 203;
                 break;
             case 2:
-                msg.putShort(3214, ValueType.ADD);
-                msg.putShort(itemId);
+                msg.putShort(3214, ByteOrder.LITTLE);
+                msg.putShort(itemId, ByteOrder.LITTLE);
                 msg.putShort(index, ValueType.ADD);
                 opcode = 24;
                 break;

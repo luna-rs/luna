@@ -63,7 +63,7 @@ fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriorit
 /**
  * The context injection event interception function.
  */
-fun <E : InjectableEvent> injector(eventClass: KClass<E>) = ActionContextInjectorReceiver(eventClass)
+fun <E : InjectableEvent> inject(eventClass: KClass<E>) = ActionContextInjectorReceiver(eventClass)
 
 /**
  * The [ItemOnItemEvent] and [ItemOnObjectEvent] matcher function. Forwards to [InterceptUseItem].

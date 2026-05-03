@@ -57,6 +57,17 @@ object Suspendable {
     }
 
     /**
+     * Suspends the current coroutine for a short, natural, micro delay.
+     *
+     * Typical range:
+     * - Minimum: 600 ms
+     * - Maximum: 1200 ms
+     */
+    suspend fun Bot.naturalMicroDelay() {
+        return delay(600.milliseconds, 1200.milliseconds)
+    }
+
+    /**
      * Suspends the current coroutine for a short, natural reaction delay.
      *
      * Typical range:
@@ -64,7 +75,7 @@ object Suspendable {
      * - Maximum: 3000 ms
      */
     suspend fun Bot.naturalDelay() {
-        return delay(600.milliseconds, 3.seconds)
+        return delay(1200.milliseconds, 2400.milliseconds)
     }
 
     /**
@@ -75,7 +86,7 @@ object Suspendable {
      * - Maximum: 6000 ms
      */
     suspend fun Bot.naturalDecisionDelay() {
-        delay(1200.milliseconds, 6.seconds)
+        delay(1200.milliseconds, 4.seconds)
     }
 
     /**

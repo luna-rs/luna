@@ -13,6 +13,8 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.path.BotPathfinder;
 import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.PathResult;
+import io.luna.game.model.path.PathResultType;
 import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.game.model.path.SimplePathfinder;
 import io.luna.util.RandomUtils;
@@ -42,6 +44,16 @@ import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFacto
  * @author lare96
  */
 public class WalkingNavigator {
+
+    // TODO@0.5.0 The builder should let you "test" the request to see if its valid (generates a valid path).
+    //  but if the builder is used this way, it passes that pre-computed path onto navigationaction. disabled for
+    //  continuous actions.
+    //  Flow could look like var request = builder.async(true).target(other)
+    //    if(request.test()) { // equivalent to canNavigate (result cached, path generated cached, always true for continuous)
+    //        result.complete() // equivalent to navigate()/submit() (uses generated path on non-continuous requests)
+    //    }
+    //  While the normal utility methods remain unchanged.
+    //  Should save a TON of resources in situations where lots of bots are using the travel system.
 
     /**
      * The logger instance.
@@ -321,16 +333,22 @@ public class WalkingNavigator {
      */
     public CompletableFuture<Deque<Position>> findPath(Position start, Position target,
                                                        GamePathfinder<Position> pathfinder, boolean async) {
-        CompletableFuture<Deque<Position>> result = async
+        CompletableFuture<PathResult<Position>> pathResultFuture = async
                 ? CompletableFuture.supplyAsync(() -> pathfinder.find(start, target), pool)
                 : CompletableFuture.completedFuture(pathfinder.find(start, target));
-        result = result.thenApply(it -> {
-            if (it == null && !start.equals(target)) {
+
+        CompletableFuture<Deque<Position>> pathFuture = pathResultFuture.thenApply(it -> {
+            if (it.getType() == PathResultType.FAILED) {
                 return null;
             }
             return it;
+        }).thenApply(it -> {
+            if (it != null) {
+                return it.getPath();
+            }
+            return null;
         });
-        return handleExceptions(target, result);
+        return handleExceptions(target, pathFuture);
     }
 
     /**
@@ -407,6 +425,7 @@ public class WalkingNavigator {
      * @return The computed adjacent offset position.
      */
     Position computeOffsetPosition(Entity target, Optional<Direction> offsetDir) {
+        Position targetPosition = target.getPosition();
         int sizeX = mob.sizeX();
         int sizeY = mob.sizeY();
 
@@ -415,7 +434,6 @@ public class WalkingNavigator {
 
         Position position = mob.getPosition();
         int height = position.getZ();
-        Position targetPosition = target.getPosition();
 
         Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
         int dx = direction.getTranslateX();

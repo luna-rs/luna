@@ -2,6 +2,7 @@ package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import io.luna.game.model.object.ObjectDirection;
 
 import java.util.Objects;
 import java.util.OptionalInt;
@@ -218,6 +219,18 @@ public final class GameObjectDefinition implements Definition {
      * @return The direction value.
      */
     public int getDirection() {
+        return direction;
+    }
+
+    /**
+     * Temporary: returns the packed direction from the live direction.
+     */
+    @Deprecated
+    public int getDirectionPacked(ObjectDirection liveDir) {
+        if (liveDir != ObjectDirection.WEST) {
+            return (direction << liveDir.getId() & 0xf) +
+                    (direction >> 4 - liveDir.getId());
+        }
         return direction;
     }
 

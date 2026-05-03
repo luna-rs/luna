@@ -80,6 +80,11 @@ val world = ctx.world!!
  */
 val gameService = ctx.game!!
 
+/**
+ * Retrieves the name of this [Item].
+ */
+val Item.name: String
+    get() = itemDef.name
 
 /* Player rights properties. */
 val RIGHTS_PLAYER = PlayerRights.PLAYER

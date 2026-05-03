@@ -1,0 +1,910 @@
+[
+  {
+    "name": "BRONZE_FULL_LEGS",
+    "items": [
+      1075,  // Bronze platelegs
+      1117,  // Bronze platebody
+      1155,  // Bronze full helm
+      1189,  // Bronze kiteshield
+      1321,  // Bronze scimitar
+      4119  // Bronze boots
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "BRONZE_FULL_SKIRT",
+    "items": [
+      1087,  // Bronze plateskirt
+      1117,  // Bronze platebody
+      1155,  // Bronze full helm
+      1189,  // Bronze kiteshield
+      1321,  // Bronze scimitar
+      4119  // Bronze boots
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "IRON_FULL_LEGS",
+    "items": [
+      1067,  // Iron platelegs
+      1115,  // Iron platebody
+      1153,  // Iron full helm
+      1191,  // Iron kiteshield
+      1323,  // Iron scimitar
+      4121  // Iron boots
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "IRON_FULL_SKIRT",
+    "items": [
+      1081,  // Iron plateskirt
+      1115,  // Iron platebody
+      1153,  // Iron full helm
+      1191,  // Iron kiteshield
+      1323,  // Iron scimitar
+      4121  // Iron boots
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "STEEL_FULL_LEGS",
+    "items": [
+      1069,  // Steel platelegs
+      1119,  // Steel platebody
+      1157,  // Steel full helm
+      1193,  // Steel kiteshield
+      1325,  // Steel scimitar
+      4123  // Steel boots
+    ],
+    "level": 5,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "STEEL_FULL_SKIRT",
+    "items": [
+      1083,  // Steel plateskirt
+      1119,  // Steel platebody
+      1157,  // Steel full helm
+      1193,  // Steel kiteshield
+      1325,  // Steel scimitar
+      4123  // Steel boots
+    ],
+    "level": 5,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "BLACK_FULL_LEGS",
+    "items": [
+      1077,  // Black platelegs
+      1125,  // Black platebody
+      1165,  // Black full helm
+      1195,  // Black kiteshield
+      1327,  // Black scimitar
+      4125  // Black boots
+    ],
+    "level": 10,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "BLACK_FULL_SKIRT",
+    "items": [
+      1089,  // Black plateskirt
+      1125,  // Black platebody
+      1165,  // Black full helm
+      1195,  // Black kiteshield
+      1327,  // Black scimitar
+      4125  // Black boots
+    ],
+    "level": 10,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "MITHRIL_FULL_LEGS",
+    "items": [
+      1071,  // Mithril platelegs
+      1121,  // Mithril platebody
+      1159,  // Mithril full helm
+      1197,  // Mithril kiteshield
+      1329,  // Mithril scimitar
+      4127  // Mithril boots
+    ],
+    "level": 20,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "MITHRIL_FULL_SKIRT",
+    "items": [
+      1085,  // Mithril plateskirt
+      1121,  // Mithril platebody
+      1159,  // Mithril full helm
+      1197,  // Mithril kiteshield
+      1329,  // Mithril scimitar
+      4127  // Mithril boots
+    ],
+    "level": 20,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "ADAMANT_FULL_LEGS",
+    "items": [
+      1073,  // Adamant platelegs
+      1123,  // Adamant platebody
+      1161,  // Adamant full helm
+      1199,  // Adamant kiteshield
+      1331,  // Adamant scimitar
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "ADAMANT_FULL_SKIRT",
+    "items": [
+      1091,  // Adamant plateskirt
+      1123,  // Adamant platebody
+      1161,  // Adamant full helm
+      1199,  // Adamant kiteshield
+      1331,  // Adamant scimitar
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "RUNE_FULL_LEGS",
+    "items": [
+      1079,  // Rune platelegs
+      1127,  // Rune platebody
+      1163,  // Rune full helm
+      1201,  // Rune kiteshield
+      1333,  // Rune scimitar
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MELEE",
+      "TRAINING"
+    ]
+  },
+  {
+    "name": "RUNE_FULL_SKIRT",
+    "items": [
+      1093,  // Rune plateskirt
+      1127,  // Rune platebody
+      1163,  // Rune full helm
+      1201,  // Rune kiteshield
+      1333,  // Rune scimitar
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MELEE",
+      "TRAINING"
+    ]
+  },
+  {
+    "name": "DRAGON_FULL_LEGS",
+    "items": [
+      4087,  // Dragon platelegs
+      3140,  // Dragon chainbody
+      11335,  // Unknown item 11335
+      1187,  // Dragon sq shield
+      4587,  // Dragon scimitar
+      11732  // Unknown item 11732
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "DRAGON_FULL_SKIRT",
+    "items": [
+      4585,  // Dragon plateskirt
+      3140,  // Dragon chainbody
+      11335,  // Unknown item 11335
+      1187,  // Dragon sq shield
+      4587,  // Dragon scimitar
+      11732  // Unknown item 11732
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "OBSIDIAN_FULL",
+    "items": [
+      6568,  // Obsidian cape
+      6528,  // Tzhaar-ket-om
+      6524,  // Toktz-ket-xil
+      11128,  // Unknown item 11128
+      6570  // Fire cape
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "SHOW_OFF",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "DHAROKS",
+    "items": [
+      4716,  // Dharoks helm
+      4718,  // Dharoks greataxe
+      4720,  // Dharoks platebody
+      4722  // Dharoks platelegs
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "VERACS",
+    "items": [
+      4753,  // Veracs helm
+      4755,  // Veracs flail
+      4757,  // Veracs brassard
+      4759  // Veracs plateskirt
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "TORAGS",
+    "items": [
+      4745,  // Torags helm
+      4747,  // Torags hammers
+      4749,  // Torags platebody
+      4751  // Torags platelegs
+    ],
+    "level": 70,
+    "purposes": [
+      "TRAINING",
+      "BOSSES"
+    ]
+  },
+  {
+    "name": "GUTHANS",
+    "items": [
+      4724,  // Guthans helm
+      4726,  // Guthans warspear
+      4728,  // Guthans platebody
+      4730  // Guthans chainskirt
+    ],
+    "level": 70,
+    "purposes": [
+      "TRAINING",
+      "SLAYER",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "LEATHER",
+    "items": [
+      1129,  // Leather body
+      1095,  // Leather chaps
+      1063,  // Leather vambraces
+      1167,  // Leather cowl
+      841,  // Shortbow
+      882  // Bronze arrow
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "STUDDED_LEATHER",
+    "items": [
+      1133,  // Studded body
+      1097,  // Studded chaps
+      1063,  // Leather vambraces
+      1169,  // Coif
+      849,  // Willow shortbow
+      884  // Iron arrow
+    ],
+    "level": 20,
+    "purposes": [
+      "TRAINING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "GREEN_DHIDE",
+    "items": [
+      1135,  // Green d'hide body
+      1099,  // Green d'hide chaps
+      1065,  // Green d'hide vamb
+      1165,  // Black full helm
+      861,  // Magic shortbow
+      892  // Rune arrow
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "RANGE",
+      "TRAINING"
+    ]
+  },
+  {
+    "name": "BLUE_DHIDE",
+    "items": [
+      2499,  // Blue d'hide body
+      2493,  // Blue d'hide chaps
+      2487,  // Blue d'hide vamb
+      2491,  // Black d'hide vamb
+      861,  // Magic shortbow
+      892  // Rune arrow
+    ],
+    "level": 50,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "RED_DHIDE",
+    "items": [
+      2501,  // Red d'hide body
+      2495,  // Red d'hide chaps
+      2489,  // Red d'hide vamb
+      2493,  // Blue d'hide chaps
+      861,  // Magic shortbow
+      892  // Rune arrow
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "BLACK_DHIDE",
+    "items": [
+      2503,  // Black d'hide body
+      2497,  // Black d'hide chaps
+      2491,  // Black d'hide vamb
+      2493,  // Blue d'hide chaps
+      861,  // Magic shortbow
+      892  // Rune arrow
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "KARILS",
+    "items": [
+      4732,  // Karils coif
+      4734,  // Karils crossbow
+      4736,  // Karils leathertop
+      4738  // Karils leatherskirt
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "WIZARD_BLUE",
+    "items": [
+      579,  // Wizard hat
+      577,  // Wizard robe
+      1011,  // Blue skirt
+      1381  // Staff of air
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "WIZARD_DARK",
+    "items": [
+      4089,  // Mystic hat
+      4091,  // Mystic robe top
+      4093,  // Mystic robe bottom
+      1381  // Staff of air
+    ],
+    "level": 10,
+    "purposes": [
+      "TRAINING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "MYSTIC_LIGHT",
+    "items": [
+      4089,  // Mystic hat
+      4091,  // Mystic robe top
+      4093,  // Mystic robe bottom
+      4095,  // Mystic gloves
+      4097,  // Mystic boots
+      4675  // Ancient staff
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "MYSTIC_DARK",
+    "items": [
+      4101,  // Mystic robe top
+      4103,  // Mystic robe bottom
+      4105,  // Mystic gloves
+      4107,  // Mystic boots
+      4109,  // Mystic hat
+      4675  // Ancient staff
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "AHRIMS",
+    "items": [
+      4708,  // Ahrims hood
+      4710,  // Ahrims staff
+      4712,  // Ahrims robetop
+      4714  // Ahrims robeskirt
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "BLACK_TRIMMED_LEGS",
+    "items": [
+      2587,  // Black full helm (t)
+      2583,  // Black platebody (t)
+      2585,  // Black platelegs (t)
+      2589,  // Black kiteshield (t)
+      4125  // Black boots
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "BLACK_TRIMMED_SKIRT",
+    "items": [
+      2587,  // Black full helm (t)
+      2583,  // Black platebody (t)
+      3472,  // Black plateskirt (t)
+      2589,  // Black kiteshield (t)
+      4125  // Black boots
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "BLACK_GOLD_LEGS",
+    "items": [
+      2595,  // Black full helm (g)
+      2591,  // Black platebody (g)
+      2593,  // Black platelegs (g)
+      2597,  // Black kiteshield (g)
+      4125  // Black boots
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "BLACK_GOLD_SKIRT",
+    "items": [
+      2595,  // Black full helm (g)
+      2591,  // Black platebody (g)
+      3473,  // Black plateskirt (g)
+      2597,  // Black kiteshield (g)
+      4125  // Black boots
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_TRIMMED_LEGS",
+    "items": [
+      2605,  // Adam full helm (t)
+      2599,  // Adam platebody (t)
+      2601,  // Adam platelegs (t)
+      2603,  // Adam kiteshield (t)
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_TRIMMED_SKIRT",
+    "items": [
+      2605,  // Adam full helm (t)
+      2599,  // Adam platebody (t)
+      3474,  // Adam plateskirt (t)
+      2603,  // Adam kiteshield (t)
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_GOLD_LEGS",
+    "items": [
+      2613,  // Adam full helm (g)
+      2607,  // Adam platebody (g)
+      2609,  // Adam platelegs (g)
+      2611,  // Adam kiteshield (g)
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_GOLD_SKIRT",
+    "items": [
+      2613,  // Adam full helm (g)
+      2607,  // Adam platebody (g)
+      3475,  // Adam plateskirt (g)
+      2611,  // Adam kiteshield (g)
+      4129  // Adamant boots
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_TRIMMED_LEGS",
+    "items": [
+      2623,  // Rune platebody (t)
+      2625,  // Rune platelegs (t)
+      2627,  // Rune full helm (t)
+      2629,  // Rune kiteshield (t)
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_TRIMMED_SKIRT",
+    "items": [
+      2623,  // Rune platebody (t)
+      3477,  // Rune plateskirt (t)
+      2627,  // Rune full helm (t)
+      2629,  // Rune kiteshield (t)
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GOLD_LEGS",
+    "items": [
+      2615,  // Rune platebody (g)
+      2617,  // Rune platelegs (g)
+      2619,  // Rune full helm (g)
+      2621,  // Rune kiteshield (g)
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GOLD_SKIRT",
+    "items": [
+      2615,  // Rune platebody (g)
+      3476,  // Rune plateskirt (g)
+      2619,  // Rune full helm (g)
+      2621,  // Rune kiteshield (g)
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_SARADOMIN_LEGS",
+    "items": [
+      2661,  // Saradomin plate
+      2663,  // Saradomin legs
+      2665,  // Saradomin full
+      2667,  // Saradomin kite
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_SARADOMIN_SKIRT",
+    "items": [
+      2661,  // Saradomin plate
+      3479,  // Saradomin skirt
+      2665,  // Saradomin full
+      2667,  // Saradomin kite
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GUTHIX_LEGS",
+    "items": [
+      2673,  // Guthix full helm
+      2669,  // Guthix platebody
+      2671,  // Guthix platelegs
+      2675,  // Guthix kiteshield
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GUTHIX_SKIRT",
+    "items": [
+      2673,  // Guthix full helm
+      2669,  // Guthix platebody
+      3480,  // Guthix plateskirt
+      2675,  // Guthix kiteshield
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_ZAMORAK_LEGS",
+    "items": [
+      2653,  // Zamorak platebody
+      2655,  // Zamorak platelegs
+      2657,  // Zamorak full helm
+      2659,  // Zamorak kiteshield
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_ZAMORAK_SKIRT",
+    "items": [
+      2653,  // Zamorak platebody
+      3478,  // Zamorak plateskirt
+      2657,  // Zamorak full helm
+      2659,  // Zamorak kiteshield
+      4131  // Rune boots
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ZAMORAK_ROBES",
+    "items": [
+      1033,  // Zamorak robe
+      1035,  // Zamorak robe
+      2414,  // Zamorak cape
+      2417  // Zamorak staff
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "MIME",
+    "items": [
+      3057,  // Mime mask
+      3058,  // Mime top
+      3059,  // Mime legs
+      3060,  // Mime gloves
+      3061  // Mime boots
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "LEDERHOSEN",
+    "items": [
+      6182,  // Lederhosen hat
+      6180,  // Lederhosen top
+      6181  // Lederhosen shorts
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "FROG_PRINCE",
+    "items": [
+      6188,  // Frog mask
+      6184,  // Prince tunic
+      6185  // Prince leggings
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "FROG_PRINCESS",
+    "items": [
+      6188,  // Frog mask
+      6186,  // Princess blouse
+      6187  // Princess skirt
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "PIRATE_A",
+    "items": [
+      7112,  // Pirate bandanna
+      7110,  // Stripy pirate shirt
+      7116  // Pirate leggings
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "PIRATE_B",
+    "items": [
+      7124,  // Pirate bandanna
+      7122,  // Stripy pirate shirt
+      7126  // Pirate leggings
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "PIRATE_C",
+    "items": [
+      7130,  // Pirate bandanna
+      7128,  // Stripy pirate shirt
+      7132  // Pirate leggings
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "PIRATE_D",
+    "items": [
+      7136,  // Pirate bandanna
+      7134,  // Stripy pirate shirt
+      7138  // Pirate leggings
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "GILDED_RUNE_LEGS",
+    "items": [
+      3486,  // Gilded full helm
+      3481,  // Gilded platebody
+      3483,  // Gilded platelegs
+      3488  // Gilded kiteshield
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "GILDED_RUNE_SKIRT",
+    "items": [
+      3486,  // Gilded full helm
+      3481,  // Gilded platebody
+      3485,  // Gilded plateskirt
+      3488  // Gilded kiteshield
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF",
+      "MELEE"
+    ]
+  }
+]
