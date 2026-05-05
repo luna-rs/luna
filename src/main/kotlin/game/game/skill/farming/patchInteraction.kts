@@ -147,6 +147,18 @@ cmd("resetpatches", RIGHTS_ADMIN) {
     Farming.sendAllotmentState(plr)
 }
 
+cmd("rakepatches", RIGHTS_ADMIN) {
+    plr.herbPatches.values.forEach({ herbPatch ->
+        herbPatch.reset(false)
+    })
+    plr.allotmentPatches.values.forEach({ patch ->
+        patch.reset(false)
+    })
+    Farming.sendHerbState(plr)
+    Farming.sendAllotmentState(plr)
+    plr.sendMessage("Raked patches")
+}
+
 cmd("progressplants", RIGHTS_ADMIN) {
     val rounds = asInt(0)
     plr.herbPatches.values.forEach({ herbPatch ->

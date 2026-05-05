@@ -92,8 +92,12 @@ abstract class FarmingPatch {
      */
     open fun reset(includeWeeds: Boolean) {
         growthStage = 0
+        isDead = false
+        isDiseased = false
         if (includeWeeds) {
             weeds = 3
+        } else {
+            weeds = 0
         }
     }
 
