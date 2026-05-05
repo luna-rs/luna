@@ -5,8 +5,9 @@ import game.skill.farming.*
 import io.luna.game.model.item.Item
 
 /**
- *
+ * // todo remove patchtype from this, probably
  * @author lare96
+ * @author hydrozoa
  */
 enum class AllotmentSeed(val seed: Int,
                          val level: Int,
@@ -87,7 +88,7 @@ enum class AllotmentSeed(val seed: Int,
                harvestXp = 29.0,
                patch = PatchType.ALLOTMENT
     ),
-    WATERMELON(seed = -1,
+    WATERMELON(seed = 5321,
                level = 47,
                configIndexOffset = 51,
                flowerProtection = setOf("Nasturtiums", "White lily"),

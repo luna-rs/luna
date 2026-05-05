@@ -24,6 +24,12 @@ class AllotmentPatch(val location: AllotmentPatchLocation) : FarmingPatch() {
             varpValue = 3
         } else if (plantType != null) {
             varpValue = plantType!!.configIndexOffset + growthStage
+
+            if (isDiseased) {
+                varpValue += 128
+            } else if (isDead) {
+                varpValue += 192
+            }
         }
 
         varpValue = varpValue shl location.shifts
