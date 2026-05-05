@@ -42,11 +42,23 @@ import io.luna.game.model.mob.varp.*
 // todo maybe hook mapupdate event to send correct patches
 
 val rake = 5341
+val spade = 952
 
 HerbPatchLocation.values().forEach { location ->
     // Hook for raking herb patches
     useItem(rake).onObject(location.objectId) {
         plr.submitAction(RakePatchAction(plr, gameObject))
+    }
+
+    // Hook for clearing dead herbs
+    useItem(spade).onObject(location.objectId) {
+        var patch: FarmingPatch? = Farming.findPatch(objectId, plr)
+        if (patch != null && patch.isDead) {
+            plr.animation(Animations.SUPERHEAT)
+            plr.sendMessage("You clear the dead plants away.")
+            patch.reset(false)
+            Farming.sendHerbState(plr)
+        }
     }
 
     // Hook for harvesting herbs
@@ -82,6 +94,17 @@ AllotmentPatchLocation.values().forEach { location ->
     // Hook for raking allotment patches
     useItem(rake).onObject(location.objectId) {
         plr.submitAction(RakePatchAction(plr, gameObject))
+    }
+
+    // Hook for clearing dead herbs
+    useItem(spade).onObject(location.objectId) {
+        var patch: FarmingPatch? = Farming.findPatch(objectId, plr)
+        if (patch != null && patch.isDead) {
+            plr.animation(Animations.SUPERHEAT)
+            plr.sendMessage("You clear the dead plants away.")
+            patch.reset(false)
+            Farming.sendAllotmentState(plr)
+        }
     }
 
     // Hook for harvesting allotments
