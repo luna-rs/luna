@@ -1,11 +1,14 @@
 package game.skill.farming
 
 import api.predef.*
+import api.predef.ext.*
+import game.player.*
 import game.skill.farming.Farming.herbPatches
 import game.skill.farming.patch.*
 import game.skill.farming.seed.*
 import io.luna.game.event.impl.*
 import io.luna.game.model.item.*
+import io.luna.game.model.mob.block.*
 import io.luna.game.model.mob.varp.*
 import io.luna.game.task.*
 
@@ -63,12 +66,27 @@ HerbSeeds.values().forEach { seed ->
                 return@onObject
             }
 
+            plr.animation(Animations.SUPERHEAT)
             plr.sendMessage("You plant the seed.")
             plr.inventory.remove(seed.seedId)
             patch.plant(seed)
             Farming.sendHerbState(plr)
         }
     }
+}
+
+cmd("resetpatches", RIGHTS_ADMIN) {
+    plr.herbPatches.values.forEach({ herbPatch ->
+        herbPatch.reset()
+    })
+    Farming.sendHerbState(plr)
+}
+
+cmd("progressplants", RIGHTS_ADMIN) {
+    plr.herbPatches.values.forEach({ herbPatch ->
+        UpdateFarmsTask.progressPlants(herbPatch)
+    })
+    Farming.sendHerbState(plr)
 }
 
 // Schedule task updating farms every minute

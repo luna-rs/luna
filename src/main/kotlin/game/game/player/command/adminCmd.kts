@@ -195,13 +195,6 @@ cmd("item", RIGHTS_ADMIN) {
     plr.inventory.add(Item(id, amount))
 }
 
-cmd("resetpatches", RIGHTS_ADMIN) {
-    plr.herbPatches.values.forEach({ herbPatch ->
-        herbPatch.reset()
-    })
-    Farming.sendHerbState(plr)
-}
-
 /**
  * A command that moves a player to a different location by name.
  */

@@ -15,7 +15,7 @@ import io.luna.game.model.`object`.GameObject
  *
  * @author hydrozoa
  */
-class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action<Player>(plr, ActionType.SOFT, true, 4) {
+class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action<Player>(plr, ActionType.WEAK, true, 4) {
 
     override fun onSubmit() {
         var patch: FarmingPatch? = null

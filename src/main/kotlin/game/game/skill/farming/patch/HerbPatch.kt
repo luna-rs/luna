@@ -39,15 +39,6 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         return true
     }
 
-    fun update() {
-        if (!hasPlant()) {
-            weeds++
-            if (weeds > 3) {
-                weeds = 3
-            }
-        }
-    }
-
     fun reset() {
         plantType = null
         growthStage = 0
