@@ -43,16 +43,19 @@ import io.luna.game.task.*
 
 val rake = 5341
 
-// Hook for raking herb patches
 HerbPatchLocation.values().forEach { location ->
+    // Hook for raking herb patches
     useItem(rake).onObject(location.objectId) {
         plr.submitAction(RakePatchAction(plr, gameObject))
     }
-}
 
-// Hook for planting seeds in herb patches
-HerbSeeds.values().forEach { seed ->
-    HerbPatchLocation.values().forEach { location ->
+    // Hook for harvesting herbs
+    object1(location.objectId) {
+        plr.sendMessage("You harvest the herbs")
+    }
+
+    // Hook for planting seeds in herb patches
+    HerbSeeds.values().forEach { seed ->
         useItem(seed.seedId).onObject(location.objectId) {
             var patch: HerbPatch = plr.herbPatches[location] ?: return@onObject
 
@@ -83,8 +86,11 @@ cmd("resetpatches", RIGHTS_ADMIN) {
 }
 
 cmd("progressplants", RIGHTS_ADMIN) {
+    val rounds = asInt(0)
     plr.herbPatches.values.forEach({ herbPatch ->
-        UpdateFarmsTask.progressPlants(herbPatch)
+        for (i in 0 until rounds) {
+            UpdateFarmsTask.progressPlants(herbPatch)
+        }
     })
     Farming.sendHerbState(plr)
 }
