@@ -7,6 +7,7 @@ import game.skill.farming.seed.*
 import io.luna.game.event.impl.*
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.varp.*
+import io.luna.game.task.*
 
 // config 504 = allotment plots Falador, specific bits for each plot
 // config 505 = allotment plots Ardy, probably specific bits for each plot
@@ -69,6 +70,9 @@ HerbSeeds.values().forEach { seed ->
         }
     }
 }
+
+// Schedule task updating farms every minute
+world.schedule(UpdateFarmsTask(world.players))
 
 // Send farming state when logged in
 on(LoginEvent::class) {

@@ -26,6 +26,10 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         return varpValue
     }
 
+    override fun hasPlant(): Boolean {
+        return plantType != null
+    }
+
     fun plant(seed: HerbSeeds): Boolean {
         if (weeds > 0) {
             return false
@@ -33,6 +37,15 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         plantType = seed
         growthStage = 1
         return true
+    }
+
+    fun update() {
+        if (!hasPlant()) {
+            weeds++
+            if (weeds > 3) {
+                weeds = 3
+            }
+        }
     }
 
     fun reset() {

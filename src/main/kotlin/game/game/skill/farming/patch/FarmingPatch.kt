@@ -30,4 +30,10 @@ abstract class FarmingPatch {
      * The value this patch contributes to the patch state, stored in a varp.
      */
     abstract fun getVarpValue(): Int
+
+    /**
+     * @return True if the player has planted something here
+     */
+    abstract fun hasPlant(): Boolean
+
 }

@@ -26,4 +26,8 @@ class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
 
         return varpValue
     }
+
+    override fun hasPlant(): Boolean {
+        return plantType != null
+    }
 }
