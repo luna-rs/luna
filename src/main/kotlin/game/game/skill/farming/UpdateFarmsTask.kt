@@ -35,6 +35,9 @@ class UpdateFarmsTask(private val players: MobList<Player>) : Task(false, 100) {
         fun progressPlants(patch: HerbPatch): Boolean {
             if (patch.hasPlant() && patch.growthStage < 5) {
                 patch.growthStage++
+                if (patch.harvestReady()) { // finished growing
+                    patch.produceAvailable = 5
+                }
                 return true
             }
             return false

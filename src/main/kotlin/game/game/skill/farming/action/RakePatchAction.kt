@@ -1,7 +1,8 @@
-package game.skill.farming
+package game.skill.farming.action
 
 import api.predef.ext.*
 import game.player.*
+import game.skill.farming.*
 import game.skill.farming.Farming.herbPatches
 import game.skill.farming.patch.*
 import io.luna.game.action.*
@@ -26,6 +27,8 @@ class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action
         }*/ // todo implement allotment patches
 
         if (patch == null) {
+            mob.sendMessage("Unknown patch id="+patchObject.id)
+            complete()
             return
         }
 
@@ -38,12 +41,10 @@ class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action
         var patch: FarmingPatch? = null
         if (HerbPatchLocation.values().map { it.objectId }.contains(patchObject.id)) {
             patch = mob.herbPatches[HerbPatchLocation.lookup(patchObject.id)]
-        } /*else if (Farming.ALLOTMENT_PATCHES.contains(patchObject.id)) {
-            patch = mob.allotmentPatch
-        }*/ // todo implement allotment patches
+        } // todo implement allotment patches
 
         if (patch == null) {
-            mob.sendMessage("Unknown patch")
+            mob.sendMessage("Unknown patch id="+patchObject.id)
             return true
         }
 
@@ -56,9 +57,8 @@ class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action
         // todo send correct animation
         // todo send rake gfx
 
-        var completedRaking = patch.rake() ?: true
+        var completedRaking = patch.rake(mob) ?: true
         Farming.sendHerbState(mob)
-        mob.inventory.add(Item.byName("Weeds"))
 
         return completedRaking
     }

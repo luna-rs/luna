@@ -1,10 +1,13 @@
 package game.skill.farming.patch
 
 import game.skill.farming.seed.*
+import io.luna.game.model.item.*
 
 /**
  * Represents any allotment patch.
  * Uses varp id 504 and 505
+ *
+ * todo finish
  *
  * @author hydrozoa
  */
@@ -29,5 +32,17 @@ class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
 
     override fun hasPlant(): Boolean {
         return plantType != null
+    }
+
+    override fun harvestReady(): Boolean {
+        return false
+    }
+
+    override fun produce(): Item? {
+        return Item.byName("Weeds")
+    }
+
+    override fun reset(includeWeeds: Boolean) {
+        TODO("Not yet implemented")
     }
 }

@@ -4,13 +4,12 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.*
 import game.skill.farming.Farming.herbPatches
+import game.skill.farming.action.*
 import game.skill.farming.patch.*
 import game.skill.farming.seed.*
 import io.luna.game.event.impl.*
 import io.luna.game.model.item.*
-import io.luna.game.model.mob.block.*
 import io.luna.game.model.mob.varp.*
-import io.luna.game.task.*
 
 // config 504 = allotment plots Falador, specific bits for each plot
 // config 505 = allotment plots Ardy, probably specific bits for each plot
@@ -51,7 +50,7 @@ HerbPatchLocation.values().forEach { location ->
 
     // Hook for harvesting herbs
     object1(location.objectId) {
-        plr.sendMessage("You harvest the herbs")
+        plr.submitAction(HarvestAction(plr, gameObject))
     }
 
     // Hook for planting seeds in herb patches
@@ -80,7 +79,7 @@ HerbPatchLocation.values().forEach { location ->
 
 cmd("resetpatches", RIGHTS_ADMIN) {
     plr.herbPatches.values.forEach({ herbPatch ->
-        herbPatch.reset()
+        herbPatch.reset(true)
     })
     Farming.sendHerbState(plr)
 }

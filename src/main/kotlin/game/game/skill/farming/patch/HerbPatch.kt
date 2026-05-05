@@ -2,6 +2,7 @@ package game.skill.farming.patch
 
 import game.skill.farming.*
 import game.skill.farming.seed.*
+import io.luna.game.model.item.*
 
 /**
  * Represents any herb patch.
@@ -39,9 +40,19 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         return true
     }
 
-    fun reset() {
+    override fun harvestReady(): Boolean {
+        return growthStage == 5
+    }
+
+    override fun produce(): Item? {
+        return plantType?.crop
+    }
+
+    override fun reset(includeWeeds: Boolean) {
         plantType = null
         growthStage = 0
-        weeds = 3
+        if (includeWeeds) {
+            weeds = 3
+        }
     }
 }
