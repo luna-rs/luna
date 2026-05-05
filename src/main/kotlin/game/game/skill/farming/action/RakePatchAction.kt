@@ -19,12 +19,7 @@ import io.luna.game.model.`object`.GameObject
 class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action<Player>(plr, ActionType.WEAK, true, 4) {
 
     override fun onSubmit() {
-        var patch: FarmingPatch? = null
-        if (HerbPatchLocation.values().map { it.objectId }.contains(patchObject.id)) {
-            patch = mob.herbPatches[HerbPatchLocation.lookup(patchObject.id)]
-        } /*else if (Farming.ALLOTMENT_PATCHES.contains(patchObject.id)) {
-            patch = mob.allotmentPatch
-        }*/ // todo implement allotment patches
+        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
 
         if (patch == null) {
             mob.sendMessage("Unknown patch id="+patchObject.id)
@@ -38,10 +33,7 @@ class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action
     }
 
     override fun run(): Boolean {
-        var patch: FarmingPatch? = null
-        if (HerbPatchLocation.values().map { it.objectId }.contains(patchObject.id)) {
-            patch = mob.herbPatches[HerbPatchLocation.lookup(patchObject.id)]
-        } // todo implement allotment patches
+        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
 
         if (patch == null) {
             mob.sendMessage("Unknown patch id="+patchObject.id)

@@ -1,6 +1,7 @@
 package game.skill.farming
 
 import api.attr.*
+import game.skill.farming.Farming.herbPatches
 import game.skill.farming.patch.*
 import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.mob.*
@@ -8,6 +9,7 @@ import io.luna.game.model.mob.varp.*
 
 /**
  * Singleton that describes player attributes for farming and utility functions.
+ * todo find a way to persist player attributes where it is loaded as correct types
  *
  * @author lare96
  * @author hydrozoa
@@ -16,7 +18,6 @@ object Farming {
 
     /**
      * An attribute representing all herb patches.
-     * todo find a way to persist this where it is loaded as correct types
      */
     val Player.herbPatches by Attr.map<HerbPatchLocation, HerbPatch> {
         val map = HashMap<HerbPatchLocation, HerbPatch>()
@@ -27,10 +28,29 @@ object Farming {
     }
 
     /**
-     * An attribute representing an allotment patch.
-     * todo fix by making it a map like herb patches maybe?
+     * An attribute representing all allotment patches.
      */
-    val Player.allotmentPatch by Attr.obj<AllotmentPatch>{ AllotmentPatch(false) }.persist("allotment-patch")
+    val Player.allotmentPatches by Attr.map<AllotmentPatchLocation, AllotmentPatch> {
+        val map = HashMap<AllotmentPatchLocation, AllotmentPatch>()
+        AllotmentPatchLocation.values().forEach { location ->
+            map[location] = AllotmentPatch(location)
+        }
+        map
+    }
+
+    /**
+     * Finds a players farming patch based on the object id. Useful for handling interactions with patches.
+     * @return FarmingPatch corresponding to the object id for a given player.
+     */
+    fun findPatch(objectId: Int, plr: Player): FarmingPatch? {
+        var patch: FarmingPatch? = null
+        if (HerbPatchLocation.lookup(objectId) != null) {
+            patch = plr.herbPatches[HerbPatchLocation.lookup(objectId)]
+        } else if (AllotmentPatchLocation.lookup(objectId) != null) {
+            patch = plr.allotmentPatches[AllotmentPatchLocation.lookup(objectId)]
+        }
+        return patch
+    }
 
     /**
      * Combines all herb patch states to a single int and sends it to the player.

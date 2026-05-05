@@ -8,16 +8,16 @@ import io.luna.game.model.item.Item
  *
  * @author lare96
  */
-enum class AllotmentSeeds(val seed: Int,
-                          val level: Int,
-                          val flowerProtection: Set<String> = emptySet(),
-                          val farmerProtection: Item? = null,
-                          val growthStages: Int,
-                          val crop: Item,
-                          val plantXp: Double,
-                          val harvestXp: Double,
-                          val patch: PatchType,
-                          val states: Pair<Int, Int> = Pair(-1, -1)) {
+enum class AllotmentSeed(val seed: Int,
+                         val level: Int,
+                         val flowerProtection: Set<String> = emptySet(),
+                         val farmerProtection: Item? = null,
+                         val growthStages: Int,
+                         val crop: Item,
+                         val plantXp: Double,
+                         val harvestXp: Double,
+                         val patch: PatchType,
+                         val states: Pair<Int, Int> = Pair(-1, -1)) {
 
     // Allotment seeds.
     POTATO(seed = -1,

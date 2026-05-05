@@ -54,7 +54,7 @@ HerbPatchLocation.values().forEach { location ->
     }
 
     // Hook for planting seeds in herb patches
-    HerbSeeds.values().forEach { seed ->
+    HerbSeed.values().forEach { seed ->
         useItem(seed.seedId).onObject(location.objectId) {
             var patch: HerbPatch = plr.herbPatches[location] ?: return@onObject
 

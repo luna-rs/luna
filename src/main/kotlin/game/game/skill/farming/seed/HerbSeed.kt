@@ -7,11 +7,11 @@ import io.luna.game.model.item.*
  *
  * @author hydrozoa
  */
-enum class HerbSeeds(val seedId: Int,
-                     val level: Int,
-                     val crop: Item,
-                     val plantXp: Double,
-                     val harvestXp: Double) {
+enum class HerbSeed(val seedId: Int,
+                    val level: Int,
+                    val crop: Item,
+                    val plantXp: Double,
+                    val harvestXp: Double) {
 
     GUAM(5291, 9, Item(199), 11.5, 13.5),
     MARRENTILL(5292, 14, Item(201), 13.5, 15.0),
@@ -29,7 +29,7 @@ enum class HerbSeeds(val seedId: Int,
     TORSTOL(5304, 85, Item(219), 199.5, 224.5);
 
     companion object {
-        private val seeds = values().associateBy(HerbSeeds::seedId)
-        fun lookup(seedId: Int): HerbSeeds? = seeds[seedId]
+        private val seeds = values().associateBy(HerbSeed::seedId)
+        fun lookup(seedId: Int): HerbSeed? = seeds[seedId]
     }
 }

@@ -1,5 +1,6 @@
 package game.skill.farming.patch
 
+import game.skill.farming.*
 import game.skill.farming.seed.*
 import io.luna.game.model.item.*
 
@@ -11,9 +12,9 @@ import io.luna.game.model.item.*
  *
  * @author hydrozoa
  */
-class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
+class AllotmentPatch(val location: AllotmentPatchLocation) : FarmingPatch() {
 
-    private var plantType: AllotmentSeeds? = null
+    private var plantType: AllotmentSeed? = null
 
     override fun getVarpValue(): Int {
         var varpValue: Int = 3
@@ -23,11 +24,13 @@ class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
             varpValue = 3
         }
 
-        if (southEastern) {
-            varpValue = varpValue shl 8
-        }
+        // todo
 
         return varpValue
+    }
+
+    override fun getVarpId(): Int {
+        return location.config
     }
 
     override fun hasPlant(): Boolean {
@@ -35,7 +38,7 @@ class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
     }
 
     override fun harvestReady(): Boolean {
-        return false
+        return plantType != null && growthStage >= 10
     }
 
     override fun produce(): Item? {
@@ -43,6 +46,7 @@ class AllotmentPatch(val southEastern: Boolean) : FarmingPatch() {
     }
 
     override fun reset(includeWeeds: Boolean) {
-        TODO("Not yet implemented")
+        super.reset(includeWeeds)
+        plantType = null
     }
 }

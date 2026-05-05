@@ -3,17 +3,29 @@ package game.skill.farming.patch;
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.*
 
-
 /**
  * Represents any farming patch.
  * @author hydrozoa
  */
 abstract class FarmingPatch {
 
-    private var isDead: Boolean = false
-    private var isDiseased: Boolean = false
+    var isDead: Boolean = false
+    var isDiseased: Boolean = false
+
+    /**
+     * How many weeds are on the patch. Can be 0 to 3, where 3 is full of weeds.
+     */
     var weeds: Int = 3
+
+    /**
+     * How many crops can be harvested.
+     */
     var produceAvailable = 0
+
+    /**
+     * Growth stage of current plant. If no plant is planted this will be 0.
+     */
+    var growthStage = 0
 
     /**
      * If this patchs needs raking.
@@ -52,14 +64,34 @@ abstract class FarmingPatch {
     abstract fun getVarpValue(): Int
 
     /**
+     * The id of the config that changes this patch.
+     */
+    abstract fun getVarpId(): Int
+
+    /**
      * @return True if the player has planted something here
      */
     abstract fun hasPlant(): Boolean
 
+    /**
+     * @return True if this patch is ready to be harvested.
+     */
     abstract fun harvestReady(): Boolean
 
+    /**
+     * @return Item that the player will harvest from this patch.
+     */
     abstract fun produce(): Item?
 
-    abstract fun reset(includeWeeds: Boolean)
+    /**
+     * Resets the patch. If weeds are included it will reset to fully grown weeds,
+     * if not it will reset to no weeds or plants.
+     */
+    open fun reset(includeWeeds: Boolean) {
+        growthStage = 0
+        if (includeWeeds) {
+            weeds = 3
+        }
+    }
 
 }

@@ -6,13 +6,13 @@ import io.luna.game.model.item.*
 
 /**
  * Represents any herb patch.
+ * Growths stage can go from 0 to 5 for all herbs.
  *
  * @hydrozoa
  */
 class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
 
-    var plantType: HerbSeeds? = null
-    var growthStage = 0 // from 0 to 5
+    var plantType: HerbSeed? = null
 
     override fun getVarpValue(): Int {
         var varpValue: Int = 3
@@ -27,11 +27,15 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         return varpValue
     }
 
+    override fun getVarpId(): Int {
+        return 515
+    }
+
     override fun hasPlant(): Boolean {
         return plantType != null
     }
 
-    fun plant(seed: HerbSeeds): Boolean {
+    fun plant(seed: HerbSeed): Boolean {
         if (weeds > 0) {
             return false
         }
@@ -49,10 +53,7 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
     }
 
     override fun reset(includeWeeds: Boolean) {
+        super.reset(includeWeeds)
         plantType = null
-        growthStage = 0
-        if (includeWeeds) {
-            weeds = 3
-        }
     }
 }

@@ -16,10 +16,7 @@ import io.luna.game.model.`object`.*
 class HarvestAction(plr: Player, private val patchObject: GameObject) : Action<Player>(plr, ActionType.WEAK, true, 4) {
 
     override fun onSubmit() {
-        var patch: FarmingPatch? = null
-        if (HerbPatchLocation.values().map { it.objectId }.contains(patchObject.id)) {
-            patch = mob.herbPatches[HerbPatchLocation.lookup(patchObject.id)]
-        } // todo implement other patches
+        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
 
         if (patch == null) {
             mob.sendMessage("Unknown patch id="+patchObject.id)
@@ -33,10 +30,7 @@ class HarvestAction(plr: Player, private val patchObject: GameObject) : Action<P
     }
 
     override fun run(): Boolean {
-        var patch: FarmingPatch? = null
-        if (HerbPatchLocation.values().map { it.objectId }.contains(patchObject.id)) {
-            patch = mob.herbPatches[HerbPatchLocation.lookup(patchObject.id)]
-        }
+        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
 
         if (patch == null) {
             mob.sendMessage("Unknown patch id="+patchObject.id)
