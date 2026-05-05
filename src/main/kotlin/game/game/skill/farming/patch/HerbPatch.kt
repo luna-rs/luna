@@ -23,6 +23,13 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         } else if (plantType != null)  {
             varpValue = 3 + growthStage
         }
+
+        if (isDiseased) {
+            varpValue += 128
+        } else if (isDead) {
+            varpValue = 169 + growthStage
+        }
+
         varpValue = varpValue shl location.shifts
         return varpValue
     }
