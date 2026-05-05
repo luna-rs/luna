@@ -22,11 +22,21 @@ class AllotmentPatch(val location: AllotmentPatchLocation) : FarmingPatch() {
             varpValue = 3 - weeds
         } else if (plantType == null) {
             varpValue = 3
+        } else if (plantType != null) {
+            varpValue = plantType!!.configIndexOffset + growthStage
         }
 
-        // todo
-
+        varpValue = varpValue shl location.shifts
         return varpValue
+    }
+
+    fun plant(seed: AllotmentSeed): Boolean {
+        if (weeds > 0) {
+            return false
+        }
+        plantType = seed
+        growthStage = 1
+        return true
     }
 
     override fun getVarpId(): Int {
@@ -37,16 +47,16 @@ class AllotmentPatch(val location: AllotmentPatchLocation) : FarmingPatch() {
         return plantType != null
     }
 
-    override fun harvestReady(): Boolean {
-        return plantType != null && growthStage >= 10
-    }
-
     override fun produce(): Item? {
-        return Item.byName("Weeds")
+        return plantType?.crop
     }
 
     override fun reset(includeWeeds: Boolean) {
         super.reset(includeWeeds)
         plantType = null
+    }
+
+    override fun maxGrowth(): Int? {
+        return plantType?.growthStages
     }
 }

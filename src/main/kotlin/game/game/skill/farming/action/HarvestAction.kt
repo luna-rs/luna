@@ -50,9 +50,12 @@ class HarvestAction(plr: Player, private val patchObject: GameObject) : Action<P
         // todo change to correct animation
         mob.animation(Animations.SUPERHEAT) // dummy just for visual feedback, remove once correct anim is found
 
+        // todo give exp
+
         var harvestResult = patch.harvest(mob)
         if (harvestResult) {
             Farming.sendHerbState(mob)
+            Farming.sendAllotmentState(mob)
             return true
         }
         return false

@@ -1,5 +1,6 @@
 package game.skill.farming.patch;
 
+import game.skill.farming.*
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.*
 
@@ -76,7 +77,9 @@ abstract class FarmingPatch {
     /**
      * @return True if this patch is ready to be harvested.
      */
-    abstract fun harvestReady(): Boolean
+    fun harvestReady(): Boolean {
+        return growthStage == maxGrowth() && hasPlant()
+    }
 
     /**
      * @return Item that the player will harvest from this patch.
@@ -93,5 +96,7 @@ abstract class FarmingPatch {
             weeds = 3
         }
     }
+
+    abstract fun maxGrowth(): Int?
 
 }

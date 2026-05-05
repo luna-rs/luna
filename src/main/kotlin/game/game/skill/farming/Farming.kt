@@ -62,4 +62,21 @@ object Farming {
         }
         plr.sendVarp(Varp(VarpDefinition.VarpType.HERB_PATCH.id, herbState))
     }
+
+    /**
+     * Combines all allotment patch states and sends them to the player.
+     */
+    fun sendAllotmentState(plr: Player) {
+        val allotmentStates: MutableMap<Int, Int> = mutableMapOf()
+        plr.allotmentPatches.values.forEach { patch ->
+            if (allotmentStates[patch.location.config] == null) {
+                allotmentStates[patch.location.config] = 0
+            }
+            allotmentStates[patch.location.config] = allotmentStates[patch.location.config]!! + patch.getVarpValue()
+        }
+        allotmentStates.forEach { (configId, value) ->
+            System.out.println("Sent "+configId+" = "+value);
+            plr.sendVarp(Varp(configId, value))
+        }
+    }
 }

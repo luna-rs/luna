@@ -44,10 +44,6 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
         return true
     }
 
-    override fun harvestReady(): Boolean {
-        return growthStage == 5
-    }
-
     override fun produce(): Item? {
         return plantType?.crop
     }
@@ -55,5 +51,9 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
     override fun reset(includeWeeds: Boolean) {
         super.reset(includeWeeds)
         plantType = null
+    }
+
+    override fun maxGrowth(): Int {
+        return 5
     }
 }

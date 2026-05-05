@@ -3,6 +3,7 @@ package game.skill.farming
 import api.predef.*
 import api.predef.ext.*
 import game.player.*
+import game.skill.farming.Farming.allotmentPatches
 import game.skill.farming.Farming.herbPatches
 import game.skill.farming.action.*
 import game.skill.farming.patch.*
@@ -77,11 +78,50 @@ HerbPatchLocation.values().forEach { location ->
     }
 }
 
+AllotmentPatchLocation.values().forEach { location ->
+    // Hook for raking allotment patches
+    useItem(rake).onObject(location.objectId) {
+        plr.submitAction(RakePatchAction(plr, gameObject))
+    }
+
+    // Hook for harvesting allotments
+    object1(location.objectId) {
+        plr.submitAction(HarvestAction(plr, gameObject))
+    }
+
+    // Hook for planting seeds in herb patches
+    AllotmentSeed.values().forEach { seed ->
+        useItem(seed.seed).onObject(location.objectId) {
+            var patch: AllotmentPatch = plr.allotmentPatches[location] ?: return@onObject
+
+            if (patch.needsRaking()) {
+                plr.sendMessage("The patch has weeds in it.")
+                return@onObject
+            }
+
+            if (!plr.inventory.contains(Item.byName("Seed dibber"))) {
+                plr.sendMessage("You need a seed dipper to do this.")
+                return@onObject
+            }
+
+            plr.animation(Animations.SUPERHEAT)
+            plr.sendMessage("You plant the seed.")
+            plr.inventory.remove(seed.seed)
+            patch.plant(seed)
+            Farming.sendAllotmentState(plr)
+        }
+    }
+}
+
 cmd("resetpatches", RIGHTS_ADMIN) {
     plr.herbPatches.values.forEach({ herbPatch ->
         herbPatch.reset(true)
     })
+    plr.allotmentPatches.values.forEach({ patch ->
+        patch.reset(true)
+    })
     Farming.sendHerbState(plr)
+    Farming.sendAllotmentState(plr)
 }
 
 cmd("progressplants", RIGHTS_ADMIN) {
@@ -91,7 +131,13 @@ cmd("progressplants", RIGHTS_ADMIN) {
             UpdateFarmsTask.progressPlants(herbPatch)
         }
     })
+    plr.allotmentPatches.values.forEach({ patch ->
+        for (i in 0 until rounds) {
+            UpdateFarmsTask.progressPlants(patch)
+        }
+    })
     Farming.sendHerbState(plr)
+    Farming.sendAllotmentState(plr)
 }
 
 // Schedule task updating farms every minute
@@ -100,6 +146,7 @@ world.schedule(UpdateFarmsTask(world.players))
 // Send farming state when logged in
 on(LoginEvent::class) {
     Farming.sendHerbState(plr)
+    Farming.sendAllotmentState(plr)
 }
 
 useItem(6032).onObject(7836) {

@@ -20,7 +20,7 @@ class UpdateFarmsTask(private val players: MobList<Player>) : Task(false, 100) {
          * Progresses weed growth on a patch.
          * @return true if any weeds were grown
          */
-        fun progressWeeds(patch: HerbPatch): Boolean {
+        fun progressWeeds(patch: FarmingPatch): Boolean {
             if (!patch.hasPlant() && patch.weeds < 3) {
                 patch.weeds++
                 return true
@@ -32,11 +32,11 @@ class UpdateFarmsTask(private val players: MobList<Player>) : Task(false, 100) {
          * Progresses plant growth on a patch.
          * @return true if any plants were grown
          */
-        fun progressPlants(patch: HerbPatch): Boolean {
-            if (patch.hasPlant() && patch.growthStage < 5) {
+        fun progressPlants(patch: FarmingPatch): Boolean {
+            if (patch.hasPlant() && patch.growthStage < patch.maxGrowth()!!) {
                 patch.growthStage++
                 if (patch.harvestReady()) { // finished growing
-                    patch.produceAvailable = 5
+                    patch.produceAvailable = 5 // todo calc amount
                 }
                 return true
             }

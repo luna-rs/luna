@@ -48,9 +48,13 @@ class RakePatchAction(plr: Player, private val patchObject: GameObject) : Action
         mob.animation(Animations.SUPERHEAT) // dummy just for visual feedback, remove once correct anim is found
         // todo send correct animation
         // todo send rake gfx
+        // todo give exp
 
         var completedRaking = patch.rake(mob) ?: true
+
+        // todo only update varps that changed, not everything
         Farming.sendHerbState(mob)
+        Farming.sendAllotmentState(mob)
 
         return completedRaking
     }
