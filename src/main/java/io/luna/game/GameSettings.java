@@ -182,7 +182,7 @@ public final class GameSettings {
     }
 
     /**
-     * Returns {@code true} when the server is running in a “beta-like” mode.
+     * Returns {@code true} when the server is running in a "beta-like" mode.
      */
     public boolean betaMode() {
         switch (runtimeMode) {

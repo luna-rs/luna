@@ -56,6 +56,17 @@ public final class BotSettings {
     private final double highIntelligenceChance;
 
     /**
+     * The chance that a newly created bot will enjoy trading with other players.
+     */
+    private final double merchantingChance;
+
+    /**
+     * The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and
+     * greed.
+     */
+    private final int baseLootValue;
+
+    /**
      * Returns the baseline number of bots the world should try to keep online.
      */
     public int baseOnlineCount() {
@@ -118,9 +129,25 @@ public final class BotSettings {
         return lowIntelligenceChance;
     }
 
+    /**
+     * Returns the chance that a newly created bot will enjoy trading with other players.
+     */
+    public double merchantingChance() {
+        return merchantingChance;
+    }
+
+    /**
+     * Returns the base value an item stack must have for a bot to loot it. Affected by combat level, intelligence,
+     * and greed.
+     */
+    public int baseLootValue() {
+        return baseLootValue;
+    }
+
     // Never called.
     private BotSettings(int baseOnlineCount, int baseLoginHours, int baseLogoutHours, int minimumLoginHours,
-                        int maximumLoginHours, int minimumLogoutHours, int maximumLogoutHours, double highIntelligenceChance, double lowIntelligenceChance) {
+                        int maximumLoginHours, int minimumLogoutHours, int maximumLogoutHours, double highIntelligenceChance,
+                        double lowIntelligenceChance, double merchantingChance, int baseLootValue) {
         this.baseOnlineCount = baseOnlineCount;
         this.baseLoginHours = baseLoginHours;
         this.baseLogoutHours = baseLogoutHours;
@@ -130,5 +157,7 @@ public final class BotSettings {
         this.maximumLogoutHours = maximumLogoutHours;
         this.highIntelligenceChance = highIntelligenceChance;
         this.lowIntelligenceChance = lowIntelligenceChance;
+        this.merchantingChance = merchantingChance;
+        this.baseLootValue = baseLootValue;
     }
 }

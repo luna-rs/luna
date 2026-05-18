@@ -7,7 +7,7 @@ import io.luna.game.model.World;
 import io.luna.game.task.Task;
 
 /**
- * A {@link TickTimer}-backed “cooldown clock” used by actions that need rate limiting.
+ * A {@link TickTimer}-backed "cooldown clock" used by actions that need rate limiting.
  * <p>
  * {@link TimeSource} is shared state that tracks elapsed ticks since the last execution of a particular action family.
  * It is primarily used by:

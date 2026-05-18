@@ -1,11 +1,35 @@
 # SQL Schemas
 
-This folder contains the default schemas required in order to enable SQL based persistence.
+This folder contains the SQL files used to set up Luna's MySQL persistence.
 
-The __main_data.sql__ schema is for basic player information and their JSON data. __skills_data.sql__ holds all skill related data. The __setup.sql__ schema can help you with setting up the initial user and database.
+## Files
 
-You will need to create your own database with an appropriate user/privileges to add the schemas. For more help on how to do this, please see [the wiki](https://github.com/luna-rs/luna/wiki/SQL-Configuration). 
+### `user.sql`
 
-# Security
+Optional helper script for creating the initial SQL user.
 
-Please do not use [the default password](https://github.com/luna-rs/luna/blob/master/src/main/java/io/luna/util/SqlConnectionPool.java#L38) provided to create your user. __Do not__ disable the BCrypt password encryption, this is especially important when storing player data in a database.
+Before running it, please change the default password and ensure it matches `database.password` in `luna.jsonc`.
+
+### `luna.sql`
+
+Main schema file for Luna's SQL persistence.
+
+This creates the required tables for:
+
+- player and bot account data
+- economy prices
+- economy price history
+
+## Setup
+
+1. Create or edit your SQL user using `user.sql`.
+2. Import the main schema using `luna.sql`.
+3. Update the values under `database` in the `luna.jsonc` file so the host, username, and password match your MySQL
+   setup.
+4. Ensure `game.serializer` is `SqlGameSerializer`in the `luna.jsonc` file.
+
+Example:
+
+```bash
+mysql -u root -p < user.sql
+mysql -u luna_db -p < luna.sql

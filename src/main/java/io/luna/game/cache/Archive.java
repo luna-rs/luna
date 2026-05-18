@@ -11,13 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * A single “named archive” inside the #317/#377 cache.
+ * A single "named archive" inside the #317/#377 cache.
  * <p>
  * An archive is a container for one or more {@link ArchiveFile}s, addressed by a hashed name. Archives can be stored
  * in one of two formats:
  * <ul>
  *   <li><b>Whole-archive compressed</b>: the entire archive payload is BZIP2-compressed.</li>
- *   <li><b>Individually compressed (“packed”)</b>: the archive payload is not compressed as a whole,
+ *   <li><b>Individually compressed ("packed")</b>: the archive payload is not compressed as a whole,
  *       but each file inside the archive is BZIP2-compressed.</li>
  * </ul>
  * <p>
@@ -36,7 +36,7 @@ public final class Archive {
      * these differ, the archive payload is compressed as a whole and must be BZIP2-decompressed before reading the
      * internal file table.
      * <p>
-     * When they are equal, the archive payload is already “raw”, and each file entry inside the archive is typically
+     * When they are equal, the archive payload is already "raw", and each file entry inside the archive is typically
      * individually compressed.
      *
      * @param buf The buffer containing the archive data positioned at the archive header.

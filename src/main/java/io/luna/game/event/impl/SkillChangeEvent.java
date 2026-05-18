@@ -53,6 +53,11 @@ public final class SkillChangeEvent extends PlayerEvent implements InjectableEve
         return plr;
     }
 
+    @Override
+    public int contextRadius(Bot bot) {
+        return 5;
+    }
+
     /**
      * Determines if this event results in a level up.
      *

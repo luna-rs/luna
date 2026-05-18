@@ -1,5 +1,6 @@
 package api.bot.zone
 
+import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.zone.SubZone.Companion.updateSubZone
@@ -9,7 +10,6 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSetMultimap
 import game.content.edgevilleDungeon.EdgevilleDungeon
-import io.luna.Luna
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
@@ -62,7 +62,7 @@ enum class SubZone(val inside: Position,
      * The home area, currently Varrock west bank. Intended for smithers, pickpockets, dumb cookers, and low -> avg. intelligence
      * firemakers.
      */
-    HOME(inside = Luna.settings().game().startingPosition(),
+    HOME(inside = VARROCK.anchor,
          area = SimpleBoxArea.of(3171, 3425, 3198, 3451),
          parent = { VARROCK }),
 
@@ -77,10 +77,16 @@ enum class SubZone(val inside: Position,
             lazyVal { world.locator.findViewableNpcs(Position(3253, 3401)) { it.id == 553 }.first() }
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            if (bot.zone != VARROCK && !bot.actionHandler.travelTo(VARROCK)) {
+            if (!bot.actionHandler.travelTo(VARROCK)) {
                 return false
             }
-            return bot.actionHandler.interactions.interact(3, auburyNpc.value)
+            while(bot.isViewableFrom(auburyNpc.value) && bot.subZone != ESSENCE_MINE) {
+                if(bot.walking.isEmpty) {
+                    bot.actionHandler.interactions.interact(4, auburyNpc.value)
+                }
+                bot.naturalDecisionDelay()
+            }
+            return area.contains(bot)
         }
 
         override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
@@ -108,7 +114,7 @@ enum class SubZone(val inside: Position,
      * - Net and bait fishing spots
      * - Guards at the jail
      */
-    DRAYNOR_MAIN(inside = Position(3093, 3244),
+    DRAYNOR_MAIN(inside = DRAYNOR.anchor,
                  area = SimpleBoxArea.of(3073, 3221, 3134, 3262),
                  parent = { DRAYNOR }),
 
@@ -255,14 +261,14 @@ enum class SubZone(val inside: Position,
                              parent = { CATHERBY }),
 
     /**
-     * The yew trees directly north of Seers' Village. Intended for mid-level woodcutters.
+     * The main bank and trees near Seers' Village. Intended for mid-level woodcutters.
      * - 4 maple trees
      * - 6 willow trees
      * - Normal trees
      */
-    SEERS_VILLAGE_MAPLES(inside = Position(2723, 3504),
-                         area = SimpleBoxArea.of(2702, 3494, 2735, 3516),
-                         parent = { SEERS_VILLAGE }),
+    SEERS_VILLAGE_MAIN(inside = Position(2723, 3504),
+                       area = SimpleBoxArea.of(2688, 3478, 2740, 3514),
+                       parent = { SEERS_VILLAGE }),
 
     /**
      * The yew trees west of Catherby. Intended for intelligent money-makers.
@@ -330,7 +336,7 @@ enum class SubZone(val inside: Position,
      * - Various men and women
      * - Hans
      */
-    LUMBRIDGE_COURT_YARD(inside = Position(3229, 3309),
+    LUMBRIDGE_COURT_YARD(inside = LUMBRIDGE.anchor,
                          area = SimpleBoxArea.of(3215, 3205, 3230, 3229),
                          parent = { LUMBRIDGE }),
 

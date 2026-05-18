@@ -320,6 +320,26 @@ public class WalkingNavigator {
     }
 
     /**
+     * @return {@code true} if there is currently active continuous navigation in-progress.
+     */
+    public boolean isCurrentContinuous() {
+        if (isActive()) {
+            return !active.getPending().isDone() && active.isContinuous();
+        }
+        return false;
+    }
+
+    /**
+     * @return The pending navigation result, or {@code null} if no request is active.
+     */
+    public CompletableFuture<NavigationResult> getCurrentPending() {
+        if (isActive()) {
+            return active.getPending();
+        }
+        return null;
+    }
+
+    /**
      * Computes a path from a start position to a target position.
      * <p>
      * If {@code async} is {@code true}, pathfinding is performed on the shared pathfinding pool. Otherwise, pathfinding

@@ -12,13 +12,15 @@ package io.luna.game.model.item.economy;
 public final class WorldEconomySettings {
 
     /**
-     * The base strength applied to price movement before sample count, sample confidence, historical weight, and
-     * movement caps are applied.
+     * The multiplier applied to historical sample resistance when calculating price movement strength.
      * <p>
-     * A value of {@code 1.0} means the raw difference between the current guide price and observed trade price is used
-     * at full strength before later dampening is applied.
+     * Higher values make prices harder to move because existing sample history is weighted more heavily against new trade
+     * samples. Lower values make prices more responsive to recent trades.
+     * <p>
+     * This value is multiplied against the base resistance factor used by {@link ItemPriceData}. For example, a value
+     * of {@code 0.60} makes the effective historical multiplier {@code 250.0 * 0.60}, or {@code 150.0}.
      */
-    private final double basePriceMovementStrength;
+    private final double priceMovementResistance;
 
     /**
      * The minimum guide price for non-stackable items.
@@ -69,10 +71,10 @@ public final class WorldEconomySettings {
     private final double maximumUnderpayRatio;
 
     /**
-     * Returns the base strength applied to price movement before other modifiers are applied.
+     * Returns the multiplier applied to historical sample resistance when calculating price movement strength.
      */
-    public double basePriceMovementStrength() {
-        return basePriceMovementStrength;
+    public double priceMovementResistance() {
+        return priceMovementResistance;
     }
 
     /**
@@ -120,14 +122,14 @@ public final class WorldEconomySettings {
     /**
      * Private constructor.
      */
-    private WorldEconomySettings(double basePriceMovementStrength,
+    private WorldEconomySettings(double priceMovementResistance,
                                  int minimumPrice,
                                  int minimumStackablePrice,
                                  int priceUpdateFrequencyMinutes,
                                  double maximumPriceMovement,
                                  double maximumOverpayRatio,
                                  double maximumUnderpayRatio) {
-        this.basePriceMovementStrength = basePriceMovementStrength;
+        this.priceMovementResistance = priceMovementResistance;
         this.minimumPrice = minimumPrice;
         this.minimumStackablePrice = minimumStackablePrice;
         this.priceUpdateFrequencyMinutes = priceUpdateFrequencyMinutes;

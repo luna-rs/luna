@@ -1,12 +1,13 @@
 package game.bot.scripts.skills
 
-import api.bot.BotScriptData
-import api.bot.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.BotScriptData
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
+import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
@@ -53,7 +54,7 @@ class PickpocketBotScript(
 
             override fun load(data: JsonObject) {
                 super.load(data)
-                loadEnumSet("npcs", data) { ThievingNpcType.valueOf(it) }
+                npcs = loadEnumSet("npcs", data) { ThievingNpcType.valueOf(it) }
             }
 
             override fun save(data: JsonObject) {
@@ -95,7 +96,7 @@ class PickpocketBotScript(
      * @param searching Whether the parent script is currently searching for a new target.
      * @param focus The currently selected NPC target, or `null` if no target is focused.
      */
-    override suspend fun onExecuteInZone(searching: Boolean, focus: Npc?) {
+    override suspend fun onExecuteSkilling(searching: Boolean, focus: Npc?) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true
@@ -112,14 +113,17 @@ class PickpocketBotScript(
      *
      * @param initial Whether this is the first banking pass for the script.
      */
-    override suspend fun onBankItems(initial: Boolean) {
+    override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.25).toInt())) {
-            // TODO@0.5.0 Trigger the bot needing food? Maybe have something called an ItemRequestBotScript that will
-            //  make a bot try and retrieve an item by any means. Shops, buying, skilling, etc. Need a universal system for this.
+            handler.supplies.getWantedFood().forEach { bot.preferences.wantedItems += it.id }
             bot.log("No food left, ending script.")
-            terminate()
+            stop()
         }
+    }
+
+    override suspend fun refocus(): Boolean {
+        return false
     }
 
     override fun interactionOption(): Int = 2
@@ -128,12 +132,12 @@ class PickpocketBotScript(
         val data = PickpocketData()
         data.npcs = npcs
         data.duration = duration
-        data.zones = zones
+        data.zones = originalZones.toMutableList()
         return data
     }
 
-    override fun find(searchRadius: Int): MutableCollection<Npc> {
-        return world.locator.findNpcs(bot, searchRadius, true) {
+    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
+        return world.locator.findNpcs(searchBase, searchRadius, true) {
             val def = it.def()
             def.actions.elementAtOrNull(2)?.equals("Pickpocket") == true && def.name in npcNames
         }

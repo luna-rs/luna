@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap
 import engine.bank.Banking
 import game.item.degradable.jewellery.TeleportJewellery
 import game.skill.magic.teleportSpells.TeleportSpell
+import io.luna.Luna
 import io.luna.game.model.EntityType
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
@@ -41,7 +42,7 @@ enum class Zone(val anchor: Position,
                 val bankAnchors: List<Position> = emptyList(),
                 val travel: List<TravelStrategy> = emptyList(),
                 val safe: Boolean = true) {
-    DRAYNOR(anchor = Position(3105, 3251),
+    DRAYNOR(anchor = Position(3093, 3244),
             regions = setOf(12338, 12339, 12340),
             bankAnchors = listOf(Position(3091, 3245, 0),
                                  Position(3091, 3242, 0),
@@ -61,7 +62,7 @@ enum class Zone(val anchor: Position,
                               HomeTravelStrategy,
                               WalkingTravelStrategy)),
 
-    VARROCK(anchor = Position(3212, 3423),
+    VARROCK(anchor = Luna.settings().game().startingPosition(),
             regions = setOf(12596, 12598, 12854, 13110, 12597, 12853, 13109, 13108, 12852),
             bankAnchors = listOf(Position(3186, 3436, 0),
                                  Position(3186, 3438, 0),

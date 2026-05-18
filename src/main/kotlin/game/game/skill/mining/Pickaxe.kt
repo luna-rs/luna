@@ -55,7 +55,7 @@ enum class Pickaxe(val level: Int,
             val weapon = plr.equipment[Equipment.WEAPON]
             if (weapon != null) { // See if weapon is a pickaxe.
                 val pickFound = ID_TO_PICKAXE[weapon.id]
-                if (pickFound != null && plr.mining.level > pickFound.level) {
+                if (pickFound != null && plr.mining.level >= pickFound.level) {
                     pick = pickFound
                 }
             }

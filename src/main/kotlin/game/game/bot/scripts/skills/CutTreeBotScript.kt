@@ -1,8 +1,8 @@
 package game.bot.scripts.skills
 
-import api.bot.BotScriptData
+import api.bot.script.BotScriptData
 import api.bot.Suspendable.naturalMicroDelay
-import api.bot.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
@@ -12,6 +12,7 @@ import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.TreeStump
 import game.skill.woodcutting.searchNest.Nest
+import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import java.util.*
@@ -88,7 +89,8 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     /**
      * The item id of a bird nest that was recently picked up and should be opened from the bot's inventory.
      *
-     * This is set after a successful ground-item interaction and cleared after the script attempts to use the nest.
+     * This is used as a small handoff between the ground-item pickup and inventory-click step. It is cleared after the
+     * script attempts to open the nest.
      */
     private var pickedUp: Int? = null
 
@@ -96,7 +98,8 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         return treeIds.isNotEmpty()
     }
 
-    override suspend fun onExecuteInZone(searching: Boolean, focus: GameObject?) {
+    override suspend fun onExecuteSkilling(searching: Boolean, focus: GameObject?) {
+        // Search nearby for birds nests and loot if we have enough inventory space.
         if (bot.walking.isEmpty && bot.inventory.computeRemainingSize() >= 2) {
             val nests = world.locator.findItems(bot, 5) { it.view.isViewableFor(bot) && Nest.isNest(it.id) }
             for (item in nests) {
@@ -114,13 +117,14 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         }
     }
 
-    override fun find(searchRadius: Int): MutableCollection<GameObject> {
-        return world.locator.findObjects(bot, searchRadius) { it.id in treeIds }
+    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+        return world.locator.findObjects(searchBase, searchRadius) { it.id in treeIds }
     }
 
     override fun tools(): SortedSet<SkillingTool> =
         Axe.VALUES.values.filter { skill.staticLevel >= it.level }
             .mapTo(TreeSet()) { SkillingTool(it.id, it.level) }
+
 
     override fun emergencyTool(): SkillingTool = SkillingTool(Axe.BRONZE.id, Axe.BRONZE.level)
 
@@ -129,7 +133,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     override fun snapshot(): BotScriptData {
         val data = CutTreeData()
         data.duration = duration
-        data.zones = zones
+        data.zones = originalZones.toMutableList()
         data.trees = trees
         return data
     }

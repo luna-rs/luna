@@ -12,7 +12,7 @@ fun openInterface(msg: ItemOnItemEvent, bow: Bow) {
     val interfaces = msg.plr.overlays
     interfaces.open(object : MakeItemDialogue(bow.strung) {
         override fun make(plr: Player, id: Int, index: Int, forAmount: Int) =
-            plr.submitAction(StringBowActionItem(plr, bow, forAmount))
+            plr.submitAction(StringBowAction(plr, bow, forAmount))
     })
 }
 
