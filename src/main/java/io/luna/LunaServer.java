@@ -54,7 +54,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * <ol>
  *   <li>Scan the classpath for plugin/script metadata (ClassGraph)</li>
  *   <li>Open the 377 cache and launch cache decoders</li>
- *   <li>Run background “launch tasks” (parsers, bot name loading, repositories)</li>
+ *   <li>Run background "launch tasks" (parsers, bot name loading, repositories)</li>
  *   <li>Start core {@link Service}s (game loop + login/logout workers)</li>
  *   <li>Wait for the online lock (ensures game is ready to accept players)</li>
  *   <li>Bring the Netty network online and bind to the configured port</li>

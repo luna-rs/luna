@@ -89,7 +89,7 @@ public final class PlayerContextMenu implements Iterable<PlayerContextMenuOption
     }
 
     /**
-     * Displays {@code option} in its configured slot and queues the corresponding “show” message to the client.
+     * Displays {@code option} in its configured slot and queues the corresponding "show" message to the client.
      * <p>
      * If the slot already contains an option, it will be overwritten.
      * </p>
@@ -104,7 +104,7 @@ public final class PlayerContextMenu implements Iterable<PlayerContextMenuOption
     }
 
     /**
-     * Hides {@code option} from its configured slot and queues the corresponding “hide” message to the client.
+     * Hides {@code option} from its configured slot and queues the corresponding "hide" message to the client.
      * <p>
      * This method clears the slot implied by {@link PlayerContextMenuOption#getIndex()}, regardless of what option
      * is currently in that slot.

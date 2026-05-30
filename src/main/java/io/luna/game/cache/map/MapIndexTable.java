@@ -3,6 +3,7 @@ package io.luna.game.cache.map;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 
 /**
@@ -19,6 +20,7 @@ import io.luna.game.model.Region;
  */
 public final class MapIndexTable {
 
+    // TODO Utility methods..
     /**
      * The index table keyed by region.
      */
@@ -45,6 +47,11 @@ public final class MapIndexTable {
         this.indexTable = indexTable;
         this.objectSet = objectSet;
         this.tileSet = tileSet;
+    }
+
+    public MapTile getTile(Position position) {
+        // todo null checks, safety, ettc.
+        return tileSet.getGrid(indexTable.get(position.getRegion())).getTile(position);
     }
 
     /**

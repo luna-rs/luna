@@ -1,13 +1,10 @@
-package api.bot
+package api.bot.script
 
-import api.bot.action.BotActionHandler
+import api.bot.GameCoroutineScope
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.io.BotInputMessageHandler
-import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -35,40 +32,7 @@ import kotlinx.coroutines.yield
  * @property bot The bot controlled by this script.
  * @author lare96
  */
-abstract class BotScript<T>(val bot: Bot) {
-
-    /**
-     * Handles simulated inbound client messages for this bot.
-     *
-     * This gives scripts access to the same input pipeline used by normal player-originated actions, such as movement
-     * requests, button clicks, item clicks, entity interactions, and widget input.
-     */
-    protected val input: BotInputMessageHandler = bot.botClient.input
-
-    /**
-     * Handles simulated outbound client messages for this bot.
-     *
-     * This lets scripts send packet-style actions through the bot client, allowing the bot to interact with the world
-     * through the same broad flow as a real player.
-     */
-    protected val output: BotOutputMessageHandler = bot.botClient.output
-
-    /**
-     * Provides high-level reusable bot actions.
-     *
-     * This groups common behavior such as banking, shopping, equipment changes, inventory operations, widget clicks,
-     * entity interactions, navigation support, and combat utility actions.
-     */
-    protected val handler: BotActionHandler = bot.actionHandler
-
-    /**
-     * The coroutine job for this script's most recent execution.
-     *
-     * This is `null` until the script is started for the first time. After [start] is called, this points at the
-     * active or most recently completed job. Paused, finished, and terminated scripts keep their most recent job
-     * reference so lifecycle checks can distinguish idle scripts from scripts that have already run.
-     */
-    private var progress: Job? = null
+abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
 
     /**
      * Whether this script has been permanently terminated.
@@ -91,9 +55,9 @@ abstract class BotScript<T>(val bot: Bot) {
      * Returning `false` allows normal script execution to continue.
      *
      * @param resumed `true` if this script is being restarted after a pause, otherwise `false`.
-     * @return `true` to finish during initialization, or `false` to enter the main [run] loop.
+     * @return `true` to enter the main [run] loop, or `false` to finish during initialization.
      */
-    open suspend fun init(resumed: Boolean): Boolean = false
+    open suspend fun init(resumed: Boolean): Boolean = false // todo invert this.. confusing
 
     /**
      * Executes one cycle of this script.
@@ -142,12 +106,12 @@ abstract class BotScript<T>(val bot: Bot) {
      *
      * @return A snapshot representing this script's persistent state.
      */
-    abstract fun snapshot(): T
+    abstract fun snapshot(): BotScriptData?
 
     /**
      * Starts this script if it is not already running and has not been terminated.
      *
-     * Starting launches a new coroutine on [GameCoroutineScope]. The coroutine calls [init], then loops
+     * Starting launches a new coroutine on [api.bot.GameCoroutineScope]. The coroutine calls [init], then loops
      * through [run] until the bot becomes inactive, the coroutine is cancelled, or [run] returns `true`.
      * [finish] is always called before the coroutine exits.
      *
@@ -167,12 +131,14 @@ abstract class BotScript<T>(val bot: Bot) {
                     }
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
-                        if (run()) {
+                        val completed = run()
+                        if(completed || !isActive) {
                             break
                         }
                     }
                 } finally {
                     finish()
+                    terminated = true
                 }
             }
             return true
@@ -211,36 +177,14 @@ abstract class BotScript<T>(val bot: Bot) {
      *
      * @return `true` if the script wasn't already terminated and termination was requested, otherwise `false`.
      */
-    fun terminate(): Boolean {
-        if (!terminated) {
+    fun stop(): Boolean {
+        if (isRunning() || isPaused()) {
             bot.log("Terminating script {${javaClass.name}}.")
             progress?.cancel()
             terminated = true
             return true
         }
         return false
-    }
-
-    /**
-     * Returns whether this script completed normally.
-     *
-     * A script is considered finished when it has a job, that job has completed, and that job was not
-     * cancelled. Paused and terminated scripts are not considered finished because both states cancel the
-     * active coroutine.
-     *
-     * @return `true` if the script completed without cancellation, otherwise `false`.
-     */
-    fun isFinished(): Boolean {
-        return progress != null && progress!!.isCompleted && !progress!!.isCancelled
-    }
-
-    /**
-     * Returns whether this script is currently running.
-     *
-     * @return `true` if the script coroutine is active, otherwise `false`.
-     */
-    fun isRunning(): Boolean {
-        return progress?.isActive == true
     }
 
     /**
@@ -255,14 +199,26 @@ abstract class BotScript<T>(val bot: Bot) {
     }
 
     /**
-     * Returns whether this script has never been started.
+     * Returns whether this script completed normally.
      *
-     * This only checks whether a coroutine job has ever been assigned. A completed, paused, or terminated script is
-     * not idle because [progress] still references the most recent job.
+     * A script is considered finished when it has a job, that job has completed, and that job was not
+     * cancelled. Paused and terminated scripts are not considered finished because both states cancel the
+     * active coroutine.
      *
-     * @return `true` if this script has no job, otherwise `false`.
+     * @return `true` if the script completed without cancellation, otherwise `false`.
      */
-    fun isIdle(): Boolean {
-        return progress == null
+    fun isFinished(): Boolean {
+        return progress != null && progress!!.isCompleted && !isPaused()
+    }
+
+    /**
+     * Returns whether this script is currently paused.
+     *
+     * A script is considered paused when its most recent coroutine job was cancelled, and it's not terminated.
+     *
+     * @return `true` if the most recent script job was cancelled and this script hasn't been terminated, otherwise `false`.
+     */
+    fun isTerminated(): Boolean {
+        return progress?.isCancelled == true && terminated
     }
 }

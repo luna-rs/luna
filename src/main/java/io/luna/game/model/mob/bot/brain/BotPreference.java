@@ -1,11 +1,14 @@
 package io.luna.game.model.mob.bot.brain;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import engine.bot.gear.BotGearSet;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager.GearSetType;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplate;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType;
 import io.luna.util.RandomUtils;
@@ -39,6 +42,49 @@ import static io.luna.util.RandomUtils.roll;
  */
 public final class BotPreference {
 
+    // todo before trading can be done, wanted item system needs to be changed to IDs, amounts are resolved later when
+    //  needed based on combat level, personality, etc.
+
+    /*
+    fun resolveOptimalFood(): Set<Food> {
+        val hitpointsLevel = bot.hitpoints.staticLevel
+        return when {
+            hitpointsLevel < 10 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 0..3 }
+            hitpointsLevel < 20 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 0..5 }
+            hitpointsLevel < 40 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 3..8 }
+            hitpointsLevel < 60 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 9..14 }
+            hitpointsLevel < 80 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 12..17 }
+            else -> setOf(Food.SHARK, Food.MANTA_RAY, Food.KARAMBWAN, Food.TUNA_POTATO, Food.SEA_TURTLE)
+        }
+    }
+
+    fun resolveOptimalWeakFood(): Food {
+        val hitpointsLevel = bot.hitpoints.staticLevel
+        return when {
+            hitpointsLevel < 10 -> RandomUtils.randomFrom(Food.MEAT, Food.CHICKEN)
+            hitpointsLevel < 20 -> Food.SHRIMP
+            hitpointsLevel < 40 -> RandomUtils.randomFrom(Food.CAKE, Food.CHOCOLATE_CAKE)
+            hitpointsLevel < 60 -> Food.TROUT
+            hitpointsLevel < 80 -> RandomUtils.randomFrom(Food.TROUT, Food.TUNA)
+            hitpointsLevel < 90 -> Food.LOBSTER
+            else -> Food.SWORDFISH
+        }
+    }
+
+    fun resolveOptimalFoodAmount(): Int {
+        val base = 500
+        return (base *
+                (if (bot.emotions.isFeeling(EmotionType.SCARED)) {
+                    rand(1.25, 1.75)
+                } else if (bot.personality.isConfident) {
+                    rand(0.25, 0.75)
+                } else {
+                    rand(0.75, 1.25)
+                })).toInt()
+    }
+     */
+
+    // todo redo docs, etc.
     /**
      * Builder for constructing {@link BotPreference} instances.
      * <p>
@@ -50,8 +96,9 @@ public final class BotPreference {
         private final BotPersonalityManager personalityManager;
         private final Map<BotActivity, Double> activities = new HashMap<>();
         private final Set<Integer> skills = new HashSet<>();
-        private final Set<Integer> items = new HashSet<>();
-        private final Set<GearSetType> gear = new HashSet<>();
+        private final Multiset<Integer> wantedItems = HashMultiset.create();
+        private final Set<BotGearSet> gear = new HashSet<>();
+        private final Map<String, Double> playerFeelings = new HashMap<>();
 
         private final double intelligence;
         private final double kindness;
@@ -101,23 +148,7 @@ public final class BotPreference {
         }
 
         /**
-         * Adds one or more item identifiers to this bot’s preferred item collection.
-         * <p>
-         * This can be used to directly seed item preferences for trade, hoarding, or usage. Items added here will be
-         * considered inherently valuable or desirable to the bot.
-         *
-         * @param itemIds One or more item IDs to mark as preferred.
-         * @return This builder for chaining.
-         */
-        public Builder addItem(int... itemIds) {
-            for (int id : itemIds) {
-                items.add(id);
-            }
-            return this;
-        }
-
-        /**
-         * Adds one or more {@link GearSetType} values to this bot’s preferred equipment list.
+         * Adds one or more {@link BotGearSet} values to this bot’s preferred equipment list.
          * <p>
          * This allows manual assignment of specific armor or outfit sets that the bot will attempt to equip or seek
          * when generating loadouts.
@@ -125,8 +156,18 @@ public final class BotPreference {
          * @param gearSets One or more gear set types to add as preferences.
          * @return This builder for chaining.
          */
-        public Builder addGear(GearSetType... gearSets) {
+        public Builder addGear(BotGearSet... gearSets) {
             gear.addAll(Arrays.asList(gearSets));
+            return this;
+        }
+
+        public Builder addWantedItem(Item item) {
+            wantedItems.add(item.getId(), item.getAmount());
+            return this;
+        }
+
+        public Builder setFeelingsFor(String username, double feeling) {
+            playerFeelings.put(username, Math.min(1.0, Math.max(feeling, 0.0)));
             return this;
         }
 
@@ -184,61 +225,40 @@ public final class BotPreference {
          */
         private Set<Integer> generateSkills() {
             Set<Integer> selected = new HashSet<>();
-            if (personality.isIntelligent()) {
-                selected.addAll(Arrays.asList(Skill.MAGIC, Skill.FLETCHING, Skill.CRAFTING, Skill.FARMING, Skill.RUNECRAFTING,
-                        Skill.HERBLORE));
-            }
-            if (personality.isConfident()) {
-                selected.addAll(Arrays.asList(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE,
-                        Skill.HITPOINTS, Skill.SLAYER, Skill.RANGED));
-            }
-            if (personality.isSocial()) {
-                selected.addAll(Arrays.asList(Skill.FISHING, Skill.COOKING, Skill.FIREMAKING, Skill.WOODCUTTING, Skill.AGILITY));
-            }
-            if (personality.isDextrous()) {
-                selected.addAll(Arrays.asList(Skill.FLETCHING, Skill.RANGED, Skill.AGILITY, Skill.CRAFTING,
-                        Skill.SMITHING, Skill.WOODCUTTING, Skill.MINING));
-            }
-            if (personality.isMean()) {
-                selected.add(Skill.THIEVING);
-            } else if (personality.isKind()) {
-                selected.add(Skill.PRAYER);
-            }
-            selected.addAll(skills);
-            if (selected.isEmpty()) {
+            if (skills.isEmpty()) {
+                if (personality.isIntelligent()) {
+                    selected.addAll(Arrays.asList(Skill.MAGIC, Skill.FLETCHING, Skill.CRAFTING, Skill.FARMING, Skill.RUNECRAFTING,
+                            Skill.HERBLORE));
+                }
+                if (personality.isConfident()) {
+                    selected.addAll(Arrays.asList(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE,
+                            Skill.HITPOINTS, Skill.SLAYER, Skill.RANGED));
+                }
+                if (personality.isSocial()) {
+                    selected.addAll(Arrays.asList(Skill.FISHING, Skill.COOKING, Skill.FIREMAKING, Skill.WOODCUTTING, Skill.AGILITY));
+                }
+                if (personality.isDextrous()) {
+                    selected.addAll(Arrays.asList(Skill.FLETCHING, Skill.THIEVING, Skill.RANGED, Skill.AGILITY, Skill.CRAFTING,
+                            Skill.SMITHING, Skill.WOODCUTTING, Skill.MINING));
+                }
+                if (personality.isMean()) {
+                    selected.add(Skill.THIEVING);
+                } else if (personality.isKind()) {
+                    selected.add(Skill.PRAYER);
+                }
+
                 // Fallback: pick 2–6 random skills
-                for (int loops = 0; loops < RandomUtils.inclusive(2, 6); loops++) {
-                    Integer id = RandomUtils.random(Skill.IDS);
-                    if (id != null) {
-                        selected.add(id);
+                if (selected.isEmpty()) {
+                    for (int loops = 0; loops < RandomUtils.inclusive(2, 6); loops++) {
+                        Integer id = RandomUtils.random(Skill.IDS);
+                        if (id != null) {
+                            selected.add(id);
+                        }
                     }
                 }
+            } else {
+                selected.addAll(skills);
             }
-            return selected;
-        }
-
-        /**
-         * Generates a set of item preferences representing what types of items this bot values or seeks.
-         *
-         * @return A generated immutable set of preferred item IDs.
-         */
-        private Set<Integer> generateItems() {
-            // TODO In tagging system, track how often items are moving and being obtained by bots (can see if an item
-            // needs a sink, to be introduced somewhere new, or reduced).
-            if (personality.isIntelligent()) {
-                // TODO Smart bots prefer useful or valuable items (e.g. resources, consumables, rares, etc.)
-                // TODO Some sort of item tagging system for the bot economy?
-            } else if (personality.isDumb()) {
-                // TODO Dumb bots pick random junk (random items from the tagging system with value < 1000?)
-            }
-            if (personality.isConfident()) {
-                // TODO They chase rares, the most valuable items in the tagging system, show-off items.
-            }
-            if (personality.isDextrous()) {
-                // TODO Love resources
-            }
-            Set<Integer> selected = new HashSet<>(items);
-            // TODO if empty, pick 5 random items from tagging system?
             return selected;
         }
 
@@ -250,92 +270,95 @@ public final class BotPreference {
          * <ul>
          *   <li>Highly confident, low-kindness bots tend to favor offensive or high-status gear (e.g. {@code DRAGON_FULL}).</li>
          *   <li>Intelligent bots prefer efficient or magically oriented sets (e.g. {@code MYSTIC_LIGHT}, {@code AHRIMS}).</li>
-         *   <li>Social bots often choose visually striking “show-off” sets.</li>
+         *   <li>Social bots often choose visually striking "show-off" sets.</li>
          *   <li>Dexterous bots lean toward ranged or lightweight setups.</li>
          * </ul>
          *
-         * @return A generated immutable set of {@link GearSetType}s representing this bot’s favored loadouts.
+         * @return A generated immutable set of {@link BotGearSet}s representing this bot’s favored loadouts.
          */
-        private Set<GearSetType> generateGear() {
-            Set<GearSetType> selected = new HashSet<>();
-
-            if (personality.isConfident() && personality.isMean()) {
-                if (roll(0.20)) {
-                    selected.addAll(Arrays.asList(GearSetType.OBSIDIAN_FULL, GearSetType.GUTHANS, GearSetType.DHAROKS, GearSetType.VERACS));
-                } else {
-                    selected.addAll(Arrays.asList(GearSetType.DRAGON_FULL_LEGS, GearSetType.DRAGON_FULL_SKIRT,
-                            GearSetType.AHRIMS, GearSetType.KARILS));
-                }
-                if (roll(0.10)) {
-                    selected.add(randomFrom(GearSetType.DHAROKS, GearSetType.VERACS,
-                            GearSetType.TORAGS, GearSetType.GUTHANS));
-                }
-            }
-
-            if (personality.isIntelligent()) {
-                if (roll(0.15)) {
-                    selected.add(GearSetType.AHRIMS);
-                } else if (roll(0.40)) {
-                    selected.add(GearSetType.MYSTIC_DARK);
-                } else {
-                    selected.add(GearSetType.MYSTIC_LIGHT);
+        private Set<BotGearSet> generateGear() {
+            Set<BotGearSet> selected = new HashSet<>();
+            if (gear.isEmpty()) {
+                if (personality.isConfident() && personality.isMean()) {
+                    if (roll(0.20)) {
+                        selected.addAll(Arrays.asList(BotGearSet.GUTHANS, BotGearSet.DHAROKS, BotGearSet.VERACS));
+                    } else {
+                        selected.addAll(Arrays.asList(BotGearSet.DRAGON_FULL_LEGS, BotGearSet.DRAGON_FULL_SKIRT,
+                                BotGearSet.AHRIMS, BotGearSet.KARILS));
+                    }
+                    if (roll(0.10)) {
+                        selected.add(randomFrom(BotGearSet.DHAROKS, BotGearSet.VERACS,
+                                BotGearSet.TORAGS, BotGearSet.GUTHANS));
+                    }
                 }
 
-                // Occasionally add wizard sets for low-level intelligent bots.
-                if (confidence < 0.5) {
-                    selected.add(randomFrom(GearSetType.WIZARD_BLUE, GearSetType.WIZARD_DARK));
+                if (personality.isIntelligent()) {
+                    if (roll(0.15)) {
+                        selected.add(BotGearSet.AHRIMS);
+                    } else if (roll(0.40)) {
+                        selected.add(BotGearSet.MYSTIC_DARK);
+                    } else {
+                        selected.add(BotGearSet.MYSTIC_LIGHT);
+                    }
+
+                    // Occasionally add wizard sets for low-level intelligent bots.
+                    if (confidence < 0.5) {
+                        selected.add(randomFrom(BotGearSet.WIZARD_BLUE, BotGearSet.WIZARD_DARK));
+                    }
                 }
-            }
 
-            // --- Social or aesthetic personalities (show-off) ---
-            if (social >= 0.7) {
-                selected.add(randomFrom(
-                        GearSetType.RUNE_TRIMMED_LEGS,
-                        GearSetType.RUNE_TRIMMED_SKIRT,
-                        GearSetType.RUNE_GOLD_LEGS,
-                        GearSetType.RUNE_GOLD_SKIRT,
-                        GearSetType.RUNE_SARADOMIN_LEGS,
-                        GearSetType.RUNE_SARADOMIN_SKIRT,
-                        GearSetType.RUNE_GUTHIX_LEGS,
-                        GearSetType.RUNE_GUTHIX_SKIRT,
-                        GearSetType.RUNE_ZAMORAK_LEGS,
-                        GearSetType.RUNE_ZAMORAK_SKIRT,
-                        GearSetType.GILDED_RUNE_LEGS,
-                        GearSetType.GILDED_RUNE_SKIRT,
-                        GearSetType.BLACK_TRIMMED_LEGS,
-                        GearSetType.BLACK_TRIMMED_SKIRT,
-                        GearSetType.BLACK_GOLD_LEGS,
-                        GearSetType.BLACK_GOLD_SKIRT,
-                        GearSetType.ADAMANT_TRIMMED_LEGS,
-                        GearSetType.ADAMANT_TRIMMED_SKIRT,
-                        GearSetType.ADAMANT_GOLD_LEGS));
-            }
-
-            // --- Dexterous bots: light, ranged-focused, practical gear ---
-            if (dexterity >= 0.7) {
-                if (roll(0.30)) {
-                    selected.add(GearSetType.KARILS);
-                } else {
+                // --- Social or aesthetic personalities (show-off) ---
+                if (social >= 0.7) {
                     selected.add(randomFrom(
-                            GearSetType.GREEN_DHIDE,
-                            GearSetType.BLUE_DHIDE,
-                            GearSetType.RED_DHIDE,
-                            GearSetType.BLACK_DHIDE));
+                            BotGearSet.RUNE_TRIMMED_LEGS,
+                            BotGearSet.RUNE_TRIMMED_SKIRT,
+                            BotGearSet.RUNE_GOLD_LEGS,
+                            BotGearSet.RUNE_GOLD_SKIRT,
+                            BotGearSet.RUNE_SARADOMIN_LEGS,
+                            BotGearSet.RUNE_SARADOMIN_SKIRT,
+                            BotGearSet.RUNE_GUTHIX_LEGS,
+                            BotGearSet.RUNE_GUTHIX_SKIRT,
+                            BotGearSet.RUNE_ZAMORAK_LEGS,
+                            BotGearSet.RUNE_ZAMORAK_SKIRT,
+                            BotGearSet.GILDED_RUNE_LEGS,
+                            BotGearSet.GILDED_RUNE_SKIRT,
+                            BotGearSet.BLACK_TRIMMED_LEGS,
+                            BotGearSet.BLACK_TRIMMED_SKIRT,
+                            BotGearSet.BLACK_GOLD_LEGS,
+                            BotGearSet.BLACK_GOLD_SKIRT,
+                            BotGearSet.ADAMANT_TRIMMED_LEGS,
+                            BotGearSet.ADAMANT_TRIMMED_SKIRT,
+                            BotGearSet.ADAMANT_GOLD_LEGS));
                 }
 
-                // Low-level dexterous bots might wear light armor sets.
-                if (confidence < 0.5) {
-                    selected.add(randomFrom(GearSetType.LEATHER, GearSetType.STUDDED_LEATHER));
+                // --- Dexterous bots: light, ranged-focused, practical gear ---
+                if (dexterity >= 0.7) {
+                    if (roll(0.30)) {
+                        selected.add(BotGearSet.KARILS);
+                    } else {
+                        selected.add(randomFrom(
+                                BotGearSet.GREEN_DHIDE,
+                                BotGearSet.BLUE_DHIDE,
+                                BotGearSet.RED_DHIDE,
+                                BotGearSet.BLACK_DHIDE));
+                    }
+
+                    // Low-level dexterous bots might wear light armor sets.
+                    if (confidence < 0.5) {
+                        selected.add(randomFrom(BotGearSet.LEATHER, BotGearSet.STUDDED_LEATHER));
+                    }
                 }
-            }
-            selected.addAll(gear);
-            // --- Fallback: unremarkable or inexperienced personalities ---
-            if (selected.isEmpty()) {
-                selected.addAll(Arrays.asList(GearSetType.ADAMANT_FULL_LEGS, GearSetType.ADAMANT_FULL_SKIRT,
-                        GearSetType.RUNE_FULL_LEGS, GearSetType.RUNE_FULL_SKIRT));
-                selected.add(randomFrom(GearSetType.KARILS, GearSetType.DRAGON_FULL_LEGS, GearSetType.DRAGON_FULL_SKIRT, GearSetType.BLACK_FULL_LEGS,
-                        GearSetType.GUTHANS, GearSetType.DHAROKS));
-                return selected;
+
+                // --- Fallback: unremarkable or inexperienced personalities ---
+                if (selected.isEmpty()) {
+                    selected.addAll(Arrays.asList(BotGearSet.ADAMANT_FULL_LEGS, BotGearSet.ADAMANT_FULL_SKIRT,
+                            BotGearSet.RUNE_FULL_LEGS, BotGearSet.RUNE_FULL_SKIRT));
+                    selected.add(randomFrom(BotGearSet.KARILS, BotGearSet.DRAGON_FULL_LEGS, BotGearSet.DRAGON_FULL_SKIRT, BotGearSet.BLACK_FULL_LEGS,
+                            BotGearSet.GUTHANS, BotGearSet.DHAROKS));
+                    return selected;
+                }
+            } else {
+                selected.addAll(gear);
             }
             return selected;
         }
@@ -350,10 +373,10 @@ public final class BotPreference {
             return new BotPreference(
                     new HashMap<>(activities),
                     new HashSet<>(generateSkills()),
-                    new HashSet<>(generateItems()),
-                    new HashSet<>(generateGear()));
+                    HashMultiset.create(wantedItems),
+                    new HashSet<>(generateGear()),
+                    new HashMap<>(playerFeelings));
         }
-
     }
 
     /**
@@ -369,12 +392,12 @@ public final class BotPreference {
     /**
      * The immutable set of preferred item IDs.
      */
-    private final Set<Integer> items;
+    private final Multiset<Integer> wantedItems;
 
     /**
      * The immutable set of preferred gear archetypes.
      */
-    private final Set<GearSetType> gear;
+    private final Set<BotGearSet> gear;
 
     /**
      * Stores this bot's long-term feelings toward known players by username.
@@ -386,24 +409,26 @@ public final class BotPreference {
      *   <li>{@code 1.0} means the bot strongly likes, trusts, or admires the player.</li>
      * </ul>
      */
-    private final Map<String, Double> playerFeelings = new HashMap<>();
+    private final Map<String, Double> playerFeelings;
 
     /**
      * Creates a new immutable {@link BotPreference}.
      *
      * @param activities Activity preference weights.
      * @param skills Preferred skill IDs.
-     * @param items Preferred item IDs.
+     * @param wantedItems Preferred item IDs.
      * @param gear Preferred gear archetypes.
      */
     public BotPreference(Map<BotActivity, Double> activities,
                          Set<Integer> skills,
-                         Set<Integer> items,
-                         Set<GearSetType> gear) {
+                         Multiset<Integer> wantedItems,
+                         Set<BotGearSet> gear,
+                         Map<String, Double> playerFeelings) {
         this.activities = activities;
         this.skills = skills;
-        this.items = items;
+        this.wantedItems = wantedItems;
         this.gear = gear;
+        this.playerFeelings = playerFeelings;
     }
 
     /**
@@ -431,6 +456,16 @@ public final class BotPreference {
         JsonArray skillsJson = new JsonArray();
         skills.forEach(skillsJson::add);
         preferences.add("skills", skillsJson);
+
+        // Serialize wanted items.
+        JsonArray wantedItemsJson = new JsonArray();
+        wantedItems.entrySet().forEach(it -> {
+            JsonObject itemJson = new JsonObject();
+            itemJson.addProperty("id", it.getElement());
+            itemJson.addProperty("amount", it.getCount());
+            wantedItemsJson.add(itemJson);
+        });
+        preferences.add("wanted_items", wantedItemsJson);
 
         // Serialize preferred gear.
         JsonArray gearJson = new JsonArray();
@@ -467,9 +502,13 @@ public final class BotPreference {
             activities.put(activity, weight);
         }
 
-        // Deserialize preferred skills and gear, and feelings towards players.
+        // Deserialize preferred skills and gear, wanted items, and feelings towards players.
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
-        object.getAsJsonArray("gear").forEach(it -> gear.add(GearSetType.valueOf(it.getAsString())));
+        object.getAsJsonArray("wanted_items").forEach(it -> {
+            JsonObject itemJson = it.getAsJsonObject();
+            wantedItems.add(itemJson.get("id").getAsInt(), itemJson.get("amount").getAsInt());
+        });
+        object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
             JsonObject feelingsJson = it.getAsJsonObject();
             playerFeelings.put(feelingsJson.get("username").getAsString(), feelingsJson.get("feeling").getAsDouble());
@@ -484,8 +523,8 @@ public final class BotPreference {
      *
      * @param id The item id to add.
      */
-    public void addWantedItem(int id) {
-        items.add(id);
+    public void addWantedItem(Item item) {
+        wantedItems.add(item.getId(), item.getAmount());
     }
 
     /**
@@ -493,8 +532,8 @@ public final class BotPreference {
      *
      * @param id The item id to remove.
      */
-    public void removeWantedItem(int id) {
-        items.remove(id);
+    public void removeWantedItem(Item item) {
+        wantedItems.remove(item.getId(), item.getAmount());
     }
 
     /**
@@ -576,6 +615,20 @@ public final class BotPreference {
         return getFeelingsToward(username) > 0.80;
     }
 
+
+    public boolean lovesActivity(BotActivity activity) {
+        return activities.getOrDefault(activity, 0.0) > 0.75;
+    }
+
+    public boolean likesActivity(BotActivity activity) {
+        return activities.getOrDefault(activity, 0.0) > 0.60;
+    }
+
+    public boolean hatesActivity(BotActivity activity) {
+        return activities.getOrDefault(activity, 0.0) < 0.20;
+
+    }
+
     /**
      * @return The immutable map of activity preferences.
      */
@@ -593,14 +646,14 @@ public final class BotPreference {
     /**
      * @return The immutable set of item preferences.
      */
-    public Set<Integer> getItems() {
-        return items;
+    public Multiset<Integer> getWantedItems() {
+        return wantedItems;
     }
 
     /**
      * @return The immutable set of gear preferences.
      */
-    public Set<GearSetType> getGear() {
+    public Set<BotGearSet> getGear() {
         return gear;
     }
 

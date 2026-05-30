@@ -44,20 +44,20 @@ val equipmentStarter = listOf(
  * Bank starter items. Only applicable to [Bot] types.
  */
 val bankStarter = listOf(
-    item("Anti-dragon shield"),
-    item("Cake", 500),
-    item("Staff of air"),
-    item("Staff of water"),
-    item("Staff of earth"),
-    item("Staff of fire"),
-    item("Chisel"),
-    item("Knife"),
-    item("Needle"),
-    item("Thread", 10_000),
-    item("Iron pickaxe"),
-    item("Iron axe"),
-    item("Hammer"),
-    item("Tinderbox")
+    item("Anti-dragon shield", 5),
+    item("Cake", 1000),
+    item("Staff of air", 2),
+    item("Staff of water", 2),
+    item("Staff of earth", 2),
+    item("Staff of fire", 2),
+    item("Chisel", 5),
+    item("Knife", 5),
+    item("Needle", 5),
+    item("Thread", 2_000_000_000),
+    item("Iron pickaxe", 5),
+    item("Iron axe", 5),
+    item("Hammer", 5),
+    item("Tinderbox", 5)
     // TODO@0.5.0 Farming starter bot items.
 )
 

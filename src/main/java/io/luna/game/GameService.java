@@ -26,14 +26,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * Main game loop service.
  *
- * <p>{@link GameService} owns the single “game thread” and executes the world tick at a fixed rate
+ * <p>{@link GameService} owns the single "game thread" and executes the world tick at a fixed rate
  * (typically 600ms per tick). It also provides safe cross-thread scheduling utilities so other
  * threads (Netty, persistence workers, bot systems, etc.) can request work to run on the game thread.
  *
@@ -75,7 +74,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * Service listener that responds to lifecycle transitions of the underlying scheduled service.
      *
-     * <p>Most “startup sequence” logic is performed when the service enters {@link State#RUNNING},
+     * <p>Most "startup sequence" logic is performed when the service enters {@link State#RUNNING},
      * and shutdown coordination is handled when the service is stopping or terminated.
      */
     private final class GameServiceListener extends Service.Listener {
@@ -135,17 +134,21 @@ public final class GameService extends AbstractScheduledService {
         }
     }
 
-    /** Async logger. */
+    /**
+     * Async logger.
+     */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * Queue of “synchronization tasks” to be executed on the game thread.
+     * Queue of "synchronization tasks" to be executed on the game thread.
      *
      * <p>These tasks are drained at the beginning of each tick by {@link #runSynchronizationTasks()}.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
-    /** Executor that marshals work onto the game thread via {@link #syncTasks}. */
+    /**
+     * Executor that marshals work onto the game thread via {@link #syncTasks}.
+     */
     private final GameServiceExecutor gameExecutor;
 
     /**
@@ -155,10 +158,14 @@ public final class GameService extends AbstractScheduledService {
      */
     private final CompletableFuture<Void> onlineLock = new CompletableFuture<>();
 
-    /** Context handle (cache/world/plugins/etc.). */
+    /**
+     * Context handle (cache/world/plugins/etc.).
+     */
     private final LunaContext context;
 
-    /** World state owned by this server instance. */
+    /**
+     * World state owned by this server instance.
+     */
     private final World world;
 
     /**
@@ -238,7 +245,7 @@ public final class GameService extends AbstractScheduledService {
      * tasks are added via {@link #sync(Supplier)} or {@link #getGameExecutor()} and executed here.
      */
     private void runSynchronizationTasks() {
-        for (;;) {
+        for (; ; ) {
             var runnable = syncTasks.poll();
             if (runnable == null) {
                 break;
@@ -299,20 +306,15 @@ public final class GameService extends AbstractScheduledService {
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
         runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
 
-        // Will stop any current and future logins.
-        loginService.stopAsync().awaitTerminated();
-
         // Save all players and wait for it to complete.
-        getUnchecked(world.getPersistenceService().saveAll());
+        world.getPersistenceService().saveAll(true).join();
 
-        // Synchronously disconnect all players.
-        world.getPlayers().forEach(Player::forceLogout);
+        // Will stop any current and future logins/logouts.
+        loginService.stopAsync().awaitTerminated();
+        logoutService.stopAsync().awaitTerminated();
 
         // Close cache resource.
         context.getCache().close();
-
-        // Close logout resources.
-        logoutService.stopAsync().awaitTerminated();
 
         // Wait for general-purpose tasks to complete.
         pool.shutdown();
@@ -329,7 +331,7 @@ public final class GameService extends AbstractScheduledService {
      */
     public void scheduleSystemUpdate(int ticks) {
         // Preliminary save of all players (fire-and-forget).
-        world.getPersistenceService().saveAll();
+        var saveResult = world.getPersistenceService().saveAll();
 
         // Send out system update messages.
         for (Player player : world.getPlayers()) {
@@ -340,7 +342,11 @@ public final class GameService extends AbstractScheduledService {
         world.schedule(new Task(ticks + 5) {
             @Override
             protected void execute() {
-                stopAsync();
+                setDelay(1);
+                if(saveResult.isDone()) {
+                    stopAsync();
+                    cancel();
+                }
             }
         });
     }
@@ -418,7 +424,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * Returns an {@link Executor} that guarantees execution on the game thread.
      * <p>
-     * This can be used when you want “fire-and-forget” marshalling without the overhead of a {@link CompletableFuture}
+     * This can be used when you want "fire-and-forget" marshalling without the overhead of a {@link CompletableFuture}
      * (see {@link #sync(Supplier)}).
      */
     public Executor getGameExecutor() {

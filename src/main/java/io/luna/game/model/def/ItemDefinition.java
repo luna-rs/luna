@@ -18,7 +18,7 @@ import java.util.OptionalInt;
  *     <li>stackability, tradeability, value, membership restrictions</li>
  *     <li>client model rendering parameters (model id, zoom, rotations, offsets, scales)</li>
  *     <li>note to unnote relationships (banknotes)</li>
- *     <li>optional “team” metadata (used by some items/capes in some revisions)</li>
+ *     <li>optional "team" metadata (used by some items/capes in some revisions)</li>
  *     <li>weight metadata (used by weight/run-energy systems if enabled)</li>
  * </ul>
  * <p>
@@ -295,7 +295,7 @@ public final class ItemDefinition implements Definition {
     /**
      * Builds a noted version of an unnoted definition and links the pair together.
      * <p>
-     * This method is intended to be called on a definition that represents the <b>note</b> (the “paper” item), passing
+     * This method is intended to be called on a definition that represents the <b>note</b> (the "paper" item), passing
      * the corresponding unnoted definition.
      * <p>
      * Side effects:
@@ -340,7 +340,7 @@ public final class ItemDefinition implements Definition {
     /**
      * Returns {@code true} if this definition represents a noted item.
      * <p>
-     * In this model, an item is considered “noted” when it has both:
+     * In this model, an item is considered "noted" when it has both:
      * <ul>
      *     <li>an {@link #unnotedId} (it points to the real item)</li>
      *     <li>a {@link #notedId} (it is itself, or has been linked)</li>

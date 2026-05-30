@@ -1,6 +1,6 @@
 package game.bot.scripts.combat
 
-import api.bot.DynamicBotScript
+import api.bot.script.DynamicBotScript
 import api.bot.Suspendable.delay
 import api.combat.specialAttack.SpecialAttackHandler
 import api.combat.specialAttack.SpecialAttackHandler.specialAttackData
@@ -28,8 +28,18 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
+ * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
  */
-class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) {
+class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
+    DynamicBotScript(bot) {
+
+    /**
+     * An enumerated type representing the initial action this bot should perform.
+     */
+    enum class InitialState {
+        ATTACK,
+        RUN
+    }
 
     /**
      * Tracks whether this bot has already failed to find food.
@@ -62,18 +72,28 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
     private var previousShield: Int? = null
 
     override suspend fun init(resumed: Boolean): Boolean {
-        bot.combat.attack(focus)
-        bot.speechStack.setDisableGeneral(true)
-        delay(600.milliseconds)
+        when (initialState) {
+            InitialState.ATTACK -> {
+                bot.combat.attack(focus)
+                bot.speechStack.setDisableGeneral(true)
+                delay(600.milliseconds)
 
-        // Twice as likely to say something when starting combat.
-        if (focus is Bot && rand(bot.personality.social * 2)) {
-            val text = BotPkingSpeechPool.take(bot,
-                                               if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_START
-                                               else PkingSpeech.NEGATIVE_START)
-            val delay = rand(2, 5)
-            bot.speechStack.pushHead(BotSpeech(text, delay))
+                // Twice as likely to say something when starting combat.
+                if (focus is Player && rand(bot.personality.social * 2)) {
+                    val text = BotPkingSpeechPool.take(bot,
+                                                       if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_START
+                                                       else PkingSpeech.NEGATIVE_START)
+                    val delay = rand(2, 5)
+                    bot.speechStack.pushHead(BotSpeech(text, delay))
+                }
+            }
+
+            InitialState.RUN -> {
+                handler.combat.fleeCombat()
+                stop()
+            }
         }
+
         return false
     }
 
@@ -133,7 +153,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
      */
     private fun talk() {
         // Less chance to talk while fighting.
-        if (rand(bot.personality.social / 2)) {
+        if (focus is Player && rand(bot.personality.social / 2)) {
             val text =
                 BotPkingSpeechPool.take(bot, if (rand(bot.personality.kindness)) PkingSpeech.POSITIVE_FIGHTING else
                     PkingSpeech.NEGATIVE_FIGHTING)
@@ -149,10 +169,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob) : DynamicBotScript(bot) 
      */
     private suspend fun eatFood() {
         if (bot.healthPercent < 30) {
-            if (!handler.combat.eatFood()) {
+            if (!handler.inventory.eatAnyFood()) {
                 // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
                 //  Wilderness depth, and available escape options.
                 handler.combat.fleeCombat()
+                return
             }
 
             targetEnemy()

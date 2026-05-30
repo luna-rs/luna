@@ -2,7 +2,6 @@ package api.bot.action
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
-import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture.SuspendableFutureSuccess
 import api.bot.zone.SubZone
@@ -35,6 +34,7 @@ import kotlinx.coroutines.future.await
  */
 class BotBankingActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
+    // todo clean up redo docs
     companion object {
 
         /**
@@ -43,21 +43,40 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
          * These positions are lazily resolved into loaded [GameObject] instances the first time [homeBank] is called.
          */
         val HOME_BANK_POSITIONS = listOf(
-            Position(3816, 3446),
-            Position(3816, 3444),
-            Position(3816, 3442),
-            Position(3816, 3440),
-            Position(3816, 3438),
-            Position(3816, 3436),
+            Position(3186, 3446),
+            Position(3186, 3444),
+            Position(3186, 3442),
+            Position(3186, 3440),
+            Position(3186, 3438),
+            Position(3186, 3436),
         )
 
         /**
          * The cached home bank booth objects.
          *
          * This cache is shared across all banking handlers because the home bank booths are static world objects.
-         * It is populated lazily from [HOME_BANK_POSITIONS].
+         * It is populated lazily from its getter.
          */
         private val homeBanks = HashSet<GameObject>()
+            get() {
+                if (field.isEmpty()) {
+                    for (position in HOME_BANK_POSITIONS) {
+                        val gameObject = world.locator
+                            .findObjectsOnTile(position) { Banking.bankingObjects.contains(it.id) }
+                            .firstOrNull()
+
+                        if (gameObject != null) {
+                            field += gameObject
+                        }
+                    }
+
+                    if (field.isEmpty()) {
+                        // Should never happen unless no objects are loaded.
+                        throw IllegalStateException("Could not generate home banks!")
+                    }
+                }
+                return field
+            }
     }
 
     /**
@@ -71,23 +90,6 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * banking object.
      */
     fun homeBank(): GameObject {
-        if (homeBanks.isEmpty()) {
-            for (position in HOME_BANK_POSITIONS) {
-                val gameObject = world.locator
-                    .findObjectsOnTile(position) { Banking.bankingObjects.contains(it.id) }
-                    .firstOrNull()
-
-                if (gameObject != null) {
-                    homeBanks += gameObject
-                }
-            }
-
-            if (homeBanks.isEmpty()) {
-                // Should never happen unless no objects are loaded.
-                throw IllegalStateException("Could not generate home banks!")
-            }
-        }
-
         return homeBanks.random()
     }
 
@@ -182,7 +184,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * through [depositAll]. If any deposit fails, the method stops immediately and returns `false`.
      *
      * @param except Item ids that should remain in the bot's inventory.
-     * @return `true` if every eligible item was deposited, otherwise `false`.
+     * @return `true` if at least one item was deposited, otherwise `false`.
      */
     suspend fun depositInventory(except: Set<Int> = emptySet()): Boolean {
         if (!bot.bank.isOpen) {
@@ -191,16 +193,19 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         bot.log("Trying to deposit all items.")
 
+        var deposited = false
         for (item in bot.inventory) {
             if (item != null) {
-                if (item.id !in except && !depositAll(item.id)) {
-                    bot.log("Could not deposit $item.")
-                    return false
+                if (item.id !in except) {
+                    if (!depositAll(item.id)) {
+                        bot.log("Could not deposit $item.")
+                    } else {
+                        deposited = true
+                    }
                 }
             }
         }
-
-        return true
+        return deposited
     }
 
     /**
@@ -285,40 +290,93 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         return withdraw(Item(id, Int.MAX_VALUE))
     }
 
-    /**
-     * Attempts to withdraw any food from the bot's bank.
-     *
-     * This searches the bank from start to finish and selects food items whose heal amount is at least [minimumHeal]. If one
-     * stack cannot satisfy the full [amount], the method continues searching for more valid food until the requested amount
-     * is reached or no more matching food is found.
-     *
-     * @param amount The total amount of food to withdraw.
-     * @param minimumHeal The minimum heal amount each food item must provide.
-     * @return `true` if at least one matching food item was found and withdrawn.
-     */
-    suspend fun withdrawAnyFood(amount: Int, minimumHeal: Int = 0): Boolean {
-        val withdrawList = ArrayList<Item>()
-        var currentAmount = amount
-        for (item in bot.bank) {
-            if (currentAmount < 1) {
-                break
-            }
-            if (item == null) {
-                continue
-            }
-            val food = Food.ID_TO_FOOD[item.id]
-            if (food != null && food.heal >= minimumHeal) {
-                // We try and withdraw up to our total requested amount. If we can't, keep searching for other food.
-                val withdrawAmount = item.amount.coerceAtMost(currentAmount)
-                currentAmount -= withdrawAmount
-                withdrawList += Item(item.id, withdrawAmount)
+    suspend fun withdrawAll(items: List<Item>): Boolean {
+        if (!bot.inventory.hasSpaceForAll(items)) {
+            depositInventory()
+        }
+        var success = true
+        for (it in items) {
+            if (!withdraw(it)) {
+                success = false
             }
         }
+        return success
+    }
+
+    suspend fun withdrawAny(items: List<Item>): Boolean {
+        if (!bot.inventory.hasSpaceForAll(items)) {
+            depositInventory()
+        }
         var success = false
-        for (item in withdrawList) {
-            if(withdraw(item)) {
+        for (it in items) {
+            if (withdraw(it)) {
                 success = true
             }
+        }
+        return success
+    }
+
+    /**
+     * Attempts to withdraw food from the bot's bank.
+     *
+     * The bank is scanned from start to finish, selecting food whose heal amount falls between [minimumHeal] and
+     * [maximumHeal]. If a single stack cannot satisfy the requested [amount], additional matching food stacks are selected
+     * until the requested amount is reached or no more valid food is available.
+     *
+     * If [retry] is enabled and the first pass finds no matching food, the method may retry with no heal restrictions. This
+     * lets callers prefer a specific food range while still falling back to any available food instead of failing outright.
+     *
+     * @param amount The total number of food items to withdraw.
+     * @param minimumHeal The minimum heal amount each selected food item must provide.
+     * @param maximumHeal The maximum heal amount each selected food item may provide.
+     * @param retry If `true`, retry with no heal restrictions when the restricted search finds no food.
+     * @return `true` if at least one selected food item was successfully withdrawn.
+     */
+    suspend fun withdrawAnyFood(
+        amount: Int,
+        minimumHeal: Int = 0,
+        maximumHeal: Int = Int.MAX_VALUE,
+        retry: Boolean = true
+    ): Boolean {
+        var currentAmount = amount.coerceAtLeast(1)
+
+        fun resolveWithdrawList(min: Int, max: Int): List<Item> {
+            val withdraw = ArrayList<Item>()
+            for (item in bot.bank) {
+                if (currentAmount < 1) {
+                    break
+                }
+                if (item == null) {
+                    continue
+                }
+
+                val food = Food.ID_TO_FOOD[item.id]
+                if (food != null && food.heal >= min && food.heal <= max) {
+                    // Withdraw as much as possible from this stack, then keep searching if more food is still needed.
+                    val withdrawAmount = item.amount.coerceAtMost(currentAmount)
+                    currentAmount -= withdrawAmount
+                    withdraw += Item(item.id, withdrawAmount)
+                }
+            }
+            return withdraw
+        }
+
+        var withdraw = resolveWithdrawList(minimumHeal, maximumHeal)
+        if (retry && withdraw.isEmpty() && (minimumHeal != 0 || maximumHeal != Int.MAX_VALUE)) {
+            currentAmount = amount
+            withdraw = resolveWithdrawList(0, Int.MAX_VALUE)
+        }
+
+        var success = false
+        for (item in withdraw) {
+            if (withdraw(item)) {
+                success = true
+            }
+        }
+        if (!success) {
+            // We have no food. Ensure the bot starts looking for some.
+        // TODO add wanted food
+        handler.supplies.getWantedFood().forEach { bot.preferences.wantedItems += it.id }
         }
         return success
     }
@@ -359,7 +417,6 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         return suspendCond.submit(5).await()
     }
 
-
     /**
      * Travels to the nearest usable bank object.
      *
@@ -369,18 +426,20 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      *
      * @return The reachable bank object, or `null` if no bank could be found or reached.
      */
-    suspend fun findNearestBank(): GameObject? {
+    suspend fun travelToNearestBank(): GameObject? {
         bot.log("Travelling to nearest bank.")
         if (bot.subZone == SubZone.HOME) {
-            // We're home, use a home bank.
-            return homeBank()
+            // We're home, use closest home bank.
+            return homeBanks.minByOrNull { it.position.computeLongestDistance(bot.position) }
         }
         bot.log("Looking in current zone.")
         val localBanks = bot.zone?.bankAnchors
         if (!localBanks.isNullOrEmpty()) {
             for (bank in localBanks) {
                 val bankObj = world.locator.findObjectsOnTile(bank) { it.id in Banking.bankingObjects }.firstOrNull()
-                if (bankObj != null && bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED) {
+                if (bankObj != null && (bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED ||
+                            bankObj.isWithinDistance(bot, 2))
+                ) {
                     return bankObj
                 }
                 bot.log("Bank $bankObj inaccessible.")
@@ -413,7 +472,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * Travels to the nearest bank and opens it.
      *
      * If the bank is already open, this method succeeds immediately. Otherwise, it finds a reachable bank through
-     * [findNearestBank], applies a natural delay, interacts with the bank object, and waits until the bank interface opens.
+     * [travelToNearestBank], applies a natural delay, interacts with the bank object, and waits until the bank interface opens.
      *
      * @return `true` if the bank was already open or opened successfully.
      */
@@ -421,12 +480,17 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (bot.bank.isOpen) {
             return true
         }
-        val bank = findNearestBank()
+
+        val bank = travelToNearestBank()
         if (bank != null) {
             bot.naturalDelay()
             bot.log("Opening bank.")
             if (handler.interactions.interact(2, bank)) {
-                return waitFor { bot.bank.isOpen }
+                bot.naturalDelay()
+                if (!bot.bank.isOpen) {
+                    bot.bank.open()
+                }
+                return true
             } else {
                 bot.log("Could not interact with $bank.")
                 return false

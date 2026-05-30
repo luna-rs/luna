@@ -1,13 +1,9 @@
 package io.luna.game.model.mob.bot.brain;
 
-import api.bot.BotScript;
-import api.bot.scripts.IdleBotScript;
-import api.bot.scripts.IdleBotScript.Companion.IdleData;
-import api.bot.scripts.IdleBotScript.State;
+import api.bot.script.BotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -23,28 +19,6 @@ import java.util.function.Consumer;
  * @author lare96
  */
 public class BotBrain {
-
-    /**
-     * A fallback coordinator that makes the bot stand idle for a short period of time.
-     * <p>
-     * Social bots idle for slightly longer, which gives them more time to appear present in the world, chat, or linger
-     * between larger activities.
-     */
-    static class IdleCoordinator implements BotCoordinator {
-
-        /**
-         * The extra idle duration added to bots with a social personality.
-         */
-        private static final int SOCIAL_DURATION_BOOST = 20;
-
-        @Override
-        public void accept(Bot bot) {
-            int min = 10 + (bot.getPersonality().isSocial() ? SOCIAL_DURATION_BOOST : 0);
-            int max = 60 + (bot.getPersonality().isSocial() ? SOCIAL_DURATION_BOOST : 0);
-            bot.getScriptStack().push(new IdleBotScript(bot, new IdleData(RandomUtils.inclusive(min, max),
-                    State.STANDING)));
-        }
-    }
 
     /**
      * A high-level behavior controller for a {@link Bot}.
@@ -68,34 +42,18 @@ public class BotBrain {
      * @return The coordinator that should run for this decision cycle.
      */
     public BotCoordinator process(Bot bot) {
-        // TODO@0.5.0 Check if bot needs any items within its preferences before selecting.
-        // TODO@0.5.0 Check if bot is ready to logout before selecting. If bot is social it will stay on until its task
-        //  is done, otherwise it'll be interrupted.
-        BotActivity activity = selectActivity(bot.getPreferences().getActivities());
-        return activity.getCoordinator() == null ? new IdleCoordinator() : activity.getCoordinator();
-    }
-
-    /**
-     * Selects a weighted activity from the provided activity preference map.
-     * <p>
-     * If the weighted roll fails to select an activity, this falls back to a random activity from all registered bot
-     * activities.
-     *
-     * @param activities The weighted activity preferences to roll against.
-     * @return The selected activity.
-     */
-    private BotActivity selectActivity(Map<BotActivity, Double> activities) {
         /*
          * TODO@0.5.0 Add more bias:
+         * - Check if bot needs any items within its preferences before selecting.
          * - Which activities have we not done recently?
          * - What context signals are active?
          * - Does the bot have everything needed for this activity?
          * - Should activity weights decay or use cooldowns?
          */
-        BotActivity activity = RandomUtils.weightedRoll(activities);
+        BotActivity activity = RandomUtils.weightedRoll(bot.getPreferences().getActivities());
         if (activity == null) {
             activity = RandomUtils.random(BotActivity.ALL);
         }
-        return activity;
+        return activity.getCoordinator();
     }
 }

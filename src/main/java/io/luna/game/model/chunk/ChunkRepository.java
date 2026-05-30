@@ -11,6 +11,7 @@ import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.World;
 import io.luna.game.model.collision.CollisionMatrix;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +42,7 @@ import static io.luna.game.model.chunk.Chunk.SIZE;
  *     <li>{@link #temporaryUpdates} stores one-tick requests (sounds, graphics, item amount changes, object
  *     animations, etc).</li>
  *     <li>{@link #persistentUpdates} caches requests that must survive across ticks and/or chunk clears
- *         (most commonly “show object/item” style updates).</li>
+ *         (most commonly "show object/item" style updates).</li>
  * </ul>
  * <p>
  * <b>Collision snapshot:</b>
@@ -70,7 +71,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * Cached persistent update requests for {@link StationaryEntity} types in this chunk.
      * <p>
-     * This typically stores “display/show” style requests that must be re-applied when a player loads the chunk
+     * This typically stores "display/show" style requests that must be re-applied when a player loads the chunk
      * or when the chunk is refreshed.
      */
     private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new HashMap<>();
@@ -81,6 +82,11 @@ public final class ChunkRepository implements Iterable<Entity> {
      * Examples: local graphics/sounds, temporary object animations, transient item changes, etc.
      */
     private final List<ChunkUpdatableRequest> temporaryUpdates = new ArrayList<>();
+
+    /**
+     * The set of removed static objects that need always-persisted requests.
+     */
+    private final Set<GameObject> removedStaticObjects = new HashSet<>();
 
     /**
      * The live collision matrices for this chunk, one per height level.
@@ -257,15 +263,16 @@ public final class ChunkRepository implements Iterable<Entity> {
             if (request.isPersistent()) {
                 StationaryEntity entity = (StationaryEntity) request.getUpdatable();
 
-                // Discard requests with inactive entities instead of caching.
-                if (entity.getState() == EntityState.INACTIVE) {
+                // Discard requests with inactive entities instead of caching (exception for static objects).
+                boolean removedStaticObject = entity instanceof GameObject && removedStaticObjects.contains(entity);
+                if (entity.getState() == EntityState.INACTIVE && !removedStaticObject) {
                     it.remove();
                     continue;
                 }
 
                 /*
                  * Some requests must be persisted because the temporary list is cleared every tick.
-                 * For example, an update request that displays an object must be resent whenever
+                 * For example, an update request that displays or removes an object must be resent whenever
                  * a chunk is cleared of entities and rebuilt for a player.
                  */
                 persistentUpdates.put(entity, request);
@@ -377,5 +384,12 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public Collection<ChunkUpdatableRequest> getPersistentUpdates() {
         return Collections.unmodifiableCollection(persistentUpdates.values());
+    }
+
+    /**
+     * @return The set of removed static objects that need always-persisted requests.
+     */
+    public Set<GameObject> getRemovedStaticObjects() {
+        return removedStaticObjects;
     }
 }

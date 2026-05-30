@@ -277,7 +277,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
      * Removes a stackable ground item, decrementing an existing stack if present.
      * <p>
      * If the resulting amount is {@code <= 0}, the stack is fully removed. If no matching stack exists, this method
-     * is treated as a successful no-op (mirrors typical “remove-if-present” semantics).
+     * is treated as a successful no-op (mirrors typical "remove-if-present" semantics).
      *
      * @param item The item to remove (the amount represents how much to remove).
      * @return {@code true} if the removal/decrement succeeded (or the stack was not present).
@@ -302,7 +302,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
         }
 
         /*
-         * Treat “not found” as success.
+         * Treat "not found" as success.
          */
         return true;
     }

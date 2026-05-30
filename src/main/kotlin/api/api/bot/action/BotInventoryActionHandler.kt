@@ -5,7 +5,6 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.item.consume.food.Food
 import io.luna.game.model.Entity
-import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
@@ -76,15 +75,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
 
-            if (bot.navigator.navigate(target, true).await() == NavigationResult.REACHED) {
-                val cond = SuspendableCondition {
-                    (target is GroundItem && bot.isWithinDistance(target, 1)) ||
-                            bot.isInteractingWith(target)
-                }
-
+            if (bot.navigator.navigate(target, true).await() != NavigationResult.NO_VALID_PATH) {
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index)
-                return cond.submit(30).await()
+                return true
             }
 
             return false
@@ -143,7 +137,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-object action appeared to start successfully.
          */
         suspend fun onObject(target: GameObject) =
-            useOnEntity(target) { bot.output.useItemOnObject(usedId, it, target) }
+            useOnEntity(target) { bot.output.useItemOnObject(it, usedId, target) }
     }
 
     /**
@@ -277,6 +271,28 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 val food = Food.ID_TO_FOOD[item.id]
                 if (food != null && food.heal >= minimumHeal) {
                     bot.output.sendInventoryItemClick(1, index, item.id)
+                    bot.log("Eating food.")
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * Returns whether the bot has any usable food in its inventory.
+     *
+     * Only food entries whose healing amount is at least [minimumHeal] are counted. This is useful when the bot needs to
+     * check for emergency food, higher-quality food, or any food before starting a dangerous activity.
+     *
+     * @param minimumHeal The minimum healing amount required for food to count.
+     * @return `true` if the bot has at least one matching food item.
+     */
+    fun hasAnyFood(minimumHeal: Int = 0): Boolean {
+        for (item in bot.inventory) {
+            if (item != null) {
+                val food = Food.ID_TO_FOOD[item.id]
+                if (food != null && food.heal >= minimumHeal) {
                     return true
                 }
             }

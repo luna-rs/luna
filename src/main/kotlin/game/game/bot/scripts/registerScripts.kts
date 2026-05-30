@@ -1,10 +1,27 @@
 package game.bot.scripts
 
-import api.bot.scripts.IdleBotScript
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
-import game.bot.scripts.combat.PkBotScript
-import game.bot.scripts.skills.MiningBotScript
-import game.bot.scripts.skills.WoodcuttingBotScript
+import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
+import game.bot.scripts.skills.CutLogBotScript
+import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
+import game.bot.scripts.skills.CutTreeBotScript
+import game.bot.scripts.skills.CutTreeBotScript.Companion.CutTreeData
+import game.bot.scripts.skills.MineBotScript
+import game.bot.scripts.skills.MineBotScript.Companion.MineData
+import game.bot.scripts.skills.PickpocketBotScript
+import game.bot.scripts.skills.PickpocketBotScript.Companion.PickpocketData
+import game.bot.scripts.skills.SearchBotScript
+import game.bot.scripts.skills.SearchBotScript.Companion.SearchData
+import game.bot.scripts.skills.SmeltOreBotScript
+import game.bot.scripts.skills.SmeltOreBotScript.Companion.SmeltOreData
+import game.bot.scripts.skills.SpinFlaxBotScript
+import game.bot.scripts.skills.StealBotScript
+import game.bot.scripts.skills.StealBotScript.Companion.StealData
+import game.bot.scripts.skills.StringBowBotScript
+import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
@@ -12,26 +29,16 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
-    scriptManager.addScript(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
-    scriptManager.addScript(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
-    scriptManager.addScript(WoodcuttingBotScript::class) { bot, data -> WoodcuttingBotScript(bot, data) }
-    scriptManager.addScript(MiningBotScript::class) { bot, data -> MiningBotScript(bot, data) }
-    scriptManager.addScript(HarvestResourceBotScript::class) { bot, data -> HarvestResourceBotScript(bot, data) }
-    //scriptManager.addScript(FishingBotScript::class) { bot, data -> FishingBotScript(bot, data) }
-    //scriptManager.addScript(GoldScamBotScript::class) { bot, data -> FishingBotScript(bot, data) }
-    //scriptManager.addScript(GearScamBotScript::class) { bot, data -> FishingBotScript(bot, data) }
-    //scriptManager.addScript(PkScamBotScript::class) { bot, data -> FishingBotScript(bot, data) }
-    /*scriptManager.addScript(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
-    scriptManager.addScript(ThievingBotScript::class) { bot, data -> ThievingBotScript(bot, data) }
-    scriptManager.addScript(PrayerBotScript::class) { bot, data -> PrayerBotScript(bot, data) }
-    scriptManager.addScript(SmeltingBotScript::class) { bot, data -> SmeltingBotScript(bot, data) }
-    scriptManager.addScript(SmithingBotScript::class) { bot, data -> SmithingBotScript(bot, data) }
-    scriptManager.addScript(HighAlchBotScript::class) { bot, data -> HighAlchBotScript(bot, data) }
-    scriptManager.addScript(RunecraftingBotScript::class) { bot, data -> RunecraftingBotScript(bot, data) }
-    scriptManager.addScript(TelegrabWinesBotScript::class) { bot, data -> TeleGrabWinesBotScript(bot, data) }
-    scriptManager.addScript(IdentifyHerbsBotScript::class) { bot, data -> IdentifyHerbsBotScript(bot, data) }
-    scriptManager.addScript(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
-    scriptManager.addScript(MakePotionBotScript::class) { bot, data -> MakePotionBotScript(bot, data) }
-    scriptManager.addScript(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
-    scriptManager.addScript(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) } */
+    scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }
+    scriptManager.addScript<MineData>(MineBotScript::class) { bot, data -> MineBotScript(bot, data) }
+    scriptManager.addScript<PickpocketData>(PickpocketBotScript::class) { bot, data -> PickpocketBotScript(bot, data) }
+    scriptManager.addScript<StealData>(StealBotScript::class) { bot, data -> StealBotScript(bot, data) }
+    scriptManager.addScript<HarvestData>(HarvestBotScript::class) { bot, data -> HarvestBotScript(bot, data) }
+    scriptManager.addScript<CutLogData>(CutLogBotScript::class) { bot, data -> CutLogBotScript(bot, data) }
+    scriptManager.addScript<StringBowData>(StringBowBotScript::class) { bot, data -> StringBowBotScript(bot, data) }
+    scriptManager.addScript<SearchData>(SearchBotScript::class) { bot, data -> SearchBotScript(bot, data) }
+    scriptManager.addScript<SmeltOreData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
+    scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+
 }

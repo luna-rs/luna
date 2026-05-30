@@ -1,6 +1,6 @@
 package game.bot.scripts
 
-import api.bot.ReflexBotScript
+import api.bot.script.ReflexBotScript
 import api.bot.Suspendable.naturalMicroDelay
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
@@ -9,12 +9,9 @@ import game.player.item.consume.potion.Potion
 import game.skill.prayer.Bone
 import io.luna.Luna
 import io.luna.game.model.EntityState
-import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager.GearSet
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager.GearSetType
 
 /**
  * A [ReflexBotScript] that allows a bot to interrupt its current activity and loot valuable nearby ground items.
@@ -138,7 +135,12 @@ class LootItemBotScript(bot: Bot) : ReflexBotScript(bot) {
         for (groundItem in bot.viewableItems) {
             val item = groundItem.toItem()
 
-            if (groundItem.id in bot.preferences.wantedItems) {
+            if (item.id == 995) {
+                if (item.amount > minimumLootValue * 0.50) {
+                    valuableItems += groundItem
+                    found = true
+                }
+            } else if (groundItem.id in bot.preferences.wantedItems) {
                 valuableItems += groundItem
                 found = true
             } else if (world.economy.getTotalPrice(item) > minimumLootValue) {

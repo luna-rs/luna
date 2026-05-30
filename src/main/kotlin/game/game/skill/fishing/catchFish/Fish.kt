@@ -1,6 +1,7 @@
 package game.skill.fishing
 
 import api.predef.*
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 import game.skill.fishing.catchFish.CatchFishAction
 import kotlin.math.floor
@@ -119,6 +120,14 @@ enum class Fish(val id: Int,
           level = 76,
           exp = 110.0,
           chance = 3 to 40);
+
+    companion object {
+
+        /**
+         * All the fish values.
+         */
+        val ALL = ImmutableList.copyOf(values())
+    }
 
     /**
      * The formatted name.

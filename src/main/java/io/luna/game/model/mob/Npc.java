@@ -7,6 +7,7 @@ import io.luna.game.action.Action;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.def.NpcCombatDefinition;
@@ -221,22 +222,22 @@ public class Npc extends Mob {
      * If this NPC is currently interacting with an entity, the interacting entity is always considered visible even
      * if outside the normal viewing cone.
      *
-     * @param entity The entity to test visibility against.
+     * @param locatable The entity to test visibility against.
      * @param viewingDistance The maximum distance in tiles at which the NPC can see the entity.
      * @return {@code true} if the entity is within range and inside the NPC's viewing cone.
      */
-    public boolean inViewCone(Entity entity, int viewingDistance) {
-        if (!position.isWithinDistance(entity.getPosition(), viewingDistance)) {
+    public boolean inViewCone(Locatable locatable, int viewingDistance) {
+        if (!position.isWithinDistance(locatable, viewingDistance)) {
             return false;
         }
 
         // Whoever we're interacting with takes priority.
-        if (Objects.equals(getInteractingWith(), entity)) {
+        if (Objects.equals(getInteractingWith(), locatable)) {
             return true;
         }
 
         // Get deltas representing where the entity is relative to this NPC.
-        Direction relativeDir = Direction.between(entity.getPosition(), position);
+        Direction relativeDir = Direction.between(position, locatable.abs());
         if (relativeDir == Direction.NONE) {
             // On top of the entity, always seen.
             return true;
@@ -254,7 +255,7 @@ public class Npc extends Mob {
      * @param entity The entity to test visibility against.
      * @return {@code true} if the entity is within the default viewing distance and inside the viewing cone.
      */
-    public boolean inViewCone(Entity entity) {
+    public boolean inViewCone(Locatable entity) {
         return inViewCone(entity, Position.VIEWING_DISTANCE);
     }
 

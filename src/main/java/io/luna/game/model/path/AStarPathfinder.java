@@ -41,19 +41,25 @@ public abstract class AStarPathfinder<T extends Locatable> extends GamePathfinde
     }
 
     @Override
-    public final Deque<T> find(T origin, T target) {
+   public final PathResult<T> find(T origin, T target) {
         Heuristic heuristic = getHeuristic();
         Map<T, Node<T>> nodes = new HashMap<>();
         Node<T> start = new Node<>(origin);
         Node<T> end = new Node<>(target);
         nodes.put(origin, start);
         nodes.put(target, end);
+        Node<T> best = start;
+        Position originAbs = origin.abs();
+        Position targetAbs = target.abs();
+        int bestDistance = originAbs.computeLongestDistance(targetAbs);
 
         Set<Node<T>> open = new HashSet<>();
         Queue<Node<T>> sorted = new PriorityQueue<>();
         open.add(start);
         sorted.add(start);
-
+        if (origin.equals(target)) {
+            return new PathResult<>(PathResultType.EMPTY, new ArrayDeque<>(0));
+        }
         do {
             if (nodes.size() >= 250_000) {
                 break;
@@ -65,10 +71,15 @@ public abstract class AStarPathfinder<T extends Locatable> extends GamePathfinde
             }
 
             T locatable = active.getLocatable();
-            if (locatable.equals(target)) {
-                break;
+            int distance = locatable.abs().computeLongestDistance(targetAbs);
+            if (distance < bestDistance) {
+                best = active;
+                bestDistance = distance;
             }
-
+            if (locatable.equals(target)) {
+                Deque<T> path = buildPath(origin, active);
+                return new PathResult<>(PathResultType.COMPLETE, path);
+            }
             open.remove(active);
             active.close();
 
@@ -97,25 +108,27 @@ public abstract class AStarPathfinder<T extends Locatable> extends GamePathfinde
                 }
             }
         } while (!open.isEmpty());
-
-        if(!end.hasParent()) {
-            return null;
+        Deque<T> partial = buildPath(origin, best);
+        if (!partial.isEmpty()) {
+            return new PathResult<>(PathResultType.PARTIAL, partial);
         }
-        nodes.clear();
+        return new PathResult<>(PathResultType.FAILED, new ArrayDeque<>(0));
+    }
 
+    private Deque<T> buildPath(T origin, Node<T> node) {
         Deque<T> shortest = new ArrayDeque<>();
-        Node<T> active = end;
 
-        if (active.hasParent()) {
+        for (Node<T> active = node; active != null; active = active.getParent()) {
             T locatable = active.getLocatable();
-            while (!origin.equals(locatable)) {
-                shortest.addFirst(locatable);
-                active = active.getParent();
-                locatable = active.getLocatable();
+
+            if (origin.equals(locatable)) {
+                return shortest;
             }
+
+            shortest.addFirst(locatable);
         }
 
-
+        shortest.clear();
         return shortest;
     }
 

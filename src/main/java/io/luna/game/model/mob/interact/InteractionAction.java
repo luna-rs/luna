@@ -235,7 +235,7 @@ public final class InteractionAction extends Action<Player> {
      */
     private boolean moveBeforeInteract(boolean isMob, InteractionPolicy trigger) {
         boolean moved = false;
-        if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
+        if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             if (mob.getStatus().isImmobilized()) {
                 // We need to move in order to interact, but we're immobilized.

@@ -57,7 +57,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     SILVER(rocks = listOf(2100 to 450,
                           2101 to 451),
            level = 20,
-           item = 443,
+           item = 442,
            respawnTicks = 100,
            exp = 17.5,
            chance = 25 to 200),
@@ -114,6 +114,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
          * Ore rock object ID -> Ore instance.
          */
         val ROCK_MAP = values().flatMap { ore -> ore.rocks.map { it.first to ore } }.toMap()
+        val ITEM_MAP = values().associateBy { it.item }
 
         /**
          * All empty rock object IDs.

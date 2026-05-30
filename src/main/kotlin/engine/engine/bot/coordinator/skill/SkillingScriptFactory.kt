@@ -1,6 +1,6 @@
 package engine.bot.coordinator.skill
 
-import api.bot.BotScript
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
@@ -68,6 +68,51 @@ abstract class SkillingScriptFactory(val skillId: Int) {
             getTrainingScript(bot, level, zones)
         } else {
             getProfitScript(bot, level, zones)
+        }
+    }
+
+    /**
+     * Returns the activities that are available at the supplied level.
+     *
+     * Each option is checked with [levelFunc]. Options with a required level higher than [level] are removed, and the
+     * remaining options are returned sorted from highest requirement to lowest requirement.
+     *
+     * @param E The activity type being filtered.
+     * @param level The current level used to unlock activities.
+     * @param levelFunc Returns the level required for an activity.
+     * @param options The full list of possible activities.
+     *
+     * @return The activities available at [level], sorted by requirement.
+     */
+    protected fun <E> getActivities(level: Int, levelFunc: (E) -> Int, options: List<E>): List<E> {
+        val optionsMutable = ArrayList<E>(options)
+        optionsMutable.removeIf { levelFunc(it) > level }
+        optionsMutable.sortByDescending { levelFunc(it) }
+        return optionsMutable
+    }
+
+    /**
+     * Selects an available activity using the bot's personality.
+     *
+     * Activities are first filtered by [level] through [getActivities]. Dextrous or intelligent bots prefer the best
+     * available activity, dumb bots may pick a worse or random activity, and average bots pick randomly.
+     *
+     * @param E The activity type being selected.
+     * @param bot The bot whose personality influences the selection.
+     * @param level The current level used to unlock activities.
+     * @param levelFunc Returns the level required for an activity.
+     * @param options The full list of possible activities.
+     *
+     * @return The selected activity, or `null` if no activity is available.
+     */
+    protected fun <E> getBestActivity(bot: Bot, level: Int, levelFunc: (E) -> Int, options: List<E>): E? {
+        val activities = getActivities(level, levelFunc, options)
+        if (bot.personality.isDextrous || bot.personality.isIntelligent) {
+            return activities.firstOrNull()
+        } else if (bot.personality.isDumb) {
+            return if (randBoolean()) activities.lastOrNull() else activities.randomOrNull()
+        } else {
+            return activities.randomOrNull()
         }
     }
 

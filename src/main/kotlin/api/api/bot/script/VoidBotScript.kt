@@ -1,4 +1,4 @@
-package api.bot
+package api.bot.script
 
 import io.luna.game.model.mob.bot.Bot
 

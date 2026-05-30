@@ -41,11 +41,6 @@ final class NavigationAction extends Action<Mob> {
     private final boolean isTargetMob;
 
     /**
-     * Whether the navigation target is an entity.
-     */
-    private final boolean isTargetEntity;
-
-    /**
      * The last absolute target position this action attempted to path toward.
      * <p>
      * This is used by continuous requests to detect when a moving target has changed position and requires
@@ -86,7 +81,6 @@ final class NavigationAction extends Action<Mob> {
         this.request = request;
         navigator = mob.getNavigator();
         isTargetMob = request.getTarget() instanceof Mob;
-        isTargetEntity = request.getTarget() instanceof Entity;
     }
 
     @Override
@@ -169,7 +163,7 @@ final class NavigationAction extends Action<Mob> {
 
         // Re-path to target if needed.
         if (current == null) {
-            current = isTargetEntity ?
+            current = isTargetMob ?
                     navigator.walk(navigator.computeOffsetPosition((Entity) target, request.getOffsetDir()),
                             request.getPathfinder(), request.isAsync()) :
                     navigator.walk(target, request.getPathfinder(), request.isAsync());

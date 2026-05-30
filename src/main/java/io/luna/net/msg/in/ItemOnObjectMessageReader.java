@@ -31,7 +31,6 @@ public final class ItemOnObjectMessageReader extends GameMessageReader<ItemOnObj
                 filter(nextObject -> nextObject.getId() == objectId &&
                         nextObject.getPosition().equals(objectPosition) &&
                         nextObject.isVisibleTo(player)).findFirst().orElse(null);
-
         return new ItemOnObjectEvent(player, itemId, itemIndexId, itemInterfaceId, gameObject);
     }
 

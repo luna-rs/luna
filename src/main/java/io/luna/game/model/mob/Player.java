@@ -223,7 +223,7 @@ public class Player extends Mob {
     /**
      * Current run energy percentage (0–100).
      */
-    private double runEnergy;
+    private double runEnergy = 100.0;
 
     /**
      * Combined weight of {@link #inventory} and {@link #equipment}.
@@ -434,7 +434,7 @@ public class Player extends Mob {
             data.load(this);
         } else {
             // New player!
-            setPosition(Luna.settings().game().startingPosition());
+            setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
             rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
             if (isBot()) {
@@ -660,6 +660,9 @@ public class Player extends Mob {
                 return;
             }
         }
+        if (force || isBot()) {
+            client.setForcedLogout(true);
+        }
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
@@ -670,7 +673,6 @@ public class Player extends Mob {
      * Forces a logout for this player.
      */
     public void forceLogout() {
-        client.setForcedLogout(true);
         logout(true);
     }
 

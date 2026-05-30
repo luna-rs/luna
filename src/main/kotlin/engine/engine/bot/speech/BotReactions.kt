@@ -30,8 +30,6 @@ import kotlin.math.floor
  */
 object BotReactions {
 
-    // TODO@0.5.0 OTHER_SCAMMED, bots reacting to another bot getting scammed.
-
     /**
      * The most recent player name that impressed this bot.
      *
@@ -140,8 +138,8 @@ object BotReactions {
     fun reactToLevelUp(bot: Bot, skill: Skill, newLevel: Int) {
         bot.lastSkillAdvanced = skill.name.lowercase() to newLevel
 
-        val minMaxHappiness = floor(newLevel / 100.0)
-        val amount = rand(minMaxHappiness / 2, minMaxHappiness)
+        val minMaxHappiness = newLevel / 100.0
+        val amount = rand(minMaxHappiness * 0.50, minMaxHappiness)
         bot.emotions.add(EmotionalTrigger(EmotionType.HAPPY, amount))
 
         if (rand(bot.personality.social)) {
@@ -249,5 +247,11 @@ object BotReactions {
     fun reactToScammed(bot: Bot) {
         // TODO@0.5.0 Impl, in ScamBotScript
         // adjustfeelingtoward(scammer, -0.50)
+    }
+
+    fun reactToOtherScammed(bot: Bot) {
+        // TODO@0.5.0 OTHER_SCAMMED, bots reacting to another bot getting scammed.
+        // adjustfeelingtoward(scammer, -0.50)
+        // gain feelings toward person scammed
     }
 }

@@ -1,77 +1,82 @@
 package io.luna.game.model.mob.bot.brain;
 
+import api.bot.script.ReflexBotScript;
 import game.bot.scripts.combat.CombatBotScript;
+import game.bot.scripts.combat.CombatBotScript.InitialState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.dialogue.DialogueInterface;
+import io.luna.game.model.mob.dialogue.NpcDialogue;
+import io.luna.game.model.mob.dialogue.PlayerDialogue;
+import io.luna.game.model.mob.dialogue.TextDialogue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-
-import static java.util.Objects.requireNonNullElse;
 
 /**
- * The low-level reflex controller for {@link Bot} entities.
+ * Controls automatic low-level reactions for a {@link Bot}.
  * <p>
- * {@link BotReflex} operates as the “lizard brain” for every bot handling involuntary, automatic reactions that
- * occur without higher-level thought. This includes things like continuing dialogue, closing interfaces, or making
- * instinctual combat decisions.
+ * This is the bot's reflex layer. It handles immediate behaviour that should run before the normal {@link BotBrain}
+ * decision cycle, such as continuing dialogue, completing character design, starting combat response scripts, or running
+ * registered {@link ReflexBotScript} instances.
  * <p>
- * Reflexes run once per server tick, prior to scripted logic in the {@link BotBrain}. If any reflex triggers
- * (returns {@code false}), the bot’s brain will skip its main decision cycle for that tick. This models how
- * reflexive behavior momentarily overrides conscious action.
- * <p>
- * Example behaviors managed here:
- * <ul>
- *   <li>Randomizing appearance when the design interface is open.</li>
- *   <li>Automatically clicking “Continue” during dialogues.</li>
- *   <li>Evading or countering in combat under low health conditions.</li>
- * </ul>
- * Custom reflexes can be registered dynamically through {@link #addInstinct(BotInstinct)}.
+ * If a reflex triggers, {@link #process(Bot)} returns {@code false}. This tells the brain to skip its normal decision
+ * cycle for the current tick so the reflex action can take priority.
  *
  * @author lare96
  */
-public class BotReflex {
+public final class BotReflex {
 
     /**
-     * Represents a single reflex or involuntary instinct that a bot can perform.
+     * The registered custom reflex scripts for this bot.
      * <p>
-     * Returning {@code false} means this reflex triggered an action that cancels the bot's thinking phase for this
-     * cycle, while {@code true} means no action was taken and the {@link BotBrain} can still run.
+     * Reflex scripts are checked in insertion order. The first script whose {@link ReflexBotScript#shouldReact()} method
+     * returns {@code true} becomes the active reflex.
      */
-    public interface BotInstinct extends Function<Bot, Boolean> {
-    }
+    private final List<ReflexBotScript> reflexes = new ArrayList<>();
 
     /**
-     * The list of registered reflexes for this bot.
+     * The reflex script currently running, or {@code null} if no custom reflex is active.
      */
-    private final List<BotInstinct> reflexes = new ArrayList<>();
+    private ReflexBotScript activeReflex;
 
     /**
-     * Disables the combat reflex so scripts can handle how the bot responds to combat.
+     * Whether automatic combat responses are disabled.
+     * <p>
+     * When enabled, combat scripts or other high-level scripts are responsible for deciding how the bot responds to
+     * combat instead of this reflex controller.
      */
     private boolean disableCombatReflex;
 
     /**
-     * Executes all reflex checks for the given bot.
+     * Processes this bot's reflex layer for one tick.
      * <p>
-     * If any reflex triggers (e.g. an interface is open or a dialogue is ongoing), the bot’s main {@link BotBrain}
-     * logic will be paused until the reflex resolves.
+     * Active custom reflex scripts take priority. If one is already running, all other reflex checks are skipped until it
+     * finishes. If no custom reflex is active, registered reflex scripts are checked first, followed by built-in reflexes
+     * for character design, dialogue continuation, and combat response.
      *
-     * @param bot The bot.
-     * @return {@code false} if a reflex action occurred, {@code true} if the bot is free to proceed with
-     * its regular logic.
+     * @param bot The bot being processed.
+     *
+     * @return {@code true} if no reflex triggered and normal brain logic may continue, or {@code false} if reflex logic
+     * took over this tick.
      */
     public boolean process(Bot bot) {
-        // Execute all registered instincts.
-        for (BotInstinct instinct : reflexes) {
-            if (!instinct.apply(bot)) {
-                Class<?> type = instinct.getClass();
-                String name = type.isAnonymousClass() ? "anonymous" : instinct.getClass().getName();
-                bot.log("Dynamic reflex [" + name + "] triggered.");
+        if (activeReflex != null) {
+            if (activeReflex.isRunning()) {
+                // Reflex script is still running; skip all other processing.
                 return false;
+            }
+            // No longer running; reset active script.
+            activeReflex.stop();
+            activeReflex = null;
+        } else {
+            for (ReflexBotScript script : reflexes) {
+                if (script.shouldReact()) {
+                    // Reflex script was triggered, start it.
+                    activeReflex = script;
+                    activeReflex.start();
+                    return false;
+                }
             }
         }
 
@@ -83,7 +88,8 @@ public class BotReflex {
         }
 
         // Automatically progress dialogue interfaces.
-        if (bot.getOverlays().contains(DialogueInterface.class)) {
+        if (bot.getOverlays().contains(NpcDialogue.class) || bot.getOverlays().contains(PlayerDialogue.class) ||
+                bot.getOverlays().contains(TextDialogue.class)) {
             bot.getOutput().sendContinueDialogue();
             bot.log("Reflex [continue dialogue] triggered.");
             return false;
@@ -91,38 +97,54 @@ public class BotReflex {
 
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
-            Mob focus = requireNonNullElse(bot.getCombat().getTarget(), bot.getCombat().getAutoRetaliateTarget());
-            bot.getScriptStack().pushHead(new CombatBotScript(bot, focus));
-            bot.log("Reflex [responding to combat] triggered.");
-            return false;
+            Mob focus = bot.getCombat().getTarget();
+            if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
+                focus = bot.getCombat().getLastAttackReceived().getAttacker();
+            }
+            if (focus != null) {
+                InitialState response = bot.getEmotions().getCombatResponse(focus);
+                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response));
+                bot.log("Reflex [responding to combat] triggered.");
+                return false;
+            }
         }
 
-        // No reflexes triggered; continue brain logic
+        // No reflexes triggered; continue brain logic.
         return true;
     }
 
     /**
-     * Registers a new {@link BotInstinct}. They are processed in the order they were added.
-     *
-     * @param instinct The instinct function to add.
-     */
-    public void addInstinct(BotInstinct instinct) {
-        reflexes.add(instinct);
-    }
-
-    /**
-     * Disables the combat reflex tracking, meaning the bot will <strong>not</strong> naturally respond to combat.
+     * Registers a custom reflex script.
      * <p>
-     * Scripts will have to define bot behaviour when attacked (or bots will do nothing).
+     * Registered reflex scripts are processed in the order they were added. The first script that wants to react becomes
+     * the active reflex and blocks normal brain logic until it finishes.
+     *
+     * @param script The reflex script to register.
      */
-    public void disableCombatReflex() {
-        disableCombatReflex = true;
+    public void add(ReflexBotScript script) {
+        reflexes.add(script);
     }
 
     /**
-     * Enables the combat reflex tracking, meaning the bot will naturally respond to combat.
+     * @return {@code true} if automatic combat reflexes are disabled.
      */
-    public void enableCombatReflex() {
-        disableCombatReflex = false;
+    public boolean isDisableCombatReflex() {
+        return disableCombatReflex;
+    }
+
+    /**
+     * Sets whether this bot should skip automatic combat reflexes.
+     *
+     * @param disableCombatReflex {@code true} to let scripts handle combat response themselves.
+     */
+    public void setDisableCombatReflex(boolean disableCombatReflex) {
+        this.disableCombatReflex = disableCombatReflex;
+    }
+
+    /**
+     * @return The currently active reflex script, or {@code null} if none is active.
+     */
+    public ReflexBotScript getActiveReflex() {
+        return activeReflex;
     }
 }

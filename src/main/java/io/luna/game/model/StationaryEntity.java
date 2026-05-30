@@ -108,10 +108,14 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      */
     public final void hide() {
         if (!hidden) {
-            boolean persistent = this instanceof GameObject && !((GameObject) this).isDynamic();
+            boolean staticGameObject = this instanceof GameObject && !((GameObject) this).isDynamic();
+            if(staticGameObject) {
+                chunkRepository.getRemovedStaticObjects().add((GameObject) this);
+            }
             int offset = getChunk().offset(position);
             chunkRepository.removeUpdate(this);
-            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, hideMessage(offset), persistent));
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, hideMessage(offset), staticGameObject));
+
             hidden = true;
         }
     }

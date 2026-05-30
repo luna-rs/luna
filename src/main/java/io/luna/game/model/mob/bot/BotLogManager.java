@@ -11,10 +11,10 @@ import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -137,7 +137,7 @@ public final class BotLogManager {
     /**
      * The maximum number of recent log entries retained in memory.
      */
-    private static final int BUFFER_CAPACITY = 50;
+    private static final int BUFFER_CAPACITY = 100;
 
     /**
      * The file path used for this bot's persistent log output.
@@ -172,7 +172,7 @@ public final class BotLogManager {
         this.bot = bot;
         path = Paths.get("data", "game", "bots", "logs",
                 bot.getUsername().toLowerCase() + ".txt");
-        buffer = new ArrayDeque<>(BUFFER_CAPACITY);
+        buffer = new ConcurrentLinkedQueue<>();
     }
 
     /**

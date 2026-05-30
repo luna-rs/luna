@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.schedule;
 
-import api.bot.BotScript;
+import api.bot.script.BotScript;
+import com.google.common.collect.Range;
 import com.google.common.primitives.Chars;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.AtomicDouble;
@@ -10,9 +11,12 @@ import game.bot.scripts.combat.CombatBotScript;
 import io.luna.Luna;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.BotLogManager.BotStreamType;
 import io.luna.game.model.mob.bot.BotSettings;
 import io.luna.game.model.mob.bot.brain.BotPersonality;
+import io.luna.game.model.mob.bot.brain.BotPreference;
 import io.luna.util.GsonUtils;
 import io.luna.util.RandomUtils;
 import io.luna.util.StringUtils;
@@ -27,6 +31,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -58,9 +63,14 @@ public final class BotScheduleService extends AbstractScheduledService {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The base number of bots this service may try to log in during a single scheduler pass.
+     * The total base number of bots this service may try to log in during a single scheduler pass.
      */
-    private static final int BASE_LOGIN_COUNT = 50;
+    private static final int BASE_LOGIN_COUNT = 15;
+
+    /**
+     * The base range amount of new bots this service may try to log in during a single scheduler pass.
+     */
+    private static final Range<Integer> NEW_LOGIN_COUNT_RANGE = Range.closed(1, 5);
 
     /**
      * The path used to persist pending bot login requests across server restarts.
@@ -93,17 +103,17 @@ public final class BotScheduleService extends AbstractScheduledService {
     private final Map<String, Instant> loginRequests = new ConcurrentHashMap<>();
 
     /**
-     * The number of bots this service still wants to log in during the current scheduler pass.
-     */
-    private int loginGoal;
-
-    /**
      * A multiplier applied to the calculated login goal.
      * <p>
      * This allows other systems to dynamically reduce or increase the desired bot population without changing the
      * configured base online count.
      */
     private final AtomicDouble onlineMultiplier = new AtomicDouble(1.0);
+
+    /**
+     * The number of bots this service still wants to log in during the current scheduler pass.
+     */
+    private int loginGoal;
 
     /**
      * The Markov chain used to generate usernames for newly created bots.
@@ -164,7 +174,7 @@ public final class BotScheduleService extends AbstractScheduledService {
 
     @Override
     protected Scheduler scheduler() {
-        return Scheduler.newFixedDelaySchedule(Duration.ofMinutes(1), Duration.ofMinutes(1));
+        return Scheduler.newFixedDelaySchedule(Duration.ofSeconds(RandomUtils.inclusive(15, 30)), Duration.ofMinutes(1));
     }
 
     /**
@@ -226,14 +236,22 @@ public final class BotScheduleService extends AbstractScheduledService {
      * @param username The username assigned to the bot.
      * @param personality The personality assigned to the bot.
      */
-    private void login(String username, BotPersonality personality) {
+    private void login(String username, BotPersonality personality, BotPreference preferences) {
         try {
-            new Bot.Builder(world.getContext())
-                    .setUsername(username)
-                    .setPersonality(personality)
-                    .build()
-                    .login()
-                    .join();
+            Bot.Builder builder = new Bot.Builder(world.getContext())
+                    .setUsername(username);
+            if (personality != null) {
+                builder.setPersonality(personality);
+            }
+            if (preferences != null) {
+                builder.setPreferences(preferences);
+            }
+
+            Bot bot = builder.build();
+            if (Luna.settings().game().betaMode()) {
+                bot.getLogManager().setStreamType(BotStreamType.FILE);
+            }
+            bot.login().join();
         } catch (Exception e) {
             logger.error("Error when trying to create new bot.", e);
         }
@@ -245,9 +263,7 @@ public final class BotScheduleService extends AbstractScheduledService {
      * @param username The username to log in.
      */
     private void login(String username) {
-        login(username, new BotPersonality.Builder(world.getBotManager().getPersonalityManager())
-                .randomizeSmart()
-                .build());
+        login(username, null, null);
     }
 
     /**
@@ -286,34 +302,55 @@ public final class BotScheduleService extends AbstractScheduledService {
 
             // Next check any other logged out bots without login requests.
             for (String username : world.getBots().getSavedNames()) {
-                if (world.getBots().isOnline(username) || loginGoal-- < 1) {
+                if (world.getBots().isOnline(username) ||
+                        loginRequests.containsKey(username) ||
+                        loginGoal-- < 1) {
                     continue;
                 }
 
                 login(username);
             }
 
-            // Finally, if we still need bots, create them.
+            // Finally, if we still need bots, create a new randomized amount of bots.
+            loginGoal = loginGoal > NEW_LOGIN_COUNT_RANGE.upperEndpoint() ? RandomUtils.random(NEW_LOGIN_COUNT_RANGE) : loginGoal;
             while (loginGoal-- > 0) {
-                BotPersonality.Builder personality = new BotPersonality.Builder(
-                        world.getBotManager().getPersonalityManager()
-                ).randomizeSmart();
+                BotPersonality.Builder personalityBuilder = new BotPersonality.Builder(
+                        world.getBotManager().getPersonalityManager()).randomizeSmart();
+
 
                 // Small chance of either an unusually low or high intelligence.
-                double intelligence = personality.getIntelligence();
+                double intelligence = personalityBuilder.getIntelligence();
                 if (RandomUtils.roll(settings.highIntelligenceChance()) && intelligence < 0.85) {
-                    personality.setIntelligence(ThreadLocalRandom.current().nextDouble(0.85, 1.0));
+                    personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.85, 1.0));
                 } else if (RandomUtils.roll(settings.lowIntelligenceChance()) && intelligence > 0.15) {
-                    personality.setIntelligence(ThreadLocalRandom.current().nextDouble(0.0, 0.15));
+                    personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.0, 0.15));
                 }
 
                 // Generate a username and attempt to log the bot in. The username quality scales with intelligence.
                 int quality = Math.max(1, (int) Math.floor(15 * intelligence));
                 List<Character> generatedUsername = usernameChain.generate(quality);
+                if (generatedUsername.isEmpty()) {
+                    continue;
+                }
                 String username = new String(Chars.toArray(generatedUsername));
+                username = username.trim().toLowerCase(Locale.CANADA).replace(' ', '_'); // No spaces.
+                if (username.length() >= 12) {// Max 1-12 characters.
+                    username = username.substring(0, 11);
+                }
+
+                BotPersonality personality = personalityBuilder.build();
+                BotPreference.Builder preferences = new BotPreference.Builder(
+                        world.getBotManager().getPersonalityManager(), personality).randomizeSmart();
+                if (username.contains("miner")) {
+                    preferences.addSkill(Skill.MINING);
+                }
+                // TODO replace spaces in regular player usernames with _ as well
+                // TODO If a bot has certain 'tags' in their name like 'miner' or 'cutter' 'woodcut' etc.
+                //  make them more likely to do that skill! Use a map tag -> skill_id
+                //  or even map tag -> (prefrences) -> void, so you can set any prefrence based on tag, pking ,etc.
 
                 if (!world.getBots().exists(username)) {
-                    login(username, personality.build());
+                    login(username, personality, preferences.build());
                 }
             }
         }
@@ -342,20 +379,19 @@ public final class BotScheduleService extends AbstractScheduledService {
                         .filter(plr -> plr instanceof Bot)
                         .ifPresent(value -> world.getContext().getGame().sync(() -> {
                             Bot bot = value.asBot();
-                            BotScript<?> script = bot.getScriptStack().current();
+                            BotScript script = bot.getScriptStack().current();
 
                             if (script instanceof LogoutBotScript) {
-                                // We already have an active logout script. Make it urgent.
-                                ((LogoutBotScript) script).setUrgent(true);
+                                bot.forceLogout();
                             } else if (script instanceof CombatBotScript) {
                                 // We're in combat. Push a logout script to run after combat completes.
-                                bot.getScriptStack().softPushHead(new LogoutBotScript(bot, true));
+                                bot.getScriptStack().softPushHead(new LogoutBotScript(bot));
                             } else if (bot.getControllers().checkLogout()) {
                                 // Otherwise, push a logout script that runs instantly.
-                                bot.getScriptStack().pushHead(new LogoutBotScript(bot, false));
+                                bot.getScriptStack().pushHead(new LogoutBotScript(bot));
                             } else if (script != null) {
                                 // We can't log out right now, but have an active script. Push a logout script to the tail.
-                                bot.getScriptStack().pushTail(new LogoutBotScript(bot, false));
+                                bot.getScriptStack().pushTail(new LogoutBotScript(bot));
                             } else {
                                 // We can't log out right now, and have no active script. Try again in 10 minutes.
                                 logoutRequests.putIfAbsent(usernameHash, Instant.now().plus(10, ChronoUnit.MINUTES));
@@ -403,11 +439,11 @@ public final class BotScheduleService extends AbstractScheduledService {
          * - 100%+ target online  -> no automatic logins this cycle.
          */
         double goalPercent = 1.0 - Math.min(1.0, onlineCount / goalCount);
-        int goal = (int) Math.floor(BASE_LOGIN_COUNT * goalPercent);
+        int goal = (int) Math.min((int) Math.floor(BASE_LOGIN_COUNT * goalPercent), goalCount);
 
         // Ensure login goal does not exceed max player count.
         int remaining = world.getPlayers().capacity() - world.getPlayerMap().size(); // Thread-safe version.
-        if(remaining < 1) {
+        if (remaining < 1) {
             return 0;
         }
         return Math.min(remaining, goal);

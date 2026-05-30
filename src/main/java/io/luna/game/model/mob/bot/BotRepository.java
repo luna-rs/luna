@@ -5,7 +5,6 @@ import io.luna.game.model.World;
 import io.luna.game.model.mob.bot.schedule.BotScheduleService;
 import io.luna.game.persistence.GameSerializer;
 import io.luna.game.persistence.JsonGameSerializer;
-import io.luna.game.persistence.SqlGameSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -81,10 +80,9 @@ public final class BotRepository {
      */
     public void loadNames() {
         try {
-            GameSerializer serializer = world.getSerializerManager().getSerializer();
-            if (serializer instanceof JsonGameSerializer) {
+            if (world.getSerializerManager().isJson()) {
                 loadJsonNames();
-            } else if (serializer instanceof SqlGameSerializer) {
+            } else if (world.getSerializerManager().isSql()) {
                 loadSqlNames();
             }
         } catch (Exception e) {
@@ -112,7 +110,7 @@ public final class BotRepository {
     }
 
     /**
-     * Loads all bot usernames from the SQL database by querying the {@code main_data} table for rows where
+     * Loads all bot usernames from the SQL database by querying the {@code main} table for rows where
      * {@code bot = 1}.
      * <p>
      * This allows the repository to reconstruct its persistent bot index from database storage.
@@ -120,7 +118,7 @@ public final class BotRepository {
     private void loadSqlNames() {
         try (Connection connection = world.getConnectionPool().take();
              PreparedStatement loadData = connection.prepareStatement(
-                     "SELECT username FROM main_data WHERE bot = 1;")) {
+                     "SELECT username FROM main WHERE bot = 1;")) {
             try (var results = loadData.executeQuery()) {
                 while (results.next()) {
                     savedNames.add(results.getString("username"));

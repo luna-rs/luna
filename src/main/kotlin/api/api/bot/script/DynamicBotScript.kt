@@ -1,9 +1,6 @@
-package api.bot
+package api.bot.script
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 
 /**
  * A base class for non-persistent, runtime-only bot scripts. These do not need to be registered within

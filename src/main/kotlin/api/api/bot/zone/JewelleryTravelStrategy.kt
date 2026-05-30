@@ -45,9 +45,15 @@ class JewelleryTravelStrategy(private val jewellery: TeleportJewellery, private 
             bot.jewelleryItems.add(Item(id))
         }
         if (!jewellery.crumbles && jewellery.items.size > 1) {
+            // Remove the final uncharged jewellery item. We can't teleport with it.
             bot.jewelleryItems.removeLast()
         }
-        return handler.hasAny(bot.jewelleryItems)
+        if (!handler.hasAny(bot.jewelleryItems)) {
+            // Bot will try to buy the jewellery item in the future if we don't have it.
+            bot.jewelleryItems.firstOrNull()?.id?.apply { bot.preferences.wantedItems += this }
+            return false
+        }
+        return true
     }
 
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {

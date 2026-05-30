@@ -1,5 +1,6 @@
 package api.bot.action
 
+import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.SuspendableCondition
 import api.predef.*
@@ -10,6 +11,9 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
+import io.luna.game.model.mob.movement.NavigationRequest
+import io.luna.game.model.mob.movement.PathfinderType
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.GroundItemClickMessageReader
 import io.luna.net.msg.`in`.NpcClickMessageReader
@@ -70,11 +74,21 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         }")
 
-        bot.navigator.navigate(target, true).await()
+        // Wait for current non-continuous pending navigation to complete first.
+        if(!bot.navigator.isCurrentContinuous) {
+            bot.navigator.currentPending?.await()
+        }
+        val request = NavigationRequest.builder(bot)
+            .async(true)
+            .continuous(false)
+            .policy(InteractionPolicy(InteractionType.SIZE, 1))
+            .target(target)
+            .pathfinder(PathfinderType.PLAYER)
+            bot.navigator.submit(request.build()).await()
         val cond = SuspendableCondition {
             bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
         }
-        bot.naturalMicroDelay()
+        bot.naturalDelay()
 
         when (target) {
             is Player -> bot.output.sendPlayerInteraction(option, target)
@@ -84,7 +98,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             else -> throw IllegalStateException("This entity cannot be interacted with.")
         }
 
-        if (cond.submit(20).await()) {
+        if (cond.submit(10).await()) {
             bot.log("Interaction successful.")
             return true
         }

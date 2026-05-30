@@ -2,6 +2,9 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import game.bot.scripts.combat.CombatBotScript.InitialState;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -221,6 +224,78 @@ public final class BotEmotion {
      */
     public boolean isFeeling(EmotionType type) {
         return isFeeling(type, false);
+    }
+
+    /**
+     * Checks whether this bot should treat its current hitpoints as dangerously low.
+     * <p>
+     * This is a personality-driven fear check. Bots with lower confidence become nervous at higher health percentages,
+     * while more confident bots are willing to stay in danger longer before reacting. If the bot is currently feeling
+     * {@link EmotionType#SCARED}, its effective confidence is reduced, making it more cautious than usual.
+     * <p>
+     * Some low-health states are treated as urgent regardless of percentage:
+     * <ul>
+     *     <li>Bots with more than 20 base Hitpoints become nervous below 10 current Hitpoints.</li>
+     *     <li>All bots become nervous below 5 current Hitpoints.</li>
+     * </ul>
+     * These urgent checks are ignored only for bots that are {@link BotPersonality#isStupidlyConfident()}.
+     * <p>
+     * For normal checks, the nervous threshold is calculated from confidence and is clamped to a minimum of {@code 5%},
+     * ensuring even highly confident bots still react when critically low.
+     *
+     * @return {@code true} if the bot should be nervous about its current hitpoints.
+     */
+    public boolean isNervousAboutHp() {
+        Skill hitpoints = bot.getSkills().getSkill(Skill.HITPOINTS);
+        boolean alwaysNervous = (hitpoints.getStaticLevel() > 20 && hitpoints.getLevel() < 10) || hitpoints.getLevel() < 5;
+        if (alwaysNervous && !bot.getPersonality().isStupidlyConfident()) {
+            return true;
+        }
+        double confidence = isFeeling(EmotionType.SCARED) ? bot.getPersonality().getConfidence() * 0.75
+                : bot.getPersonality().getConfidence();
+        return bot.getHealthPercent() < Math.max(50 * (1.0 - confidence), 5.0);
+    }
+
+    /**
+     * Chooses this bot's initial combat response when attacked.
+     * <p>
+     * The decision is intentionally personality-driven and probabilistic:
+     * <ul>
+     *     <li>Against non-threatening attackers, confidence matters most because the bot is deciding whether it feels
+     *     bold enough to fight back.</li>
+     *     <li>Against threatening attackers, intelligence matters most because smarter bots are more likely to recognize
+     *     danger and retreat.</li>
+     * </ul>
+     * <p>
+     * This method only chooses the first reaction. Longer-term combat behavior, such as eating, fleeing, pathing,
+     * or re-engaging, should be handled by the combat action logic after this state is selected.
+     *
+     * @param attacker The mob that attacked this bot.
+     *
+     * @return {@link InitialState#ATTACK} if the bot decides to fight back, or {@link InitialState#RUN} if it decides
+     * to retreat.
+     */
+    public InitialState getCombatResponse(Mob attacker) {
+        double confidence = bot.getPersonality().getConfidence();
+        double intelligence = bot.getPersonality().getIntelligence();
+
+        /*
+         * When the attacker is not an obvious threat, confidence has the strongest influence.
+         * Intelligent bots are still more likely to make a stable decision instead of panicking.
+         */
+        double nonThreatFactor = (confidence * 0.70) + (intelligence * 0.30);
+
+        /*
+         * When the attacker is dangerous, intelligence becomes the main factor.
+         * Confidence slightly reduces the chance to run, allowing brave bots to sometimes stand their ground.
+         */
+        double threatFactor = Math.max(0.0, intelligence - (confidence * 0.30));
+
+        if (bot.getActionHandler().getCombat().isThreat(attacker)) {
+            return RandomUtils.roll(threatFactor) ? InitialState.RUN : InitialState.ATTACK;
+        } else {
+            return RandomUtils.roll(nonThreatFactor) ? InitialState.ATTACK : InitialState.RUN;
+        }
     }
 
     /**

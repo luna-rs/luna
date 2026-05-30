@@ -1,11 +1,13 @@
 package engine.bot.coordinator.skill
 
-import api.bot.BotScript
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.PickpocketBotScript
+import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
+import game.skill.thieving.searchForTraps.ThievingChest
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.mob.bot.Bot
 import java.util.*
@@ -175,10 +177,35 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
             return PickpocketBotScript(bot, npcs, getDuration(bot), zones)
         }
 
+        /**
+         * Creates a chest-stealing profit script.
+         *
+         * Higher-level bots target more profitable chests, while lower-level bots fall back to basic chests until
+         * better targets are unlocked.
+         */
+        fun searchForTraps(bot: Bot): SearchBotScript {
+            val chests = EnumSet.noneOf(ThievingChest::class.java)
+            if (level >= ThievingChest.TEN_COIN.level) {
+                chests += ThievingChest.TEN_COIN
+                zones += SubZone.TEN_COIN_CHEST_HUT
+            } else if (level >= ThievingChest.STEEL_ARROWTIPS.level) {
+                chests += ThievingChest.STEEL_ARROWTIPS
+                zones += SubZone.HEMENSTER_CHEST_ROOM
+            } else if (level >= ThievingChest.BLOOD_RUNES.level) {
+                chests += ThievingChest.BLOOD_RUNES
+                zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
+            }
+
+            chests.removeIf { level < it.level }
+            return SearchBotScript(bot, chests, getDuration(bot), zones)
+        }
+
         return if (rand(bot.personality.intelligence) || level < ThievingStallType.SEED.level) {
             pickpocketing(bot)
-        } else {
+        } else if(randBoolean()) {
             stealingFromStalls(bot)
+        } else {
+            searchForTraps(bot)
         }
     }
 }

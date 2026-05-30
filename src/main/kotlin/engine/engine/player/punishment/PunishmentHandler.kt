@@ -218,7 +218,7 @@ object PunishmentHandler {
     private fun now() = Instant.now()
 
     /**
-     *  Returns an [Instant] one second in the past, used to mark “expired” punishments.
+     *  Returns an [Instant] one second in the past, used to mark "expired" punishments.
      */
     private fun pastDate() = now().minusSeconds(1)
 

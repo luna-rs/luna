@@ -1,6 +1,5 @@
 package engine.bot.coordinator.skill
 
-import api.bot.BotScript
 import api.bot.zone.SubZone
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -29,21 +28,14 @@ import io.luna.util.RandomUtils
 class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
 
     /*
-     * TODO Bot money-making activities.
+     * TODO Bot money-making activities, smelting, smithing, etc.
      *
      * Add richer money-making behavior once the economy system, item valuation, and item tagging are stable enough for
      * bots to make sensible profit-based decisions.
      *
-     * Woodcutting:
-     * - Cut yews and magic trees.
-     * - Candidate zones:
-     *
      * Fishing:
      * - Fish lobsters, swordfish, and sharks.
      * - Pick fishing spots based on level, confidence, danger, and bank distance.
-     *
-     * Thieving:
-     * - Steal from profitable stalls.
      *
      * Simple gathering and processing:
      * - Pick flax.
@@ -95,7 +87,9 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
     private val factories: Map<Int, SkillingScriptFactory> = listOf(
         MiningScriptFactory,
         ThievingScriptFactory,
-        WoodcuttingScriptFactory
+        WoodcuttingScriptFactory,
+        FletchingScriptFactory,
+        CraftingScriptFactory
     ).associateBy { it.skillId }
 
     /**

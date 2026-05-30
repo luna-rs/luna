@@ -1,29 +1,54 @@
-package api.bot.scripts
+package engine.bot.coordinator
 
-import api.attr.Attr
-import api.bot.BotScript
-import api.bot.Suspendable.delay
-import api.bot.Suspendable.maybe
-import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.Suspendable.naturalDelay
-import api.bot.Suspendable.waitFor
-import api.bot.scripts.IdleBotScript.Companion.IdleData
-import api.bot.zone.SubZone
+import api.bot.script.DynamicBotScript
 import api.bot.zone.Zone
-import api.predef.*
-import api.predef.ext.*
-import com.google.common.base.Stopwatch
-import com.google.common.collect.ImmutableList
-import engine.controllers.Controllers.inWilderness
-import engine.widget.settings.Emote
-import io.luna.game.model.Position
-import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.bot.Bot
-import io.luna.util.RandomUtils
-import kotlinx.coroutines.future.await
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
+import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+
+/**
+ * Coordinates temporary social behaviour for bots that are not committed to a specific skill, combat task, or
+ * economic activity.
+ *
+ * Socializing bots are meant to make the world feel more alive by wandering between populated areas, idling around
+ * banks, chatting with other bots, reacting to players, attending drop parties, or becoming available for social-only
+ * interactions such as scams.
+ *
+ * @author lare96
+ */
+object SocializingCoordinator : BotCoordinator {
+
+    /**
+     * Assigns a temporary social script to the bot.
+     *
+     * The current implementation is intentionally simple: it pushes a short-lived script that travels to a random zone
+     * and then completes. This gives the coordinator a working baseline until richer social behaviours are implemented.
+     *
+     * Future social scripts may include:
+     *
+     * - Random navigation between cities or popular gathering areas.
+     * - Dancing or emote-based interaction with nearby social bots.
+     * - Conversation with nearby bots using conversation pools.
+     * - Reactions to impressive nearby players while not already in a conversation.
+     * - Social-only scamming or being the victim of a social scam.
+     * - Drop party attendance or kind-bot item donation behaviour.
+     */
+    override fun accept(bot: Bot) {
+        bot.scriptStack.push(object : DynamicBotScript(bot) {
+            override suspend fun run(): Boolean {
+                bot.log("Travelling to a random zone.")
+                handler.travelTo(Zone.ALL.random())
+                bot.log("Travel completed. Exiting temporary social script.")
+                return true
+            }
+        })
+    }
+
+    /*
+
+    package api.bot.scripts
+
+import api.bot.script.BotScript
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * A [BotScript] that makes a [Bot] idle for a random period based on [duration]. An idle bot will stand around,
@@ -31,7 +56,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @author lare96
  */
-class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
+class IdleBotScript(bot: Bot, val durationMinutes: Int) /*: DynamicBotScript(bot) {
 
     // TODO chance to start a trading bot script, a scamming bot script, chance to be scammed, chance to react to impressive player
     //  otherwise just bank stand
@@ -40,23 +65,12 @@ class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
     // todo chance to follow players that we LOVE while bankstanding. if they arent already following someone
     // if they are idle too, check if someone is following you. if you like them back, follow them as well and dance for 5 minutes to 1 hr
 
+// TODO delete and migrate into social coordinator
+
     companion object {
 
 
-        private val HOME_ANCHOR_POINTS = listOf(
-            Position(3095, 3248),
-            Position(3094, 3244),
-            Position(3094, 3242),
-            Position(3097, 3238),
-            Position(3091, 3237),
-            Position(3086, 3241),
-        )
 
-        /**
-         * The persistence data.
-         */
-        data class IdleData(val durationMinutes: Long = rand().nextLong(30, 120),
-                            var state: State? = null)
     }
 
     /**
@@ -94,12 +108,20 @@ class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
     private val timer = Stopwatch.createUnstarted()
 
     override suspend fun init(resumed: Boolean): Boolean {
-        timer.start()
+        if (!timer.isRunning) {
+            timer.start()
+        }
         return false
     }
 
+    override fun paused() {
+        if (timer.isRunning) {
+            timer.stop()
+        }
+    }
+
     override suspend fun run(): Boolean {
-        if (timer.elapsed().toMinutes() >= data.durationMinutes) {
+        if (timer.elapsed().toMinutes() >= durationMinutes) {
             // Stop script once our idle timer completes.
             return true
         }
@@ -118,7 +140,7 @@ class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
                 return false
             }
             nextState()
-            when (data.state) {
+            when (state) {
                 State.STANDING -> doStanding()
                 State.FOLLOW -> doFollow()
                 State.WALKING -> doWalking()
@@ -126,21 +148,15 @@ class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
 
             }
         } finally {
-            data.state = null
+            state = null
         }
         bot.naturalDecisionDelay()
         return false
     }
 
-    override fun snapshot(): IdleData {
-        // Save the remaining idle time needed.
-        val remaining = data.durationMinutes - timer.elapsed().toMinutes()
-        return if (remaining < 1) IdleData(1, data.state) else IdleData(remaining, data.state)
-    }
-
     private fun nextState() {
-        if (data.state == null) {
-            data.state = RandomUtils.random(State.ALL)
+        if (state == null) {
+            state = RandomUtils.random(State.ALL)
         }
     }
 
@@ -232,4 +248,6 @@ class IdleBotScript(bot: Bot, var data: IdleData) : BotScript<IdleData>(bot) {
             })
             return
     }
+}*/
+     */
 }

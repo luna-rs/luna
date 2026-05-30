@@ -219,11 +219,11 @@ public final class BotPersonality {
          */
         public BotPersonality build() {
             return new BotPersonality(
-                    Math.max(intelligence, 1.0),
-                    Math.max(kindness, 1.0),
-                    Math.max(confidence, 1.0),
-                    Math.max(social, 1.0),
-                    Math.max(dexterity, 1.0));
+                    Math.min(intelligence, 1.0),
+                    Math.min(kindness, 1.0),
+                    Math.min(confidence, 1.0),
+                    Math.min(social, 1.0),
+                    Math.min(dexterity, 1.0));
         }
     }
 
@@ -306,6 +306,15 @@ public final class BotPersonality {
      */
     public boolean isConfident() {
         return confidence >= 0.7;
+    }
+
+    /**
+     * Determines if this bot is stupidly confident.
+     *
+     * @return {@code true} if {@link #isDumb()} and {@link #isConfident()} are both true.
+     */
+    public boolean isStupidlyConfident() {
+        return isDumb() && isConfident();
     }
 
     /**

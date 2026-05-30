@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.io;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -73,6 +74,11 @@ public final class BotOutputMessageHandler {
         GLOW_3(11);
 
         /**
+         * All the chat colors.
+         */
+        public static final ImmutableList<ChatColor> ALL = ImmutableList.copyOf(values());
+
+        /**
          * The client identifier.
          */
         private final int id;
@@ -104,6 +110,11 @@ public final class BotOutputMessageHandler {
         SHAKE(3),
         SCROLL(4),
         SLIDE(5);
+
+        /**
+         * All the chat effects.
+         */
+        public static final ImmutableList<ChatEffect> ALL = ImmutableList.copyOf(values());
 
         /**
          * The client identifier.
@@ -461,7 +472,7 @@ public final class BotOutputMessageHandler {
                 opcode = 67;
                 break;
             case 4:
-                msg.putShort(index);
+                msg.putShort(index, ByteOrder.LITTLE);
                 opcode = 42;
                 break;
             case 5:

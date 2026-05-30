@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom
 /**
  * The number formatter. Uses the UK locale.
  */
-private val NUMBER_FORMATTER = NumberFormat.getInstance(Locale.UK)
+private val NUMBER_FORMATTER = NumberFormat.getInstance(Locale.CANADA)
 
 /**
  * Format a number.

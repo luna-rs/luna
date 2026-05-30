@@ -3,7 +3,6 @@ package game.player.item.consume.food
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.model.mob.Player
-import kotlin.collections.set
 
 /**
  * An enum representing food that can be eaten.
@@ -113,6 +112,17 @@ enum class Food(val heal: Int,
     };
 
     companion object {
+
+        /**
+         * The highest-healing food currently defined.
+         *
+         * This is used as the fallback upper bound when a bot needs to know the best available food type without
+         * caring about cost, availability, or combat level.
+         */
+        val BEST_FOOD = Food.values()
+            .maxByOrNull { it.heal }
+            ?.let { it to it.heal }
+            ?: (MEAT to MEAT.heal)
 
         /**
          * Mappings of [Food.ids] to [Food].

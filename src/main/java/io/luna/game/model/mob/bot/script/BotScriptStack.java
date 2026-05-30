@@ -1,7 +1,11 @@
 package io.luna.game.model.mob.bot.script;
 
-import api.bot.BotScript;
-import api.bot.VoidBotScript;
+import api.bot.script.BotScript;
+import api.bot.script.BotScriptData;
+import api.bot.script.VoidBotScript;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import io.luna.game.model.mob.bot.Bot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,7 +80,7 @@ public final class BotScriptStack {
      * The first element is the currently active or next-to-run script. Scripts after the first element are pending
      * scripts that will run later.
      */
-    private final Deque<BotScript<?>> buffer = new ArrayDeque<>();
+    private final Deque<BotScript> buffer = new ArrayDeque<>();
 
     /**
      * Whether this script stack has been shut down.
@@ -105,18 +109,22 @@ public final class BotScriptStack {
      *
      * @param loadedBuffer The saved script snapshots to restore.
      */
-    public void load(List<BotScriptSnapshot<?>> loadedBuffer) {
+    public void load(List<BotScriptSnapshot> loadedBuffer) {
         buffer.clear();
-        BotScript<?>[] loadedScripts = new BotScript<?>[loadedBuffer.size()];
-        for (BotScriptSnapshot<?> snapshot : loadedBuffer) {
+        BotScript[] loadedScripts = new BotScript[loadedBuffer.size()];
+        for (BotScriptSnapshot snapshot : loadedBuffer) {
             String scriptClass = snapshot.getScriptClass();
-            if (scriptClass.equals("null")) {
+            JsonElement scriptData = snapshot.getData();
+            if (scriptData == null || scriptData.isJsonNull()) {
                 // Dynamic script was here, temporarily hold a void script in its place.
                 loadedScripts[snapshot.getIndex()] = new VoidBotScript(bot);
                 continue;
             }
             try {
-                loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, snapshot.getData());
+                BotScriptData dataClass =
+                        (BotScriptData) Class.forName(snapshot.getScriptDataClass()).getConstructor().newInstance();
+                dataClass.load(scriptData.getAsJsonObject());
+                loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, dataClass);
             } catch (Exception e) {
                 logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
@@ -134,16 +142,19 @@ public final class BotScriptStack {
      *
      * @return An ordered list of snapshots representing this script buffer.
      */
-    public List<BotScriptSnapshot<?>> save() {
+    public List<BotScriptSnapshot> save() {
         int index = 0;
-        List<BotScriptSnapshot<?>> snapshots = new ArrayList<>(buffer.size());
-        for (BotScript<?> script : buffer) {
-            Object snapshot = script.snapshot();
+        List<BotScriptSnapshot> snapshots = new ArrayList<>(buffer.size());
+        for (BotScript script : buffer) {
+            BotScriptData snapshot = script.snapshot();
             if (snapshot == null) {
-                snapshots.add(new BotScriptSnapshot<>(index++, "null", "null"));
+                snapshots.add(new BotScriptSnapshot(index++, "null", "null", JsonNull.INSTANCE));
                 continue;
             }
-            snapshots.add(new BotScriptSnapshot<>(index++, script.getClass().getName(), snapshot));
+            JsonObject data = new JsonObject();
+            snapshot.save(data);
+            snapshots.add(new BotScriptSnapshot(index++, script.getClass().getName(),
+                    snapshot.getClass().getName(), data));
         }
         return snapshots;
     }
@@ -166,7 +177,7 @@ public final class BotScriptStack {
      * The script remains in the buffer and may be restarted later by {@link #process()}.
      */
     public void pause() {
-        BotScript<?> script = buffer.peek();
+        BotScript script = buffer.peek();
         if (script != null) {
             script.pause();
         }
@@ -187,7 +198,7 @@ public final class BotScriptStack {
         if (shutdown.get()) {
             return true;
         }
-        BotScript<?> current = buffer.peek();
+        BotScript current = buffer.peek();
         if (current != null) {
             if (current.isIdle() || current.isPaused()) {
                 // Script is idle or paused, start it.
@@ -209,7 +220,7 @@ public final class BotScriptStack {
      *
      * @param script The script to enqueue.
      */
-    public void push(BotScript<?> script) {
+    public void push(BotScript script) {
         pushTail(script);
     }
 
@@ -221,14 +232,13 @@ public final class BotScriptStack {
      *
      * @param script The high-priority script to run immediately.
      */
-    public void pushHead(BotScript<?> script) {
-        BotScript<?> current = buffer.peek();
+    public void pushHead(BotScript script) {
+        BotScript current = buffer.peek();
         if (current != null) {
             // Pause current script, but don't remove it. The stack will start it again later.
             current.pause();
             bot.log("Paused {" + current.getClass().getName() + "}.");
         }
-        script.start();
         buffer.addFirst(script);
         bot.log("Pushed {" + script.getClass().getName() + "} to head of buffer.");
     }
@@ -245,9 +255,9 @@ public final class BotScriptStack {
      *
      * @param script The script to run after the current script.
      */
-    public void softPushHead(BotScript<?> script) {
+    public void softPushHead(BotScript script) {
         String scriptName = script.getClass().getName();
-        BotScript<?> current = buffer.peek();
+        BotScript current = buffer.peek();
         if (current != null) {
             buffer.removeFirst();
             buffer.addFirst(script);
@@ -256,7 +266,7 @@ public final class BotScriptStack {
         } else {
             script.start();
             buffer.addFirst(script);
-            bot.log("Pushed {" + scriptName + "} to to head of buffer.");
+            bot.log("Pushed {" + scriptName + "} to head of buffer.");
         }
     }
 
@@ -271,7 +281,7 @@ public final class BotScriptStack {
      *
      * @param script The script to enqueue at the tail.
      */
-    public void pushTail(BotScript<?> script) {
+    public void pushTail(BotScript script) {
         String scriptName = script.getClass().getName();
         if (buffer.size() >= SCRIPT_WARNING_THRESHOLD) {
             logger.warn("Excessive amount of scripts in buffer bot={}, script={}.", bot, scriptName);
@@ -286,7 +296,7 @@ public final class BotScriptStack {
      *
      * @return The current script, or {@code null} if the buffer is empty.
      */
-    public BotScript<?> current() {
+    public BotScript current() {
         return buffer.peek();
     }
 
@@ -297,7 +307,7 @@ public final class BotScriptStack {
      * scripts are removed.
      */
     public void clear() {
-        BotScript<?> current = buffer.peek();
+        BotScript current = buffer.peek();
         buffer.clear();
         if (current != null && current.isRunning()) {
             buffer.add(current);

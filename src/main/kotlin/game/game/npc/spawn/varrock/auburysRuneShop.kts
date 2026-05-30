@@ -12,6 +12,8 @@ import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 
 /**
  * The [Npc] id for Aubury.
@@ -26,7 +28,7 @@ val SHOP_NAME = "Aubury's Rune Shop."
 /**
  * The overworld position players return to after leaving the Rune Essence mine through the mine portal.
  */
- val EXIT_POSITION = Position(3253, 3400)
+val EXIT_POSITION = Position(3253, 3400)
 
 /**
  * Stores Aubury's currently active tele-other action.
@@ -87,7 +89,7 @@ ShopHandler.create(SHOP_NAME) {
  * This option is used as a direct Rune Essence mine teleport shortcut, bypassing the dialogue path and immediately
  * submitting or queueing the player into Aubury's tele-other action.
  */
-npc3(AUBURY_ID) {
+npc3(id = AUBURY_ID, interaction = { _, _ -> InteractionPolicy(InteractionType.SIZE, Position.VIEWING_DISTANCE / 2) }) {
     teleport(targetNpc, plr)
 }
 

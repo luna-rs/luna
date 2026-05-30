@@ -2,13 +2,18 @@ package api.bot.action
 
 import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone
+import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
+import game.player.item.consume.food.Food
 import game.skill.magic.Magic
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.movement.NavigationResult
+import io.luna.util.RandomUtils
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 
@@ -19,7 +24,22 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotCombatActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
-    // TODO@0.5.0 More functions like get/equip(Strongest)Weapon, get/equip(Strongest)Armor, drinkPotion, etc.
+    /**
+     * Determines whether the given mob is considered an extreme combat threat to this bot.
+     *
+     * A mob is treated as threatening when its combat level is more than double the bot's combat level. This is a
+     * simple fear check meant for obvious danger cases, such as a low-level bot encountering a much stronger enemy.
+     *
+     * @param mob The mob being evaluated.
+     *
+     * @return `true` if [mob] is more than twice this bot's combat level.
+     */
+    fun isThreat(mob: Mob)
+
+            : Boolean {
+        // TODO@.5.0 Expand by checking mob type, if it's a boss, equipment, skills, etc.
+        return mob.combatLevel > bot.combatLevel * 2
+    }
 
     /**
      * Attempts to escape from the Wilderness.
@@ -31,7 +51,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      *
      * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
      */
-    suspend fun fleeWilderness(): Boolean {
+    suspend fun fleeWilderness()
+            : Boolean {
         // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
         //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
         bot.walking.isRunning = true
@@ -57,7 +78,9 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
 
             // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
             if (bot.subZone == SubZone.HOME ||
-                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true).await() == NavigationResult.REACHED) {
+                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
+                    .await() == NavigationResult.REACHED
+            ) {
                 bot.output.sendCommand("home")
                 return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
             }

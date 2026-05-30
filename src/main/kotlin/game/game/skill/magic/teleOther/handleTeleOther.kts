@@ -29,14 +29,14 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
     }
     val timestamp = source.teleOtherRequests[target.usernameHash]
     if (timestamp != null) {
-        val elapsed = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - timestamp)
+        val elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timestamp)
         if (elapsed < Luna.settings().skills().teleOtherThrottleSeconds()) {
             source.sendMessage("You have already recently sent a teleother request to this person.")
             return
         }
     }
     if (Magic.checkRequirements(source, type.level, type.requirements) != null) {
-        source.teleOtherRequests[target.usernameHash] = System.nanoTime()
+        source.teleOtherRequests[target.usernameHash] = System.currentTimeMillis()
         target.overlays.open(TeleOtherInterface(source, target, type))
         target.walking.clear()
     }

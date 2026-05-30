@@ -9,12 +9,12 @@ import api.predef.*
  *
  * @author lare96
  */
-enum class ThievableChest(val id: Int,
-                          val level: Int,
-                          val xp: Double,
-                          val respawnTicks: Int,
-                          val drops: DropTable,
-                          val globalRefresh: Boolean = true) {
+enum class ThievingChest(val id: Int,
+                         val level: Int,
+                         val xp: Double,
+                         val respawnTicks: Int,
+                         val drops: DropTable,
+                         val globalRefresh: Boolean = true) {
 
     TEN_COIN(id = 2566,
              level = 13,

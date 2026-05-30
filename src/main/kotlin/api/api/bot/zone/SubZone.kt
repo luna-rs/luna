@@ -3,13 +3,13 @@ package api.bot.zone
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone.Companion.updateSubZone
 import api.bot.zone.Zone.*
 import api.predef.*
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSetMultimap
-import game.content.edgevilleDungeon.EdgevilleDungeon
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
@@ -67,6 +67,51 @@ enum class SubZone(val inside: Position,
          parent = { VARROCK }),
 
     /**
+     * The deep wilderness area where the 10-coin chest is contained.
+     */
+    TEN_COIN_CHEST_HUT(inside = Position(3190, 3959),
+                       area = SimpleBoxArea.of(3184, 3953, 3198, 3965),
+                       parent = { WILDERNESS }),
+
+    /**
+     * The room with the steel arrowtip chest in Hemenster, south-west of seers' village.
+     */
+    HEMENSTER_CHEST_ROOM(inside = Position(2642, 3447),
+                         area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
+                         parent = { SEERS_VILLAGE }),
+
+
+    /**
+     * The chaos druid tower north of Ardougne.
+     */
+    CHAOS_DRUID_TOWER(inside = Position(2565, 3355),
+                      area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
+                      parent = { ARDOUGNE }),
+
+    /**
+     * The chaos druid tower dungeon.
+     * - Ogres
+     * - Blood rune thieving chest
+     */
+    CHAOS_DRUID_TOWER_DUNGEON(inside = Position(2565, 9753),
+                              outside = { Position(2565, 3355) },
+                              area = SimpleBoxArea.of(2559, 9729, 2594, 9761),
+                              parent = { ARDOUGNE }) {
+        private val upstairsLadder =
+            lazyVal { world.locator.findObjectsOnTile(Position(2562, 3356)) { it.id == 1754 }.first() }
+        private val downstairsLadder =
+            lazyVal { world.locator.findObjectsOnTile(Position(2562, 9756)) { it.id == 1755 }.first() }
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return bot.actionHandler.interactions.interact(1, upstairsLadder.value)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return bot.actionHandler.interactions.interact(1, downstairsLadder.value)
+        }
+    },
+
+    /**
      * The rune essence mine. Intended for low-level and low-confidence money makers.
      */
     ESSENCE_MINE(inside = Position(2910, 4832),
@@ -77,16 +122,36 @@ enum class SubZone(val inside: Position,
             lazyVal { world.locator.findViewableNpcs(Position(3253, 3401)) { it.id == 553 }.first() }
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            bot.log("Entering essence mine. Travelling to Aubury.")
+
             if (!bot.actionHandler.travelTo(VARROCK)) {
+                bot.log("Failed to travel to Varrock for essence mine.")
                 return false
             }
-            while(bot.isViewableFrom(auburyNpc.value) && bot.subZone != ESSENCE_MINE) {
-                if(bot.walking.isEmpty) {
-                    bot.actionHandler.interactions.interact(4, auburyNpc.value)
+
+            val aubury = auburyNpc.value
+            bot.log("Attempting Aubury teleport. aubury=${aubury.position}, bot=${bot.position}")
+
+            while (!area.contains(bot)) {
+                if (!bot.isViewableFrom(aubury)) {
+                    bot.log(
+                        "Aubury is no longer viewable but bot is not inside essence mine. " +
+                                "bot=${bot.position}, subZone=${bot.subZone}"
+                    )
+                    break
                 }
+
+                if (bot.walking.isEmpty) {
+                    bot.log("Clicking Aubury essence teleport. bot=${bot.position}, subZone=${bot.subZone}")
+                    bot.actionHandler.interactions.interact(4, aubury)
+                }
+
                 bot.naturalDecisionDelay()
             }
-            return area.contains(bot)
+
+            val entered = waitFor { area.contains(bot) }
+            bot.log("Essence mine enter result=$entered, bot=${bot.position}, subZone=${bot.subZone}")
+            return entered
         }
 
         override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
@@ -116,7 +181,8 @@ enum class SubZone(val inside: Position,
      */
     DRAYNOR_MAIN(inside = DRAYNOR.anchor,
                  area = SimpleBoxArea.of(3073, 3221, 3134, 3262),
-                 parent = { DRAYNOR }),
+                 parent =
+                     { DRAYNOR }),
 
     /**
      * A low-level mining area near Varrock. Intended for low-level miners.
@@ -127,7 +193,8 @@ enum class SubZone(val inside: Position,
      */
     VARROCK_SW_MINE(inside = Position(3187, 3373),
                     area = SimpleBoxArea.of(3166, 3360, 3187, 3380),
-                    parent = { VARROCK }),
+                    parent =
+                        { VARROCK }),
 
     /**
      * A low-level mining area near Varrock. Intended for low-level miners.
@@ -137,7 +204,8 @@ enum class SubZone(val inside: Position,
      */
     VARROCK_SE_MINE(inside = Position(3284, 3372),
                     area = SimpleBoxArea.of(3274, 3354, 3300, 3376),
-                    parent = { VARROCK }),
+                    parent =
+                        { VARROCK }),
 
     /**
      * The yew trees around the Lumber Yard north-east of Varrock. Intended for low-level and money making woodcutters.
@@ -147,7 +215,8 @@ enum class SubZone(val inside: Position,
      */
     LUMBER_YARD_YEWS(inside = Position(3287, 3459),
                      area = SimpleBoxArea.of(3265, 3457, 3309, 3513),
-                     parent = { VARROCK }),
+                     parent =
+                         { VARROCK }),
 
     /**
      * The Edgeville Dungeon mine. Intended for low -> high level money-making miners. They will use the brass key.
@@ -160,9 +229,15 @@ enum class SubZone(val inside: Position,
      * - 2 adamant rocks
      */
     EDGEVILLE_DUNGEON_MINE(inside = Position(3132, 9874),
-                           outside = { Position(3115, 3448) },
+                           outside =
+                               { Position(3115, 3448) },
                            area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
-                           parent = { VARROCK }) {
+                           parent =
+                               { VARROCK }) {
+        private val varrockLadder =
+            lazyVal { world.locator.findObjectsOnTile(Position(3116, 3452)) { it.id == 1754 }.first() }
+        private val dungeonLadder =
+            lazyVal { world.locator.findObjectsOnTile(Position(3116, 9852)) { it.id == 1755 }.first() }
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             if (bot.actionHandler.travelTo(VARROCK)) {
@@ -174,7 +249,7 @@ enum class SubZone(val inside: Position,
                 }
 
                 // Interact with the ladder.
-                if (!bot.actionHandler.interactions.interact(1, EdgevilleDungeon.VARROCK_LADDER.value)) {
+                if (!bot.actionHandler.interactions.interact(1, varrockLadder.value)) {
                     return false
                 }
                 return true
@@ -184,7 +259,7 @@ enum class SubZone(val inside: Position,
 
         override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             // Interact with the ladder inside the dungeon.
-            return bot.actionHandler.interactions.interact(1, EdgevilleDungeon.DUNGEON_LADDER.value)
+            return bot.actionHandler.interactions.interact(1, dungeonLadder.value)
         }
     },
 
@@ -194,7 +269,8 @@ enum class SubZone(val inside: Position,
      */
     VARROCK_PALACE_YEWS(inside = Position(3213, 3501),
                         area = SimpleBoxArea.of(3201, 3496, 3224, 3508),
-                        parent = { VARROCK }),
+                        parent =
+                            { VARROCK }),
 
     /**
      * The yew trees south of Falador. Intended for low-level and money making woodcutters.
@@ -204,7 +280,8 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_FALADOR_YEWS(inside = Position(3008, 3314),
                        area = SimpleBoxArea.of(2991, 3303, 3043, 3327),
-                       parent = { FALADOR }),
+                       parent =
+                           { FALADOR }),
 
     /**
      * The Lumbridge river area. Intended for bait drop-fishers and low-level combat.
@@ -213,7 +290,8 @@ enum class SubZone(val inside: Position,
      */
     LUMBRIDGE_RIVER(inside = Position(3249, 3228),
                     area = SimpleBoxArea.of(3234, 3227, 3261, 3251),
-                    parent = { LUMBRIDGE }),
+                    parent =
+                        { LUMBRIDGE }),
 
     /**
      * The south Lumbridge mine. Intended for smart money-making miners.
@@ -223,7 +301,8 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_LUMBRIDGE_MINE(inside = Position(3233, 3150),
                          area = SimpleBoxArea.of(3219, 3139, 3248, 3162),
-                         parent = { LUMBRIDGE }),
+                         parent =
+                             { LUMBRIDGE }),
 
     /**
      * Also known as the Scorpion Mine, this is a major mining area north of Al Kharid.
@@ -238,7 +317,8 @@ enum class SubZone(val inside: Position,
      */
     AL_KHARID_MINE(inside = Position(3298, 3273),
                    area = SimpleBoxArea.of(3288, 3271, 3312, 3324),
-                   parent = { AL_KHARID }),
+                   parent =
+                       { AL_KHARID }),
 
     /**
      * The flax field south-east of Seers' Village. Intended for money-makers.
@@ -247,7 +327,8 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_SEERS_VILLAGE_FLAX(inside = Position(2735, 3441),
                              area = SimpleBoxArea.of(2734, 3436, 2751, 3453),
-                             parent = { SEERS_VILLAGE }),
+                             parent =
+                                 { SEERS_VILLAGE }),
 
     /**
      * The yew trees south of Seers' Village. Intended for money-makers and low -> high level dumb woodcutters.
@@ -258,7 +339,8 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_SEERS_VILLAGE_YEWS(inside = Position(2721, 3460),
                              area = SimpleBoxArea.of(2688, 3456, 2750, 3476),
-                             parent = { CATHERBY }),
+                             parent =
+                                 { CATHERBY }),
 
     /**
      * The main bank and trees near Seers' Village. Intended for mid-level woodcutters.
@@ -268,7 +350,8 @@ enum class SubZone(val inside: Position,
      */
     SEERS_VILLAGE_MAIN(inside = Position(2723, 3504),
                        area = SimpleBoxArea.of(2688, 3478, 2740, 3514),
-                       parent = { SEERS_VILLAGE }),
+                       parent =
+                           { SEERS_VILLAGE }),
 
     /**
      * The yew trees west of Catherby. Intended for intelligent money-makers.
@@ -278,7 +361,8 @@ enum class SubZone(val inside: Position,
      */
     WEST_CATHERBY_YEWS(inside = Position(2763, 3429),
                        area = SimpleBoxArea.of(2750, 3419, 2774, 3434),
-                       parent = { CATHERBY }),
+                       parent =
+                           { CATHERBY }),
 
     /**
      * The Catherby fishing shore. Intended for low -> mid-range level fishing trainers and money-makers.
@@ -288,7 +372,8 @@ enum class SubZone(val inside: Position,
      */
     EAST_CATHERBY_FISHING(inside = Position(2838, 3435),
                           area = SimpleBoxArea.of(2829, 3417, 2864, 3437),
-                          parent = { CATHERBY }),
+                          parent =
+                              { CATHERBY }),
 
     /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
@@ -301,7 +386,8 @@ enum class SubZone(val inside: Position,
      */
     ARDOUGNE_SQUARE_THIEVING(inside = Position(2661, 3306),
                              area = SimpleBoxArea.of(2645, 3290, 2677, 3325),
-                             parent = { ARDOUGNE }),
+                             parent =
+                                 { ARDOUGNE }),
 
     /**
      * The south-east Ardougne mine. Intended for dexterous mining trainers.
@@ -310,7 +396,8 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_EAST_ARDOUGNE_MINE(inside = Position(2601, 3240),
                              area = SimpleBoxArea.of(2579, 3215, 2625, 3240),
-                             parent = { ARDOUGNE }),
+                             parent =
+                                 { ARDOUGNE }),
 
     /**
      * The Legends' Guild mine, also known as the East Ardougne Mine. Intended for dexterous mining trainers and
@@ -320,7 +407,8 @@ enum class SubZone(val inside: Position,
      */
     LEGENDS_GUILD_MINE(inside = Position(2702, 3332),
                        area = SimpleBoxArea.of(2688, 3326, 2717, 3340),
-                       parent = { ARDOUGNE }),
+                       parent =
+                           { ARDOUGNE }),
 
     /**
      * The farming patch located north of Lumbridge. Intended for farmers and low-level thieving trainers.
@@ -329,7 +417,8 @@ enum class SubZone(val inside: Position,
      */
     NORTH_LUMBRIDGE_FARMING(inside = Position(3229, 3309),
                             area = SimpleBoxArea.of(3223, 3309, 3242, 3321),
-                            parent = { LUMBRIDGE }),
+                            parent =
+                                { LUMBRIDGE }),
 
     /**
      * The iconic Lumbridge courtyard. Intended for very low-level thieving trainers.
@@ -338,7 +427,8 @@ enum class SubZone(val inside: Position,
      */
     LUMBRIDGE_COURT_YARD(inside = LUMBRIDGE.anchor,
                          area = SimpleBoxArea.of(3215, 3205, 3230, 3229),
-                         parent = { LUMBRIDGE }),
+                         parent =
+                             { LUMBRIDGE }),
 
     /**
      * A four-story tower south of Seers' Village.
@@ -347,7 +437,8 @@ enum class SubZone(val inside: Position,
      */
     SORCERERS_TOWER_MAGICS(inside = Position(2702, 3391),
                            area = SimpleBoxArea.of(2692, 3389, 2717, 3418),
-                           parent = { SEERS_VILLAGE }),
+                           parent =
+                               { SEERS_VILLAGE }),
 
     /**
      * The iconic barbarian village, intended for low-level combat training, crafting training, and low -> high level
@@ -360,7 +451,8 @@ enum class SubZone(val inside: Position,
      */
     BARBARIAN_VILLAGE(inside = Position(3099, 3420),
                       area = SimpleBoxArea.of(3070, 3402, 3109, 3451),
-                      parent = { EDGEVILLE }),
+                      parent =
+                          { EDGEVILLE }),
 
     /**
      * The Al-kharid bank area. Intended for average dexerity/intelligence bots that need to tan, smelt, cook, and do
@@ -372,7 +464,8 @@ enum class SubZone(val inside: Position,
      */
     AL_KHARID_BANK(inside = Position(3270, 3167),
                    area = SimpleBoxArea.of(3263, 3138, 3279, 3194),
-                   parent = { AL_KHARID }),
+                   parent =
+                       { AL_KHARID }),
 
     /**
      * The goblin village area. Intended for beginner combat training.
@@ -381,7 +474,15 @@ enum class SubZone(val inside: Position,
      */
     GOBLIN_VILLAGE(inside = Position(2955, 3502),
                    area = SimpleBoxArea.of(2944, 3481, 2970, 3518),
-                   parent = { FALADOR }),
+                   parent =
+                       { FALADOR }),
+
+    /**
+     * The main flax spinning area inside Thessalia's clothing store.
+     */
+    FLAX_SPINNING_MAIN(inside = Position(3207, 3415),
+                       area = SimpleBoxArea.of(3200, 3410, 3210, 3420),
+                       parent = { VARROCK }),
 
     /**
      * The chaos temple north of falador and to the north-west of goblin village. Primarily intended for low-level combat
@@ -394,7 +495,8 @@ enum class SubZone(val inside: Position,
     // TODO Test bots telegrabbing wines.
     NORTH_FALADOR_CHAOS_TEMPLE(inside = Position(2934, 3515),
                                area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
-                               parent = { FALADOR});
+                               parent =
+                                   { FALADOR });
 
 
     /*

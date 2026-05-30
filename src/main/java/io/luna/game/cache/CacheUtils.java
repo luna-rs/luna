@@ -16,7 +16,7 @@ import java.util.zip.GZIPInputStream;
  * <p>
  * This includes:
  * <ul>
- *   <li>“Smart” integer decoding used in many cache streams</li>
+ *   <li>"Smart" integer decoding used in many cache streams</li>
  *   <li>24-bit MEDIUM reads used in index/archive headers</li>
  *   <li>RS2 newline-terminated string decoding</li>
  *   <li>GZIP decompression for certain cache containers</li>
@@ -39,7 +39,7 @@ public final class CacheUtils {
     public static final int MAP_PLANES = Position.HEIGHT_LEVELS.upperEndpoint();
 
     /**
-     * Reads a “smart” value.
+     * Reads a "smart" value.
      * <p>
      * Smart encoding uses either 1 or 2 bytes:
      * <ul>

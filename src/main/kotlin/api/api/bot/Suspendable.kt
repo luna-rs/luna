@@ -1,11 +1,11 @@
 package api.bot
 
+import api.bot.Suspendable.naturalDecisionDelay
+import api.bot.Suspendable.naturalDelay
 import api.predef.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.net.msg.GameMessageWriter
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,7 +21,7 @@ object Suspendable {
     /**
      * Suspends until [cond] is `true` or `duration` elapses. Returns `true` if [cond] was satisfied.
      */
-    suspend fun waitFor(duration: Duration = 120.seconds, cond: () -> Boolean) =
+    suspend fun waitFor(duration: Duration = 10.seconds, cond: () -> Boolean) =
         SuspendableCondition(cond).submit(duration.inWholeSeconds.coerceAtLeast(1)).await()
 
     /**
@@ -68,6 +68,15 @@ object Suspendable {
     }
 
     /**
+     * Suspends the current coroutine for a short, natural reaction delay based on dexterity.
+     *
+     * Typical ranges are equivalent to [naturalDelay] and [naturalDecisionDelay].
+     */
+    suspend fun Bot.naturalDexterityDelay() {
+        if (personality.isDextrous) naturalDelay() else naturalDecisionDelay()
+    }
+
+    /**
      * Suspends the current coroutine for a short, natural reaction delay.
      *
      * Typical range:
@@ -75,7 +84,7 @@ object Suspendable {
      * - Maximum: 3000 ms
      */
     suspend fun Bot.naturalDelay() {
-        return delay(1200.milliseconds, 2400.milliseconds)
+        delay(1200.milliseconds, 2400.milliseconds)
     }
 
     /**
@@ -86,7 +95,7 @@ object Suspendable {
      * - Maximum: 6000 ms
      */
     suspend fun Bot.naturalDecisionDelay() {
-        delay(1200.milliseconds, 4.seconds)
+        delay(1200.milliseconds, 5400.milliseconds)
     }
 
     /**

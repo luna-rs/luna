@@ -22,6 +22,7 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.collision.CollisionUpdate.DirectionFlag;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -29,7 +30,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -511,7 +511,8 @@ public final class CollisionManager {
         }
         int localX = position.getX() % 8;
         int localY = position.getY() % 8;
-        return collisionData.isBlocked(localX, localY, EntityType.PLAYER);
+        return collisionData.isBlocked(localX, localY, EntityType.PROJECTILE) &&
+                collisionData.isBlocked(localX, localY, EntityType.PLAYER);
     }
 
     /**
@@ -546,15 +547,18 @@ public final class CollisionManager {
         if (policy.getType() == InteractionType.UNSPECIFIED) {
             // No checks.
             return true;
+        } else if (start.getZ() != end.getZ()) {
+            return false;
         } else if (distance == 0) {
             // Distance of 0 always requires player to occupy tile.
             return start.equals(end);
         } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
+        } else if (source instanceof Bot && source.isWithinDistance(target, 1)) {
+            return true;
         }
-
-        CollisionMatrix matrices = world.getChunks().load(end.getChunk()).getMatrices()[start.getZ()];
+        CollisionMatrix matrices = world.getChunks().load(end.getChunk()).getMatrices()[end.getZ()];
         switch (policy.getType()) {
             case LINE_OF_SIGHT:
                 // Line of sight requires raycast and being within the distance.
@@ -580,6 +584,54 @@ public final class CollisionManager {
                 box(policy.getDistance()), target);
         return start.isWithinDistance(target, distance);
     }
+
+    /* TODO Test and implement.
+     * Determines whether {@code position} is a valid tile to interact with {@code object} from.
+     * <p>
+     * This uses the object's rotated interaction-direction mask to reject tiles that are beside the object but blocked by
+     * the object's directional access rules. For example, some objects can only be interacted with from certain sides.
+     *
+     * @param object The object being interacted with.
+     * @param position The tile the mob/player would stand on.
+     * @return {@code true} if {@code position} can interact with {@code object}.
+
+    public boolean canInteractFrom(GameObject object, Position position) {
+        int sizeX = object.def().getSizeX();
+        int sizeY = object.def().getSizeY();
+
+        if (object.getDirection().getId() == 1 || object.getDirection().getId() == 3) {
+            int oldSizeX = sizeX;
+            sizeX = sizeY;
+            sizeY = oldSizeX;
+        }
+        **
+         * Temporary: returns the packed direction from the live direction.
+         *
+        @Deprecated
+        public int getDirectionPacked(ObjectDirection liveDir) {
+            if (liveDir != ObjectDirection.WEST) {
+                return (direction << liveDir.getId() & 0xf) +
+                        (direction >> 4 - liveDir.getId());
+            }
+            return direction;
+        }
+
+        int packed = object.def().getDirectionPacked(object.getDirection());
+        CollisionMatrix matrices = world.getChunks().load(object.getChunk()).getMatrices()[object.getPosition().getZ()];
+        int startX = position.getLocalX(position);
+        int startY = position.getLocalY(position);
+
+        Position end = object.getPosition();
+        int endX = end.getLocalX(position);
+        int endY = end.getLocalY(position);
+
+        int radiusX = (endX + sizeX) - 1;
+        int radiusY = (endY + sizeY) - 1;
+        return startX == endX - 1 && startY >= endY && startY <= radiusY && (matrices.get(position) & 8) == 0 && (packed & 8) == 0
+                || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (matrices.get(position) & 0x80) == 0 && (packed & 2) == 0
+                || startY == endY - 1 && startX >= endX && startX <= radiusX && (matrices.get(position) & 2) == 0 && (packed & 4) == 0
+                || startY == radiusY + 1 && startX >= endX && startX <= radiusX && (matrices.get(position) & 0x20) == 0 && (packed & 1) == 0;
+    }*/
 
     /**
      * Returns whether {@code start} lies within the expanded size bounds of {@code target}.
@@ -616,34 +668,5 @@ public final class CollisionManager {
         }
 
         return Math.max(dx, dy) <= distance;
-    }
-
-    /**
-     * Temporary: gets the cardinal direction from the target entity/object toward the interacting position.
-     */
-    @Deprecated
-    public EnumSet<Direction> getInteractionDirections(int packed) {
-        EnumSet<Direction> directions = EnumSet.noneOf(Direction.class);
-        if ((packed & 1) == 0) {
-            directions.add(Direction.NORTH);
-            directions.add(Direction.NORTH_WEST);
-            directions.add(Direction.NORTH_EAST);
-        }
-        if ((packed & 8) == 0) {
-            directions.add(Direction.WEST);
-            directions.add(Direction.NORTH_WEST);
-            directions.add(Direction.SOUTH_WEST);
-        }
-        if ((packed & 4) == 0) {
-            directions.add(Direction.SOUTH);
-            directions.add(Direction.SOUTH_WEST);
-            directions.add(Direction.SOUTH_EAST);
-        }
-        if ((packed & 2) == 0) {
-            directions.add(Direction.EAST);
-            directions.add(Direction.SOUTH_EAST);
-            directions.add(Direction.NORTH_EAST);
-        }
-        return directions;
     }
 }

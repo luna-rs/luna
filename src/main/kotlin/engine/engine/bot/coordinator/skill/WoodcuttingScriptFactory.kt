@@ -1,6 +1,6 @@
 package engine.bot.coordinator.skill
 
-import api.bot.BotScript
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
@@ -48,7 +48,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
                 // Non-dumb bots use stronger training trees at Seers' Village.
                 trees += Tree.MAPLE
                 trees += Tree.WILLOW
-                zones += SubZone.SEERS_VILLAGE_MAPLES
+                zones += SubZone.SEERS_VILLAGE_MAIN
             } else {
                 // Dumb bots use any accessible tree type, regardless of efficiency.
                 for (tree in Tree.ALL.values) {
@@ -61,7 +61,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
                 zones += SubZone.WEST_CATHERBY_YEWS
                 zones += SubZone.SOUTH_SEERS_VILLAGE_YEWS
                 zones += SubZone.LUMBRIDGE_RIVER
-                zones += SubZone.SEERS_VILLAGE_MAPLES
+                zones += SubZone.SEERS_VILLAGE_MAIN
             }
         } else {
             // Starter bots cut basic trees until better routes are unlocked.
@@ -106,7 +106,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             trees += Tree.WILLOW
             trees += Tree.MAPLE
 
-            zones += SubZone.SEERS_VILLAGE_MAPLES
+            zones += SubZone.SEERS_VILLAGE_MAIN
 
             if (bot.personality.isDumb) {
                 trees += Tree.OAK
@@ -136,7 +136,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         }
 
         trees.removeIf { level < it.level }
-        require(trees.isNotEmpty()) { "No tree types were selected from WoodcuttingScriptFactory." }
+        require(trees.isNotEmpty()) { "No tree types were selected." }
         return CutTreeBotScript(bot, trees, getDuration(bot), zones)
     }
 }

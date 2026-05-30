@@ -1,111 +1,144 @@
 {
-  // Core game-server settings.
   "game": {
     // Controls whether the server runs in development, testing, or production-style mode.
     "runtime_mode": "DEVELOPMENT",
-
     // The default position new players are placed at when no saved position exists.
     "starting_position": {
       "x": 3182,
       "y": 3440
     },
-
     // Global multiplier applied to experience gained from skills and other XP sources.
     "experience_multiplier": 1.0,
-
     // The serializer implementation used for loading and saving game data.
     "serializer": "JsonGameSerializer",
-
     // The network port the game server listens on.
     "port": 43594,
-
     // The maximum number of simultaneous connections allowed from one source.
     "connection_limit": 2,
-
     // The password-strength policy used when validating new or changed passwords.
     "password_strength": "DEFAULT",
-
     // Whether stackable ground items with the same id should merge together on the same tile.
     "merge_stackable_ground_items": false
   },
-
-  // Database connection settings.
-  "database": {
-    "host": "localhost",
-    "port": 3306,
-    "username": "luna_db",
-    "password": "<redacted>"
+  "economy": {
+    /**
+     * The multiplier applied to historical sample resistance when calculating price movement strength.
+     *
+     * Higher values make prices harder to move because existing sample history is weighted more heavily against new
+     * trade samples. Lower values make prices more responsive to recent trades.
+     *
+     * The effective historical weight is calculated as:
+     *
+     *     sqrt(current_samples) * (250.0 * price_movement_resistance)
+     *
+     * The current sample count is capped internally before this calculation, so very old prices do not become permanently
+     * unmovable.
+     *
+     * A value of 1.0 uses the full base resistance. A value of 0.60 uses 60% of the base resistance, making the effective
+     * multiplier 150.0. Avoid using 0.0 unless you intentionally want new samples to immediately hit the maximum movement
+     * cap.
+     */
+    "price_movement_resistance": 0.60,
+    /**
+     * The minimum guide price for non-stackable items.
+     *
+     * This prevents ordinary items from collapsing to extremely low or zero-value prices.
+     */
+    "minimum_price": 25,
+    /**
+     * The minimum guide price for stackable items.
+     *
+     * Stackable items use a lower minimum because resources, runes, ammunition, and other bulk-traded items may
+     * naturally settle at very small per-unit prices.
+     */
+    "minimum_stackable_price": 5,
+    /**
+     * The number of minutes between scheduled economy price update passes.
+     *
+     * During each pass, completed trades are drained from the trade queue and used to update item guide prices.
+     */
+    "price_update_frequency_minutes": 10,
+    /**
+     * The maximum fraction a price may move during a single price update.
+     *
+     * A value of 0.25 means a price can move by at most 25% in one update pass, even if trade samples imply a
+     * larger change.
+     */
+    "maximum_price_movement": 0.25,
+    /**
+     * The maximum accepted overpay ratio when deciding whether a trade is close enough to current guide value
+     * to be tracked.
+     *
+     * A value of 1.0 allows trades up to 100% above the comparison value. Trades above this range are treated
+     * as outliers and ignored for price movement.
+     */
+    "maximum_overpay_ratio": 1.0,
+    /**
+     * The maximum accepted underpay ratio when deciding whether a trade is close enough to current guide value
+     * to be tracked.
+     *
+     * A value of 0.65 allows trades down to 65% below the comparison value. Trades below this range are treated
+     * as outliers and ignored for price movement.
+     */
+    "maximum_underpay_ratio": 0.65
   },
-
-  // Logging settings for console and file output.
-  "logging": {
-    // The minimum root log level emitted by the server.
-    "root_level": "TRACE",
-
-    // The format used when writing log messages.
-    "format_type": "VERBOSE",
-
-    // Controls whether logs are written to console, files, or both.
-    "output_type": "MIXED",
-
-    // The specific file logs that should be actively written.
-    "active_file_logs": [
-      "CONSOLE_ERR",
-      "CHAT",
-      "COMMANDS",
-      "PRIVATE_MESSAGE"
-    ]
-  },
-
-  // Global skill and skilling-behavior settings.
   "skills": {
     // The interval (in game ticks) between each attempt to cut a log while woodcutting.
     "woodcutting_speed": 4,
-
     /**
      * 317 style: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
      *
      * OSRS style: each tree has a health value that scales with its level, determining when it becomes a stump.
      */
     "use_317_tree_stumps": false,
-
     // Whether Slayer tasks should enforce required equipment checks.
     "slayer_equipment_needed": true,
-
     // The maximum number of ticks a player may spend trying to light a fire.
     "max_firemaking_light_ticks": 10,
-
     // The cooldown, in seconds, between tele-other requests sent to the same player.
     "tele_other_throttle_seconds": 30
   },
-
-  // Bot population, login scheduling, and generated-personality settings.
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 700,
-
+    "base_online_count": 50,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
-
     // The baseline number of hours bots should remain logged out before returning.
     "base_logout_hours": 48,
-
     // The minimum number of hours a bot should remain logged in before being scheduled for logout.
     "minimum_login_hours": 1,
-
     // The maximum number of hours a bot should remain logged in before being scheduled for logout.
     "maximum_login_hours": 48,
-
     // The minimum number of hours a bot should remain logged out before being scheduled to return.
     "minimum_logout_hours": 1,
-
     // The maximum number of hours a bot should remain logged out before being scheduled to return.
-    "maximum_logout_hours": 336, // 2 weeks.
-
+    "maximum_logout_hours": 336,
     // The chance that a newly created bot receives an unusually low intelligence value.
     "low_intelligence_chance": 0.15,
-
     // The chance that a newly created bot receives an unusually high intelligence value.
-    "high_intelligence_chance": 0.05
+    "high_intelligence_chance": 0.05,
+    // The chance that a newly created bot becomes a merchant.
+    "high_merchanting_chance": 0.15,
+    // The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and greed.
+    "base_loot_value": 15000
+  },
+  // Database connection settings.
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "username": "luna_db",
+    "password": "guMQRNYf44fxERs4uHxLCWjCQ"
+  },
+  // Logging settings for console and file output.
+  "logging": {
+    "root_level": "TRACE",
+    "format_type": "VERBOSE",
+    "output_type": "MIXED",
+    "active_file_logs": [
+      "CONSOLE_ERR",
+      "CHAT",
+      "COMMANDS",
+      "PRIVATE_MESSAGE"
+    ]
   }
 }

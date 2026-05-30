@@ -1,7 +1,7 @@
 package game.bot.scripts.combat
 
-import api.bot.BotScript
-import api.bot.BotScriptData
+import api.bot.script.BotScript
+import api.bot.script.BotScriptData
 import api.bot.Suspendable.delay
 import api.bot.zone.SubZone
 import api.predef.*
@@ -44,6 +44,16 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     // TODO@1.0 dynamic "clans", bots will advertise at edgeville they're looking to start or join and then they wil pk together
     // TODO do not attack liked players when searching, UNLESS we're greedy and unkind. then we attack everyone
     // TODO PKers who are kind only attack other pkers (you can check which script they have!). Unkind PKers go for everyone.
+        // TODO Pking groups with liked bots? Pking groups are persisted and permanent, each bot clan is assigned to a team cape.
+    // TODO each bot clan has a leader which determines who can/can't join their clan (must be liked/neutral/etc. by leader)
+    //  bots will not attack anyone wearing their team cape.
+    // TODO there's currently 50 team capes meaning 50 possible clans for bots to join. chatgpt needs to generate:
+    //  clan name, description, favorite wilderness subzones (complete
+    // TODO bots will automatically be placed in a clan when PKing for the first time. bots will not attack other bots
+    //  wearing the same team cape. team capes are auto-spawn equipped on bots during loadout selection. bots can only be
+    //  placed once. once the bot decides either to join a clan or go solo for the first time the choice is persisted and
+    // can't be changed (only in file)
+
     /**
      * Shared PK bot constants.
      */
@@ -345,7 +355,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      *
      * Once this time is reached, the bot stops hunting and attempts to flee the Wilderness.
      */
-    var expireAt: Long = System.nanoTime() + duration.toLong(DurationUnit.NANOSECONDS)
+    var expireAt: Long = System.currentTimeMillis() + duration.toLong(DurationUnit.MILLISECONDS)
 
     override suspend fun init(resumed: Boolean): Boolean {
         // todo@0.5.0 Make sure we go to the bank first and prepare items (resetItem())
@@ -357,7 +367,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     override suspend fun run(): Boolean {
-        if (System.nanoTime() > expireAt) {
+        if (System.currentTimeMillis() > expireAt) {
             bot.log("Script expired. Travelling back home.")
 
             val finished = handler.travelTo(SubZone.HOME)
@@ -398,7 +408,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     override fun snapshot(): PkData {
-        val remaining = expireAt - System.nanoTime()
+        val remaining = expireAt - System.currentTimeMillis()
         val data = PkData()
         data.duration = if (remaining < 1) Duration.ZERO else remaining.nanoseconds
         return data

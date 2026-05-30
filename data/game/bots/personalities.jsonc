@@ -34,7 +34,7 @@
       "PROFIT_SKILLS": 0.95,
       "PROFIT_COMBAT": 0.50,
       "PKING": 0.15,
-      "TRADING": 0.65,
+      "MERCHANTING": 0.65,
       "SOCIALIZING": 0.65,
       "MINIGAMES": 0.25
     }
@@ -53,14 +53,14 @@
       "PROFIT_SKILLS": 0.25,
       "PROFIT_COMBAT": 0.85,
       "PKING": 0.95,
-      "TRADING": 0.50,
+      "MERCHANTING": 0.50,
       "SOCIALIZING": 0.15,
       "MINIGAMES": 0.15
     }
   },
   {
     "type": "MERCHANT",
-    "description": "Highly confident and social. Heavy focus on trading and acquiring resources to trade.",
+    "description": "Highly confident and social. Heavy focus on MERCHANTING and acquiring resources to trade.",
     "intelligence": 0.65,
     "kindness": 0.50,
     "confidence": 0.80,
@@ -72,7 +72,7 @@
       "PROFIT_SKILLS": 0.85,
       "PROFIT_COMBAT": 0.85,
       "PKING": 0.10,
-      "TRADING": 0.95,
+      "MERCHANTING": 0.95,
       "SOCIALIZING": 0.50,
       "MINIGAMES": 0.75
     }
@@ -91,7 +91,7 @@
       "PROFIT_SKILLS": 0.75,
       "PROFIT_COMBAT": 0.75,
       "PKING": 0.15,
-      "TRADING": 0.80,
+      "MERCHANTING": 0.80,
       "SOCIALIZING": 0.50,
       "MINIGAMES": 0.75
     }
@@ -110,7 +110,7 @@
       "PROFIT_SKILLS": 0.50,
       "PROFIT_COMBAT": 0.50,
       "PKING": 0.50,
-      "TRADING": 0.50,
+      "MERCHANTING": 0.50,
       "SOCIALIZING": 0.50,
       "MINIGAMES": 0.50
     }
@@ -129,7 +129,7 @@
       "PROFIT_SKILLS": 0.50,
       "PROFIT_COMBAT": 0.50,
       "PKING": 0.50,
-      "TRADING": 0.50,
+      "MERCHANTING": 0.50,
       "SOCIALIZING": 0.50,
       "MINIGAMES": 0.50
     }
@@ -148,7 +148,7 @@
       "PROFIT_SKILLS": 0.50,
       "PROFIT_COMBAT": 0.50,
       "PKING": 0.50,
-      "TRADING": 0.50,
+      "MERCHANTING": 0.50,
       "SOCIALIZING": 0.50,
       "MINIGAMES": 0.50
     }
@@ -167,7 +167,7 @@
       "PROFIT_SKILLS": 0.05,
       "PROFIT_COMBAT": 0.05,
       "PKING": 0.05,
-      "TRADING": 1.0,
+      "MERCHANTING": 1.0,
       "SOCIALIZING": 0.05,
       "MINIGAMES": 0.05
     }

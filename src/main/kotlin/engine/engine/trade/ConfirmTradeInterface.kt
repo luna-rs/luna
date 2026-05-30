@@ -2,6 +2,7 @@ package engine.trade
 
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.item.economy.CompletedTradeData
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 import java.text.NumberFormat
@@ -19,7 +20,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         /**
          * The number formatter.
          */
-        val FORMATTER = NumberFormat.getInstance(Locale.UK)
+        val FORMATTER = NumberFormat.getInstance(Locale.CANADA)
     }
 
     /**
@@ -85,6 +86,13 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
 
             plr.inventory.addAll(confirm.tradingItems)
             other.inventory.addAll(tradingItems)
+
+            // TODO@1.0 Prevent manipulation by making player trades not count if they're trading with someone they've
+            //  traded with in the last <x> trades. The system should support a modifiable number of trades.
+            world.economy.addTrade(CompletedTradeData(plr.username,
+                                                      other.username,
+                                                      confirm.tradingItems,
+                                                      tradingItems))
 
             plr.overlays.closeWindows()
             other.overlays.closeWindows()

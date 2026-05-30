@@ -1,6 +1,6 @@
 package engine.bot.coordinator.skill
 
-import api.bot.BotScript
+import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.MineBotScript
@@ -95,7 +95,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
 
             zones += SubZone.SOUTH_LUMBRIDGE_MINE
         } else {
-            // TODO@0.5.0 Mining guild, Edgeville dungeon mine.
+            // TODO@0.5.0 Mining guild.
             // TODO Rune rocks in wilderness if feeling greedy.
             //  Need to modify script superclass to logout/run automatically if a PKer is spotted.
             //  Based on personality and emotions.
@@ -105,6 +105,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
 
             zones += SubZone.AL_KHARID_MINE
             zones += SubZone.SOUTH_LUMBRIDGE_MINE
+            zones += SubZone.EDGEVILLE_DUNGEON_MINE
         }
 
         ores.removeIf { level < it.level }

@@ -1,10 +1,14 @@
-package api.bot
+package api.bot.script
 
+import api.bot.Suspendable.naturalDecisionDelay
+import api.bot.Suspendable.naturalDelay
 import api.bot.zone.SubZone
 import api.predef.*
+import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
+import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
@@ -39,8 +43,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
     /**
      * The entity currently being targeted or interacted with.
      *
-     * This is cleared when the active zone changes, when the script pauses, or when the focus becomes inactive,
-     * unreachable, no longer visible, or no longer associated with an active bot action.
+     * This is cleared when the script pauses, when banking interrupts the script, or when the focus becomes inactive,
+     * invisible, or no longer associated with an active bot action.
      */
     private var focus: E? = null
 
@@ -79,20 +83,22 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * @return `true` if this zone should remain active, or `false` if this script should abandon the zone and allow
      * [ZonedBotScript] to choose another one.
      */
-   final override suspend fun executeInZone(zone: SubZone): Boolean {
+    final override suspend fun executeInZone(zone: SubZone): Boolean {
         val currentFocus = focus
         val invalidReason = getInvalidFocusReason(currentFocus)
-        if (invalidReason != null || refocus()) {
+        val refocus = refocus()
+
+        if (invalidReason != null || refocus) {
             focus = null
 
             var freshSearch = false
-            bot.log("Searching for a new target in $zone because $invalidReason.")
+            bot.log("Searching for a new target in $zone because ${invalidReason ?: "refocus was requested"}.")
 
             onExecuteInZone(true, focus)
 
             if (lastOptions.isEmpty()) {
                 val searchRadius = zone.area.tileRadius
-                lastOptions = find(searchRadius)
+                lastOptions = find(zone.area.centerPosition, searchRadius)
                 freshSearch = true
 
                 bot.log("Found ${lastOptions.size} target option(s) in $zone using search radius $searchRadius.")
@@ -100,9 +106,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
             val dexterity = bot.personality.dexterity
             val sortChance = dexterity * 0.75
             val sortByDistance = rand(sortChance)
-            bot.log(
-                "Target option ordering roll: dexterity=$dexterity, sortChance=$sortChance, rollPassed=$sortByDistance, options=${lastOptions.size}"
-            )
+            bot.log("Target option ordering roll: dexterity=$dexterity, sortChance=$sortChance, rollPassed=$sortByDistance, options=${lastOptions.size}")
             if (sortByDistance && lastOptions.size > 1) {
                 lastOptions = lastOptions.toSortedSet(LocatableDistanceComparator(bot))
                 bot.log("Sorted ${lastOptions.size} target option(s) by distance due to dexterity.")
@@ -159,43 +163,38 @@ abstract class TargetingZonedBotScript<E : Entity>(
         return true
     }
 
-    /**
-     * Clears cached targeting state when this script is paused.
-     *
-     * This prevents the bot from resuming with stale entity references or cached options from an old zone.
-     */
     final override fun onPaused() {
         clearTargetCache("script paused")
     }
 
-    /**
-     * Clears cached targeting state when this script requires banking.
-     *
-     * This prevents the bot from resuming with stale entity references or cached options.
-     */
-    final override suspend fun onBankRequired() {
-        clearTargetCache("banking required")
-        onTargetingBankRequired()
+
+    final override suspend fun onBankRequested(initial: Boolean): Boolean {
+        if (onBankRequestedTargeting(initial)) {
+            clearTargetCache("banking required")
+            return true
+        }
+        return false
+
     }
 
     /**
-     * Invoked before target searching. Returning `true` forces this script to look for another target.
+     * Invoked before this script decides whether it needs a new target.
      *
-     * @return `true` if this script should be forced to look for another target.
+     * The default implementation tries to resume interaction with the current active focus when the bot has no weak action
+     * running. Subclasses can return `true` to force the targeting loop to discard the current focus and search again.
+     *
+     * @return `true` if this script should search for another target.
      */
     open suspend fun refocus(): Boolean {
+        if (focus?.state == EntityState.ACTIVE && bot.actions.size(ActionType.WEAK) == 0) {
+            handler.interactions.interact(interactionOption(), focus)
+            if (rand(bot.personality.dexterity)) {
+                bot.naturalDelay()
+            } else {
+                bot.naturalDecisionDelay()
+            }
+        }
         return false
-    }
-
-    /**
-     * Runs after targeting state has been cleared for an upcoming banking cycle.
-     *
-     * Subclasses can override this to perform additional cleanup before banking begins, such as clearing script-specific
-     * targets, resetting local action state, cancelling temporary behaviour, or preparing any state needed before the bot
-     * travels to a bank.
-     */
-    open suspend fun onTargetingBankRequired() {
-
     }
 
     /**
@@ -204,11 +203,12 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * Implementations should return mutable results because this base script removes options as they are attempted.
      * Returned targets may be unsorted; dextrous bots may sort them by distance before attempting interaction.
      *
+     * @param searchBase The tile to search from, usually the center of the zone.
      * @param searchRadius The tile radius to search within, usually based on the active zone size.
      *
      * @return A mutable collection of candidate target entities.
      */
-    abstract fun find(searchRadius: Int): MutableCollection<E>
+    abstract fun find(searchBase: Position, searchRadius: Int): MutableCollection<E>
 
     /**
      * The interaction option used when attempting to interact with a target entity.
@@ -222,15 +222,29 @@ abstract class TargetingZonedBotScript<E : Entity>(
     /**
      * Called during each targeting cycle.
      *
-     * Subclasses can use this to update state, emit speech, adjust behaviour, or perform script-specific logic while
-     * either searching for a target or continuing an existing focused action.
+     * Subclasses can use this to update state, emit speech, adjust behaviour, or perform script-specific logic while either
+     * searching for a target or continuing an existing focused action.
      *
      * @param searching `true` when the script is searching for a new target, or `false` when it is continuing with the
-     * @param focus The current mob being focused.
      * current focus.
+     * @param focus The current entity being focused, or `null` when no focus is active.
      */
     open suspend fun onExecuteInZone(searching: Boolean, focus: E?) {
 
+    }
+
+    /**
+     * Handles script-specific banking checks before the targeting cache is cleared.
+     *
+     * Returning `true` tells the base script that banking is required and that the current target state should be discarded.
+     * Returning `false` leaves the current focus and cached options intact.
+     *
+     * @param initial `true` if this is the first banking check for the current banking request.
+     *
+     * @return `true` if banking should continue, or `false` if no banking is needed.
+     */
+    open suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
+        return true
     }
 
     /**
@@ -259,7 +273,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
     }
 
     /**
-     * Clears the current focus, cached options, and cached zone.
+     * Clears the current focus and cached target options.
      *
      * @param reason The reason cached targeting state is being reset.
      */

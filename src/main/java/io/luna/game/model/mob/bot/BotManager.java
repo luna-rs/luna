@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.bot;
 
-import api.bot.BotScript;
+import api.bot.script.BotScript;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager;
 import io.luna.game.model.mob.bot.injection.BotContextInjector;

@@ -23,9 +23,6 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
  */
 public final class PursuitAction extends Action<Npc> {
 
-    // TODO@0.5.0 NPCs not as responsive when targeted in multi-combat. Only the main NPC acts truly aggressive, with
-    //  others being wildly inconsistent. Why?
-
     /**
      * The combat context for the pursuing NPC.
      */
@@ -67,6 +64,7 @@ public final class PursuitAction extends Action<Npc> {
     public void onSubmit() {
         // Cancel any in-progress navigation while pursuing.
         mob.getNavigator().cancel();
+        mob.getCombat().resetCombatTimer();
 
         if (tryStep()) {
             complete();
@@ -79,7 +77,7 @@ public final class PursuitAction extends Action<Npc> {
         mob.getNavigator().cancel();
 
         Mob target = combat.getTarget();
-        if (!combat.inCombat() || target == null || !mob.isViewableFrom(target)) {
+        if (target == null || !mob.isViewableFrom(target)) {
             return true;
         }
         mob.interact(target);

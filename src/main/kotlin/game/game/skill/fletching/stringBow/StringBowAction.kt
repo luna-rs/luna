@@ -12,9 +12,9 @@ import game.player.Sound
  *
  * @author lare96
  */
-class StringBowActionItem(plr: Player,
-                          val bow: Bow,
-                          count: Int) : InventoryAction(plr, true, 2, count) {
+class StringBowAction(plr: Player,
+                      val bow: Bow,
+                      count: Int) : InventoryAction(plr, true, 2, count) {
 
     companion object {
 

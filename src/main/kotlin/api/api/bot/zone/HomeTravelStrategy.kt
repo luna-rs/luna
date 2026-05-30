@@ -14,7 +14,7 @@ import io.luna.game.model.mob.bot.Bot
 object HomeTravelStrategy : TravelStrategy {
     override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean = true
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
-        if (bot.subZone != HOME) {
+        if (bot.subZone != HOME && bot.zone != HOME.parent(bot)) {
             bot.output.sendCommand("home")
             if (!waitFor { bot.subZone == HOME }) {
                 bot.log("Home teleport failed or timed out.")

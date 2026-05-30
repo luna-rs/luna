@@ -3,13 +3,15 @@ package io.luna.game.model.mob.bot;
 import api.bot.action.BotActionHandler;
 import api.bot.zone.SubZone;
 import api.bot.zone.Zone;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import game.bot.scripts.LootItemBotScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.EquipmentDefinition;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
@@ -20,7 +22,6 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.brain.BotBrain;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
 import io.luna.game.model.mob.bot.brain.BotEmotion;
-import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType;
 import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.bot.brain.BotPreference;
 import io.luna.game.model.mob.bot.brain.BotReflex;
@@ -29,7 +30,6 @@ import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
 import io.luna.game.model.mob.bot.script.BotScriptStack;
 import io.luna.game.model.mob.bot.speech.BotSpeechStack;
-import io.luna.game.persistence.BotData;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.util.RandomUtils;
@@ -37,6 +37,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -111,6 +112,7 @@ public final class Bot extends Player {
          * @throws IllegalStateException If an active bot with this username is already online.
          */
         public Builder setUsername(String username) {
+            // TODO apply same name filtering from login
             BotRepository repository = context.getWorld().getBots();
             if (repository.isOnline(username)) {
                 throw new IllegalStateException("Bot is already logged in.");
@@ -325,7 +327,9 @@ public final class Bot extends Player {
     /**
      * Local sub-zones in the bots current region.
      */
-    private ImmutableList<SubZone> localSubZones = ImmutableList.of();
+    private ImmutableSet<SubZone> localSubZones = ImmutableSet.of();
+
+    private final Set<GroundItem> viewableItems = new HashSet<>();
 
     /**
      * Creates a new {@link Bot}.
@@ -372,6 +376,12 @@ public final class Bot extends Player {
     }
 
     @Override
+    protected void onActive() {
+        super.onActive();
+        reflex.add(new LootItemBotScript(this));
+    }
+
+    @Override
     protected void onInactive() {
         super.onInactive();
         scriptStack.shutdown();
@@ -386,7 +396,7 @@ public final class Bot extends Player {
     @Override
     public PlayerData createSaveData() {
         // Temporary bots don't create any data.
-        return temporary ? null : new BotData(getUsername());
+        return temporary ? null : new PlayerData(getUsername()).save(this);
     }
 
     /**
@@ -580,23 +590,6 @@ public final class Bot extends Player {
     }
 
     /**
-     * Returns whether this bot is nervous about its current hitpoints.
-     * <p>
-     * The nervous threshold scales with the bot's confidence. Less confident bots will become nervous at higher health
-     * percentages, while highly confident bots wait until they are closer to low health.
-     * <p>
-     * The threshold is never allowed to drop below {@code 5%}, so even fully confident bots still react when
-     * critically low.
-     *
-     * @return {@code true} if the bot's health percentage is below its personality-based nervous threshold.
-     */
-    public boolean isNervousAboutHp() {
-        double confidence = emotions.isFeeling(EmotionType.SCARED) ? personality.getConfidence() * 0.75
-                : personality.getConfidence();
-        return getHealthPercent() < Math.max(50 * (1.0 - confidence), 5.0);
-    }
-
-    /**
      * @return {@code true} if this bot is temporary, otherwise {@code false}.
      */
     public boolean isTemporary() {
@@ -760,7 +753,7 @@ public final class Bot extends Player {
     /**
      * @return An immutable list of local {@link SubZone}s.
      */
-    public ImmutableList<SubZone> getLocalSubZones() {
+    public ImmutableSet<SubZone> getLocalSubZones() {
         return localSubZones;
     }
 
@@ -769,7 +762,12 @@ public final class Bot extends Player {
      *
      * @param localSubZones The immutable list of local {@link SubZone}s.
      */
-    public void setLocalSubZones(ImmutableList<SubZone> localSubZones) {
+    public void setLocalSubZones(ImmutableSet<SubZone> localSubZones) {
         this.localSubZones = localSubZones;
+    }
+
+    // todo test, docs
+    public Set<GroundItem> getViewableItems() { // faster than using the locator
+        return viewableItems;
     }
 }
