@@ -46,7 +46,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * This is cleared when the script pauses, when banking interrupts the script, or when the focus becomes inactive,
      * invisible, or no longer associated with an active bot action.
      */
-    private var focus: E? = null
+    protected var focus: E? = null
+        private set
 
     /**
      * Cached targeting options from the most recent search.
@@ -54,7 +55,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * This prevents the script from repeatedly scanning the zone every cycle. Options are removed as they are attempted,
      * so failed or invalid targets are not retried until a new search is performed.
      */
-    private var lastOptions: MutableCollection<E> = mutableListOf()
+    protected var lastOptions: MutableCollection<E> = mutableListOf()
+        private set
 
     /**
      * Executes one targeting cycle inside the selected active zone.

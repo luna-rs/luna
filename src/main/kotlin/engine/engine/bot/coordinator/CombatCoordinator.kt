@@ -1,15 +1,21 @@
 package engine.bot.coordinator
 
+import api.bot.zone.SubZone
+import game.bot.scripts.CombatTrainingScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import kotlin.time.Duration.Companion.minutes
 
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
 
+    // todo test retrieving items after death
+    // todo 0.75 boost to combat training chance if intelligent 0.5 for average, 0.25 below average, and no boost for the dumbest bots
     //TODO@0.5.0 Before this is done, item sets need to be added so we can determine what to equip, etc.
     // also need to add support for magic sets maybe? ranged sets? sasfespotting?
     /* Combat:
      * - Kill profitable but dangerous monsters such as green dragons, red dragons, and lava dragons.
      * - Add bossing behavior later for King Black Dragon and Kalphite Queen.
+     // todo switching styles to train correct stats
  */
     /* TODO@0.5.0 Training spots (once combat training coordinator and equipment selection are complete).
             We may also need to do obstacles like doors and ladders to completion before starting this as well.
@@ -53,5 +59,35 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     override fun accept(bot: Bot) {
         // For now, travel to any zone without transitions and fight any attackable mobs.
         // TODO Combat script for the above ^ and basic equipment selection
+        // for now, ONLY BEGINNER AREAS!!
+        val zones = ArrayList<SubZone>()
+        if (bot.combatLevel < 10) {
+            zones += SubZone.LUMBRIDGE_RIVER
+            zones += SubZone.EAST_DRAYNOR_YEWS
+            // cow field lumby, varrock sewers
+        } else if (bot.combatLevel < 20) {
+            zones += SubZone.BARBARIAN_VILLAGE
+            zones += SubZone.WIZARDS_TOWER
+            zones += SubZone.GOBLIN_VILLAGE
+            if (bot.personality.isDumb) {
+                // use rand(1.0 - intelligence)
+                zones += SubZone.LUMBRIDGE_RIVER
+                zones += SubZone.EAST_DRAYNOR_YEWS
+            }
+            // al kharid palace
+        } else if (bot.combatLevel < 40) {
+            // edgeville monastery, rock crabs, dark wizards at verrock entry lol lol
+            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
+            zones += SubZone.BARBARIAN_VILLAGE
+
+        } else  {
+            zones += SubZone.CHAOS_DRUID_TOWER
+            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
+            zones += SubZone.EDGEVILLE_DUNGEON_MINE
+            zones += SubZone.ARDOUGNE_SQUARE_THIEVING
+
+        }
+        // al kharid palace
+       bot.scriptStack.pushHead(CombatTrainingScript(bot, 100.minutes, zones))
     }
 }

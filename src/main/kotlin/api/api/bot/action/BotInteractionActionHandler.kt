@@ -88,8 +88,6 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         val cond = SuspendableCondition {
             bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
         }
-        bot.naturalDelay()
-
         when (target) {
             is Player -> bot.output.sendPlayerInteraction(option, target)
             is Npc -> bot.output.sendNpcInteraction(option, target)

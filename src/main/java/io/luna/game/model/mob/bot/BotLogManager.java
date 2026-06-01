@@ -199,6 +199,10 @@ public final class BotLogManager {
         if (streamType.isFileStream()) {
             bot.getService().submit(() -> {
                 try {
+                    Path parent = path.getParent();
+                    if(!Files.exists(parent)) {
+                        Files.createDirectories(parent);
+                    }
                     Files.writeString(path, entry.getFormattedMessage(),
                             StandardOpenOption.APPEND, StandardOpenOption.CREATE);
                 } catch (IOException e) {

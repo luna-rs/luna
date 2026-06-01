@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
+import engine.bot.coordinator.CombatCoordinator;
 import engine.bot.coordinator.SocializingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
@@ -26,7 +27,7 @@ public enum BotActivity {
     /**
      * Combat training, such as fighting NPCs to improve Attack, Strength, or Defence.
      */
-    TRAINING_COMBAT(new SkillingCoordinator(true)),
+    TRAINING_COMBAT(new CombatCoordinator(true)),
 
     /**
      * Money-making through non-combat skills (e.g., crafting items, gathering resources for profit).
@@ -36,7 +37,7 @@ public enum BotActivity {
     /**
      * Money-making through combat (e.g., killing profitable monsters, farming drops).
      */
-    PROFIT_COMBAT(new SkillingCoordinator(false)),
+    PROFIT_COMBAT(new CombatCoordinator(false)),
 
     /**
      * Player-versus-player combat, including wilderness fights and PK strategies.

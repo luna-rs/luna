@@ -115,7 +115,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * it. The script may keep an active zone while the bot is walking back toward it, but subclass execution is
      * only called once the bot is close enough to the zone.
      */
-    private var activeZone: SubZone? = null
+    protected var activeZone: SubZone? = null
+        private set
 
     /**
      * The original candidate-zone list used for one retry pass after travel-based selection failures.

@@ -162,4 +162,15 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     fun clickRunning(enabled: Boolean) {
         bot.walking.isRunning = enabled
     }
+
+    /**
+     * Clicks the auto-retaliate button.
+     */
+    fun clickAutoRetaliate(enabled: Boolean) {
+        if(enabled) {
+            bot.output.clickButton(151)
+        } else {
+            bot.output.clickButton(150)
+        }
+    }
 }

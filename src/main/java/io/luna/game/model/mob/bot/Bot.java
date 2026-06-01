@@ -476,11 +476,11 @@ public final class Bot extends Player {
     public void process() {
         try {
             // TODO@1.0 Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
+            // Process speech before scripts so we can still talk while doing anything.
+            speechStack.process();
+
             // First process any instincts our bot has.
             if (reflex.process(this)) {
-                // Process speech before scripts so we can still talk while doing stuff.
-                speechStack.process();
-
                 // Process context injectors before scripts so we can still react to events while doing stuff.
                 manager.getInjectorManager().injectEvents(this);
 
