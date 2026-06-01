@@ -1,9 +1,6 @@
 package io.luna.util;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
+import com.google.gson.*;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -13,6 +10,8 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * A static utility class that provides helper functions for working with the Google GSON serialization library.
@@ -48,6 +47,15 @@ public final class GsonUtils {
      * </ul>
      */
     public static final Gson GSON = new GsonBuilder()
+            .addReflectionAccessFilter(ReflectionAccessFilter.BLOCK_ALL_PLATFORM)
+            .registerTypeAdapter(Instant.class, (JsonSerializer<Instant>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.toString()))
+            .registerTypeAdapter(Instant.class, (JsonDeserializer<Instant>) (json, typeOfT, context) ->
+                    Instant.parse(json.getAsString()))
+            .registerTypeAdapter(Duration.class, (JsonSerializer<Duration>) (src, typeOfSrc, context) ->
+                    new JsonPrimitive(src.toString()))
+            .registerTypeAdapter(Duration.class, (JsonDeserializer<Duration>) (json, typeOfT, context) ->
+                    Duration.parse(json.getAsString()))
             .disableHtmlEscaping()
             .disableInnerClassSerialization()
             .setPrettyPrinting()
