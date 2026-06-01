@@ -1,9 +1,11 @@
 package api.combat.death
 
+import api.attr.Attr
 import api.combat.death.dsl.DeathHookReceiver
 import api.predef.*
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.MobDeathTask.DeathStage
+import io.luna.game.model.mob.MobDeathAction.DeathStage
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerController
@@ -37,6 +39,11 @@ object DeathHookHandler {
      * Registered NPC death hooks mapped to their respective IDs.
      */
     private val npcHooks = HashMap<Int, DeathHook<Npc>>()
+
+    /**
+     * The ground item references of the last items lost on death.
+     */
+    var Player.deathItems by Attr.hashSet { HashSet<GroundItem>() }
 
     /**
      * The default player death hook.

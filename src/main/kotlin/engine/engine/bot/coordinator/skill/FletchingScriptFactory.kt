@@ -37,51 +37,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        /**
-         * Creates either a cutting or stringing script for the supplied log tier.
-         *
-         * Dextrous bots roll for the longbow variant first. If the bot cannot make that tier's longbow yet, this falls
-         * back to the shortbow variant.
-         */
-        fun getScriptForLog(log: Log): BotScript {
-            var index = if (rand(bot.personality.dexterity)) 1 else 0
-            if (index == 1 && level < log.bows[1].level) {
-                index = 0
-            }
-            return if (rand(2) == 0) {
-                StringBowBotScript(bot, log.bows[index], getDuration(bot))
-            } else {
-                CutLogBotScript(bot, log, index, getDuration(bot))
-            }
-        }
-
-        if (level < SHORTBOW.level) {
-            return CutLogBotScript(bot, Log.NORMAL, 0, getDuration(bot))
-        } else if (level < OAK_SHORTBOW.level) {
-            return if (level >= LONGBOW.level) {
-                if (rand(2) == 0) {
-                    StringBowBotScript(bot, LONGBOW, getDuration(bot))
-                } else {
-                    CutLogBotScript(bot, Log.NORMAL, 2, getDuration(bot))
-                }
-            } else {
-                if (rand(2) == 0) {
-                    StringBowBotScript(bot, SHORTBOW, getDuration(bot))
-                } else {
-                    CutLogBotScript(bot, Log.NORMAL, 1, getDuration(bot))
-                }
-            }
-        } else if (level < WILLOW_SHORTBOW.level) {
-            return getScriptForLog(Log.OAK)
-        } else if (level < MAPLE_SHORTBOW.level) {
-            return getScriptForLog(Log.WILLOW)
-        } else if (level < YEW_SHORTBOW.level) {
-            return getScriptForLog(Log.MAPLE)
-        } else if (level < MAGIC_SHORTBOW.level) {
-            return getScriptForLog(Log.YEW)
-        } else {
-            return getScriptForLog(Log.MAGIC)
-        }
+        return resolveScript(bot, level, false)
     }
 
     /**
@@ -101,6 +57,57 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        return getTrainingScript(bot, level, zones)
+        return resolveScript(bot, level, true)
+    }
+
+    /**
+     * Retrieves a random script for the parameters set.
+     */
+    private fun resolveScript(bot: Bot, level: Int, randomized: Boolean): BotScript {
+        /**
+         * Creates either a cutting or stringing script for the supplied log tier.
+         *
+         * Dextrous bots roll for the longbow variant first. If the bot cannot make that tier's longbow yet, this falls
+         * back to the shortbow variant.
+         */
+        fun getScriptForLog(log: Log): BotScript {
+            var index = if (rand(bot.personality.dexterity)) 1 else 0
+            if (index == 1 && level < log.bows[1].level) {
+                index = 0
+            }
+            return if (rand(2) == 0) {
+                StringBowBotScript(bot, log.bows[index], getDuration(bot))
+            } else {
+                CutLogBotScript(bot, log, index, getDuration(bot))
+            }
+        }
+
+        if (level >= MAGIC_SHORTBOW.level && (!randomized || rand(2) == 0)) {
+            return getScriptForLog(Log.MAGIC)
+        } else if (level >= YEW_SHORTBOW.level && (!randomized || rand(4) == 0)) {
+            return getScriptForLog(Log.YEW)
+        } else if (level >= MAPLE_SHORTBOW.level && (!randomized || rand(8) == 0)) {
+            return getScriptForLog(Log.MAPLE)
+        } else if (level >= WILLOW_SHORTBOW.level && (!randomized || rand(16) == 0)) {
+            return getScriptForLog(Log.WILLOW)
+        } else if (level >= OAK_SHORTBOW.level && (!randomized || rand(32) == 0)) {
+            return getScriptForLog(Log.OAK)
+        } else if (level >= SHORTBOW.level && (!randomized || rand(64) == 0)) {
+            return if (level >= LONGBOW.level && (!randomized || randBoolean())) {
+                if (rand(2) == 0) {
+                    StringBowBotScript(bot, LONGBOW, getDuration(bot))
+                } else {
+                    CutLogBotScript(bot, Log.NORMAL, 2, getDuration(bot))
+                }
+            } else {
+                if (rand(2) == 0) {
+                    StringBowBotScript(bot, SHORTBOW, getDuration(bot))
+                } else {
+                    CutLogBotScript(bot, Log.NORMAL, 1, getDuration(bot))
+                }
+            }
+        } else {
+            return CutLogBotScript(bot, Log.NORMAL, 0, getDuration(bot))
+        }
     }
 }

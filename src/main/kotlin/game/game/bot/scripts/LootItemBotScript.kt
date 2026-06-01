@@ -147,6 +147,7 @@ class LootItemBotScript(bot: Bot) : ReflexBotScript(bot) {
                 valuableItems += groundItem
                 found = true
             } else if (groundItem in bot.deathItems) {
+                bot.deathItems.clear()
                 valuableItems += groundItem
                 found = true
             }

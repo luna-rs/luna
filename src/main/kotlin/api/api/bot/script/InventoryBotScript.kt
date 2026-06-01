@@ -32,7 +32,8 @@ abstract class InventoryBotScript(
      * This is cached during initialization from [withdraw] so the requirement list remains stable for the current script
      * run.
      */
-    private var withdraw: List<Item> = emptyList()
+    protected var withdraw: List<Item> = emptyList()
+        private set
 
     /**
      * Initializes this script and verifies that the bot owns the required withdrawal items.

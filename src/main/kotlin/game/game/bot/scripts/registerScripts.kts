@@ -16,7 +16,6 @@ import game.bot.scripts.skills.PickpocketBotScript.Companion.PickpocketData
 import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.SearchBotScript.Companion.SearchData
 import game.bot.scripts.skills.SmeltOreBotScript
-import game.bot.scripts.skills.SmeltOreBotScript.Companion.SmeltOreData
 import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
@@ -37,7 +36,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CutLogData>(CutLogBotScript::class) { bot, data -> CutLogBotScript(bot, data) }
     scriptManager.addScript<StringBowData>(StringBowBotScript::class) { bot, data -> StringBowBotScript(bot, data) }
     scriptManager.addScript<SearchData>(SearchBotScript::class) { bot, data -> SearchBotScript(bot, data) }
-    scriptManager.addScript<SmeltOreData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
 
