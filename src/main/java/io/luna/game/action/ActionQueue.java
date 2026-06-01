@@ -278,7 +278,7 @@ public final class ActionQueue {
      * <p>
      * This is also invoked automatically during {@link #process()} when any strong action is present.
      */
-        public void interruptWeak() {
+    public void interruptWeak() {
         List<Action<?>> weakActions = new ArrayList<>(processing.get(ActionType.WEAK));
         for (Action<?> action : weakActions) {
             if (action.getState() == ActionState.PROCESSING) {
@@ -295,9 +295,10 @@ public final class ActionQueue {
     }
     //todo docs, testing
 
-    public int size(ActionType type)  {
+    public int size(ActionType type) {
         return processing.get(type).size();
     }
+
     /**
      * @return The active action count.
      */

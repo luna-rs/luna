@@ -1,7 +1,7 @@
 package api.combat.death.dsl
 
 import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.MobDeathTask.DeathStage
+import io.luna.game.model.mob.MobDeathAction.DeathStage
 
 /**
  * Represents a contextual receiver for handling various stages of an entity’s death event.

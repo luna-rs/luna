@@ -1,7 +1,8 @@
 package io.luna.game.model.mob;
 
 import api.combat.death.DeathHookHandler;
-import io.luna.game.model.EntityType;
+import io.luna.game.action.Action;
+import io.luna.game.action.ActionType;
 import io.luna.game.model.World;
 import io.luna.game.task.Task;
 import org.apache.logging.log4j.LogManager;
@@ -23,10 +24,10 @@ import org.apache.logging.log4j.Logger;
  * These stages are forwarded to the Kotlin-driven {@link DeathHookHandler}, allowing scripts to implement custom
  * death behavior without modifying core engine code. The task runs synchronously on the game tick loop and self-cancels
  * when the final stage completes.
- * </p>
+ *
  * @author lare96
  */
-public final class MobDeathTask extends Task {
+public final class MobDeathAction extends Action<Mob> {
 
     /**
      * Represents the progression of a mob's scripted death.
@@ -70,39 +71,25 @@ public final class MobDeathTask extends Task {
     private int currentLoop;
 
     /**
-     * Creates a new {@link MobDeathTask}.
+     * Creates a new {@link MobDeathAction}.
      *
      * @param victim The mob being killed.
      * @param source The killer, or {@code null} if the cause is environmental or unknown.
      */
-    public MobDeathTask(Mob victim, Mob source) {
-        super(false, 1);
+    public MobDeathAction(Mob victim, Mob source) {
+        super(victim, ActionType.STRONG, false, 1);
         this.victim = victim;
         this.source = source;
     }
 
     @Override
-    protected boolean onSchedule() {
+    public void onSubmit() {
         victim.getWalking().clear();
         victim.interact(null);
-        return true;
     }
 
-    /**
-     * Executes the staged death sequence.
-     *
-     * <p>
-     * The timeline:
-     * </p>
-     *
-     * <ul>
-     *     <li>Tick 0 -> {@code PRE_DEATH}</li>
-     *     <li>Tick 4 -> {@code DEATH}</li>
-     *     <li>Tick 5+ -> {@code POST_DEATH}, then the task cancels itself.</li>
-     * </ul>
-     */
     @Override
-    public void execute() {
+    public boolean run() {
         try {
             if (currentLoop == 0) {
                 victim.interact(null);
@@ -111,21 +98,19 @@ public final class MobDeathTask extends Task {
                 DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.DEATH);
             } else if (currentLoop >= 5) {
                 DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.POST_DEATH);
-                cancel();
+                return true;
             }
+        } catch (Exception e) {
+            World world = victim.getWorld();
+            if (victim instanceof Player) {
+                victim.asPlr().forceLogout();
+            } else if (victim instanceof Npc) {
+                world.getNpcs().remove(victim.asNpc());
+            }
+            logger.error("Error while processing death for {}.", victim, e);
         } finally {
             currentLoop++;
         }
-    }
-
-    @Override
-    public void onException(Exception e) {
-        World world = victim.getWorld();
-        if (victim.getType() == EntityType.PLAYER) {
-            victim.asPlr().forceLogout();
-        } else if (victim.getType() == EntityType.NPC) {
-            world.getNpcs().remove(victim.asNpc());
-        }
-        logger.error("Error while processing death for {}.", victim, e);
+        return false;
     }
 }

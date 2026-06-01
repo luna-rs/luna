@@ -403,10 +403,6 @@ public final class World {
         // Then, pre-process NPC walking and action queues.
         for (Npc npc : npcList) {
             try {
-                if (npc.isLocked()) {
-                    // Skip pre-processing for locked NPCs.
-                    continue;
-                }
                 npc.getAggression().process();
                 npc.getCombat().processAttackDelay();
                 npc.getActions().process();
