@@ -169,7 +169,7 @@ public final class InteractionAction extends Action<Player> {
                 it.remove();
                 continue;
             }
-            if (collisionManager.reached(mob.getPosition(), target, policy)) {
+            if (collisionManager.reached(mob, target, policy)) {
                 // We've reached a listener with a satisfied policy, queue it for later.
                 if (trigger == null) {
                     trigger = policy;
@@ -235,7 +235,7 @@ public final class InteractionAction extends Action<Player> {
      */
     private boolean moveBeforeInteract(boolean isMob, InteractionPolicy trigger) {
         boolean moved = false;
-        if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
+        if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             if (mob.getStatus().isImmobilized()) {
                 // We need to move in order to interact, but we're immobilized.

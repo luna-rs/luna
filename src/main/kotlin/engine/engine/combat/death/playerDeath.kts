@@ -1,12 +1,15 @@
 package engine.combat.death
 
 import api.combat.death.DeathHookHandler
+import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import game.player.Animations
 import game.player.Jingles
 import io.luna.Luna
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.SkullIcon
@@ -25,6 +28,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.sendMessage("Oh dear, you have died!")
         victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
+        BotReactions.reactToOtherDied(source, victim)
     }
 
     death {
@@ -39,7 +43,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
             if (victim.skullIcon == SkullIcon.WHITE) {
                 keepAmount = 0
             }
-            if(victim.combat.prayers.isActive(CombatPrayer.PROTECT_ITEM)) {
+            if (victim.combat.prayers.isActive(CombatPrayer.PROTECT_ITEM)) {
                 keepAmount++
             }
             if (keepAmount > 0) {
@@ -63,9 +67,13 @@ DeathHookHandler.setDefaultHook(Player::class) {
                 victim.inventory.addAll(keepItems)
             }
 
-            val sourcePlayer = source as? Player
+            val sourcePlayer = source as? Player ?: victim
             world.addItem(526, 1, victim.position, sourcePlayer)
-            removedItems.forEach { world.addItem(it.id, it.amount, victim.position, sourcePlayer) }
+            removedItems.forEach {
+                val groundItem = world.addItem(it.id, it.amount, victim.position, sourcePlayer)
+                victim.deathItems = HashSet<GroundItem>()
+                victim.deathItems += groundItem
+            }
         }
     }
 

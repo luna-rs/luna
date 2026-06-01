@@ -7,7 +7,7 @@ package io.luna.game.model.def;
  * volume levels, chat options, and other data. This definition exposes:
  * <ul>
  *     <li>the varp id ({@link #getId()})</li>
- *     <li>a decoded “type” field ({@link #getType()}) that categorizes the varp</li>
+ *     <li>a decoded "type" field ({@link #getType()}) that categorizes the varp</li>
  * </ul>
  * <p>
  * <b>Repository:</b> All definitions are stored in {@link #ALL}, indexed by id. The repository size (725) should match

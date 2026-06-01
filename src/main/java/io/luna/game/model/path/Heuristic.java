@@ -33,9 +33,9 @@ public enum Heuristic {
     /**
      * <strong>Euclidean Distance</strong>: {@code ceil(sqrt(dx² + dy²))}
      * <p>
-     * The Euclidean heuristic measures “as-the-crow-flies” geometric distance. It assumes diagonals cost more than
+     * The Euclidean heuristic measures "as-the-crow-flies" geometric distance. It assumes diagonals cost more than
      * regular directions. Euclidean tends to generate slightly more curved or smoothed paths. Useful for bots or
-     * “intelligent” actors, but not for strict correctness in the RS2 world.
+     * "intelligent" actors, but not for strict correctness in the RS2 world.
      * </p>
      */
     EUCLIDEAN {
@@ -52,7 +52,7 @@ public enum Heuristic {
      * <p>
      * In an 8-direction movement system, Manhattan is admissible (never overestimates) but tends to
      * <em>underestimate</em> by a significant margin. This causes A* to expand more nodes than other heuristics,
-     * running slower but still producing correct results. Manhattan paths look “boxy” and expand in a
+     * running slower but still producing correct results. Manhattan paths look "boxy" and expand in a
      * diamond-shaped pattern. This can be useful for deliberately imperfect bot movement or weighted maze searches.
      * </p>
      */

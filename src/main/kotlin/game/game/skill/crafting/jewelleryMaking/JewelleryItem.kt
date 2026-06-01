@@ -8,12 +8,12 @@ import io.luna.game.model.item.Item
  *
  * @author lare96
  */
-class JewelleryItem(name: String, val level: Int, val xp: Double, requiredName: String? = null) {
+class JewelleryItem(val id: Int, val level: Int, val xp: Double, requiredName: String? = null) {
 
     /**
      * The crafted jewellery item.
      */
-    val item: Item = item(name)
+    val item: Item = Item(id)
 
     /**
      * The additional required item (other than a silver/gold bar).

@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import io.luna.Luna;
-import io.luna.LunaRuntime;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -566,7 +565,7 @@ public final class CollisionMatrix {
      * Determines if the given {@code start} position has reached an entity occupying a rectangular area with optional
      * direction-based reach constraints.
      * <p>
-     * This is the generalized “reach check” used for entities and objects with arbitrary width/length, and optional
+     * This is the generalized "reach check" used for entities and objects with arbitrary width/length, and optional
      * directional reachability (via {@code packedDirections}). Logic is refactored from the #377 client.
      * </p>
      *

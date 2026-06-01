@@ -14,13 +14,28 @@ import java.util.concurrent.ThreadLocalRandom
 /**
  * The number formatter. Uses the UK locale.
  */
-private val NUMBER_FORMATTER = NumberFormat.getInstance(Locale.UK)
+private val NUMBER_FORMATTER = NumberFormat.getInstance(Locale.CANADA)
 
 /**
  * Format a number.
  */
 fun numF(input: Any): String {
     return NUMBER_FORMATTER.format(input)
+}
+
+/**
+ * Returns a [Set] containing every element that matches [predicate].
+ *
+ * This is a single-pass alternative to calling `filter { ... }.toSet()`. It avoids creating an intermediate filtered
+ * list by adding matching elements directly into a [HashSet].
+ *
+ * The returned set contains unique elements only and does not guarantee iteration order.
+ *
+ * @param predicate Returns `true` for elements that should be included in the result.
+ * @return A set containing all elements that matched [predicate].
+ */
+inline fun <T> Iterable<T>.filterToSet(predicate: (T) -> Boolean): Set<T> {
+    return filterTo(HashSet(), predicate)
 }
 
 /**
@@ -33,11 +48,6 @@ fun <T> lazyVal(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE,
  */
 fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
     .orElseThrow { NoSuchElementException("Name not found for item <$id>") }
-
-/**
- * Computes and returns the name for [item].
- */
-fun itemName(item: Item): String = itemName(item.id)
 
 /**
  * Computes and returns the name for [item].
@@ -100,6 +110,11 @@ fun rand() = ThreadLocalRandom.current()!!
  * Generates a random integer from [lower] to [upperInclusive] inclusive.
  */
 fun rand(lower: Int, upperInclusive: Int): Int = rand().nextInt((upperInclusive - lower) + 1) + lower
+
+/**
+ * Generates a random integer from [lower] to [upperInclusive] exclusive.
+ */
+fun rand(lower: Double, upperInclusive: Double): Double = rand().nextDouble(lower, upperInclusive)
 
 /**
  * Generates a random integer from 0 to [upperInclusive] inclusive.

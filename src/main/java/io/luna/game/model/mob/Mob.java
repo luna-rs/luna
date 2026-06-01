@@ -394,7 +394,7 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Sets the current hitpoints of this mob, clamping the value to {@code >= 0}, and scheduling a {@link MobDeathTask}
+     * Sets the current hitpoints of this mob, clamping the value to {@code >= 0}, and scheduling a {@link MobDeathAction}
      * if this call transitions the mob from alive to dead.
      *
      * @param amount The new hitpoint value.
@@ -405,7 +405,7 @@ public abstract class Mob extends Entity {
         hp.setLevel(Math.max(amount, 0));
         if (levelBefore > 0 && hp.getLevel() <= 0) {
             Mob source = getCombat().getDamageStack().getHighestDamage();
-            world.schedule(new MobDeathTask(this, source));
+            submitAction(new MobDeathAction(this, source));
         }
     }
 

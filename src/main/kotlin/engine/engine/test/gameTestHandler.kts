@@ -4,7 +4,7 @@ import api.attr.Attr
 import api.combat.specialAttack.SpecialAttackHandler
 import api.predef.*
 import api.predef.ext.*
-import game.bot.scripts.PkBotScript
+import game.bot.scripts.combat.PkBotScript
 import game.player.item.consume.food.Food
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
@@ -20,7 +20,6 @@ import io.luna.game.model.mob.dialogue.DialogueQueueBuilder
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 import io.luna.game.model.mob.overlay.NumberInput
-import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.hours
 
@@ -258,7 +257,6 @@ fun botInputDialogue(plr: Player, builder: DialogueQueueBuilder) {
                 override fun input(player: Player, value: Int) {
                     plr.botSpawnCount = value
                     builder.open()
-                    println("???")
                 }
             })
         }.open()

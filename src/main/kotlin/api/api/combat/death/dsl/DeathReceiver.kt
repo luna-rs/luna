@@ -4,6 +4,7 @@ import api.drops.DropTableHandler.getDropTable
 import api.drops.MergedDropTable
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.speech.BotReactions
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
@@ -11,6 +12,7 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * A receiver class used during the **main death stage** of a [DeathHookReceiver].
@@ -84,13 +86,20 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
     fun DeathReceiver<Npc>.drop() {
         val table = getDropTable(receiver.victim)
         if (table != null) {
+            val mob = receiver.source
             val itemList = table.roll(receiver.victim, receiver.source)
-            val view = if (receiver.source is Player)
-                ChunkUpdatableView.localView(receiver.source)
+            val view = if (mob is Player)
+                ChunkUpdatableView.localView(mob)
             else
                 ChunkUpdatableView.globalView()
 
+            var reacted = false
             for (item in itemList) {
+                if (mob is Bot && item.itemDef.value > 10_000 && !reacted) { // TODO@0.5.0 Use economy value.
+                    // React to receiving a rare drop.
+                    BotReactions.reactToRareDrop(mob, item)
+                    reacted = true
+                }
                 world.addItem(GroundItem(ctx, item.id, item.amount, receiver.victim.position, view))
             }
         }

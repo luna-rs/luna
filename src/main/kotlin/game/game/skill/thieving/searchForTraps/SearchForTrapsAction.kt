@@ -18,7 +18,7 @@ import game.skill.thieving.Thieving
  *
  * @author lare96
  */
-class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: ThievableChest) :
+class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: ThievingChest) :
     LockedAction(plr) {
 
     companion object {

@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * Defines a visibility view for {@link ChunkUpdatable} types using an allow-list of viewers.
  * <p>
- * A {@link ChunkUpdatableView} answers one question: <i>“Which players are allowed to see this updatable?”</i>
+ * A {@link ChunkUpdatableView} answers one question: <i>"Which players are allowed to see this updatable?"</i>
  * It is used by the chunk update system to decide whether to enqueue show/hide/update messages for a specific player.
  * <p>
  * Two view modes exist:

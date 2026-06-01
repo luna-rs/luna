@@ -8,7 +8,7 @@ import java.time.Duration;
 /**
  * A lightweight timer that measures elapsed time in <em>game ticks</em> using {@link World#getCurrentTick()}.
  * <p>
- * Use this for gameplay timing (cooldowns, throttles, “X ticks since…”, etc.). For real wall-clock timing
+ * Use this for gameplay timing (cooldowns, throttles, "X ticks since…", etc.). For real wall-clock timing
  * (profiling, IO latency, external services), prefer {@link Stopwatch}.
  *
  * @author lare96
@@ -73,7 +73,7 @@ public class TickTimer implements Comparable<Long> {
     /**
      * Stops the timer and clears the baseline tick.
      * <p>
-     * After calling this, the timer is considered “not started” until {@link #start()} is called again.
+     * After calling this, the timer is considered "not started" until {@link #start()} is called again.
      *
      * @return {@code this} for chaining.
      */

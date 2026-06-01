@@ -2,6 +2,8 @@ package io.luna;
 
 import game.skill.SkillsSettings;
 import io.luna.game.GameSettings;
+import io.luna.game.model.item.economy.WorldEconomySettings;
+import io.luna.game.model.mob.bot.BotSettings;
 import io.luna.util.SqlConnectionPool.DatabaseSettings;
 import io.luna.util.logging.LoggingSettings;
 
@@ -36,6 +38,16 @@ public final class LunaSettings {
     private final SkillsSettings skills;
 
     /**
+     * Bot scheduling and creation related behaviour.
+     */
+    private final BotSettings bots;
+
+    /**
+     * The world item economy.
+     */
+    private final WorldEconomySettings economy;
+
+    /**
      * Returns game-server settings.
      */
     public GameSettings game() {
@@ -64,12 +76,28 @@ public final class LunaSettings {
     }
 
     /**
+     * Returns bot settings.
+     */
+    public BotSettings bots() {
+        return bots;
+    }
+
+    /**
+     * The world item economy.
+     */
+    public WorldEconomySettings economy() {
+        return economy;
+    }
+
+    /**
      * Private constructor used by Gson. Not invoked directly.
      */
-    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging, SkillsSettings skills) {
+    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging, SkillsSettings skills, BotSettings bots, WorldEconomySettings economy) {
         this.game = game;
         this.database = database;
         this.logging = logging;
         this.skills = skills;
+        this.bots = bots;
+        this.economy = economy;
     }
 }

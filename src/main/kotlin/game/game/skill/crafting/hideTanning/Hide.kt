@@ -45,5 +45,10 @@ enum class Hide(val hide: Int, val tan: Int, val cost: Int, val displayName: Str
          * Mappings of [Hide.tan] to [Hide].
          */
         val TAN_TO_HIDE = values().associateBy { it.tan }
+
+        /**
+         * Mappings of [Hide.hide] to [Hide].
+         */
+        val HIDE_TO_HIDE = values().associateBy { it.hide }
     }
 }

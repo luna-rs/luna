@@ -6,8 +6,6 @@ import api.predef.ext.*
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Hit
-import io.luna.game.model.mob.block.Hit.HitType
 import io.luna.game.model.`object`.GameObject
 import game.player.Animations
 
@@ -16,7 +14,7 @@ import game.player.Animations
  *
  * @author lare96
  */
-class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievableChest) :
+class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievingChest) :
     ThrottledAction<Player>(plr, plr.openTrappedChest, 2) {
 
     companion object {

@@ -26,14 +26,14 @@ public final class SqlGameSerializer extends GameSerializer {
     public PlayerData loadPlayer(World world, String username) {
         PlayerData data = null;
         try (var connection = world.getConnectionPool().take();
-             var loadData = connection.prepareStatement("SELECT bot, json_data FROM main_data WHERE username = ?;")) {
+             var loadData = connection.prepareStatement("SELECT bot, json_data FROM main WHERE username = ?;")) {
             loadData.setString(1, username);
 
             try (var results = loadData.executeQuery()) {
                 if (results.next()) {
                     boolean isBot = results.getBoolean("bot");
                     String jsonData = results.getString("json_data");
-                    data = Attribute.getGsonInstance().fromJson(jsonData, isBot ? BotData.class : PlayerData.class);
+                    data = Attribute.getGsonInstance().fromJson(jsonData, PlayerData.class);
                 }
             }
         } catch (Exception e) {
@@ -63,9 +63,9 @@ public final class SqlGameSerializer extends GameSerializer {
     @Override
     public boolean deletePlayer(World world, String username) {
         try (Connection connection = world.getConnectionPool().take();
-             PreparedStatement databaseId = connection.prepareStatement("SELECT id FROM main_data WHERE username = ?;");
-             PreparedStatement mainData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;");
-             PreparedStatement skillsData = connection.prepareStatement("DELETE FROM skills_data WHERE id = ?;")) {
+             PreparedStatement databaseId = connection.prepareStatement("SELECT id FROM main WHERE username = ?;");
+             PreparedStatement mainData = connection.prepareStatement("DELETE FROM main WHERE username = ?;");
+             PreparedStatement skillsData = connection.prepareStatement("DELETE FROM skills WHERE id = ?;")) {
 
             int id = -1;
             databaseId.setString(1, username);
@@ -109,17 +109,17 @@ public final class SqlGameSerializer extends GameSerializer {
      * @throws SQLException If any errors occur.
      */
     private void saveNewPlayer(Connection connection, String username, PlayerData data) throws SQLException {
-        try (var insertPlayer = connection.prepareStatement("INSERT INTO main_data (username, password, bot, rights, json_data) VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-             var insertSkills = connection.prepareStatement("INSERT INTO skills_data (id,attack_xp,attack_level,defence_xp,defence_level,strength_xp,strength_level,hitpoints_xp,hitpoints_level," +
+        try (var insertPlayer = connection.prepareStatement("INSERT INTO main (username, password, bot, rights, json_data) VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+             var insertSkills = connection.prepareStatement("INSERT INTO skills (id,attack_xp,attack_level,defence_xp,defence_level,strength_xp,strength_level,hitpoints_xp,hitpoints_level," +
                      "ranged_xp,ranged_level,prayer_xp,prayer_level,magic_xp,magic_level,cooking_xp,cooking_level,woodcutting_xp,woodcutting_level,fletching_xp,fletching_level,fishing_xp,fishing_level," +
                      "firemaking_xp,firemaking_level,crafting_xp,crafting_level,smithing_xp,smithing_level,mining_xp,mining_level,herblore_xp,herblore_level,agility_xp,agility_level,thieving_xp,thieving_level," +
                      "slayer_xp,slayer_level,farming_xp,farming_level,runecrafting_xp,runecrafting_level,total_level) " +
                      "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-             var updateJsonData = connection.prepareStatement("UPDATE main_data SET json_data = ? WHERE id = ?;")) {
+             var updateJsonData = connection.prepareStatement("UPDATE main SET json_data = ? WHERE id = ?;")) {
             // Insert player data to the main table.
             insertPlayer.setString(1, username);
             insertPlayer.setString(2, data.password);
-            insertPlayer.setBoolean(3, data instanceof BotData);
+            insertPlayer.setBoolean(3, data.isBot);
             insertPlayer.setString(4, data.rights.name());
             insertPlayer.setString(5, "[]");
             insertPlayer.executeUpdate();
@@ -169,8 +169,8 @@ public final class SqlGameSerializer extends GameSerializer {
      * @throws SQLException If any errors occur.
      */
     private void saveExistingPlayer(Connection connection, PlayerData data) throws SQLException {
-        try (var updatePlayer = connection.prepareStatement("UPDATE main_data SET password = ?, rights = ?, json_data = ? WHERE id = ?;", Statement.RETURN_GENERATED_KEYS);
-             var updateSkills = connection.prepareStatement("UPDATE skills_data SET attack_xp = ?,attack_level = ?,defence_xp = ?,defence_level = ?,strength_xp = ?,strength_level = ?,hitpoints_xp = ?,hitpoints_level = ?," +
+        try (var updatePlayer = connection.prepareStatement("UPDATE main SET password = ?, rights = ?, json_data = ? WHERE id = ?;", Statement.RETURN_GENERATED_KEYS);
+             var updateSkills = connection.prepareStatement("UPDATE skills SET attack_xp = ?,attack_level = ?,defence_xp = ?,defence_level = ?,strength_xp = ?,strength_level = ?,hitpoints_xp = ?,hitpoints_level = ?," +
                      "ranged_xp = ?,ranged_level = ?,prayer_xp = ?,prayer_level = ?,magic_xp = ?,magic_level = ?,cooking_xp = ?,cooking_level = ?,woodcutting_xp = ?,woodcutting_level = ?,fletching_xp = ?,fletching_level = ?,fishing_xp = ?,fishing_level = ?," +
                      "firemaking_xp = ?,firemaking_level = ?,crafting_xp = ?,crafting_level = ?,smithing_xp = ?,smithing_level = ?,mining_xp = ?,mining_level = ?,herblore_xp = ?,herblore_level = ?,agility_xp = ?,agility_level = ?,thieving_xp = ?,thieving_level = ?," +
                      "slayer_xp = ?,slayer_level = ?,farming_xp = ?,farming_level = ?,runecrafting_xp = ?,runecrafting_level = ?,total_level = ? WHERE id = ?;")) {

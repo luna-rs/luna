@@ -18,12 +18,12 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * Per-mob action scheduler responsible for registering and processing {@link Action}s each game cycle.
  * <p>
- * The queue is processed once per tick (or “cycle”) for a single {@link Mob}. Actions are submitted into a processing
+ * The queue is processed once per tick (or "cycle") for a single {@link Mob}. Actions are submitted into a processing
  * set and evaluated in two stages:
  * <ol>
  *   <li><b>Processing stage</b> ({@link Action#onProcess()}): gives actions a chance to update state each cycle and
  *       enqueue themselves for execution.</li>
- *   <li><b>Execution stage</b> (nested queue): actions are polled and executed in a stable order, allowing “nested”
+ *   <li><b>Execution stage</b> (nested queue): actions are polled and executed in a stable order, allowing "nested"
  *       behavior where one action can trigger/queue another during the same cycle.</li>
  * </ol>
  *
@@ -48,7 +48,7 @@ public final class ActionQueue {
     /**
      * Registered actions currently in the queue, keyed by {@link ActionType}.
      * <p>
-     * All actions in this multimap are considered “active” candidates for processing until they leave
+     * All actions in this multimap are considered "active" candidates for processing until they leave
      * {@link ActionState#PROCESSING}.
      */
     private final ListMultimap<ActionType, Action<?>> processing = ArrayListMultimap.create();
@@ -64,8 +64,8 @@ public final class ActionQueue {
     /**
      * Fast-membership set of action classes currently present in this queue.
      * <p>
-     * This set exists purely as an O(1) {@link #contains(Class)} shortcut for “is an action of type X currently
-     * queued?”, avoiding a linear scan across {@link #processing} and {@link #executing}.
+     * This set exists purely as an O(1) {@link #contains(Class)} shortcut for "is an action of type X currently
+     * queued?", avoiding a linear scan across {@link #processing} and {@link #executing}.
      */
     private final Set<String> types = new HashSet<>();
 
@@ -131,8 +131,9 @@ public final class ActionQueue {
      * @param type The exact action class to check for.
      * @return {@code true} if an instance of {@code type} exists in the queue.
      */
-    public boolean contains(Class<?> type) {
-        return types.contains(type.getName());
+    @Deprecated
+    public <T extends Action<?>> boolean contains(Class<T> type) {
+        return first(type) != null;
     }
 
     /**
@@ -278,7 +279,12 @@ public final class ActionQueue {
      * This is also invoked automatically during {@link #process()} when any strong action is present.
      */
     public void interruptWeak() {
-        processing.get(ActionType.WEAK).forEach(Action::interrupt);
+        List<Action<?>> weakActions = new ArrayList<>(processing.get(ActionType.WEAK));
+        for (Action<?> action : weakActions) {
+            if (action.getState() == ActionState.PROCESSING) {
+                action.interrupt();
+            }
+        }
     }
 
     /**
@@ -287,11 +293,16 @@ public final class ActionQueue {
     public void interruptAll() {
         processing.values().forEach(Action::interrupt);
     }
+    //todo docs, testing
+
+    public int size(ActionType type) {
+        return processing.get(type).size();
+    }
 
     /**
      * @return The active action count.
      */
     public int size() {
-        return executing.size() + processing.size();
+        return processing.size();
     }
 }

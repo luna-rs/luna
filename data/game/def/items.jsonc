@@ -67,7 +67,7 @@
   {
     "id": 35, // Excalibur
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 50, // Shortbow (u)
@@ -117,7 +117,7 @@
   {
     "id": 84, // Staff of armadyl
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 88, // Boots of lightness
@@ -675,6 +675,11 @@
     "tradeable": true
   },
   {
+    "id": 552, // Ghostspeak amulet
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 567, // Unpowered orb
     "weight": 1.0,
     "tradeable": true
@@ -1052,7 +1057,7 @@
   {
     "id": 772, // Dramen staff
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 775, // Cooking gauntlets
@@ -2152,12 +2157,12 @@
   {
     "id": 1409, // Iban's staff
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 1410, // Iban's staff
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 1419, // Scythe
@@ -2337,7 +2342,7 @@
   {
     "id": 1580, // Ice gloves
     "weight": 0.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 1581, // Blamish snail slime
@@ -3552,7 +3557,7 @@
   {
     "id": 2402, // Silverlight
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2403, // Hazeel scroll
@@ -3567,32 +3572,32 @@
   {
     "id": 2412, // Saradomin cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2413, // Guthix cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2414, // Zamorak cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2415, // Saradomin staff
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2416, // Guthix staff
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2417, // Zamorak staff
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2420, // Brass monkey
@@ -4172,7 +4177,12 @@
   {
     "id": 2890, // Elemental shield
     "weight": 0.2,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 2891, // Elemental shield
+    "weight": 0.2,
+    "tradeable": false
   },
   {
     "id": 2892, // Elemental ore
@@ -4237,12 +4247,17 @@
   {
     "id": 2961, // Silver sickle
     "weight": 1.6,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 2962, // Silver sickle
+    "weight": 1.6,
+    "tradeable": false
   },
   {
     "id": 2963, // Silver sickle(b)
     "weight": 1.5,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 2964, // Washing bowl
@@ -4390,9 +4405,29 @@
     "tradeable": true
   },
   {
+    "id": 3057, // Mime mask
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 3058, // Mime top
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 3059, // Mime legs
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 3060, // Mime gloves
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 3061, // Mime boots
     "weight": 0.5,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 3062, // Strange box
@@ -5432,12 +5467,12 @@
   {
     "id": 4021, // M'speak amulet
     "weight": 1.3,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4022, // M'speak amulet
     "weight": 1.3,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4023, // Monkey talisman
@@ -5487,7 +5522,12 @@
   {
     "id": 4081, // Salve amulet
     "weight": 0.6,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 4082, // Salve shard
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 4087, // Dragon platelegs
@@ -5692,112 +5732,122 @@
   {
     "id": 4212, // New crystal bow
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 4213, // New crystal bow
+    "weight": 1.8,
+    "tradeable": false
   },
   {
     "id": 4214, // Crystal bow full
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4215, // Crystal bow 9/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4216, // Crystal bow 8/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4217, // Crystal bow 7/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4218, // Crystal bow 6/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4219, // Crystal bow 5/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4220, // Crystal bow 4/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4221, // Crystal bow 3/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4222, // Crystal bow 2/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4223, // Crystal bow 1/10
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4224, // New crystal shield
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4225, // Crystal shield full
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4226, // Crystal shield 9/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4227, // Crystal shield 8/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4228, // Crystal shield 7/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4229, // Crystal shield 6/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4230, // Crystal shield 5/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4231, // Crystal shield 4/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4232, // Crystal shield 3/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4233, // Crystal shield 2/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4234, // Crystal shield 1/10
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 4235, // New crystal shield
+    "weight": 2.0,
+    "tradeable": false
   },
   {
     "id": 4236, // Oak longbow
@@ -5853,6 +5903,11 @@
     "id": 4249, // Translation manual
     "weight": 1.0,
     "tradeable": true
+  },
+  {
+    "id": 4250, // Ghostspeak amulet
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 4255, // Bonemeal
@@ -6377,12 +6432,22 @@
   {
     "id": 4513, // Castlewars hood
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 4514, // Castlewars cloak
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 4515, // Castlewars hood
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 4516, // Castlewars cloak
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 4517, // Giant frog legs
@@ -6567,7 +6632,7 @@
   {
     "id": 4677, // Catspeak amulet
     "weight": 1.3,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4678, // Canopic jar
@@ -6787,22 +6852,22 @@
   {
     "id": 4856, // Ahrims hood 100
     "weight": 0.9,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4857, // Ahrims hood 75
     "weight": 0.9,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4858, // Ahrims hood 50
     "weight": 0.9,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4859, // Ahrims hood 25
     "weight": 0.9,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4860, // Ahrims hood 0
@@ -6812,22 +6877,22 @@
   {
     "id": 4862, // Ahrims staff 100
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4863, // Ahrims staff 75
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4864, // Ahrims staff 50
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4865, // Ahrims staff 25
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4866, // Ahrims staff 0
@@ -6837,22 +6902,22 @@
   {
     "id": 4868, // Ahrims top 100
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4869, // Ahrims top 75
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4870, // Ahrims top 50
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4871, // Ahrims top 25
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4872, // Ahrims top 0
@@ -6862,22 +6927,22 @@
   {
     "id": 4874, // Ahrims skirt 100
     "weight": 12.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4875, // Ahrims skirt 75
     "weight": 12.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4876, // Ahrims skirt 50
     "weight": 12.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4877, // Ahrims skirt 25
     "weight": 12.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4878, // Ahrims skirt 0
@@ -6887,22 +6952,22 @@
   {
     "id": 4880, // Dharoks helm 100
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4881, // Dharoks helm 75
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4882, // Dharoks helm 50
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4883, // Dharoks helm 25
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4884, // Dharoks helm 0
@@ -6912,22 +6977,22 @@
   {
     "id": 4886, // Dharoks axe 100
     "weight": 13.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4887, // Dharoks axe 75
     "weight": 13.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4888, // Dharoks axe 50
     "weight": 13.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4889, // Dharoks axe 25
     "weight": 13.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4890, // Dharoks axe 0
@@ -6937,22 +7002,22 @@
   {
     "id": 4892, // Dharoks body 100
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4893, // Dharoks body 75
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4894, // Dharoks body 50
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4895, // Dharoks body 25
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4896, // Dharoks body 0
@@ -6962,22 +7027,22 @@
   {
     "id": 4898, // Dharoks legs 100
     "weight": 10.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4899, // Dharoks legs 75
     "weight": 10.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4900, // Dharoks legs 50
     "weight": 10.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4901, // Dharoks legs 25
     "weight": 10.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4902, // Dharoks legs 0
@@ -6987,22 +7052,22 @@
   {
     "id": 4904, // Guthans helm 100
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4905, // Guthans helm 75
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4906, // Guthans helm 50
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4907, // Guthans helm 25
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4908, // Guthans helm 0
@@ -7012,22 +7077,22 @@
   {
     "id": 4910, // Guthans spear 100
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4911, // Guthans spear 75
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4912, // Guthans spear 50
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4913, // Guthans spear 25
     "weight": 2.2,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4914, // Guthans spear 0
@@ -7037,22 +7102,22 @@
   {
     "id": 4916, // Guthans body 100
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4917, // Guthans body 75
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4918, // Guthans body 50
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4919, // Guthans body 25
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4920, // Guthans body 0
@@ -7062,22 +7127,22 @@
   {
     "id": 4922, // Guthans skirt 100
     "weight": 8.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4923, // Guthans skirt 75
     "weight": 8.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4924, // Guthans skirt 50
     "weight": 8.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4925, // Guthans skirt 25
     "weight": 8.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4926, // Guthans skirt 0
@@ -7085,24 +7150,44 @@
     "tradeable": true
   },
   {
+    "id": 4928, // Karils coif 100
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 4929, // Karils coif 75
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 4930, // Karils coif 50
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 4931, // Karils coif 25
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 4934, // Karils x-bow 100
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4935, // Karils x-bow 75
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4936, // Karils x-bow 50
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4937, // Karils x-bow 25
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4938, // Karils x-bow 0
@@ -7112,22 +7197,22 @@
   {
     "id": 4940, // Karils top 100
     "weight": 6.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4941, // Karils top 75
     "weight": 6.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4942, // Karils top 50
     "weight": 6.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4943, // Karils top 25
     "weight": 6.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4944, // Karils top 0
@@ -7137,22 +7222,22 @@
   {
     "id": 4946, // Karils skirt 100
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4947, // Karils skirt 75
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4948, // Karils skirt 50
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4949, // Karils skirt 25
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4950, // Karils skirt 0
@@ -7162,22 +7247,22 @@
   {
     "id": 4952, // Torags helm 100
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4953, // Torags helm 75
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4954, // Torags helm 50
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4955, // Torags helm 25
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4956, // Torags helm 0
@@ -7187,22 +7272,22 @@
   {
     "id": 4958, // Torags hammer 100
     "weight": 3.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4959, // Torags hammer 75
     "weight": 3.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4960, // Torags hammer 50
     "weight": 3.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4961, // Torags hammer 25
     "weight": 3.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4962, // Torags hammer 0
@@ -7212,22 +7297,22 @@
   {
     "id": 4964, // Torags body 100
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4965, // Torags body 75
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4966, // Torags body 50
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4967, // Torags body 25
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4968, // Torags body 0
@@ -7237,22 +7322,22 @@
   {
     "id": 4970, // Torags legs 100
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4971, // Torags legs 75
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4972, // Torags legs 50
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4973, // Torags legs 25
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4974, // Torags legs 0
@@ -7262,22 +7347,22 @@
   {
     "id": 4976, // Veracs helm 100
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4977, // Veracs helm 75
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4978, // Veracs helm 50
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4979, // Veracs helm 25
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4980, // Veracs helm 0
@@ -7287,22 +7372,22 @@
   {
     "id": 4982, // Veracs flail 100
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4983, // Veracs flail 75
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4984, // Veracs flail 50
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4985, // Veracs flail 25
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4986, // Veracs flail 0
@@ -7312,22 +7397,22 @@
   {
     "id": 4988, // Veracs top 100
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4989, // Veracs top 75
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4990, // Veracs top 50
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4991, // Veracs top 25
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4992, // Veracs top 0
@@ -7337,22 +7422,22 @@
   {
     "id": 4994, // Veracs skirt 100
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4995, // Veracs skirt 75
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4996, // Veracs skirt 50
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4997, // Veracs skirt 25
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4998, // Veracs skirt 0
@@ -7947,27 +8032,27 @@
   {
     "id": 5553, // Rogue top
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5554, // Rogue mask
     "weight": 0.5,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5555, // Rogue trousers
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5556, // Rogue gloves
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5557, // Rogue boots
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5559, // Flash powder
@@ -8452,32 +8537,37 @@
   {
     "id": 6064, // Bloody mourner top
     "weight": 2.72,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 6065, // Mourner top
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 6066, // Mourner trousers
     "weight": 2.25,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6067, // Mourner trousers
     "weight": 2.25,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6068, // Mourner gloves
     "weight": 2.3,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6069, // Mourner boots
     "weight": 1.36,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6070, // Mourner cloak
     "weight": 2.25,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6072, // Tegid's soap
@@ -8528,6 +8618,36 @@
     "id": 6104, // New key
     "weight": 0.33,
     "tradeable": true
+  },
+  {
+    "id": 6106, // Ghostly boots
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 6107, // Ghostly robe
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 6108, // Ghostly robe
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 6109, // Ghostly hood
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 6110, // Ghostly gloves
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 6111, // Ghostly cloak
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 6113, // Kelda hops
@@ -8717,32 +8837,32 @@
   {
     "id": 6183, // Frog token
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6184, // Prince tunic
     "weight": 2.7,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6185, // Prince leggings
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6186, // Princess blouse
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6187, // Princess skirt
     "weight": 2.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6188, // Frog mask
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6199, // Mystery box
@@ -9292,7 +9412,7 @@
   {
     "id": 6544, // Catspeak amulet(e)
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6562, // Mud battlestaff
@@ -9525,6 +9645,11 @@
     "tradeable": true
   },
   {
+    "id": 6722, // Zombie head
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 6724, // Seercull
     "weight": 1.0,
     "tradeable": true
@@ -9547,12 +9672,12 @@
   {
     "id": 6745, // Silverlight
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6746, // Darklight
     "weight": 1.8,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6748, // Demonic sigil
@@ -10430,6 +10555,56 @@
     "tradeable": true
   },
   {
+    "id": 7453, // Gloves (RFD bronze gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7454, // Gloves (RFD iron gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7455, // Gloves (RFD steel gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7456, // Gloves (RFD black gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7457, // Gloves (RFD mithril gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7458, // Gloves (RFD adamant gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7459, // Gloves (RFD rune gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7460, // Gloves (RFD dragon gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7461, // Gloves (RFD Culinaromancer gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7462, // Gloves (Barrows gloves)
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
     "id": 7463, // Cornflour
     "weight": 1.0,
     "tradeable": true
@@ -10507,7 +10682,7 @@
   {
     "id": 7534, // Fishbowl helmet
     "weight": 5.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7535, // Diving apparatus
@@ -10558,6 +10733,31 @@
     "id": 7579, // Stuffed snake
     "weight": 3.0,
     "tradeable": true
+  },
+  {
+    "id": 7592, // Zombie shirt
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7593, // Zombie trousers
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7594, // Zombie mask
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7595, // Zombie gloves
+    "weight": 0.0,
+    "tradeable": false
+  },
+  {
+    "id": 7596, // Zombie boots
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 7622, // Bucket of rubble
@@ -10647,12 +10847,22 @@
   {
     "id": 7671, // Boxing gloves
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 7672, // Boxing gloves
+    "weight": 0.4,
+    "tradeable": false
   },
   {
     "id": 7673, // Boxing gloves
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
+  },
+  {
+    "id": 7674, // Boxing gloves
+    "weight": 0.0,
+    "tradeable": false
   },
   {
     "id": 7676, // Wooden shield.
@@ -11437,12 +11647,12 @@
   {
     "id": 7917, // Ram skull helm
     "weight": 3.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7918, // Bonesack
     "weight": 9.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 7919, // Bottle of wine

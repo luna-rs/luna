@@ -2,6 +2,7 @@ package api.combat.specialAttack.dsl
 
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 
 /**
@@ -18,5 +19,6 @@ import io.luna.game.model.mob.combat.damage.CombatDamage
 class SpecialAttackArrivedReceiver(
     val attacker: Player,
     val victim: Mob,
-    val damage: CombatDamage
+    val damage: CombatDamage,
+    val source: CombatAttack<Player>
 )

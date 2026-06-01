@@ -2,9 +2,9 @@ package io.luna.game.model.mob.bot;
 
 import com.google.common.collect.Sets;
 import io.luna.game.model.World;
+import io.luna.game.model.mob.bot.schedule.BotScheduleService;
 import io.luna.game.persistence.GameSerializer;
 import io.luna.game.persistence.JsonGameSerializer;
-import io.luna.game.persistence.SqlGameSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,10 +80,9 @@ public final class BotRepository {
      */
     public void loadNames() {
         try {
-            GameSerializer serializer = world.getSerializerManager().getSerializer();
-            if (serializer instanceof JsonGameSerializer) {
+            if (world.getSerializerManager().isJson()) {
                 loadJsonNames();
-            } else if (serializer instanceof SqlGameSerializer) {
+            } else if (world.getSerializerManager().isSql()) {
                 loadSqlNames();
             }
         } catch (Exception e) {
@@ -110,7 +110,7 @@ public final class BotRepository {
     }
 
     /**
-     * Loads all bot usernames from the SQL database by querying the {@code main_data} table for rows where
+     * Loads all bot usernames from the SQL database by querying the {@code main} table for rows where
      * {@code bot = 1}.
      * <p>
      * This allows the repository to reconstruct its persistent bot index from database storage.
@@ -118,7 +118,7 @@ public final class BotRepository {
     private void loadSqlNames() {
         try (Connection connection = world.getConnectionPool().take();
              PreparedStatement loadData = connection.prepareStatement(
-                     "SELECT username FROM main_data WHERE bot = 1;")) {
+                     "SELECT username FROM main WHERE bot = 1;")) {
             try (var results = loadData.executeQuery()) {
                 while (results.next()) {
                     savedNames.add(results.getString("username"));
@@ -139,6 +139,7 @@ public final class BotRepository {
      */
     public void add(Bot bot) {
         online.putIfAbsent(bot.getUsername(), bot);
+        world.getBotManager().getScheduleService().addLogoutRequest(bot.getUsernameHash(), bot.getPersonality());
         if (!bot.isTemporary()) {
             savedNames.add(bot.getUsername());
         }
@@ -154,6 +155,7 @@ public final class BotRepository {
      */
     public void remove(Bot bot) {
         online.remove(bot.getUsername());
+        world.getBotManager().getScheduleService().addLoginRequest(bot.getUsername(), bot.getPersonality());
         if (bot.isTemporary()) {
             savedNames.remove(bot.getUsername());
         }
@@ -189,5 +191,22 @@ public final class BotRepository {
      */
     public Bot get(String username) {
         return online.get(username);
+    }
+
+    /**
+     * These names can be used by systems such as the {@link BotScheduleService} to find existing bots that may be
+     * logged back in before creating brand-new bot accounts.
+     *
+     * @return An immutable view of the saved bot username set.
+     */
+    public Set<String> getSavedNames() {
+        return Collections.unmodifiableSet(savedNames);
+    }
+
+    /**
+     * @return The current online bot count.
+     */
+    public int getOnlineCount() {
+        return online.size();
     }
 }

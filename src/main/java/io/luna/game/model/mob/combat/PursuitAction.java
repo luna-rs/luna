@@ -64,6 +64,7 @@ public final class PursuitAction extends Action<Npc> {
     public void onSubmit() {
         // Cancel any in-progress navigation while pursuing.
         mob.getNavigator().cancel();
+        mob.getCombat().resetCombatTimer();
 
         if (tryStep()) {
             complete();
@@ -76,7 +77,7 @@ public final class PursuitAction extends Action<Npc> {
         mob.getNavigator().cancel();
 
         Mob target = combat.getTarget();
-        if (!combat.inCombat() || target == null || !mob.isViewableFrom(target)) {
+        if (target == null || !mob.isViewableFrom(target)) {
             return true;
         }
         mob.interact(target);

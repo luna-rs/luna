@@ -52,7 +52,11 @@ public final class CombatDamageAction extends Action<Mob> {
      * @param instant {@code true} if the action should execute instantly, otherwise {@code false}.
      */
     public CombatDamageAction(CombatDamage damage, CombatAttack<?> source, boolean instant) {
-        super(damage.getVictim(), ActionType.SOFT, instant, 1);
+        this(damage, source, instant, 1);
+    }
+
+    public CombatDamageAction(CombatDamage damage, CombatAttack<?> source, boolean instant, int delay) {
+        super(damage.getVictim(), ActionType.SOFT, instant, delay);
         this.damage = damage;
         this.source = source;
         attacker = damage.getAttacker();

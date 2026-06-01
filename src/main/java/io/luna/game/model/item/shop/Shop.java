@@ -96,7 +96,7 @@ public final class Shop {
     /**
      * Shared number formatter used when displaying price messages to players.
      */
-    private static final NumberFormat PRICE_FORMAT = NumberFormat.getInstance(Locale.UK);
+    private static final NumberFormat PRICE_FORMAT = NumberFormat.getInstance(Locale.CANADA);
 
     /**
      * The world instance used for scheduling restock tasks.

@@ -131,11 +131,14 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         }
 
         // Handle a special attack if applicable.
-        if (specialBar.isActivated() && !magic.isCasting()) {
+        if ((specialBar.isActivated() || specialBar.isForced()) && !magic.isCasting()) {
             SpecialAttackDataReceiver receiver = SpecialAttackHandler.INSTANCE.specialAttackData(this);
             CombatAttack<Player> attack =
                     receiver.getAttackTransformer().invoke(new SpecialAttackBuilderReceiver(mob, victim, receiver));
             if (attack != null) {
+                if(receiver.getInstant()) {
+                    attack.setIgnoreAttackDelay(true);
+                }
                 return attack;
             }
         }
@@ -202,11 +205,16 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
-    public int getDefenceAnimation(CombatDamageType type) {
+    public int getDefenceAnimation(CombatDamageType type, int damage) {
         int shieldId = player.getEquipment().computeIdForIndex(Equipment.SHIELD);
         if (shieldId > 0 && type != CombatDamageType.MAGIC) {
             // Block animation for non-magic based attacks when a shield is equipped.
             return 1156;
+        }
+
+        // 0 damage with no shield equipped results in no animation.
+        if(damage == 0) {
+            return -1;
         }
 
         int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);

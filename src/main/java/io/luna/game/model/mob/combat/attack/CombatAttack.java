@@ -111,11 +111,7 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        if (!isIgnoreAttackDelay()) {
-            // TODO Wiki states if you open with an instant special attack (gmaul) it will still give you the
-            //  delay after. We can simulate this behaviour by adding an additional "|| combat.isAttackReady()" check.
-            attacker.getCombat().setAttackDelay(delay);
-        }
+        attacker.getCombat().setAttackDelay(delay);
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);

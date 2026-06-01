@@ -18,14 +18,14 @@ import io.luna.game.model.`object`.GameObject
  *
  * @author lare96
  */
-class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievableStall) : LockedAction(plr) {
+class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingStallType) : LockedAction(plr) {
 
     companion object {
 
         /**
          * A set of names of guards in local cities.
          */
-        private val GUARD_NAMES = setOf("Guard", "Market Guard")
+        val GUARD_NAMES = setOf("Guard", "Market Guard")
     }
 
     /**
@@ -102,10 +102,10 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
      */
     private fun alertGuards() {
         val nearbyGuards = world.locator.findViewableNpcs(mob) {
-            GUARD_NAMES.contains(it.def().name) && it.def().actions.contains("Attack")
+            !it.combat.inCombat() && GUARD_NAMES.contains(it.def().name) && it.combat.isAttackable
         }
         for (guard in nearbyGuards) {
-            if (!world.collisionManager.raycast(guard.position, mob.position) && guard.inViewCone(mob)) {
+            if (world.collisionManager.raycast(guard.position, mob.position) && guard.inViewCone(mob) && !guard.combat.inCombat()) {
                 // The guard can see the player.
                 guard.speak("Hey! Get your hands off there!")
                 guard.combat.attack(mob)
@@ -119,7 +119,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
      */
     private fun replaceStall() {
         val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
-        val newId = ThievableStall.FULL_TO_EMPTY[obj.id]
+        val newId = ThievingStallType.FULL_TO_EMPTY[obj.id]
         if (newId == null || newId == -1) {
             return
         }

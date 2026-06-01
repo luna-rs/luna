@@ -58,6 +58,7 @@ object Attr {
         builder.registerTypeAdapter(AttributeMap::class.java, AttributeMapTypeAdapter)
         builder.registerTypeAdapter(IndexedItem::class.java, IndexedItemTypeAdapter)
         builder.registerTypeAdapter(Item::class.java, ItemTypeAdapter)
+        builder.registerTypeAdapterFactory(MarkovChainTypeAdapterFactory())
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())
@@ -121,10 +122,10 @@ object Attr {
     }
 
     /**
-     * Creates an [ArrayList] attribute with [initialValues].
+     * Creates an [ArrayList] attribute with [initialValue].
      */
-    fun <E> list(initialValues: () -> ArrayList<E> = { ArrayList() }): AttributeDelegate<ArrayList<E>> =
-        attribute(initialValues)
+    fun <E> list(initialValue: () -> ArrayList<E> = { ArrayList() }): AttributeDelegate<ArrayList<E>> =
+        attribute(initialValue)
 
     /**
      * Creates a [HashSet] attribute with [initialValues].

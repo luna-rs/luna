@@ -46,9 +46,9 @@ public abstract class WanderingAction extends Action<Mob> {
 
     @Override
     public final boolean run() {
-        if(!mob.isWandering()) {
+        if (!mob.isWandering()) {
             return true;
-        } else if (!mob.getCombat().inCombat() && mob.getWalking().isEmpty() &&
+        } else if (!mob.getCombat().inCombat() && mob.getCombat().getTarget() == null && mob.getWalking().isEmpty() &&
                 mob.getInteractingWith() == null && !mob.isLocked()) {
             wander();
         }

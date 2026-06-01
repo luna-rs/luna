@@ -147,7 +147,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
-    public int getDefenceAnimation(CombatDamageType type) {
+    public int getDefenceAnimation(CombatDamageType type, int damage) {
         return mob.combatDef().getDefenceAnimation();
     }
 
@@ -177,9 +177,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * <p>
      * The animation ID is taken directly from the NPC's combat definition.
      */
-    public void handleDefaultDefence(CombatDamageType type) {
-        int id = getDefenceAnimation(type);
-        mob.animation(new Animation(id));
+    public void handleDefaultDefence(CombatDamageType type, int damage) {
+        int id = getDefenceAnimation(type, damage);
+        if (id > 0) {
+            mob.animation(new Animation(id));
+        }
     }
 
     /**

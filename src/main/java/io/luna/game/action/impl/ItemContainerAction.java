@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * An {@link Action} that performs atomic modifications on an {@link ItemContainer} (add/remove lists).
  * <p>
- * This is a convenience base for “consume X, produce Y” style interactions (crafting, fletching, cooking, etc.).
+ * This is a convenience base for "consume X, produce Y" style interactions (crafting, fletching, cooking, etc.).
  * Implementations provide the items to remove via {@link #remove()} and items to add via {@link #add()}, and can run
  * custom logic via {@link #execute()} after the container has been updated.
  * <h3>Action semantics</h3>
@@ -99,6 +99,9 @@ public abstract class ItemContainerAction extends Action<Player> {
         public final void onProcess() {
             onProcessAnimation();
             if (--animationTimer < 1) {
+                if (mob.getInteractingWith() != null) {
+                    mob.interact(mob.getInteractingWith());
+                }
                 mob.animation(animation());
                 animationTimer = animationDelay;
             }
@@ -155,7 +158,7 @@ public abstract class ItemContainerAction extends Action<Player> {
     }
 
     /**
-     * Executes one “cycle” of the action.
+     * Executes one "cycle" of the action.
      * <p>Flow:
      * <ol>
      *   <li>Validate {@link #executeIf(boolean)} for this tick.</li>

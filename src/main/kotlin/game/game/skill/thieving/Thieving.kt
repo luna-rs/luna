@@ -9,10 +9,8 @@ import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
 import game.skill.Skills
-import game.skill.thieving.pickpocketNpc.ThievableNpc
+import game.skill.thieving.pickpocketNpc.ThievingNpcType
 
 /**
  * Contains utility functions related to the thieving skill.
@@ -49,7 +47,7 @@ object Thieving {
     /**
      * If a pickpocketing action will be successful or not.
      */
-    fun canPickpocket(plr: Player, thievable: ThievableNpc): Boolean {
+    fun canPickpocket(plr: Player, thievable: ThievingNpcType): Boolean {
         val level = plr.thieving.level
         if (level >= thievable.master) {
             return true

@@ -1,6 +1,7 @@
 package game.skill.mining;
 
 import api.predef.*
+import com.google.common.collect.ImmutableSetMultimap
 
 /**
  * An enumerated type representing all ores that can be mined with [Pickaxe]s.
@@ -48,7 +49,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
            chance = 100 to 400), // Just a guess, rates haven't been released.
     IRON(rocks = listOf(2092 to 450,
                         2093 to 451),
-         level = 1,
+         level = 15,
          item = 440,
          respawnTicks = 9,
          exp = 17.5,
@@ -56,7 +57,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     SILVER(rocks = listOf(2100 to 450,
                           2101 to 451),
            level = 20,
-           item = 443,
+           item = 442,
            respawnTicks = 100,
            exp = 17.5,
            chance = 25 to 200),
@@ -104,9 +105,16 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     companion object {
 
         /**
+         * Ore instance -> Ore rock object ID.
+         */
+        val ORE_MAP: ImmutableSetMultimap<Ore, Int>
+
+
+        /**
          * Ore rock object ID -> Ore instance.
          */
         val ROCK_MAP = values().flatMap { ore -> ore.rocks.map { it.first to ore } }.toMap()
+        val ITEM_MAP = values().associateBy { it.item }
 
         /**
          * All empty rock object IDs.
@@ -117,5 +125,15 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
          * Ore rock object ID -> Empty rock object ID.
          */
         val ORE_TO_EMPTY: Map<Int, Int> = values().flatMap { ore -> ore.rocks.map { it.first to it.second } }.toMap()
+
+        init {
+            values().flatMap { ore -> ore.rocks.map { ore to it.first } }.apply {
+                val map = ImmutableSetMultimap.builder<Ore, Int>()
+                for ((ore, rock) in this) {
+                    map.put(ore, rock)
+                }
+                ORE_MAP = map.build()
+            }
+        }
     }
 }

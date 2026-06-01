@@ -187,13 +187,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         workers.submit(() -> {
             try {
                 Stopwatch timer = Stopwatch.createStarted();
-
                 world.getSerializerManager().getSerializer().savePlayer(world, username, saveData);
-
-                if (request.player.isBot()) {
-                    world.getBots().remove(request.player.asBot());
-                }
-
                 logger.debug("Finished saving {}'s data (took {}ms).",
                         username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {

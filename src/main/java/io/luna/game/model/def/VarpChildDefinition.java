@@ -6,15 +6,15 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.object.GameObject;
 
 /**
- * A small “child definition” that describes varp/varbit-driven transformations for {@link Npc}s and {@link GameObject}s.
+ * A small "child definition" that describes varp/varbit-driven transformations for {@link Npc}s and {@link GameObject}s.
  * <p>
- * In the RuneScape cache, certain NPCs/objects can “morph” (transform) into different ids depending on a client varp
+ * In the RuneScape cache, certain NPCs/objects can "morph" (transform) into different ids depending on a client varp
  * (variable parameter) or a varbit (bitfield packed into a varp). This class captures the data needed to select the
  * correct transformed id:
  * <ul>
  *     <li>{@link #varBitId} - the varbit id to read (often preferred when present)</li>
  *     <li>{@link #varpId} - the varp id to read when no varbit is used</li>
- *     <li>{@link #childIdList} - the list of potential transformed ids (“children”)</li>
+ *     <li>{@link #childIdList} - the list of potential transformed ids ("children")</li>
  * </ul>
  *
  * @author lare96
@@ -32,7 +32,7 @@ public final class VarpChildDefinition {
     private final int varpId;
 
     /**
-     * The candidate transformed ids (“children”) that this entity may morph into.
+     * The candidate transformed ids ("children") that this entity may morph into.
      */
     private final ImmutableList<Integer> childIdList;
 
@@ -77,7 +77,7 @@ public final class VarpChildDefinition {
     }
 
     /**
-     * Returns the candidate transformed ids (“children”).
+     * Returns the candidate transformed ids ("children").
      *
      * @return The immutable list of child ids.
      */

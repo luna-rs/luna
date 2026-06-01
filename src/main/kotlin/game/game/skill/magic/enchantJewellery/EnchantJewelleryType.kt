@@ -27,9 +27,9 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1637 to EnchantItem(2550, Animation(718), Graphic(238), Sound.ENCHANT_SAPPHIRE_RING), // Sapphire ring
-              1656 to EnchantItem(3858, Animation(719), Graphic(114, 100), Sound.ENCHANT_SAPPHIRE_AMULET), // Sapphire necklace
-              1694 to EnchantItem(1727, Animation(719), Graphic(114, 100), Sound.ENCHANT_SAPPHIRE_AMULET) // Sapphire amulet
+              1637 to EnchantItem(2550, Animation(718), Graphic(238), Sound.ENCHANT_SAPPHIRE_RING), // Ring of recoil.
+              1656 to EnchantItem(3853, Animation(719), Graphic(114, 100), Sound.ENCHANT_SAPPHIRE_AMULET), // Games necklace.
+              1694 to EnchantItem(1727, Animation(719), Graphic(114, 100), Sound.ENCHANT_SAPPHIRE_AMULET) // Amulet of magic.
           )),
     LVL_2(spellId = 1165,
           level = 27,
@@ -39,10 +39,9 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1639 to EnchantItem(2552, Animation(718), Graphic(238), Sound.ENCHANT_EMERALD_RING),      // Emerald ring
-              1658 to EnchantItem(3853, Animation(720), Graphic(115, 100), Sound.ENCHANT_EMERALD_AMULET), // Emerald necklace
-              1696 to EnchantItem(1729, Animation(720), Graphic(115, 100), Sound.ENCHANT_EMERALD_AMULET),    // Emerald amulet
-              6041 to EnchantItem(6040, Animation(720), Graphic(115, 100), Sound.ENCHANT_EMERALD_AMULET),    // Pre-nature amulet
+              1639 to EnchantItem(2552, Animation(718), Graphic(238), Sound.ENCHANT_EMERALD_RING), // Ring of dueling
+              1696 to EnchantItem(1729, Animation(720), Graphic(115, 100), Sound.ENCHANT_EMERALD_AMULET), // Ring of defence
+              6041 to EnchantItem(6040, Animation(720), Graphic(115, 100), Sound.ENCHANT_EMERALD_AMULET), // Pre-nature amulet
           )),
     LVL_3(spellId = 1176,
           level = 49,
@@ -52,8 +51,8 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1641 to EnchantItem(2568, Animation(718), Graphic(238), Sound.ENCHANT_RUBY_RING),   // Ruby ring
-              1698 to EnchantItem(1725, Animation(721), Graphic(116, 100), Sound.ENCHANT_RUBY_AMULET), // Ruby amulet
+              1641 to EnchantItem(2568, Animation(718), Graphic(238), Sound.ENCHANT_RUBY_RING),   // Ring of forging
+              1698 to EnchantItem(1725, Animation(721), Graphic(116, 100), Sound.ENCHANT_RUBY_AMULET), // Amulet of strength
           )),
     LVL_4(spellId = 1180,
           level = 57,
@@ -63,8 +62,8 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1643 to EnchantItem(2570, Animation(718), Graphic(238), Sound.ENCHANT_DIAMOND_RING),   // Diamond ring
-              1700 to EnchantItem(1731, Animation(719), Graphic(153, 100), Sound.ENCHANT_DIAMOND_AMULET) // Diamond amulet
+              1643 to EnchantItem(2570, Animation(718), Graphic(238), Sound.ENCHANT_DIAMOND_RING),   // Ring of life
+              1700 to EnchantItem(1731, Animation(719), Graphic(153, 100), Sound.ENCHANT_DIAMOND_AMULET) // Amulet of power
           )),
     LVL_5(spellId = 1187,
           level = 68,
@@ -75,8 +74,8 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1645 to EnchantItem(2572, Animation(718), Graphic(238), Sound.ENCHANT_DRAGON_RING),   // Dragonstone ring
-              1702 to EnchantItem(1712, Animation(720), Graphic(154, 100), Sound.ENCHANT_DRAGON_AMULET) // Dragonstone amulet
+              1645 to EnchantItem(2572, Animation(718), Graphic(238), Sound.ENCHANT_DRAGON_RING),   // Ring of wealth
+              1702 to EnchantItem(1712, Animation(720), Graphic(154, 100), Sound.ENCHANT_DRAGON_AMULET) // Amulet of glory
           )),
     LVL_6(spellId = 6003,
           level = 87,
@@ -87,8 +86,8 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              6575 to EnchantItem(6583, Animation(718), Graphic(238), Sound.ENCHANT_ONYX_RING),   // Onyx ring
-              6581 to EnchantItem(6585, Animation(721), Graphic(452, 100), Sound.ENCHANT_ONYX_AMULET) // Onyx amulet
+              6575 to EnchantItem(6583, Animation(718), Graphic(238), Sound.ENCHANT_ONYX_RING),   // Ring of stone
+              6581 to EnchantItem(6585, Animation(721), Graphic(452, 100), Sound.ENCHANT_ONYX_AMULET) // Amulet of fury
           ));
 
     companion object {

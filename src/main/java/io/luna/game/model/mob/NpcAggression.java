@@ -146,7 +146,9 @@ public class NpcAggression {
             radius *= 2; // NPCs that are always aggressive have increased range.
         }
         for (Player victim : world.getLocator().findViewablePlayers(attacker)) {
-            if (radius > 0 && !victim.isWithinDistance(attacker, radius)) {
+            // Bots are ignored for the first 48h of playtime.
+            boolean ignored = victim.isBot() && victim.getTimePlayed().toDays() < 2;
+            if (ignored || radius > 0 && !victim.isWithinDistance(attacker, radius)) {
                 continue;
             }
             if (attacker.getCombat().checkMultiCombat(victim) &&

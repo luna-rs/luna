@@ -47,7 +47,7 @@ public abstract class GamePathfinder<T extends Locatable> {
      * @param target The target locatable.
      * @return A deque representing the path to the target, or an empty deque if no route exists.
      */
-    public abstract Deque<T> find(T origin, T target);
+    public abstract PathResult<T> find(T origin, T target);
 
     /**
      * Determines whether walking one step from {@code current} in the given {@link Direction} is traversable

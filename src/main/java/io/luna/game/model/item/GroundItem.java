@@ -9,6 +9,7 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
@@ -173,6 +174,28 @@ public class GroundItem extends StationaryEntity {
     @Override
     protected final ChunkUpdatableMessage hideMessage(int offset) {
         return new RemoveGroundItemMessageWriter(id, offset);
+    }
+
+    @Override
+    protected void onActive() {
+        if (!getView().isGlobal()) {
+            for (Player player : getView()) {
+                if (player.isBot()) {
+                    player.asBot().getViewableItems().add(this);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onInactive() {
+        if (!getView().isGlobal()) {
+            for (Player player : getView()) {
+                if (player.isBot()) {
+                    player.asBot().getViewableItems().remove(this);
+                }
+            }
+        }
     }
 
     /**

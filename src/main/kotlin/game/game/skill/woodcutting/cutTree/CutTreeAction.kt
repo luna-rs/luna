@@ -59,7 +59,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun execute() {
         if (currentAdd.isNotEmpty()) {
-            if (rand().nextInt(256) == 0) {
+            if (rand(256) == 0) {
                 val nest = Nest.VALUES.random()
                 mob.sendMessage("A bird's nest drops to the floor!")
                 world.addItem(nest.id, 1, mob.position, mob)

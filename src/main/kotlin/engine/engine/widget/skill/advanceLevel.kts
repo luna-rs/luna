@@ -1,6 +1,7 @@
 package engine.widget.skill
 
 import api.predef.*
+import engine.bot.speech.BotReactions
 import game.player.Jingles.*
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.SkillChangeEvent
@@ -8,6 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.bot.Bot
 import io.luna.net.msg.out.JingleMessageWriter
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 
@@ -107,6 +109,9 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
         skill.level = when (skillId) {
             SKILL_HITPOINTS -> skill.level + 1
             else -> newLevel
+        }
+        if (plr is Bot) {
+            BotReactions.reactToLevelUp(plr, skill, newLevel)
         }
 
         // Open level up widget.

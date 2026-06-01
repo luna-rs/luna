@@ -58,7 +58,7 @@ on(ButtonClickEvent::class)
         val action = buttonMap[id]
         if (action != null) {
             val dialogue = plr.overlays[MakeItemDialogue::class]
-            if(dialogue != null) {
+            if (dialogue != null) {
                 makeItem(this, dialogue, action)
             }
         }
