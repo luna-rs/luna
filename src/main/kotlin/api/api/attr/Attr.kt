@@ -20,6 +20,7 @@ import io.luna.game.model.mob.attr.AttributeMap
 import java.lang.reflect.*
 import java.time.*
 import kotlin.reflect.KClass
+import io.luna.util.markov.MarkovChainTypeAdapterFactory
 
 /**
  * A factory class for instantiating attributes.
