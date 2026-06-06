@@ -319,6 +319,15 @@ public final class WalkingQueue {
     }
 
     /**
+     * Determines if this path is a running path.
+     *
+     * @return {@code true} if this path is a running path, {@code false} otherwise.
+     */
+    public boolean isRunning() {
+        return running;
+    }
+
+    /**
      * Sets whether the current path should be treated as a running path.
      * <p>
      * When enabled, {@link #process()} will attempt to consume up to two tiles per cycle, subject to available run

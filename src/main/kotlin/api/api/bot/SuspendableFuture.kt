@@ -8,7 +8,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 
 /**
- * A coroutine-friendly future used to await the result of asynchronous bot logic in [BotScript]s.
+ * A coroutine-friendly future used to await the result of asynchronous bot logic in [api.bot.script.BotScript]s.
  *
  * This acts like a simplified, suspending version of Java's [Future], used to block a coroutine
  * until a condition is met or a task completes. Most commonly returned by [SuspendableCondition] to

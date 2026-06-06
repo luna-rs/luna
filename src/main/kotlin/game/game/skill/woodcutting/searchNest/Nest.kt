@@ -30,6 +30,13 @@ enum class Nest(val id: Int, val items: List<Int>) {
          * Nest ID -> Nest instance.
          */
         val NEST_MAP = values().associateBy { it.id }
+
+        /**
+         * Determines if [id] is a nest.
+         *
+         * @param id The id of the item to check.
+         */
+        fun isNest(id: Int) = NEST_MAP.containsKey(id)
     }
 
     /**

@@ -7,6 +7,7 @@ import io.luna.game.LogoutService;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
+import io.luna.game.model.item.economy.WorldEconomy;
 import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
@@ -16,7 +17,6 @@ import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.object.GameObjectList;
 import io.luna.game.persistence.GameSerializerManager;
 import io.luna.game.persistence.PersistenceService;
-import io.luna.game.persistence.SqlGameSerializer;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -255,6 +255,11 @@ public final class World {
     private final SqlConnectionPool connectionPool;
 
     /**
+     * The world economy manager.
+     */
+    private final WorldEconomy economy;
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The runtime context instance.
@@ -266,14 +271,15 @@ public final class World {
         collisionManager = new CollisionManager(this);
         botRepository = new BotRepository(this);
         persistenceService = new PersistenceService(this);
-        botManager = new BotManager();
+        botManager = new BotManager(this);
+        economy = new WorldEconomy(this);
 
         // Initialize the connection pool.
-        if (getSerializerManager().getSerializer() instanceof SqlGameSerializer) {
+        if (serializerManager.isSql()) {
             try {
                 connectionPool = new SqlConnectionPool.Builder()
                         .poolName("LunaSqlPool")
-                        .database("luna_players")
+                        .database("luna")
                         .build();
             } catch (Exception e) {
                 logger.fatal("Fatal error creating SQL pool!", e);
@@ -293,6 +299,7 @@ public final class World {
      * This method is executed on the game thread.
      */
     public void start() {
+        economy.startAsync();
         items.startExpirationTask();
         collisionManager.build(false);
         botManager.load();
@@ -318,6 +325,9 @@ public final class World {
      */
     public void removePlayer(Player player) {
         playerMap.remove(player.getUsername());
+        if (player.isBot()) {
+            botRepository.remove(player.asBot());
+        }
     }
 
     /**
@@ -393,10 +403,6 @@ public final class World {
         // Then, pre-process NPC walking and action queues.
         for (Npc npc : npcList) {
             try {
-                if (npc.isLocked()) {
-                    // Skip pre-processing for locked NPCs.
-                    continue;
-                }
                 npc.getAggression().process();
                 npc.getCombat().processAttackDelay();
                 npc.getActions().process();
@@ -694,5 +700,12 @@ public final class World {
      */
     public SqlConnectionPool getConnectionPool() {
         return connectionPool;
+    }
+
+    /**
+     * @return The world economy manager.
+     */
+    public WorldEconomy getEconomy() {
+        return economy;
     }
 }

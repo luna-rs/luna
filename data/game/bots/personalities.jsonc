@@ -1,0 +1,175 @@
+/**
+ * Defines the personality templates used when generating or randomizing Luna bots.
+ *
+ * Each entry describes one broad bot archetype, such as an efficient skiller, fighter, trader, socializer, PKer,
+ * gatherer, or scammer-style personality. These templates give the bot system a starting shape for behavior instead of
+ * making every generated bot feel statistically identical.
+ *
+ * The top-level personality values are normalized from 0.0 to 1.0:
+ *
+ * - intelligence: How smart, efficient, and strategic the bot tends to be.
+ * - kindness: How friendly, cooperative, or harmless the bot tends to be.
+ * - confidence: How willing the bot is to take risks, commit to actions, or engage aggressively.
+ * - social: How likely the bot is to talk and trade. How long the bot stays logged in and out for.
+ * - dexterity: How mechanically active, responsive, and skill-efficient the bot tends to be.
+ *
+ * The preferences object gives weighted interest in major activity categories. Higher values make the bot more likely to
+ * choose that type of content when the scheduler, brain, or script-selection system needs an activity bias.
+ *
+ * These templates should be treated as behavior biases, not strict rules. Runtime systems may still adjust behavior based
+ * on wealth, skills, combat level, available equipment, current goals, world state, danger, and nearby opportunities.
+ */
+[
+  {
+    "type": "SKILLER",
+    "description": "High intelligence and dexterity, focuses on training and profit activities with high social interaction.",
+    "intelligence": 0.75,
+    "kindness": 0.50,
+    "confidence": 0.50,
+    "social": 0.50,
+    "dexterity": 0.90,
+    "preferences": {
+      "TRAINING_SKILLS": 0.85,
+      "TRAINING_COMBAT": 0.25,
+      "PROFIT_SKILLS": 0.95,
+      "PROFIT_COMBAT": 0.50,
+      "PKING": 0.15,
+      "MERCHANTING": 0.65,
+      "SOCIALIZING": 0.65,
+      "MINIGAMES": 0.25
+    }
+  },
+  {
+    "type": "PKER",
+    "description": "Highly intelligent but also tends to be unkind. Focuses on combat training and profit, and PKing.",
+    "intelligence": 0.85,
+    "kindness": 0.35,
+    "confidence": 0.90,
+    "social": 0.50,
+    "dexterity": 0.15,
+    "preferences": {
+      "TRAINING_SKILLS": 0.15,
+      "TRAINING_COMBAT": 0.80,
+      "PROFIT_SKILLS": 0.25,
+      "PROFIT_COMBAT": 0.85,
+      "PKING": 0.95,
+      "MERCHANTING": 0.50,
+      "SOCIALIZING": 0.15,
+      "MINIGAMES": 0.15
+    }
+  },
+  {
+    "type": "MERCHANT",
+    "description": "Highly confident and social. Heavy focus on MERCHANTING and acquiring resources to trade.",
+    "intelligence": 0.65,
+    "kindness": 0.50,
+    "confidence": 0.80,
+    "social": 0.95,
+    "dexterity": 0.25,
+    "preferences": {
+      "TRAINING_SKILLS": 0.15,
+      "TRAINING_COMBAT": 0.15,
+      "PROFIT_SKILLS": 0.85,
+      "PROFIT_COMBAT": 0.85,
+      "PKING": 0.10,
+      "MERCHANTING": 0.95,
+      "SOCIALIZING": 0.50,
+      "MINIGAMES": 0.75
+    }
+  },
+  {
+    "type": "NO_LIFE",
+    "description": "Highly skilled player that seems to always be online.",
+    "intelligence": 0.95,
+    "kindness": 0.15,
+    "confidence": 0.95,
+    "social": 1.0,
+    "dexterity": 0.95,
+    "preferences": {
+      "TRAINING_SKILLS": 0.95,
+      "TRAINING_COMBAT": 0.95,
+      "PROFIT_SKILLS": 0.75,
+      "PROFIT_COMBAT": 0.75,
+      "PKING": 0.15,
+      "MERCHANTING": 0.80,
+      "SOCIALIZING": 0.50,
+      "MINIGAMES": 0.75
+    }
+  },
+  {
+    "type": "KID",
+    "description": "Always has time to play, although isn't very good and lacks intelligence.",
+    "intelligence": 0.15,
+    "kindness": 0.50,
+    "confidence": 0.50,
+    "social": 0.95,
+    "dexterity": 0.05,
+    "preferences": {
+      "TRAINING_SKILLS": 0.50,
+      "TRAINING_COMBAT": 0.50,
+      "PROFIT_SKILLS": 0.50,
+      "PROFIT_COMBAT": 0.50,
+      "PKING": 0.50,
+      "MERCHANTING": 0.50,
+      "SOCIALIZING": 0.50,
+      "MINIGAMES": 0.50
+    }
+  },
+  {
+    "type": "HERO",
+    "description": "Incredibly intelligent, confident, kind, and social. Always looking to lend a helping hand.",
+    "intelligence": 0.95,
+    "kindness": 0.90,
+    "confidence": 0.85,
+    "social": 0.95,
+    "dexterity": 0.25,
+    "preferences": {
+      "TRAINING_SKILLS": 0.50,
+      "TRAINING_COMBAT": 0.50,
+      "PROFIT_SKILLS": 0.50,
+      "PROFIT_COMBAT": 0.50,
+      "PKING": 0.50,
+      "MERCHANTING": 0.50,
+      "SOCIALIZING": 0.50,
+      "MINIGAMES": 0.50
+    }
+  },
+  {
+    "type": "JACK_OF_ALL_TRADES",
+    "description": "Average in all aspects.",
+    "intelligence": 0.50,
+    "kindness": 0.50,
+    "confidence": 0.50,
+    "social": 0.50,
+    "dexterity": 0.50,
+    "preferences": {
+      "TRAINING_SKILLS": 0.50,
+      "TRAINING_COMBAT": 0.50,
+      "PROFIT_SKILLS": 0.50,
+      "PROFIT_COMBAT": 0.50,
+      "PKING": 0.50,
+      "MERCHANTING": 0.50,
+      "SOCIALIZING": 0.50,
+      "MINIGAMES": 0.50
+    }
+  },
+  {
+    "type": "SCAMMER",
+    "description": "Very unskilled and unkind, but incredibly high in other traits that make a good scammer.",
+    "intelligence": 1.0,
+    "kindness": 0.0,
+    "confidence": 1.0,
+    "social": 1.0,
+    "dexterity": 0.0,
+    "preferences": {
+      "TRAINING_SKILLS": 0.05,
+      "TRAINING_COMBAT": 0.05,
+      "PROFIT_SKILLS": 0.05,
+      "PROFIT_COMBAT": 0.05,
+      "PKING": 0.05,
+      "MERCHANTING": 1.0,
+      "SOCIALIZING": 0.05,
+      "MINIGAMES": 0.05
+    }
+  }
+]

@@ -87,6 +87,7 @@ on(ServerLaunchEvent::class) {
         buttonToTan[make5] = TanButton(it, TanAmount.TAN_5)
         buttonToTan[makeX] = TanButton(it, TanAmount.TAN_X)
         buttonToTan[makeAll] = TanButton(it, TanAmount.TAN_ALL)
+        TanInterface.hideToMakeAll[it] = makeAll
     }
 }
 

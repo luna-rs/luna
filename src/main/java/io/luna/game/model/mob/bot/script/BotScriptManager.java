@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.script;
 
-import api.bot.BotScript;
+import api.bot.script.BotScript;
+import api.bot.script.BotScriptData;
 import io.luna.game.model.mob.bot.Bot;
 import kotlin.reflect.KClass;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +33,7 @@ public final class BotScriptManager {
      *
      * @param <T> The script data type.
      */
-    public interface ScriptSupplier<T> extends BiFunction<Bot, T, BotScript<T>> {
+    public interface ScriptSupplier<T extends BotScriptData> extends BiFunction<Bot, T, BotScript> {
 
     }
 
@@ -55,7 +56,7 @@ public final class BotScriptManager {
      * @param newScript The factory function that constructs the script.
      * @param <T> The type of data used to initialize the script.
      */
-    public <T> void addScript(KClass<? extends BotScript<T>> type, ScriptSupplier<T> newScript) {
+    public <T extends BotScriptData> void addScript(KClass<? extends BotScript> type, ScriptSupplier<T> newScript) {
         scriptMap.put(type.getQualifiedName(), newScript);
     }
 
@@ -71,12 +72,13 @@ public final class BotScriptManager {
      * @param <T> The type of data used by the script.
      * @return The constructed {@link BotScript}, or {@code null} if the script was not registered.
      */
-    public <T> BotScript<T> loadScript(String typeName, Bot bot, T data) {
+    public <T extends BotScriptData> BotScript loadScript(String typeName, Bot bot, T data) {
         ScriptSupplier<T> supplier = (ScriptSupplier<T>) scriptMap.get(typeName);
         if (supplier == null) {
             logger.error("Unregistered script {}.", typeName);
             return null;
         }
+
         return supplier.apply(bot, data);
     }
 }

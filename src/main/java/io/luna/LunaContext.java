@@ -16,7 +16,7 @@ import io.luna.game.plugin.PluginManager;
  *   <li>{@link PluginManager} (scripts/plugins, event listeners, hot reload wiring)</li>
  *   <li>{@link LunaServer} (startup orchestration + network boot)</li>
  * </ul>
- * This object is passed around as a dependency hub to prevent “global static everything” while still keeping
+ * This object is passed around as a dependency hub to prevent "global static everything" while still keeping
  * initialization explicit and deterministic.
  *
  * @author lare96

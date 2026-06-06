@@ -1,81 +1,90 @@
 package io.luna.game.model.mob.bot.script;
 
-import api.bot.BotScript;
+import api.bot.script.BotScript;
+import com.google.gson.JsonElement;
 
 /**
- * A serializable snapshot of a single {@link BotScript} instance.
+ * A serialized snapshot of a single {@link BotScript} instance.
  * <p>
- * Each snapshot represents the saved state of one script in a {@link BotScriptStack}, including its execution
- * order index, class identifier, and script-specific data payload.
+ * Each snapshot stores enough information for {@link BotScriptManager} to rebuild one script inside a
+ * {@link BotScriptStack}. This includes the script's stack index, script class name, script data class name, and
+ * serialized state payload.
  * <p>
- * Snapshots are created when bots are persisted and later used to reconstruct their
- * script stack using {@link BotScriptManager}.
+ * Snapshots are created when bots are saved and consumed again when bots are loaded.
  *
- * <h3>Usage</h3>
- * <ul>
- *     <li>During save, each script produces its own {@link #getData()} via {@code snapshot()}.</li>
- *     <li>During load, the {@link #getScriptClass()} name is used by the script manager
- *     to reinstantiate the correct script type and restore its state.</li>
- * </ul>
- *
- * @param <T> The type of data representing this script’s serialized state.
  * @author lare96
  */
-public final class BotScriptSnapshot<T> {
+public final class BotScriptSnapshot {
 
     /**
-     * The index of this script within the stack at the time of saving.
+     * The script's position in the stack when the snapshot was created.
      * <p>
-     * Used to preserve the exact ordering of scripts during restoration.
+     * This is used to restore scripts in the same order they were saved.
      */
     private final int index;
 
     /**
-     * The fully qualified class name of the serialized script.
+     * The fully qualified class name of the saved script.
      * <p>
-     * Used by {@link BotScriptManager} to locate and reconstruct the correct script type.
+     * This is used by {@link BotScriptManager} to find and recreate the correct {@link BotScript} implementation.
      */
     private final String scriptClass;
 
     /**
-     * The snapshot data representing the internal state of the script.
+     * The fully qualified class name of the saved script data.
      * <p>
-     * This is the object returned by {@link BotScript#snapshot()} and may contain any serializable fields
-     * necessary to resume execution later.
+     * This is used by {@link BotScriptManager} to find the correct data type before restoring {@link #data}.
      */
-    private final T data;
+    private final String scriptDataClass;
+
+    /**
+     * The serialized script state.
+     * <p>
+     * This payload is produced by {@link BotScript#snapshot()} and contains the script-specific fields needed to resume
+     * execution later.
+     */
+    private final JsonElement data;
 
     /**
      * Creates a new {@link BotScriptSnapshot}.
      *
-     * @param index The script’s position in the stack.
-     * @param scriptClass The fully qualified name of the script class.
-     * @param data The serialized state data for the script.
+     * @param index The script's position in the stack.
+     * @param scriptClass The fully qualified class name of the script.
+     * @param scriptDataClass The fully qualified class name of the script data.
+     * @param data The serialized state payload for the script.
      */
-    public BotScriptSnapshot(int index, String scriptClass, T data) {
+    public BotScriptSnapshot(int index, String scriptClass, String scriptDataClass, JsonElement data) {
         this.index = index;
         this.scriptClass = scriptClass;
+        this.scriptDataClass = scriptDataClass;
         this.data = data;
     }
 
     /**
-     * @return The script’s index within the stack.
+     * @return The script's position in the saved stack.
      */
     public int getIndex() {
         return index;
     }
 
     /**
-     * @return The fully qualified name of the serialized script class.
+     * @return The fully qualified class name of the saved script.
      */
     public String getScriptClass() {
         return scriptClass;
     }
 
     /**
-     * @return The serialized state data for the script.
+     * @return The fully qualified class name of the saved script data.
      */
-    public T getData() {
+    public String getScriptDataClass() {
+        return scriptDataClass;
+    }
+
+    /**
+     * @return The serialized state payload for the script.
+     */
+    public JsonElement getData() {
         return data;
     }
 }

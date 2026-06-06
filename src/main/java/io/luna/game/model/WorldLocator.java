@@ -63,8 +63,7 @@ public final class WorldLocator {
      * @param base The origin of the search.
      * @param distance The maximum tile distance from {@code base}.
      * @param filter Additional filter that matching entities must satisfy.
-     * @param collectionSupplier Supplies the collection implementation used to
-     * accumulate results.
+     * @param collectionSupplier Supplies the collection implementation used to accumulate results.
      * @param <C> The collection type returned.
      * @param <T> The entity type being searched for.
      * @return A collection containing all matching entities within range.
@@ -96,15 +95,15 @@ public final class WorldLocator {
      * <p>
      * Results may optionally be returned in distance order relative to {@code base}.
      *
+     * @param <T> The entity type being searched for.
      * @param type The entity type to search for.
      * @param base The origin of the search.
      * @param distance The maximum tile distance from {@code base}.
-     * @param filter Additional filter that matching entities must satisfy.
      * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
-     * @param <T> The entity type being searched for.
+     * @param filter Additional filter that matching entities must satisfy.
      * @return A set containing all matching entities within range.
      */
-    public <T extends Entity> Set<T> find(EntityType type, Locatable base, int distance, Predicate<T> filter, boolean sorted) {
+    public <T extends Entity> Set<T> find(EntityType type, Locatable base, int distance, boolean sorted, Predicate<T> filter) {
         return find(type, base, distance, filter, sorted ?
                 () -> new TreeSet<>(new LocatableDistanceComparator(base)) : HashSet::new);
     }
@@ -120,7 +119,7 @@ public final class WorldLocator {
      * @return An unordered set containing all matching entities within range.
      */
     public <T extends Entity> Set<T> find(EntityType type, Locatable base, int distance, Predicate<T> filter) {
-        return find(type, base, distance, filter, false);
+        return find(type, base, distance, false, filter);
     }
 
     /**
@@ -172,6 +171,66 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all ground items within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching items must satisfy.
+     * @return All matching ground items within range.
+     */
+    public Set<GroundItem> findItems(Locatable base, int distance, boolean sorted, Predicate<GroundItem> filter) {
+        return find(EntityType.ITEM, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all NPCs within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching NPCs must satisfy.
+     * @return All matching NPCs within range.
+     */
+    public Set<Npc> findNpcs(Locatable base, int distance, boolean sorted, Predicate<Npc> filter) {
+        return find(EntityType.NPC, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all objects within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching objects must satisfy.
+     * @return All matching objects within range.
+     */
+    public Set<GameObject> findObjects(Locatable base, int distance, boolean sorted, Predicate<GameObject> filter) {
+        return find(EntityType.OBJECT, base, distance, sorted, filter);
+    }
+
+    /**
+     * Finds all players within {@code distance} tiles of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance from {@code base}.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching players must satisfy.
+     * @return All matching players within range.
+     */
+    public Set<Player> findPlayers(Locatable base, int distance, boolean sorted, Predicate<Player> filter) {
+        return find(EntityType.PLAYER, base, distance, sorted, filter);
+    }
+
+    /**
      * Finds all entities of {@code type} within normal viewing distance of {@code base} that satisfy {@code filter}.
      *
      * @param type The entity type to search for.
@@ -182,6 +241,23 @@ public final class WorldLocator {
      */
     public <T extends Entity> Set<T> findViewable(EntityType type, Locatable base, Predicate<T> filter) {
         return find(type, base, Position.VIEWING_DISTANCE, filter);
+    }
+
+    /**
+     * Finds all entities of {@code type} within normal viewing distance of {@code base} that satisfy {@code filter}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param type The entity type to search for.
+     * @param base The origin of the search.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param <T> The entity type being searched for.
+     * @return All matching entities within viewing distance.
+     */
+    public <T extends Entity> Set<T> findViewable(EntityType type, Locatable base, Predicate<T> filter,
+                                                  boolean sorted) {
+        return find(type, base, Position.VIEWING_DISTANCE, sorted, filter);
     }
 
     /**
@@ -197,6 +273,21 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all entities of {@code type} within normal viewing distance of {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param <T> The entity type being searched for.
+     * @param type The entity type to search for.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param base The origin of the search.
+     * @return All entities of {@code type} within viewing distance.
+     */
+    public <T extends Entity> Set<T> findViewable(EntityType type, boolean sorted, Locatable base) {
+        return find(type, base, Position.VIEWING_DISTANCE, sorted, entity -> true);
+    }
+
+    /**
      * Finds all viewable ground items relative to {@code base}.
      *
      * @param base The origin of the search.
@@ -204,6 +295,19 @@ public final class WorldLocator {
      */
     public Set<GroundItem> findViewableItems(Locatable base) {
         return findViewable(EntityType.ITEM, base);
+    }
+
+    /**
+     * Finds all viewable ground items relative to {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @return All viewable ground items.
+     */
+    public Set<GroundItem> findViewableItems(Locatable base, boolean sorted) {
+        return findViewable(EntityType.ITEM, sorted, base);
     }
 
     /**
@@ -218,6 +322,20 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all viewable ground items relative to {@code base} that satisfy {@code filter}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching items must satisfy.
+     * @return All matching viewable ground items.
+     */
+    public Set<GroundItem> findViewableItems(Locatable base, boolean sorted, Predicate<GroundItem> filter) {
+        return findViewable(EntityType.ITEM, base, filter, sorted);
+    }
+
+    /**
      * Finds all viewable NPCs relative to {@code base}.
      *
      * @param base The origin of the search.
@@ -225,6 +343,19 @@ public final class WorldLocator {
      */
     public Set<Npc> findViewableNpcs(Locatable base) {
         return findViewable(EntityType.NPC, base);
+    }
+
+    /**
+     * Finds all viewable NPCs relative to {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @return All viewable NPCs.
+     */
+    public Set<Npc> findViewableNpcs(Locatable base, boolean sorted) {
+        return findViewable(EntityType.NPC, sorted, base);
     }
 
     /**
@@ -239,6 +370,20 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all viewable NPCs relative to {@code base} that satisfy {@code filter}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching NPCs must satisfy.
+     * @return All matching viewable NPCs.
+     */
+    public Set<Npc> findViewableNpcs(Locatable base, boolean sorted, Predicate<Npc> filter) {
+        return findViewable(EntityType.NPC, base, filter, sorted);
+    }
+
+    /**
      * Finds all viewable objects relative to {@code base}.
      *
      * @param base The origin of the search.
@@ -246,6 +391,19 @@ public final class WorldLocator {
      */
     public Set<GameObject> findViewableObjects(Locatable base) {
         return findViewable(EntityType.OBJECT, base);
+    }
+
+    /**
+     * Finds all viewable objects relative to {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @return All viewable objects.
+     */
+    public Set<GameObject> findViewableObjects(Locatable base, boolean sorted) {
+        return findViewable(EntityType.OBJECT, sorted, base);
     }
 
     /**
@@ -260,6 +418,20 @@ public final class WorldLocator {
     }
 
     /**
+     * Finds all viewable objects relative to {@code base} that satisfy {@code filter}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching objects must satisfy.
+     * @return All matching viewable objects.
+     */
+    public Set<GameObject> findViewableObjects(Locatable base, boolean sorted, Predicate<GameObject> filter) {
+        return findViewable(EntityType.OBJECT, base, filter, sorted);
+    }
+
+    /**
      * Finds all viewable players relative to {@code base}.
      *
      * @param base The origin of the search.
@@ -267,6 +439,19 @@ public final class WorldLocator {
      */
     public Set<Player> findViewablePlayers(Locatable base) {
         return findViewable(EntityType.PLAYER, base);
+    }
+
+    /**
+     * Finds all viewable players relative to {@code base}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @return All viewable players.
+     */
+    public Set<Player> findViewablePlayers(Locatable base, boolean sorted) {
+        return findViewable(EntityType.PLAYER, sorted, base);
     }
 
     /**
@@ -278,6 +463,20 @@ public final class WorldLocator {
      */
     public Set<Player> findViewablePlayers(Locatable base, Predicate<Player> filter) {
         return findViewable(EntityType.PLAYER, base, filter);
+    }
+
+    /**
+     * Finds all viewable players relative to {@code base} that satisfy {@code filter}.
+     * <p>
+     * Results may optionally be returned in distance order relative to {@code base}.
+     *
+     * @param base The origin of the search.
+     * @param sorted {@code true} to return results sorted by distance, {@code false} to return an unordered set.
+     * @param filter Additional filter that matching players must satisfy.
+     * @return All matching viewable players.
+     */
+    public Set<Player> findViewablePlayers(Locatable base, boolean sorted, Predicate<Player> filter) {
+        return findViewable(EntityType.PLAYER, base, filter, sorted);
     }
 
     /**
@@ -411,11 +610,11 @@ public final class WorldLocator {
      * @param filter Additional filter that matching entities must satisfy.
      * @param <T> The entity type being searched for.
      * @return The nearest matching entity, or {@code null} if none is found.
-     */
+     */ // todo@0.5.0 needs to be maybe request style, but 100% needs a radius cap
     public <T extends Entity> T findNearest(EntityType type, Locatable base, Predicate<T> filter) {
         // Check if entity is within twice the viewable distance first.
         Position abs = base.abs();
-        Set<T> viewableResult = find(type, base, Position.VIEWING_DISTANCE * 2, filter, true);
+        Set<T> viewableResult = find(type, base, Position.VIEWING_DISTANCE * 2, true, filter);
         if (!viewableResult.isEmpty()) {
             return viewableResult.iterator().next();
         }
@@ -613,27 +812,26 @@ public final class WorldLocator {
      * @return A list of visible mobs of the requested type.
      */
     private <T extends Mob> List<T> computeVisibleMobsFor(EntityType type, Player player) {
-        return find(type, player.getPosition(), Position.VIEWING_DISTANCE, mob -> mob.isViewableFrom(player), ArrayList::new);
+        return find(type, player.getPosition(), Position.VIEWING_DISTANCE, mob -> mob.isViewableFrom(player),
+                ArrayList::new);
     }
 
     /**
-     * Performs a bounded outward chunk-ring search for the nearest entity of
-     * {@code type} that satisfies {@code filter}.
+     * Performs a bounded outward chunk-ring search for the nearest entity of {@code type} that satisfies
+     * {@code filter}.
      * <p>
-     * This method is used as the fallback nearest-search path when a broader global
-     * iterable is not available for the requested entity type.
+     * This method is used as the fallback nearest-search path when a broader global iterable is not available for the
+     * requested entity type.
      * <p>
-     * The search scans the base chunk first, then expands outward in square rings
-     * up to {@link #MAXIMUM_SCAN_RADIUS}. All matching entities discovered within
-     * the current search scope are accumulated into a distance-sorted set, and the
-     * nearest match is returned as soon as at least one candidate is found.
+     * The search scans the base chunk first, then expands outward in square rings up to
+     * {@link #MAXIMUM_SCAN_RADIUS}. All matching entities discovered within the current search scope are accumulated
+     * into a distance-sorted set, and the nearest match is returned as soon as at least one candidate is found.
      *
      * @param type The entity type to search for.
      * @param base The base position to search outward from.
      * @param filter Additional filter that matching entities must satisfy.
      * @param <T> The entity type being searched for.
-     * @return The nearest matching entity found within the bounded scan radius, or
-     * {@code null} if none is found.
+     * @return The nearest matching entity found within the bounded scan radius, or {@code null} if none is found.
      */
     private <T extends Entity> T unsafeFindNearest(EntityType type, Position base, Predicate<T> filter) {
         ChunkManager chunks = world.getChunks();
@@ -693,8 +891,8 @@ public final class WorldLocator {
      * @param filter Additional filter that matching entities must satisfy.
      * @param <T> The entity type being searched for.
      */
-    private <T extends Entity> void collectMatchingEntities(Set<T> found, ChunkRepository repository, int z, EntityType type,
-                                                            Predicate<T> filter) {
+    private <T extends Entity> void collectMatchingEntities(Set<T> found, ChunkRepository repository, int z,
+                                                            EntityType type, Predicate<T> filter) {
         Set<T> entities = repository.getAll(type);
         if (!entities.isEmpty()) {
             for (T entity : entities) {
@@ -714,6 +912,6 @@ public final class WorldLocator {
      * @return The chunk radius required to cover that distance.
      */
     private int radiusForDistance(int distance) {
-        return Math.floorDiv(distance, Chunk.SIZE) + 2;
+        return Math.floorDiv(distance, Chunk.SIZE) + 1;
     }
 }

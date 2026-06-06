@@ -28,6 +28,11 @@ class TanInterface : StandardInterface(14670) {
                 RED_D_LEATHER,
                 BLACK_D_LEATHER
         )
+
+        /**
+         * A map of hides to the make all button.
+         */
+        val hideToMakeAll = HashMap<Hide, Int>()
     }
 
     override fun onOpen(plr: Player) {

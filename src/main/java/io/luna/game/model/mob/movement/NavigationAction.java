@@ -41,11 +41,6 @@ final class NavigationAction extends Action<Mob> {
     private final boolean isTargetMob;
 
     /**
-     * Whether the navigation target is an entity.
-     */
-    private final boolean isTargetEntity;
-
-    /**
      * The last absolute target position this action attempted to path toward.
      * <p>
      * This is used by continuous requests to detect when a moving target has changed position and requires
@@ -86,7 +81,6 @@ final class NavigationAction extends Action<Mob> {
         this.request = request;
         navigator = mob.getNavigator();
         isTargetMob = request.getTarget() instanceof Mob;
-        isTargetEntity = request.getTarget() instanceof Entity;
     }
 
     @Override
@@ -95,7 +89,7 @@ final class NavigationAction extends Action<Mob> {
         Locatable target = request.getTarget();
         Position targetPos = target.abs();
 
-        if (sourcePos.computeLongestDistance(targetPos) >= 15 || request.getPending().isCancelled()) {
+        if ((sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) || request.getPending().isCancelled()) {
             result = NavigationResult.DIDNT_REACH;
             return true;
         }
@@ -124,7 +118,10 @@ final class NavigationAction extends Action<Mob> {
         if (reached) {
             // When reached: clear walking queue, cancel pathing, and stop action if tracking isn't required.
             reachedOnce = true;
-            mob.getWalking().clear(); // TODO: Verify whether this should always clear the queue.
+            if(!request.isContinuous()) {
+                // TODO: More testing around this with following, combat, and normal interactions..
+                mob.getWalking().clear();
+            }
             if (current != null) {
                 current.cancel(true);
                 current = null;
@@ -166,7 +163,7 @@ final class NavigationAction extends Action<Mob> {
 
         // Re-path to target if needed.
         if (current == null) {
-            current = isTargetEntity ?
+            current = isTargetMob ?
                     navigator.walk(navigator.computeOffsetPosition((Entity) target, request.getOffsetDir()),
                             request.getPathfinder(), request.isAsync()) :
                     navigator.walk(target, request.getPathfinder(), request.isAsync());

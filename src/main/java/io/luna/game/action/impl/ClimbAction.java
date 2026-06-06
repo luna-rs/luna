@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
 
 /**
- * A {@link LockedAction} that performs a simple two-step “climb” sequence for a {@link Player}.
+ * A {@link LockedAction} that performs a simple two-step "climb" sequence for a {@link Player}.
  * <p>
  * This is intended for basic ladders/stairs-style transitions. More complex climbing (agility, obstacle timing,
  * direction-specific animations) should be implemented in specialized actions.

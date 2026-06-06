@@ -24,6 +24,13 @@ val LADDER_ACTIONS = listOf("Climb", "Climb-up", "Climb-down")
 fun climb(plr: Player, ladder: GameObject, offset: Int) {
     val plrPos = plr.position
     val dir = Direction.between(plrPos, ladder.position)
+    if (ladder.position.z == 0 && offset < 0) {
+        plr.submitAction(ClimbAction(plr, plrPos.translate(0, 6400, 0), dir, "You climb down the ladder."))
+        return
+    } else if (ladder.position.z == 0 && offset > 0) {
+        plr.submitAction(ClimbAction(plr, plrPos.translate(0, -6400, 0), dir, "You climb up the ladder."))
+        return
+    }
     when (Integer.signum(offset)) {
         1 -> plr.submitAction(ClimbAction(plr, plrPos.translate(0, 0, 1), dir, "You climb up the ladder."))
         -1 -> plr.submitAction(ClimbAction(plr, plrPos.translate(0, 0, -1), dir, "You climb down the ladder."))
@@ -73,6 +80,8 @@ on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
         if (def.name.equals("Ladder")) {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id, index, name) }
+        } else if (def.name.equals("Trapdoor")) {
+            // TODO Trapdoor handling here?
         }
     }
 }

@@ -13,7 +13,7 @@ import io.luna.game.model.mob.overlay.StandardInterface;
  *   <li><b>How interruption APIs behave</b></li>
  * </ul>
  * <p>
- * Conceptually this matches the “queue” model used in OSRS-style action processing, where some actions are
+ * Conceptually this matches the "queue" model used in OSRS-style action processing, where some actions are
  * disposable (weak), some are exclusive (strong), and some are long-running background loops (soft).
  *
  * @author lare96

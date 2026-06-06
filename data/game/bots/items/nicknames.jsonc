@@ -1,0 +1,1248 @@
+/*
+ * Valuable and/or common item nickname mappings for combat and economy-related bot speech.
+ *
+ * Each entry groups one or more tradeable item ids that share the same nickname or similar identity.
+ *
+ * "nicknames" contains casual names, abbreviations, and old-school RuneScape-style shorthand that bots can use
+ * instead of always saying the full cache item name.
+ */
+[
+  {
+    "ids": [
+      1079
+    ],
+    "nicknames": [
+      "rune legs",
+      "r legs",
+      "rune platelegs",
+      "r platelegs"
+    ]
+  },
+  {
+    "ids": [
+      1093
+    ],
+    "nicknames": [
+      "rune skirt",
+      "r skirt",
+      "rune plateskirt",
+      "r plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      1113
+    ],
+    "nicknames": [
+      "rune chain",
+      "r chain",
+      "rune chainbody",
+      "r chainbody"
+    ]
+  },
+  {
+    "ids": [
+      1127
+    ],
+    "nicknames": [
+      "rune plate",
+      "rune body",
+      "r plate",
+      "rune platebody",
+      "r platebody"
+    ]
+  },
+  {
+    "ids": [
+      1149
+    ],
+    "nicknames": [
+      "d med",
+      "d med helm",
+      "dragon med",
+      "dragon med helm",
+      "drag med helm"
+    ]
+  },
+  {
+    "ids": [
+      1187
+    ],
+    "nicknames": [
+      "d sq",
+      "dsq",
+      "d square",
+      "dragon square",
+      "dragon sq shield",
+      "d sq shield",
+      "drag sq shield"
+    ]
+  },
+  {
+    "ids": [
+      1201
+    ],
+    "nicknames": [
+      "rune kite",
+      "r kite",
+      "rune kiteshield",
+      "r kiteshield"
+    ]
+  },
+  {
+    "ids": [
+      1249
+    ],
+    "nicknames": [
+      "d spear",
+      "dspear",
+      "dragon spear",
+      "drag spear"
+    ]
+  },
+  {
+    "ids": [
+      1263
+    ],
+    "nicknames": [
+      "d spear p",
+      "dspear p",
+      "dragon spear p",
+      "dragon spear(p)",
+      "d spear(p)",
+      "drag spear(p)"
+    ]
+  },
+  {
+    "ids": [
+      1305
+    ],
+    "nicknames": [
+      "d long",
+      "dlong",
+      "dragon long",
+      "dragon longsword",
+      "d longsword",
+      "drag longsword"
+    ]
+  },
+  {
+    "ids": [
+      1319
+    ],
+    "nicknames": [
+      "rune 2h",
+      "r2h",
+      "rune two hander",
+      "rune 2h sword",
+      "r 2h sword"
+    ]
+  },
+  {
+    "ids": [
+      1377
+    ],
+    "nicknames": [
+      "d baxe",
+      "dbaxe",
+      "d b axe",
+      "dragon baxe",
+      "dragon battleaxe",
+      "d battleaxe",
+      "drag battleaxe"
+    ]
+  },
+  {
+    "ids": [
+      1434
+    ],
+    "nicknames": [
+      "d mace",
+      "dmace",
+      "dragon mace",
+      "drag mace"
+    ]
+  },
+  {
+    "ids": [
+      2366
+    ],
+    "nicknames": [
+      "left half",
+      "shield left half"
+    ]
+  },
+  {
+    "ids": [
+      2368
+    ],
+    "nicknames": [
+      "right half",
+      "shield right half"
+    ]
+  },
+  {
+    "ids": [
+      2615
+    ],
+    "nicknames": [
+      "rune platebody (g)",
+      "r platebody (g)",
+      "rune plate (g)",
+      "rune body (g)",
+      "rune platebody g",
+      "rune platebody gold",
+      "g rune platebody"
+    ]
+  },
+  {
+    "ids": [
+      2617
+    ],
+    "nicknames": [
+      "rune platelegs (g)",
+      "r platelegs (g)",
+      "rune legs (g)",
+      "rune platelegs g",
+      "rune platelegs gold",
+      "g rune platelegs"
+    ]
+  },
+  {
+    "ids": [
+      2621
+    ],
+    "nicknames": [
+      "rune kiteshield (g)",
+      "r kiteshield (g)",
+      "rune kite (g)",
+      "rune kiteshield g",
+      "rune kiteshield gold",
+      "g rune kiteshield"
+    ]
+  },
+  {
+    "ids": [
+      2623
+    ],
+    "nicknames": [
+      "rune platebody (t)",
+      "r platebody (t)",
+      "rune plate (t)",
+      "rune body (t)",
+      "rune platebody t",
+      "rune platebody trim",
+      "trimmed rune platebody"
+    ]
+  },
+  {
+    "ids": [
+      2625
+    ],
+    "nicknames": [
+      "rune platelegs (t)",
+      "r platelegs (t)",
+      "rune legs (t)",
+      "rune platelegs t",
+      "rune platelegs trim",
+      "trimmed rune platelegs"
+    ]
+  },
+  {
+    "ids": [
+      2629
+    ],
+    "nicknames": [
+      "rune kiteshield (t)",
+      "r kiteshield (t)",
+      "rune kite (t)",
+      "rune kiteshield t",
+      "rune kiteshield trim",
+      "trimmed rune kiteshield"
+    ]
+  },
+  {
+    "ids": [
+      2653
+    ],
+    "nicknames": [
+      "zammy platebody",
+      "zammy plate",
+      "zamorak platebody",
+      "zamorak plate",
+      "zamorak body"
+    ]
+  },
+  {
+    "ids": [
+      2655
+    ],
+    "nicknames": [
+      "zammy platelegs",
+      "zammy legs",
+      "zamorak platelegs",
+      "zamorak legs"
+    ]
+  },
+  {
+    "ids": [
+      2659
+    ],
+    "nicknames": [
+      "zammy kiteshield",
+      "zammy kite",
+      "zamorak kiteshield",
+      "zamorak kite"
+    ]
+  },
+  {
+    "ids": [
+      2661
+    ],
+    "nicknames": [
+      "sara plate",
+      "saradomin plate"
+    ]
+  },
+  {
+    "ids": [
+      2663
+    ],
+    "nicknames": [
+      "sara legs",
+      "saradomin legs"
+    ]
+  },
+  {
+    "ids": [
+      2667
+    ],
+    "nicknames": [
+      "sara kite",
+      "saradomin kite"
+    ]
+  },
+  {
+    "ids": [
+      2669
+    ],
+    "nicknames": [
+      "guthix platebody",
+      "guthix plate",
+      "guth platebody",
+      "guthix body"
+    ]
+  },
+  {
+    "ids": [
+      2671
+    ],
+    "nicknames": [
+      "guthix platelegs",
+      "guthix legs",
+      "guth platelegs"
+    ]
+  },
+  {
+    "ids": [
+      2675
+    ],
+    "nicknames": [
+      "guthix kiteshield",
+      "guthix kite",
+      "guth kiteshield"
+    ]
+  },
+  {
+    "ids": [
+      3122
+    ],
+    "nicknames": [
+      "g shield",
+      "granite shield"
+    ]
+  },
+  {
+    "ids": [
+      3140
+    ],
+    "nicknames": [
+      "d chain",
+      "dragon chain",
+      "dragon chainbody",
+      "d chainbody",
+      "drag chainbody"
+    ]
+  },
+  {
+    "ids": [
+      3176
+    ],
+    "nicknames": [
+      "d spear kp",
+      "dspear kp",
+      "dragon spear kp",
+      "dragon spear(kp)",
+      "d spear(kp)",
+      "drag spear(kp)"
+    ]
+  },
+  {
+    "ids": [
+      3202
+    ],
+    "nicknames": [
+      "rune hally",
+      "r hally",
+      "rune halberd",
+      "r halberd"
+    ]
+  },
+  {
+    "ids": [
+      3204
+    ],
+    "nicknames": [
+      "d hally",
+      "dhally",
+      "d halberd",
+      "dragon hally",
+      "dragon halberd",
+      "drag halberd"
+    ]
+  },
+  {
+    "ids": [
+      3476
+    ],
+    "nicknames": [
+      "rune plateskirt (g)",
+      "r plateskirt (g)",
+      "rune skirt (g)",
+      "rune plateskirt g",
+      "rune plateskirt gold",
+      "g rune plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      3477
+    ],
+    "nicknames": [
+      "rune plateskirt (t)",
+      "r plateskirt (t)",
+      "rune skirt (t)",
+      "rune plateskirt t",
+      "rune plateskirt trim",
+      "trimmed rune plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      3478
+    ],
+    "nicknames": [
+      "zammy plateskirt",
+      "zammy skirt",
+      "zamorak plateskirt",
+      "zamorak skirt"
+    ]
+  },
+  {
+    "ids": [
+      3479
+    ],
+    "nicknames": [
+      "sara skirt",
+      "saradomin skirt"
+    ]
+  },
+  {
+    "ids": [
+      3480
+    ],
+    "nicknames": [
+      "guthix plateskirt",
+      "guthix skirt",
+      "guth plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      3481
+    ],
+    "nicknames": [
+      "gilded platebody",
+      "gilded plate",
+      "g plate",
+      "gilded body"
+    ]
+  },
+  {
+    "ids": [
+      3483
+    ],
+    "nicknames": [
+      "gilded platelegs",
+      "gilded legs",
+      "g legs"
+    ]
+  },
+  {
+    "ids": [
+      3485
+    ],
+    "nicknames": [
+      "gilded plateskirt",
+      "gilded skirt",
+      "g skirt"
+    ]
+  },
+  {
+    "ids": [
+      3488
+    ],
+    "nicknames": [
+      "gilded kiteshield",
+      "gilded kite",
+      "g kite"
+    ]
+  },
+  {
+    "ids": [
+      3749
+    ],
+    "nicknames": [
+      "archer helm",
+      "arch helm"
+    ]
+  },
+  {
+    "ids": [
+      3751
+    ],
+    "nicknames": [
+      "zerker helm",
+      "b helm",
+      "berserker helm"
+    ]
+  },
+  {
+    "ids": [
+      3753
+    ],
+    "nicknames": [
+      "warrior helm"
+    ]
+  },
+  {
+    "ids": [
+      3755
+    ],
+    "nicknames": [
+      "farseer helm"
+    ]
+  },
+  {
+    "ids": [
+      4087
+    ],
+    "nicknames": [
+      "d legs",
+      "dragon legs",
+      "d platelegs",
+      "dragon platelegs",
+      "drag platelegs"
+    ]
+  },
+  {
+    "ids": [
+      4091,
+      4101,
+      4111
+    ],
+    "nicknames": [
+      "mystic robe top",
+      "mystic top"
+    ]
+  },
+  {
+    "ids": [
+      4151
+    ],
+    "nicknames": [
+      "whip",
+      "abby whip",
+      "ab whip",
+      "abyssal whip"
+    ]
+  },
+  {
+    "ids": [
+      4153
+    ],
+    "nicknames": [
+      "gmaul",
+      "g maul",
+      "maul",
+      "granite maul"
+    ]
+  },
+  {
+    "ids": [
+      4585
+    ],
+    "nicknames": [
+      "d skirt",
+      "dragon skirt",
+      "d plateskirt",
+      "dragon plateskirt",
+      "drag plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      4587
+    ],
+    "nicknames": [
+      "d scim",
+      "dscim",
+      "d scimmy",
+      "dragon scim",
+      "dragon scimmy",
+      "scimmy",
+      "scim",
+      "dragon scimitar",
+      "d scimitar",
+      "drag scimitar"
+    ]
+  },
+  {
+    "ids": [
+      4675
+    ],
+    "nicknames": [
+      "ancient staff",
+      "ancients staff",
+      "anc staff"
+    ]
+  },
+  {
+    "ids": [
+      4710
+    ],
+    "nicknames": [
+      "ahrim staff",
+      "ahrims staff"
+    ]
+  },
+  {
+    "ids": [
+      4712
+    ],
+    "nicknames": [
+      "ahrim top",
+      "ahrim robetop",
+      "ahrim robe top",
+      "ahrims top",
+      "ahrims robetop",
+      "ahrims robe top"
+    ]
+  },
+  {
+    "ids": [
+      4716
+    ],
+    "nicknames": [
+      "dh helm",
+      "dharok helm",
+      "dharoks helm"
+    ]
+  },
+  {
+    "ids": [
+      4718
+    ],
+    "nicknames": [
+      "dh axe",
+      "dh greataxe",
+      "dharok axe",
+      "dharok greataxe",
+      "dharoks axe",
+      "dharoks greataxe"
+    ]
+  },
+  {
+    "ids": [
+      4720
+    ],
+    "nicknames": [
+      "dh body",
+      "dh plate",
+      "dh platebody",
+      "dharok body",
+      "dharok plate",
+      "dharok platebody",
+      "dharoks body",
+      "dharoks plate",
+      "dharoks platebody"
+    ]
+  },
+  {
+    "ids": [
+      4722
+    ],
+    "nicknames": [
+      "dh legs",
+      "dh platelegs",
+      "dharok legs",
+      "dharok platelegs",
+      "dharoks legs",
+      "dharoks platelegs"
+    ]
+  },
+  {
+    "ids": [
+      4724
+    ],
+    "nicknames": [
+      "guthan helm",
+      "guthans helm",
+      "guth helm"
+    ]
+  },
+  {
+    "ids": [
+      4726
+    ],
+    "nicknames": [
+      "guthan spear",
+      "guthan warspear",
+      "guthans spear",
+      "guthans warspear",
+      "guth spear",
+      "guth warspear"
+    ]
+  },
+  {
+    "ids": [
+      4728
+    ],
+    "nicknames": [
+      "guthan body",
+      "guthan plate",
+      "guthan platebody",
+      "guthans body",
+      "guthans plate",
+      "guthans platebody",
+      "guth body",
+      "guth plate",
+      "guth platebody"
+    ]
+  },
+  {
+    "ids": [
+      4730
+    ],
+    "nicknames": [
+      "guthan skirt",
+      "guthan chainskirt",
+      "guthans skirt",
+      "guthans chainskirt",
+      "guth skirt",
+      "guth chainskirt"
+    ]
+  },
+  {
+    "ids": [
+      4734
+    ],
+    "nicknames": [
+      "karil crossbow",
+      "karil xbow",
+      "karil x-bow",
+      "karils crossbow",
+      "karils xbow",
+      "karils x-bow",
+      "karils cbow"
+    ]
+  },
+  {
+    "ids": [
+      4736
+    ],
+    "nicknames": [
+      "karil top",
+      "karil leathertop",
+      "karils top",
+      "karils leathertop"
+    ]
+  },
+  {
+    "ids": [
+      4745
+    ],
+    "nicknames": [
+      "torag helm",
+      "torags helm"
+    ]
+  },
+  {
+    "ids": [
+      4747
+    ],
+    "nicknames": [
+      "torag hammers",
+      "torag hammer",
+      "torags hammers",
+      "torags hammer"
+    ]
+  },
+  {
+    "ids": [
+      4749
+    ],
+    "nicknames": [
+      "torag body",
+      "torag plate",
+      "torag platebody",
+      "torags body",
+      "torags plate",
+      "torags platebody"
+    ]
+  },
+  {
+    "ids": [
+      4751
+    ],
+    "nicknames": [
+      "torag legs",
+      "torag platelegs",
+      "torags legs",
+      "torags platelegs"
+    ]
+  },
+  {
+    "ids": [
+      4753
+    ],
+    "nicknames": [
+      "verac helm",
+      "veracs helm",
+      "v helm"
+    ]
+  },
+  {
+    "ids": [
+      4755
+    ],
+    "nicknames": [
+      "verac flail",
+      "veracs flail",
+      "v flail"
+    ]
+  },
+  {
+    "ids": [
+      4757
+    ],
+    "nicknames": [
+      "verac brassard",
+      "verac top",
+      "veracs brassard",
+      "veracs top",
+      "v brassard",
+      "v top"
+    ]
+  },
+  {
+    "ids": [
+      4759
+    ],
+    "nicknames": [
+      "verac skirt",
+      "verac plateskirt",
+      "veracs skirt",
+      "veracs plateskirt",
+      "v skirt",
+      "v plateskirt"
+    ]
+  },
+  {
+    "ids": [
+      4866
+    ],
+    "nicknames": [
+      "ahrim staff",
+      "ahrims staff",
+      "ahrims staff 0"
+    ]
+  },
+  {
+    "ids": [
+      4872
+    ],
+    "nicknames": [
+      "ahrim top",
+      "ahrims top",
+      "ahrims top 0"
+    ]
+  },
+  {
+    "ids": [
+      4884
+    ],
+    "nicknames": [
+      "dh helm",
+      "dharok helm",
+      "dharoks helm",
+      "dharoks helm 0"
+    ]
+  },
+  {
+    "ids": [
+      4890
+    ],
+    "nicknames": [
+      "dh axe",
+      "dharok axe",
+      "dharoks axe",
+      "dharoks axe 0"
+    ]
+  },
+  {
+    "ids": [
+      4896
+    ],
+    "nicknames": [
+      "dh body",
+      "dharok body",
+      "dharoks body",
+      "dharoks body 0"
+    ]
+  },
+  {
+    "ids": [
+      4902
+    ],
+    "nicknames": [
+      "dh legs",
+      "dharok legs",
+      "dharoks legs",
+      "dharoks legs 0"
+    ]
+  },
+  {
+    "ids": [
+      4908
+    ],
+    "nicknames": [
+      "guthan helm",
+      "guthans helm",
+      "guth helm",
+      "guthans helm 0"
+    ]
+  },
+  {
+    "ids": [
+      4914
+    ],
+    "nicknames": [
+      "guthan spear",
+      "guthans spear",
+      "guth spear",
+      "guthans spear 0"
+    ]
+  },
+  {
+    "ids": [
+      4920
+    ],
+    "nicknames": [
+      "guthan body",
+      "guthans body",
+      "guth body",
+      "guthans body 0"
+    ]
+  },
+  {
+    "ids": [
+      4926
+    ],
+    "nicknames": [
+      "guthan skirt",
+      "guthans skirt",
+      "guth skirt",
+      "guthans skirt 0"
+    ]
+  },
+  {
+    "ids": [
+      4938
+    ],
+    "nicknames": [
+      "karil crossbow",
+      "karil xbow",
+      "karil x-bow",
+      "karils crossbow",
+      "karils xbow",
+      "karils x-bow",
+      "karils x bow",
+      "karils x-bow 0"
+    ]
+  },
+  {
+    "ids": [
+      4944
+    ],
+    "nicknames": [
+      "karil top",
+      "karils top",
+      "karils top 0"
+    ]
+  },
+  {
+    "ids": [
+      4956
+    ],
+    "nicknames": [
+      "torag helm",
+      "torags helm",
+      "torags helm 0"
+    ]
+  },
+  {
+    "ids": [
+      4962
+    ],
+    "nicknames": [
+      "torag hammer",
+      "torag hammers",
+      "torags hammer",
+      "torags hammers",
+      "torags hammer 0"
+    ]
+  },
+  {
+    "ids": [
+      4968
+    ],
+    "nicknames": [
+      "torag body",
+      "torags body",
+      "torags body 0"
+    ]
+  },
+  {
+    "ids": [
+      4974
+    ],
+    "nicknames": [
+      "torag legs",
+      "torags legs",
+      "torags legs 0"
+    ]
+  },
+  {
+    "ids": [
+      4980
+    ],
+    "nicknames": [
+      "verac helm",
+      "veracs helm",
+      "v helm",
+      "veracs helm 0"
+    ]
+  },
+  {
+    "ids": [
+      4986
+    ],
+    "nicknames": [
+      "verac flail",
+      "veracs flail",
+      "v flail",
+      "veracs flail 0"
+    ]
+  },
+  {
+    "ids": [
+      4992
+    ],
+    "nicknames": [
+      "verac top",
+      "veracs top",
+      "v top",
+      "veracs top 0"
+    ]
+  },
+  {
+    "ids": [
+      4998
+    ],
+    "nicknames": [
+      "verac skirt",
+      "veracs skirt",
+      "v skirt",
+      "veracs skirt 0"
+    ]
+  },
+  {
+    "ids": [
+      5698 // Dragon dagger(s)
+    ],
+    "nicknames": [
+      "dds"
+    ]
+  },
+  {
+    "ids": [
+      5716
+    ],
+    "nicknames": [
+      "d spear+",
+      "dspear+",
+      "dragon spear+",
+      "dragon spear(+)",
+      "d spear(+)",
+      "drag spear(+)"
+    ]
+  },
+  {
+    "ids": [
+      5730
+    ],
+    "nicknames": [
+      "d spear s",
+      "dspear s",
+      "dragon spear s",
+      "dragon spear(s)",
+      "d spear(s)",
+      "drag spear(s)"
+    ]
+  },
+  {
+    "ids": [
+      6129
+    ],
+    "nicknames": [
+      "rock-shell plate",
+      "rockshell plate",
+      "rock shell plate"
+    ]
+  },
+  {
+    "ids": [
+      6130
+    ],
+    "nicknames": [
+      "rock-shell legs",
+      "rockshell legs",
+      "rock shell legs"
+    ]
+  },
+  {
+    "ids": [
+      6131
+    ],
+    "nicknames": [
+      "spined helm"
+    ]
+  },
+  {
+    "ids": [
+      6528
+    ],
+    "nicknames": [
+      "obby maul",
+      "obsidian maul",
+      "tzhaar-ket-om",
+      "tzhaar ket om"
+    ]
+  },
+  {
+    "ids": [
+      6568
+    ],
+    "nicknames": [
+      "obby cape",
+      "obsidian cape"
+    ]
+  },
+  {
+    "ids": [
+      6809
+    ],
+    "nicknames": [
+      "g legs",
+      "granite legs"
+    ]
+  },
+  {
+    "ids": [
+      6916
+    ],
+    "nicknames": [
+      "infinity top",
+      "infinity robe top",
+      "inf top"
+    ]
+  },
+  {
+    "ids": [
+      6924
+    ],
+    "nicknames": [
+      "infinity bottoms",
+      "inf bottoms"
+    ]
+  },
+  {
+    "ids": [
+      7158
+    ],
+    "nicknames": [
+      "d 2h",
+      "d2h",
+      "dragon 2h",
+      "dragon two hander",
+      "dragon 2h sword",
+      "d 2h sword",
+      "drag 2h sword"
+    ]
+  },
+  {
+    "ids": [
+      7336,
+      7342,
+      7348,
+      7354,
+      7360
+    ],
+    "nicknames": [
+      "rune kiteshield(h)",
+      "r kiteshield(h)",
+      "rune kite(h)",
+      "rune kiteshield h",
+      "rune kiteshield heraldic"
+    ]
+  },
+  {
+    "ids": [
+      7398
+    ],
+    "nicknames": [
+      "enchanted robe",
+      "ench robe"
+    ]
+  },
+  {
+    "ids": [
+      7399
+    ],
+    "nicknames": [
+      "enchanted top",
+      "ench top"
+    ]
+  }
+]

@@ -1,15 +1,19 @@
 package api.bot.action
 
-import api.bot.Suspendable
+import api.bot.Suspendable.waitFor
+import api.bot.zone.SubZone
+import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
-import game.bot.scripts.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
+import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.player.item.consume.food.Food
 import game.skill.magic.Magic
-import io.luna.Luna
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.movement.NavigationResult
+import io.luna.util.RandomUtils
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 
@@ -20,46 +24,21 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotCombatActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
-    // TODO@0.5.0 More functions like get/equip(Strongest)Weapon, get/equip(Strongest)Armor, drinkPotion, etc.
-
     /**
-     * Attempts to eat a food item from the bot's inventory.
+     * Determines whether the given mob is considered an extreme combat threat to this bot.
      *
-     * If [id] is `-1`, the first available food item found in the inventory is eaten. If [id] is supplied, only that
-     * specific food item will be used.
+     * A mob is treated as threatening when its combat level is more than double the bot's combat level. This is a
+     * simple fear check meant for obvious danger cases, such as a low-level bot encountering a much stronger enemy.
      *
-     * @param id The food item id to eat, or `-1` to eat the first available food item.
-     * @return `true` if a food item was found and clicked, otherwise `false`.
+     * @param mob The mob being evaluated.
+     *
+     * @return `true` if [mob] is more than twice this bot's combat level.
      */
-    fun eatFood(id: Int = -1): Boolean {
-        if (id == -1) {
-            var matching: Pair<Int, Int>? = null
+    fun isThreat(mob: Mob)
 
-            for ((index, item) in bot.inventory.withIndex()) {
-                if (item == null) {
-                    continue
-                }
-
-                if (Food.ID_TO_FOOD.containsKey(item.id)) {
-                    matching = index to item.id
-                    break
-                }
-            }
-
-            if (matching != null) {
-                bot.output.sendInventoryItemClick(1, matching.first, matching.second)
-                return true
-            }
-        } else if (Food.ID_TO_FOOD.containsKey(id)) {
-            val index = bot.inventory.computeIndexForId(id)
-
-            if (index != -1) {
-                bot.output.sendInventoryItemClick(1, index, id)
-                return true
-            }
-        }
-
-        return false
+            : Boolean {
+        // TODO@.5.0 Expand by checking mob type, if it's a boss, equipment, skills, etc.
+        return mob.combatLevel > bot.combatLevel * 2
     }
 
     /**
@@ -72,27 +51,40 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      *
      * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
      */
-    suspend fun fleeWilderness(): Boolean {
+    suspend fun fleeWilderness()
+            : Boolean {
         // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
         //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
-        handler.widgets.clickRunning(true)
+        bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
             bot.isWandering = false
             bot.combat.isDisabled = true
 
-            val home = Luna.settings().game().startingPosition()
-
-            if (bot.wildernessLevel < 20 ||
-                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true).await() == NavigationResult.REACHED) {
+            if (bot.wildernessLevel < 20) {
                 bot.output.sendCommand("home")
                 bot.combat.isDisabled = false
-
-                return Suspendable.waitFor(10.seconds) {
-                    bot.isViewableFrom(home)
+                val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                if (success) {
+                    return true
                 }
             }
-            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned.
+
+            val outside = bot.subZone?.outside?.invoke(bot)
+            val parent = bot.subZone?.parent?.invoke(bot)
+            if (outside != null && parent != null) {
+                bot.subZone.leave(bot, parent, outside)
+            }
+
+            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
+            if (bot.subZone == SubZone.HOME ||
+                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
+                    .await() == NavigationResult.REACHED
+            ) {
+                bot.output.sendCommand("home")
+                return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+            }
+
             bot.combat.isDisabled = false
             return false
         }
@@ -107,7 +99,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * when critically low on health, or falls back to future reverse-pursuit movement logic.
      */
     suspend fun fleeCombat() {
-        handler.widgets.clickRunning(true)
+        bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()

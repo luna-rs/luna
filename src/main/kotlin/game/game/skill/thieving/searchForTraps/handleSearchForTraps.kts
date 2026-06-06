@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
  * Submits the [OpenTrapAction].
  */
 fun openTrap(plr: Player, event: ObjectClickEvent) {
-    val thievable = ThievableChest.CHESTS[event.id]
+    val thievable = ThievingChest.CHESTS[event.id]
     if (thievable != null) {
         plr.submitAction(OpenTrapAction(plr, event.gameObject, thievable))
     }
@@ -19,7 +19,7 @@ fun openTrap(plr: Player, event: ObjectClickEvent) {
  * Submits the [SearchForTrapsAction].
  */
 fun searchForTraps(plr: Player, event: ObjectClickEvent) {
-    val thievable = ThievableChest.CHESTS[event.id]
+    val thievable = ThievingChest.CHESTS[event.id]
     if (thievable != null) {
         plr.submitAction(SearchForTrapsAction(plr, event.gameObject, thievable))
     }

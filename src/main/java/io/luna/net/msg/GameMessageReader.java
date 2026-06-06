@@ -100,6 +100,9 @@ public abstract class GameMessageReader<E extends Event> {
     public final void submitMessage(Player player, GameMessage msg) {
         try {
             // Decode event object from raw client data.
+            if(msg.getPayload().refCnt() == 0) {
+                return;
+            }
             E event = decode(player, msg);
 
             // Validate the event with the decoder and the current controller if needed.
@@ -109,7 +112,6 @@ public abstract class GameMessageReader<E extends Event> {
                         return;
                     }
                 }
-
                 // Handle it and post to plugins.
                 handle(player, event);
                 if (event instanceof InteractableEvent) {

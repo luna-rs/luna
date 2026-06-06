@@ -42,7 +42,7 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
     }
 
     @Override
-    public Deque<Position> find(Position origin, Position target) {
+    public PathResult<Position> find(Position origin, Position target) {
         Deque<Position> positions = new ArrayDeque<>((int) (origin.computeLongestDistance(target) * 1.5));
         return addHorizontal(origin, target, positions);
     }
@@ -58,7 +58,7 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
      * @param positions The deque into which visited positions are appended.
      * @return The updated deque containing the partial or complete path.
      */
-    private Deque<Position> addHorizontal(Position start, Position target, Deque<Position> positions) {
+    private PathResult<Position> addHorizontal(Position start, Position target, Deque<Position> positions) {
         int x = start.getX(), y = start.getY(), height = start.getZ();
         int dx = x - target.getX(), dy = y - target.getY();
 
@@ -83,7 +83,7 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
             return addVertical(last, target, positions);
         }
 
-        return positions;
+        return new PathResult<>(PathResultType.COMPLETE, positions);
     }
 
     /**
@@ -99,7 +99,7 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
      * @param positions The deque into which visited positions are appended.
      * @return The updated deque containing the partial or complete path.
      */
-    private Deque<Position> addVertical(Position start, Position target, Deque<Position> positions) {
+    private PathResult<Position> addVertical(Position start, Position target, Deque<Position> positions) {
         int x = start.getX(), y = start.getY(), height = start.getZ();
         int dy = y - target.getY(), dx = x - target.getX();
 
@@ -124,6 +124,6 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
             return addHorizontal(last, target, positions);
         }
 
-        return positions;
+        return new PathResult<>(PathResultType.COMPLETE, positions);
     }
 }

@@ -34,6 +34,9 @@ cmd("empty", RIGHTS_ADMIN) {
         "Empty equipment.", { it.equipment.clear() }).open()
 }
 
+// TODO@0.5.0 Combine these 3 commands into one
+// TODO@0.5.0 Some sort of item (magic potato) with a bunch of these that can be used on a player (or entered by player name)
+   // view inv/bank/equip, view stats, move to location, bring to my location, kick/ban/mute etc. etc.
 /**
  * A command that makes the player view someone's bank.
  */
@@ -46,6 +49,34 @@ cmd("viewbank", RIGHTS_ADMIN) {
     }
     plr.overlays.open(bankInterface)
 }
+
+/**
+ * A command that makes the player view someone's bank.
+ */
+cmd("viewinv", RIGHTS_ADMIN) {
+    val viewing = getInputFrom(0)
+    val viewingPlr = world.getPlayer(viewing).orElseThrow()
+    val bankInterface = object : DynamicBankInterface("The inventory of ${viewingPlr.username}") {
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> =
+            viewingPlr.inventory.filterNotNull().toCollection(ArrayList())
+    }
+    plr.overlays.open(bankInterface)
+}
+
+
+/**
+ * A command that makes the player view someone's equipment.
+ */
+cmd("viewequip", RIGHTS_ADMIN) {
+    val viewing = getInputFrom(0)
+    val viewingPlr = world.getPlayer(viewing).orElseThrow()
+    val bankInterface = object : DynamicBankInterface("The equipment of ${viewingPlr.username}") {
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> =
+            viewingPlr.equipment.filterNotNull().toCollection(ArrayList())
+    }
+    plr.overlays.open(bankInterface)
+}
+
 
 /**
  * A command that moves the player to another player.

@@ -2,6 +2,7 @@ package game.skill.crafting.armorCrafting
 
 import api.predef.*
 import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 import game.skill.crafting.hideTanning.Hide
 
@@ -121,6 +122,11 @@ enum class HideArmor(val id: Int, val level: Int, val exp: Double, val hides: Pa
     companion object {
 
         /**
+         * All the hide armor.
+         */
+        val ALL = ImmutableList.copyOf(values())
+
+        /**
          * Mappings of [HideArmor.id] to [HideArmor].
          */
         val ID_TO_ARMOR = values().associateBy { it.id }
@@ -133,7 +139,7 @@ enum class HideArmor(val id: Int, val level: Int, val exp: Double, val hides: Pa
             for (armor in values()) {
                 map.put(armor.hides?.first ?: Hide.SOFT_LEATHER, armor.id)
             }
-            map.asMap().entries.map { it.key to it.value.toIntArray() }.toMap()
+            map.asMap().entries.associate { it.key to it.value.toIntArray() }
         }
     }
 

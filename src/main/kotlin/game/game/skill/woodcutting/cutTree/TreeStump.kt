@@ -1,5 +1,7 @@
 package game.skill.woodcutting.cutTree
 
+import com.google.common.collect.ImmutableSetMultimap
+
 /**
  * A class representing a tree stump.
  *
@@ -19,13 +21,23 @@ class TreeStump(val tree: Tree, val treeId: Int, val stumpId: Int) {
          */
         val TREE_ID_MAP: Map<Int, TreeStump>
 
+        /**
+         * Tree -> Alive tree IDs.
+         */
+        val ALIVE_TREE_MAP: ImmutableSetMultimap<Tree, Int>
+
         init {
             val stumpList = ArrayList<TreeStump>()
+            val aliveTreeMap = ImmutableSetMultimap.builder<Tree, Int>()
             for (stump in Stump.values()) {
                 stumpList.addAll(buildStumpList(stump.tree, stump.all))
+                for((alive, _) in stump.all) {
+                    aliveTreeMap.put(stump.tree, alive)
+                }
             }
             ALL_STUMPS = stumpList
             TREE_ID_MAP = stumpList.associateBy { it.treeId }
+            ALIVE_TREE_MAP = aliveTreeMap.build()
         }
 
         private fun buildStumpList(tree: Tree, stumpMap: Map<Int, Int>) =

@@ -24,12 +24,8 @@ class PreDeathReceiver(val receiver: DeathHookReceiver<*>) {
      */
     fun reset() {
         val victim = receiver.victim
-        if (victim is Player) {
-            victim.overlays.closeWindows()
-        }
         victim.hitpoints.level = 0
         victim.combat.damageStack.clear()
-        victim.actions.interruptWeak()
         victim.status.remove(StatusEffectType.POISONED)
     }
 }

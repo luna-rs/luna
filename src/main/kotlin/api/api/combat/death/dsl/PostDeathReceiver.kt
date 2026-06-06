@@ -30,6 +30,7 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
             victim.skills.resetAll()
             victim.skullIcon = SkullIcon.NONE
         } else if (victim is Npc) {
+            world.npcs.remove(victim)
             if (victim.respawnTicks > 0 && victim.state == EntityState.INACTIVE) {
                 world.scheduleOnce(victim.respawnTicks) {
                     val respawnNpc = Npc(ctx, victim.baseId, victim.basePosition)
