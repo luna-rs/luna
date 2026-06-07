@@ -200,4 +200,12 @@ enum class BootsBotGear(private val priority: Int,
     override fun containsPurpose(purpose: BotGearPurpose): Boolean {
         return purpose in purposes
     }
+
+    override fun ids(): Set<Int> {
+        return ids
+    }
+
+    override fun purposes(): Set<BotGearPurpose> {
+        return purposes
+    }
 }

@@ -98,7 +98,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         return treeIds.isNotEmpty()
     }
 
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: GameObject?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         // Search nearby for birds nests and loot if we have enough inventory space.
         if (bot.walking.isEmpty && bot.inventory.computeRemainingSize() >= 2) {
             val nests = world.locator.findItems(bot, 5) { it.view.isViewableFor(bot) && Nest.isNest(it.id) }

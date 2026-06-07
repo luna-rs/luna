@@ -540,6 +540,7 @@ public final class CollisionManager {
      */
     public boolean reached(Locatable source, Locatable target, InteractionPolicy policy) {
         int distance = policy.getDistance();
+        int size = target instanceof Entity ? ((Entity) target).size() : 1;
         checkArgument(distance <= Position.VIEWING_DISTANCE, "Distance must be below max viewable range.");
 
         Position start = source.abs();
@@ -549,14 +550,14 @@ public final class CollisionManager {
             return true;
         } else if (start.getZ() != end.getZ()) {
             return false;
-        } else if (distance == 0) {
-            // Distance of 0 always requires player to occupy tile.
-            return start.equals(end);
+        } else if (source instanceof Bot && source.isWithinDistance(target, 1)) {
+            return true;
         } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
-        } else if (source instanceof Bot && source.isWithinDistance(target, 1)) {
-            return true;
+        } else if (distance == 0) {
+            // Distance of 0 always requires player to occupy tile.
+            return start.equals(end);
         }
         CollisionMatrix matrices = world.getChunks().load(end.getChunk()).getMatrices()[end.getZ()];
         switch (policy.getType()) {

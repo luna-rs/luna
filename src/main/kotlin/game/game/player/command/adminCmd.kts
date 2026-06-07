@@ -39,7 +39,7 @@ cmd("empty", RIGHTS_ADMIN) {
  * A command that makes the player view someone's bank.
  */
 cmd("viewbank", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0)
+    val viewing = getInputFrom(0).lowercase()
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> =
@@ -52,7 +52,7 @@ cmd("viewbank", RIGHTS_ADMIN) {
  * A command that makes the player view someone's bank.
  */
 cmd("viewinv", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0)
+    val viewing = getInputFrom(0).lowercase()
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The inventory of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> =
@@ -66,7 +66,7 @@ cmd("viewinv", RIGHTS_ADMIN) {
  * A command that makes the player view someone's equipment.
  */
 cmd("viewequip", RIGHTS_ADMIN) {
-    val viewing = getInputFrom(0)
+    val viewing = getInputFrom(0).lowercase()
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The equipment of ${viewingPlr.username}") {
         override fun buildDisplayItems(player: Player?): ArrayList<Item> =

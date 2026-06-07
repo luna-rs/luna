@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.script.DynamicBotScript
 import api.bot.zone.Zone
+import api.predef.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 
@@ -31,13 +32,16 @@ object SocializingCoordinator : BotCoordinator {
      * - Reactions to impressive nearby players while not already in a conversation.
      * - Social-only scamming or being the victim of a social scam.
      * - Drop party attendance or kind-bot item donation behaviour.
+     * - Cleaning junk out of bank.
      */
     override fun accept(bot: Bot) {
         bot.scriptStack.push(object : DynamicBotScript(bot) {
             override suspend fun run(): Boolean {
-                bot.log("Travelling to a random zone.")
-                handler.travelTo(Zone.ALL.random())
-                bot.log("Travel completed. Exiting temporary social script.")
+                repeat(rand(1, 5)) {
+                    bot.log("Travelling to a random zone.")
+                    handler.travelTo(Zone.entries.random())
+                    bot.log("Travel completed. Exiting temporary social script.")
+                }
                 return true
             }
         })

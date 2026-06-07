@@ -1,5 +1,6 @@
 package engine.bot.gear
 
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.def.ItemDefinition
 
 /**
@@ -1265,6 +1266,9 @@ enum class BotGearSet(
         BotGearPurpose.SKILLING
     );
 
+    companion object {
+        val VALUES = ImmutableList.copyOf(values())
+    }
     /**
      * The high-level reasons a bot may choose this gear set.
      */
@@ -1280,6 +1284,14 @@ enum class BotGearSet(
 
     override fun containsPurpose(purpose: BotGearPurpose): Boolean {
         return purpose in purposes
+    }
+
+    override fun ids(): Set<Int> {
+        return equipment
+    }
+
+    override fun purposes(): Set<BotGearPurpose> {
+        return purposes
     }
 
     /**

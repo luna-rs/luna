@@ -8,7 +8,6 @@ import api.bot.zone.SubZone.Companion.updateSubZone
 import api.bot.zone.Zone.*
 import api.predef.*
 import com.google.common.collect.HashMultimap
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSetMultimap
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -51,6 +50,20 @@ enum class SubZone(val inside: Position,
                       parent = { DRAYNOR }),
 
     /**
+     * The Al-Kharid palace. Used for low-level combat training.
+     */
+    AL_KHARID_PALACE(inside = Position(3292, 3176),
+                     area = SimpleBoxArea.of(3282, 3159, 3303, 3177),
+                     parent = { AL_KHARID }),
+
+    /**
+     * The Edgeville monastery. Used for low-level -> mid-level combat training.
+     */
+    EDGEVILLE_MONASTERY(inside = Position(3051, 3482),
+                        area = SimpleBoxArea.of(3041, 3480, 3062, 3509),
+                        parent = { EDGEVILLE }),
+
+    /**
      * The wizards' tower area. Intended for low-level combat training.
      * - Low level wizards
      */
@@ -87,6 +100,13 @@ enum class SubZone(val inside: Position,
     CHAOS_DRUID_TOWER(inside = Position(2565, 3355),
                       area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
                       parent = { ARDOUGNE }),
+
+    /**
+     * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
+     */
+    ROCK_CRABS(inside = Position(2672, 3714),
+               area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
+               parent = { RELLEKKA }),
 
     /**
      * The chaos druid tower dungeon.
@@ -229,11 +249,9 @@ enum class SubZone(val inside: Position,
      * - 2 adamant rocks
      */
     EDGEVILLE_DUNGEON_MINE(inside = Position(3132, 9874),
-                           outside =
-                               { Position(3115, 3448) },
+                           outside = { Position(3115, 3448) },
                            area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
-                           parent =
-                               { VARROCK }) {
+                           parent = { VARROCK }) {
         private val varrockLadder =
             lazyVal { world.locator.findObjectsOnTile(Position(3116, 3452)) { it.id == 1754 }.first() }
         private val dungeonLadder =
@@ -260,6 +278,22 @@ enum class SubZone(val inside: Position,
         override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             // Interact with the ladder inside the dungeon.
             return bot.actionHandler.interactions.interact(1, dungeonLadder.value)
+        }
+    },
+
+    /**
+     * The Edgeville Dungeon hill giants area. Intended for mid -> high level combat training.
+     */
+    EDGEVILLE_DUNGEON_HILL_GIANTS(inside = Position(3117, 9849),
+                                  outside = EDGEVILLE_DUNGEON_MINE.outside,
+                                  area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
+                                  parent = { VARROCK }) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return EDGEVILLE_DUNGEON_MINE.enter(bot, selectedParent, selectedOutside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return EDGEVILLE_DUNGEON_MINE.leave(bot, selectedParent, selectedOutside)
         }
     },
 
@@ -301,8 +335,14 @@ enum class SubZone(val inside: Position,
      */
     SOUTH_LUMBRIDGE_MINE(inside = Position(3233, 3150),
                          area = SimpleBoxArea.of(3219, 3139, 3248, 3162),
-                         parent =
-                             { LUMBRIDGE }),
+                         parent = { LUMBRIDGE }),
+
+    /**
+     * The Lumbridge swamp. Intended for low-level combat training.
+     */
+    LUMBRIDGE_SWAMP(inside = Position(3229, 3171),
+                    area = SimpleBoxArea.of(3203, 3168, 3231, 3193),
+                    parent = { LUMBRIDGE }),
 
     /**
      * Also known as the Scorpion Mine, this is a major mining area north of Al Kharid.
@@ -485,6 +525,13 @@ enum class SubZone(val inside: Position,
                        parent = { VARROCK }),
 
     /**
+     * The main eastern lumbridge cow pen.
+     */
+    LUMBRIDGE_COW_PEN(inside = Position(3257, 3279),
+                      area = SimpleBoxArea.of(3240, 3253, 3265, 3298),
+                      parent = { LUMBRIDGE }),
+
+    /**
      * The chaos temple north of falador and to the north-west of goblin village. Primarily intended for low-level combat
      * training and telegrabbing wines money making method.
      * - Zamorak wine
@@ -495,9 +542,7 @@ enum class SubZone(val inside: Position,
     // TODO Test bots telegrabbing wines.
     NORTH_FALADOR_CHAOS_TEMPLE(inside = Position(2934, 3515),
                                area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
-                               parent =
-                                   { FALADOR });
-
+                               parent = { FALADOR });
 
     /*
      * TODO@0.5.0 Implement Mining Guild access and routing.
@@ -556,13 +601,6 @@ enum class SubZone(val inside: Position,
     companion object {
 
         /**
-         * All registered subzones in enum order.
-         *
-         * Enum order matters when overlapping areas exist because [updateSubZone] assigns the first matching subzone.
-         */
-        val ALL: ImmutableList<SubZone> = ImmutableList.copyOf(SubZone.values())
-
-        /**
          * Maps each loaded map region to the subzones that touch it.
          *
          * This is used as a cheap pre-filter before checking exact tile containment. A bot only scans local subzones
@@ -571,7 +609,7 @@ enum class SubZone(val inside: Position,
         val LOCAL: ImmutableSetMultimap<Int, SubZone> = run {
             val map = HashMultimap.create<Int, SubZone>()
 
-            for (zone in ALL) {
+            for (zone in entries) {
                 for (region in zone.area.touchedRegions) {
                     map.put(region, zone)
                 }
@@ -604,11 +642,11 @@ enum class SubZone(val inside: Position,
          * @throws IllegalStateException If any two subzones overlap.
          */
         fun findAreaOverlaps() {
-            for (firstIndex in 0 until ALL.size) {
-                val first = ALL[firstIndex]
+            for (firstIndex in 0 until entries.size) {
+                val first = entries[firstIndex]
 
-                for (secondIndex in firstIndex + 1 until ALL.size) {
-                    val second = ALL[secondIndex]
+                for (secondIndex in firstIndex + 1 until entries.size) {
+                    val second = entries[secondIndex]
                     val overlap = findOverlap(first, second) ?: continue
 
                     throw IllegalStateException("${overlap.first} overlaps ${overlap.second} at " +

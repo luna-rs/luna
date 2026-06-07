@@ -21,6 +21,7 @@ import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
+import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
@@ -39,5 +40,6 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
-
+    scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(CombatTrainingScript::class) { bot, data -> CombatTrainingScript(bot, data) }
 }

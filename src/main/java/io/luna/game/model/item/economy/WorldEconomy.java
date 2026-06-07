@@ -176,8 +176,8 @@ public final class WorldEconomy extends AbstractScheduledService {
             List<Item> sideB = tradeData.getSideB();
 
             if (sideA.size() == 1 && sideB.size() == 1) {
-                Item itemA = sideA.get(0);
-                Item itemB = sideB.get(0);
+                Item itemA = sideA.getFirst();
+                Item itemB = sideB.getFirst();
                 if (itemA.getId() == itemB.getId()) {
                     continue;
                 }
@@ -191,13 +191,13 @@ public final class WorldEconomy extends AbstractScheduledService {
                 List<Item> barterItems = sideA.size() > 1 ? sideA : sideB;
                 List<Item> coinItem = sideA != barterItems ? sideA : sideB;
 
-                if ((barterItems == sideA && sideB.get(0).getId() != 995) ||
-                        (barterItems == sideB && sideA.get(0).getId() != 995)) {
+                if ((barterItems == sideA && sideB.getFirst().getId() != 995) ||
+                        (barterItems == sideB && sideA.getFirst().getId() != 995)) {
                     bartering(sideA, sideB);
                     continue;
                 }
 
-                multiItemForCoins(barterItems, coinItem.get(0).getAmount());
+                multiItemForCoins(barterItems, coinItem.getFirst().getAmount());
             } else {
                 bartering(sideA, sideB);
             }

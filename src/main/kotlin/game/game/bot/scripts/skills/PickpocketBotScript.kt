@@ -96,7 +96,7 @@ class PickpocketBotScript(
      * @param searching Whether the parent script is currently searching for a new target.
      * @param focus The currently selected NPC target, or `null` if no target is focused.
      */
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: Npc?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true

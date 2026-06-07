@@ -159,9 +159,8 @@ abstract class SkillingBotScript<E : Entity>(
      * Equippable tools are equipped automatically when carried in the inventory.
      *
      * @param searching `true` when the targeting layer is searching for a new focus.
-     * @param focus The current focused skilling target, or `null` if no target is active.
      */
-    final override suspend fun onExecuteInZone(searching: Boolean, focus: E?) {
+    final override suspend fun onExecuteInZone(searching: Boolean) {
         val toolId = tool?.id
         if (toolId != null) {
             if (!hasCarriedItem(toolId)) {
@@ -191,7 +190,7 @@ abstract class SkillingBotScript<E : Entity>(
         }
 
         // Run normal execution hook for subclasses.
-        onExecuteSkilling(searching, focus)
+        onExecuteSkilling(searching)
     }
 
     /**
@@ -207,9 +206,8 @@ abstract class SkillingBotScript<E : Entity>(
      * This is called after the base script has verified tool availability and equipped the selected tool when possible.
      *
      * @param searching `true` when the targeting layer is searching for a new focus.
-     * @param focus The current focused skilling target, or `null` if no target is active.
      */
-    open suspend fun onExecuteSkilling(searching: Boolean, focus: E?) {
+    open suspend fun onExecuteSkilling(searching: Boolean) {
 
     }
 

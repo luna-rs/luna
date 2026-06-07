@@ -98,15 +98,14 @@ abstract class StationaryInventoryBotScript(
      *
      * If the bot already has a weak action running, this method does nothing and keeps the current zone active.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    final override suspend fun executeInZone(zone: SubZone): Boolean {
+    final override suspend fun executeInZone(): Boolean {
         if (bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true
         }
-        return onExecuteInZone(zone)
+        return onExecuteInZone()
     }
 
     /**
@@ -159,11 +158,9 @@ abstract class StationaryInventoryBotScript(
      * Subclasses should perform their activity-specific interaction here, such as using one inventory item on another,
      * interacting with a nearby object, or clicking a make-item dialogue.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
-     *
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    open suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    open suspend fun onExecuteInZone(): Boolean {
         return true
     }
 }

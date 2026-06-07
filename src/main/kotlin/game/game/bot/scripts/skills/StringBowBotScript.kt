@@ -5,7 +5,6 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
-import api.bot.zone.SubZone
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.fletching.stringBow.Bow
@@ -72,7 +71,7 @@ class StringBowBotScript(
      */
     constructor(bot: Bot, data: StringBowData) : this(bot, data.bow, data.duration)
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
         if (bow.unstrung !in bot.inventory) {
             bot.log("No unstrung ${bow.name} left in inventory; requesting bank trip.")
             forceBanking = true

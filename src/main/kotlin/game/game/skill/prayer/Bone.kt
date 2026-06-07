@@ -29,12 +29,12 @@ enum class Bone(val id: Int, val exp: Double) {
         /**
          * A mapping of bones identifiers to instances.
          */
-        val ID_TO_BONE = values().associateBy { it.id }
+        val ID_TO_BONE = entries.associateBy { it.id }
 
         /**
          * An immutable list of [Bone.values].
          */
-        val ALL = ImmutableList.copyOf(values())
+        val ALL = ImmutableList.copyOf(entries)
     }
 
     /**

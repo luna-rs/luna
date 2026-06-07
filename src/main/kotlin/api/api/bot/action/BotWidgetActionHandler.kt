@@ -124,16 +124,6 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Clicks the logout button.
-     *
-     * This uses the normal client logout control instead of forcibly disconnecting the bot.
-     */
-    fun clickLogout() {
-        bot.output.clickLogout()
-        bot.log("Clicking logout button.")
-    }
-
-    /**
      * Closes the currently open interface window.
      *
      * If no window is open, this returns `true` immediately. Otherwise, it sends the close-interface action and waits

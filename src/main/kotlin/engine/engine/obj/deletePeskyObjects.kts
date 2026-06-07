@@ -1,7 +1,7 @@
 package engine.obj
 
 import api.predef.*
-import api.predef.ext.addObject
+import api.predef.ext.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.ObjectDirection
@@ -55,7 +55,22 @@ on(ServerLaunchEvent::class) {
         Position(3337, 3896),
         Position(3336, 3896),
         Position(2948, 3904),
-        Position(2947, 3904)
+        Position(2947, 3904),
+
+        // Lumbridge cow and chicken pen gates.
+        Position(3253, 3266),
+        Position(3253, 3267),
+
+        Position(3236, 3295),
+        Position(3236, 3296),
+
+        // Al-kharid palace
+        Position(3287, 3172),
+        Position(3287, 3171),
+        Position(3292, 3167),
+        Position(3293, 3167),
+        Position(3298, 3172),
+        Position(3298, 3171),
     )
 
     for (position in positions) {

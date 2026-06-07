@@ -132,13 +132,13 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
                         val completed = run()
-                        if(completed || !isActive) {
+                        if(completed) {
+                            terminated = true
                             break
                         }
                     }
                 } finally {
                     finish()
-                    terminated = true
                 }
             }
             return true

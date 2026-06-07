@@ -45,6 +45,9 @@ abstract class InventoryBotScript(
      */
     final override fun onInit(resumed: Boolean): Boolean {
         withdraw = withdraw()
+        if(isTerminated()) {
+            return false
+        }
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("Bot does not have required withdraw items. Adding to wanted list.")
             withdraw.forEach { bot.preferences.wantedItems.add(it.id) }
@@ -74,15 +77,14 @@ abstract class InventoryBotScript(
      *
      * If the bot already has a weak action running, this method does nothing and keeps the current zone active.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    final override suspend fun executeInZone(zone: SubZone): Boolean {
+    final override suspend fun executeInZone(): Boolean {
         if (bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true
         }
-        return onExecuteInZone(zone)
+        return onExecuteInZone()
     }
 
     /**
@@ -107,10 +109,9 @@ abstract class InventoryBotScript(
      * Subclasses should perform their main interaction here, such as using an item, interacting with an object, or
      * clicking a make-item dialogue.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    open suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    open suspend fun onExecuteInZone(): Boolean {
         return true
     }
 

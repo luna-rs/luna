@@ -59,7 +59,8 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
         return tanning.hide !in bot.inventory
     }
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
+        val zone = activeZone!!
         if (tannerNpc == null) {
             tannerNpc = world.locator
                 .findNpcs(zone.area.centerPosition, zone.area.tileRadius) {

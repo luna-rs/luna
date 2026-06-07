@@ -660,7 +660,9 @@ public class Player extends Mob {
                 return;
             }
         }
-        if (force || isBot()) {
+        if (isBot()) {
+            asBot().forceLogout();
+        } else if (force) {
             client.setForcedLogout(true);
         }
         var channel = client.getChannel();

@@ -8,6 +8,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
+import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
@@ -85,11 +86,17 @@ class SmeltOreBotScript(
         return listOf()
     }
 
-    override suspend fun onInventoryBankRequested(): Boolean {
-        return !bot.inventory.containsAll(withdraw)
-    }
-
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
+        val zone = activeZone!!
+        if (smelting == null) {
+            bot.log("No smeltable ore configured.")
+            stop()
+            return true
+        }
+        if(!bot.inventory.containsAll(withdraw) && bot.actions.size(ActionType.WEAK) == 0) {
+            forceBanking = true
+            return true
+        }
         if (furnaceObject == null) {
             furnaceObject = world.locator
                 .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in Smithing.FURNACE_OBJECTS }
@@ -101,7 +108,7 @@ class SmeltOreBotScript(
         if (furnace == null) {
             bot.log("No furnace object found in zone area.")
             stop()
-            return false
+            return true
         }
 
         val useId =

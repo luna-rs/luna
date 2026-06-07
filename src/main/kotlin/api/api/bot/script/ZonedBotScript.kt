@@ -181,7 +181,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         val zone = activeZone
         if (!forceBanking && zone != null && zone.isWithinDistance(bot, 64)) {
-            if (!executeInZone(zone)) {
+            if (!executeInZone()) {
                 val removed = zones.remove(zone)
                 bot.log(
                     "Execution rejected active zone. zone=$zone, removed=$removed, " +
@@ -220,11 +220,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * Return `false` when the zone should be removed from the current candidate list and another zone should be
      * selected on a later cycle.
      *
-     * @param zone The currently selected active zone.
-     *
      * @return `true` if {@code zone} is still usable, or `false` to reject it.
      */
-    abstract suspend fun executeInZone(zone: SubZone): Boolean
+    abstract suspend fun executeInZone(): Boolean
 
     /**
      * Runs subclass-specific initialization before the normal script loop begins.
@@ -397,7 +395,6 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     private suspend fun bankIfNeeded() {
         val activeZone = activeZone ?: return
-
         if (!bot.inventory.isFull && !forceBanking) {
             if (!activeZone.isWithinDistance(bot, 64) && bot.walking.isEmpty) {
                 bot.log("Bot is outside active zone after activity cycle. Returning. activeZone=$activeZone")

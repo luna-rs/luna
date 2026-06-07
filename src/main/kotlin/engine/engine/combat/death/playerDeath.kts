@@ -9,6 +9,8 @@ import engine.combat.prayer.CombatPrayer
 import game.player.Animations
 import game.player.Jingles
 import io.luna.Luna
+import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -67,10 +69,12 @@ DeathHookHandler.setDefaultHook(Player::class) {
                 victim.inventory.addAll(keepItems)
             }
 
-            val sourcePlayer = source as? Player ?: victim
-            world.addItem(526, 1, victim.position, sourcePlayer)
+            val view =
+                if (source is Player) ChunkUpdatableView.localView(source) else ChunkUpdatableView.localView(victim)
+            world.addItem(DeathGroundItem(ctx, 526, 1, victim.position, view, victim))
             removedItems.forEach {
-                val groundItem = world.addItem(it.id, it.amount, victim.position, sourcePlayer)
+                val groundItem = DeathGroundItem(ctx, it.id, it.amount, victim.position, view, victim)
+                world.addItem(groundItem)
                 victim.deathItems = HashSet<GroundItem>()
                 victim.deathItems += groundItem
             }

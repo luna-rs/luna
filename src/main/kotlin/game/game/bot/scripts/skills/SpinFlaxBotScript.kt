@@ -63,7 +63,8 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
         return FLAX !in bot.inventory
     }
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
+        val zone = activeZone!!
         if (spinningWheelObj == null) {
             spinningWheelObj = world.locator
                 .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in SPINNING_WHEELS }

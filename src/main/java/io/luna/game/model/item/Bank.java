@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import engine.bot.gear.BotItemTracker;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
@@ -189,7 +190,7 @@ public final class Bank extends ItemContainer {
                 player,
                 bankInterface,
                 "You do not have enough bank space to deposit that."
-        ));
+        ), new BotItemTracker(player));
     }
 
     /**

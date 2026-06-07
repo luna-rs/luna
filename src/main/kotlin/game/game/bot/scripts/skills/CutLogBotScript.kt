@@ -5,7 +5,6 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
-import api.bot.zone.SubZone
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.fletching.cutLog.Log
@@ -78,7 +77,7 @@ class CutLogBotScript(bot: Bot,
      */
     constructor(bot: Bot, data: CutLogData) : this(bot, data.log, data.index, data.duration)
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
         if (log.id !in bot.inventory) {
             bot.log("No ${log.name} logs left in inventory; requesting bank trip.")
             forceBanking = true

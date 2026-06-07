@@ -6,7 +6,6 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
-import api.bot.zone.SubZone
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.crafting.armorCrafting.CraftArmorActionItem.Companion.NEEDLE_ID
@@ -74,7 +73,7 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
      */
     constructor(bot: Bot, data: CraftArmorData) : this(bot, data.armor, data.duration)
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    override suspend fun onExecuteInZone(): Boolean {
         if (armor.hides != null) {
             if (!bot.inventory.containsAll(NEEDLE_ID, THREAD_ID, armor.hides.first.tan)) {
                 bot.log("Not all required supplies are in inventory; requesting bank trip.")

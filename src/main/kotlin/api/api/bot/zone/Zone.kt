@@ -1,5 +1,6 @@
 package api.bot.zone
 
+import api.bot.zone.Zone.Companion.REGIONS
 import api.predef.*
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.ImmutableList
@@ -168,7 +169,7 @@ enum class Zone(val anchor: Position,
                                12602, 12603, 12604, 12605, 12855, 12856, 12857, 12858, 12859, 12860, 12861, 13111,
                                13112, 13113, 13114, 13115, 13116, 13117, 13367, 13368, 13369, 13370, 13371, 13372,
                                13373),
-               bankAnchors = listOf(),
+               bankAnchors = EDGEVILLE.bankAnchors,
                travel = listOf(JewelleryTravelStrategy(TeleportJewellery.AMULET_OF_GLORY, 1),
                                TeleportTravelStrategy(TeleportSpell.VARROCK),
                                TeleportTravelStrategy(TeleportSpell.DAREEYAK),
@@ -177,14 +178,16 @@ enum class Zone(val anchor: Position,
                                TeleportTravelStrategy(TeleportSpell.GHORROCK),
                                HomeTravelStrategy,
                                WalkingTravelStrategy),
-               safe = false);
+               safe = false),
+
+    RELLEKKA(anchor = Position(2666, 3641),
+             regions = setOf(10297, 10553, 10554, 10810, 10809, 10296, 10552, 10808),
+             bankAnchors = SEERS_VILLAGE.bankAnchors,
+             travel = listOf(TeleportTravelStrategy(TeleportSpell.CAMELOT),
+                             HomeTravelStrategy,
+                             WalkingTravelStrategy));
 
     companion object {
-
-        /**
-         * All known zones.
-         */
-        val ALL = ImmutableList.copyOf(values())
 
         /**
          * All zones marked as safe.
@@ -192,7 +195,7 @@ enum class Zone(val anchor: Position,
          * Unsafe zones, such as [WILDERNESS], are excluded from this list so callers can choose normal bot destinations
          * without manually filtering dangerous areas.
          */
-        val SAFE_ZONES = ImmutableList.copyOf(ALL.filter { it.safe })
+        val SAFE_ZONES = ImmutableList.copyOf(entries.filter { it.safe })
 
         /**
          * A region-to-zone lookup table.
@@ -202,7 +205,7 @@ enum class Zone(val anchor: Position,
          */
         val REGIONS = run {
             val map = HashMap<Int, Zone>()
-            for (zone in ALL) {
+            for (zone in entries) {
                 zone.regions.forEach {
                     checkState(map.putIfAbsent(it, zone) == null, "Region [$it] already mapped to another zone.")
                 }
@@ -233,9 +236,10 @@ enum class Zone(val anchor: Position,
          */
         fun generateBankPositions() {
             val sb = StringBuilder()
-            for (zone in ALL) {
-                if (zone.bankAnchors.isNotEmpty())
+            for (zone in entries) {
+                if (zone.bankAnchors.isNotEmpty()) {
                     continue
+                }
                 val checked = HashSet<Chunk>()
                 val added = HashSet<Position>()
                 for (region in zone.regions.map { Region(it) }) {
@@ -258,8 +262,10 @@ enum class Zone(val anchor: Position,
                     sb.append("Position(")
                         .append(position.x)
                         .append(',')
+                        .append(' ')
                         .append(position.y)
                         .append(',')
+                        .append(' ')
                         .append(position.z)
                         .append("),\n")
                 }

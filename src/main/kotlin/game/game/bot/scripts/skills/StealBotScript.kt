@@ -103,7 +103,7 @@ class StealBotScript(
         ids
     }
 
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: GameObject?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true
