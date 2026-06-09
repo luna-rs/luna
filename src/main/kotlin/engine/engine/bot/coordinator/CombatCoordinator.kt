@@ -1,6 +1,8 @@
 package engine.bot.coordinator
 
 import api.bot.zone.SubZone
+import api.predef.rand
+import api.predef.randBoolean
 import game.bot.scripts.CombatTrainingScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -17,30 +19,15 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
      * - Add bossing behavior later for King Black Dragon and Kalphite Queen.
      // todo switching styles to train correct stats
  */
-    /* TODO@0.5.0 Training spots (once combat training coordinator and equipment selection are complete).
-            We may also need to do obstacles like doors and ladders to completion before starting this as well.
-            SkillingBotScript needs to be opened up to be general purpose ZonedBotScript (stays within a zone and relays
-            processing to subclasses). Instead of just taking a list of zones, scripts should take a list of zones with weights
-            (to determine how likely the bot is to go to that zone regardless of distance, etc).
-            Beginner popular spots (1-10)
-                - lumby chicken pen (3184, 3265, 3191, 3279)
-                - lumby north-east cow field (3241, 3255, 3265, 3297)
-            Other beginner spots
-                - lumby north cow field (3190, 3282, 3213, 3303)
-                - lumby swamp (3203, 3168, 3231, 3193)
-                - lumby goblins
+    /* TODO@0.5.0
             Low level popular spots (10-30)
-                - al kharid palace (smart bots) (3281, 3158, 3304, 3178)
                 - the most intelligent bots will always go to rock crabs as soon as possible. > 50% intelligence have a
                    chance to go to rock crabs but not guaranteed
             Other low level spots
-                - edgeville monastary (3039, 3478, 3063, 3510)
-                - barbarian village (3068, 3404, 3100, 3449)
                 - varrock dark wizards by the circle
             Mid level popular spots (30-60)
                 - rock crabs (> 80% intelligence always goes)
                 - varrock sewers (moss giants)
-                - edgeville dungeon (hill giants)
             Other mid level spots
                 - chaos druid tower
                 - taverly dungeon (chaos druids)
@@ -60,34 +47,57 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         // For now, travel to any zone without transitions and fight any attackable mobs.
         // TODO Combat script for the above ^ and basic equipment selection
         // for now, ONLY BEGINNER AREAS!!
+        // TODO varrock sewers
         val zones = ArrayList<SubZone>()
         if (bot.combatLevel < 10) {
-            zones += SubZone.LUMBRIDGE_RIVER
-            zones += SubZone.EAST_DRAYNOR_YEWS
-            // cow field lumby, varrock sewers
-        } else if (bot.combatLevel < 20) {
-            zones += SubZone.BARBARIAN_VILLAGE
-            zones += SubZone.WIZARDS_TOWER
-            zones += SubZone.GOBLIN_VILLAGE
-            if (bot.personality.isDumb) {
-                // use rand(1.0 - intelligence)
+            if(randBoolean()) {
+                zones += SubZone.LUMBRIDGE_SWAMP
                 zones += SubZone.LUMBRIDGE_RIVER
                 zones += SubZone.EAST_DRAYNOR_YEWS
+                zones += SubZone.GOBLIN_VILLAGE
+                zones += SubZone.LUMBRIDGE_COW_PEN
+            } else {
+                zones += SubZone.LUMBRIDGE_SWAMP
+                zones += SubZone.LUMBRIDGE_RIVER
+                zones += SubZone.LUMBRIDGE_COW_PEN
             }
-            // al kharid palace
+        } else if (bot.combatLevel < 20) {
+            // varrock sewers
+            zones += SubZone.BARBARIAN_VILLAGE
+            if (rand(1.0 - bot.personality.intelligence)) {
+                zones += SubZone.LUMBRIDGE_RIVER
+                zones += SubZone.EAST_DRAYNOR_YEWS
+                zones += SubZone.GOBLIN_VILLAGE
+            }
+            if(bot.personality.isIntelligent) {
+                zones += SubZone.AL_KHARID_PALACE
+                zones += SubZone.EDGEVILLE_MONASTERY
+            }
         } else if (bot.combatLevel < 40) {
-            // edgeville monastery, rock crabs, dark wizards at verrock entry lol lol
+            // dark wizards at varrock entry
+            if(bot.personality.isIntelligent) {
+                zones += SubZone.ROCK_CRABS
+            }
             zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
             zones += SubZone.BARBARIAN_VILLAGE
-
-        } else  {
+            zones += SubZone.AL_KHARID_PALACE
+            zones += SubZone.EDGEVILLE_MONASTERY
+            if(bot.personality.isIntelligent) {
+                zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
+            }
+        } else if (bot.combatLevel < 80) {
+            if(bot.personality.isIntelligent) {
+                zones += SubZone.ROCK_CRABS
+            }
+            zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
             zones += SubZone.CHAOS_DRUID_TOWER
             zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
             zones += SubZone.EDGEVILLE_DUNGEON_MINE
             zones += SubZone.ARDOUGNE_SQUARE_THIEVING
 
+        } else  {
+            // TODO higher level monsters, demons, dragons, etc.
         }
-        // al kharid palace
        bot.scriptStack.pushHead(CombatTrainingScript(bot, 100.minutes, zones))
     }
 }

@@ -26,7 +26,7 @@ import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
  *
  * @author lare96
  */
-class LootItemBotScript(bot: Bot) : ReflexBotScript(bot) {
+class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
     companion object {
 
@@ -142,6 +142,7 @@ class LootItemBotScript(bot: Bot) : ReflexBotScript(bot) {
                 }
             } else if (groundItem.id in bot.preferences.wantedItems) {
                 valuableItems += groundItem
+                bot.preferences.wantedItems.remove(item.id, item.amount)
                 found = true
             } else if (world.economy.getTotalPrice(item) > minimumLootValue) {
                 valuableItems += groundItem

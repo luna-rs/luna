@@ -1,8 +1,10 @@
 package game.bot.scripts
 
+import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
-import api.bot.script.BotScriptData
+import api.bot.Suspendable.naturalMicroDelay
 import api.bot.script.TargetingZonedBotScript
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import game.skill.fishing.Fish
@@ -13,13 +15,13 @@ import game.skill.prayer.Bone
 import game.skill.smithing.BarType
 import game.skill.smithing.smithBar.SmithingTable
 import game.skill.woodcutting.cutTree.Tree
-import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.PathfinderType
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZone>) :
     TargetingZonedBotScript<Npc>(bot, duration, zones) {
@@ -50,7 +52,8 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
 
     }
 
-    private var lastFocus: Npc? = null
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
+
     override fun onInit(resumed: Boolean): Boolean {
         bot.reflex.isDisableCombatReflex = true
         handler.widgets.clickAutoRetaliate(true)
@@ -64,11 +67,9 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
     }
 
     override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
-        val lastCombat = bot.combat.lastCombatWith
-        if(lastCombat is Npc && bot.combat.inCombat()) {
-            return mutableListOf(lastCombat)
+        if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc) {
+            return mutableListOf(bot.combat.lastCombatWith as Npc)
         }
-
         return world.locator.findNpcs(searchBase, searchRadius, true) {
             canAttack(it) && it.combat.isAttackable
                     && bot.combat.checkMultiCombat(it)
@@ -97,59 +98,70 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
     //  random chance to safespot based on intelligence (highest intelligence)
 
     // todo discard focus if not reachable.
-    override suspend fun onExecuteInZone(searching: Boolean, focus: Npc?) {
-        val previous = lastFocus
+    override suspend fun onExecuteInZone(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             forceBanking = true
-        } else if (previous != null && previous.state == EntityState.INACTIVE) {
-            // TODO sort by value and filter junk
-            val groundItems = world.locator.findViewableItems(previous.position) { it.view.isViewableFor(bot) }
-            for (item in groundItems) {
-                handler.interactions.interact(1, item)
-                bot.naturalDelay()
-            }
-            for ((index, item) in bot.inventory.withIndex()) {
-                if (item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
-                    handler.inventory.clickItem(1, item.id, index)
-                    break
-                }
-            }
-            lastFocus = null
-        } else if (focus != null) {
-            if (bot.combat.target == null) {
-                bot.combat.attack(focus)
-            } else {
-                handler.interactions.interact(3, bot.combat.target)
-            }
-            lastFocus = focus
+        } else if (bot.combat.lastCombatWith != null && bot.combat.inCombat()) {
+            handler.interactions.interact(3, bot.combat.lastCombatWith)
+            bot.naturalDelay()
+        } else if (focus?.isAlive != true) {
+            lootItems()
         }
     }
 
     override suspend fun refocus(): Boolean {
-        if(focus == null) {
+        if (focus?.isAlive != true || bot.combat.lastCombatWith == null) {
+            lootItems()
             return true
         }
-        if(!bot.combat.checkMultiCombat(focus)) {
+        if (bot.combat.inCombat() && bot.combat.target == focus && focus?.isAlive == true) {
+            return false
+        }
+        if (!bot.combat.checkMultiCombat(focus)) {
             lastOptions.clear()
-            if(bot.combat.lastCombatWith is Npc) {
+            if (bot.combat.lastCombatWith is Npc && bot.combat.inCombat()) {
                 lastOptions += bot.combat.lastCombatWith as Npc
             } else {
                 handler.combat.fleeCombat()
             }
         }
-        if(bot.walking.isEmpty && !bot.combat.inCombat()) {
-            bot.navigator.navigate(activeZone!!.inside, true).await() // Temporary, pathfinding sucks sometimes bots get stuck
+        if (bot.walking.isEmpty && !bot.combat.inCombat()) {
+            bot.navigator.navigate(activeZone!!.inside, true)
+                .await() // Temporary, pathfinding sucks sometimes bots get stuck
             return true
         }
         return false
     }
+
+    override suspend fun onAssignFocus(newFocus: Npc): Boolean {
+        return bot.combat.checkMultiCombat(newFocus)
+    }
+
     override fun interactionOption(): Int = 3
 
-    override fun snapshot(): BotScriptData? {
-        return null
+    override fun snapshot(): ZonedBotScriptData {
+        val data = ZonedBotScriptData()
+        data.duration = duration
+        data.zones = originalZones.toMutableList()
+        return data
     }
 
     private fun canAttack(npc: Npc): Boolean {
         return npc.combatLevel < 7 || npc.combatLevel < bot.combatLevel
+    }
+
+    private suspend fun lootItems() {
+        delay(2.seconds, 4.seconds)
+        val groundItems = world.locator.findViewableItems(bot) { it is DeathGroundItem && it.isVisibleTo(bot) }
+        for (item in groundItems) {
+            handler.interactions.interact(1, item)
+            bot.naturalMicroDelay()
+        }
+        for ((index, item) in bot.inventory.withIndex()) {
+            if (item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
+                handler.inventory.clickItem(1, item.id, index)
+                break
+            }
+        }
     }
 }

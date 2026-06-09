@@ -5,7 +5,8 @@ import api.bot.zone.SubZone;
 import api.bot.zone.Zone;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import game.bot.scripts.LootItemBotScript;
+import game.bot.scripts.DeathReflexScript;
+import game.bot.scripts.LootItemReflexScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
@@ -378,7 +379,8 @@ public final class Bot extends Player {
     @Override
     protected void onActive() {
         super.onActive();
-        reflex.add(new LootItemBotScript(this));
+        reflex.add(new LootItemReflexScript(this));
+        reflex.add(new DeathReflexScript(this));
     }
 
     @Override
