@@ -15,7 +15,7 @@ import kotlinx.coroutines.yield
  * system.
  *
  * Unlike normal bot scripts, a reflex script does not own the bot's long-term activity. It runs only while it is still
- * assigned as [bot.reflex.activeReflex], the bot is active, and its coroutine has not been cancelled.
+ * assigned as the active reflex, the bot is active, and its coroutine has not been cancelled.
  *
  * @param bot The bot running this reflex script.
  * @author lare96

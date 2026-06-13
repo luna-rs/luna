@@ -126,7 +126,7 @@ class PickpocketBotScript(
         return false
     }
 
-    override fun interactionOption(): Int = 2
+    override fun interactionOption(target: Npc): Int = 2
 
     override fun snapshot(): BotScriptData {
         val data = PickpocketData()

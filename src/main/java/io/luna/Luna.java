@@ -25,6 +25,12 @@ import java.nio.file.Paths;
  */
 public final class Luna {
 
+    //TODO@1.0 Small and basic server control panel for offline control (in the future, sync this control panel with a phone app)
+    // kick, ban, mute player
+    // move player to home
+    // shutdown server
+    // dynamically adjust active bot count
+
     /**
      * The asynchronous logger. Initialized after Log4j system properties are configured.
      */

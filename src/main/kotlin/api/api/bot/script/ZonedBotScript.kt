@@ -4,9 +4,9 @@ import api.bot.Suspendable.naturalMicroDelay
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.`object`.GameObject
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -91,7 +91,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * This avoids resolving and clicking a bank from scratch every banking cycle. It is cleared when the active zone
      * changes, when the cached bank can no longer be interacted with, or when the script is paused.
      */
-    private var cachedBank: GameObject? = null
+    protected var cachedBank: Entity? = null
 
     /**
      * Forces the next script cycle to perform a banking trip.
@@ -430,23 +430,36 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     }
 
                 for (bank in sortedBanks) {
-                    if (handler.interactions.interact(2, bank)) {
+                    val option: Int = bank.def().actions.filter { it != "null" }.size
+                    if (handler.interactions.interact(option, bank)) {
                         cachedBank = bank
-                        bot.log("Cached bank selected. parent=$parent, bank=$bank")
+                        bot.log("Cached bank selected. parent=$parent, bank=$bank, option=$option")
                         break
                     }
                 }
 
                 if (cachedBank == null) {
                     bot.log("No parent bank could be interacted with. parent=$parent, bankCount=${parent.banks.size}")
-                }
-            } else {
-                bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                if (handler.travelTo(SubZone.HOME)) {
-                    cachedBank = handler.banking.homeBank()
-                    bot.log("Home bank fallback result. cachedBank=$cachedBank")
+                    bot.log("Trying to find banking NPC.")
+                    val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
+                    { it.def().actions.contains("Bank") }.firstOrNull()
+                    if (npc != null) {
+                        bot.log("Banking NPC ${npc.id} found!")
+                        val option: Int = npc.def().actions.filter { it != "null" }.size
+                        if (handler.interactions.interact(option, npc)) {
+                            cachedBank = npc
+                        } else {
+                            bot.log("Banking NPC could not be found.")
+                        }
+                    }
                 } else {
-                    bot.log("Home bank fallback failed. Could not travel to home subzone.")
+                    bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
+                    if (handler.travelTo(SubZone.HOME)) {
+                        cachedBank = handler.banking.homeBank()
+                        bot.log("Home bank fallback result. cachedBank=$cachedBank")
+                    } else {
+                        bot.log("Home bank fallback failed. Could not travel to home subzone.")
+                    }
                 }
             }
         }

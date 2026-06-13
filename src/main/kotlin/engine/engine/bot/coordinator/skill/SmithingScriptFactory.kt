@@ -4,8 +4,9 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.SmeltOreBotScript
-import game.bot.scripts.skills.TanHideBotScript
+import game.bot.scripts.skills.SmithBarBotScript
 import game.skill.smithing.BarType
+import game.skill.smithing.smithBar.SmithingTable
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -16,7 +17,21 @@ import io.luna.game.model.mob.bot.Bot
  *
  * @author lare96
  */
-object SmithingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
+object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
+
+    /**
+     * All the most profitable smithing items.
+     */
+    val PROFITABLE_ITEMS = setOf(
+        SmithingTable.SCIMITAR,
+        SmithingTable.TWO_HANDED_SWORD,
+        SmithingTable.FULL_HELM,
+        SmithingTable.PLATESKIRT,
+        SmithingTable.PLATELEGS,
+        SmithingTable.PLATEBODY,
+        SmithingTable.ARROWTIPS,
+        SmithingTable.KITESHIELD
+    ).flatMap { it.items }
 
     /**
      * Creates a smithing training script for the bot's current level.
@@ -35,14 +50,13 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        // TODO Try smithing training first.
-
-        // Smelting starts at level 1 so it's always the fallback.
-        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES)
-        if (smeltBar == null) {
-            throw IllegalStateException("No Smithing activity could be generated.")
+        val smithingItem = getBestActivity(bot, level, { it.level }, SmithingTable.ID_TO_ITEM.values)
+        if (smithingItem != null) {
+            return SmithBarBotScript(bot, smithingItem, getDuration(bot))
         }
 
+        // Smelting starts at level 1 so it's always the fallback.
+        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES) ?: BarType.BRONZE
         // TODO Add more zones, dexterous bots use better zones.
         zones += SubZone.AL_KHARID_BANK
         return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
@@ -64,11 +78,11 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        // TODO Smithing profit is making any weapon, and pieces of armor sets that we have.
-        if (randBoolean()) {
-            return TanHideBotScript(bot, getDuration(bot))
+        // Smithing profit is making any weapon, and pieces of armor sets that we have.
+        val smithingItem = getBestActivity(bot, level, { it.level }, PROFITABLE_ITEMS)
+        if (smithingItem != null) {
+            return SmithBarBotScript(bot, smithingItem, getDuration(bot))
         }
-
         // TODO Add more zones, dexterous bots use better zones.
         zones += SubZone.AL_KHARID_BANK
         return SmeltOreBotScript(bot, null, getDuration(bot), zones)

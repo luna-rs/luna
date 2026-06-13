@@ -4,6 +4,7 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.mob.bot.Bot
 import kotlin.math.floor
 import kotlin.time.Duration
@@ -20,6 +21,8 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 abstract class SkillingScriptFactory(val skillId: Int) {
+
+    // TODO Profit function to determine which element is the most profitable to harvest/process right now.
 
     /**
      * Creates a training-focused skilling script.
@@ -80,11 +83,11 @@ abstract class SkillingScriptFactory(val skillId: Int) {
      * @param E The activity type being filtered.
      * @param level The current level used to unlock activities.
      * @param levelFunc Returns the level required for an activity.
-     * @param options The full list of possible activities.
+     * @param options The full collection of possible activities.
      *
      * @return The activities available at [level], sorted by requirement.
      */
-    protected fun <E> getActivities(level: Int, levelFunc: (E) -> Int, options: List<E>): List<E> {
+    protected fun <E> getActivities(level: Int, levelFunc: (E) -> Int, options: Collection<E>): List<E> {
         val optionsMutable = ArrayList<E>(options)
         optionsMutable.removeIf { levelFunc(it) > level }
         optionsMutable.sortByDescending { levelFunc(it) }
@@ -101,11 +104,11 @@ abstract class SkillingScriptFactory(val skillId: Int) {
      * @param bot The bot whose personality influences the selection.
      * @param level The current level used to unlock activities.
      * @param levelFunc Returns the level required for an activity.
-     * @param options The full list of possible activities.
+     * @param options The full collection of possible activities.
      *
      * @return The selected activity, or `null` if no activity is available.
      */
-    protected fun <E> getBestActivity(bot: Bot, level: Int, levelFunc: (E) -> Int, options: List<E>): E? {
+    protected fun <E> getBestActivity(bot: Bot, level: Int, levelFunc: (E) -> Int, options: Collection<E>): E? {
         val activities = getActivities(level, levelFunc, options)
         if (bot.personality.isDextrous || bot.personality.isIntelligent) {
             return activities.firstOrNull()

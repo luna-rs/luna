@@ -93,6 +93,7 @@ public class PlayerData {
      * Loads {@code player}'s data from this model.
      */
     public void load(Player player) {
+        player.getAttributes().load(attributes);
         player.setDatabaseId(databaseId);
         player.setHashedPassword(password);
         player.setPosition(position);
@@ -109,7 +110,6 @@ public class PlayerData {
         player.setUnmuteInstant(unmuteInstant);
         player.setRunEnergy(runEnergy, true);
         player.setWeight(weight, true);
-        player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
         player.updateSpellbook(spellbook, false);
         player.setTimePlayed(timePlayed);
@@ -167,7 +167,6 @@ public class PlayerData {
         unmuteInstant = player.getUnmuteInstant();
         runEnergy = player.getRunEnergy();
         weight = player.getWeight();
-        attributes = player.getAttributes().save();
         varps = player.getVarpManager().toMap();
         spellbook = player.getSpellbook();
         timePlayed = player.getTimePlayed();
@@ -187,6 +186,7 @@ public class PlayerData {
         } else {
             isBot = false;
         }
+        attributes = player.getAttributes().save();
         return this;
     }
 

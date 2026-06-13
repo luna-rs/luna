@@ -104,7 +104,7 @@ class SearchBotScript(
      * Most capable bots use option `2`, which should be the "Search for traps" option. Less intelligent or less
      * dextrous bots can accidentally use option `1`, simulating a misclick or poor game knowledge.
      */
-    override fun interactionOption(): Int =
+    override fun interactionOption(target: GameObject): Int =
         if (bot.personality.isIntelligent || bot.personality.isDextrous ||
             rand(bot.personality.intelligence) || rand(bot.personality.dexterity)) 2
         else 1

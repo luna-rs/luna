@@ -109,7 +109,7 @@ class HarvestBotScript(
      */
     constructor(bot: Bot, data: HarvestData) : this(bot, data.harvestable!!, data.duration, data.zones)
 
-    override fun interactionOption(): Int = 2
+    override fun interactionOption(target: GameObject): Int = 2
 
     override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius, true) { harvestable.resource.isResource(it.def()) }
