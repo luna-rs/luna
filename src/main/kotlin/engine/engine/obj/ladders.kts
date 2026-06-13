@@ -1,5 +1,6 @@
 package engine.obj
 
+import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
@@ -78,10 +79,15 @@ fun handleIndex(id: Int, index: Int, name: String) {
 
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
-        if (def.name.equals("Ladder")) {
+        if (def.name == "Ladder") {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id, index, name) }
-        } else if (def.name.equals("Trapdoor")) {
+        } else if (def.name == "Trapdoor") {
             // TODO Trapdoor handling here?
         }
     }
+}
+
+// Temp -- rogues den trapdoor.
+object1(7257) {
+    plr.move(SubZone.ROGUES_DEN.inside)
 }

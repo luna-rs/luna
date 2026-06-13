@@ -132,6 +132,13 @@ enum class SubZone(val inside: Position,
     },
 
     /**
+     * The Varrock east-bank. Contains ranges nearby which make it a valid cooking area.
+     */
+    VARROCK_EAST_BANK(inside = Position(3253, 3427),
+                      area = SimpleBoxArea.of(2882, 4805, 2939, 4860),
+                      parent = { VARROCK }),
+
+    /**
      * The rune essence mine. Intended for low-level and low-confidence money makers.
      */
     ESSENCE_MINE(inside = Position(2910, 4832),
@@ -239,6 +246,39 @@ enum class SubZone(val inside: Position,
                          { VARROCK }),
 
     /**
+     * The Rogues Den area. Intended for the best cooking training and profit.
+     */
+    ROGUES_DEN(inside = Position(3045, 4972, 1),
+               outside = { Position(2906, 3537) },
+               area = SimpleBoxArea.of(3036, 4961, 3067, 4988),
+               parent = { BURTHORPE }) {
+
+        private val enterTrapdoor =
+            lazyVal { world.locator.findObjectsOnTile(Position(2905, 3537)) { it.id == 7257 }.first() }
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            if (bot.actionHandler.travelTo(BURTHORPE)) {
+                // Navigate to the trapdoor that leads us into the dungeon.
+                bot.navigator.navigate(selectedOutside, true).await()
+                if (selectedOutside?.isViewableFrom(bot) == false) {
+                    return false
+                }
+                // Interact with the ladder.
+                if (!bot.actionHandler.interactions.interact(1, enterTrapdoor.value)) {
+                    return false
+                }
+                return true
+            }
+            return false
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            bot.output.sendCommand("home")
+            return true
+        }
+    },
+
+    /**
      * The Edgeville Dungeon mine. Intended for low -> high level money-making miners. They will use the brass key.
      * - 2 copper rocks
      * - 2 tin rocks
@@ -338,6 +378,13 @@ enum class SubZone(val inside: Position,
                          parent = { LUMBRIDGE }),
 
     /**
+     * The musa point fishing area. Intended for mid-level fishers.
+     */
+    MUSA_POINT_FISHING(inside = Position(2924, 3173),
+               area = SimpleBoxArea.of(2922, 3173, 2928, 3181),
+               parent = { KARAMJA }),
+
+    /**
      * The Lumbridge swamp. Intended for low-level combat training.
      */
     LUMBRIDGE_SWAMP(inside = Position(3229, 3171),
@@ -414,6 +461,13 @@ enum class SubZone(val inside: Position,
                           area = SimpleBoxArea.of(2829, 3417, 2864, 3437),
                           parent =
                               { CATHERBY }),
+
+    /**
+     * The Piscatoris fishing colony. Intended for the highest level fishers.
+     */
+    PISCATORIS_FISHING_COLONY_MAIN(inside = PISCATORIS_FISHING_COLONY.anchor,
+                          area = SimpleBoxArea.of(2306, 3663, 2363, 3705),
+                          parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.

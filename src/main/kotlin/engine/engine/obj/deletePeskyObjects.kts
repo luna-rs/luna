@@ -7,7 +7,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.`object`.ObjectDirection
 
 // Deletes pesky overworld gates/doors/etc. that mess with bot pathing.
-// THIS IS TEMPORARY AND WILL BE DELETED BEFORE 0.5.0 (maybe change it to always keeping these doors/gates open?)
+// THIS IS TEMPORARY AND WILL BE DELETED BEFORE 0.5.0 (maybe change it to always keeping these doors/gates open?).
 on(ServerLaunchEvent::class) {
     val positions = listOf(
 
@@ -71,6 +71,10 @@ on(ServerLaunchEvent::class) {
         Position(3293, 3167),
         Position(3298, 3172),
         Position(3298, 3171),
+
+        // Varrock range near bank.
+        Position(3241, 3406),
+        Position(3242, 3412)
     )
 
     for (position in positions) {
@@ -78,12 +82,9 @@ on(ServerLaunchEvent::class) {
     }
 }
 
-// Temp objects spawns (should be done from cache)
-
-/**
- * Spawn spinning wheel near home area.
- */
+// Temp objects spawns (should be done from cache).
 on(ServerLaunchEvent::class) {
+    // Spinning wheel near ::home.
     world.addObject(id = 2644,
                     x = 3208,
                     y = 3415,

@@ -28,7 +28,9 @@ object FishingSpotHandler : Task(false, 100) {
     class FishingSpotReceiver(var id: Int? = null,
                               var home: Position? = null,
                               val away: ArrayList<Position> = ArrayList())
-
+// todo this can probably be dynamically automated. Look for all possible water tiles within half viewing distance,
+//  where a tile only has 1 non-water tile at one of its cardinal axes. Then that is a possible teleportation tile.
+//  when doing the selection, fail/re-select if another fishing spot is already on that tile
     /**
      * A range of how often fishing spots can move.
      */

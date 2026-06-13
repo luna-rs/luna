@@ -55,5 +55,6 @@ object Banking {
         NpcDefinition.ALL
             .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
             .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id) }
+        loadBankingNpcs += 2271 // Emerald benedict.
     }
 }

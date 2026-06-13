@@ -138,7 +138,6 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 bot.log("Shuffled ${lastOptions.size} target option(s); dexterity distance-sort did not trigger.")
             }
 
-            val option = interactionOption()
             val iterator = lastOptions.iterator()
 
             while (iterator.hasNext()) {
@@ -148,7 +147,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 if (target.state != EntityState.ACTIVE || !onAssignFocus(target)) {
                     continue
                 }
-
+                val option = interactionOption(target)
                 if (!handler.interactions.interact(option, target)) {
                     bot.log("Failed to interact with target ${describeTarget(target)} using option $option.")
                     continue
@@ -237,7 +236,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
      */
     open suspend fun refocus(): Boolean {
         if (focus?.state == EntityState.ACTIVE && bot.actions.size(ActionType.WEAK) == 0) {
-            handler.interactions.interact(interactionOption(), focus)
+            handler.interactions.interact(interactionOption(focus!!), focus)
 
             if (rand(bot.personality.dexterity)) {
                 bot.naturalDelay()
@@ -267,9 +266,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * Most first-option actions use `1`, such as chop, mine, fish, attack, steal, or pick depending on the target type.
      * Subclasses can override this when a different context-menu option should be used.
      *
+     * @param target The target being interacted with.
      * @return The interaction option index to send.
      */
-    open fun interactionOption(): Int = 1
+    open fun interactionOption(target: E): Int = 1
 
     /**
      * Runs script-specific logic during each zone execution cycle.

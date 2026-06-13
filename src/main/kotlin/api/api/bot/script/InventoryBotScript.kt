@@ -45,7 +45,7 @@ abstract class InventoryBotScript(
      */
     final override fun onInit(resumed: Boolean): Boolean {
         withdraw = withdraw()
-        if(isTerminated()) {
+        if (isTerminated()) {
             return false
         }
         if (!bot.bank.containsAll(withdraw)) {
@@ -93,6 +93,11 @@ abstract class InventoryBotScript(
      * @param initial `true` if this is the first bank-open call for the current banking request.
      */
     final override suspend fun onBankOpen(initial: Boolean) {
+        if (!bot.bank.containsAll(withdraw)) {
+            bot.log("We no longer have the required withdraw items. Stopping script.")
+            stop()
+            return
+        }
         handler.banking.withdrawAll(withdraw)
     }
 

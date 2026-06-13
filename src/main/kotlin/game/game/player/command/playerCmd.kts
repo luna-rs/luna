@@ -1,8 +1,8 @@
 package game.player.command
 
+import api.bot.zone.Zone
 import api.event.Matcher
 import api.predef.*
-import com.google.common.collect.HashMultimap
 import game.player.QuestJournalInterface
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
@@ -12,6 +12,19 @@ import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.overlay.TextInput
+
+
+//todo temporary until ship travel,etc. are added
+cmd("piscatoris") {
+    if (plr.isBot && !plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) {
+        plr.teleport(Zone.PISCATORIS_FISHING_COLONY.anchor, TeleportStyle.REGULAR)
+    }
+}
+cmd("karamja") {
+    if (plr.isBot && !plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) {
+        plr.teleport(Zone.KARAMJA.anchor, TeleportStyle.REGULAR)
+    }
+}
 
 /**
  * A command that changes the password of a player.

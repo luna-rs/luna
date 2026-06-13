@@ -90,7 +90,9 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         WoodcuttingScriptFactory,
         FletchingScriptFactory,
         CraftingScriptFactory,
-        SmithingScriptFactory
+        SmithingScriptFactory,
+        CookingScriptFactory,
+        FishingScriptFactory
     ).associateBy { it.skillId }
 
     /**

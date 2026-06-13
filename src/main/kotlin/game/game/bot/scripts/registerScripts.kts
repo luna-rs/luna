@@ -3,12 +3,15 @@ package game.bot.scripts
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
 import game.bot.scripts.skills.CutTreeBotScript
 import game.bot.scripts.skills.CutTreeBotScript.Companion.CutTreeData
+import game.bot.scripts.skills.FishBotScript
+import game.bot.scripts.skills.FishBotScript.Companion.FishData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -16,6 +19,7 @@ import game.bot.scripts.skills.PickpocketBotScript.Companion.PickpocketData
 import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.SearchBotScript.Companion.SearchData
 import game.bot.scripts.skills.SmeltOreBotScript
+import game.bot.scripts.skills.SmithBarBotScript
 import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
@@ -42,4 +46,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CombatTrainingScript::class) { bot, data -> CombatTrainingScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
+    scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }
 }

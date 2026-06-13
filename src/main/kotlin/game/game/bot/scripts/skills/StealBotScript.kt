@@ -146,7 +146,7 @@ class StealBotScript(
         return world.locator.findObjects(searchBase, searchRadius, true) { it.id in stallIds }
     }
 
-    override fun interactionOption(): Int = 2
+    override fun interactionOption(target: GameObject): Int = 2
 
     override fun levelRequired(): Int = stalls.maxOfOrNull { it.level } ?: 0
 

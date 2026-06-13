@@ -41,7 +41,7 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
                 .map { it.item.id }
             items += 4151 // Abyssal whip.
             items += Staff.ID_TO_STAFF.keys
-            items += Fish.ALL.map { it.id }
+            items += Fish.entries.map { it.id }
 
             /* TODO Add all gear set items. Loot items should also be wanted items. split this up into RESOURCES, EQUIPMENT, etc. and add it in BotSupplies class
             for (type in GearSetType.values()) {
@@ -99,9 +99,8 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
 
     // todo discard focus if not reachable.
     override suspend fun onExecuteInZone(searching: Boolean) {
-        if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
-            forceBanking = true
-        } else if (bot.combat.lastCombatWith != null && bot.combat.inCombat()) {
+        eatFood()
+        if (bot.combat.lastCombatWith != null && bot.combat.inCombat()) {
             handler.interactions.interact(3, bot.combat.lastCombatWith)
             bot.naturalDelay()
         } else if (focus?.isAlive != true) {
@@ -110,6 +109,7 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
     }
 
     override suspend fun refocus(): Boolean {
+        eatFood()
         if (focus?.isAlive != true || bot.combat.lastCombatWith == null) {
             lootItems()
             return true
@@ -137,7 +137,7 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
         return bot.combat.checkMultiCombat(newFocus)
     }
 
-    override fun interactionOption(): Int = 3
+    override fun interactionOption(target: Npc): Int = 3
 
     override fun snapshot(): ZonedBotScriptData {
         val data = ZonedBotScriptData()
@@ -147,7 +147,7 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
     }
 
     private fun canAttack(npc: Npc): Boolean {
-        return npc.combatLevel < 7 || npc.combatLevel < bot.combatLevel
+        return npc.combatLevel < 15 || npc.combatLevel < bot.combatLevel
     }
 
     private suspend fun lootItems() {
@@ -162,6 +162,12 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
                 handler.inventory.clickItem(1, item.id, index)
                 break
             }
+        }
+    }
+
+    private fun eatFood() {
+        if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
+            forceBanking = true
         }
     }
 }
