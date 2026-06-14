@@ -100,7 +100,7 @@
   },
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 100,
+    "base_online_count": 200,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The baseline number of hours bots should remain logged out before returning.

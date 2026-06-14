@@ -8,6 +8,7 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.cooking.cookFood.Cooking.COOKING_OBJECTS
 import game.skill.cooking.cookFood.CookingInterface
 import game.skill.cooking.cookFood.Food
@@ -87,8 +88,7 @@ class CookFoodBotScript(
     override fun withdraw(): List<Item> {
         if (selectedFood == null) {
             for (food in Food.entries) {
-                val item = Item(food.raw, 28)
-                if (bot.bank.contains(item)) {
+                if (bot.itemTracker.count(food.raw) >= 28) {
                     cooking = food
                     break
                 }

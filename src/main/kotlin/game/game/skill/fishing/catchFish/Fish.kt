@@ -131,10 +131,10 @@ enum class Fish(val id: Int,
             ImmutableSetMultimap.builder<Tool, Int>()
                 .putAll(Tool.FISHING_ROD, 233, 234, 235, 236)
                 .putAll(Tool.FLY_FISHING_ROD, 309, 310, 311, 314, 315, 317, 318)
-                .put(Tool.LOBSTER_POT, 312)
+                .putAll(Tool.LOBSTER_POT, 312, 321)
                 .put(Tool.BIG_NET, 313)
-                .putAll(Tool.SMALL_NET, 316, 319)
-                .put(Tool.MONKFISH_NET, 1174)
+                .putAll(Tool.SMALL_NET, 316, 319, 320, 330, 327)
+                .putAll(Tool.MONKFISH_NET, 1174, 322)
                 .build()
 
         /**
@@ -142,8 +142,8 @@ enum class Fish(val id: Int,
          */
         val SECOND_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> =
             ImmutableSetMultimap.builder<Tool, Int>()
-                .putAll(Tool.FISHING_ROD, 309, 310, 311, 314, 315, 316, 317, 318, 319)
-                .put(Tool.HARPOON, 312)
+                .putAll(Tool.FISHING_ROD, 309, 310, 311, 314, 315, 316, 317, 318, 319, 320, 330, 327)
+                .putAll(Tool.HARPOON, 312, 321, 322)
                 .put(Tool.SHARK_HARPOON, 313)
                 .build()
     }

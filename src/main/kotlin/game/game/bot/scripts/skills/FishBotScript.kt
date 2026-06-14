@@ -6,6 +6,7 @@ import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
+import com.google.common.collect.Iterables
 import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.Fish.Companion.FIRST_CLICK_SPOTS
@@ -87,7 +88,7 @@ class FishBotScript(
      * This combines both first-click and second-click fishing spots so the
      * script can search for every valid target for the selected tool.
      */
-    private val fishingSpotIds = run {
+    private val fishingSpotIds = lazyVal {
         val ids = HashSet<Int>()
 
         for (spotId in FIRST_CLICK_SPOTS[selectedTool] + SECOND_CLICK_SPOTS[selectedTool]) {
@@ -98,7 +99,7 @@ class FishBotScript(
     }
 
     override fun requirements(): Boolean {
-        return fishingSpotIds.isNotEmpty()
+        return fishingSpotIds.value.isNotEmpty()
     }
 
     override suspend fun onBankOpenSkilling(initial: Boolean) {
@@ -119,8 +120,11 @@ class FishBotScript(
     }
 
     override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
+        println("FISHING DEBUG: finding NPCs, possible fishing spots [${Iterables.toString(fishingSpotIds.value)}]")
         return world.locator.findNpcs(searchBase, searchRadius) {
-            it.id in fishingSpotIds
+            if (it.def().name.equals("Fishing spot", true))
+                println("FISHING DEBUG: potential target ${it.id}/${it.def().name}")
+            it.id in fishingSpotIds.value
         }
     }
 
