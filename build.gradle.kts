@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -23,7 +25,9 @@ dependencies {
     implementation("com.google.guava:guava:33.4.8-jre")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("io.github.classgraph:classgraph:4.8.179")
-    implementation(kotlin("script-runtime"))
+    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.9.25") {
+        exclude(group = "com.google.guava", module = "guava")
+    }
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
