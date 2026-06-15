@@ -11834,6 +11834,33 @@
     ]
   },
   {
+    "id": 2661, // Saradomin platebody
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -30,
+      -15,
+      82,
+      80,
+      72,
+      -6,
+      80,
+      0,
+      1
+    ]
+  },
+  {
     "id": 2669, // Guthix platebody
     "index": 4,
     "two_handed?": false,
@@ -15166,6 +15193,28 @@
   },
   {
     "id": 3840, // Holy book
+    "index": 5,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      8,
+      8,
+      8,
+      8,
+      0,
+      5
+    ]
+  },
+  {
+    "id": 3844, // Book of balance
     "index": 5,
     "two_handed?": false,
     "full_body?": false,
@@ -33383,6 +33432,373 @@
       0,
       0,
       0,
+      0
+    ]
+  },
+  {
+    "id": 2665, // Saradomin full helm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -6,
+      -3,
+      30,
+      32,
+      27,
+      -1,
+      30,
+      0,
+      1
+    ]
+  },
+  {
+    "id": 2667, // Saradomin kiteshield
+    "index": 5,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -8,
+      -2,
+      44,
+      48,
+      46,
+      -1,
+      46,
+      0,
+      1
+    ]
+  },
+  {
+    "id": 6129, // Rock-shell plate
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -30,
+      -10,
+      82,
+      80,
+      72,
+      -6,
+      80,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6181, // Lederhosen shorts
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6184, // Prince tunic
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6186, // Princess blouse
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3757, // Fremennik blade
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      9,
+      14,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      1,
+      0,
+      12,
+      0
+    ]
+  },
+  {
+    "id": 4565, // Basket of eggs
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -100,
+      -100,
+      -50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -10,
+      0
+    ]
+  },
+  {
+    "id": 4566, // Rubber chicken
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -100,
+      -100,
+      -50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -10,
+      0
+    ]
+  },
+  {
+    "id": 5018, // Bone club
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      13,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      13,
+      0
+    ]
+  },
+  {
+    "id": 6313, // Opal machete
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      12,
+      -2,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      8,
+      0
+    ]
+  },
+  {
+    "id": 6315, // Jade machete
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      14,
+      -2,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      9,
+      0
+    ]
+  },
+  {
+    "id": 6541, // Mouse toy
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -100,
+      -100,
+      -50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -10,
+      0
+    ]
+  },
+  {
+    "id": 7140, // Lucky cutlass
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      9,
+      14,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      1,
+      0,
+      12,
+      0
+    ]
+  },
+  {
+    "id": 7141, // Harry's cutlass
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      9,
+      14,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      1,
+      0,
+      12,
+      0
+    ]
+  },
+  {
+    "id": 7142, // Rapier
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      14,
+      9,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      1,
+      0,
+      12,
       0
     ]
   }

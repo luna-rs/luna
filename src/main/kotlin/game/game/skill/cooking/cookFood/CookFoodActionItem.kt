@@ -72,10 +72,9 @@ class CookFoodActionItem(plr: Player,
      * Determines if the food will be burnt this action cycle.
      */
     private fun computeFoodBurnt(): Boolean {
-
-        // Cooking gauntlets decreases burn chance.
         val level = mob.cooking.level
         var burnLevel = food.burnStopLvl
+        // Cooking gauntlets decreases burn chance.
         if (mob.equipment.contains(775)) {
             burnLevel = when (food) {
                 Food.LOBSTER -> 64

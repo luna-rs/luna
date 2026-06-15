@@ -7,6 +7,9 @@ import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
 import game.skill.fishing.Fish
 import game.skill.herblore.identifyHerb.Herb
 import game.skill.magic.Staff
@@ -53,6 +56,19 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
     }
 
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
+
+    override suspend fun equipment(): BotGearLocator {
+        // Higher chance to train melee.
+        // TODO Chance based on bot personality?
+        // TODO Functions for magic and ranged combat (perfect melee first)
+        val purposes =
+            when (rand(4)) {
+           //     0 -> setOf(BotGearPurpose.MAGIC)
+             //   1 -> setOf(BotGearPurpose.RANGED)
+                else -> setOf(BotGearPurpose.MELEE)
+            }
+        return BotGearSelector.find(bot, purposes).buildLocator()
+    }
 
     override fun onInit(resumed: Boolean): Boolean {
         bot.reflex.isDisableCombatReflex = true

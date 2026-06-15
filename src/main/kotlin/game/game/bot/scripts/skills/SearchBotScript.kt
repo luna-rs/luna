@@ -6,6 +6,10 @@ import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.thieving.searchForTraps.ThievingChest
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
@@ -92,6 +96,9 @@ class SearchBotScript(
             bot.log("No food left, ending script.")
             stop()
         }
+    }
+    override suspend fun equipment(): BotGearLocator? {
+        return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
     }
 
     override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {

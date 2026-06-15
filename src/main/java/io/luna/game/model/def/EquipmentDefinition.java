@@ -177,7 +177,8 @@ public final class EquipmentDefinition implements Definition {
      * Equipment bonuses array (defensively copied).
      */
     private final int[] bonuses;
-
+// todo docs
+    private int highestRequirement= -1;
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
@@ -275,6 +276,18 @@ public final class EquipmentDefinition implements Definition {
      */
     public ImmutableList<Requirement> getRequirements() {
         return requirements;
+    }
+
+    public int getHighestRequirement() {
+        if(highestRequirement == -1) {
+            highestRequirement = 0;
+            requirements.forEach(it -> {
+                if(highestRequirement < it.level) {
+                    highestRequirement = it.level;
+                }
+            });
+        }
+        return highestRequirement;
     }
 
     /**

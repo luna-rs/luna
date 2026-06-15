@@ -7,6 +7,10 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.thieving.stealFromStall.StealFromAction
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.Position
@@ -109,7 +113,9 @@ class StealBotScript(
             forceBanking = true
         }
     }
-
+    override suspend fun equipment(): BotGearLocator? {
+        return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
+    }
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.15).toInt())) {

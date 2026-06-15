@@ -50,7 +50,6 @@ enum class BootsBotGear(private val priority: Int,
             628,  // Green boots
             626,  // Pink boots
             634,  // Turquoise boots
-            6790, // Shoes
             1846  // Slave boots
         ),
         BotGearPurpose.SHOW_OFF,
@@ -191,14 +190,6 @@ enum class BootsBotGear(private val priority: Int,
 
     override fun priority(): Int {
         return priority
-    }
-
-    override fun containsId(id: Int): Boolean {
-        return id in ids
-    }
-
-    override fun containsPurpose(purpose: BotGearPurpose): Boolean {
-        return purpose in purposes
     }
 
     override fun ids(): Set<Int> {

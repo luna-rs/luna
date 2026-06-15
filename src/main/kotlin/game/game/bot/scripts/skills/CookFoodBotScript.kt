@@ -8,11 +8,15 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.cooking.cookFood.Cooking.COOKING_OBJECTS
 import game.skill.cooking.cookFood.CookingInterface
 import game.skill.cooking.cookFood.Food
 import io.luna.game.action.ActionType
+import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
@@ -84,6 +88,13 @@ class CookFoodBotScript(
      * raw food.
      */
     private var cooking: Food? = null
+
+    override suspend fun equipment(): BotGearLocator {
+        val purpose = if (randBoolean() || bot.personality.isSocial) setOf(BotGearPurpose.SHOW_OFF)
+        else setOf(BotGearPurpose.SKILLING)
+        // Replace with Cooking gauntlets.
+        return BotGearSelector.find(bot, purpose).replace(HANDS, 775).buildLocator()
+    }
 
     override fun withdraw(): List<Item> {
         if (selectedFood == null) {

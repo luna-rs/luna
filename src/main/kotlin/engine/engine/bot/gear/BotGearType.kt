@@ -1,5 +1,7 @@
 package engine.bot.gear
 
+import api.predef.*
+
 /**
  * Represents a logical gear group that a bot can evaluate when selecting equipment.
  *
@@ -22,24 +24,6 @@ interface BotGearType {
     fun priority(): Int
 
     /**
-     * Returns whether this gear type contains the supplied item id.
-     *
-     * @param id The item id to check.
-     *
-     * @return `true` if this gear type contains [id], otherwise `false`.
-     */
-    fun containsId(id: Int): Boolean
-
-    /**
-     * Returns whether this gear type supports the supplied gear purpose.
-     *
-     * @param purpose The gear purpose to check.
-     *
-     * @return `true` if this gear type supports [purpose], otherwise `false`.
-     */
-    fun containsPurpose(purpose: BotGearPurpose): Boolean
-
-    /**
      * Returns the purposes this gear type can satisfy.
      *
      * A gear type may support multiple purposes. For example, a rune platebody could be part of melee, tank, wilderness,
@@ -55,4 +39,11 @@ interface BotGearType {
      * @return The item ids included in this gear type.
      */
     fun ids(): Set<Int>
+
+    /**
+     * Returns [ids] mapped to [BotGearItem] instances.
+     */
+    fun items(): List<BotGearItem> {
+        return ids().map { BotGearItem(equipDef(it).index, it, purposes(), priority()) }
+    }
 }

@@ -6,9 +6,14 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
 import io.luna.game.action.ActionType
+import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
@@ -63,6 +68,13 @@ class SmeltOreBotScript(
      * ore combination.
      */
     private var smelting: BarType? = null
+
+    override suspend fun equipment(): BotGearLocator? {
+        val purpose = if (randBoolean() || bot.personality.isSocial) setOf(BotGearPurpose.SHOW_OFF)
+        else setOf(BotGearPurpose.SKILLING)
+        // Goldsmith gauntlets.
+        return BotGearSelector.find(bot, purpose).replace(HANDS, 776).buildLocator()
+    }
 
     override fun withdraw(): List<Item> {
         if (selectedBar == null) {

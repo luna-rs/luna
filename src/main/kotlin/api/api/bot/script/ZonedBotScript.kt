@@ -1,11 +1,16 @@
 package api.bot.script
 
+import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
 import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
+import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
@@ -142,8 +147,14 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         timestamp = System.currentTimeMillis()
 
         if (!resumed) {
-            bot.log("Initial setup complete. Requesting initial banking. candidateZones=${zones.size}")
-
+            bot.log("Initial setup complete. Equipping required gear. candidateZones=${zones.size}")
+            val equipmentLocator = equipment()
+            if (equipmentLocator != null && !equipmentLocator.locateAndEquip()) {
+                bot.log("Gear required for this script could not be equipped.")
+                // TODO Function here that controls behaviour? Some scripts may require a cancellation, re-try, etc.
+                bot.naturalDelay()
+            }
+            bot.log("Starting initial banking.")
             if (onBankRequested(true)) {
                 if (!handler.banking.travelToBankDepositAll()) {
                     bot.log("Initial banking failed. Could not travel to bank and deposit inventory.")
@@ -223,6 +234,20 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * @return `true` if {@code zone} is still usable, or `false` to reject it.
      */
     abstract suspend fun executeInZone(): Boolean
+
+    /**
+     * Builds the equipment request used by this script.
+     *
+     * This method describes what gear the bot should try to wear during script execution. Implementations should
+     * return a [BotGearLocator] that represents the desired equipment.
+     *
+     * @return A locator that can find and equip the gear required by this script, `null` to leave equipment as-is.
+     */
+    open suspend fun equipment(): BotGearLocator? {
+        val purpose = if (randBoolean() || bot.personality.isSocial) setOf(BotGearPurpose.SHOW_OFF)
+        else setOf(BotGearPurpose.SKILLING)
+        return BotGearSelector.find(bot, purpose).buildLocator()
+    }
 
     /**
      * Runs subclass-specific initialization before the normal script loop begins.

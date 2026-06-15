@@ -223,10 +223,10 @@ enum class BotGearSet(
         setOf(
             4087, // Dragon platelegs
             3140, // Dragon chainbody
-            11335, // Dragon full helm (not in supplied 377 item dump)
+            1149, // Dragon med helm
             1187, // Dragon sq shield
             4587, // Dragon scimitar
-            11732 // Dragon boots (not in supplied 377 item dump)
+            4131 // Rune boots
         ),
         BotGearPurpose.PKING,
         BotGearPurpose.MELEE
@@ -237,10 +237,10 @@ enum class BotGearSet(
         setOf(
             4585, // Dragon plateskirt
             3140, // Dragon chainbody
-            11335, // Dragon full helm (not in supplied 377 item dump)
+            1149, // Dragon med helm
             1187, // Dragon sq shield
             4587, // Dragon scimitar
-            11732 // Dragon boots (not in supplied 377 item dump)
+            4131 // Rune boots
         ),
         BotGearPurpose.PKING,
         BotGearPurpose.MELEE
@@ -903,7 +903,7 @@ enum class BotGearSet(
             2497, // Black d'hide chaps
             2491, // Black d'hide vamb
             1169, // Coif
-            11732, // Dragon boots (not in supplied 377 item dump)
+            4131, // Rune boots
             861 // Magic shortbow
         ),
         BotGearPurpose.MELEE,
@@ -1224,7 +1224,8 @@ enum class BotGearSet(
         ),
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING,
-        BotGearPurpose.SHOW_OFF
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
     ),
 
     // Random event, quest, and disguise sets.
@@ -1276,14 +1277,6 @@ enum class BotGearSet(
 
     override fun priority(): Int {
         return level
-    }
-
-    override fun containsId(id: Int): Boolean {
-        return id in equipment
-    }
-
-    override fun containsPurpose(purpose: BotGearPurpose): Boolean {
-        return purpose in purposes
     }
 
     override fun ids(): Set<Int> {
