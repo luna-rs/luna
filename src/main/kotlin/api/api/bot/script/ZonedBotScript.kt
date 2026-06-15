@@ -10,7 +10,6 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
-import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
@@ -473,14 +472,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                         val option: Int = npc.def().actions.filter { it != "null" }.size
                         if (handler.interactions.interact(option, npc)) {
                             cachedBank = npc
+                        }
+                    }
+                    if (cachedBank == null) {
+                        bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
+                        if (handler.travelTo(SubZone.HOME)) {
+                            cachedBank = handler.banking.homeBank()
+                            bot.log("Home bank fallback result. cachedBank=$cachedBank")
                         } else {
-                            bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                            if (handler.travelTo(SubZone.HOME)) {
-                                cachedBank = handler.banking.homeBank()
-                                bot.log("Home bank fallback result. cachedBank=$cachedBank")
-                            } else {
-                                bot.log("Home bank fallback failed. Could not travel to home subzone.")
-                            }
+                            bot.log("Home bank fallback failed. Could not travel to home subzone.")
                         }
                     }
                 }
