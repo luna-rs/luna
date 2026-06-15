@@ -921,7 +921,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -934,7 +933,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -947,7 +945,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -960,7 +957,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -973,7 +969,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -986,7 +981,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),
@@ -1000,7 +994,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),
@@ -1014,7 +1007,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),

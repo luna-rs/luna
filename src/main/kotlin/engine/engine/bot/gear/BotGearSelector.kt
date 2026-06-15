@@ -2,6 +2,7 @@ package engine.bot.gear
 
 import api.predef.*
 import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearSelector.ALL_GEAR
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.AmmoDefinition
@@ -41,7 +42,7 @@ object BotGearSelector {
      * are then added for amulets, boots, capes, gloves, rings, shields, and weapons.
      */
     val ALL_GEAR = lazyVal {
-        val map = ArrayListMultimap.create<Int, BotGearItem>()
+        val map = HashMultimap.create<Int, BotGearItem>()
 
         for (set in BotGearSet.entries) {
             set.equipment.forEach {
@@ -57,7 +58,9 @@ object BotGearSelector {
         RingBotGear.entries.forEach { map.putAll(RING, it.items()) }
         ShieldBotGear.entries.forEach { map.putAll(SHIELD, it.items()) }
         WeaponBotGear.entries.forEach { map.putAll(WEAPON, it.items()) }
-
+        EquipmentDefinition.ALL.filter { it.index == WEAPON }.forEach {
+            map.put(WEAPON, BotGearItem(WEAPON, it.id, setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
+        }
         map
     }
 
@@ -175,19 +178,21 @@ object BotGearSelector {
         private fun fillAmmo() {
             val weapon = equipment[WEAPON]
             if (equipment[AMMUNITION] == null && weapon != null && WeaponDefinition.ALL.get(weapon)
-                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent) {
+                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent
+            ) {
                 class AmmoSelection(val id: Int, val strength: Int)
+
                 val selected = ArrayList<AmmoSelection>()
                 for (ammoType in AmmoDefinition.ALL.values) {
                     if (ammoType.weapons.contains(weapon)) {
-                        for(id in ammoType.ammo) {
-                            if(valid(bot, AMMUNITION, id)) {
+                        for (id in ammoType.ammo) {
+                            if (valid(bot, AMMUNITION, id)) {
                                 selected += AmmoSelection(id, ammoType.strength)
                             }
                         }
                     }
                 }
-                selected.sortByDescending {  it.strength }
+                selected.sortByDescending { it.strength }
                 equipment[AMMUNITION] = selected.firstOrNull()?.id
             }
         }

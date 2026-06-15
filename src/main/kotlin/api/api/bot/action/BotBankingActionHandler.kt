@@ -205,7 +205,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
                 }
             }
         }
-        return deposited
+        return deposited || bot.inventory.size() == 0
     }
 
     /**

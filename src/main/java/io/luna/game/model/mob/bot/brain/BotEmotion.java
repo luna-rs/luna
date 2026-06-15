@@ -246,8 +246,11 @@ public final class BotEmotion {
      * @return {@code true} if the bot should be nervous about its current hitpoints.
      */
     public boolean isNervousAboutHp() {
+        if(bot.getHealthPercent() <= 10) {
+            return true;
+        }
         Skill hitpoints = bot.getSkills().getSkill(Skill.HITPOINTS);
-        boolean alwaysNervous = (hitpoints.getStaticLevel() > 20 && hitpoints.getLevel() < 10) || hitpoints.getLevel() < 5;
+        boolean alwaysNervous = (hitpoints.getStaticLevel() > 20 && hitpoints.getLevel() < 10) || hitpoints.getLevel() < 5 || bot.getHealthPercent() <= 10;
         if (alwaysNervous && !bot.getPersonality().isStupidlyConfident()) {
             return true;
         }

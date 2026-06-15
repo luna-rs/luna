@@ -474,16 +474,14 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                         if (handler.interactions.interact(option, npc)) {
                             cachedBank = npc
                         } else {
-                            bot.log("Banking NPC could not be found.")
+                            bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
+                            if (handler.travelTo(SubZone.HOME)) {
+                                cachedBank = handler.banking.homeBank()
+                                bot.log("Home bank fallback result. cachedBank=$cachedBank")
+                            } else {
+                                bot.log("Home bank fallback failed. Could not travel to home subzone.")
+                            }
                         }
-                    }
-                } else {
-                    bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                    if (handler.travelTo(SubZone.HOME)) {
-                        cachedBank = handler.banking.homeBank()
-                        bot.log("Home bank fallback result. cachedBank=$cachedBank")
-                    } else {
-                        bot.log("Home bank fallback failed. Could not travel to home subzone.")
                     }
                 }
             }

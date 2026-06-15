@@ -91,6 +91,6 @@ enum class Tool(val id: Int,
                   message = "You start Harpooning fish.");
 
     companion object {
-        val ALL_IDS: ImmutableSet<Int> = ImmutableSet.copyOf(entries.map { it.id })
+        val ALL_IDS: Set<Int> = entries.map { it.id }.toSet()
     }
 }

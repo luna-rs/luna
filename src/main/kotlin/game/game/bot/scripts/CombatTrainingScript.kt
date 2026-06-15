@@ -61,13 +61,7 @@ class CombatTrainingScript(bot: Bot, duration: Duration, zones: MutableList<SubZ
         // Higher chance to train melee.
         // TODO Chance based on bot personality?
         // TODO Functions for magic and ranged combat (perfect melee first)
-        val purposes =
-            when (rand(4)) {
-           //     0 -> setOf(BotGearPurpose.MAGIC)
-             //   1 -> setOf(BotGearPurpose.RANGED)
-                else -> setOf(BotGearPurpose.MELEE)
-            }
-        return BotGearSelector.find(bot, purposes).buildLocator()
+        return BotGearSelector.find(bot, setOf(BotGearPurpose.MELEE)).buildLocator()
     }
 
     override fun onInit(resumed: Boolean): Boolean {
