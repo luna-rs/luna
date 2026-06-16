@@ -51,6 +51,9 @@ object BotGearSelector {
             }
         }
 
+        EquipmentDefinition.ALL.filter { it.index == WEAPON }.forEach {
+            map.put(WEAPON, BotGearItem(WEAPON, it.id, setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
+        }
         AmuletBotGear.entries.forEach { map.putAll(AMULET, it.items()) }
         BootsBotGear.entries.forEach { map.putAll(BOOTS, it.items()) }
         CapeBotGear.entries.forEach { map.putAll(CAPE, it.items()) }
@@ -58,9 +61,6 @@ object BotGearSelector {
         RingBotGear.entries.forEach { map.putAll(RING, it.items()) }
         ShieldBotGear.entries.forEach { map.putAll(SHIELD, it.items()) }
         WeaponBotGear.entries.forEach { map.putAll(WEAPON, it.items()) }
-        EquipmentDefinition.ALL.filter { it.index == WEAPON }.forEach {
-            map.put(WEAPON, BotGearItem(WEAPON, it.id, setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
-        }
         map
     }
 
@@ -178,8 +178,7 @@ object BotGearSelector {
         private fun fillAmmo() {
             val weapon = equipment[WEAPON]
             if (equipment[AMMUNITION] == null && weapon != null && WeaponDefinition.ALL.get(weapon)
-                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent
-            ) {
+                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent) {
                 class AmmoSelection(val id: Int, val strength: Int)
 
                 val selected = ArrayList<AmmoSelection>()
@@ -198,12 +197,23 @@ object BotGearSelector {
         }
 
         /**
+         * Removes the selected shield if the weapon is two-handed.
+         */
+        private fun check2hWeapon() {
+            val weapon = equipment[WEAPON]
+            if(weapon != null && equipDef(weapon).isTwoHanded) {
+                equipment[SHIELD] = null
+            }
+        }
+
+        /**
          * Builds a locator for the current desired equipment layout.
          *
          * @return A locator that can locate and equip the selected gear.
          */
         fun buildLocator(): BotGearLocator {
             fillAmmo()
+            check2hWeapon()
             return BotGearLocator(bot, equipment)
         }
     }

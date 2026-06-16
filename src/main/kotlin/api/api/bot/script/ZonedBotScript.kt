@@ -461,27 +461,27 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                         break
                     }
                 }
+            }
 
-                if (cachedBank == null) {
-                    bot.log("No parent bank could be interacted with. parent=$parent, bankCount=${parent.banks.size}")
-                    bot.log("Trying to find banking NPC.")
-                    val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
-                    { it.def().actions.contains("Bank") }.firstOrNull()
-                    if (npc != null) {
-                        bot.log("Banking NPC ${npc.id} found!")
-                        val option: Int = npc.def().actions.filter { it != "null" }.size
-                        if (handler.interactions.interact(option, npc)) {
-                            cachedBank = npc
-                        }
+            if (cachedBank == null) {
+                bot.log("No parent bank could be interacted with. parent=$parent, bankCount=${parent.banks.size}")
+                bot.log("Trying to find banking NPC.")
+                val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
+                { it.def().actions.contains("Bank") }.firstOrNull()
+                if (npc != null) {
+                    bot.log("Banking NPC ${npc.id} found!")
+                    val option: Int = npc.def().actions.filter { it != "null" }.size
+                    if (handler.interactions.interact(option, npc)) {
+                        cachedBank = npc
                     }
-                    if (cachedBank == null) {
-                        bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                        if (handler.travelTo(SubZone.HOME)) {
-                            cachedBank = handler.banking.homeBank()
-                            bot.log("Home bank fallback result. cachedBank=$cachedBank")
-                        } else {
-                            bot.log("Home bank fallback failed. Could not travel to home subzone.")
-                        }
+                }
+                if (cachedBank == null) {
+                    bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
+                    if (handler.travelTo(SubZone.HOME)) {
+                        cachedBank = handler.banking.homeBank()
+                        bot.log("Home bank fallback result. cachedBank=$cachedBank")
+                    } else {
+                        bot.log("Home bank fallback failed. Could not travel to home subzone.")
                     }
                 }
             }
