@@ -10,6 +10,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
+import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -77,7 +78,10 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             stop()
             return false
         }
-
+        if(!bot.inventory.containsAll(withdraw)) {
+            forceBanking = true
+            return true
+        }
         if (!handler.interactions.interact(2, tanner)) {
             bot.log("Could not interact with tanner NPC. Trying again next cycle.")
             return true

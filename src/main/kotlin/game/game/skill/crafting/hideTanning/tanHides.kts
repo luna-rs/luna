@@ -3,11 +3,12 @@ package game.skill.crafting.hideTanning
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
+import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
+import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
-import kotlin.collections.set
 
 /**
  * A data class representing the amount of a hide to tan.
@@ -100,7 +101,7 @@ on(ButtonClickEvent::class)
     }
 
 // "Talk" option for tanner NPC.
-npc1(804) {
+on(NpcFirstClickEvent::class).match(804, 2824).then {
     plr.newDialogue()
         .npc(targetNpc.id, "Would you like me to tan some hides?")
         .options("Yes", { open(it) },
@@ -109,4 +110,4 @@ npc1(804) {
 }
 
 // "Trade" option for tanner NPC.
-npc2(804) { open(plr) }
+on(NpcSecondClickEvent::class).match(804, 2824).then { open(plr) }
