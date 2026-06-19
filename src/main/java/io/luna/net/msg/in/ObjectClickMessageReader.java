@@ -34,18 +34,24 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
                 objectY = payload.getShort(false, ByteOrder.LITTLE);
                 objectId = payload.getShort(false, ByteOrder.LITTLE);
                 gameObject = findObject(player, objectX, objectY, objectId);
+                // todo remove after done discovery
+                System.out.println(gameObject.getId()+" first click");
                 return new ObjectFirstClickEvent(player, gameObject);
             case 241:
                 objectId = payload.getShort(false);
                 objectX = payload.getShort(true);
                 objectY = payload.getShort(false, ValueType.ADD);
                 gameObject = findObject(player, objectX, objectY, objectId);
+                // todo remove after done discovery
+                System.out.println(gameObject.getId()+" second click");
                 return new ObjectSecondClickEvent(player, gameObject);
             case 50:
                 objectY = payload.getShort(false, ValueType.ADD);
                 objectId = payload.getShort(false, ByteOrder.LITTLE);
                 objectX = payload.getShort(true, ByteOrder.LITTLE, ValueType.ADD);
                 gameObject = findObject(player, objectX, objectY, objectId);
+                // todo remove after done discovery
+                System.out.println(gameObject.getId()+" third click");
                 return new ObjectThirdClickEvent(player, gameObject);
         }
         throw new IllegalStateException("invalid opcode");
