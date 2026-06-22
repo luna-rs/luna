@@ -137,7 +137,7 @@ class StealBotScript(
      * @return The nearby full-stall objects this script can attempt to steal from, or an empty collection if the bot
      * should avoid stealing right now.
      */
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         val isGuardWatching = world.locator.findViewableNpcs(searchBase) {
             it.combat.isAttackable &&
                     StealFromAction.GUARD_NAMES.contains(it.def().name) &&
@@ -152,7 +152,7 @@ class StealBotScript(
         return world.locator.findObjects(searchBase, searchRadius, true) { it.id in stallIds }
     }
 
-    override fun interactionOption(target: GameObject): Int = 2
+    override suspend fun interactionOption(target: GameObject): Int = 2
 
     override fun levelRequired(): Int = stalls.maxOfOrNull { it.level } ?: 0
 

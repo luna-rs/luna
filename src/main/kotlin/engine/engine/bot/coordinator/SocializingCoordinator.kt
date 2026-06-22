@@ -3,6 +3,7 @@ package engine.bot.coordinator
 import api.bot.script.DynamicBotScript
 import api.bot.zone.Zone
 import api.predef.*
+import game.bot.scripts.BuyFromStoreBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 
@@ -18,6 +19,8 @@ import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
  */
 object SocializingCoordinator : BotCoordinator {
 
+    // todo somethign cooler than walkign to random areas, probably look to scam or get scammed,
+    // conversations in banks with another socializer, etc.
     /**
      * Assigns a temporary social script to the bot.
      *
@@ -35,16 +38,19 @@ object SocializingCoordinator : BotCoordinator {
      * - Cleaning junk out of bank.
      */
     override fun accept(bot: Bot) {
-        bot.scriptStack.push(object : DynamicBotScript(bot) {
-            override suspend fun run(): Boolean {
-                repeat(rand(1, 5)) {
-                    bot.log("Travelling to a random zone.")
-                    handler.travelTo(Zone.entries.random())
-                    bot.log("Travel completed. Exiting temporary social script.")
+        // TODO Weighted chance map when more sub-activities. Create a static 0.5 chance for generic coordinator
+        //  dynamically in main brain
+            bot.scriptStack.push(object : DynamicBotScript(bot) {
+                override suspend fun run(): Boolean {
+                    repeat(rand(1, 5)) {
+                        bot.log("Travelling to a random zone.")
+                        handler.travelTo(Zone.entries.random())
+                        bot.log("Travel completed. Exiting temporary social script.")
+                    }
+                    return true
                 }
-                return true
-            }
-        })
+            })
+
     }
 
     /*

@@ -8,6 +8,9 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.skill.FletchingScriptFactory
+import engine.bot.coordinator.skill.SkillingScriptFactory
+import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -99,5 +102,13 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
         data.duration = duration
         data.zones = zones
         return data
+    }
+
+    override suspend fun finish() {
+        // Chance to queue a fletching script.
+        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+            val script = FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
+            bot.scriptStack.pushTail(script, 2)
+        }
     }
 }

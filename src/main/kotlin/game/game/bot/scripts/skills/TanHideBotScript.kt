@@ -8,9 +8,9 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.gear.BotGearLocator
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
-import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -53,10 +53,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
     private var tannerNpc: Npc? = null
 
     override suspend fun onInventoryBankRequested(): Boolean {
-        val tanning = tanning
-        if (tanning == null) {
-            return false
-        }
+        val tanning = tanning ?: return false
         return tanning.hide !in bot.inventory
     }
 
@@ -78,7 +75,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             stop()
             return false
         }
-        if(!bot.inventory.containsAll(withdraw)) {
+        if (!bot.inventory.containsAll(withdraw)) {
             forceBanking = true
             return true
         }
@@ -123,10 +120,14 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
         return listOf()
     }
 
-    override fun snapshot(): BotScriptData? {
+    override fun snapshot(): BotScriptData {
         val data = ZonedBotScriptData()
         data.duration = duration
         data.zones = zones
         return data
+    }
+
+    override suspend fun equipment(): BotGearLocator? {
+        return null
     }
 }

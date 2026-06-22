@@ -24,33 +24,33 @@ import kotlin.time.Duration
 /**
  * Smiths bars into finished smithing items at an anvil.
  *
- * If [selectedItem] is supplied, this script attempts to smith that specific item when the bot has the required level
+ * If [selectedItems] is supplied, this script attempts to smith that specific item when the bot has the required level
  * and enough bars. Otherwise, it chooses a smithable item from the bot's available bars and smithing level.
  *
  * The script withdraws a hammer and a full inventory of the required bar type, travels to an anvil, opens the smithing
  * interface, and clicks the matching smithing-table slot.
  *
  * @param bot The bot running this script.
- * @param selectedItem The specific item to smith, or `null` to choose from available bars.
+ * @param selectedItems The specific item to smith, or `null` to choose from available bars.
  * @param duration How long this script should run before completing normally.
  * @author lare96
  */
 class SmithBarBotScript(
     bot: Bot,
-    val selectedItem: SmithingItem? = null,
+    val selectedItems: MutableList<SmithingItem> = mutableListOf(),
     duration: Duration
 ) : InventoryBotScript(bot, duration, mutableListOf(SubZone.HOME)) {
 
     /**
      * Recreates a smithing script from saved zone and duration data.
      *
-     * This constructor does not restore a fixed [selectedItem], so the script will choose a smithable item from the
+     * This constructor does not restore a fixed [selectedItems], so the script will choose a smithable item from the
      * bot's available bars when it initializes.
      *
      * @param bot The bot running this script.
      * @param data The saved zone and duration data.
      */
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, null, data.duration)
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, mutableListOf(), data.duration)
 
     /**
      * The cached anvil object used by this script.
@@ -62,13 +62,16 @@ class SmithBarBotScript(
     /**
      * The item selected for the current smithing session.
      *
-     * This is resolved by [withdraw] from either [selectedItem] or the bot's available bars.
+     * This is resolved by [withdraw] from either [selectedItems] or the bot's available bars.
      */
     private var smithingItem: SmithingItem? = null
 
     override fun withdraw(): List<Item> {
         // Resolve smithing bar type and item type.
-        if (selectedItem == null || bot.smithing.staticLevel < selectedItem.level || bot.itemTracker.count(selectedItem.barType.id) < 27) {
+        selectedItems.removeIf {
+            bot.smithing.staticLevel < it.level || bot.itemTracker.count(it.barType.id) < 27
+        }
+        if (selectedItems.isEmpty()) {
             // Important: Always attempt bars from the lowest -> the highest level.
             var smithingBar: BarType? = null
             for (bar in BarType.VALUES) {
@@ -82,21 +85,19 @@ class SmithBarBotScript(
                 stop()
                 return listOf()
             }
-
-            val possible = ArrayList<SmithingItem>()
             for (item in SmithingTable.BAR_TO_ITEM[smithingBar]) {
                 if (bot.smithing.staticLevel >= item.level) {
-                    possible += item
+                    selectedItems += item
                 }
             }
-            if (possible.isEmpty()) {
+            if (selectedItems.isEmpty()) {
                 bot.log("No smithing item types can be created with $smithingBar.")
                 stop()
                 return listOf()
             }
-            smithingItem = possible.random()
+            smithingItem = selectedItems.random()
         } else {
-            smithingItem = selectedItem
+            smithingItem = selectedItems.random()
         }
 
         val item = smithingItem
@@ -152,6 +153,10 @@ class SmithBarBotScript(
 
         output.sendItemWidgetClick(3, table.slotId, table.widgetId, id)
         bot.naturalDecisionDelay()
+
+        if(selectedItems.size > 1) {
+            smithingItem = selectedItems.random()
+        }
         return true
     }
 

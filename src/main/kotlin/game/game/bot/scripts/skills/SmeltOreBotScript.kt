@@ -6,10 +6,10 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
-import engine.bot.gear.BotGearSet
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
 import io.luna.game.action.ActionType
@@ -105,7 +105,7 @@ class SmeltOreBotScript(
             stop()
             return true
         }
-        if(!bot.inventory.containsAll(withdraw) && bot.actions.size(ActionType.WEAK) == 0) {
+        if (!bot.inventory.containsAll(withdraw) && bot.actions.size(ActionType.WEAK) == 0) {
             forceBanking = true
             return true
         }
@@ -139,5 +139,16 @@ class SmeltOreBotScript(
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data
+    }
+
+    override suspend fun finish() {
+        // Chance to queue a smelting, smithing, or runecrafting script.
+        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+            val script =
+                SmithingScriptFactory.getSmithingScript(bot, bot.smithing.staticLevel)
+            if (script != null) {
+                bot.scriptStack.pushTail(script, 2)
+            }
+        }
     }
 }

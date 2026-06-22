@@ -132,6 +132,11 @@ abstract class StationaryInventoryBotScript(
                 }
             }
         }
+        if (!bot.bank.containsAll(withdraw)) {
+            bot.log("We no longer have the required withdraw items. Stopping script.")
+            stop()
+            return
+        }
         handler.banking.withdrawAll(withdraw)
     }
 
