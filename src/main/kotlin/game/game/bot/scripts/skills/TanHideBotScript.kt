@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.waitFor
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -9,11 +10,12 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
 /**
@@ -75,7 +77,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             stop()
             return false
         }
-        if (!bot.inventory.containsAll(withdraw)) {
+        if (!bot.inventory.contains(tanning!!.hide)) {
             forceBanking = true
             return true
         }
@@ -128,6 +130,9 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
     }
 
     override suspend fun equipment(): BotGearLocator? {
+        if(bot.personality.isIntelligent) {
+            return BotGearSelector.find(bot, setOf(BotGearPurpose.SKILLING)).buildLocator()
+        }
         return null
     }
 }
