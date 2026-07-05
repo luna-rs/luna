@@ -1,11 +1,11 @@
 package game.skill.runecrafting.craftRune
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import game.player.Sound
 
 /**
  * The rune essence identifier.
@@ -54,10 +54,10 @@ fun craft(plr: Player, rune: CraftableRune) {
     }
 
     // Now we can craft runes!
-    val craftAmt = essenceAmt * (plr.runecrafting.level / rune.multiplier)
+    val multiplier = (plr.runecrafting.level / rune.multiplier).coerceAtLeast(1)
     val removeItem = Item(essenceId, essenceAmt)
     if (inv.remove(removeItem)) {
-        inv.add(Item(rune.id, craftAmt))
+        inv.add(Item(rune.id, essenceAmt * multiplier))
 
         plr.sendMessage("You bind the temple's power into ${itemName(rune.id)}s.")
 
@@ -73,7 +73,7 @@ fun craft(plr: Player, rune: CraftableRune) {
 /**
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
-for(entry in CraftableRune.ALTAR_TO_RUNE) {
+for(entry in CraftableRune.INSIDE_ALTAR_TO_RUNE) {
     object1(entry.key) {
         craft(plr, entry.value)
     }
