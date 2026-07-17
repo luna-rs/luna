@@ -67,11 +67,11 @@ abstract class StationaryInventoryBotScript(
         tools = tools()
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("Bot does not have required withdraw items. Adding to wanted list.")
-            withdraw.forEach { bot.preferences.wantedItems.add(it.id) }
+            withdraw.forEach { bot.preferences.addWantedItem(it.id, 2000) }
             return false
         } else if (!bot.bank.containsAllIds(tools)) {
             bot.log("Bot does not have required tools. Adding to wanted list.")
-            tools.forEach { bot.preferences.wantedItems.add(it) }
+            tools.forEach { bot.preferences.addWantedItem(it, 3) }
             return false
         }
         return true

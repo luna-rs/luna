@@ -1,11 +1,14 @@
 package game.bot.scripts
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.SkillingScriptFactory
+import game.bot.scripts.skills.SpinFlaxBotScript
 import game.obj.resource.harvestable.CabbageResource
 import game.obj.resource.harvestable.FlaxResource
 import game.obj.resource.harvestable.HarvestableResource
@@ -13,7 +16,6 @@ import game.obj.resource.harvestable.OnionResource
 import game.obj.resource.harvestable.PotatoResource
 import game.obj.resource.harvestable.WheatResource
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
 
@@ -109,9 +111,9 @@ class HarvestBotScript(
      */
     constructor(bot: Bot, data: HarvestData) : this(bot, data.harvestable!!, data.duration, data.zones)
 
-    override fun interactionOption(target: GameObject): Int = 2
+    override suspend fun interactionOption(target: GameObject): Int = 2
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius, true) { harvestable.resource.isResource(it.def()) }
     }
 
@@ -121,5 +123,13 @@ class HarvestBotScript(
         data.duration = duration
         data.zones = zones
         return data
+    }
+
+    override suspend fun finish() {
+        // Chance to queue a flax spinning script.
+        if (harvestable == Harvestable.FLAX && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
+            val script = SpinFlaxBotScript(bot, SkillingScriptFactory.getDuration(bot))
+            bot.scriptStack.pushTail(script, 2)
+        }
     }
 }

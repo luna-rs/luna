@@ -8,9 +8,12 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.skill.CraftingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
-import engine.bot.coordinator.skill.SkillingScriptFactory
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
+import game.skill.crafting.textileCrafting.Textile
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -30,7 +33,7 @@ import kotlin.time.Duration
  */
 class SpinFlaxBotScript(bot: Bot, duration: Duration) :
     InventoryBotScript(bot, duration, mutableListOf(SubZone.FLAX_SPINNING_MAIN)) {
-
+    // TODO not working or not used?
     companion object {
 
         /**
@@ -43,7 +46,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
          */
         val SPINNING_WHEELS = GameObjectDefinition.ALL
             .filter { it.name == "Spinning wheel" }
-            .map { it.id }
+            .map { it.id() }
             .toSet()
     }
 
@@ -95,9 +98,25 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
         return true
     }
 
-    override fun withdraw(): List<Item> = listOf(Item(FLAX, 28))
+    override fun withdraw(): List<Item> {
+        if (bot.itemTracker.count(FLAX) < 28) {
+            bot.log("Don't have flax, queuing flax picking script.")
+            stop()
+            val flaxScript =
+                HarvestBotScript(bot, Harvestable.FLAX, duration, mutableListOf(SubZone.SOUTH_SEERS_VILLAGE_FLAX))
+            bot.scriptStack.push(flaxScript)
+            return listOf()
+        }
+        if (bot.crafting.staticLevel < Textile.BOWSTRING.level) {
+            bot.log("Not high enough level, queuing basic crafting script.")
+            bot.scriptStack.push(CraftingScriptFactory.getBasicScript(bot))
+            stop()
+            return listOf()
+        }
+        return listOf(Item(FLAX, 28))
+    }
 
-    override fun snapshot(): BotScriptData? {
+    override fun snapshot(): BotScriptData {
         val data = ZonedBotScriptData()
         data.duration = duration
         data.zones = zones
@@ -107,7 +126,8 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
     override suspend fun finish() {
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
-            val script = FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
+            val script =
+                FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)
         }
     }

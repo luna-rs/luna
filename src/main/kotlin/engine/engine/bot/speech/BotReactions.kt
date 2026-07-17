@@ -1,6 +1,7 @@
 package engine.bot.speech
 
 import api.attr.Attr
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
@@ -11,12 +12,10 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.util.StringUtils
-import kotlin.math.floor
 
 /**
  * Coordinates event-driven emotional and speech reactions for bots. Bot reactions are small behavior hooks

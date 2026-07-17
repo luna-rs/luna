@@ -1,11 +1,12 @@
 package api.shop.dsl
 
 import api.predef.*
-import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.Shop
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivity
 
 /**
  * The receiver for the [shop] closure that encapsulates shop creation.
@@ -13,7 +14,7 @@ import io.luna.game.model.item.shop.Shop
  * @author lare96
  */
 class ShopReceiver(val name: String) {
-
+//todo docs
     /**
      * The buy policy.
      */
@@ -28,6 +29,11 @@ class ShopReceiver(val name: String) {
      * The currency.
      */
     var currency = Currency.COINS
+
+    /**
+     * If a bot can access this shop.
+     */
+    var botAccess: Bot.() -> Boolean = { true }
 
     /**
      * The next index to add an item to.
@@ -69,7 +75,7 @@ class ShopReceiver(val name: String) {
     fun register() {
 
         // Create and initialize shop.
-        val shop = Shop(world, name, restock, buy, currency)
+        val shop = Shop(world, name, restock, buy, currency, botAccess)
         shop.init(items)
 
         // Add event listeners from the OpenReceiver.
@@ -84,5 +90,12 @@ class ShopReceiver(val name: String) {
      */
     fun addItem(id: Int, amount: Int, maxAmount: Int) {
         items += ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
+    }
+
+    fun merchantsAccessOnly(strict: Boolean = false, additionalFilter: Bot.() -> Boolean = { true }) {
+        botAccess = {
+            (if (strict) preferences.lovesActivity(BotActivity.MERCHANTING)
+            else preferences.likesActivity(BotActivity.MERCHANTING)) && additionalFilter(this)
+        }
     }
 }

@@ -3,7 +3,11 @@ package game.item.degradable
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
+import game.item.degradable.DegradableEquipmentHandler.charges
 import game.item.degradable.DegradableEquipmentHandler.degrade
+import game.item.degradable.DegradableEquipmentHandler.dropRestricted
+import game.item.degradable.DegradableEquipmentHandler.idMap
+import game.item.degradable.DegradableEquipmentHandler.nextItem
 import io.luna.game.model.item.DynamicItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

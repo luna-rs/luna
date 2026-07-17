@@ -1,10 +1,9 @@
 package engine.bot.coordinator
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.DynamicBotScript
 import api.bot.zone.Zone
 import api.predef.*
-import game.bot.scripts.BuyFromStoreBotScript
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 
 /**

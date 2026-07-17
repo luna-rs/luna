@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -14,7 +15,6 @@ import engine.bot.gear.BotGearSet
 import game.skill.thieving.stealFromStall.StealFromAction
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
 

@@ -81,4 +81,11 @@ public final class BotScriptManager {
 
         return supplier.apply(bot, data);
     }
+
+    /**
+     * @return The registry of script constructors, mapped by their fully qualified class names.
+     */
+    public Map<String, ScriptSupplier<?>> getScriptMap() {
+        return scriptMap;
+    }
 }

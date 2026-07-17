@@ -22,6 +22,6 @@ public final class NumberInputMessageReader extends GameMessageReader<NumberInpu
 
     @Override
     public boolean validate(Player player, NumberInputEvent event) {
-        return player.getOverlays().contains(NumberInput.class);
+        return player.getOverlays().has(NumberInput.class);
     }
 }

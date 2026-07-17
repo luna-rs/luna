@@ -4,8 +4,8 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.FishBotScript
-import game.skill.fishing.Tool
-import game.skill.fishing.Tool.*
+import game.skill.fishing.catchFish.Tool
+import game.skill.fishing.catchFish.Tool.*
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -48,7 +48,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         SMALL_NET_AND_BAIT(
             tools = setOf(SMALL_NET, FISHING_ROD),
             zones = {
-                if (personality.isDumb && !personality.isDextrous) {
+                if (personality.isDumb || !personality.isDextrous) {
                     mutableListOf(
                         SubZone.SOUTH_LUMBRIDGE_MINE,
                         SubZone.MUSA_POINT_FISHING,
@@ -73,7 +73,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         LURE_AND_BAIT(
             tools = setOf(FLY_FISHING_ROD, FISHING_ROD),
             zones = {
-                if (personality.isDumb && !personality.isDextrous) {
+                if (personality.isDumb || !personality.isDextrous) {
                     mutableListOf(SubZone.LUMBRIDGE_RIVER)
                 } else {
                     mutableListOf(SubZone.BARBARIAN_VILLAGE)
@@ -89,7 +89,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         CAGE_AND_HARPOON(
             tools = setOf(LOBSTER_POT, HARPOON),
             zones = {
-                if (personality.isDumb && !personality.isDextrous) {
+                if (personality.isDumb || !personality.isDextrous || personality.isAntiSocial) {
                     mutableListOf(SubZone.MUSA_POINT_FISHING)
                 } else {
                     mutableListOf(SubZone.EAST_CATHERBY_FISHING)
@@ -188,7 +188,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
 
             KARAMBWAN_VESSEL -> listOf(
                 FishingZone.SMALL_NET_AND_HARPOON
-            ) // TODO Vessel fishing
+            ) // TODO Vessel fishing.
         }
 
         return zones.random().zones(bot)

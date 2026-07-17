@@ -23986,7 +23986,7 @@
     "id": 5553, // Rogue top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -24009,7 +24009,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,

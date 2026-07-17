@@ -1,15 +1,17 @@
 package api.bot.action
 
+import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.HomeTravelStrategy
 import api.bot.zone.SubZone
 import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import api.predef.*
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import game.skill.magic.Magic.teleport
 import io.luna.Luna
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
 
@@ -298,7 +300,7 @@ class BotActionHandler(val bot: Bot) {
      * @param zone The zone to travel to.
      * @return `true` if the bot reached or was already inside [zone], otherwise `false`.
      */
-    suspend fun travelTo(zone: Zone, preferWalking: Boolean = false): Boolean {
+    suspend fun travelTo(zone: Zone): Boolean {
         val stateBefore = bot.reflex.isDisableCombatReflex
         try {
             bot.reflex.isDisableCombatReflex = true
@@ -332,13 +334,18 @@ class BotActionHandler(val bot: Bot) {
             }
             val dest = zone.anchor
             val distance = bot.position.computeLongestDistance(dest)
-            if (distance < 64 || (preferWalking && distance < 256)) { // todo random chance
+            var attemptedWalking = false
+            if (distance < 128) {
                 // Just try and run there before using all strategies.
                 if (WalkingTravelStrategy.travel(bot, this, dest)) {
                     return true
                 }
+                attemptedWalking = true
             }
             for (strategy in zone.travel) {
+                if (attemptedWalking && strategy is WalkingTravelStrategy) {
+                    continue
+                }
                 bot.log("Attempting strategy ${strategy.javaClass.simpleName}.")
                 if (strategy.canTravel(bot, this, dest)) {
                     if (strategy.travel(bot, this, dest)) {
@@ -346,8 +353,15 @@ class BotActionHandler(val bot: Bot) {
                     }
                 }
             }
-            bot.log("No travel strategies were successful.")
-            return false
+            bot.log("No travel strategies were successful, falling back to zone teleportation.")
+            val goldItem = Item(995, if (zone.price < 1) 250 else zone.price) // Deduct some gold, if we can.
+            if (!bot.inventory.contains(goldItem)) {
+                bot.bank.remove(goldItem)
+            } else {
+                bot.inventory.remove(goldItem)
+            }
+            bot.teleport(dest)
+            return waitFor { bot.isViewableFrom(dest) }
         } finally {
             bot.reflex.isDisableCombatReflex = stateBefore
         }
@@ -375,61 +389,72 @@ class BotActionHandler(val bot: Bot) {
      * @return `true` if the bot successfully reaches or enters [zone], otherwise `false`.
      */
     suspend fun travelTo(zone: SubZone): Boolean {
-        val stateBefore = bot.reflex.isDisableCombatReflex
-        try {
-            bot.reflex.isDisableCombatReflex = true
-            // We are already in this sub-zone.
-            if (bot.subZone == zone) {
-                return true
-            }
-
-            // We're below level 20 in the wilderness and going home.
-            if (bot.wildernessLevel < 20 && zone == SubZone.HOME) {
-                return HomeTravelStrategy.travel(bot, this, Luna.settings().game().startingPosition())
-            }
-            val parent = zone.parent(bot)
-            val outside = zone.outside(bot)
-
-
-            // If we're in a sub-zone, try and leave first.
-            if (bot.subZone != null) {
-                val oldParent = bot.subZone.parent(bot)
-                val oldOutside = bot.subZone.outside(bot)
-                if (!bot.subZone.leave(bot, oldParent, oldOutside)) {
-                    bot.log("Could not leave sub-zone {${bot.subZone}}.")
-                    return false
+        suspend fun defaultTravelTo(): Boolean {
+            val stateBefore = bot.reflex.isDisableCombatReflex
+            try {
+                bot.reflex.isDisableCombatReflex = true
+                // We are already in this sub-zone.
+                if (bot.subZone == zone) {
+                    return true
                 }
-            }
 
-            // Then, try and travel to the parent zone.
-            if (bot.zone != parent && !travelTo(parent)) {
-                bot.log("Could not travel to parent {$parent} of $zone.")
-                return false
-            }
+                // We're below level 20 in the wilderness and going home.
+                if (bot.wildernessLevel < 20 && zone == SubZone.HOME) {
+                    return HomeTravelStrategy.travel(bot, this, Luna.settings().game().startingPosition())
+                }
+                val parent = zone.parent(bot)
+                val outside = zone.outside(bot)
 
-            // Travel to the outside anchor from the parent zone, if available.
-            if (outside != null) {
-                if (bot.navigator.navigate(outside, true).await() == NavigationResult.NO_VALID_PATH) {
-                    bot.log("Could not travel to $zone outside anchor.")
+
+                // If we're in a sub-zone, try and leave first.
+                if (bot.subZone != null) {
+                    val oldParent = bot.subZone.parent(bot)
+                    val oldOutside = bot.subZone.outside(bot)
+                    if (!bot.subZone.leave(bot, oldParent, oldOutside)) {
+                        bot.log("Could not leave sub-zone {${bot.subZone}}.")
+                        return false
+                    }
+                }
+
+                // Then, try and travel to the parent zone.
+                if (bot.zone != parent && !travelTo(parent)) {
+                    bot.log("Could not travel to parent {$parent} of $zone.")
                     return false
                 }
 
-                // Try and enter the sub-zone.
-                if (!zone.enter(bot, parent, outside)) {
-                    bot.log("Could not enter $zone.")
-                    return false
-                }
+                // Travel to the outside anchor from the parent zone, if available.
+                if (outside != null) {
+                    if (bot.navigator.navigate(outside, true).await() == NavigationResult.NO_VALID_PATH) {
+                        bot.log("Could not travel to $zone outside anchor.")
+                        return false
+                    }
 
-                // Try and path to the inside anchor if the transition did not update sub-zone state immediately.
-                if (bot.subZone != zone) {
-                    bot.navigator.navigate(zone.inside, true).await()
+                    // Try and enter the sub-zone.
+                    if (!zone.enter(bot, parent, outside)) {
+                        bot.log("Could not enter $zone.")
+                        return false
+                    }
+
+                    // Try and path to the inside anchor if the transition did not update sub-zone state immediately.
+                    if (bot.subZone != zone) {
+                        bot.navigator.navigate(zone.inside, true).await()
+                    }
+                    return bot.subZone == zone
                 }
-                return bot.subZone == zone
+                // Sub-zone has no transitions, path directly to the inside anchor.
+                return bot.navigator.navigate(zone.inside, true)
+                    .await() == NavigationResult.REACHED || bot.subZone == zone
+            } finally {
+                bot.reflex.isDisableCombatReflex = stateBefore
             }
-            // Sub-zone has no transitions, path directly to the inside anchor.
-            return bot.navigator.navigate(zone.inside, true).await() == NavigationResult.REACHED || bot.subZone == zone
-        } finally {
-            bot.reflex.isDisableCombatReflex = stateBefore
         }
+
+        if (!defaultTravelTo()) {
+            // We cannot travel to the sub-zone by default means. Attempt to teleport the bot wherever it needs to go.
+            bot.teleport(zone.inside)
+            zone.parent(bot).price.apply { bot.bank.remove(Item(995, this)) }
+            return waitFor { bot.isViewableFrom(zone.inside) }
+        }
+        return bot.isViewableFrom(zone.inside)
     }
 }

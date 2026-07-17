@@ -1,19 +1,20 @@
 package game.bot.scripts.skills
 
-import api.bot.script.BotScriptData
 import api.bot.Suspendable.naturalMicroDelay
+import io.luna.game.model.mob.bot.Bot
+import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.FletchingScriptFactory
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.TreeStump
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
@@ -117,7 +118,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         }
     }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius) { it.id in treeIds }
     }
 
@@ -136,5 +137,14 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         data.zones = originalZones.toMutableList()
         data.trees = trees
         return data
+    }
+
+    override suspend fun finish() {
+        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+            // TODO Chance to queue firemaking script.
+            val script =
+                FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
+            bot.scriptStack.pushTail(script, 2)
+        }
     }
 }

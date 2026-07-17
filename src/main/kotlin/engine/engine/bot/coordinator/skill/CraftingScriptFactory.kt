@@ -48,15 +48,11 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         //  pottery crafting
         //  textile crafting (wool/silk etc.)
 
+        // TODO pottery making as level 1 alternative when we don't have soft leather
+
         // Armor crafting starts at level 1 so it's always the fallback.
         val craftArmor = getBestActivity(bot, level, { it.level }, HideArmor.ALL)
-        if (craftArmor != null) {
-            return CraftArmorBotScript(bot, craftArmor, getDuration(bot))
-        } else {
-            // Worst case scenario, go pick flax.
-            zones += SubZone.SOUTH_SEERS_VILLAGE_FLAX
-            return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
-        }
+        return CraftArmorBotScript(bot, craftArmor ?: HideArmor.LEATHER_GLOVES, getDuration(bot))
     }
 
     /**
@@ -83,15 +79,17 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         } else {
             for (item in bot.bank) {
                 if (item != null) {
-                    val hide = Hide.HIDE_TO_HIDE[item.id]
-                    if (hide == null) {
-                        continue
-                    }
+                    Hide.HIDE_TO_HIDE[item.id] ?: continue
                     return TanHideBotScript(bot, getDuration(bot))
                 }
             }
         }
         zones += SubZone.SOUTH_SEERS_VILLAGE_FLAX
         return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
+    }
+
+    fun getBasicScript(bot: Bot): CraftArmorBotScript {
+        // todo chance of pottery crafting
+        return CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot))
     }
 }

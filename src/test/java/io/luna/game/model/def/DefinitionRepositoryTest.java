@@ -19,7 +19,7 @@ final class DefinitionRepositoryTest {
     @BeforeEach
     void initDefinition() {
         def = mock(Definition.class);
-        when(def.getId()).thenReturn(1);
+        when(def.id()).thenReturn(1);
     }
 
     @Test

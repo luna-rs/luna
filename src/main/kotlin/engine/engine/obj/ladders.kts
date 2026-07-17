@@ -80,7 +80,7 @@ fun handleIndex(id: Int, index: Int, name: String) {
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
         if (def.name == "Ladder") {
-            def.actions.forEachIndexed { index, name -> handleIndex(def.id, index, name) }
+            def.actions.forEachIndexed { index, name -> handleIndex(def.id(), index, name) }
         } else if (def.name == "Trapdoor") {
             // TODO Trapdoor handling here?
         }

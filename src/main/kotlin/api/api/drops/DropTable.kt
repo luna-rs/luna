@@ -4,7 +4,6 @@ import api.predef.*
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
-import io.luna.util.RandomUtils
 
 /**
  * Represents a drop table with a fixed chance to roll for item drops. This is the base class for all drop table types

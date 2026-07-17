@@ -1,6 +1,6 @@
 package api.bot.zone
 
-import api.bot.action.BotActionHandler
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.Zone.Companion.REGIONS
 import api.predef.*
 import com.google.common.base.Preconditions.checkState
@@ -15,7 +15,6 @@ import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -39,12 +38,14 @@ import io.luna.game.model.`object`.GameObject
  *
  * @author lare96
  */
-enum class Zone(val anchor: Position,
+enum class Zone(val price: Int,
+                val anchor: Position,
                 val regions: Set<Int>,
                 val bankAnchors: List<Position> = emptyList(),
                 val travel: List<TravelStrategy> = emptyList(),
                 val safe: Boolean = true) {
-    DRAYNOR(anchor = Position(3093, 3244),
+    DRAYNOR(price = 500,
+            anchor = Position(3093, 3244),
             regions = setOf(12338, 12339, 12340),
             bankAnchors = listOf(Position(3091, 3245, 0),
                                  Position(3091, 3242, 0),
@@ -53,14 +54,19 @@ enum class Zone(val anchor: Position,
                             TeleportTravelStrategy(TeleportSpell.LUMBRIDGE),
                             HomeTravelStrategy,
                             WalkingTravelStrategy)),
-    BURTHORPE(anchor = Position(2918, 3545),
+    ENTRANA(price = 2500,
+            anchor = Position(2866, 3336),
+            regions = setOf(11316, 11060)),
+    BURTHORPE(price = 1000,
+              anchor = Position(2918, 3545),
               regions = setOf(11575),
               travel = listOf(JewelleryTravelStrategy(TeleportJewellery.GAMES_NECKLACE, 1),
                               JewelleryTravelStrategy(TeleportJewellery.AMULET_OF_GLORY, 1),
                               TeleportTravelStrategy(TeleportSpell.FALADOR),
                               HomeTravelStrategy,
                               WalkingTravelStrategy)),
-    EDGEVILLE(anchor = Position(3087, 3496),
+    EDGEVILLE(price = 500,
+              anchor = Position(3087, 3496),
               regions = setOf(12342),
               bankAnchors = listOf(Position(3098, 3493, 0),
                                    Position(3096, 3493, 0),
@@ -70,7 +76,8 @@ enum class Zone(val anchor: Position,
                               HomeTravelStrategy,
                               WalkingTravelStrategy)),
 
-    VARROCK(anchor = Luna.settings().game().startingPosition(),
+    VARROCK(price = 250,
+            anchor = Luna.settings().game().startingPosition(),
             regions = setOf(12596, 12598, 12854, 13110, 12597, 12853, 13109, 13108, 12852),
             bankAnchors = listOf(Position(3186, 3436, 0),
                                  Position(3186, 3438, 0),
@@ -84,7 +91,8 @@ enum class Zone(val anchor: Position,
                                  Position(3186, 3442, 0)),
             travel = listOf(HomeTravelStrategy,
                             WalkingTravelStrategy)),
-    FALADOR(anchor = Position(2964, 3377),
+    FALADOR(price = 250,
+            anchor = Position(2964, 3377),
             regions = setOf(11829, 12085, 12084, 12083, 11827, 11571),
             bankAnchors = listOf(Position(3010, 3354, 0),
                                  Position(3011, 3354, 0),
@@ -96,7 +104,12 @@ enum class Zone(val anchor: Position,
                             JewelleryTravelStrategy(TeleportJewellery.AMULET_OF_GLORY, 3),
                             HomeTravelStrategy,
                             WalkingTravelStrategy)),
-    KARAMJA(anchor = Position(2946, 3147),
+    APE_ATOLL(price = 7500,
+              anchor = Position(2713, 2798),
+              regions = setOf(10795, 11051, 10794, 11050),
+              bankAnchors = listOf()), // todo
+    KARAMJA(price = 2500,
+            anchor = Position(2946, 3147),
             regions = setOf(10802,
                             10801,
                             11058,
@@ -117,29 +130,17 @@ enum class Zone(val anchor: Position,
                             11565,
                             11823,
                             11822,
-                            11821),
-            bankAnchors = listOf(),
-            travel = listOf(JewelleryTravelStrategy(TeleportJewellery.AMULET_OF_GLORY, 2),
-                                object : TravelStrategy {
-                                    override fun canTravel(bot: Bot,
-                                                           handler: BotActionHandler,
-                                                           dest: Position): Boolean = true
-
-                                    override suspend fun travel(bot: Bot,
-                                                                handler: BotActionHandler,
-                                                                dest: Position): Boolean =
-                                        bot.output.sendCommand("karamja")
-
-                                })),
-    LUMBRIDGE(anchor = Position(3222, 3219),
+                            11821)),
+    LUMBRIDGE(price = 250,
+              anchor = Position(3222, 3219),
               regions = setOf(12594, 12850, 12849, 12593),
-              bankAnchors = listOf(),
               travel = listOf(TeleportTravelStrategy(TeleportSpell.LUMBRIDGE),
                               JewelleryTravelStrategy(TeleportJewellery.AMULET_OF_GLORY, 3),
                               HomeTravelStrategy,
                               WalkingTravelStrategy)),
 
-    AL_KHARID(anchor = Position(3277, 3224),
+    AL_KHARID(price = 250,
+              anchor = Position(3277, 3224),
               regions = setOf(13107, 13106, 13362, 13361, 13105),
               bankAnchors = listOf(Position(3268, 3169, 0),
                                    Position(3268, 3168, 0),
@@ -152,7 +153,8 @@ enum class Zone(val anchor: Position,
                               HomeTravelStrategy,
                               WalkingTravelStrategy)),
 
-    SEERS_VILLAGE(anchor = Position(2723, 3485),
+    SEERS_VILLAGE(price = 1250,
+                  anchor = Position(2723, 3485),
                   regions = setOf(10806),
                   bankAnchors = listOf(Position(2728, 3494, 0),
                                        Position(2729, 3494, 0),
@@ -166,23 +168,12 @@ enum class Zone(val anchor: Position,
                                   JewelleryTravelStrategy(TeleportJewellery.DUELING_RING, 2),
                                   HomeTravelStrategy,
                                   WalkingTravelStrategy)),
-    PISCATORIS_FISHING_COLONY(anchor = Position(2335, 3687),
+    PISCATORIS_FISHING_COLONY(price = 7500,
+                              anchor = Position(2335, 3687),
                               regions = setOf(9273),
-                              bankAnchors = listOf(Position(2327, 3690)),
-                              travel = listOf(
-                                  object : TravelStrategy {
-                                      override fun canTravel(bot: Bot,
-                                                             handler: BotActionHandler,
-                                                             dest: Position): Boolean = true
-
-                                      override suspend fun travel(bot: Bot,
-                                                                  handler: BotActionHandler,
-                                                                  dest: Position): Boolean =
-                                          bot.output.sendCommand("piscatoris")
-
-                                  }
-                              )),
-    CATHERBY(anchor = Position(2809, 3435),
+                              bankAnchors = listOf(Position(2327, 3690))),
+    CATHERBY(price = 1000,
+             anchor = Position(2809, 3435),
              regions = setOf(11061, 11317),
              bankAnchors = listOf(Position(2809, 3442, 0),
                                   Position(2811, 3442, 0),
@@ -193,7 +184,8 @@ enum class Zone(val anchor: Position,
                              HomeTravelStrategy,
                              WalkingTravelStrategy)),
 
-    ARDOUGNE(anchor = Position(2661, 3306),
+    ARDOUGNE(price = 1500,
+             anchor = Position(2661, 3306),
              regions = setOf(9779, 10035, 10291, 10292, 10290, 10547, 10548, 10803, 10804),
              bankAnchors = listOf(Position(2656, 3283, 0),
                                   Position(2618, 3331, 0),
@@ -205,8 +197,11 @@ enum class Zone(val anchor: Position,
                              JewelleryTravelStrategy(TeleportJewellery.DUELING_RING, 2),
                              HomeTravelStrategy,
                              WalkingTravelStrategy)),
-
-    YANILLE(anchor = Position(2612, 3101),
+    ZANARIS(price = 7500,
+            anchor = Position(2388, 4457),
+            regions = setOf(9285, 9541, 9797, 9540, 9796)),
+    YANILLE(price = 1750,
+            anchor = Position(2612, 3101),
             regions = setOf(10288, 10032),
             bankAnchors = listOf(Position(2614, 3094, 0),
                                  Position(2614, 3092, 0),
@@ -218,7 +213,8 @@ enum class Zone(val anchor: Position,
                             HomeTravelStrategy,
                             WalkingTravelStrategy)),
 
-    WILDERNESS(anchor = Position(3088, 3544),
+    WILDERNESS(price = 500,
+               anchor = Position(3088, 3544),
                regions = setOf(11831,
                                11832,
                                11833,
@@ -279,7 +275,8 @@ enum class Zone(val anchor: Position,
                                WalkingTravelStrategy),
                safe = false),
 
-    RELLEKKA(anchor = Position(2666, 3641),
+    RELLEKKA(price = 5000,
+             anchor = Position(2666, 3657),
              regions = setOf(10297, 10553, 10554, 10810, 10809, 10296, 10552, 10808),
              bankAnchors = SEERS_VILLAGE.bankAnchors,
              travel = listOf(TeleportTravelStrategy(TeleportSpell.CAMELOT),

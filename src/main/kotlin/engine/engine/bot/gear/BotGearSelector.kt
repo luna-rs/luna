@@ -7,11 +7,12 @@ import engine.bot.gear.BotGearSelector.ALL_GEAR
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.AmmoDefinition
 import io.luna.game.model.def.EquipmentDefinition
-import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment.*
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.Weapon
+import java.util.*
 
 /**
  * Resolves bot equipment layouts from known gear definitions and the items currently owned by a bot.
@@ -43,16 +44,14 @@ object BotGearSelector {
      */
     val ALL_GEAR = lazyVal {
         val map = HashMultimap.create<Int, BotGearItem>()
-
+        EquipmentDefinition.ALL.forEach {
+            map.put(it.index, BotGearItem(it.index, it.id(), setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
+        }
         for (set in BotGearSet.entries) {
             set.equipment.forEach {
                 val index = equipDef(it).index
                 map.put(index, BotGearItem(index, it, set.purposes, set.priority()))
             }
-        }
-
-        EquipmentDefinition.ALL.filter { it.index == WEAPON }.forEach {
-            map.put(WEAPON, BotGearItem(WEAPON, it.id, setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
         }
         AmuletBotGear.entries.forEach { map.putAll(AMULET, it.items()) }
         BootsBotGear.entries.forEach { map.putAll(BOOTS, it.items()) }
@@ -61,6 +60,19 @@ object BotGearSelector {
         RingBotGear.entries.forEach { map.putAll(RING, it.items()) }
         ShieldBotGear.entries.forEach { map.putAll(SHIELD, it.items()) }
         WeaponBotGear.entries.forEach { map.putAll(WEAPON, it.items()) }
+        map
+    }
+
+    /**
+     * All known bot gear candidates, indexed by item id.
+     *
+     * This is a convenience lookup for systems that already know the item id and need the matching [BotGearItem] metadata
+     * without scanning [ALL_GEAR]. It is derived from [ALL_GEAR], so it contains the same candidate items in a flattened
+     * item-id lookup table.
+     */
+    val ALL_GEAR_IDS = lazyVal {
+        val map = HashMap<Int, BotGearItem>()
+        ALL_GEAR.value.values().forEach { map[it.id] = it }
         map
     }
 
@@ -132,7 +144,7 @@ object BotGearSelector {
                     }
                 }
 
-                selected.sortByDescending { equipDef(it.id).calculateScore(it) }
+                selected.sortByDescending { it.calculateScore() }
                 equipment[index] = selected.firstOrNull()?.id
             }
             return this
@@ -178,7 +190,8 @@ object BotGearSelector {
         private fun fillAmmo() {
             val weapon = equipment[WEAPON]
             if (equipment[AMMUNITION] == null && weapon != null && WeaponDefinition.ALL.get(weapon)
-                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent) {
+                    .filter { it.type == Weapon.SHORTBOW || it.type == Weapon.LONGBOW || it.type == Weapon.CROSSBOW }.isPresent
+            ) {
                 class AmmoSelection(val id: Int, val strength: Int)
 
                 val selected = ArrayList<AmmoSelection>()
@@ -193,6 +206,16 @@ object BotGearSelector {
                 }
                 selected.sortByDescending { it.strength }
                 equipment[AMMUNITION] = selected.firstOrNull()?.id
+                if (equipment[AMMUNITION] == null) {
+                    // Couldn't find matching ammo, fallback to melee, give bot some emergency ammo.
+                    fill(WEAPON, setOf(BotGearPurpose.MELEE))
+                    for(ammo in AmmoDefinition.ALL.values) {
+                        if(ammo.weapons.contains(weapon)) {
+                            bot.bank.add(Item(ammo.ammo.random(), 1000))
+                            break
+                        }
+                    }
+                }
             }
         }
 
@@ -201,7 +224,7 @@ object BotGearSelector {
          */
         private fun check2hWeapon() {
             val weapon = equipment[WEAPON]
-            if(weapon != null && equipDef(weapon).isTwoHanded) {
+            if (weapon != null && equipDef(weapon).isTwoHanded) {
                 equipment[SHIELD] = null
             }
         }
@@ -221,19 +244,23 @@ object BotGearSelector {
     /**
      * Finds the best owned equipment matching the supplied purposes.
      *
-     * This performs a generic purpose-based search across every known gear candidate. Valid candidates are grouped by
-     * equipment slot, scored, and reduced to the highest-scoring item for each slot.
+     * This first gives intelligent bots a chance to prefer coordinated gear sets. A set is considered usable when it
+     * satisfies every requested purpose and the bot owns enough valid pieces to wear at least half of the set. The best
+     * usable set is selected by priority, with a bonus when the full set is available, and every valid piece from that set
+     * is placed into the equipment layout.
      *
-     * The returned builder can be refined further before equipping. For example, a script can replace a weapon, fill
-     * missing slots with a second purpose, or request a specific utility item before calling
-     * [BotGearSelectorFill.buildLocator].
+     * If a complete set is selected, the layout is returned immediately. Otherwise, any missing slots are filled by the
+     * generic purpose-based selector. The fallback selector scans every known gear candidate, keeps only valid items that
+     * satisfy all requested purposes, groups them by equipment slot, and selects the highest-scoring item for each empty
+     * slot.
+     *
+     * The returned builder can still be refined before equipping. For example, a script can replace a weapon, fill missing
+     * slots with a secondary purpose, or request a specific utility item before calling [BotGearSelectorFill.buildLocator].
      *
      * @param bot The bot selecting gear.
      * @param purposes The purposes each selected gear item must satisfy.
      * @param excluding A predicate used to reject specific gear candidates.
-     *
      * @return A mutable fill builder containing the selected equipment layout.
-     *
      * @throws IllegalArgumentException If [purposes] is empty.
      */
     fun find(
@@ -243,8 +270,58 @@ object BotGearSelector {
     ): BotGearSelectorFill {
         require(purposes.isNotEmpty()) { "Must have at least one purpose." }
 
-        val selection = ArrayListMultimap.create<Int, BotGearItem>()
+        // More intelligent bots tend to use gear sets.
+        val equipment = arrayOfNulls<Int>(14)
+        if (bot.personality.isIntelligent || rand(bot.personality.intelligence)) {
+            // Determine which gear sets we can use. Must have at least size / 2 pieces of the set.
+            val gearSelection = EnumMap<BotGearSet, Int>(BotGearSet::class.java)
+            for (set in BotGearSet.entries) {
+                if (!set.purposes.containsAll(purposes)) {
+                    continue
+                }
+                var count = 0
+                for (id in set.equipment) {
+                    val item = ALL_GEAR_IDS.value[id]!!
+                    if (!excluding(item) && valid(bot, item.index, item.id)) {
+                        count++
+                    }
+                }
+                val size = set.equipment.size
+                if (count >= size / 2) {
+                    gearSelection[set] = count
+                }
+            }
 
+            // If we found equipable gearsets, find the best one and set all possible pieces.
+            if (gearSelection.isNotEmpty()) {
+                // Best one = highest priority + amount of pieces of the set we have.
+                val selected = gearSelection.entries.maxBy {
+                    var score = it.key.priority() + it.value // Default score based on priority and owned pieces.
+                    if (it.value == it.key.equipment.size) {
+                        // We have the entire set, give a bonus to the score.
+                        score += it.value * 2
+                    }
+                    score
+                }
+
+                // Set all possible pieces.
+                for (id in selected.key.equipment) {
+                    val item = ALL_GEAR_IDS.value[id]!!
+                    if (excluding(item) || !valid(bot, item.index, item.id)) {
+                        continue
+                    }
+                    equipment[item.index] = item.id
+                }
+
+                // Dumb social bots prefer full sets, even when inefficient.
+                if (selected.key.equipment.size == selected.value && bot.personality.isDumb && bot.personality.isSocial) {
+                    return BotGearSelectorFill(bot, equipment)
+                }
+            }
+        }
+
+        // Default selection mode, determine all valid equipable items.
+        val selection = ArrayListMultimap.create<Int, BotGearItem>()
         for (entry in ALL_GEAR.value.entries()) {
             val item = entry.value
             if (!valid(bot, entry.key, item.id) || !item.purposes.containsAll(purposes) || excluding(item)) {
@@ -253,13 +330,23 @@ object BotGearSelector {
             selection.put(entry.key, item)
         }
 
-        val equipment = arrayOfNulls<Int>(14)
+        // Set the best item for each missing slot.
         for (index in equipment.indices) {
             val items = selection[index]
-            items.sortByDescending { equipDef(it.id).calculateScore(it) }
-            equipment[index] = items.firstOrNull()?.id
+            val equipmentId = equipment[index]
+            items.sortByDescending { it.calculateScore() }
+            val selectionItem = items.firstOrNull()
+            if (equipmentId == null) {
+                equipment[index] = selectionItem?.id
+            } else if(!bot.personality.isDumb) {
+                // Bots that aren't stupid will use the most efficient equipment possible.
+                val equipmentItem = ALL_GEAR_IDS.value[equipmentId]
+                val selectionScore = selectionItem?.calculateScore() ?: 0
+                if(equipmentItem != null && selectionScore > equipmentItem.calculateScore()) {
+                    equipment[index] = selectionItem?.id
+                }
+            }
         }
-
         return BotGearSelectorFill(bot, equipment)
     }
 
@@ -310,44 +397,14 @@ object BotGearSelector {
         return BotGearSelectorFill(bot, equipment)
     }
 
-    /**
-     * Calculates a rough usefulness score for this equipment definition.
-     *
-     * The score is intentionally simple. It starts with the item's highest equipment requirement, then applies extra
-     * bonuses for weapon and shield types that are usually more desirable for bots.
-     *
-     * This score is used only to choose between multiple valid candidates in the same slot. It is not intended to be a
-     * perfect combat formula.
-     *
-     * @return The calculated equipment score.
-     */
-    private fun EquipmentDefinition.calculateScore(item: BotGearItem): Int {
-        val weaponType = if (index == WEAPON) WeaponDefinition.ALL[id].orElse(null)?.type else null
-        val shieldType = if (index == SHIELD) ItemDefinition.ALL[id].orElse(null) else null
+    fun computeWantedEquipment(bot: Bot): Set<Int> {
+        val wanted = HashSet<Int>()
+        /* for() {
+          // todo adds wanted equipment for level if bot has none
+         }*
 
-        var score = 0
-        score += item.priority * 10
-        score += highestRequirement
-        score +=
-            when (weaponType) {
-                Weapon.WHIP -> 150
-                Weapon.SCIMITAR, Weapon.SHORTBOW -> 100
-                Weapon.DART, Weapon.KNIFE -> 75
-                Weapon.LONGSWORD, Weapon.BATTLEAXE, Weapon.TWO_HANDED_SWORD, Weapon.CLAWS -> 50
-                Weapon.SWORD, Weapon.DAGGER, Weapon.MACE -> 25
-                else -> 0
-            }
-
-        score +=
-            if (shieldType != null)
-                when {
-                    shieldType.name.contains("crystal", true) -> 50
-                    shieldType.name.contains("kiteshield", true) -> 25
-                    else -> 0
-                }
-            else 0
-
-        return score
+         */
+        return emptySet()
     }
 
     /**

@@ -4,7 +4,7 @@ import api.predef.*
 import game.player.login.firstLogin
 import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
 import game.skill.crafting.jewelleryMaking.SilverJewelleryTable
-import game.skill.fishing.Tool
+import game.skill.fishing.catchFish.Tool
 import game.skill.magic.Rune
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.event.impl.LoginEvent

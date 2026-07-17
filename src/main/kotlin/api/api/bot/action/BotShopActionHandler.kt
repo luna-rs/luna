@@ -3,10 +3,10 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.shop.ShopInterface
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * A [BotActionHandler] implementation for shop related actions.

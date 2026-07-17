@@ -1,10 +1,10 @@
 package game.skill.magic.teleOther
 
-import io.luna.game.model.Position
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
 import game.skill.magic.teleportSpells.TeleportSpell
+import io.luna.game.model.Position
 
 /**
  * Represents all the different teleother spell types.

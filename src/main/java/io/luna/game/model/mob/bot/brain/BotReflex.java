@@ -73,6 +73,7 @@ public final class BotReflex {
             for (ReflexBotScript script : reflexes) {
                 if (script.shouldReact()) {
                     // Reflex script was triggered, start it.
+                    bot.getScriptStack().pause();
                     activeReflex = script;
                     activeReflex.start();
                     return false;
@@ -81,15 +82,15 @@ public final class BotReflex {
         }
 
         // Handle automatic character design if the interface is open.
-        if (bot.getOverlays().contains(PlayerAppearance.DesignPlayerInterface.class)) {
+        if (bot.getOverlays().has(PlayerAppearance.DesignPlayerInterface.class)) {
             bot.getOutput().sendCharacterDesignSelection();
             bot.log("Reflex [select appearance] triggered.");
             return false;
         }
 
         // Automatically progress dialogue interfaces.
-        if (bot.getOverlays().contains(NpcDialogue.class) || bot.getOverlays().contains(PlayerDialogue.class) ||
-                bot.getOverlays().contains(TextDialogue.class)) {
+        if (bot.getOverlays().has(NpcDialogue.class) || bot.getOverlays().has(PlayerDialogue.class) ||
+                bot.getOverlays().has(TextDialogue.class)) {
             bot.getOutput().sendContinueDialogue();
             bot.log("Reflex [continue dialogue] triggered.");
             return false;

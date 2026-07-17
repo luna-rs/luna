@@ -12,5 +12,5 @@ public interface Definition {
      *
      * @return The identifier.
      */
-    int getId();
+    int id();
 }

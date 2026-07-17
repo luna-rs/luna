@@ -16,6 +16,7 @@ on(CombatDamageReceivedEvent::class) {
         if (reflected > charges) {
             reflected = charges
         }
+        reflected = reflected.coerceAtLeast(0)
         plr.ringOfRecoilCharges -= reflected
         damage.attacker.damage(reflected)
         if (plr.ringOfRecoilCharges <= 0) {

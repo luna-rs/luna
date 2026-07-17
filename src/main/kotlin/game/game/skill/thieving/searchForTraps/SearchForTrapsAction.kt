@@ -2,16 +2,16 @@ package game.skill.thieving.searchForTraps
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.player.Messages
+import game.player.Sound
+import game.skill.thieving.Thieving
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
-import game.player.Animations
-import game.player.Messages
-import game.player.Sound
-import game.skill.thieving.Thieving
 
 /**
  * A [LockedAction] that handles searching chests for traps.

@@ -2,12 +2,12 @@ package game.skill.crafting.jewelleryMaking
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.impl.ItemContainerAction.InventoryAction
-import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Player
 import game.player.Animations
 import game.player.Sound
 import game.skill.smithing.BarType
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that enables crafting silver and gold jewellery for players.

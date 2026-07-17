@@ -829,7 +829,11 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if the container can accommodate the item.
      */
     public final boolean hasSpaceFor(Item item) {
-        return computeSpaceFor(item) <= computeRemainingSize();
+        int remaining = computeRemainingSize();
+        if(remaining == 0 && !item.getItemDef().isStackable()) {
+            return false;
+        }
+        return computeSpaceFor(item) <= remaining;
     }
 
     /**

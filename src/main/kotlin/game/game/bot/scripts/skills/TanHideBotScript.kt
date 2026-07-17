@@ -2,7 +2,6 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.waitFor
-import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -16,6 +15,8 @@ import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.bot.Bot
+import io.luna.util.RandomUtils.roll
 import kotlin.time.Duration
 
 /**
@@ -30,7 +31,7 @@ import kotlin.time.Duration
  */
 class TanHideBotScript(bot: Bot, duration: Duration) :
     InventoryBotScript(bot, duration, mutableListOf(SubZone.AL_KHARID_BANK)) {
-
+    // todo canifis tannery, crafting guild
     /**
      * Recreates a hide-tanning script from saved zone and duration data.
      *
@@ -109,15 +110,18 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             if (item == null) {
                 continue
             }
-            val hide = Hide.HIDE_TO_HIDE[item.id]
+            var hide = Hide.HIDE_TO_HIDE[item.id]
             if (hide != null) {
+                if (hide == Hide.HARD_LEATHER) {
+                    hide = if (roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
+                }
                 tanning = hide
                 return listOf(Item(995, hide.cost * 27), Item(hide.hide, 27))
             }
         }
 
         stop()
-        Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.wantedItems += it }
+        Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.addWantedItem(it, 500) }
         bot.log("No untanned hides in bank, ending script.")
         return listOf()
     }
@@ -130,7 +134,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
     }
 
     override suspend fun equipment(): BotGearLocator? {
-        if(bot.personality.isIntelligent) {
+        if (bot.personality.isIntelligent) {
             return BotGearSelector.find(bot, setOf(BotGearPurpose.SKILLING)).buildLocator()
         }
         return null

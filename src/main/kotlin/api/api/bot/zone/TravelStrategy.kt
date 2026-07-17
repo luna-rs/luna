@@ -1,8 +1,8 @@
 package api.bot.zone
 
 import api.bot.action.BotActionHandler
-import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.Position
 
 /**
  * Defines how a bot should travel to a destination.
@@ -25,7 +25,7 @@ interface TravelStrategy {
      * @param dest The destination position the bot wants to reach.
      * @return `true` if this strategy can be used to travel to [dest], otherwise `false`.
      */
-    fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean
+    suspend fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean
 
     /**
      * Attempts to move the given bot to the destination using this strategy.

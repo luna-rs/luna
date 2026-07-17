@@ -84,6 +84,7 @@ public final class CombatDamage {
         // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync
         victim.getCombat().getDamageStack().push(this);
         source.onDamageApplied(this);
+        attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
         victim.getCombat().setLastDamageReceived(this);
     }

@@ -102,7 +102,7 @@ public final class WeaponDefinition implements Definition {
     }
 
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

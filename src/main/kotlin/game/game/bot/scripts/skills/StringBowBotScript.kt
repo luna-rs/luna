@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -9,7 +10,6 @@ import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.fletching.stringBow.Bow
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds

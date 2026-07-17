@@ -1,13 +1,13 @@
 package engine.controllers
 
 import api.attr.Attr
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import com.google.common.collect.ImmutableSet
 import engine.combat.status.StatusEffectType
 import io.luna.game.model.Locatable
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.controller.PlayerAreaListener

@@ -33,7 +33,7 @@ public class NumberUtils {
      * @param value The GP value to format.
      * @return The formatted GP value.
      */
-    public static String formatPrice(int value) {
+    public static String formatPrice(long value) {
         if (value < 10_000) {
             return value + "gp";
         }
@@ -41,6 +41,11 @@ public class NumberUtils {
             return abbreviateCeil(value, 1_000, "K", 1);
         }
         return abbreviateCeil(value, 1_000_000, "M", 3);
+    }
+
+    //todo docs
+    public static String formatPrice(int value) {
+        return formatPrice((long) value);
     }
 
     /**
@@ -82,7 +87,7 @@ public class NumberUtils {
      * @param decimals The number of decimal places to preserve before rounding up.
      * @return The abbreviated value with its suffix.
      */
-    private static String abbreviateCeil(int value, int divisor, String suffix, int decimals) {
+    private static String abbreviateCeil(long value, int divisor, String suffix, int decimals) {
         double factor = Math.pow(10, decimals);
         double shortened = value / (double) divisor;
         double roundedUp = Math.ceil(shortened * factor) / factor;

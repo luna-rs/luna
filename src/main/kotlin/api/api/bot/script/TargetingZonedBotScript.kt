@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.ActionType
@@ -10,7 +11,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.Region
-import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
 /**
@@ -108,7 +108,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val invalidReason = getInvalidFocusReason(currentFocus)
         val refocus = refocus()
         val zone = activeZone!!
-
+        if(forceBanking) {
+            // Don't proceed if we need to bank.
+            return true
+        }
         if (invalidReason != null || refocus) {
             onExecuteInZone(true)
             focus = null

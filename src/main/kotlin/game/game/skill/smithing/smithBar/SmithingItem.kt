@@ -1,7 +1,7 @@
 package game.skill.smithing.smithBar;
 
-import io.luna.game.model.item.Item
 import game.skill.smithing.BarType
+import io.luna.game.model.item.Item
 
 /**
  * Represents a single item as part of a [SmithingTable].

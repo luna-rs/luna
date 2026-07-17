@@ -8,7 +8,6 @@ import game.skill.woodcutting.Woodcutting.treeHealth
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.Luna
 import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
-import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

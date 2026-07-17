@@ -22,5 +22,5 @@ object Smithing {
     /**
      * Retrieves all object IDs with the interaction action "Smelt."
      */
-    val FURNACE_OBJECTS = GameObjectDefinition.ALL.filter { it.actions.contains("Smelt") }.map { it.id }.toSet()
+    val FURNACE_OBJECTS = GameObjectDefinition.ALL.filter { it.actions.contains("Smelt") }.map { it.id() }.toSet()
 }

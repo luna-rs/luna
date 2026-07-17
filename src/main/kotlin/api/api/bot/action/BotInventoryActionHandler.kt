@@ -1,13 +1,14 @@
 package api.bot.action
 
+import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import game.player.item.consume.food.Food
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
@@ -265,13 +266,20 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
      * @param minimumHeal The minimum heal amount the food must provide.
      * @return `true` if a matching food item was found and clicked, or `false` if no matching food was available.
      */
-    fun eatAnyFood(minimumHeal: Int = 0): Boolean {
+    suspend fun eatAnyFood(minimumHeal: Int = 0): Boolean {
         bot.inventory.withIndex().forEach { (index, item) ->
             if (item != null) {
                 val food = Food.ID_TO_FOOD[item.id]
                 if (food != null && food.heal >= minimumHeal) {
-                    bot.output.sendInventoryItemClick(1, index, item.id)
                     bot.log("Eating food.")
+                    val lastHealth = bot.healthPercent
+                    repeat(10) {
+                        bot.output.sendInventoryItemClick(1, index, item.id)
+                        bot.naturalDelay()
+                        if(bot.healthPercent > lastHealth || bot.healthPercent == 100) {
+                            return true
+                        }
+                    }
                     return true
                 }
             }

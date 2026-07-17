@@ -311,7 +311,7 @@ public class Npc extends Mob {
      * @return The current NPC identifier from the active definition.
      */
     public int getId() {
-        return definition.getId();
+        return definition.id();
     }
 
     /**

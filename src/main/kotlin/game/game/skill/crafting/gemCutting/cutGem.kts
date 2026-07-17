@@ -1,9 +1,9 @@
 package game.skill.crafting.gemCutting
 
 import api.predef.*
-import io.luna.game.model.mob.Player
 import game.skill.crafting.gemCutting.Gem.Companion.CHISEL
 import game.skill.crafting.gemCutting.Gem.Companion.UNCUT_TO_GEM
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 // Use chisel with gems.

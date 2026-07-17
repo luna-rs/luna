@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -7,10 +8,11 @@ import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.RunecraftingScriptFactory
+import engine.bot.coordinator.skill.SmithingScriptFactory
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
@@ -80,10 +82,11 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         for (ore in ores) {
             ids.addAll(Ore.ORE_MAP[ore])
         }
+        bot.log("Mining ores: $ores")
         ids
     }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius) { it.id in rockObjectIds }
     }
 
@@ -102,4 +105,20 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         data.zones = originalZones.toMutableList()
         return data
     }
+
+    override suspend fun finish() {
+        // Chance to queue a smelting, smithing, or runecrafting script.
+        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+            val script =
+                if (ores.contains(Ore.PURE_ESSENCE) || ores.contains(Ore.RUNE_ESSENCE))
+                    RunecraftingScriptFactory.getScript(bot,
+                                                        bot.runecrafting.staticLevel,
+                                                        mutableListOf(),
+                                                        randBoolean())
+                else
+                    SmithingScriptFactory.getScript(bot, bot.smithing.staticLevel, mutableListOf(), randBoolean())
+            bot.scriptStack.pushTail(script, 2)
+        }
+    }
+
 }

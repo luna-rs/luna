@@ -8,6 +8,7 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.skill.MiningScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
@@ -82,6 +83,7 @@ class SmithBarBotScript(
             }
             if (smithingBar == null) {
                 bot.log("No smithing bar types could be found in the bank.")
+                bot.scriptStack.pushTail(MiningScriptFactory.getScript(bot, bot.mining.staticLevel, mutableListOf(), randBoolean()), 2)
                 stop()
                 return listOf()
             }
@@ -151,10 +153,11 @@ class SmithBarBotScript(
             return true
         }
 
-        output.sendItemWidgetClick(3, table.slotId, table.widgetId, id)
+        bot.log("Smithing item: ${itemDef(id).name}")
+        output.sendItemWidgetClick(2, table.slotId, table.widgetId, id)
         bot.naturalDecisionDelay()
 
-        if(selectedItems.size > 1) {
+        if (selectedItems.size > 1) {
             smithingItem = selectedItems.random()
         }
         return true

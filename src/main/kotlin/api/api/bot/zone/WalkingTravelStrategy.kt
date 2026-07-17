@@ -1,13 +1,13 @@
 package api.bot.zone
 
-import api.bot.Suspendable
+import api.attr.Attr
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
-import api.bot.SuspendableCondition
 import api.bot.action.BotActionHandler
+import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
+import io.luna.game.model.path.PlayerPathfinder
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 
@@ -18,23 +18,34 @@ import kotlin.time.Duration.Companion.seconds
  */
 object WalkingTravelStrategy : TravelStrategy {
 
-    // TODO@0.5.0 Calculate path first, determine if valid (in canTravel), path later.
+    /**
+     * An attribute representing the path a bot will walk during a travel strategy.
+     */
+    private var Bot.path by Attr.obj { java.util.ArrayDeque<Position>() }
 
-    override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean = true
+    override suspend fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
+        val computedPath =
+            bot.navigator.findPath(bot.position, dest, PlayerPathfinder(world.collisionManager, bot.z), true).await()
+        if (computedPath?.peekLast()?.isViewableFrom(dest) == true) {
+            bot.path = java.util.ArrayDeque(computedPath)
+            return true
+        }
+        return false
+    }
 
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
-        if (bot.position.isWithinDistance(dest, Position.VIEWING_DISTANCE / 2)) {
+        if (bot.isViewableFrom(dest)) {
             return true
         }
         handler.widgets.clickRunning(true)
         bot.naturalDelay()
-        val future = bot.navigator.navigate(dest, true)
-        while (!future.isDone) {
+        bot.walking.replacePath(bot.path)
+        while (!bot.walking.isEmpty) {
             if (bot.isViewableFrom(dest)) {
                 return true
             }
             delay(1.seconds, 3.seconds)
         }
-        return future.await() == NavigationResult.REACHED
+        return bot.isViewableFrom(dest)
     }
 }

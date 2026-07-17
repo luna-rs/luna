@@ -1,9 +1,8 @@
 package game.skill.magic.teleportSpells
 
-import api.combat.magic.CombatSpellHandler
 import api.predef.*
-import io.luna.util.StringUtils
 import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
+import io.luna.util.StringUtils
 
 /* Intercept all button clicks.*/
 for (spell in TeleportSpell.VALUES) {

@@ -1,12 +1,12 @@
 package game.skill.magic.enchantJewellery
 
 import com.google.common.collect.ImmutableList
-import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.block.Graphic
 import game.player.Sound
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Graphic
 
 /**
  * Represents all different levels of jewellery enchanting spells.

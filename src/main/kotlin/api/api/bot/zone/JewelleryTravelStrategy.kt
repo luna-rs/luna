@@ -3,12 +3,12 @@ package api.bot.zone
 import api.attr.Attr
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import game.item.degradable.jewellery.TeleportJewellery
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,7 +39,7 @@ class JewelleryTravelStrategy(private val jewellery: TeleportJewellery, private 
         private val Bot.jewelleryItems by Attr.list<Item>()
     }
 
-    override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
+    override suspend fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
         bot.jewelleryItems.clear()
         for (id in jewellery.items) {
             bot.jewelleryItems.add(Item(id))
@@ -50,7 +50,7 @@ class JewelleryTravelStrategy(private val jewellery: TeleportJewellery, private 
         }
         if (!handler.hasAny(bot.jewelleryItems)) {
             // Bot will try to buy the jewellery item in the future if we don't have it.
-            bot.jewelleryItems.firstOrNull()?.id?.apply { bot.preferences.wantedItems += this }
+            bot.jewelleryItems.firstOrNull()?.id?.apply { bot.preferences.addWantedItem(this, 10) }
             return false
         }
         return true

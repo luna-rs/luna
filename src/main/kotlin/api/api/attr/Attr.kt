@@ -6,7 +6,16 @@ import api.attr.json.IndexedItemTypeAdapter
 import api.attr.json.ItemContainerTypeAdapter
 import api.attr.json.ItemTypeAdapter
 import api.predef.*
-import com.google.gson.*
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import com.google.gson.ReflectionAccessFilter
+import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import game.skill.slayer.ActiveSlayerTask
 import io.luna.game.TickTimer
@@ -17,10 +26,11 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attributable
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
-import java.lang.reflect.*
-import java.time.*
-import kotlin.reflect.KClass
 import io.luna.util.markov.MarkovChainTypeAdapterFactory
+import java.lang.reflect.Type
+import java.time.Duration
+import java.time.Instant
+import kotlin.reflect.KClass
 
 /**
  * A factory class for instantiating attributes.

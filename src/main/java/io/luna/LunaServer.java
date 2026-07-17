@@ -28,6 +28,7 @@ import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
 import io.luna.util.parser.impl.ItemNicknameDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
+import io.luna.util.parser.impl.WantedItemDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
@@ -203,6 +204,7 @@ public final class LunaServer {
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new WeaponAnimationDefinitionFileParser());
         taskList.add(new ItemNicknameDefinitionFileParser());
+        taskList.add(new WantedItemDefinitionFileParser());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {

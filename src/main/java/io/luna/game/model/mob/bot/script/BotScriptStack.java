@@ -292,6 +292,20 @@ public final class BotScriptStack {
     }
 
     /**
+     * Pushes a script to the tail of the buffer if the buffer has not reached the specified maximum size.
+     * <p>
+     * If the buffer already contains {@code maximumSize} scripts or more, the script is not added.
+     *
+     * @param script The script to enqueue at the tail.
+     * @param maximumSize The maximum number of scripts allowed in the buffer before rejecting the script.
+     */
+    public void pushTail(BotScript script, int maximumSize) {
+        if (buffer.size() < maximumSize) {
+            pushTail(script);
+        }
+    }
+
+    /**
      * Returns the current script at the head of the buffer.
      *
      * @return The current script, or {@code null} if the buffer is empty.

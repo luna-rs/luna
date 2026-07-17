@@ -1,11 +1,11 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.naturalDelay
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.ReflexBotScript
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
 
 /**

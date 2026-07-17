@@ -2,13 +2,13 @@ package game.skill.smithing.smeltOre
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.player.Sound
+import game.skill.smithing.BarType
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import game.player.Animations
-import game.player.Sound
-import game.skill.smithing.BarType
 
 /**
  * An [InventoryAction] implementation that handles the smelting action.

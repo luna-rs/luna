@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -551,5 +552,16 @@ public final class WorldEconomy extends AbstractScheduledService {
         double minimumValue = targetValue * (1.0 - settings.maximumUnderpayRatio());
         double maximumValue = targetValue * (1.0 + settings.maximumOverpayRatio());
         return value >= minimumValue && value <= maximumValue;
+    }
+
+    /**
+     * Returns an unmodifiable view of the current item price data, keyed by item ID.
+     * <p>
+     * The returned map reflects changes made to the underlying price data, but cannot be modified directly.
+     *
+     * @return an unmodifiable map containing item IDs mapped to their corresponding {@link ItemPriceData}
+     */
+    public Map<Integer, ItemPriceData> getPrices() {
+        return Collections.unmodifiableMap(prices);
     }
 }

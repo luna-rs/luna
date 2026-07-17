@@ -1,11 +1,11 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.SKILL_COOKING
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * A [SkillingScriptFactory] that creates cooking bot scripts.

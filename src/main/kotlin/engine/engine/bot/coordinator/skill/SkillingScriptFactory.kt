@@ -1,11 +1,10 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
-import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import io.luna.game.model.mob.bot.Bot
 import kotlin.math.floor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -21,6 +20,28 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 abstract class SkillingScriptFactory(val skillId: Int) {
+
+    companion object {
+
+        /**
+         * Selects the duration of a skilling session for [bot].
+         *
+         * The base duration is randomly chosen from [BASE_SKILLING_DURATION_MINUTES]. Dextrous bots may receive a longer
+         * session duration, reflecting a stronger tendency to stay focused on skilling before switching activities.
+         *
+         * @param bot The bot whose personality affects the duration.
+         * @return The selected skilling session duration.
+         */
+        fun getDuration(bot: Bot): Duration {
+            var baseDuration = rand(BASE_SKILLING_DURATION_MINUTES)
+
+            if (bot.personality.isDextrous) {
+                baseDuration = floor(baseDuration * rand(1.25, 1.75)).toInt()
+            }
+
+            return baseDuration.minutes
+        }
+    }
 
     // TODO Profit function to determine which element is the most profitable to harvest/process right now.
 
@@ -117,24 +138,5 @@ abstract class SkillingScriptFactory(val skillId: Int) {
         } else {
             return activities.randomOrNull()
         }
-    }
-
-    /**
-     * Selects the duration of a skilling session for [bot].
-     *
-     * The base duration is randomly chosen from [BASE_SKILLING_DURATION_MINUTES]. Dextrous bots may receive a longer
-     * session duration, reflecting a stronger tendency to stay focused on skilling before switching activities.
-     *
-     * @param bot The bot whose personality affects the duration.
-     * @return The selected skilling session duration.
-     */
-    protected fun getDuration(bot: Bot): Duration {
-        var baseDuration = rand(BASE_SKILLING_DURATION_MINUTES)
-
-        if (bot.personality.isDextrous) {
-            baseDuration = floor(baseDuration * rand(1.25, 1.75)).toInt()
-        }
-
-        return baseDuration.minutes
     }
 }

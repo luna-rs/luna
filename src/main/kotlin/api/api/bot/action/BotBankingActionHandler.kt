@@ -20,7 +20,7 @@ import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 
 /**
- * Handles bank-related actions for a single [Bot].
+ * Handles bank-related actions for a single [io.luna.game.model.mob.bot.Bot].
  *
  * This action handler exposes higher-level suspendable banking operations such as depositing items,
  * withdrawing items, depositing the inventory, locating the home bank, and toggling noted withdrawal mode.
@@ -120,6 +120,10 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
 
         val existingAmount = bot.inventory.computeAmountForId(item.id)
+        if (existingAmount == 0) {
+            bot.inventory[inventoryIndex] = null
+            return true
+        }
         var depositItem = item
         if (depositItem.amount > existingAmount) {
             depositItem = depositItem.withAmount(existingAmount)
@@ -375,8 +379,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
         if (!success) {
             // We have no food. Ensure the bot starts looking for some.
-        // TODO add wanted food
-        handler.supplies.getWantedFood().forEach { bot.preferences.wantedItems += it.id }
+            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
         }
         return success
     }
@@ -391,30 +394,11 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @param noted `true` to withdraw items as notes, or `false` to withdraw items normally.
      * @return `true` if the change succeeded, `false` otherwise.
      */
-    suspend fun clickBankingMode(noted: Boolean): Boolean {
+    fun clickBankingMode(noted: Boolean) {
         if (!bot.bank.isOpen) {
-            return false
+            return
         }
-
-        val currentNoted = {
-            bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1
-        }
-
-        if (noted == currentNoted()) {
-            return true
-        }
-
-        val suspendCond = SuspendableCondition {
-            currentNoted() == noted
-        }
-
-        if (!noted) {
-            bot.output.clickButton(5387)
-        } else {
-            bot.output.clickButton(5386)
-        }
-
-        return suspendCond.submit(5).await()
+        bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, if (noted) 1 else 0)
     }
 
     /**
@@ -452,7 +436,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             // Try to travel to nearby banks.
             bot.log("Found ${banks.size}.")
             for (it in banks) {
-                if (bot.navigator.navigate(it, true).await() == NavigationResult.REACHED) {
+                if (bot.navigator.navigate(it, true).await() != NavigationResult.NO_VALID_PATH) {
                     return it
                 }
                 bot.log("Bank $it inaccessible.")

@@ -26,12 +26,12 @@ fun restore(plr: Player) {
 /* Match all altar objects.  */
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
-        if (def.id == 6552) {
+        if (def.id() == 6552) {
             // Ancient altar.
             continue
         }
         if (def.actions.contains("Pray-at") && def.name!!.contains("altar", true)) {
-            object1(def.id) { restore(plr) }
+            object1(def.id()) { restore(plr) }
         }
     }
 }

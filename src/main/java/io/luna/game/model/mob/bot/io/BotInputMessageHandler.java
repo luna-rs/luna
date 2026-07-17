@@ -5,49 +5,67 @@ import com.google.common.collect.Multimap;
 import io.luna.game.model.mob.bot.Bot;
 
 /**
- * A model responsible for managing input messages received by a {@link Bot} from the server.
+ * Stores input messages received by a {@link Bot}.
+ * <p>
+ * This handler is used by bot logic to inspect messages that were sent from the server to the bot. Messages are
+ * grouped by their concrete message class so scripts and handlers can quickly check for specific response types.
  *
  * @author lare96
  */
 public final class BotInputMessageHandler {
 
     /**
-     * A multimap of all messages received from the server, keyed by message class.
+     * The messages received by this bot, grouped by message class.
      */
     private final Multimap<Class<?>, BotMessage<?>> received = ArrayListMultimap.create();
 
     /**
-     * The bot.
+     * The bot that owns this message handler.
      */
     private final Bot bot;
 
     /**
-     * Creates a new {@link BotInputMessageHandler}.
+     * Creates a new input message handler for the specified bot.
      *
-     * @param bot The bot.
+     * @param bot The owning bot.
      */
     public BotInputMessageHandler(Bot bot) {
         this.bot = bot;
     }
 
     /**
-     * Adds a newly flushed message from the server to the internal multimap.
+     * Records a message that was received from the server.
+     * <p>
+     * The message is stored under its concrete runtime class. Multiple messages of the same type may be stored.
      *
-     * @param msg The message to add. Must not be {@code null}.
+     * @param msg The received message.
      */
-    void add(BotMessage<?> msg) {
+    void add(BotMessage<?> msg) { // todo Autoclear every 100 entries or so.
         received.put(msg.getClass(), msg);
     }
 
     /**
-     * @return The internal multimap of received messages.
+     * Removes all received messages from this handler.
+     */
+    public void clear() {
+        received.clear();
+    }
+
+    /**
+     * Returns all received messages grouped by message class.
+     * <p>
+     * The returned multimap is the live backing collection.
+     *
+     * @return The received message multimap.
      */
     public Multimap<Class<?>, BotMessage<?>> getReceived() {
         return received;
     }
 
     /**
-     * @return The bot.
+     * Returns the bot that owns this message handler.
+     *
+     * @return The owning bot.
      */
     public Bot getBot() {
         return bot;

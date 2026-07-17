@@ -1,8 +1,6 @@
 package io.luna.game.persistence;
 
 import io.luna.Luna;
-import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -158,7 +158,7 @@ public final class GameObjectDefinition implements Definition {
      * @return The id.
      */
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

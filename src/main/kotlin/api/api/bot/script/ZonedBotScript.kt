@@ -153,7 +153,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val equipmentLocator = equipment()
             if (equipmentLocator != null && !equipmentLocator.locateAndEquip()) {
                 bot.log("Gear required for this script could not be equipped.")
-                // TODO Function here that controls behaviour? Some scripts may require a cancellation, re-try, etc.
+                onEquipmentFailed(equipmentLocator)
                 bot.naturalDelay()
             }
             bot.log("Starting initial banking.")
@@ -309,6 +309,10 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
     }
 
+    open suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
+
+    }
+
     /**
      * Updates [duration] using the elapsed time since the previous duration check.
      *
@@ -454,7 +458,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
             if (parent.banks.isNotEmpty() && handler.travelTo(parent)) {
                 val sortedBanks =
-                    if (bot.personality.isDextrous || rand(bot.personality.dexterity)) {
+                    if (bot.personality.isDextrous || bot.personality.isIntelligent || rand(bot.personality.dexterity)) {
                         parent.banks.sortedWith(LocatableDistanceComparator(bot))
                     } else {
                         parent.banks

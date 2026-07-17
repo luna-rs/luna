@@ -7,10 +7,10 @@ import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
-import com.google.common.collect.Iterables
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.skill.fishing.Tool
+import game.skill.fishing.catchFish.Tool
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -51,15 +51,15 @@ class FishBotScript(
 
         /**
          * Maps each fishing tool to the NPC fishing spots that use it as their first-click action.
-         */
+         */ // todo finish, go up from 334 (start at 335)
         val FIRST_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> =
             ImmutableSetMultimap.builder<Tool, Int>()
                 .putAll(Tool.FISHING_ROD, 233, 234, 235, 236)
-                .putAll(Tool.FLY_FISHING_ROD, 309, 310, 311, 314, 315, 317, 318)
-                .putAll(Tool.LOBSTER_POT, 312, 321)
-                .put(Tool.BIG_NET, 313)
-                .putAll(Tool.SMALL_NET, 316, 319, 320, 330, 327)
-                .putAll(Tool.MONKFISH_NET, 1174, 322)
+                .putAll(Tool.FLY_FISHING_ROD, 309, 310, 311, 314, 315, 317, 318, 328, 329, 331)
+                .putAll(Tool.LOBSTER_POT, 312, 321, 324, 333)
+                .putAll(Tool.BIG_NET, 313, 322, 334)
+                .putAll(Tool.SMALL_NET, 316, 319, 320, 330, 327, 323, 325, 326, 332)
+                .putAll(Tool.MONKFISH_NET, 1174)
                 .build()
 
         /**
@@ -67,9 +67,11 @@ class FishBotScript(
          */
         val SECOND_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> =
             ImmutableSetMultimap.builder<Tool, Int>()
-                .putAll(Tool.FISHING_ROD, 309, 310, 311, 314, 315, 316, 317, 318, 319, 320, 330, 327)
-                .putAll(Tool.HARPOON, 312, 321, 322)
-                .put(Tool.SHARK_HARPOON, 313)
+                .putAll(
+                    Tool.FISHING_ROD, 309, 310, 311, 314, 315, 316, 331,
+                    317, 318, 319, 320, 330, 327, 323, 325, 326, 328, 329, 332, )
+                .putAll(Tool.HARPOON, 312, 321, 32, 324, 333)
+                .putAll(Tool.SHARK_HARPOON, 313, 322, 334)
                 .build()
 
         /**
@@ -107,8 +109,8 @@ class FishBotScript(
     /**
      * All NPC ids that can be fished using [selectedTool].
      *
-     * This combines both first-click and second-click fishing spots so the
-     * script can search for every valid target for the selected tool.
+     * This combines both first-click and second-click fishing spots so the script can search for every valid
+     * target for the selected tool.
      */
     private val fishingSpotIds = lazyVal {
         val ids = HashSet<Int>()
@@ -125,27 +127,20 @@ class FishBotScript(
     }
 
     override suspend fun onBankOpenSkilling(initial: Boolean) {
-        val baitId = selectedTool.bait
-
-        if (baitId == null) {
-            return
-        }
+        val baitId = selectedTool.bait ?: return
 
         if (baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
             stop()
-            bot.preferences.wantedItems += baitId
+            bot.preferences.addWantedItem(baitId, 100_000)
             return
         }
 
         handler.banking.withdrawAll(baitId)
     }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
-        println("FISHING DEBUG: finding NPCs, possible fishing spots [${Iterables.toString(fishingSpotIds.value)}]")
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         return world.locator.findNpcs(searchBase, searchRadius) {
-            if (it.def().name.equals("Fishing spot", true))
-                println("FISHING DEBUG: potential target ${it.id}/${it.def().name}")
             it.id in fishingSpotIds.value
         }
     }
@@ -154,7 +149,11 @@ class FishBotScript(
         return sortedSetOf(SkillingTool(selectedTool.id, selectedTool.level))
     }
 
-    override fun interactionOption(target: Npc): Int {
+    override fun emergencyTool(): SkillingTool {
+        return SkillingTool(selectedTool.id, selectedTool.level)
+    }
+
+    override suspend fun interactionOption(target: Npc): Int {
         if (target.id in SECOND_CLICK_SPOTS[selectedTool]) {
             return 2
         }
@@ -172,5 +171,13 @@ class FishBotScript(
         data.zones = originalZones.toMutableList()
         data.tool = selectedTool
         return data
+    }
+
+    override suspend fun finish() {
+        // Chance to queue a fletching script.
+        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+            val script = CookingScriptFactory.getScript(bot, bot.cooking.staticLevel, mutableListOf(), randBoolean())
+            bot.scriptStack.pushTail(script, 2)
+        }
     }
 }

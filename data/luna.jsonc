@@ -100,7 +100,7 @@
   },
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 200,
+    "base_online_count": 100,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The baseline number of hours bots should remain logged out before returning.
@@ -118,7 +118,7 @@
     // The chance that a newly created bot receives an unusually high intelligence value.
     "high_intelligence_chance": 0.05,
     // The chance that a newly created bot becomes a merchant.
-    "high_merchanting_chance": 0.15,
+    "high_merchanting_chance": 0.10,
     // The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and greed.
     "base_loot_value": 15000
   },

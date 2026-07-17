@@ -1,7 +1,8 @@
 package game.bot.scripts.combat
 
-import api.bot.script.DynamicBotScript
 import api.bot.Suspendable.delay
+import io.luna.game.model.mob.bot.Bot
+import api.bot.script.DynamicBotScript
 import api.combat.specialAttack.SpecialAttackHandler
 import api.combat.specialAttack.SpecialAttackHandler.specialAttackData
 import api.predef.*
@@ -13,7 +14,6 @@ import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.time.Duration.Companion.milliseconds
@@ -29,6 +29,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
  * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
+ * @author lare96
  */
 class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
     DynamicBotScript(bot) {

@@ -2,12 +2,12 @@ package game.skill.smithing.smithBar
 
 import api.predef.*
 import com.google.common.collect.ArrayListMultimap
+import game.skill.smithing.BarType
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
-import game.skill.smithing.BarType
 
 /**
  * A [StandardInterface] that builds and represents the Smithing interface.

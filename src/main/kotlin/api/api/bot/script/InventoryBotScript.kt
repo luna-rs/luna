@@ -50,7 +50,7 @@ abstract class InventoryBotScript(
         }
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("Bot does not have required withdraw items. Adding to wanted list.")
-            withdraw.forEach { bot.preferences.wantedItems.add(it.id) }
+            withdraw.forEach { bot.preferences.addWantedItem(it.id, 750) }
             return false
         }
         return true

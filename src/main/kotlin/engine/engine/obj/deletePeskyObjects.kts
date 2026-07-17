@@ -74,7 +74,10 @@ on(ServerLaunchEvent::class) {
 
         // Varrock range near bank.
         Position(3241, 3406),
-        Position(3242, 3412)
+        Position(3242, 3412),
+
+        // HAM cult area door.
+        Position(3158, 9640)
     )
 
     for (position in positions) {

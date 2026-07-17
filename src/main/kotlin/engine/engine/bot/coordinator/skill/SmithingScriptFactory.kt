@@ -38,7 +38,8 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         SmithingTable.PLATELEGS,
         SmithingTable.PLATEBODY,
         SmithingTable.ARROWTIPS,
-        SmithingTable.KITESHIELD
+        SmithingTable.KITESHIELD,
+        SmithingTable.AXE
     ).flatMap { it.items }
 
     /**
@@ -102,6 +103,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
         zones += SubZone.AL_KHARID_BANK
+        zones += SubZone.FALADOR_WEST_BANK
         return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
     }
 
@@ -132,6 +134,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
         zones += SubZone.AL_KHARID_BANK
+        zones += SubZone.FALADOR_WEST_BANK
         return SmeltOreBotScript(bot, null, getDuration(bot), zones)
     }
 
@@ -151,5 +154,16 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
             return SmithBarBotScript(bot, smithingItems.toMutableList(), getDuration(bot))
         }
         return null
+    }
+    //todo docs
+    fun getSmeltingScript(bot: Bot, level: Int): SmeltOreBotScript{
+        // Smelting starts at level 1, so it is always the final training fallback.
+        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES) ?: BarType.BRONZE
+      val zones = mutableListOf<SubZone>()
+        // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
+   // todo boilerplate
+        zones += SubZone.AL_KHARID_BANK
+        zones += SubZone.FALADOR_WEST_BANK
+        return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
     }
 }

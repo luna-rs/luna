@@ -1,12 +1,11 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.Suspendable.naturalDelay
-import api.bot.script.DynamicBotScript
 import io.luna.game.model.mob.bot.Bot
+import api.bot.script.DynamicBotScript
 
 /**
- * A simple script that will make a [Bot] logout.
+ * A simple script that will make a [io.luna.game.model.mob.bot.Bot] logout.
  *
  * @author lare96
  */

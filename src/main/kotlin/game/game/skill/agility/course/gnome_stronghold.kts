@@ -1,5 +1,8 @@
 package game.skill.agility.course
 
+import game.skill.agility.Agility.course
+import game.skill.agility.AgilityCourse.GNOME_STRONGHOLD
+import game.skill.agility.AgilityObstacle.*
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Direction
@@ -7,9 +10,6 @@ import io.luna.game.model.Position
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.ExactMovement
-import game.skill.agility.Agility.course
-import game.skill.agility.AgilityCourse.GNOME_STRONGHOLD
-import game.skill.agility.AgilityObstacle.*
 
 /**
  * The gnome stronghold agility course.

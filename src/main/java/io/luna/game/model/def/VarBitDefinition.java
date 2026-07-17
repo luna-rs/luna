@@ -9,7 +9,7 @@ package io.luna.game.model.def;
  * <p>
  * This definition specifies:
  * <ul>
- *     <li>the varbit id ({@link #getId()})</li>
+ *     <li>the varbit id ({@link #id()})</li>
  *     <li>the parent varp id that contains the packed bits ({@link #getParentVarpId()})</li>
  *     <li>the inclusive bit range within the parent varp:
  *         {@link #getLeastSignificantBit()}..{@link #getMostSignificantBit()}</li>
@@ -71,7 +71,7 @@ public final class VarBitDefinition implements Definition {
      * @return The id.
      */
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

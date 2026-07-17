@@ -3,7 +3,6 @@ package api.drops
 import com.google.common.base.MoreObjects
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
-import io.luna.util.Rational
 
 /**
  * Represents a possible item drop from a drop table, with variable quantity and drop chance.
@@ -33,7 +32,7 @@ class DropTableItem(val id: Int, val amount: IntRange, val chance: Double) {
                 return priorityValue
             }
             return ItemDefinition.ALL.lookup { it.name == name && it.isNoted == noted }
-                .orElseThrow { NoSuchElementException("Item with name [$name] not found.") }.id
+                .orElseThrow { NoSuchElementException("Item with name [$name] not found.") }.id()
         }
     }
 

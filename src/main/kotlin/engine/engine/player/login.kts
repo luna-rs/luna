@@ -1,9 +1,8 @@
 package engine.player
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
-import api.bot.zone.SubZone.Companion.updateLocalSubZones
 import api.bot.zone.Zone
-import api.bot.zone.Zone.Companion.updateZone
 import api.predef.*
 import engine.combat.prayer.CombatPrayer
 import engine.player.punishment.PunishmentHandler
@@ -12,7 +11,6 @@ import io.luna.Luna
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SkillUpdateMessageWriter

@@ -1,19 +1,15 @@
 package api.bot.action
 
 import api.bot.Suspendable.waitFor
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
-import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
-import game.player.item.consume.food.Food
 import game.skill.magic.Magic
 import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.movement.NavigationResult
-import io.luna.util.RandomUtils
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 

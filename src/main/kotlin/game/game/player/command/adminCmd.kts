@@ -1,7 +1,9 @@
 package game.player.command
 
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.primitives.Ints
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
@@ -11,6 +13,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.NumberInput
 
 /**
@@ -34,7 +37,7 @@ cmd("empty", RIGHTS_ADMIN) {
 
 // TODO@0.5.0 Combine these 3 commands into one
 // TODO@0.5.0 Some sort of item (magic potato) with a bunch of these that can be used on a player (or entered by player name)
-   // view inv/bank/equip, view stats, move to location, bring to my location, kick/ban/mute etc. etc.
+// view inv/bank/equip, view stats, move to location, bring to my location, kick/ban/mute etc. etc.
 /**
  * A command that makes the player view someone's bank.
  */
@@ -42,10 +45,64 @@ cmd("viewbank", RIGHTS_ADMIN) {
     val viewing = getInputFrom(0).lowercase()
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
-        override fun buildDisplayItems(player: Player?): ArrayList<Item> =
-            viewingPlr.bank.filterNotNull().toCollection(ArrayList())
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> {
+            val items = viewingPlr.bank.filterNotNull().toCollection(ArrayList())
+            items.sortByDescending { itemDef(it.id).value * it.amount }
+            return items
+        }
     }
     plr.overlays.open(bankInterface)
+    world.schedule(2) {
+        if(DynamicBankInterface::class in plr.overlays) {
+            bankInterface.onClose(plr)
+            bankInterface.onOpen(plr)
+        } else {
+            it.cancel()
+        }
+    }
+}
+
+cmd("botitem", RIGHTS_ADMIN) {
+    val item = getInputFrom(0).lowercase()
+    for (bot in world.players) {
+        if (bot is Bot) {
+            if (bot.bank.filterNotNull().find { it.itemDef.name.lowercase() == item } != null) {
+                val bankInterface = object : DynamicBankInterface("The bank of ${bot.username}") {
+                    override fun buildDisplayItems(player: Player?): ArrayList<Item> {
+                        val items = bot.bank.filterNotNull().toCollection(ArrayList())
+                        items.sortByDescending { itemDef(it.id).value * it.amount }
+                        return items
+                    }
+                }
+                plr.overlays.open(bankInterface)
+                break
+            }
+        }
+    }
+
+}
+
+/**
+ * A command that makes the player view someone's bank.
+ */
+cmd("viewtracked", RIGHTS_ADMIN) {
+    val viewing = getInputFrom(0).lowercase()
+    val viewingPlr = world.getPlayer(viewing).orElseThrow()
+    val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> {
+            return ArrayList(viewingPlr.asBot().itemTracker.entrySet().map { Item(it.element, it.count) }.toList())
+        }
+    }
+    plr.sendMessage("Item tracked count: ${viewingPlr.asBot().itemTracker.entrySet().size}")
+    plr.overlays.open(bankInterface)
+    world.schedule(2) {
+        if(DynamicBankInterface::class in plr.overlays) {
+            bankInterface.onClose(plr)
+            bankInterface.onOpen(plr)
+        } else {
+            it.cancel()
+        }
+    }
 }
 
 /**
@@ -59,6 +116,14 @@ cmd("viewinv", RIGHTS_ADMIN) {
             viewingPlr.inventory.filterNotNull().toCollection(ArrayList())
     }
     plr.overlays.open(bankInterface)
+    world.schedule(2) {
+        if(DynamicBankInterface::class in plr.overlays) {
+            bankInterface.onClose(plr)
+            bankInterface.onOpen(plr)
+        } else {
+            it.cancel()
+        }
+    }
 }
 
 
@@ -73,6 +138,14 @@ cmd("viewequip", RIGHTS_ADMIN) {
             viewingPlr.equipment.filterNotNull().toCollection(ArrayList())
     }
     plr.overlays.open(bankInterface)
+    world.schedule(2) {
+        if(DynamicBankInterface::class in plr.overlays) {
+            bankInterface.onClose(plr)
+            bankInterface.onOpen(plr)
+        } else {
+            it.cancel()
+        }
+    }
 }
 
 
@@ -82,7 +155,7 @@ cmd("viewequip", RIGHTS_ADMIN) {
 cmd("moveto", RIGHTS_ADMIN) {
     val name = getInputFrom(0)
     val target = world.getPlayer(name.lowercase())
-    if(target.isPresent) {
+    if (target.isPresent) {
         plr.move(target.get().position)
     } else {
         plr.sendMessage("Player '$name' not found.")
@@ -103,7 +176,7 @@ cmd("teleobj", RIGHTS_ADMIN) {
             list += obj.position
         }
     }
-    if(list.isNotEmpty()) {
+    if (list.isNotEmpty()) {
         plr.move(list.random())
     } else {
         plr.sendMessage("No object location found for [name:$name|id:$id].")

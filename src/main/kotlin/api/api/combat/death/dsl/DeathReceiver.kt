@@ -1,19 +1,19 @@
 package api.combat.death.dsl
 
+import io.luna.game.model.mob.bot.Bot
 import api.drops.DropTableHandler.getDropTable
 import api.drops.MergedDropTable
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
 import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * A receiver class used during the **main death stage** of a [DeathHookReceiver].

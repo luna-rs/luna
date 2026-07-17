@@ -73,10 +73,12 @@ DeathHookHandler.setDefaultHook(Player::class) {
                 if (source is Player) ChunkUpdatableView.localView(source) else ChunkUpdatableView.localView(victim)
             world.addItem(DeathGroundItem(ctx, 526, 1, victim.position, view, victim))
             removedItems.forEach {
-                val groundItem = DeathGroundItem(ctx, it.id, it.amount, victim.position, view, victim)
-                world.addItem(groundItem)
-                victim.deathItems = HashSet<GroundItem>()
-                victim.deathItems += groundItem
+                if(it.amount > 0) {
+                    val groundItem = DeathGroundItem(ctx, it.id, it.amount, victim.position, view, victim)
+                    world.addItem(groundItem)
+                    victim.deathItems = HashSet()
+                    victim.deathItems += groundItem
+                }
             }
         }
     }

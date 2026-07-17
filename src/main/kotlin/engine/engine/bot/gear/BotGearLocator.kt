@@ -2,9 +2,9 @@ package engine.bot.gear
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * Locates and equips a resolved bot equipment layout.

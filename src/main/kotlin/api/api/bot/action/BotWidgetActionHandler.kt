@@ -2,9 +2,9 @@ package api.bot.action
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
+import io.luna.game.model.mob.bot.Bot
 import api.predef.ext.*
 import engine.widget.make.ButtonIndex
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.NumberInput

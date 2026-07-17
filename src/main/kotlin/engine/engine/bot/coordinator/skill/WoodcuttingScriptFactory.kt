@@ -1,11 +1,11 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
 import game.skill.woodcutting.cutTree.Tree
-import io.luna.game.model.mob.bot.Bot
 import java.util.*
 
 /**

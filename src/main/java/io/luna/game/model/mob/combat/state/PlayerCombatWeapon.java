@@ -152,7 +152,7 @@ public final class PlayerCombatWeapon {
      * @return The current weapon id.
      */
     public int getId() {
-        return def.getId();
+        return def.id();
     }
 
     /**

@@ -2,7 +2,7 @@ package game.skill.firemaking
 
 import api.predef.*
 
-for (log in Log.VALUES) {
+for (log in Log.entries) {
     // Use tinderbox on log in inventory.
     useItem(Firemaking.TINDERBOX).onItem(log.id) {
         plr.submitAction(LightLogAction(plr, log, true))

@@ -2,7 +2,7 @@ package game.item.experienceLamp
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.varp.*
+import io.luna.game.model.mob.varp.PersistentVarp
 
 /**
  * Rubbing the lamp.

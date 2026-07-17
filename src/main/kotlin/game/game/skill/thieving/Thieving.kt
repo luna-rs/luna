@@ -5,12 +5,12 @@ import api.drops.DropTableHandler
 import api.drops.DropTableItemList
 import api.predef.*
 import api.predef.ext.*
+import game.skill.Skills
+import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
-import game.skill.Skills
-import game.skill.thieving.pickpocketNpc.ThievingNpcType
 
 /**
  * Contains utility functions related to the thieving skill.

@@ -550,8 +550,10 @@ public final class CollisionManager {
             return true;
         } else if (start.getZ() != end.getZ()) {
             return false;
-        } else if (source instanceof Bot && source.isWithinDistance(target, 1)) {
-            return true;
+        } else if (source instanceof Bot) {
+            if(source.isWithinDistance(target, 1))
+                return true;
+            return policy.getType() == InteractionType.LINE_OF_SIGHT && raycast(start, end);
         } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;

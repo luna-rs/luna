@@ -2,7 +2,6 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
-import engine.bot.coordinator.SocializingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
@@ -50,9 +49,9 @@ public enum BotActivity {
     MERCHANTING(new SkillingCoordinator(true)),
 
     /**
-     * Social activities like chatting, emotes, or community events.
+     * Generic activities like chatting, community events, buying items from stores, etc.
      */
-    SOCIALIZING(SocializingCoordinator.INSTANCE),
+    SOCIALIZING(new SkillingCoordinator(true)),
 
     /**
      * Participation in structured mini-games or cooperative content.

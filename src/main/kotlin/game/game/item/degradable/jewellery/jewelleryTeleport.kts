@@ -2,13 +2,13 @@ package game.item.degradable.jewellery
 
 import api.predef.*
 import api.predef.ext.*
+import game.skill.magic.Magic.teleport
 import io.luna.game.event.impl.ItemClickEvent
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.util.StringUtils
-import game.skill.magic.Magic.teleport
 
 /**
  * Invoked when the player initially rubs the jewellery. Forwards to [openDialogue].

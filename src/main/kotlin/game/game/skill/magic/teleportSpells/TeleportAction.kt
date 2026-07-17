@@ -2,11 +2,11 @@ package game.skill.magic.teleportSpells
 
 import api.attr.Attr
 import api.predef.*
+import game.skill.magic.Magic
+import game.skill.magic.SpellRequirement
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
-import game.skill.magic.Magic
-import game.skill.magic.SpellRequirement
 
 /**
  * A [LockedAction] implementation that teleports a player to another destination.

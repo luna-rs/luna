@@ -21,8 +21,8 @@ class SearchResultInterface(private val searchToken: String) :
     override fun buildDisplayItems(plr: Player): ArrayList<Item> {
         // Perform search here, filter items based on search token.
         val itemsFound = ItemDefinition.ALL
-            .filter { it.id > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
-            .map { Item(it.id, 1) }.toCollection(ArrayList())
+            .filter { it.id() > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
+            .map { Item(it.id(), 1) }.toCollection(ArrayList())
 
         val resultCount = itemsFound.size
         val maxResults = plr.bank.capacity()
@@ -70,13 +70,13 @@ cmd("finddef", RIGHTS_DEV) {
     when (type) {
         "obj", "object", "objects" -> GameObjectDefinition.ALL.stream()
             .filter { it.name.lowercase().contains(search) }
-            .forEach { matches.add(it.id to it.name) }
+            .forEach { matches.add(it.id() to it.name) }
 
         "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
-            .forEach { matches.add(it.id to it.name) }
+            .forEach { matches.add(it.id() to it.name) }
 
         "npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
-            .forEach { matches.add(it.id to it.name) }
+            .forEach { matches.add(it.id() to it.name) }
     }
     if (matches.isNotEmpty()) {
         for (next in matches) {

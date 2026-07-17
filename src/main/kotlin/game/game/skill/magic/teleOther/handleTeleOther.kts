@@ -2,13 +2,13 @@ package game.skill.magic.teleOther
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
-import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.varp.PersistentVarp
 import game.player.Messages
 import game.skill.magic.Magic
 import game.skill.magic.teleOther.TeleOtherAction.Companion.teleOtherRequests
 import io.luna.Luna
+import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.varp.PersistentVarp
 import java.util.concurrent.TimeUnit
 
 /**

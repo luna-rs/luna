@@ -1,9 +1,10 @@
 package game.bot.scripts
 
-import api.bot.script.ReflexBotScript
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
+import game.bot.scripts.LootItemReflexScript.Companion.JUNK_ITEMS
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import game.skill.prayer.Bone
@@ -88,7 +89,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
 
         valuableItems.sortWith(
             compareByDescending<GroundItem> { it in bot.deathItems }
-                .thenByDescending { it.id in bot.preferences.wantedItems }
+                .thenByDescending { bot.preferences.hasWantedItem(it.id) }
                 .thenByDescending { world.economy.getTotalPrice(it.toItem()) }
         )
 
@@ -140,9 +141,9 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                     valuableItems += groundItem
                     found = true
                 }
-            } else if (groundItem.id in bot.preferences.wantedItems) {
+            } else if (bot.preferences.hasWantedItem(groundItem.id)) {
                 valuableItems += groundItem
-                bot.preferences.wantedItems.remove(item.id, item.amount)
+                bot.preferences.removeWantedItem(item.id, item.amount)
                 found = true
             } else if (world.economy.getTotalPrice(item) > minimumLootValue) {
                 valuableItems += groundItem

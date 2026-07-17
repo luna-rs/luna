@@ -3,11 +3,11 @@ package game.skill.thieving.searchForTraps
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
-import game.player.Animations
 
 /**
  * A [ThrottledAction] that handles opening trapped chests.

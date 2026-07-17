@@ -2,11 +2,11 @@ package game.skill.prayer.buryBone
 
 import api.attr.Attr
 import api.predef.*
+import game.player.Sound
+import game.skill.prayer.Bone
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.player.Sound
-import game.skill.prayer.Bone
 
 /**
  * Throttles bone burying.

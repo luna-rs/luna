@@ -2,6 +2,7 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -18,7 +19,6 @@ import game.skill.cooking.cookFood.Food
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
 
@@ -127,7 +127,7 @@ class CookFoodBotScript(
             return true
         }
 
-        if (!bot.inventory.containsAll(withdraw) && bot.actions.size(ActionType.WEAK) == 0) {
+        if (!bot.inventory.contains(cooking!!.raw) && bot.actions.size(ActionType.WEAK) == 0) {
             forceBanking = true
             return true
         }

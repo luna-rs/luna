@@ -1,7 +1,6 @@
 package api.predef.ext
 
 import api.predef.*
-import io.luna.game.model.Entity
 import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -14,7 +13,6 @@ import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
 import java.time.Duration
-import kotlin.reflect.KClass
 
 /**
  * Spawns an [Npc].

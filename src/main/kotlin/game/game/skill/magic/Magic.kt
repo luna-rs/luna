@@ -248,9 +248,10 @@ object Magic {
      * @param onTeleport A callback invoked when the teleport finishes.
      */
     fun Player.teleport(destination: Position,
-                        style: TeleportStyle = TeleportStyle.REGULAR,
+                        style: TeleportStyle? = null,
                         onTeleport: () -> Unit = {}) {
-        submitAction(object : TeleportAction(this@teleport, destination = destination, style = style) {
+        submitAction(object : TeleportAction(this@teleport, destination = destination, style =
+            style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR)) {
             override fun onTeleport() {
                 onTeleport()
             }

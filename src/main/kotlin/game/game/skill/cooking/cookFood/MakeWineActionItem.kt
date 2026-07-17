@@ -2,12 +2,12 @@ package game.skill.cooking.cookFood
 
 import api.attr.Attr
 import api.predef.*
+import game.skill.cooking.prepareFood.IncompleteFood
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.DynamicItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.task.TaskState
-import game.skill.cooking.prepareFood.IncompleteFood
 
 /**
  * An [InventoryAction] implementation that makes wine.

@@ -1,0 +1,6214 @@
+/*
+ * Default wanted-item definitions used by bots to determine which items they should try to keep stocked or acquire.
+ *
+ * Each entry defines an item id, the minimum quantity that triggers demand, the quantity the bot should try to
+ * restock toward, and optional progression restrictions that control when the item is considered relevant.
+ *
+ * Item identifiers refer to both noted and unnoted variants, but all item IDs should use the unnoted variant.
+ *
+ * "min" is the quantity at which the bot begins wanting more of the item. -1 means the bot always wants more.
+ * "target" is the quantity the bot attempts to reach once restocking is triggered.
+ * "skill" identifies the relevant skill used for progression checks, or -1 for combat level.
+ * "max_level" is the level after which the item is no longer considered part of that progression tier, or -1 when
+ * there is no upper level restriction.
+ *
+ * Item-name comments beside each "id" are informational only and correspond to the item definitions in items.json.
+ */
+
+[
+  {
+    "id": 995,// Coins
+    "min": -1,
+    "target": 500000,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 556, // Air rune
+    "min": 1000,
+    "target": 5000,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 555, // Water rune
+    "min": 1000,
+    "target": 5000,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 557, // Earth rune
+    "min": 1000,
+    "target": 5000,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 554, // Fire rune
+    "min": 1000,
+    "target": 5000,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 558, // Mind rune
+    "min": 500,
+    "target": 3000,
+    "skill": 6,
+    "max_level": 35
+  },
+  {
+    "id": 559, // Body rune
+    "min": 250,
+    "target": 1500,
+    "skill": 6,
+    "max_level": 50
+  },
+  {
+    "id": 562, // Chaos rune
+    "min": 300,
+    "target": 2000,
+    "skill": 6,
+    "max_level": 65
+  },
+  {
+    "id": 560, // Death rune
+    "min": 250,
+    "target": 1500,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 565, // Blood rune
+    "min": 100,
+    "target": 750,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 564, // Cosmic rune
+    "min": 100,
+    "target": 500,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 561, // Nature rune
+    "min": 200,
+    "target": 1000,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 563, // Law rune
+    "min": 100,
+    "target": 500,
+    "skill": 6,
+    "max_level": -1
+  },
+  {
+    "id": 882, // Bronze arrow
+    "min": 250,
+    "target": 1500,
+    "skill": 4,
+    "max_level": 20
+  },
+  {
+    "id": 884, // Iron arrow
+    "min": 300,
+    "target": 2000,
+    "skill": 4,
+    "max_level": 30
+  },
+  {
+    "id": 886, // Steel arrow
+    "min": 400,
+    "target": 3000,
+    "skill": 4,
+    "max_level": 40
+  },
+  {
+    "id": 888, // Mithril arrow
+    "min": 500,
+    "target": 4000,
+    "skill": 4,
+    "max_level": 55
+  },
+  {
+    "id": 890, // Adamant arrow
+    "min": 500,
+    "target": 4000,
+    "skill": 4,
+    "max_level": 70
+  },
+  {
+    "id": 892, // Rune arrow
+    "min": 300,
+    "target": 2500,
+    "skill": 4,
+    "max_level": -1
+  },
+  {
+    "id": 526, // Bones
+    "min": 50,
+    "target": 300,
+    "skill": 5,
+    "max_level": 30
+  },
+  {
+    "id": 532, // Big bones
+    "min": 100,
+    "target": 500,
+    "skill": 5,
+    "max_level": 60
+  },
+  {
+    "id": 536, // Dragon bones
+    "min": 50,
+    "target": 300,
+    "skill": 5,
+    "max_level": -1
+  },
+  {
+    "id": 315, // Shrimps
+    "min": 20,
+    "target": 100,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 333, // Trout
+    "min": 30,
+    "target": 150,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 329, // Salmon
+    "min": 40,
+    "target": 200,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 361, // Tuna
+    "min": 50,
+    "target": 250,
+    "skill": -1,
+    "max_level": 60
+  },
+  {
+    "id": 379, // Lobster
+    "min": 75,
+    "target": 400,
+    "skill": -1,
+    "max_level": 80
+  },
+  {
+    "id": 373, // Swordfish
+    "min": 100,
+    "target": 500,
+    "skill": -1,
+    "max_level": 100
+  },
+  {
+    "id": 385, // Shark
+    "min": 100,
+    "target": 500,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2428, // Attack potion(4)
+    "min": 4,
+    "target": 20,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 113, // Strength potion(4)
+    "min": 4,
+    "target": 20,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 2432, // Defence potion(4)
+    "min": 4,
+    "target": 20,
+    "skill": -1,
+    "max_level": 60
+  },
+  {
+    "id": 2436, // Super attack(4)
+    "min": 8,
+    "target": 40,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2440, // Super strength(4)
+    "min": 8,
+    "target": 40,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2442, // Super defence(4)
+    "min": 8,
+    "target": 40,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2434, // Prayer potion(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2444, // Ranging potion(4)
+    "min": 8,
+    "target": 40,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3040, // Magic potion(4)
+    "min": 5,
+    "target": 30,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1511, // Logs
+    "min": 100,
+    "target": 500,
+    "skill": 8,
+    "max_level": 30
+  },
+  {
+    "id": 1521, // Oak logs
+    "min": 150,
+    "target": 750,
+    "skill": 8,
+    "max_level": 45
+  },
+  {
+    "id": 1519, // Willow logs
+    "min": 250,
+    "target": 1500,
+    "skill": 8,
+    "max_level": 60
+  },
+  {
+    "id": 1517, // Maple logs
+    "min": 300,
+    "target": 2000,
+    "skill": 8,
+    "max_level": 75
+  },
+  {
+    "id": 1515, // Yew logs
+    "min": 250,
+    "target": 1500,
+    "skill": 8,
+    "max_level": -1
+  },
+  {
+    "id": 1513, // Magic logs
+    "min": 100,
+    "target": 500,
+    "skill": 8,
+    "max_level": -1
+  },
+  {
+    "id": 436, // Copper ore
+    "min": 100,
+    "target": 500,
+    "skill": 14,
+    "max_level": 30
+  },
+  {
+    "id": 438, // Tin ore
+    "min": 100,
+    "target": 500,
+    "skill": 14,
+    "max_level": 30
+  },
+  {
+    "id": 440, // Iron ore
+    "min": 250,
+    "target": 1500,
+    "skill": 14,
+    "max_level": 60
+  },
+  {
+    "id": 453, // Coal
+    "min": 500,
+    "target": 5000,
+    "skill": 14,
+    "max_level": -1
+  },
+  {
+    "id": 447, // Mithril ore
+    "min": 200,
+    "target": 1000,
+    "skill": 14,
+    "max_level": 80
+  },
+  {
+    "id": 449, // Adamantite ore
+    "min": 150,
+    "target": 750,
+    "skill": 14,
+    "max_level": -1
+  },
+  {
+    "id": 451, // Runite ore
+    "min": 50,
+    "target": 250,
+    "skill": 14,
+    "max_level": -1
+  },
+  {
+    "id": 2349, // Bronze bar
+    "min": 100,
+    "target": 500,
+    "skill": 13,
+    "max_level": 30
+  },
+  {
+    "id": 2351, // Iron bar
+    "min": 100,
+    "target": 500,
+    "skill": 13,
+    "max_level": 45
+  },
+  {
+    "id": 2353, // Steel bar
+    "min": 200,
+    "target": 1000,
+    "skill": 13,
+    "max_level": 60
+  },
+  {
+    "id": 2359, // Mithril bar
+    "min": 150,
+    "target": 750,
+    "skill": 13,
+    "max_level": 75
+  },
+  {
+    "id": 2361, // Adamantite bar
+    "min": 100,
+    "target": 500,
+    "skill": 13,
+    "max_level": 90
+  },
+  {
+    "id": 2363, // Runite bar
+    "min": 50,
+    "target": 250,
+    "skill": 13,
+    "max_level": -1
+  },
+  {
+    "id": 2355, // Silver bar
+    "min": 50,
+    "target": 250,
+    "skill": 12,
+    "max_level": 70
+  },
+  {
+    "id": 2357, // Gold bar
+    "min": 100,
+    "target": 500,
+    "skill": 12,
+    "max_level": -1
+  },
+  {
+    "id": 314, // Feather
+    "min": 1000,
+    "target": 10000,
+    "skill": 9,
+    "max_level": -1
+  },
+  {
+    "id": 52, // Arrow shaft
+    "min": 1000,
+    "target": 10000,
+    "skill": 9,
+    "max_level": -1
+  },
+  {
+    "id": 53, // Headless arrow
+    "min": 1000,
+    "target": 10000,
+    "skill": 9,
+    "max_level": -1
+  },
+  {
+    "id": 1777, // Bow string
+    "min": 250,
+    "target": 2500,
+    "skill": 9,
+    "max_level": -1
+  },
+  {
+    "id": 39, // Bronze arrowtips
+    "min": 250,
+    "target": 2000,
+    "skill": 9,
+    "max_level": 30
+  },
+  {
+    "id": 40, // Iron arrowtips
+    "min": 300,
+    "target": 2500,
+    "skill": 9,
+    "max_level": 40
+  },
+  {
+    "id": 41, // Steel arrowtips
+    "min": 400,
+    "target": 3000,
+    "skill": 9,
+    "max_level": 50
+  },
+  {
+    "id": 42, // Mithril arrowtips
+    "min": 500,
+    "target": 4000,
+    "skill": 9,
+    "max_level": 60
+  },
+  {
+    "id": 43, // Adamant arrowtips
+    "min": 500,
+    "target": 4000,
+    "skill": 9,
+    "max_level": 75
+  },
+  {
+    "id": 44, // Rune arrowtips
+    "min": 300,
+    "target": 2500,
+    "skill": 9,
+    "max_level": -1
+  },
+  {
+    "id": 313, // Fishing bait
+    "min": 500,
+    "target": 5000,
+    "skill": 10,
+    "max_level": 40
+  },
+  {
+    "id": 317, // Raw shrimps
+    "min": 50,
+    "target": 250,
+    "skill": 10,
+    "max_level": 20
+  },
+  {
+    "id": 335, // Raw trout
+    "min": 100,
+    "target": 500,
+    "skill": 10,
+    "max_level": 35
+  },
+  {
+    "id": 331, // Raw salmon
+    "min": 125,
+    "target": 600,
+    "skill": 10,
+    "max_level": 45
+  },
+  {
+    "id": 359, // Raw tuna
+    "min": 150,
+    "target": 750,
+    "skill": 10,
+    "max_level": 55
+  },
+  {
+    "id": 377, // Raw lobster
+    "min": 200,
+    "target": 1000,
+    "skill": 10,
+    "max_level": 70
+  },
+  {
+    "id": 371, // Raw swordfish
+    "min": 200,
+    "target": 1000,
+    "skill": 10,
+    "max_level": 85
+  },
+  {
+    "id": 383, // Raw shark
+    "min": 150,
+    "target": 750,
+    "skill": 10,
+    "max_level": -1
+  },
+  {
+    "id": 1436, // Rune essence
+    "min": 500,
+    "target": 5000,
+    "skill": 20,
+    "max_level": 30
+  },
+  {
+    "id": 7936, // Pure essence
+    "min": 1000,
+    "target": 10000,
+    "skill": 20,
+    "max_level": -1
+  },
+  {
+    "id": 1205, // Bronze dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1221, // Bronze dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5670, // Bronze dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5688, // Bronze dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1237, // Bronze spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1251, // Bronze spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 3170, // Bronze spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5704, // Bronze spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5718, // Bronze spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1277, // Bronze sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1291, // Bronze longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1307, // Bronze 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1321, // Bronze scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1337, // Bronze warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1375, // Bronze battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1422, // Bronze mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 3190, // Bronze halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1203, // Iron dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1219, // Iron dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5668, // Iron dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5686, // Iron dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1239, // Iron spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1253, // Iron spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 3171, // Iron spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5706, // Iron spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5720, // Iron spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1279, // Iron sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1293, // Iron longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1309, // Iron 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1323, // Iron scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1335, // Iron warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1363, // Iron battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1420, // Iron mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 3192, // Iron halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1207, // Steel dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1223, // Steel dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5672, // Steel dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5690, // Steel dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1241, // Steel spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1255, // Steel spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 3172, // Steel spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5708, // Steel spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5722, // Steel spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1281, // Steel sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1295, // Steel longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1311, // Steel 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1325, // Steel scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1339, // Steel warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1365, // Steel battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1424, // Steel mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 3194, // Steel halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1217, // Black dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1233, // Black dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5682, // Black dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5700, // Black dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 4580, // Black spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 4582, // Black spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 4584, // Black spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5734, // Black spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5736, // Black spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1283, // Black sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1297, // Black longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1313, // Black 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1327, // Black scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1341, // Black warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1367, // Black battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1426, // Black mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 3196, // Black halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1209, // Mithril dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1225, // Mithril dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5674, // Mithril dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5692, // Mithril dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1243, // Mithril spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1257, // Mithril spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 3173, // Mithril spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5710, // Mithril spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5724, // Mithril spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1285, // Mithril sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1299, // Mithril longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1315, // Mithril 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1329, // Mithril scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1343, // Mithril warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1369, // Mithril battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1428, // Mithril mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 3198, // Mithril halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1211, // Adamant dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1227, // Adamant dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5676, // Adamant dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5694, // Adamant dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1245, // Adamant spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1259, // Adamant spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 3174, // Adamant spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5712, // Adamant spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5726, // Adamant spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1287, // Adamant sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1301, // Adamant longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1317, // Adamant 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1331, // Adamant scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1345, // Addy warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1371, // Adamant battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1430, // Adamant mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 3200, // Adamant halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1213, // Rune dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1229, // Rune dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5678, // Rune dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5696, // Rune dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1247, // Rune spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1261, // Rune spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 3175, // Rune spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5714, // Rune spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5728, // Rune spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1289, // Rune sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1303, // Rune longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 6897, // Rune longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1319, // Rune 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1333, // Rune scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1347, // Rune warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1373, // Rune battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1432, // Rune mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 3202, // Rune halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1215, // Dragon dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1231, // Dragon dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5680, // Dragon dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5698, // Dragon dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1249, // Dragon spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1263, // Dragon spear(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3176, // Dragon spear(kp)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5716, // Dragon spear(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5730, // Dragon spear(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1305, // Dragon longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4587, // Dragon scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7158, // Dragon 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1377, // Dragon battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1434, // Dragon mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3204, // Dragon halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6589, // White battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6591, // White dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6593, // White dagger(p)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6595, // White dagger(+)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6597, // White dagger(s)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6599, // White halberd
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6601, // White mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6605, // White sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6607, // White longsword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6609, // White 2h sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6611, // White scimitar
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6613, // White warhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6523, // Toktz-xil-ak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6525, // Toktz-xil-ek
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6527, // Tzhaar-ket-em
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6528, // Tzhaar-ket-om
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4153, // Granite maul
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4718, // Dharoks greataxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4886, // Dharoks axe 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4887, // Dharoks axe 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4888, // Dharoks axe 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4889, // Dharoks axe 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4726, // Guthans warspear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4910, // Guthans spear 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4911, // Guthans spear 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4912, // Guthans spear 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4913, // Guthans spear 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4747, // Torags hammers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4958, // Torags hammer 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4959, // Torags hammer 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4960, // Torags hammer 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4961, // Torags hammer 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4755, // Veracs flail
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4982, // Veracs flail 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4983, // Veracs flail 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4984, // Veracs flail 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4985, // Veracs flail 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4151, // Abyssal whip
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 35, // Excalibur
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 667, // Blurite sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 746, // Dark dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 747, // Glowing dagger
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2402, // Silverlight
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6745, // Silverlight
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2952, // Wolfbane
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4158, // Leaf-bladed spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6746, // Darklight
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7668, // Gadderhammer
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7806, // Anger sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7807, // Anger battleaxe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7808, // Anger mace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7809, // Anger spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3757, // Fremennik blade
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4068, // Decorative sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4503, // Decorative sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4508, // Decorative sword
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5016, // Bone spear
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5018, // Bone club
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6313, // Opal machete
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6315, // Jade machete
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6317, // Red topaz machete
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7140, // Lucky cutlass
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7141, // Harry's cutlass
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7142, // Rapier
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6760, // Guthix mjolnir
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6762, // Saradomin mjolnir
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6764, // Zamorak mjolnir
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7804, // Zaros mjolnir
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1419, // Scythe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2460, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2462, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2464, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2466, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2468, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2470, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2472, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2474, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2476, // Flowers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4565, // Basket of eggs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4566, // Rubber chicken
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6541, // Mouse toy
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 767, // Phoenix crossbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 837, // Crossbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 839, // Longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 841, // Shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 843, // Oak shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 30
+  },
+  {
+    "id": 845, // Oak longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 30
+  },
+  {
+    "id": 4236, // Oak longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 30
+  },
+  {
+    "id": 847, // Willow longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 849, // Willow shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 851, // Maple longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 853, // Maple shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 855, // Yew longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 857, // Yew shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 859, // Magic longbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 861, // Magic shortbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2883, // Ogre bow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4827, // Comp ogre bow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4212, // New crystal bow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4214, // Crystal bow full
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4215, // Crystal bow 9/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4216, // Crystal bow 8/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4217, // Crystal bow 7/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4218, // Crystal bow 6/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4219, // Crystal bow 5/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4220, // Crystal bow 4/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4221, // Crystal bow 3/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4222, // Crystal bow 2/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4223, // Crystal bow 1/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4734, // Karils crossbow
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4934, // Karils x-bow 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4935, // Karils x-bow 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4936, // Karils x-bow 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4937, // Karils x-bow 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6724, // Seercull
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6522, // Toktz-xil-ul
+    "min": 100,
+    "target": 750,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 800, // Bronze thrownaxe
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 806, // Bronze dart
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 812, // Bronze dart(p)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5628, // Bronze dart(+)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5635, // Bronze dart(s)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 825, // Bronze javelin
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 831, // Bronze javelin(p)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5642, // Bronze javelin(+)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5648, // Bronze javelin(s)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 864, // Bronze knife
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 870, // Bronze knife(p)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5654, // Bronze knife(+)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 5661, // Bronze knife(s)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 801, // Iron thrownaxe
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 807, // Iron dart
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 813, // Iron dart(p)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5629, // Iron dart(+)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5636, // Iron dart(s)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 826, // Iron javelin
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 832, // Iron javelin(p)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5643, // Iron javelin(+)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5649, // Iron javelin(s)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 863, // Iron knife
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 871, // Iron knife(p)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5655, // Iron knife(+)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 5662, // Iron knife(s)
+    "min": 300,
+    "target": 2000,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 802, // Steel thrownaxe
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 808, // Steel dart
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 814, // Steel dart(p)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5630, // Steel dart(+)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5637, // Steel dart(s)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 827, // Steel javelin
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 833, // Steel javelin(p)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5644, // Steel javelin(+)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5650, // Steel javelin(s)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 865, // Steel knife
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 872, // Steel knife(p)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5656, // Steel knife(+)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 5663, // Steel knife(s)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 3093, // Black dart
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 3094, // Black dart(p)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5631, // Black dart(+)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5638, // Black dart(s)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 869, // Black knife
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 874, // Black knife(p)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5658, // Black knife(+)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 5665, // Black knife(s)
+    "min": 400,
+    "target": 3000,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 803, // Mithril thrownaxe
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 809, // Mithril dart
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 815, // Mithril dart(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5632, // Mithril dart(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5639, // Mithril dart(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 828, // Mithril javelin
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 834, // Mithril javelin(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5645, // Mithril javelin(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5651, // Mithril javelin(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 866, // Mithril knife
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 873, // Mithril knife(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5657, // Mithril knife(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 5664, // Mithril knife(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 804, // Adamnt thrownaxe
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 75
+  },
+  {
+    "id": 810, // Adamant dart
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 816, // Adamant dart(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5633, // Adamant dart(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5640, // Adamant dart(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 829, // Adamant javelin
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 835, // Adamant javelin(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5646, // Adamant javelin(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5652, // Adamant javelin(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 867, // Adamant knife
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 875, // Adamant knife(p)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5659, // Adamant knife(+)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 5666, // Adamant knife(s)
+    "min": 500,
+    "target": 4000,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 805, // Rune thrownaxe
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 811, // Rune dart
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 817, // Rune dart(p)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5634, // Rune dart(+)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5641, // Rune dart(s)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 830, // Rune javelin
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 836, // Rune javelin(p)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5647, // Rune javelin(+)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5653, // Rune javelin(s)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 868, // Rune knife
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 876, // Rune knife(p)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5660, // Rune knife(+)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 5667, // Rune knife(s)
+    "min": 300,
+    "target": 2500,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 818, // Poisoned dart(p)
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1379, // Staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 20
+  },
+  {
+    "id": 1389, // Magic staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 6603, // Magic staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1381, // Staff of air
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1383, // Staff of water
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1385, // Staff of earth
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1387, // Staff of fire
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1391, // Battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 1393, // Fire battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1395, // Water battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1397, // Air battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1399, // Earth battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3053, // Lava battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6562, // Mud battlestaff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1401, // Mystic fire staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1403, // Mystic water staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1405, // Mystic air staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1407, // Mystic earth staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3054, // Mystic lava staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6563, // Mystic mud staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4675, // Ancient staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6526, // Toktz-mej-tal
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4170, // Slayer's staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4710, // Ahrims staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4862, // Ahrims staff 100
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4863, // Ahrims staff 75
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4864, // Ahrims staff 50
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4865, // Ahrims staff 25
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6908, // Beginner wand
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6910, // Apprentice wand
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6912, // Teacher wand
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6914, // Master wand
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1409, // Iban's staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2415, // Saradomin staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2416, // Guthix staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2417, // Zamorak staff
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1075, // Bronze platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1117, // Bronze platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1155, // Bronze full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1189, // Bronze kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 4119, // Bronze boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1087, // Bronze plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1067, // Iron platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1115, // Iron platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1153, // Iron full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1191, // Iron kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 4121, // Iron boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1081, // Iron plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1069, // Steel platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1119, // Steel platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1157, // Steel full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1193, // Steel kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 4123, // Steel boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1083, // Steel plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1077, // Black platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1125, // Black platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1165, // Black full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1195, // Black kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 4125, // Black boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1089, // Black plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1071, // Mithril platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1121, // Mithril platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1159, // Mithril full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1197, // Mithril kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 4127, // Mithril boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1085, // Mithril plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1073, // Adamant platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1123, // Adamant platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1161, // Adamant full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1199, // Adamant kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 4129, // Adamant boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1091, // Adamant plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1079, // Rune platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1127, // Rune platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1163, // Rune full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 1201, // Rune kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 4131, // Rune boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1093, // Rune plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 4087, // Dragon platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3140, // Dragon chainbody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1149, // Dragon med helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1187, // Dragon sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4585, // Dragon plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4716, // Dharoks helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4720, // Dharoks platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4722, // Dharoks platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4753, // Veracs helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4757, // Veracs brassard
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4759, // Veracs plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4745, // Torags helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4749, // Torags platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4751, // Torags platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4724, // Guthans helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4728, // Guthans platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4730, // Guthans chainskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1129, // Leather body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1095, // Leather chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1063, // Leather vambraces
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1167, // Leather cowl
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1133, // Studded body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 1097, // Studded chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 1169, // Coif
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 40
+  },
+  {
+    "id": 1135, // Green d'hide body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1099, // Green d'hide chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1065, // Green d'hide vamb
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 2499, // Blue d'hide body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 2493, // Blue d'hide chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 2487, // Blue d'hide vamb
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 2491, // Black d'hide vamb
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2501, // Red d'hide body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 85
+  },
+  {
+    "id": 2495, // Red d'hide chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 85
+  },
+  {
+    "id": 2489, // Red d'hide vamb
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 85
+  },
+  {
+    "id": 2503, // Black d'hide body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2497, // Black d'hide chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4732, // Karils coif
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4736, // Karils leathertop
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4738, // Karils leatherskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 579, // Wizard hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 577, // Wizard robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1011, // Blue skirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4089, // Mystic hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4091, // Mystic robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4093, // Mystic robe bottom
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4095, // Mystic gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4097, // Mystic boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4101, // Mystic robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4103, // Mystic robe bottom
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4105, // Mystic gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4107, // Mystic boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4109, // Mystic hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4708, // Ahrims hood
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4712, // Ahrims robetop
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4714, // Ahrims robeskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2587, // Black full helm (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2583, // Black platebody (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2585, // Black platelegs (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2589, // Black kiteshield (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3472, // Black plateskirt (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2595, // Black full helm (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2591, // Black platebody (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2593, // Black platelegs (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2597, // Black kiteshield (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3473, // Black plateskirt (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2605, // Adam full helm (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2599, // Adam platebody (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2601, // Adam platelegs (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2603, // Adam kiteshield (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3474, // Adam plateskirt (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2613, // Adam full helm (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2607, // Adam platebody (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2609, // Adam platelegs (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2611, // Adam kiteshield (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3475, // Adam plateskirt (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2623, // Rune platebody (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2625, // Rune platelegs (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2627, // Rune full helm (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2629, // Rune kiteshield (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3477, // Rune plateskirt (t)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2615, // Rune platebody (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2617, // Rune platelegs (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2619, // Rune full helm (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2621, // Rune kiteshield (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3476, // Rune plateskirt (g)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2661, // Saradomin plate
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2663, // Saradomin legs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2665, // Saradomin full
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2667, // Saradomin kite
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3479, // Saradomin skirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2673, // Guthix full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2669, // Guthix platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2671, // Guthix platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2675, // Guthix kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3480, // Guthix plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2653, // Zamorak platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2655, // Zamorak platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2657, // Zamorak full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2659, // Zamorak kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3478, // Zamorak plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1033, // Zamorak robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1035, // Zamorak robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2414, // Zamorak cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3057, // Mime mask
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3058, // Mime top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3059, // Mime legs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3060, // Mime gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3061, // Mime boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6182, // Lederhosen hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6180, // Lederhosen top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6181, // Lederhosen shorts
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6188, // Frog mask
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6184, // Prince tunic
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6185, // Prince leggings
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6186, // Princess blouse
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6187, // Princess skirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7112, // Pirate bandanna
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7110, // Stripy pirate shirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7116, // Pirate leggings
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7124, // Pirate bandanna
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7122, // Stripy pirate shirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7126, // Pirate leggings
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7130, // Pirate bandanna
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7128, // Stripy pirate shirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7132, // Pirate leggings
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7136, // Pirate bandanna
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7134, // Stripy pirate shirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7138, // Pirate leggings
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3486, // Gilded full helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3481, // Gilded platebody
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3483, // Gilded platelegs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3488, // Gilded kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3485, // Gilded plateskirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1061, // Leather boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 2579, // Wizard boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 50
+  },
+  {
+    "id": 1725, // Amulet of strength
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1704, // Amulet of glory
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3751, // Berserker helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6568, // Obsidian cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6524, // Toktz-ket-xil
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6737, // Berserker ring
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6128, // Rock-shell helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6129, // Rock-shell plate
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6130, // Rock-shell legs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6151, // Rock-shell gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6145, // Rock-shell boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6131, // Spined helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6133, // Spined body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6135, // Spined chaps
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6149, // Spined gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6143, // Spined boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6137, // Skeletal helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6139, // Skeletal top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6141, // Skeletal bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6153, // Skeletal gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6147, // Skeletal boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3385, // Splitbark helm
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3387, // Splitbark body
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3389, // Splitbark legs
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3391, // Splitbark gauntlets
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3393, // Splitbark greaves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6918, // Infinity hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6916, // Infinity top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6924, // Infinity bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6922, // Infinity gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6920, // Infinity boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6109, // Ghostly hood
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6107, // Ghostly robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6108, // Ghostly robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6110, // Ghostly gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6106, // Ghostly boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6111, // Ghostly cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2900, // Hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2896, // Robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2898, // Robe bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2902, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2894, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2910, // Hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2906, // Robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2908, // Robe bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2912, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2904, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1007, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2920, // Hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2916, // Robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2918, // Robe bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2922, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2914, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1023, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2930, // Hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2926, // Robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2928, // Robe bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2932, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2924, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2940, // Hat
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2936, // Robe top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2938, // Robe bottoms
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2942, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2934, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4298, // Ham shirt
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4300, // Ham robe
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4302, // Ham hood
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4304, // Ham cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6065, // Mourner top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6067, // Mourner trousers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6068, // Mourner gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6069, // Mourner boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6070, // Mourner cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5553, // Rogue top
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5554, // Rogue mask
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5555, // Rogue trousers
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5556, // Rogue gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 5557, // Rogue boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1171, // Wooden shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7676, // Wooden shield.
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1173, // Bronze sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 15
+  },
+  {
+    "id": 1175, // Iron sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 1177, // Steel sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1179, // Black sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1181, // Mithril sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 55
+  },
+  {
+    "id": 1183, // Adamant sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 6894, // Adamant kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 1185, // Rune sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 6631, // White sq shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 6633, // White kiteshield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 7332, // Black kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 7334, // Adam kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 7336, // Rune kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 7338, // Black kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 7340, // Adam kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 7342, // Rune kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 7344, // Black kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 7346, // Adam kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 7348, // Rune kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 7350, // Black kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 7352, // Adam kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 7354, // Rune kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 7356, // Black kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 7358, // Adam kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 70
+  },
+  {
+    "id": 7360, // Rune kiteshield(h)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 90
+  },
+  {
+    "id": 4072, // Decorative shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4507, // Decorative shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4512, // Decorative shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3758, // Fremennik shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3122, // Granite shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1540, // Anti-dragon shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2890, // Elemental shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4156, // Mirror shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4224, // New crystal shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4225, // Crystal shield full
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4226, // Crystal shield 9/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4227, // Crystal shield 8/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4228, // Crystal shield 7/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4229, // Crystal shield 6/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4230, // Crystal shield 5/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4231, // Crystal shield 4/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4232, // Crystal shield 3/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4233, // Crystal shield 2/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4234, // Crystal shield 1/10
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3840, // Holy book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3842, // Unholy book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3844, // Book of balance
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3839, // Damaged book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3841, // Damaged book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3843, // Damaged book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6889, // Mage's book
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6215, // Broodoo shield (10)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6217, // Broodoo shield (9)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6219, // Broodoo shield (8)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6221, // Broodoo shield (7)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6223, // Broodoo shield (6)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6225, // Broodoo shield (5)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6227, // Broodoo shield (4)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6229, // Broodoo shield (3)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6231, // Broodoo shield (2)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6233, // Broodoo shield (1)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6235, // Broodoo shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6237, // Broodoo shield (10)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6239, // Broodoo shield (9)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6241, // Broodoo shield (8)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6243, // Broodoo shield (7)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6245, // Broodoo shield (6)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6247, // Broodoo shield (5)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6249, // Broodoo shield (4)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6251, // Broodoo shield (3)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6253, // Broodoo shield (2)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6255, // Broodoo shield (1)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6257, // Broodoo shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6259, // Broodoo shield (10)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6261, // Broodoo shield (9)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6263, // Broodoo shield (8)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6265, // Broodoo shield (7)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6267, // Broodoo shield (6)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6269, // Broodoo shield (5)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6271, // Broodoo shield (4)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6273, // Broodoo shield (3)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6275, // Broodoo shield (2)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6277, // Broodoo shield (1)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6279, // Broodoo shield
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6893, // Leather boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 3791, // Fremennik boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 630, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 632, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 628, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 626, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 634, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1846, // Slave boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4117, // Mystic boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6328, // Snakeskin boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3105, // Climbing boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1837, // Desert boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4310, // Boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3107, // Spiked boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 88, // Boots of lightness
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 89, // Boots of lightness
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2577, // Ranger boots
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1059, // Leather gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 25
+  },
+  {
+    "id": 6629, // White gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7453, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 775, // Cooking gauntlets
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 776, // Goldsmith gauntlet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 777, // Chaos gauntlets
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1580, // Ice gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4115, // Mystic gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7454, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7455, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7456, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7457, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7458, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7459, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7460, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7461, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7462, // Gloves
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1019, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1021, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1027, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1031, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1029, // Cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4514, // Castlewars cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4516, // Castlewars cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3759, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3761, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3763, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3765, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3777, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3779, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3781, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3783, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3785, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3787, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3789, // Fremennik cloak
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1052, // Cape of legends
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2412, // Saradomin cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2413, // Guthix cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6570, // Fire cape
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2568, // Ring of forging
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2550, // Ring of recoil
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2570, // Ring of life
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 2572, // Ring of wealth
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6735, // Warrior ring
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6733, // Archers ring
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6731, // Seers ring
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3853, // Games necklace(8)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3855, // Games necklace(7)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3857, // Games necklace(6)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3859, // Games necklace(5)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3861, // Games necklace(4)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3863, // Games necklace(3)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3865, // Games necklace(2)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 3867, // Games necklace(1)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 552, // Ghostspeak amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4250, // Ghostspeak amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1662, // Diamond necklace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1692, // Gold amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1654, // Gold necklace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 4021, // M'speak amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6208, // Man speak amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6707, // Camulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 7803, // Yin yang amulet
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1664, // Dragon necklace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6577, // Onyx necklace
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1478, // Amulet of accuracy
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 35
+  },
+  {
+    "id": 1729, // Amulet of defence
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 45
+  },
+  {
+    "id": 1731, // Amulet of power
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 60
+  },
+  {
+    "id": 1727, // Amulet of magic
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": 65
+  },
+  {
+    "id": 1706, // Amulet of glory(1)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1708, // Amulet of glory(2)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1710, // Amulet of glory(3)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 1712, // Amulet of glory(4)
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  },
+  {
+    "id": 6585, // Amulet of fury
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1
+  }
+]

@@ -1,12 +1,11 @@
 package game.skill.firemaking
 
 import api.predef.ext.*
+import game.player.Animations
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.player.Animations
-import game.player.Sound
 
 /**
  * An [Action] that allows a player to perform a generic firemaking based light action, where the end result

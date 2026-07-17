@@ -8,6 +8,7 @@ import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.crafting.armorCrafting.CraftArmorActionItem.Companion.NEEDLE_ID
 import game.skill.crafting.armorCrafting.CraftArmorActionItem.Companion.THREAD_ID
 import game.skill.crafting.armorCrafting.CraftStuddedActionItem
@@ -131,7 +132,8 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
     }
 
     override fun withdraw(): List<Item> {
-        return if (armor.hides != null) {
+
+        val items = if (armor.hides != null) {
             listOf(Item(armor.hides.first.tan, 26))
         } else if (armor == HideArmor.STUDDED_BODY) {
             listOf(Item(HideArmor.LEATHER_BODY.id, 14), Item(CraftStuddedActionItem.STUDS, 14))
@@ -140,13 +142,22 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
         } else {
             throw IllegalStateException("Invalid armor type $armor.")
         }
+        if(items.find { bot.itemTracker.count(it.id) < it.amount } != null) {
+            val tannedHide = armor.hides?.first?.tan
+            if(tannedHide != null) {
+                bot.preferences.addWantedItem(tannedHide, 5000)
+            }
+            stop()
+            return listOf()
+        }
+        return items
     }
 
     override fun tools(): Set<Int> {
         return if (armor.hides != null) setOf(NEEDLE_ID, THREAD_ID) else setOf()
     }
 
-    override fun snapshot(): BotScriptData? {
+    override fun snapshot(): BotScriptData {
         val data = CraftArmorData()
         data.duration = duration
         data.zones = originalZones.toMutableList()

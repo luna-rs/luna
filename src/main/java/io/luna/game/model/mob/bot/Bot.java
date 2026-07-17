@@ -6,6 +6,7 @@ import api.bot.zone.Zone;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import game.bot.scripts.DeathReflexScript;
+import game.bot.scripts.EatFoodReflexScript;
 import game.bot.scripts.LootItemReflexScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
@@ -233,8 +234,8 @@ public final class Bot extends Player {
                 preferences = new BotPreference.Builder(manager.getPersonalityManager(), personality).randomizeSmart()
                         .build();
             }
-            return new Bot(context, username, "lunaisthebest1997", reflex, brain, personality, preferences,
-                    spawnPosition, temporary);
+            return new Bot(context, username, RandomUtils.nextBoolean() ? "lunaisthebest1997" : "chubbychaser123",
+                    reflex, brain, personality, preferences, spawnPosition, temporary);
         }
     }
 
@@ -363,6 +364,7 @@ public final class Bot extends Player {
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
         speechStack = new BotSpeechStack(this);
         setClient(botClient);
+        preferences.setBot(this);
     }
 
     /**
@@ -381,6 +383,7 @@ public final class Bot extends Player {
         super.onActive();
         reflex.add(new LootItemReflexScript(this));
         reflex.add(new DeathReflexScript(this));
+        reflex.add(new EatFoodReflexScript(this));
     }
 
     @Override
@@ -574,7 +577,7 @@ public final class Bot extends Player {
 
             EquipmentDefinition def = RandomUtils.random(eligible);
             if (def != null) {
-                Item equipItem = new Item(def.getId());
+                Item equipItem = new Item(def.id());
                 getEquipment().set(index, equipItem);
             }
             eligible.clear();

@@ -2,13 +2,12 @@ package game.skill.fletching.cutLog
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.skill.fletching.attachArrow.Arrow
+import game.skill.fletching.stringBow.Bow
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import game.player.Animations
-import game.player.Sound
-import game.skill.fletching.attachArrow.Arrow
-import game.skill.fletching.stringBow.Bow
 
 /**
  * An [InventoryAction] implementation that cuts logs.

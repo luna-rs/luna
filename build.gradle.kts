@@ -30,8 +30,8 @@ dependencies {
     }
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.8.1")
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.8.1"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.mockito:mockito-core:5.14.2")
     implementation("mysql:mysql-connector-java:8.0.33")

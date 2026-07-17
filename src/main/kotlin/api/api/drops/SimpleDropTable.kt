@@ -3,7 +3,6 @@ package api.drops
 import api.predef.*
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
-import io.luna.util.Rational
 
 /**
  * A basic implementation of [DropTable] that returns a predefined list of items.
@@ -16,7 +15,7 @@ import io.luna.util.Rational
  *
  * @author lare96
  */
-    class SimpleDropTable(private val items: DropTableItemList, chance: Double = ALWAYS) : DropTable(chance) {
+class SimpleDropTable(private val items: DropTableItemList, chance: Double = ALWAYS) : DropTable(chance) {
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList = items
     override fun computePossibleItems(): DropTableItemList = items
 }

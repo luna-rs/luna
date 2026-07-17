@@ -3,8 +3,8 @@ package game.skill.smithing
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSetMultimap
-import io.luna.game.model.item.Item
 import game.skill.smithing.smeltOre.SmeltAction
+import io.luna.game.model.item.Item
 
 /**
  * An enum representing a metal bar that can be made from a [SmeltAction].

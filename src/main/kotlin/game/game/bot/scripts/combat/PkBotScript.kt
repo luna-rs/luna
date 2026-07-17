@@ -1,8 +1,9 @@
 package game.bot.scripts.combat
 
+import api.bot.Suspendable.delay
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
-import api.bot.Suspendable.delay
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -14,7 +15,6 @@ import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds

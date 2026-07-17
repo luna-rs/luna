@@ -19,8 +19,8 @@ object MilkResource : FillableResource() {
         }
 
     override fun registerResource(obj: GameObjectDefinition) {
-        useItem(1925).onObject(obj.id) { fill(plr, 1925, gameObject) }
-        object1(obj.id) {
+        useItem(1925).onObject(obj.id()) { fill(plr, 1925, gameObject) }
+        object1(obj.id()) {
             if (plr.inventory.contains(1925)) {
                 fill(plr, 1925, gameObject)
             }

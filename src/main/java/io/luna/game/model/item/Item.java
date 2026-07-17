@@ -122,11 +122,11 @@ public class Item {
      */
     public static Integer findId(String name, boolean noted) {
         return ItemDefinition.ALL.lookup(def ->
-                        !SEARCH_RESTRICTED.contains(def.getId())
+                        !SEARCH_RESTRICTED.contains(def.id())
                                 && def.isTradeable()
                                 && def.getName().equals(name)
                                 && def.isNoted() == noted)
-                .map(ItemDefinition::getId)
+                .map(ItemDefinition::id)
                 .orElseGet(() -> {
                     logger.warn("Item ({}) was not valid or found.", name);
                     return null;

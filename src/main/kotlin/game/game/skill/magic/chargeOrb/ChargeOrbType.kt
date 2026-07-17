@@ -2,11 +2,11 @@ package game.skill.magic.chargeOrb
 
 import com.google.common.collect.ImmutableList
 import game.player.Sound
-import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
 import game.skill.magic.ItemRequirement
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
+import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
 
 /**
  * An enum representing all the different charge orb spells.

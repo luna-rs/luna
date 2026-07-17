@@ -7,6 +7,8 @@ import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
+import java.time.Instant;
+
 /**
  * Represents a prepared combat attack from one {@link Mob} onto another. It essentially models a single combat turn,
  * swing, or attack attempt.
@@ -57,6 +59,11 @@ public abstract class CombatAttack<T extends Mob> {
      * If this attack should ignore the attack delay (attack instantly, do not reset attack delay after).
      */
     private boolean ignoreAttackDelay;
+
+    /**
+     * A timestamp set when this attack is applied using {@link #apply()}.
+     */
+    private Instant timestamp;
 
     /**
      * Creates a new {@link CombatAttack}.
@@ -116,6 +123,7 @@ public abstract class CombatAttack<T extends Mob> {
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);
         victim.getCombat().resetCombatTimer(); // Once targeted and engaged, cannot safely log out or attack anyone else.
+        timestamp = Instant.now();
         attack();
     }
 
@@ -241,5 +249,12 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public void setIgnoreAttackDelay(boolean ignoreAttackDelay) {
         this.ignoreAttackDelay = ignoreAttackDelay;
+    }
+
+    /**
+     * @return The timestamp set when this attack is applied, or {@code null} if this attack hasn't been applied yet.
+     */
+    public Instant getTimestamp() {
+        return timestamp;
     }
 }

@@ -44,4 +44,4 @@ operator fun <T : AbstractOverlay> AbstractOverlaySet.get(interClass: KClass<T>)
 /**
  * Determines if the currently open [AbstractOverlay] matches [interClass].
  */
-operator fun <T : AbstractOverlay> AbstractOverlaySet.contains(interClass: KClass<T>): Boolean = player.overlays.contains(interClass.java)
+operator fun <T : AbstractOverlay> AbstractOverlaySet.contains(interClass: KClass<T>): Boolean = player.overlays.has(interClass.java)

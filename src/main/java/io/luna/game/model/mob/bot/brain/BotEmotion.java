@@ -4,7 +4,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -246,17 +245,19 @@ public final class BotEmotion {
      * @return {@code true} if the bot should be nervous about its current hitpoints.
      */
     public boolean isNervousAboutHp() {
-        if(bot.getHealthPercent() <= 10) {
+        int highestNervousHp = 75; // Highest HP bot can start to feel nervous.
+        int smartNervousHp = 35; // HP that will trigger the "always nervous" threshold for smarter/timid bots.
+        int minimumNervousHp = 20; // HP that will trigger the "always nervous" threshold for all bots.
+        if(bot.getHealthPercent() <= minimumNervousHp) {
             return true;
         }
-        Skill hitpoints = bot.getSkills().getSkill(Skill.HITPOINTS);
-        boolean alwaysNervous = (hitpoints.getStaticLevel() > 20 && hitpoints.getLevel() < 10) || hitpoints.getLevel() < 5 || bot.getHealthPercent() <= 10;
-        if (alwaysNervous && !bot.getPersonality().isStupidlyConfident()) {
+       if (bot.getHealthPercent() <= smartNervousHp && !bot.getPersonality().isStupidlyConfident()) {
             return true;
         }
         double confidence = isFeeling(EmotionType.SCARED) ? bot.getPersonality().getConfidence() * 0.75
                 : bot.getPersonality().getConfidence();
-        return bot.getHealthPercent() < Math.max(50 * (1.0 - confidence), 5.0);
+
+        return bot.getHealthPercent() <= Math.max(highestNervousHp * (1.0 - confidence), minimumNervousHp);
     }
 
     /**

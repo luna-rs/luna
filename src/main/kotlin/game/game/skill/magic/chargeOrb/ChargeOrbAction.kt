@@ -3,13 +3,13 @@ package game.skill.magic.chargeOrb
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.skill.magic.Magic
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
-import game.player.Animations
-import game.skill.magic.Magic
 
 /**
  * A [QueuedAction] handles charging orbs.

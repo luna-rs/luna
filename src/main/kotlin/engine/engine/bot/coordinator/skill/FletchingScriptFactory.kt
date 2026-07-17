@@ -3,10 +3,12 @@ package engine.bot.coordinator.skill
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.StringBowBotScript
 import game.skill.fletching.cutLog.Log
 import game.skill.fletching.stringBow.Bow.*
+import game.skill.fletching.stringBow.Bow.Companion.BOW_STRING
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -75,7 +77,8 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
             if (index == 1 && level < log.bows[1].level) {
                 index = 0
             }
-            return if (rand(2) == 0) {
+            return if (randBoolean() && bot.itemTracker.contains(BOW_STRING) &&
+                log.unstrungIds.find { bot.itemTracker.contains(it) } != null) {
                 StringBowBotScript(bot, log.bows[index], getDuration(bot))
             } else {
                 CutLogBotScript(bot, log, index, getDuration(bot))

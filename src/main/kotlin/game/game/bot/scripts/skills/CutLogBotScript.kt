@@ -2,15 +2,19 @@ package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.SkillingScriptFactory
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fletching.cutLog.Log
 import game.skill.fletching.cutLog.Log.Companion.KNIFE
+import game.skill.fletching.stringBow.Bow
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -32,7 +36,7 @@ class CutLogBotScript(bot: Bot,
                       duration: Duration) : StationaryInventoryBotScript(bot, duration) {
 
     init {
-        require(index >= 0 && index <= 4) { "Make-item index must be within inclusive bounds (0..4)." }
+        require(index in 0..4) { "Make-item index must be within inclusive bounds (0..4)." }
     }
 
     companion object {
@@ -119,5 +123,14 @@ class CutLogBotScript(bot: Bot,
         data.log = log
         data.index = index
         return data
+    }
+
+    override suspend fun finish() {
+        // Chance to queue a fletching script.
+        val bow = log.bows.find { bot.itemTracker.contains(it.unstrung) }
+        if (bow != null && bow != Bow.ARROW_SHAFT && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
+            val script = StringBowBotScript(bot, bow, SkillingScriptFactory.getDuration(bot))
+            bot.scriptStack.pushTail(script, 2)
+        }
     }
 }

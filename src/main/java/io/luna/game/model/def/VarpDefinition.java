@@ -6,7 +6,7 @@ package io.luna.game.model.def;
  * {@code varp}s are integer variables used by the client to represent and drive settings/state such as brightness,
  * volume levels, chat options, and other data. This definition exposes:
  * <ul>
- *     <li>the varp id ({@link #getId()})</li>
+ *     <li>the varp id ({@link #id()})</li>
  *     <li>a decoded "type" field ({@link #getType()}) that categorizes the varp</li>
  * </ul>
  * <p>
@@ -123,7 +123,7 @@ public final class VarpDefinition implements Definition {
      * @return The id.
      */
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

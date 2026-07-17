@@ -1,8 +1,8 @@
 package api.bot.script
 
 import api.bot.GameCoroutineScope
-import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import kotlinx.coroutines.isActive

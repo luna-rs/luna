@@ -7,6 +7,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -66,7 +67,7 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Apply auto-retaliate if a valid aggressor was remembered.
-        if (combat.getAutoRetaliateTarget() != null && combat.isAutoRetaliate()) {
+        if (combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() || mob instanceof Bot)) {
             if (combat.getAutoRetaliateTarget().isAlive()) {
                 combat.setTarget(combat.getAutoRetaliateTarget());
             }

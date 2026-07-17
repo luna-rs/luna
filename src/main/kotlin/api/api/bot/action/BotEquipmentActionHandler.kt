@@ -1,9 +1,9 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.def.EquipmentDefinition
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * Handles equipment-related actions for a [Bot].
@@ -37,14 +37,18 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             return false
         }
 
-        val equipmentIndex = EquipmentDefinition.ALL.get(id).map { it.index }
+        val equipmentDef = EquipmentDefinition.ALL.get(id)
+        val equipmentIndex = equipmentDef.map { it.index }
         if (equipmentIndex.isEmpty) {
             // Invalid item.
             bot.log("${itemName(id)} cannot be equipped.")
             return false
+        } else if(equipmentDef.map { it.meetsAllRequirements(bot) }.isEmpty) {
+            bot.log("Does not meet equipment requirements.")
+            return false
         }
 
-        val suspendCond = SuspendableCondition({ bot.equipment[equipmentIndex.get()]?.id == id })
+        val suspendCond = SuspendableCondition { bot.equipment[equipmentIndex.get()]?.id == id }
         bot.output.sendInventoryItemClick(2, index, id)
         return suspendCond.submit().await()
     }
@@ -111,7 +115,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      */
     suspend fun equipAll(ids: List<Int>): Boolean {
         bot.log("Trying to equip ${ids.size} items.")
-
+        // todo check level req on fly fishing for script
         var success = true
         for (next in ids) {
             if (!equip(next)) {

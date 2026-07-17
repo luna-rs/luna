@@ -5,7 +5,6 @@ import api.drops.dsl.DropTableItemReceiver
 import api.drops.dsl.MergedDropTableReceiver
 import api.drops.dsl.SpecializedTableReceiver
 import api.predef.*
-import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState
 import io.luna.game.model.mob.Npc
 import io.luna.util.Rational

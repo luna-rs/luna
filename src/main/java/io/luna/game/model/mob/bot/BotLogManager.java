@@ -33,6 +33,7 @@ import static java.util.Objects.requireNonNullElse;
  */
 public final class BotLogManager {
 
+    // todo file size management, reset log file if > certain size
     /**
      * Defines where bot log messages should be streamed when they are recorded.
      */

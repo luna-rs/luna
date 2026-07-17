@@ -73,6 +73,7 @@ public class PlayerRangedCombat {
         if (ammo == UNEQUIPPED) {
             // We have a ranged weapon equipped but no ammo.
             player.sendMessage("You do not have enough ammo in your quiver.");
+            // todo bots can bypass this but need to match the right ammo with the right weapon
             return false;
         } else if (ammo.isNeedsWeapon()) {
             // We have ammo and are using a weapon that requires explicit ammo.

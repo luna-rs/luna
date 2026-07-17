@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -13,7 +14,6 @@ import engine.bot.gear.BotGearSet
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
 /**
@@ -120,13 +120,13 @@ class PickpocketBotScript(
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.25).toInt())) {
-            handler.supplies.getWantedFood().forEach { bot.preferences.wantedItems += it.id }
+            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
             bot.log("No food left, ending script.")
             stop()
         }
     }
 
-    override suspend fun equipment(): BotGearLocator? {
+    override suspend fun equipment(): BotGearLocator {
         return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
     }
 
@@ -134,7 +134,7 @@ class PickpocketBotScript(
         return false
     }
 
-    override fun interactionOption(target: Npc): Int = 2
+    override suspend fun interactionOption(target: Npc): Int = 2
 
     override fun snapshot(): BotScriptData {
         val data = PickpocketData()
@@ -144,7 +144,7 @@ class PickpocketBotScript(
         return data
     }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         return world.locator.findNpcs(searchBase, searchRadius, true) {
             val def = it.def()
             def.actions.elementAtOrNull(2)?.equals("Pickpocket") == true && def.name in npcNames

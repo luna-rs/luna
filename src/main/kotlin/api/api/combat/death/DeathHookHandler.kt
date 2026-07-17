@@ -54,7 +54,6 @@ object DeathHookHandler {
      * The default NPC death hook.
      */
     var defaultNpcHook: DeathHook<Npc>? = null
-
     /**
      * Registers a player death hook.
      *

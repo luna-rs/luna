@@ -1,12 +1,13 @@
 package io.luna.game.model.mob.bot.brain;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import engine.bot.gear.BotGearSet;
-import io.luna.game.model.item.Item;
+import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.def.WantedItemDefinition;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplate;
@@ -44,7 +45,7 @@ public final class BotPreference {
 
     // todo before trading can be done, wanted item system needs to be changed to IDs, amounts are resolved later when
     //  needed based on combat level, personality, etc.
-
+// todo docs and cleanp
     /*
     fun resolveOptimalFood(): Set<Food> {
         val hitpointsLevel = bot.hitpoints.staticLevel
@@ -85,6 +86,7 @@ public final class BotPreference {
      */
 
     // todo redo docs, etc.
+
     /**
      * Builder for constructing {@link BotPreference} instances.
      * <p>
@@ -96,7 +98,7 @@ public final class BotPreference {
         private final BotPersonalityManager personalityManager;
         private final Map<BotActivity, Double> activities = new HashMap<>();
         private final Set<Integer> skills = new HashSet<>();
-        private final Multiset<Integer> wantedItems = HashMultiset.create();
+        private final Map<Integer, WantedItemDefinition> wantedItems = new HashMap<>();
         private final Set<BotGearSet> gear = new HashSet<>();
         private final Map<String, Double> playerFeelings = new HashMap<>();
 
@@ -161,8 +163,8 @@ public final class BotPreference {
             return this;
         }
 
-        public Builder addWantedItem(Item item) {
-            wantedItems.add(item.getId(), item.getAmount());
+        public Builder addWantedItem(WantedItemDefinition item) {
+            wantedItems.put(item.id(), item);
             return this;
         }
 
@@ -373,12 +375,13 @@ public final class BotPreference {
             return new BotPreference(
                     new HashMap<>(activities),
                     new HashSet<>(generateSkills()),
-                    HashMultiset.create(wantedItems),
+                    new HashMap<>(wantedItems),
                     new HashSet<>(generateGear()),
                     new HashMap<>(playerFeelings));
         }
     }
 
+    private Bot bot;
     /**
      * The immutable map of activity preference weights.
      */
@@ -391,8 +394,8 @@ public final class BotPreference {
 
     /**
      * The immutable set of preferred item IDs.
-     */
-    private final Multiset<Integer> wantedItems;
+     *///todo =redo docs
+    private final Map<Integer, WantedItemDefinition> wantedItems;
 
     /**
      * The immutable set of preferred gear archetypes.
@@ -421,7 +424,7 @@ public final class BotPreference {
      */
     public BotPreference(Map<BotActivity, Double> activities,
                          Set<Integer> skills,
-                         Multiset<Integer> wantedItems,
+                         Map<Integer, WantedItemDefinition> wantedItems,
                          Set<BotGearSet> gear,
                          Map<String, Double> playerFeelings) {
         this.activities = activities;
@@ -459,10 +462,13 @@ public final class BotPreference {
 
         // Serialize wanted items.
         JsonArray wantedItemsJson = new JsonArray();
-        wantedItems.entrySet().forEach(it -> {
+        wantedItems.values().forEach(it -> {
             JsonObject itemJson = new JsonObject();
-            itemJson.addProperty("id", it.getElement());
-            itemJson.addProperty("amount", it.getCount());
+            itemJson.addProperty("id", it.id());
+            itemJson.addProperty("min", it.min());
+            itemJson.addProperty("target", it.target());
+            itemJson.addProperty("skill", it.skill());
+            itemJson.addProperty("max_level", it.maxLevel());
             wantedItemsJson.add(itemJson);
         });
         preferences.add("wanted_items", wantedItemsJson);
@@ -506,7 +512,12 @@ public final class BotPreference {
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
         object.getAsJsonArray("wanted_items").forEach(it -> {
             JsonObject itemJson = it.getAsJsonObject();
-            wantedItems.add(itemJson.get("id").getAsInt(), itemJson.get("amount").getAsInt());
+            int id = itemJson.get("id").getAsInt();
+            int min = itemJson.get("min").getAsInt();
+            int target = itemJson.get("target").getAsInt();
+            int skill = itemJson.get("skill").getAsInt();
+            int maxLevel = itemJson.get("max_level").getAsInt();
+            wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel));
         });
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
@@ -522,18 +533,59 @@ public final class BotPreference {
      * or making future economy decisions.
      *
      * @param id The item id to add.
-     */
-    public void addWantedItem(Item item) {
-        wantedItems.add(item.getId(), item.getAmount());
+     */// todo docs
+    public void addWantedItem(int id, int target, int skill, int maxLevel) {
+        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, skill, maxLevel);
+        if (def.isNoted() && def.getUnnotedId().isPresent()) {
+            int newId = def.getUnnotedId().getAsInt();
+            wantedItems.put(newId, item.copy(newId));
+        } else {
+            wantedItems.put(item.id(), item);
+        }
+    }
+
+    public void addWantedItem(int id, int target) {
+        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, -1, -1);
+        if (def.isNoted() && def.getUnnotedId().isPresent()) {
+            int newId = def.getUnnotedId().getAsInt();
+            wantedItems.put(newId, item.copy(newId));
+        } else {
+            wantedItems.put(item.id(), item);
+        }
+    }
+
+    public WantedItemDefinition getWantedItem(int id) {
+        // todo convert noted id to unnoted
+        return wantedItems.get(id);
+    }
+
+    public boolean hasWantedItem(int id) {
+        return wantedItems.containsKey(id);
     }
 
     /**
      * Removes an item from this bot's wanted item preferences.
      *
-     * @param id The item id to remove.
-     */
-    public void removeWantedItem(Item item) {
-        wantedItems.remove(item.getId(), item.getAmount());
+     * @param id The item id to remove     .
+     */ // todo docs
+    public boolean removeWantedItem(int id, int amount) {
+        WantedItemDefinition def = wantedItems.get(id);
+        if (def != null) {
+            if(def.min() != -1) {
+                // Wanted items with a minimum value are never removed.
+                return false;
+            }
+            int target = def.target() - amount;
+            if (target > 0) {
+                WantedItemDefinition newDef = new WantedItemDefinition(def.id(), def.min(), target,
+                        def.skill(), def.maxLevel());
+                wantedItems.put(id, newDef);
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -558,6 +610,7 @@ public final class BotPreference {
      * @param amount The amount to add to the player's current feeling value.
      */
     public void adjustFeelingsToward(String username, double amount) {
+        // todo combat, etc.
         playerFeelings.compute(username, (k, v) -> {
             double current = v == null ? 0.5 : v;
             return Math.max(0.0, Math.min(1.0, current + amount));
@@ -646,8 +699,9 @@ public final class BotPreference {
     /**
      * @return The immutable set of item preferences.
      */
-    public Multiset<Integer> getWantedItems() {
-        return wantedItems;
+    public UnmodifiableIterator<WantedItemDefinition> getWantedItems() {
+        // TODO add all default definitions to wanted map on first iteration to avoid this..
+        return Iterators.unmodifiableIterator(wantedItems.values().iterator());
     }
 
     /**
@@ -663,4 +717,14 @@ public final class BotPreference {
     public Map<String, Double> getPlayerFeelings() {
         return playerFeelings;
     }
+
+
+    public Bot getBot() {
+        return bot;
+    }
+
+    public void setBot(Bot bot) {
+        this.bot = bot;
+    }
+
 }

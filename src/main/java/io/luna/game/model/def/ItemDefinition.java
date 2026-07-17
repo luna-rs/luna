@@ -288,7 +288,7 @@ public final class ItemDefinition implements Definition {
     }
 
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

@@ -3,6 +3,7 @@ package api.bot
 import api.predef.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.isActive
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -14,6 +15,8 @@ object GameCoroutineDispatcher : CoroutineDispatcher() {
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
         // Dispatch back to the game thread to run safely.
-        gameService.gameExecutor.execute(block)
+        if (context.isActive) {
+            gameService.gameExecutor.execute(block)
+        }
     }
 }

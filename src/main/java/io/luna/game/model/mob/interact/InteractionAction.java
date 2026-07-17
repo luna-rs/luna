@@ -102,7 +102,8 @@ public final class InteractionAction extends Action<Player> {
      * The listeners still waiting to be satisfied for this interaction.
      */
     private List<InteractionActionListener> listeners;
-
+//todo docs
+    private boolean retry;
     /**
      * Creates a new {@link InteractionAction}.
      *
@@ -185,6 +186,10 @@ public final class InteractionAction extends Action<Player> {
             onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
         } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
+            if(!retry) {
+                retry = true;
+                return false;
+            }
             onStanding();
             return true;
         } else if (listeners.isEmpty()) {

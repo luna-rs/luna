@@ -43,7 +43,7 @@ object Banking {
             if ((name.equals("Bank booth") || name.equals("Bank chest")) &&
                 (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))
             ) {
-                loadObjects += definition.id
+                loadObjects += definition.id()
             }
         }
     }
@@ -54,7 +54,7 @@ object Banking {
     fun loadBankingNpcs() {
         NpcDefinition.ALL
             .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
-            .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id) }
+            .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id()) }
         loadBankingNpcs += 2271 // Emerald benedict.
     }
 }

@@ -6,6 +6,8 @@ import game.bot.scripts.HarvestBotScript.Companion.HarvestData
 import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
+import game.bot.scripts.skills.CraftRuneBotScript
+import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
 import game.bot.scripts.skills.CutTreeBotScript
@@ -45,8 +47,9 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
-    scriptManager.addScript<ZonedBotScriptData>(CombatTrainingScript::class) { bot, data -> CombatTrainingScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }
+    scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
 }

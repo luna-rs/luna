@@ -1,15 +1,13 @@
 package api.bot.action
 
-import api.bot.Suspendable.naturalDelay
-import api.bot.Suspendable.naturalMicroDelay
 import api.bot.SuspendableCondition
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.Entity
 import io.luna.game.model.LocalEntity
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.mob.movement.NavigationRequest

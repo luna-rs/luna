@@ -2,8 +2,8 @@ package api.bot
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
-import api.predef.*
 import io.luna.game.model.mob.bot.Bot
+import api.predef.*
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.net.msg.GameMessageWriter
 import kotlin.reflect.KClass

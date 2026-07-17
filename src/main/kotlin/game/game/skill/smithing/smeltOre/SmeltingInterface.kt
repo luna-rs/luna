@@ -1,9 +1,9 @@
 package game.skill.smithing.smeltOre
 
+import game.skill.smithing.BarType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
-import game.skill.smithing.BarType
 
 /**
  * A [DialogueInterface] representing the smelting interface.
