@@ -512,12 +512,14 @@ public final class BotPreference {
         object.getAsJsonArray("skills").forEach(it -> skills.add(it.getAsInt()));
         object.getAsJsonArray("wanted_items").forEach(it -> {
             JsonObject itemJson = it.getAsJsonObject();
-            int id = itemJson.get("id").getAsInt();
-            int min = itemJson.get("min").getAsInt();
-            int target = itemJson.get("target").getAsInt();
-            int skill = itemJson.get("skill").getAsInt();
-            int maxLevel = itemJson.get("max_level").getAsInt();
-            wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel));
+            if (itemJson.has("min")) {
+                int id = itemJson.get("id").getAsInt();
+                int min = itemJson.get("min").getAsInt();
+                int target = itemJson.get("target").getAsInt();
+                int skill = itemJson.get("skill").getAsInt();
+                int maxLevel = itemJson.get("max_level").getAsInt();
+                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel));
+            }
         });
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
         object.getAsJsonArray("player_feelings").forEach(it -> {
@@ -573,7 +575,7 @@ public final class BotPreference {
     public boolean removeWantedItem(int id, int amount) {
         WantedItemDefinition def = wantedItems.get(id);
         if (def != null) {
-            if(def.min() != -1) {
+            if (def.min() != -1) {
                 // Wanted items with a minimum value are never removed.
                 return false;
             }
