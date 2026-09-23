@@ -1,6 +1,5 @@
 package api.bot.zone
 
-import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.Zone.Companion.REGIONS
 import api.predef.*
 import com.google.common.base.Preconditions.checkState
@@ -15,6 +14,7 @@ import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -376,9 +376,13 @@ enum class Zone(val price: Int,
     val banks = HashSet<GameObject>()
         get() {
             if (field.isEmpty()) {
-                field.addAll(bankAnchors.map { position ->
-                    world.locator.findObjectsOnTile(position) { it.id in Banking.bankingObjects }.first()
-                }.toSet())
+                bankAnchors.map { position ->
+                    world.locator.findObjectsOnTile(position) { it.id in Banking.bankingObjects }.firstOrNull()
+                }.forEach {
+                    if (it != null) {
+                        field.add(it)
+                    }
+                }
             }
             return field
         }
