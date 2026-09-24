@@ -18,6 +18,8 @@ import game.obj.resource.harvestable.WheatResource
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * A generic object-targeting script for harvesting simple world resources.
@@ -126,6 +128,7 @@ class HarvestBotScript(
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a flax spinning script.
         if (harvestable == Harvestable.FLAX && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script = SpinFlaxBotScript(bot, SkillingScriptFactory.getDuration(bot))

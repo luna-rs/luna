@@ -180,8 +180,8 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     fun stop(): Boolean {
         if (isRunning() || isPaused()) {
             bot.log("Terminating script {${javaClass.name}}.")
-            progress?.cancel()
             terminated = true
+            progress?.cancel()
             return true
         }
         return false

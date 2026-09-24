@@ -19,6 +19,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Smelts available ore combinations into bars at a furnace.
@@ -180,6 +182,7 @@ class SmeltOreBotScript(
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a smithing script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script = SmithingScriptFactory.getSmithingScript(bot, bot.smithing.staticLevel)
