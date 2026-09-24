@@ -27,8 +27,8 @@ class BotGearLocator(val bot: Bot, val equipment: Array<Int?>) {
      *
      * This method performs a bank-centered equipment reset:
      * - Travels to a bank and deposits carried items.
-     * - Moves currently equipped items into the inventory using a fast memory transfer.
-     * - Clears the current equipment container.
+     * - Checks inventory capacity, then unequips each item using a fast memory transfer.
+     * - Stops if any item cannot be moved, leaving it equipped.
      * - Deposits the unequipped items.
      * - Withdraws each selected gear item from the bank.
      * - Equips all selected items.
@@ -48,8 +48,20 @@ class BotGearLocator(val bot: Bot, val equipment: Array<Int?>) {
 
         // Fast memory based unequip to speed things up here.
         bot.log("Fast transfer: equipment -> inventory.")
-        bot.inventory.addAll(bot.equipment)
-        bot.equipment.clear()
+        if (!bot.inventory.hasSpaceForAll(bot.equipment)) {
+            bot.log("Not enough inventory space to unequip selected gear.")
+            return false
+        }
+
+        for ((index, item) in bot.equipment.withIndex()) {
+            if (item == null) {
+                continue
+            }
+            if (!bot.inventory.hasSpaceFor(item) || !bot.equipment.unequip(index)) {
+                bot.log("Could not unequip $item.")
+                return false
+            }
+        }
         bot.naturalDelay()
 
         if (!banking.travelToBankDepositAll()) {

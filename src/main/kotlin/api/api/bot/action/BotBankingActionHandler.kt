@@ -185,10 +185,10 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * Deposits every inventory item except the ids listed in [except].
      *
      * The bank must already be open before this method is called. Each item is deposited one at a time
-     * through [depositAll]. If any deposit fails, the method stops immediately and returns `false`.
+     * through [depositAll]. Failed deposits are logged, and the remaining items are still attempted.
      *
      * @param except Item ids that should remain in the bot's inventory.
-     * @return `true` if at least one item was deposited, otherwise `false`.
+     * @return `true` if no items remain except those listed in [except], otherwise `false`.
      */
     suspend fun depositInventory(except: Set<Int> = emptySet()): Boolean {
         if (!bot.bank.isOpen) {
@@ -197,19 +197,17 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         bot.log("Trying to deposit all items.")
 
-        var deposited = false
         for (item in bot.inventory) {
             if (item != null) {
                 if (item.id !in except) {
                     if (!depositAll(item.id)) {
                         bot.log("Could not deposit $item.")
-                    } else {
-                        deposited = true
                     }
                 }
             }
         }
-        return deposited || bot.inventory.size() == 0
+
+        return bot.inventory.none { it != null && it.id !in except }
     }
 
     /**
