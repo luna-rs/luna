@@ -123,7 +123,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script =
