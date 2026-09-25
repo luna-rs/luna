@@ -43,7 +43,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             // Invalid item.
             bot.log("${itemName(id)} cannot be equipped.")
             return false
-        } else if(equipmentDef.map { it.meetsAllRequirements(bot) }.isEmpty) {
+        } else if (!equipmentDef.get().meetsAllRequirements(bot)) {
             bot.log("Does not meet equipment requirements.")
             return false
         }
