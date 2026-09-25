@@ -58,7 +58,7 @@ class BotGearLocator(val bot: Bot, val equipment: Array<Int?>) {
             if (item == null) {
                 continue
             }
-            if (!bot.inventory.hasSpaceFor(item) || !bot.equipment.unequip(index)) {
+            if (!bot.equipment.unequip(index)) {
                 bot.log("Could not unequip $item.")
                 return false
             }
