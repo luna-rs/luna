@@ -116,7 +116,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-NPC action appeared to start successfully.
          */
         suspend fun onNpc(target: Npc) =
-            useOnEntity(target) { bot.output.useItemOnNpc(usedId, it, target) }
+            useOnEntity(target) { bot.output.useItemOnNpc(it, usedId, target) }
 
         /**
          * Uses the selected inventory item on a player.
@@ -127,7 +127,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-player action appeared to start successfully.
          */
         suspend fun onPlayer(target: Player) =
-            useOnEntity(target) { bot.output.useItemOnPlayer(usedId, it, target) }
+            useOnEntity(target) { bot.output.useItemOnPlayer(it, usedId, target) }
 
         /**
          * Uses the selected inventory item on a game object.

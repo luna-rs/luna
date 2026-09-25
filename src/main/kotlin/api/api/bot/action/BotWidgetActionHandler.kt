@@ -88,6 +88,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                 when (option) {
                     1 -> bot.output.clickButton(14445)
                     2 -> bot.output.clickButton(14446)
+                    else -> return false
                 }
 
             2469 ->
@@ -95,6 +96,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     1 -> bot.output.clickButton(2471)
                     2 -> bot.output.clickButton(2472)
                     3 -> bot.output.clickButton(2473)
+                    else -> return false
                 }
 
             8207 ->
@@ -103,6 +105,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     2 -> bot.output.clickButton(8210)
                     3 -> bot.output.clickButton(8211)
                     4 -> bot.output.clickButton(8212)
+                    else -> return false
                 }
 
             8219 ->
@@ -112,6 +115,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     3 -> bot.output.clickButton(8223)
                     4 -> bot.output.clickButton(8224)
                     5 -> bot.output.clickButton(8225)
+                    else -> return false
                 }
 
             else -> {
