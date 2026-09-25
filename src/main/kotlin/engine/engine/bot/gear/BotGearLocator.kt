@@ -49,6 +49,7 @@ class BotGearLocator(val bot: Bot, val equipment: Array<Int?>) {
         // Fast memory based unequip to speed things up here.
         bot.log("Fast transfer: equipment -> inventory.")
         if (!bot.inventory.hasSpaceForAll(bot.equipment)) {
+            // TODO Make bot try and deposit all again?
             bot.log("Not enough inventory space to unequip selected gear.")
             return false
         }
