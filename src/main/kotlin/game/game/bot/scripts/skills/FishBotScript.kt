@@ -16,6 +16,8 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import java.util.*
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Bot script for Fishing.
@@ -174,6 +176,7 @@ class FishBotScript(
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script = CookingScriptFactory.getScript(bot, bot.cooking.staticLevel, mutableListOf(), randBoolean())

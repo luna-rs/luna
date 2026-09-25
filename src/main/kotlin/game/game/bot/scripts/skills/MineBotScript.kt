@@ -16,6 +16,8 @@ import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * A [SkillingBotScript] that trains Mining by mining configured ore types inside selected zones.
@@ -107,6 +109,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a smelting, smithing, or runecrafting script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script =

@@ -18,6 +18,8 @@ import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * A [SkillingBotScript] that trains Woodcutting by chopping configured tree types inside selected zones.
@@ -140,6 +142,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             // TODO Chance to queue firemaking script.
             val script =

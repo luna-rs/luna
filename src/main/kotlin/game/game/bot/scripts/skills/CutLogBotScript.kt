@@ -18,6 +18,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Handles stationary bot fletching by repeatedly using a knife on one configured log type.
@@ -126,6 +128,7 @@ class CutLogBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a fletching script.
         val bow = log.bows.find { bot.itemTracker.contains(it.unstrung) }
         if (bow != null && bow != Bow.ARROW_SHAFT && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {

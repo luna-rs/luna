@@ -20,6 +20,8 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 /**
  * Spins flax into bow strings at a spinning wheel.
@@ -124,6 +126,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
     }
 
     override suspend fun finish() {
+        if (!currentCoroutineContext().isActive) return
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script =
