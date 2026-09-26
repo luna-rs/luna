@@ -30,15 +30,16 @@ public final class JsonGameSerializer extends GameSerializer {
 
     static {
         try {
-            // Initialize directory if it doesn't exist.
+            // TODO Bot leveling test fix: create both save folders, or every save fails on a fresh checkout. This is a
+            //  test to see how it works; we should go further and add a test for it.
             DIR = Path.of("data", "game");
-            Files.createDirectories(DIR);
+            PLAYER_DIR = DIR.resolve("saved_players");
+            BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
+            Files.createDirectories(PLAYER_DIR);
+            Files.createDirectories(BOT_DIR);
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
-        PLAYER_DIR = DIR.resolve("saved_players");
-        BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
-
     }
 
     @Override

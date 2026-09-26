@@ -81,7 +81,9 @@ class BotSuppliesActionHandler(private val bot: Bot, private val handler: BotAct
         fun getBaseSellAmount(id: Int) = amount(id)!! * 2
     }
 
-    private val scale = bot.combatLevel / 126.0
+    // TODO Bot leveling test fix: read the combat level when it's used, not when the bot is built, or a bot loaded
+    //  from a save shows level 3. This is a test to see how it works; we should go further and refresh it on load.
+    private val scale get() = bot.combatLevel / 126.0
 
     fun getSellAmount(id: Int, type: WantedItemType) = floor(type.getBaseSellAmount(id) * scale).toInt()
 
