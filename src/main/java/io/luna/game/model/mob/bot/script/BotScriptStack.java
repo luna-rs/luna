@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -129,7 +128,13 @@ public final class BotScriptStack {
                 logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
         }
-        buffer.addAll(Arrays.asList(loadedScripts));
+        // TODO Bot leveling test fix: skip scripts that failed to restore instead of crashing the whole load. This
+        //  is a test to see how it works; we should go further and register PkBotScript in registerScripts.kts.
+        for (BotScript script : loadedScripts) {
+            if (script != null) {
+                buffer.addLast(script);
+            }
+        }
         buffer.removeIf(script -> script instanceof VoidBotScript); // Remove all void scripts after to maintain order.
     }
 
