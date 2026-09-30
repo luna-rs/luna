@@ -26,6 +26,7 @@ import static java.util.Objects.requireNonNullElse;
  * entry is added. This keeps the logger lightweight even when many bots are active.
  *
  * @author lare96
+ * @author TheLining
  */
 public final class BotLogManager {
 
