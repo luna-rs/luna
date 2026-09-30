@@ -30,15 +30,14 @@ public final class JsonGameSerializer extends GameSerializer {
 
     static {
         try {
-            // Initialize directory if it doesn't exist.
             DIR = Path.of("data", "game");
-            Files.createDirectories(DIR);
+            PLAYER_DIR = DIR.resolve("saved_players");
+            BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
+            Files.createDirectories(PLAYER_DIR);
+            Files.createDirectories(BOT_DIR);
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
-        PLAYER_DIR = DIR.resolve("saved_players");
-        BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
-
     }
 
     @Override
