@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * Writes run on a multi-threaded pool, the same way bot logs run on the game service's worker pool, so any write that
  * escapes the writer's ordering would be free to land out of order.
+ *
+ * @author TheLining
  */
 final class BotLogFileWriterTest {
 
