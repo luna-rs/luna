@@ -75,7 +75,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         /**
          * Attribute representing if this coordinator was last in profit or training mode.
          */
-        private var Bot.profitMode by Attr.boolean { false }
+        var Bot.profitMode by Attr.boolean { false }
     }
 
     /**
@@ -85,6 +85,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         MiningScriptFactory,
         ThievingScriptFactory,
         WoodcuttingScriptFactory,
+        FiremakingScriptFactory,
         FletchingScriptFactory,
         CraftingScriptFactory,
         SmithingScriptFactory,
