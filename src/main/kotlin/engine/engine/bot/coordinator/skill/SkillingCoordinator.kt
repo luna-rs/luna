@@ -115,16 +115,16 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         }
 
         val selectedSkill = RandomUtils.weightedRoll(weights)
-        val level = bot.skill(selectedSkill).staticLevel
         val zones = ArrayList<SubZone>()
 
         bot.profitMode = !training
 
         bot.scriptStack.push(run {
-            var script = factories[selectedSkill]?.getScript(bot, level, zones, training)
+            var script = factories[selectedSkill]?.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
 
             if (script == null) {
-                script = factories.values.random().getScript(bot, level, zones, training)
+                val factory = factories.values.random()
+                script = factory.getScript(bot, bot.skill(factory.skillId).staticLevel, zones, training)
             }
 
             script
