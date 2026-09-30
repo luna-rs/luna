@@ -3,16 +3,12 @@ package io.luna.game.model.mob.bot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Queue;
-import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -30,6 +26,7 @@ import static java.util.Objects.requireNonNullElse;
  * entry is added. This keeps the logger lightweight even when many bots are active.
  *
  * @author lare96
+ * @author TheLining
  */
 public final class BotLogManager {
 
@@ -141,9 +138,9 @@ public final class BotLogManager {
     private static final int BUFFER_CAPACITY = 100;
 
     /**
-     * The file path used for this bot's persistent log output.
+     * Writes this bot's persistent log output, in the order it was requested.
      */
-    private final Path path;
+    private final BotLogFileWriter fileWriter;
 
     /**
      * The bounded queue containing the bot's most recent log entries.
@@ -171,8 +168,9 @@ public final class BotLogManager {
      */
     public BotLogManager(Bot bot) {
         this.bot = bot;
-        path = Paths.get("data", "game", "bots", "logs",
+        Path path = Paths.get("data", "game", "bots", "logs",
                 bot.getUsername().toLowerCase() + ".txt");
+        fileWriter = new BotLogFileWriter(path, task -> bot.getService().submit(task));
         buffer = new ConcurrentLinkedQueue<>();
     }
 
@@ -181,7 +179,7 @@ public final class BotLogManager {
      * <p>
      * The message is always added to the in-memory buffer. If the buffer is already full, the oldest entry is removed
      * first. Depending on the current {@link #streamType}, the message may also be spoken by the bot and/or appended
-     * asynchronously to the bot's log file.
+     * asynchronously to the bot's log file. File appends are applied in the order this method is called.
      *
      * @param text The log message to record.
      */
@@ -198,18 +196,7 @@ public final class BotLogManager {
         }
 
         if (streamType.isFileStream()) {
-            bot.getService().submit(() -> {
-                try {
-                    Path parent = path.getParent();
-                    if(!Files.exists(parent)) {
-                        Files.createDirectories(parent);
-                    }
-                    Files.writeString(path, entry.getFormattedMessage(),
-                            StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-                } catch (IOException e) {
-                    logger.catching(e);
-                }
-            });
+            fileWriter.append(entry.getFormattedMessage());
         }
     }
 
@@ -218,23 +205,16 @@ public final class BotLogManager {
      * <p>
      * This method only writes when the current stream type includes file output. The file is overwritten with the
      * current buffer contents, meaning older file entries outside the buffer are discarded.
+     * <p>
+     * The overwrite is ordered with {@link #log(String)} file appends: lines logged before this call are replaced,
+     * and lines logged after it are appended to the rewritten file.
      *
      * @return A future that completes with {@code true} if the buffer was written successfully, or {@code false} if
      * file output is disabled or the write fails.
      */
     public CompletableFuture<Boolean> writeBuffer() {
         if (streamType.isFileStream()) {
-            return bot.getService().submit(() -> {
-                try {
-                    Files.writeString(path, exportLogs(),
-                            StandardOpenOption.TRUNCATE_EXISTING,
-                            StandardOpenOption.CREATE);
-                    return true;
-                } catch (IOException e) {
-                    logger.catching(e);
-                    return false;
-                }
-            });
+            return fileWriter.overwrite(exportLogs());
         }
         return CompletableFuture.completedFuture(false);
     }
@@ -245,11 +225,11 @@ public final class BotLogManager {
      * @return The formatted contents of the recent log buffer.
      */
     private String exportLogs() {
-        StringJoiner sj = new StringJoiner("\n");
+        StringBuilder sb = new StringBuilder();
         for (BotLogEntry entry : buffer) {
-            sj.add(entry.getFormattedMessage());
+            sb.append(entry.getFormattedMessage());
         }
-        return sj.toString();
+        return sb.toString();
     }
 
     /**
