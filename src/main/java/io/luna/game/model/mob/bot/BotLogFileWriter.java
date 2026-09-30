@@ -18,6 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Requested writes are queued and applied by at most one writer task at a time, so they can never race each other,
  * even on an executor with many threads. Consecutive appends are batched into a single file write.
+ *
+ * @author lare96
+ * @author TheLining
  */
 final class BotLogFileWriter {
 
