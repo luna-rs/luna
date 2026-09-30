@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
@@ -14,6 +15,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Provides the shared lifecycle for bot scripts that operate inside one selected [SubZone] at a time.
@@ -505,11 +507,21 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         bot.log("Preparing to interact with bank. cachedBank=$cachedBank, bankOpen=${bot.bank.isOpen}")
-        if (!bot.bank.isOpen && !handler.interactions.interact(2, cachedBank)) {
-            bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
-            cachedBank = null
-            forceBanking = true
-            return
+        if (!bot.bank.isOpen) {
+            if (!handler.interactions.interact(2, cachedBank)) {
+                bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
+                cachedBank = null
+                forceBanking = true
+                return
+            }
+
+            // The bank interface opens a tick or so after the bank is clicked.
+            if (!waitFor(5.seconds) { bot.bank.isOpen }) {
+                bot.log("Banking aborted because the bank never opened. Clearing cached bank. cachedBank=$cachedBank")
+                cachedBank = null
+                forceBanking = true
+                return
+            }
         }
 
         if (depositInventoryWhenBanking && !handler.banking.depositInventory()) {
