@@ -128,8 +128,6 @@ public final class BotScriptStack {
                 logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
         }
-        // TODO Bot leveling test fix: skip scripts that failed to restore instead of crashing the whole load. This
-        //  is a test to see how it works; we should go further and register PkBotScript in registerScripts.kts.
         for (BotScript script : loadedScripts) {
             if (script != null) {
                 buffer.addLast(script);
