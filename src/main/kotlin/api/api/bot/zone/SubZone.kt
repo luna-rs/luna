@@ -890,6 +890,13 @@ enum class SubZone(val inside: Position,
                       parent = { FALADOR }),
 
     /**
+     * The Falador east bank and the open square north of its entrance. Intended for firemakers.
+     */
+    FALADOR_EAST_BANK(inside = Position(3013, 3360),
+                      area = SimpleBoxArea.of(3000, 3348, 3035, 3370),
+                      parent = { FALADOR }),
+
+    /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
      * training and telegrabbing wines money-making method.
      * - Zamorak wine
