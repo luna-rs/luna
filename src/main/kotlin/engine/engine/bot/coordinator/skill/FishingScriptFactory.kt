@@ -50,7 +50,6 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             zones = {
                 if (personality.isDumb || !personality.isDextrous) {
                     mutableListOf(
-                        SubZone.SOUTH_LUMBRIDGE_MINE,
                         SubZone.MUSA_POINT_FISHING,
                         SubZone.AL_KHARID_BANK,
                         SubZone.DRAYNOR_MAIN,
