@@ -5,6 +5,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -124,7 +125,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
         if (progress?.isActive != true && !terminated) {
             val wasPaused = isPaused()
             bot.log("Running script {${javaClass.name}}.")
-            progress = GameCoroutineScope.launch {
+            /**
+             * Set progress before starting the job. On the game thread, the job runs up to its first suspension
+             * inline, so stop() needs progress to already be set if it's called during init.
+             */
+            val job = GameCoroutineScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     if (init(wasPaused)) {
                         return@launch
@@ -141,6 +146,8 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     finish()
                 }
             }
+            progress = job
+            job.start()
             return true
         }
         return false
