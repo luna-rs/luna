@@ -81,7 +81,7 @@ open class SuspendableFuture(internal val channel: Channel<Boolean>) {
             result
         } catch (e: CancellationException) {
             channel.close()
-            false
+            throw e
         }
     }
 }

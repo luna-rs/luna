@@ -179,7 +179,7 @@ class SmeltOreBotScript(
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a smithing script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script = SmithingScriptFactory.getSmithingScript(bot, bot.smithing.staticLevel)

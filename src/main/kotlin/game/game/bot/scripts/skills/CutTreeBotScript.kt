@@ -139,7 +139,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             // TODO Chance to queue firemaking script.
             val script =

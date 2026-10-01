@@ -173,7 +173,7 @@ class FishBotScript(
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script = CookingScriptFactory.getScript(bot, bot.cooking.staticLevel, mutableListOf(), randBoolean())

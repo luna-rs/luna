@@ -125,7 +125,7 @@ class HarvestBotScript(
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a flax spinning script.
         if (harvestable == Harvestable.FLAX && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script = SpinFlaxBotScript(bot, SkillingScriptFactory.getDuration(bot))

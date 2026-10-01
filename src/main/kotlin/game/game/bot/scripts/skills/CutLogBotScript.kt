@@ -125,7 +125,7 @@ class CutLogBotScript(bot: Bot,
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a fletching script.
         val bow = log.bows.find { bot.itemTracker.contains(it.unstrung) }
         if (bow != null && bow != Bow.ARROW_SHAFT && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {

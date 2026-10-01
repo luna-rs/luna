@@ -106,7 +106,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         return data
     }
 
-    override suspend fun finish() {
+    override suspend fun completed() {
         // Chance to queue a smelting, smithing, or runecrafting script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script =
