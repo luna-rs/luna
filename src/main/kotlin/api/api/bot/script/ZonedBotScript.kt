@@ -455,6 +455,25 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         val parent = activeZone.parent(bot)
 
+        val bank = cachedBank
+        val outside = bot.subZone?.let { it.outside(bot) }
+        if (bank != null && outside != null && !bank.isWithinDistance(bot, 64)) {
+            /**
+             * We're inside a sub-zone with an entrance, such as an altar, a dungeon, or the essence mine, and can't
+             * walk to the cached bank. Travel to the parent zone first, the same way the first banking trip does.
+             */
+            bot.log(
+                "Cannot walk to cached bank from sub-zone. Travelling to parent zone first. " +
+                        "subZone=${bot.subZone}, parent=$parent, cachedBank=$bank"
+            )
+            if (!handler.travelTo(parent)) {
+                bot.log("Banking aborted because travel to parent zone failed. Clearing cached bank. parent=$parent")
+                cachedBank = null
+                forceBanking = true
+                return
+            }
+        }
+
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
