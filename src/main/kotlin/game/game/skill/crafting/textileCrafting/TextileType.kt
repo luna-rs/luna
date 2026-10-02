@@ -6,6 +6,6 @@ package game.skill.crafting.textileCrafting
  * @author lare96
  */
 enum class TextileType(val objectIds: Set<Int>) {
-    LOOM(objectIds = setOf(2644, 4309, 8748)),
-    SPINNING_WHEEL(objectIds = setOf(787, 8717))
+    LOOM(objectIds = setOf(787, 8717)),
+    SPINNING_WHEEL(objectIds = setOf(2644, 4309, 8748))
 }
