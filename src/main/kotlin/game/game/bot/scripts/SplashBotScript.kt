@@ -37,7 +37,7 @@ class SplashBotScript(bot: Bot,
         return null
     }
 
-    override fun onInit(resumed: Boolean): Boolean {
+    override suspend fun onInit(resumed: Boolean): Boolean {
 
         fun resolveStaffFor(req: RuneRequirement): Int? {
             for (staff in Staff.entries) {

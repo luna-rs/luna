@@ -263,7 +263,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      *
      * @return `true` if initialization succeeded, otherwise `false`.
      */
-    open fun onInit(resumed: Boolean): Boolean {
+    open suspend fun onInit(resumed: Boolean): Boolean {
         return true
     }
 

@@ -1,8 +1,8 @@
 package api.bot.script
 
 import api.bot.GameCoroutineScope
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.EntityState
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import kotlinx.coroutines.CoroutineStart
@@ -146,7 +146,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
                         val completed = run()
-                        if(completed) {
+                        if (completed) {
                             terminated = true
                             break
                         }

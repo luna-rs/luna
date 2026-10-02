@@ -78,7 +78,7 @@ class NpcCombatScript(bot: Bot,
         return BotGearSelector.find(bot, setOf(BotGearPurpose.MELEE)).buildLocator()
     }
 
-    override fun onInit(resumed: Boolean): Boolean {
+    override suspend fun onInit(resumed: Boolean): Boolean {
         bot.reflex.isDisableCombatReflex = true
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 

@@ -65,7 +65,7 @@ abstract class SkillingBotScript<E : Entity>(
      * @param resumed `true` if this script is being restored from a saved snapshot.
      * @return `true` if the script can start, or `false` if the bot does not meet the requirements.
      */
-    final override fun onInit(resumed: Boolean): Boolean {
+    final override suspend fun onInit(resumed: Boolean): Boolean {
         val requiredLevel = levelRequired()
 
         // Check any level or subclass-defined requirements before doing setup work.
