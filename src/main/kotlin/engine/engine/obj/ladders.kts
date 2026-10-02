@@ -6,6 +6,7 @@ import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Direction
+import io.luna.game.model.Position
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
@@ -13,29 +14,46 @@ import io.luna.game.model.`object`.GameObject
 /**
  * Supported ladder interaction action names.
  */
-val LADDER_ACTIONS = listOf("Climb", "Climb-up", "Climb-down")
+val LADDER_ACTIONS = listOf("Climb", "Climb-up", "Climb-down", "Climb-Down")
+
+/**
+ * The Mining Guild ladder, which needs 60 Mining.
+ */
+val MINING_GUILD_LADDER = 2113
+
+/**
+ * The Barbarian Outpost agility course ladders, which barbarian_outpost.kts climbs instead.
+ */
+val AGILITY_COURSE_LADDERS = setOf(Position(2532, 3545), Position(2532, 3545, 1))
 
 /**
  * Starts a ladder climb for [plr].
  *
  * @param plr The climbing player.
  * @param ladder The ladder being used.
- * @param offset The height offset to apply. Positive climbs up, negative climbs down.
+ * @param up `true` to climb up, `false` to climb down.
  */
-fun climb(plr: Player, ladder: GameObject, offset: Int) {
-    val plrPos = plr.position
-    val dir = Direction.between(plrPos, ladder.position)
-    if (ladder.position.z == 0 && offset < 0) {
-        plr.submitAction(ClimbAction(plr, plrPos.translate(0, 6400, 0), dir, "You climb down the ladder."))
-        return
-    } else if (ladder.position.z == 0 && offset > 0) {
-        plr.submitAction(ClimbAction(plr, plrPos.translate(0, -6400, 0), dir, "You climb up the ladder."))
+fun climb(plr: Player, ladder: GameObject, up: Boolean) {
+    if (ladder.position in AGILITY_COURSE_LADDERS) {
         return
     }
-    when (Integer.signum(offset)) {
-        1 -> plr.submitAction(ClimbAction(plr, plrPos.translate(0, 0, 1), dir, "You climb up the ladder."))
-        -1 -> plr.submitAction(ClimbAction(plr, plrPos.translate(0, 0, -1), dir, "You climb down the ladder."))
+    val refusal = LadderType.forObject(ladder).refusal
+    if (refusal != null) {
+        plr.sendMessage(refusal)
+        return
     }
+    if (ladder.id == MINING_GUILD_LADDER && plr.mining.level < 60) {
+        plr.sendMessage("You need a Mining level of 60 to access the Mining Guild.")
+        return
+    }
+    val destination = LadderDestination.destination(ladder, plr.position, up)
+    if (destination == null) {
+        plr.sendMessage("Nothing interesting happens.")
+        return
+    }
+    val dir = Direction.between(plr.position, ladder.position)
+    val message = if (up) "You climb up the ladder." else "You climb down the ladder."
+    plr.submitAction(ClimbAction(plr, destination, dir, message))
 }
 
 /**
@@ -47,17 +65,18 @@ fun climb(plr: Player, ladder: GameObject, offset: Int) {
  */
 fun handleAction(name: String): EventAction<ObjectClickEvent> =
     when (name) {
-        "Climb-up" -> fun(event: ObjectClickEvent) { climb(event.plr, event.gameObject, 1) }
-        "Climb-down" -> fun(event: ObjectClickEvent) { climb(event.plr, event.gameObject, -1) }
+        "Climb-up" -> fun(event: ObjectClickEvent) { climb(event.plr, event.gameObject, true) }
+        "Climb-down", "Climb-Down" -> fun(event: ObjectClickEvent) { climb(event.plr, event.gameObject, false) }
         "Climb" ->
             fun(event: ObjectClickEvent) {
                 val plr = event.plr
-                plr.newDialogue().options("Climb up", { climb(plr, event.gameObject, 1) },
-                                          "Climb down", { climb(plr, event.gameObject, -1) },
+                plr.newDialogue().options("Climb up", { climb(plr, event.gameObject, true) },
+                                          "Climb down", { climb(plr, event.gameObject, false) },
                                           "Nevermind", { plr.overlays.closeWindows() }).open()
             }
 
-        else -> throw IllegalArgumentException("Argument '$name' must be either 'Climb', 'Climb-up', or 'Climb-down'.")
+        else -> throw IllegalArgumentException(
+            "Argument '$name' must be either 'Climb', 'Climb-up', 'Climb-down', or 'Climb-Down'.")
     }
 
 /**
