@@ -1,0 +1,9 @@
+{
+  "name": "luna-local",
+  "plugins": [
+    {
+      "name": "luna-companion",
+      "source": { "source": "local", "path": "./tools/luna-companion" }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "luna-companion",
+  "version": "0.1.0",
+  "description": "Develop Luna Java/Kotlin content and inspect a local Luna server through read-only tools.",
+  "skills": "./skills",
+  "mcpServers": "./mcp.json",
+  "interface": {
+    "displayName": "Luna Companion",
+    "shortDescription": "Develop and inspect Luna",
+    "developerName": "CJ",
+    "defaultPrompt": "Help me develop Luna and inspect my local bot trades."
+  }
+}

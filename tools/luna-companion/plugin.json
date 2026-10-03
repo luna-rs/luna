@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "luna-companion",
+  "version": "0.1.0",
+  "description": "Develop Luna Java/Kotlin content and inspect a local Luna server through read-only tools.",
+  "author": { "name": "CJ" },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Luna Companion",
+        "shortDescription": "Develop and inspect Luna",
+        "longDescription": "Luna-specific development guidance and local tools for server status, online players and bots, and active trade offers. Requires Python 3 and the optional Luna bridge on the same PC.",
+        "developerName": "CJ",
+        "category": "Developer Tools",
+        "defaultPrompt": "Help me develop Luna and inspect my local bot trades."
+      }
+    }
+  }
+}

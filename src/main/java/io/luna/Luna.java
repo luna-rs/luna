@@ -77,6 +77,7 @@ public final class Luna {
         try {
             var context = new LunaContext();
             context.getServer().init();
+            io.luna.companion.LunaCompanionBridge.startIfConfigured(context);
         } catch (Exception e) {
             logger.fatal("Luna could not be started.", e);
             System.exit(1);

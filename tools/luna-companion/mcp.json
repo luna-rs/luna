@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "luna-companion": {
+      "type": "stdio",
+      "command": "C:\\Users\\cj\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+      "args": [
+        "${PLUGIN_ROOT}/server/server.py"
+      ],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}
