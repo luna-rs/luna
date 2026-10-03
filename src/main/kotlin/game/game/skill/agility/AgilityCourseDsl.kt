@@ -23,7 +23,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                  type: AgilityObstacle,
                  action: Player.(GameObject) -> Action<Player>) {
         object1(id) {
-            if (Agility.checkLevel(plr, courseType.level) && type.startIf(plr)) {
+            if (type.startIf(plr) && Agility.checkLevel(plr, courseType.level)) {
                 plr.submitAction(action(plr, gameObject))
                 plr.completedObstacles.put(courseType, type)
                 plr.agility.addExperience(type.xp)
