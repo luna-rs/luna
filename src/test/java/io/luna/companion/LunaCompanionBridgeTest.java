@@ -84,6 +84,17 @@ class LunaCompanionBridgeTest {
     }
 
     @Test
+    void diagnosticsRemainAvailableWithoutGameThread() throws Exception {
+        for (String path : List.of("/diagnostics", "/threads", "/events", "/collectors")) {
+            assertEquals(401, get(path, null).statusCode());
+            assertEquals(200, get(path, TOKEN).statusCode());
+        }
+        verify(context.getGame(), never()).sync(any(Supplier.class));
+        assertEquals(200, get("/collect/unknown", TOKEN).statusCode());
+        verify(context.getGame()).sync(any(Supplier.class));
+    }
+
+    @Test
     void rejectsUnauthorizedRequestsAndUnknownRoutes() throws Exception {
         assertEquals(401, get("/trade?username=test_bot", null).statusCode());
         assertEquals(401, get("/trade?username=test_bot", "incorrect").statusCode());

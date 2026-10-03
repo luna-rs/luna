@@ -88,7 +88,23 @@ public final class LunaCompanionBridge {
                 return;
             }
             String path = exchange.getRequestURI().getPath();
+            // JVM diagnostics remain usable when the game thread is stalled.
+            Object diagnostic = switch (path) {
+                case "/diagnostics" -> RuntimeDiagnostics.snapshot();
+                case "/threads" -> RuntimeDiagnostics.threads();
+                case "/events" -> RuntimeDiagnostics.events();
+                case "/collectors" -> RuntimeDiagnostics.collectors();
+                default -> null;
+            };
+            if (diagnostic != null) {
+                respond(exchange, 200, diagnostic);
+                return;
+            }
             Supplier<Object> snapshot;
+            if (path.startsWith("/collect/")) {
+                String name = path.substring("/collect/".length());
+                snapshot = () -> RuntimeDiagnostics.collect(name, context);
+            } else {
             switch (path) {
                 case "/status" -> snapshot = () -> {
                     int players = 0;
@@ -120,6 +136,7 @@ public final class LunaCompanionBridge {
                     respond(exchange, 404, Map.of("error", "Unknown endpoint."));
                     return;
                 }
+            }
             }
             // Never wait on the game thread. This handler runs on the dedicated bridge executor.
             Object result = context.getGame().sync(snapshot).get(3, TimeUnit.SECONDS);
@@ -185,6 +202,10 @@ public final class LunaCompanionBridge {
 
     private static void respond(HttpExchange exchange, int status, Object value) throws IOException {
         byte[] body = JSON.toJson(value).getBytes(StandardCharsets.UTF_8);
+        if (body.length > 1_000_000) {
+            status = 413;
+            body = "{\"error\":\"Snapshot exceeds one megabyte. Bound or paginate the collector.\"}".getBytes(StandardCharsets.UTF_8);
+        }
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         exchange.getResponseHeaders().set("Cache-Control", "no-store");
         exchange.sendResponseHeaders(status, body.length);

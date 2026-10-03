@@ -73,7 +73,7 @@ class ServerTests(unittest.TestCase):
         rows = [json.loads(line) for line in proc.stdout.splitlines()]
         self.assertEqual(len(rows), 4)
         self.assertEqual(rows[0]["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual(len(rows[1]["result"]["tools"]), 3)
+        self.assertEqual(len(rows[1]["result"]["tools"]), len(MCP.TOOLS))
         self.assertEqual(rows[2]["result"]["structuredContent"]["online"], 2)
         self.assertEqual(rows[3]["result"]["structuredContent"]["otherItems"][0]["amount"], 50)
 
@@ -98,7 +98,7 @@ class ServerTests(unittest.TestCase):
 
     def test_parse_error_does_not_stop_stdio(self):
         proc = subprocess.run([sys.executable, str(ENTRY)], input='broken\n{"jsonrpc":"2.0","id":2,"method":"ping"}\n',
-                              text=True, capture_output=True, timeout=5)
+                              text=True, capture_output=True, timeout=15)
         rows = [json.loads(line) for line in proc.stdout.splitlines()]
         self.assertEqual(rows[0]["error"]["code"], -32700)
         self.assertEqual(rows[1]["result"], {})

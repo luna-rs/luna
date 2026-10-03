@@ -7,7 +7,13 @@
       "args": [
         "${PLUGIN_ROOT}/server/server.py"
       ],
-      "cwd": "${PLUGIN_ROOT}"
+      "cwd": "${PLUGIN_ROOT}",
+      "env": {
+        "LUNA_COMPANION_REPO": "C:\\Users\\cj\\Documents\\Codex\\luna-agent",
+        "LUNA_COMPANION_GAME_PORT": "43595",
+        "LUNA_COMPANION_JAVA_HOME": "C:\\Program Files\\Java\\jdk-21.0.2",
+        "LUNA_COMPANION_PORT": "8788"
+      }
     }
   }
 }

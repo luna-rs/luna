@@ -227,6 +227,7 @@ public final class GameService extends AbstractScheduledService {
      * permanently stall the tick loop.
      */
     private void process() {
+        long companionStarted = System.nanoTime();
         try {
             // Drain tasks requested by other threads.
             runSynchronizationTasks();
@@ -234,7 +235,10 @@ public final class GameService extends AbstractScheduledService {
             // Run the main game loop.
             world.process();
         } catch (Throwable t) {
+            io.luna.companion.RuntimeDiagnostics.event("tick_error", java.util.Map.of("exceptionType", t.getClass().getName()));
             logger.catching(t);
+        } finally {
+            io.luna.companion.RuntimeDiagnostics.tick(System.nanoTime() - companionStarted);
         }
     }
 

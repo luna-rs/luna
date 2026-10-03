@@ -6,8 +6,14 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import subprocess
 
-VERSION = "0.1.0"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from harness import Harness
+
+HARNESS = Harness()
+
+VERSION = "0.2.0"
 SUPPORTED_PROTOCOLS = ("2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25")
 
 
@@ -28,6 +34,33 @@ TOOLS = [
     tool("luna_inspect_trade", "Inspect both offers in a player's current trade. Reports offer/confirm stage, item IDs and quantities. Does not report prices or bot decision reasons.",
          {"username": {"type": "string", "minLength": 1, "maxLength": 12}}, ["username"]),
 ]
+
+TOOLS += [
+    tool("luna_diagnostics", "JVM memory, GC, thread counts and deadlocks; works even if the game thread is blocked."),
+    tool("luna_threads", "Bounded JVM thread stacks and states; no local variable values."),
+    tool("luna_events", "Recent bounded game events, including slow ticks and tick errors."),
+    tool("luna_collectors", "List registered read-only game-thread snapshot collectors."),
+    tool("luna_collect", "Read a registered game-state collector.", {"collector": {"type": "string"}}, ["collector"]),
+    tool("luna_harness", "Show session-owned processes, job results and lifecycle events."),
+    tool("luna_build", "Build the dedicated clone's runnable distribution (asynchronous)."),
+    tool("luna_run_tests", "Run Java tests in the dedicated clone (asynchronous).", {"filter": {"type": "string"}}),
+    tool("luna_start", "Start the built Luna runtime in the dedicated clone; requires a successful luna_build."),
+    tool("luna_job", "Read a job's exit code and test-suite results.", {"job": {"type": "string"}}, ["job"]),
+    tool("luna_logs", "Read bounded, redacted job output with a sequence cursor.",
+         {"job": {"type": "string"}, "after": {"type": "integer", "minimum": 0},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 200}}, ["job"]),
+    tool("luna_stop", "Force-stop only a job owned by this MCP session; may interrupt pending runtime saves.",
+         {"job": {"type": "string"}}, ["job"]),
+]
+for definition in TOOLS:
+    if definition["name"] in {"luna_build", "luna_run_tests", "luna_start", "luna_stop"}:
+        definition["annotations"].update(readOnlyHint=False, idempotentHint=False,
+                                          destructiveHint=definition["name"] == "luna_stop")
+
+
+def result(data):
+    return {"content": [{"type": "text", "text": json.dumps(data)}],
+            "structuredContent": data, "isError": "error" in data}
 
 
 class NoRedirects(urllib.request.HTTPRedirectHandler):
@@ -64,6 +97,26 @@ def call_tool(params):
     args = params.get("arguments", {})
     if not isinstance(args, dict):
         raise ValueError("Tool arguments must be an object.")
+    schema = next((t["inputSchema"] for t in TOOLS if t["name"] == name), None)
+    if schema is None or set(args) - set(schema["properties"]) or set(schema["required"]) - set(args):
+        raise ValueError("Unknown tool or unexpected/missing arguments.")
+    for key, value in args.items():
+        expected = schema["properties"][key]["type"]
+        if (expected == "string" and not isinstance(value, str)) or (expected == "integer" and type(value) is not int):
+            raise ValueError("Invalid argument type.")
+    try:
+        if name == "luna_harness":
+            return result(HARNESS.status())
+        if name in ("luna_build", "luna_run_tests", "luna_start"):
+            return result(HARNESS.start({"luna_build": "build", "luna_run_tests": "tests", "luna_start": "runtime"}[name], args.get("filter")))
+        if name == "luna_job":
+            return result(HARNESS.job(args["job"]))
+        if name == "luna_logs":
+            return result(HARNESS.logs(args["job"], args.get("after", 0), args.get("limit", 100)))
+        if name == "luna_stop":
+            return result(HARNESS.stop(args["job"]))
+    except (OSError, subprocess.SubprocessError):
+        return failure("Harness operation failed. Check local configuration and process permissions.")
     if name in ("luna_status", "luna_online_players"):
         if args:
             raise ValueError("This tool does not accept arguments.")
@@ -73,6 +126,13 @@ def call_tool(params):
         if set(args) != {"username"} or not isinstance(username, str) or not username.strip() or len(username) > 12:
             raise ValueError("Supply a username of 1–12 characters.")
         path = "/trade?" + urllib.parse.urlencode({"username": username})
+    elif name in ("luna_diagnostics", "luna_threads", "luna_collectors", "luna_events"):
+        path = {"luna_diagnostics": "/diagnostics", "luna_threads": "/threads", "luna_collectors": "/collectors", "luna_events": "/events"}[name]
+    elif name == "luna_collect":
+        import re
+        if not re.fullmatch(r"[a-z][a-z0-9_-]{0,47}", args["collector"]):
+            raise ValueError("Invalid collector name.")
+        path = "/collect/" + args["collector"]
     else:
         raise ValueError("Unknown Luna tool.")
     try:
@@ -135,4 +195,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        HARNESS.close()

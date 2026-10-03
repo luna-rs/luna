@@ -1,13 +1,13 @@
 {
   "name": "luna-companion",
-  "version": "0.1.0",
-  "description": "Develop Luna Java/Kotlin content and inspect a local Luna server through read-only tools.",
+  "version": "0.2.0",
+  "description": "Build, test and run an isolated Luna runtime; inspect logs, JVM diagnostics and extensible game-state collectors.",
   "skills": "./skills",
   "mcpServers": "./mcp.json",
   "interface": {
     "displayName": "Luna Companion",
     "shortDescription": "Develop and inspect Luna",
     "developerName": "CJ",
-    "defaultPrompt": "Help me develop Luna and inspect my local bot trades."
+    "defaultPrompt": "Build and test Luna in the agent clone, then inspect runtime health and game state."
   }
 }

@@ -162,7 +162,14 @@ public final class LunaServer {
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-        bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
+        String companionPort = System.getenv("LUNA_COMPANION_GAME_PORT");
+        if (companionPort == null) {
+            bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
+        } else {
+            int port = Integer.parseInt(companionPort);
+            if (port < 1024 || port > 65535) throw new IllegalArgumentException("Invalid companion game port.");
+            bootstrap.bind("127.0.0.1", port).syncUninterruptibly();
+        }
     }
 
     /**
