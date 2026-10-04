@@ -203,12 +203,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
 
         if (!bot.strength.isBoosted) {
             potions += Potion.STRENGTH_POTION.doses
-            potions += Potion.SUPER_ATTACK.doses
+            potions += Potion.SUPER_STRENGTH.doses
         }
 
         if (!bot.ranged.isBoosted) {
             potions += Potion.RANGING_POTION.doses
-            potions += Potion.SUPER_ATTACK.doses
         }
 
         if (!bot.magic.isBoosted) {
