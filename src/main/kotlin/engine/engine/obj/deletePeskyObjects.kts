@@ -77,7 +77,10 @@ on(ServerLaunchEvent::class) {
         Position(3242, 3412),
 
         // HAM cult area door.
-        Position(3158, 9640)
+        Position(3158, 9640),
+
+        // Seers' Village spinning wheel house door.
+        Position(2716, 3472)
     )
 
     for (position in positions) {
