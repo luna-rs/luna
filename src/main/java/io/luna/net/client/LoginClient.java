@@ -65,7 +65,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
         String username = msg.getUsername();
         String password = msg.getPassword();
 
-        if (!username.matches("^[a-z0-9_ ]{1,12}$") ||
+        if (!PlayerCredentials.isValidUsername(username) ||
                 password.isEmpty() || password.length() > 20) {
             // Username/password format invalid, drop connection. Or we're already loading player data.
             channel.close();

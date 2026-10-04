@@ -107,14 +107,19 @@ public final class Bot extends Player {
         /**
          * Sets the username assigned to the bot.
          * <p>
-         * This only checks the active bot repository. Persistent data may still be loaded later during {@link Bot#login()}.
+         * The username is normalized and validated the same way as a player login. This only checks the active bot
+         * repository. Persistent data may still be loaded later during {@link Bot#login()}.
          *
          * @param username The username to assign.
          * @return This builder.
+         * @throws IllegalArgumentException If the username is not a valid login username.
          * @throws IllegalStateException If an active bot with this username is already online.
          */
         public Builder setUsername(String username) {
-            // TODO apply same name filtering from login
+            username = username.toLowerCase().trim();
+            if (!PlayerCredentials.isValidUsername(username)) {
+                throw new IllegalArgumentException("Invalid bot username [" + username + "].");
+            }
             BotRepository repository = context.getWorld().getBots();
             if (repository.isOnline(username)) {
                 throw new IllegalStateException("Bot is already logged in.");

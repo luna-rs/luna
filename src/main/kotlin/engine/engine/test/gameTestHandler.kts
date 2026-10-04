@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.hours
 
 val COMBAT_FOOD = listOf(Food.MANTA_RAY, Food.SHARK, Food.SWORDFISH, Food.LOBSTER)
 val POSSIBLE_WEAPONS = SpecialAttackHandler.getAllWeaponIds()
-val BOT_NAME_FUNCTION: (Int) -> String = { "R0b0t02473$it" }
+val BOT_NAME_FUNCTION: (Int) -> String = { "r0b0t_$it" }
 
 val botList = ArrayList<Bot>()
 var currentType: GameTestType? = null
