@@ -155,7 +155,7 @@ enum class Zone(val price: Int,
 
     SEERS_VILLAGE(price = 1250,
                   anchor = Position(2723, 3485),
-                  regions = setOf(10806),
+                  regions = setOf(10806, 10805),
                   bankAnchors = listOf(Position(2728, 3494, 0),
                                        Position(2729, 3494, 0),
                                        Position(2721, 3494, 0),
