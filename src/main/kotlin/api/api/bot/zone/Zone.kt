@@ -158,7 +158,7 @@ enum class Zone(val price: Int,
                   regions = setOf(10806, 10805),
                   bankAnchors = listOf(Position(2728, 3494, 0),
                                        Position(2729, 3494, 0),
-                                       // Bots use this corner booth through the west wall, since they skip reach checks.
+                                       // TODO Bots use this corner booth through the west wall, since they skip reach checks. Uncomment when pathfinding and interactions aree fixed.
                                        // Position(2721, 3494, 0),
                                        Position(2722, 3494, 0),
                                        Position(2727, 3494, 0),
