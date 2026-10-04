@@ -334,8 +334,8 @@ public final class BotScheduleService extends AbstractScheduledService {
                 }
                 String username = new String(Chars.toArray(generatedUsername));
                 username = username.trim().toLowerCase(Locale.CANADA).replace(' ', '_'); // No spaces.
-                if (username.length() >= 12) {// Max 1-12 characters.
-                    username = username.substring(0, 11);
+                if (username.length() > 12) {// Max 1-12 characters.
+                    username = username.substring(0, 12);
                 }
 
                 BotPersonality personality = personalityBuilder.build();
