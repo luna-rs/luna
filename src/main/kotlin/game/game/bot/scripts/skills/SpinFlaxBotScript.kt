@@ -10,7 +10,6 @@ import api.predef.*
 import api.predef.ext.*
 import engine.bot.coordinator.skill.CraftingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
-import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.skill.crafting.textileCrafting.Textile
@@ -33,7 +32,6 @@ import kotlin.time.Duration
  */
 class SpinFlaxBotScript(bot: Bot, duration: Duration) :
     InventoryBotScript(bot, duration, mutableListOf(SubZone.FLAX_SPINNING_MAIN)) {
-    // TODO not working or not used?
     companion object {
 
         /**
@@ -65,11 +63,21 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
      */
     private var spinningWheelObj: GameObject? = null
 
+    override fun onPaused() {
+        forceBanking = false
+    }
+
     override suspend fun onInventoryBankRequested(): Boolean {
         return FLAX !in bot.inventory
     }
 
     override suspend fun onExecuteInZone(): Boolean {
+        if (FLAX !in bot.inventory) {
+            bot.log("No flax left in inventory; requesting bank trip.")
+            forceBanking = true
+            return true
+        }
+
         val zone = activeZone!!
         if (spinningWheelObj == null) {
             spinningWheelObj = world.locator
@@ -99,7 +107,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration) :
     }
 
     override fun withdraw(): List<Item> {
-        if (bot.itemTracker.count(FLAX) < 28) {
+        if (!handler.has(Item(FLAX, 28))) {
             bot.log("Don't have flax, queuing flax picking script.")
             stop()
             val flaxScript =
