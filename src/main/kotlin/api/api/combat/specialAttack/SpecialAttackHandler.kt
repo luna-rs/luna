@@ -167,6 +167,18 @@ object SpecialAttackHandler {
     }
 
     /**
+     * Gets the special attack energy drained by the weapon with [id].
+     *
+     * @param id The weapon id.
+     * @return The special attack energy drained.
+     * @throws IllegalArgumentException if no special attack is registered for the weapon.
+     */
+    fun getDrain(id: Int): Int {
+        val type = SpecialAttackType.IDS[id]
+        return requireNotNull(specialAttacks[type]) { "No receiver for special attack type $type." }.drain
+    }
+
+    /**
      * Returns every weapon id registered across all special attack definitions.
      *
      * This flattens the weapon id arrays from each special attack entry into a single list in iteration order.
