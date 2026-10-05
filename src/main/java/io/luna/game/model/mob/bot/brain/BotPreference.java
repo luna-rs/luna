@@ -537,34 +537,20 @@ public final class BotPreference {
      * @param id The item id to add.
      */// todo docs
     public void addWantedItem(int id, int target, int skill, int maxLevel) {
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, skill, maxLevel);
-        if (def.isNoted() && def.getUnnotedId().isPresent()) {
-            int newId = def.getUnnotedId().getAsInt();
-            wantedItems.put(newId, item.copy(newId));
-        } else {
-            wantedItems.put(item.id(), item);
-        }
+        int unnotedId = toUnnotedId(id);
+        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel));
     }
 
     public void addWantedItem(int id, int target) {
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, -1, -1);
-        if (def.isNoted() && def.getUnnotedId().isPresent()) {
-            int newId = def.getUnnotedId().getAsInt();
-            wantedItems.put(newId, item.copy(newId));
-        } else {
-            wantedItems.put(item.id(), item);
-        }
+        addWantedItem(id, target, -1, -1);
     }
 
     public WantedItemDefinition getWantedItem(int id) {
-        // todo convert noted id to unnoted
-        return wantedItems.get(id);
+        return wantedItems.get(toUnnotedId(id));
     }
 
     public boolean hasWantedItem(int id) {
-        return wantedItems.containsKey(id);
+        return wantedItems.containsKey(toUnnotedId(id));
     }
 
     /**
@@ -573,7 +559,8 @@ public final class BotPreference {
      * @param id The item id to remove     .
      */ // todo docs
     public boolean removeWantedItem(int id, int amount) {
-        WantedItemDefinition def = wantedItems.get(id);
+        int unnotedId = toUnnotedId(id);
+        WantedItemDefinition def = wantedItems.get(unnotedId);
         if (def != null) {
             if (def.min() != -1) {
                 // Wanted items with a minimum value are never removed.
@@ -583,11 +570,26 @@ public final class BotPreference {
             if (target > 0) {
                 WantedItemDefinition newDef = new WantedItemDefinition(def.id(), def.min(), target,
                         def.skill(), def.maxLevel());
-                wantedItems.put(id, newDef);
+                wantedItems.put(unnotedId, newDef);
             }
             return true;
         }
         return false;
+    }
+
+    /**
+     * Converts a noted item id to its unnoted id, so noted and unnoted copies count as the same wanted item.
+     *
+     * @param id The item id.
+     * @return The unnoted id, or {@code id} itself if it isn't a noted item.
+     */
+    private static int toUnnotedId(int id) {
+        if (!ItemDefinition.isIdValid(id)) {
+            return id;
+        }
+        return ItemDefinition.ALL.get(id)
+                .map(def -> def.getUnnotedId().orElse(id))
+                .orElse(id);
     }
 
     /**
