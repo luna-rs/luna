@@ -1,29 +1,31 @@
-package world.obj.doors
+package game.obj.doors
 
 import api.predef.*
 import io.luna.game.model.mob.*
 import io.luna.game.model.`object`.*
+import io.luna.util.GsonUtils
+import java.nio.file.Paths
 
-Doors.closedToOpen.forEach(
-    {(key, value) ->
-        object1(key) {
-            handleDoorClick(gameObject, plr)
-        }
-        if (key != value) {
-            object1(value) {
-                handleDoorClick(gameObject, plr)
-            }
-        }
+/**
+ * The filesystem path to the door definition file.
+ *
+ * Read synchronously while this script is evaluated, because a click handler has to be registered for every door id
+ * and the ids come from this file.
+ */
+val PATH = Paths.get("data", "game", "world", "doors.json")
+
+Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java))
+
+Doors.all.forEach { type ->
+    object1(type.closed) {
+        handleDoorClick(gameObject, plr)
     }
-)
+    object1(type.open) {
+        handleDoorClick(gameObject, plr)
+    }
+}
 
 fun handleDoorClick(gameObject: GameObject, plr: Player) {
     System.out.println("Clicked door: "+gameObject+" "+gameObject.direction)
-    if (Doors.activeDoors.contains(gameObject.position)) {
-        Doors.closeDoor(world, gameObject)
-        plr.sendMessage("Ran closeDoor()")
-    } else {
-        Doors.activateDoor(world, gameObject)
-        plr.sendMessage("Ran openDoor()")
-    }
+    Doors.toggle(world, plr, gameObject)
 }

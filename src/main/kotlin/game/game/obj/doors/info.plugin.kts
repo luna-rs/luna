@@ -1,4 +1,4 @@
-package world.obj.doors
+package game.obj.doors
 
 import api.plugin.dsl.plugin
 
