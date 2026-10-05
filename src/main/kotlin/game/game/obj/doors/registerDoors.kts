@@ -24,9 +24,15 @@ val DOUBLE_PATH = Paths.get("data", "game", "world", "double_doors.json")
  */
 val GATE_PATH = Paths.get("data", "game", "world", "gates.json")
 
+/**
+ * The filesystem path to the curtain definition file.
+ */
+val CURTAIN_PATH = Paths.get("data", "game", "world", "curtains.json")
+
 Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java),
            GsonUtils.readAsType(DOUBLE_PATH, Array<DoorType>::class.java),
-           GsonUtils.readAsType(GATE_PATH, Array<DoorType>::class.java))
+           GsonUtils.readAsType(GATE_PATH, Array<DoorType>::class.java),
+           GsonUtils.readAsType(CURTAIN_PATH, Array<DoorType>::class.java))
 
 Doors.all.forEach { type ->
     object1(type.closed) {

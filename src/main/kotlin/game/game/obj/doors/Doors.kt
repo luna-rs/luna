@@ -26,6 +26,11 @@ object Doors {
     private val gateTypes: MutableSet<DoorType> = Collections.newSetFromMap(IdentityHashMap())
 
     /**
+     * The [DoorType]s that are curtains, which are replaced in place.
+     */
+    private val curtainTypes: MutableSet<DoorType> = Collections.newSetFromMap(IdentityHashMap())
+
+    /**
      * Doors that are currently away from their home state, mapped to the object they replaced. A door only reverts
      * on its own if it is still in this map when its timer expires.
      */
@@ -47,19 +52,22 @@ object Doors {
      * @param singles The single door pairs to load.
      * @param doubles The double door leaves to load.
      * @param gates The gate leaves to load. The [DoorSide.LEFT] leaf of a gate is its hinge.
+     * @param curtains The curtain pairs to load.
      */
-    fun load(singles: Array<DoorType>, doubles: Array<DoorType>, gates: Array<DoorType>) {
+    fun load(singles: Array<DoorType>, doubles: Array<DoorType>, gates: Array<DoorType>, curtains: Array<DoorType>) {
         byId.clear()
         gateTypes.clear()
         gateTypes.addAll(gates)
-        for (type in singles + doubles + gates) {
-            require((type.side != null) == (type !in singles)) {
-                "Door ${type.closed} must ${if (type in singles) "not " else ""}have a side."
+        curtainTypes.clear()
+        curtainTypes.addAll(curtains)
+        for (type in singles + doubles + gates + curtains) {
+            require((type.side != null) == (type in doubles || type in gates)) {
+                "Door ${type.closed} must ${if (type.side != null) "not " else ""}have a side."
             }
             require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
             require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
         }
-        all = (singles + doubles + gates).toList()
+        all = (singles + doubles + gates + curtains).toList()
     }
 
     /**
@@ -83,7 +91,9 @@ object Doors {
     fun toggle(world: World, plr: Player, door: GameObject) {
         val type = typeOf(door.id) ?: return
         val opening = door.id == type.closed
+        val curtain = type in curtainTypes
         val swaps = when {
+            curtain -> curtainSwaps(door, type, opening)
             type.side == null -> singleSwaps(door, opening)
             type in gateTypes -> gateSwaps(world, door, type, opening)
             else -> doubleSwaps(world, door, type, opening)
@@ -97,7 +107,7 @@ object Doors {
         if (!world.removeObject(self.old)) {
             return
         }
-        if (door.objectType == ObjectType.DIAGONAL_WALL && plr.position == self.position) {
+        if (!curtain && door.objectType == ObjectType.DIAGONAL_WALL && plr.position == self.position) {
             // A diagonal door swings across the tile the player is standing on, so move them out of the way.
             val away = if (opening) openPlayerOffset(door.direction) else closePlayerOffset(door.direction)
             plr.move(self.position.translate(away.first, away.second))
@@ -126,6 +136,13 @@ object Doors {
                 }
             }
         }
+    }
+
+    /**
+     * Computes the replacement for a curtain, which is swapped for its other state in the same position and direction.
+     */
+    private fun curtainSwaps(curtain: GameObject, type: DoorType, opening: Boolean): List<Swap> {
+        return listOf(Swap(curtain, if (opening) type.open else type.closed, curtain.position, curtain.direction))
     }
 
     /**
