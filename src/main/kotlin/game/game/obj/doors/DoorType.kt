@@ -3,15 +3,20 @@ package game.obj.doors
 import game.player.Sound
 
 /**
- * A single closed/open door pair, as defined in `data/game/world/doors/doors.json`, or one leaf of a double door, as
- * defined in `data/game/world/doors/double_doors.json`.
+ * A closed/open pair of objects that make up a door. Which kind of door it is depends on the file it is defined in, all
+ * of which are in `data/game/world/doors/`:
+ *
+ * - `doors.json`: a single door.
+ * - `double_doors.json`: one leaf of a double door.
+ * - `gates.json`: one leaf of a gate.
+ * - `curtains.json`: a curtain.
  *
  * Fields that are missing from the JSON are deserialized as `null`, so optional values are exposed through the
  * `*OrDefault` properties rather than constructor defaults (Gson does not run Kotlin default arguments).
  *
  * @param closed The id of the closed door.
  * @param open The id of the open door.
- * @param side Which half of a double door this is, or `null` for a single door.
+ * @param side Which leaf of a double door or gate this is, or `null` for a single door or curtain.
  * @param openSound The sound played on opening, or `null` for [Sound.DOOR_OPEN].
  * @param closeSound The sound played on closing, or `null` for [Sound.DOOR_CLOSE].
  * @param duration The ticks before the door reverts on its own, or `null` for [DEFAULT_DURATION].

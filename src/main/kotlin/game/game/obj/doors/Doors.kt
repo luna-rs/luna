@@ -7,6 +7,18 @@ import io.luna.game.model.mob.*
 import io.luna.game.model.`object`.*
 import java.util.*
 
+/**
+ * Opens and closes doors by replacing the clicked object with its other state.
+ *
+ * There are four kinds of door, each loaded from its own file under `data/game/world/doors/`:
+ *
+ * - Single doors, which are straight or diagonal walls that move one tile and turn a quarter turn.
+ * - Double doors, whose two leaves swing apart from each other.
+ * - Gates, whose two leaves swing together as one 2x1 fence around the corner of the hinge leaf.
+ * - Curtains, which are replaced in place without moving.
+ *
+ * Doors that are away from their home state revert on their own after a while.
+ */
 object Doors {
 
     /**
@@ -21,7 +33,7 @@ object Doors {
         private set
 
     /**
-     * The [DoorType]s that are leaves of a gate rather than a double door.
+     * The [DoorType]s that are leaves of a gate rather than a double door. Both have a [DoorType.side].
      */
     private val gateTypes: MutableSet<DoorType> = Collections.newSetFromMap(IdentityHashMap())
 
@@ -50,9 +62,11 @@ object Doors {
      * Loads all door definitions, replacing any previously loaded ones.
      *
      * @param singles The single door pairs to load.
-     * @param doubles The double door leaves to load.
-     * @param gates The gate leaves to load. The [DoorSide.LEFT] leaf of a gate is its hinge.
+     * @param doubles The double door leaves to load. Each must have a side.
+     * @param gates The gate leaves to load. Each must have a side, and the [DoorSide.LEFT] leaf is the hinge.
      * @param curtains The curtain pairs to load.
+     * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if an id is used by
+     * more than one door.
      */
     fun load(singles: Array<DoorType>, doubles: Array<DoorType>, gates: Array<DoorType>, curtains: Array<DoorType>) {
         byId.clear()
@@ -78,11 +92,16 @@ object Doors {
     /**
      * Opens [door] if it is closed, or closes it if it is open.
      *
-     * Single doors can be straight or diagonal walls. An opening door moves one tile and turns a quarter turn
+     * What is replaced depends on the kind of door:
+     *
+     * - Single doors can be straight or diagonal walls. An opening door moves one tile and turns a quarter turn
      * clockwise. A closing door does the exact inverse, so the position and direction of the original door can always
-     * be recovered from the door that was clicked. Double doors (straight walls only) swing both leaves together, see
-     * [doubleSwaps]. Doors that were moved away from their home state revert on their own after
-     * [DoorType.durationOrDefault] ticks.
+     * be recovered from the door that was clicked, see [singleSwaps].
+     * - Double doors (straight walls only) swing both leaves apart together, see [doubleSwaps].
+     * - Gates (straight walls only) swing both leaves together as one fence around the hinge leaf, see [gateSwaps].
+     * - Curtains are replaced in place, see [curtainSwaps].
+     *
+     * Doors that were moved away from their home state revert on their own after [DoorType.durationOrDefault] ticks.
      *
      * @param world The world.
      * @param plr The player that clicked the door.

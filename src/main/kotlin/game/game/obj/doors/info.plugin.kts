@@ -6,7 +6,7 @@ plugin {
     name = "Doors"
     description =
         """
-        A plugin that enables doors to be opened.
+        A plugin that enables doors (and double doors, gates, and curtains) to be opened.
         """
     version = "1.0"
     authors += "hydrozoa"
