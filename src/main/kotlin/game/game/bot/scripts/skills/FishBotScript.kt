@@ -136,7 +136,15 @@ class FishBotScript(
             return
         }
 
+        // TODO Only withdraw percentage amount based on intelligence.
         handler.banking.withdrawAll(baitId)
+    }
+
+    override suspend fun onExecuteSkilling(searching: Boolean) {
+       val bait = selectedTool.bait
+        if(bait != null && bait !in bot.inventory) {
+            forceBanking = true
+        }
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
