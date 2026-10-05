@@ -19,7 +19,6 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
-import io.luna.game.model.collision.CollisionUpdate.DirectionFlag;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -28,7 +27,6 @@ import io.luna.game.model.object.GameObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -56,11 +54,24 @@ public final class CollisionManager {
     private static final Logger logger = LogManager.getLogger();
 
     /**
+     * The flags that stop an NPC's tile from being entered. NPCs block every side until they get their own flag.
+     */
+    private static final int NPC_TILE = CollisionFlag.WALL_NORTH | CollisionFlag.WALL_EAST |
+            CollisionFlag.WALL_SOUTH | CollisionFlag.WALL_WEST;
+
+    /**
      * Globally blocked tiles keyed by chunk.
      * <p>
-     * Positions stored here are treated as fully blocked in all directions when collision is built.
+     * Positions stored here get {@link CollisionFlag#BLOCK_WALK} when collision is built.
      */
     private final Multimap<Chunk, Position> blocked = Multimaps.synchronizedMultimap(HashMultimap.create());
+
+    /**
+     * Tiles that are covered by a roof, keyed by chunk.
+     * <p>
+     * Positions stored here get {@link CollisionFlag#ROOF} when collision is built.
+     */
+    private final Multimap<Chunk, Position> roofed = Multimaps.synchronizedMultimap(HashMultimap.create());
 
     /**
      * Tiles that belong to bridged structures.
@@ -111,9 +122,9 @@ public final class CollisionManager {
     /**
      * Builds or rebuilds all world collision data.
      * <p>
-     * This method optionally clears existing matrices, imports blocked and bridged tile data from the cache, registers
-     * static map objects into the world, applies global blocked tiles as collision, and then snapshots the final
-     * repository state. Chunks that have no map data stay fully blocked when rebuilding.
+     * This method optionally clears existing matrices, imports blocked, bridged and roofed tile data from the cache,
+     * registers static map objects into the world, applies the blocked and roofed tiles as collision, and then
+     * snapshots the final repository state. Chunks that have no map data stay fully blocked when rebuilding.
      *
      * @param rebuilding {@code true} to reset existing matrices before rebuilding, otherwise {@code false}.
      */
@@ -133,13 +144,16 @@ public final class CollisionManager {
         LunaContext context = world.getContext();
         MapIndexTable table = context.getCache().getMapIndexTable();
         for (Map.Entry<MapIndex, MapTileGrid> entry : table.getTileSet()) {
+            Region region = entry.getKey().getRegion();
             entry.getValue().forEach(tile -> {
-                Region region = entry.getKey().getRegion();
                 if (tile.isBlocked()) {
                     block(tile.getAbsPosition(region));
                 }
                 if (tile.isBridge()) {
                     markBridged(tile.getAbsPosition(region));
+                }
+                if (tile.isRoof()) {
+                    markRoofed(tile.getAbsPosition(region));
                 }
             });
         }
@@ -148,22 +162,14 @@ public final class CollisionManager {
             world.getObjects().register(mapObject.toGameObject(context));
         }
 
-        // Apply global blocked tiles.
+        // Apply blocked and roofed tiles. Bridged tiles are moved down a level when the update is applied.
         CollisionUpdate.Builder tiles = new CollisionUpdate.Builder();
         tiles.type(CollisionUpdateType.ADDING);
         for (Position position : blocked.values()) {
-            int x = position.getX();
-            int y = position.getY();
-            int height = position.getZ();
-
-            // Handle bridged tiles by dropping one level when needed.
-            if (bridges.contains(new Position(x, y, 1))) {
-                height--;
-            }
-
-            if (height >= 0) {
-                tiles.tile(new Position(x, y, height), false, Direction.NESW);
-            }
+            tiles.flag(position, CollisionFlag.BLOCK_WALK);
+        }
+        for (Position position : roofed.values()) {
+            tiles.flag(position, CollisionFlag.ROOF);
         }
         apply(tiles.build(), true);
 
@@ -196,7 +202,7 @@ public final class CollisionManager {
         if (entity.getType() == EntityType.OBJECT) {
             builder.object((GameObject) entity);
         } else if (entity.getType() == EntityType.NPC) {
-            builder.tile(entity.getPosition(), false, Direction.NESW);
+            builder.flag(entity.getPosition(), NPC_TILE);
         }
         apply(builder.build(), false);
     }
@@ -204,7 +210,7 @@ public final class CollisionManager {
     /**
      * Applies a {@link CollisionUpdate} to the world.
      * <p>
-     * Each flagged tile in the update is translated into one or more {@link CollisionFlag}s on the appropriate
+     * The {@link CollisionFlag}s of each tile in the update are added to or removed from the appropriate
      * {@link CollisionMatrix}, with bridge height adjustments applied where necessary. When the world is live, the
      * modified repositories are queued for snapshot refresh.
      *
@@ -215,10 +221,9 @@ public final class CollisionManager {
         ChunkRepository prev = null;
 
         CollisionUpdateType type = update.getType();
-        Map<Position, Collection<DirectionFlag>> map = update.getFlags().asMap();
         Set<ChunkRepository> snapshots = new HashSet<>();
 
-        for (Map.Entry<Position, Collection<DirectionFlag>> entry : map.entrySet()) {
+        for (Map.Entry<Position, Integer> entry : update.getFlags().entrySet()) {
             Position position = entry.getKey();
             Chunk chunk = position.getChunk();
 
@@ -237,22 +242,7 @@ public final class CollisionManager {
             int localX = position.getX() % Chunk.SIZE;
             int localY = position.getY() % Chunk.SIZE;
 
-            CollisionMatrix matrix = prev.getMatrices()[height];
-            int[] mobs = CollisionFlag.WALLS;
-            int[] projectiles = CollisionFlag.WALL_PROJ_BLOCKERS;
-
-            for (DirectionFlag flag : entry.getValue()) {
-                Direction direction = flag.getDirection();
-                if (direction == Direction.NONE) {
-                    continue;
-                }
-
-                int orientation = direction.getId();
-                if (flag.isImpenetrable()) {
-                    flag(type, matrix, localX, localY, projectiles[orientation]);
-                }
-                flag(type, matrix, localX, localY, mobs[orientation]);
-            }
+            flag(type, prev.getMatrices()[height], localX, localY, entry.getValue());
             snapshots.add(prev);
         }
 
@@ -400,13 +390,13 @@ public final class CollisionManager {
     }
 
     /**
-     * Applies or clears a single {@link CollisionFlag} on a {@link CollisionMatrix}.
+     * Applies or clears a mask of {@link CollisionFlag}s on a {@link CollisionMatrix}.
      *
      * @param type The update type.
      * @param matrix The matrix to modify.
      * @param localX The local X coordinate within the chunk.
      * @param localY The local Y coordinate within the chunk.
-     * @param flag The collision flag to apply or clear.
+     * @param flag The collision flags to apply or clear.
      */
     private void flag(CollisionUpdateType type,
                       CollisionMatrix matrix,
@@ -424,12 +414,23 @@ public final class CollisionManager {
     /**
      * Marks {@code position} as globally blocked.
      * <p>
-     * Blocked positions are applied as fully blocked tiles during {@link #build(boolean)}.
+     * Blocked positions are applied with {@link CollisionFlag#BLOCK_WALK} during {@link #build(boolean)}.
      *
      * @param position The tile to block.
      */
     public void block(Position position) {
         blocked.put(position.getChunk(), position);
+    }
+
+    /**
+     * Marks {@code position} as covered by a roof.
+     * <p>
+     * Roofed positions are applied with {@link CollisionFlag#ROOF} during {@link #build(boolean)}.
+     *
+     * @param position The roofed tile.
+     */
+    public void markRoofed(Position position) {
+        roofed.put(position.getChunk(), position);
     }
 
     /**

@@ -2,14 +2,14 @@ package io.luna.game.model.collision;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableMap;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.object.GameObject;
-import io.luna.game.model.object.ObjectType;
 
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.luna.game.model.object.ObjectType.*;
 
@@ -26,100 +26,18 @@ import static io.luna.game.model.object.ObjectType.*;
 public final class CollisionUpdate {
 
     /**
-     * Returns whether an object with the given {@link GameObjectDefinition} and object {@code type} should cause its
-     * tile(s) to be blocked. This is used by {@link Builder#object(GameObject)} to decide if collision flags should
-     * be generated at all for the object.
-     *
-     * @param definition The game's definition of the object.
-     * @param type The raw object type id (see {@link ObjectType}).
-     * @return {@code true} if the object should block movement on its tiles, otherwise {@code false}.
-     */
-    private static boolean unwalkable(GameObjectDefinition definition, int type) {
-        boolean isSolidFloorDecoration = type == GROUND_DECORATION.getId() && definition.isInteractive();
-        boolean isRoof = type > DIAGONAL_DEFAULT.getId() && type < GROUND_DECORATION.getId();
-
-        boolean isWall = type >= STRAIGHT_WALL.getId() && type <= RECTANGLE_CORNER_WALL.getId() ||
-                type == DIAGONAL_WALL.getId();
-
-        boolean isSolidInteractable = (type == DIAGONAL_DEFAULT.getId() ||
-                type == DEFAULT.getId()) && definition.isSolid();
-
-        return isWall || isRoof || isSolidInteractable || isSolidFloorDecoration;
-    }
-
-    /**
-     * A directional flag in a {@link CollisionUpdate}.
-     */
-    public static final class DirectionFlag {
-
-        /**
-         * Whether the direction is impenetrable (blocks projectiles in addition to mobs).
-         */
-        private final boolean impenetrable;
-
-        /**
-         * The blocked direction itself.
-         */
-        private final Direction direction;
-
-        /**
-         * Creates a new {@link DirectionFlag}.
-         *
-         * @param impenetrable {@code true} if the direction should also block projectiles,
-         * {@code false} if only mobs are blocked.
-         * @param direction The direction from the tile that is blocked.
-         */
-        public DirectionFlag(boolean impenetrable, Direction direction) {
-            this.impenetrable = impenetrable;
-            this.direction = direction;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof DirectionFlag) {
-                DirectionFlag other = (DirectionFlag) obj;
-                return impenetrable == other.impenetrable && direction == other.direction;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(impenetrable, direction);
-        }
-
-        /**
-         * Returns whether this flag represents an impenetrable direction.
-         *
-         * @return {@code true} if projectiles are blocked in this direction, otherwise {@code false}.
-         */
-        public boolean isImpenetrable() {
-            return impenetrable;
-        }
-
-        /**
-         * Returns the direction this flag represents.
-         *
-         * @return The blocked direction.
-         */
-        public Direction getDirection() {
-            return direction;
-        }
-    }
-
-    /**
      * Builder for {@link CollisionUpdate} instances.
      * <p>
-     * The builder accumulates directional collision information for a set of tiles and produces an immutable
+     * The builder accumulates {@link CollisionFlag} masks for a set of tiles and produces an immutable
      * {@link CollisionUpdate} snapshot via {@link #build()}.
      * </p>
      */
     public static final class Builder {
 
         /**
-         * Accumulated direction flags grouped by world position.
+         * Accumulated flag masks by world position.
          */
-        private final ImmutableSetMultimap.Builder<Position, DirectionFlag> flags = ImmutableSetMultimap.builder();
+        private final Map<Position, Integer> flags = new HashMap<>();
 
         /**
          * The update type (adding or removing flags).
@@ -141,21 +59,14 @@ public final class CollisionUpdate {
         }
 
         /**
-         * Marks the tile at {@code position} as untraversable in the given directions.
-         * <p>
-         * Each direction in {@code directions} becomes a {@link DirectionFlag} entry at this position.
-         * Whether the flags are impenetrable (block projectiles) is controlled by {@code impenetrable}.
-         * </p>
+         * Adds {@link CollisionFlag}s to the tile at {@code position}. Flags added to the same tile more than once are
+         * combined.
          *
          * @param position The world position of the tile being updated.
-         * @param impenetrable {@code true} if the tile should also block projectiles in those directions.
-         * @param directions The directions that are untraversable from this tile.
+         * @param mask The collision flags to add to (or remove from) the tile.
          */
-        public void tile(Position position, boolean impenetrable, ImmutableList<Direction> directions) {
-            if (directions.isEmpty()) {
-                return;
-            }
-            directions.forEach(direction -> flags.put(position, new DirectionFlag(impenetrable, direction)));
+        public void flag(Position position, int mask) {
+            flags.merge(position, mask, (current, added) -> current | added);
         }
 
         /**
@@ -180,8 +91,8 @@ public final class CollisionUpdate {
          * @param orientation The cardinal direction the wall faces.
          */
         public void wall(Position position, boolean impenetrable, Direction orientation) {
-            tile(position, impenetrable, ImmutableList.of(orientation));
-            tile(position.translate(1, orientation), impenetrable, ImmutableList.of(orientation.opposite()));
+            wallFlag(position, impenetrable, orientation);
+            wallFlag(position.translate(1, orientation), impenetrable, orientation.opposite());
         }
 
         /**
@@ -202,23 +113,24 @@ public final class CollisionUpdate {
          */
         public void largeCornerWall(Position position, boolean impenetrable, Direction orientation) {
             ImmutableList<Direction> directions = Direction.diagonalComponents(orientation);
-            tile(position, impenetrable, directions);
-
             for (Direction direction : directions) {
-                tile(position.translate(1, direction), impenetrable, ImmutableList.of(direction.opposite()));
+                wallFlag(position, impenetrable, direction);
+                wallFlag(position.translate(1, direction), impenetrable, direction.opposite());
             }
         }
 
         /**
          * Adds collision flags appropriate for the given {@link GameObject}.
          * <p>
-         * This method inspects the {@link GameObjectDefinition} and {@link ObjectType} of {@code object} to
-         * determine:
+         * This follows the 377 client's rules, which are the same ones rsmod uses:
          * </p>
          * <ul>
-         *     <li>Whether the object should block movement at all (see {@link #unwalkable(GameObjectDefinition, int)}).</li>
-         *     <li>Whether it should be treated as a solid multi-tile object, a wall, a corner, or a floor decoration.</li>
-         *     <li>Which directions and tiles to flag as blocked.</li>
+         *     <li>Ground decorations block their tile only when they are interactive.</li>
+         *     <li>Everything else only collides when the definition is solid.</li>
+         *     <li>Walls (types 0-3) block the edges or corners they cover.</li>
+         *     <li>Diagonal walls, centrepieces and roofs (types 9-21) block every tile of their footprint. The
+         *     footprint is rotated, so objects facing north or south swap their width and length.</li>
+         *     <li>Wall decorations (types 4-8) never collide.</li>
          * </ul>
          *
          * @param object The object whose presence should contribute collision data.
@@ -227,34 +139,35 @@ public final class CollisionUpdate {
             GameObjectDefinition definition = object.def();
             Position position = object.getPosition();
             int type = object.getObjectType().getId();
-
-            if (!unwalkable(definition, type)) {
-                return;
-            }
-
-            int x = position.getX(), y = position.getY(), height = position.getZ();
             boolean impenetrable = definition.isImpenetrable();
             int orientation = object.getDirection().getId();
 
-            if (type == ObjectType.GROUND_DECORATION.getId()) {
-                // Solid, interactive, floor decorations: block all directions on a single tile.
-                tile(new Position(x, y, height), impenetrable, Direction.NESW);
-            } else if (type >= DIAGONAL_WALL.getId() && type < GROUND_DECORATION.getId()) {
-                // Large, solid multi-tile objects: block all directions on each covered tile.
-                for (int dx = 0; dx < definition.getSizeX(); dx++) {
-                    for (int dy = 0; dy < definition.getSizeY(); dy++) {
-                        tile(new Position(x + dx, y + dy, height), impenetrable, Direction.NESW);
-                    }
+            if (type == GROUND_DECORATION.getId()) {
+                if (definition.isInteractive()) {
+                    flag(position, CollisionFlag.GROUND_DECOR);
                 }
+            } else if (!definition.isSolid()) {
+                return;
             } else if (type == STRAIGHT_WALL.getId()) {
-                // Normal straight walls: block a single cardinal edge between two tiles.
                 wall(position, impenetrable, Direction.WNES.get(orientation));
             } else if (type == DIAGONAL_CORNER_WALL.getId() || type == RECTANGLE_CORNER_WALL.getId()) {
-                // Diagonal/rectangle corner walls: block a single diagonal edge.
                 wall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
             } else if (type == WALL_CORNER.getId()) {
-                // Corner walls: block two cardinal edges that form an L-shaped corner.
                 largeCornerWall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
+            } else if (type >= DIAGONAL_WALL.getId() && type < GROUND_DECORATION.getId()) {
+                int sizeX = definition.getSizeX();
+                int sizeY = definition.getSizeY();
+                if (orientation == 1 || orientation == 3) {
+                    sizeX = definition.getSizeY();
+                    sizeY = definition.getSizeX();
+                }
+
+                int mask = impenetrable ? CollisionFlag.LOC | CollisionFlag.LOC_PROJ_BLOCKER : CollisionFlag.LOC;
+                for (int dx = 0; dx < sizeX; dx++) {
+                    for (int dy = 0; dy < sizeY; dy++) {
+                        flag(new Position(position.getX() + dx, position.getY() + dy, position.getZ()), mask);
+                    }
+                }
             }
         }
 
@@ -266,7 +179,23 @@ public final class CollisionUpdate {
          */
         public CollisionUpdate build() {
             Preconditions.checkNotNull(type, "update type must not be null");
-            return new CollisionUpdate(type, flags.build());
+            return new CollisionUpdate(type, ImmutableMap.copyOf(flags));
+        }
+
+        /**
+         * Adds the wall flag for a single side of a tile.
+         *
+         * @param position The tile the wall is on.
+         * @param impenetrable {@code true} if the wall should block projectiles, otherwise {@code false}.
+         * @param direction The side of the tile the wall is on.
+         */
+        private void wallFlag(Position position, boolean impenetrable, Direction direction) {
+            int id = direction.getId();
+            int mask = CollisionFlag.WALLS[id];
+            if (impenetrable) {
+                mask |= CollisionFlag.WALL_PROJ_BLOCKERS[id];
+            }
+            flag(position, mask);
         }
     }
 
@@ -276,21 +205,20 @@ public final class CollisionUpdate {
     private final CollisionUpdateType type;
 
     /**
-     * A mapping of world {@link Position}s to their associated {@link DirectionFlag}s.
+     * A mapping of world {@link Position}s to the {@link CollisionFlag} masks that are added to or removed from them.
      * <p>
-     * Each position can have multiple flags, one per blocked direction. The manager later interprets these flags
-     * into {@link CollisionFlag} values on the appropriate {@link CollisionMatrix}.
+     * The manager later applies these masks to the appropriate {@link CollisionMatrix}.
      * </p>
      */
-    private final ImmutableSetMultimap<Position, DirectionFlag> flags;
+    private final ImmutableMap<Position, Integer> flags;
 
     /**
      * Creates a new {@link CollisionUpdate}.
      *
      * @param type The {@link CollisionUpdateType} describing whether collision is being added or removed.
-     * @param flags A multimap of positions to their direction flags.
+     * @param flags A map of positions to their flag masks.
      */
-    public CollisionUpdate(CollisionUpdateType type, ImmutableSetMultimap<Position, DirectionFlag> flags) {
+    public CollisionUpdate(CollisionUpdateType type, ImmutableMap<Position, Integer> flags) {
         this.type = type;
         this.flags = flags;
     }
@@ -305,11 +233,11 @@ public final class CollisionUpdate {
     }
 
     /**
-     * Returns the mapping of tiles to their direction flags.
+     * Returns the mapping of tiles to their flag masks.
      *
-     * @return A multimap of positions to {@link DirectionFlag}s.
+     * @return A map of positions to {@link CollisionFlag} masks.
      */
-    public ImmutableSetMultimap<Position, DirectionFlag> getFlags() {
+    public ImmutableMap<Position, Integer> getFlags() {
         return flags;
     }
 }

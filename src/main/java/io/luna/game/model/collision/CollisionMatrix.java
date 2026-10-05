@@ -299,8 +299,8 @@ public final class CollisionMatrix {
      * Determines whether an entity of the given {@link EntityType} is blocked from entering the tile at (x, y)
      * when attempting to move in the given {@link Direction}.
      * <p>
-     * This method interprets directional collision flags using the same semantics as the original RS2 client,
-     * mapping the entity's approach direction to the appropriate directional flag(s) that would prevent movement.
+     * Walls, solid objects and blocked floors on the tile stop the movement according to the {@code BLOCK_*} masks
+     * in {@link CollisionFlag}. Projectiles are only stopped by walls and objects that also block projectiles.
      *
      * @param x The local X coordinate of the tile being entered.
      * @param y The local Y coordinate of the tile being entered.
@@ -309,38 +309,15 @@ public final class CollisionMatrix {
      * @return {@code true} if the tile is blocked when approached from {@code direction}; otherwise {@code false}.
      */
     public boolean untraversable(int x, int y, EntityType entity, Direction direction) {
-        int[] flags = CollisionFlag.forType(entity);
-        int northwest = 0, north = 1, northeast = 2, west = 3, east = 4, southwest = 5, south = 6, southeast = 7;
-
-        switch (direction) {
-            case NORTH_WEST:
-                return flagged(x, y, flags[southeast]) || flagged(x, y, flags[south]) ||
-                        flagged(x, y, flags[east]);
-            case NORTH:
-                return flagged(x, y, flags[south]);
-            case NORTH_EAST:
-                return flagged(x, y, flags[southwest]) || flagged(x, y, flags[south]) ||
-                        flagged(x, y, flags[west]);
-            case EAST:
-                return flagged(x, y, flags[west]);
-            case SOUTH_EAST:
-                return flagged(x, y, flags[northwest]) || flagged(x, y, flags[north]) ||
-                        flagged(x, y, flags[west]);
-            case SOUTH:
-                return flagged(x, y, flags[north]);
-            case SOUTH_WEST:
-                return flagged(x, y, flags[northeast]) || flagged(x, y, flags[north]) ||
-                        flagged(x, y, flags[east]);
-            case WEST:
-                return flagged(x, y, flags[east]);
-            default:
-                throw new IllegalArgumentException("Unrecognised direction " + direction + ".");
+        if (direction == Direction.NONE) {
+            throw new IllegalArgumentException("Unrecognised direction " + direction + ".");
         }
+        return flagged(x, y, CollisionFlag.blocks(entity, direction.getId()));
     }
 
     /**
      * Returns whether the tile at (x, y) is blocked for the given {@link EntityType}, regardless of direction. This
-     * checks all directional flags associated with the entity type and reports {@code true} if any are set.
+     * reports {@code true} if any flag that stops the entity type from entering the tile is set.
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
@@ -348,12 +325,7 @@ public final class CollisionMatrix {
      * @return {@code true} if the tile is blocked for that entity type; otherwise {@code false}.
      */
     public boolean isBlocked(int x, int y, EntityType entity) {
-        for (int flag : CollisionFlag.forType(entity)) {
-            if (flagged(x, y, flag)) {
-                return true;
-            }
-        }
-        return false;
+        return flagged(x, y, CollisionFlag.anyBlock(entity));
     }
 
     /**

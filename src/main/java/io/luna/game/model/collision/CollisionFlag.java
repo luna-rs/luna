@@ -180,6 +180,51 @@ public final class CollisionFlag {
     public static final int ROOF = 0x80000000;
 
     /**
+     * The flags for a tile that can't be walked on regardless of the side it's entered from.
+     */
+    public static final int FLOOR_BLOCKED = BLOCK_WALK | GROUND_DECOR;
+
+    /**
+     * The flags that stop a mob from moving north into a tile.
+     */
+    public static final int BLOCK_NORTH = WALL_SOUTH | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving east into a tile.
+     */
+    public static final int BLOCK_EAST = WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving south into a tile.
+     */
+    public static final int BLOCK_SOUTH = WALL_NORTH | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving west into a tile.
+     */
+    public static final int BLOCK_WEST = WALL_EAST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving north west into a tile.
+     */
+    public static final int BLOCK_NORTH_WEST = WALL_EAST | WALL_SOUTH_EAST | WALL_SOUTH | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving north east into a tile.
+     */
+    public static final int BLOCK_NORTH_EAST = WALL_SOUTH | WALL_SOUTH_WEST | WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving south west into a tile.
+     */
+    public static final int BLOCK_SOUTH_WEST = WALL_NORTH | WALL_NORTH_EAST | WALL_EAST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags that stop a mob from moving south east into a tile.
+     */
+    public static final int BLOCK_SOUTH_EAST = WALL_NORTH_WEST | WALL_NORTH | WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
      * The wall flags indexed by {@link io.luna.game.model.Direction#getId()}, in the order north west, north, north
      * east, west, east, south west, south, south east. Must not be modified.
      */
@@ -217,15 +262,61 @@ public final class CollisionFlag {
             WALL_SOUTH_PROJ_BLOCKER | WALL_SOUTH_WEST_PROJ_BLOCKER | WALL_WEST_PROJ_BLOCKER | LOC_PROJ_BLOCKER;
 
     /**
-     * Returns the directional wall flags that decide whether the specified {@link EntityType} can enter a tile.
+     * The flags that stop a mob from entering a tile, indexed by the {@link io.luna.game.model.Direction#getId()} it
+     * is moving in. Must not be modified.
+     */
+    private static final int[] MOB_BLOCKS = {
+            BLOCK_NORTH_WEST,
+            BLOCK_NORTH,
+            BLOCK_NORTH_EAST,
+            BLOCK_WEST,
+            BLOCK_EAST,
+            BLOCK_SOUTH_WEST,
+            BLOCK_SOUTH,
+            BLOCK_SOUTH_EAST
+    };
+
+    /**
+     * The flags that stop a projectile from entering a tile, indexed like {@link #MOB_BLOCKS}. These are the walls and
+     * objects of {@link #MOB_BLOCKS} moved onto their projectile-blocking counterparts, which are 9 bits higher. The
+     * floor flags are left out, so projectiles fly over water. Must not be modified.
+     */
+    private static final int[] PROJECTILE_BLOCKS = new int[MOB_BLOCKS.length];
+
+    static {
+        int wallsAndLoc = 0x1FF;
+        for (int i = 0; i < MOB_BLOCKS.length; i++) {
+            PROJECTILE_BLOCKS[i] = (MOB_BLOCKS[i] & wallsAndLoc) << 9;
+        }
+    }
+
+    /**
+     * Returns the flags that decide whether the specified {@link EntityType} can enter a tile while moving in a
+     * direction.
      * <p>
-     * Projectiles are stopped by the projectile-blocking flags; everything else is stopped by the plain wall flags.
+     * Projectiles are stopped by the projectile-blocking flags; everything else is stopped by the plain wall flags
+     * along with objects and blocked floors.
      *
      * @param type The entity type.
-     * @return The flags, indexed by {@link io.luna.game.model.Direction#getId()}. Must not be modified.
+     * @param directionId The {@link io.luna.game.model.Direction#getId()} of the movement.
+     * @return The flags that block that movement.
      */
-    static int[] forType(EntityType type) {
-        return type == EntityType.PROJECTILE ? WALL_PROJ_BLOCKERS : WALLS;
+    static int blocks(EntityType type, int directionId) {
+        return type == EntityType.PROJECTILE ? PROJECTILE_BLOCKS[directionId] : MOB_BLOCKS[directionId];
+    }
+
+    /**
+     * Returns every flag that makes a tile unusable for the specified {@link EntityType} from some direction.
+     *
+     * @param type The entity type.
+     * @return The union of the flags that block it.
+     */
+    static int anyBlock(EntityType type) {
+        int flags = 0;
+        for (int i = 0; i < MOB_BLOCKS.length; i++) {
+            flags |= blocks(type, i);
+        }
+        return flags;
     }
 
     /**
