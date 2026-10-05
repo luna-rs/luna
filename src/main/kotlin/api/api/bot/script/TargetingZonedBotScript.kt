@@ -186,6 +186,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                     return false
                 }
 
+                // TODO Combat bots stall for extended periods of time and display this message.
                 bot.log("No interactable targets found in $zone, but staying because no better zone decision was made.")
                 return true
             } else {
