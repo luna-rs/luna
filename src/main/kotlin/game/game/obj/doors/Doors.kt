@@ -27,17 +27,31 @@ object Doors {
     private val displaced: IdentityHashMap<GameObject, GameObject> = IdentityHashMap()
 
     /**
+     * A single object replacement made while opening or closing a door.
+     *
+     * @param old The object being replaced.
+     * @param id The id of the replacement.
+     * @param position The position of the replacement.
+     * @param direction The direction of the replacement.
+     */
+    private class Swap(val old: GameObject, val id: Int, val position: Position, val direction: ObjectDirection)
+
+    /**
      * Loads all door definitions, replacing any previously loaded ones.
      *
-     * @param types The door pairs to load.
+     * @param singles The single door pairs to load.
+     * @param doubles The double door leaves to load.
      */
-    fun load(types: Array<DoorType>) {
+    fun load(singles: Array<DoorType>, doubles: Array<DoorType>) {
         byId.clear()
-        for (type in types) {
-            require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in doors.json." }
-            require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in doors.json." }
+        for (type in singles + doubles) {
+            require((type.side != null) == (type in doubles)) {
+                "Door ${type.closed} must ${if (type in doubles) "" else "not "}have a side."
+            }
+            require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
+            require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
         }
-        all = types.toList()
+        all = (singles + doubles).toList()
     }
 
     /**
@@ -48,9 +62,11 @@ object Doors {
     /**
      * Opens [door] if it is closed, or closes it if it is open.
      *
-     * An opening door moves one tile and turns a quarter turn clockwise. A closing door does the exact inverse, so
-     * the position and direction of the original door can always be recovered from the door that was clicked. A
-     * door that was moved away from its home state reverts on its own after [DoorType.durationOrDefault] ticks.
+     * Single doors can be straight or diagonal walls. An opening door moves one tile and turns a quarter turn
+     * clockwise. A closing door does the exact inverse, so the position and direction of the original door can always
+     * be recovered from the door that was clicked. Double doors (straight walls only) swing both leaves together, see
+     * [doubleSwaps]. Doors that were moved away from their home state revert on their own after
+     * [DoorType.durationOrDefault] ticks.
      *
      * @param world The world.
      * @param plr The player that clicked the door.
@@ -58,41 +74,176 @@ object Doors {
      */
     fun toggle(world: World, plr: Player, door: GameObject) {
         val type = typeOf(door.id) ?: return
-        if (door.objectType != ObjectType.STRAIGHT_WALL) {
-            return
-        }
-
         val opening = door.id == type.closed
-        val offset = if (opening) openOffset(door.direction) else closeOffset(door.direction)
-        val newDirection = rotate(door.direction, if (opening) 1 else 3)
-        val newId = if (opening) type.open else type.closed
-
-        // Fails if the door was already replaced, so a stale click cannot spawn a duplicate.
-        if (!world.removeObject(door)) {
+        val swaps = if (type.side == null) singleSwaps(door, opening) else doubleSwaps(world, door, type, opening)
+        if (swaps.isEmpty()) {
             return
         }
-        val newDoor = world.addObject(newId,
-                                      door.position.translate(offset.first, offset.second),
-                                      door.objectType,
-                                      newDirection)
+
+        // The clicked door is always first. Fails if it was already replaced, so a stale click cannot spawn a duplicate.
+        val self = swaps.first()
+        if (!world.removeObject(self.old)) {
+            return
+        }
+        if (door.objectType == ObjectType.DIAGONAL_WALL && plr.position == self.position) {
+            // A diagonal door swings across the tile the player is standing on, so move them out of the way.
+            val away = if (opening) openPlayerOffset(door.direction) else closePlayerOffset(door.direction)
+            plr.move(self.position.translate(away.first, away.second))
+        }
         plr.playSound(if (opening) type.openSoundOrDefault else type.closeSoundOrDefault)
 
-        if (displaced.remove(door) != null) {
-            // The clicked door was away from home, so it is home again and has nothing left to revert.
+        val replaced = ArrayList<Pair<GameObject, GameObject>>()
+        for (swap in swaps) {
+            if (swap !== self && !world.removeObject(swap.old)) {
+                continue
+            }
+            val new = world.addObject(swap.id, swap.position, swap.old.objectType, swap.direction)
+            replaced += Pair(new, swap.old)
+        }
+
+        // Leaves that were away from home are home again, and have nothing left to revert.
+        val wasAwayFromHome = swaps.count { displaced.remove(it.old) != null } > 0
+        if (wasAwayFromHome) {
             return
         }
-        displaced[newDoor] = door
-        world.scheduleOnce(type.durationOrDefault) {
-            if (displaced.remove(newDoor) != null && world.removeObject(newDoor)) {
-                world.addObject(door.id, door.position, door.objectType, door.direction)
+        for ((new, old) in replaced) {
+            displaced[new] = old
+            world.scheduleOnce(type.durationOrDefault) {
+                if (displaced.remove(new) != null && world.removeObject(new)) {
+                    world.addObject(old.id, old.position, old.objectType, old.direction)
+                }
             }
         }
     }
 
     /**
-     * The tile offset applied when a straight wall door opens.
+     * Computes the replacement for a single door, which can be a straight or diagonal wall.
+     *
+     * @return The replacement, or an empty list if [door] is not a wall.
      */
-    private fun openOffset(direction: ObjectDirection): Pair<Int, Int> {
+    private fun singleSwaps(door: GameObject, opening: Boolean): List<Swap> {
+        val diagonal = when (door.objectType) {
+            ObjectType.STRAIGHT_WALL -> false
+            ObjectType.DIAGONAL_WALL -> true
+            else -> return emptyList()
+        }
+        val type = typeOf(door.id)!!
+        val offset = if (opening) openOffset(door.direction, diagonal) else closeOffset(door.direction, diagonal)
+        return listOf(Swap(door,
+                           if (opening) type.open else type.closed,
+                           door.position.translate(offset.first, offset.second),
+                           rotate(door.direction, if (opening) 1 else 3)))
+    }
+
+    /**
+     * Computes the replacements for one leaf of a double door and, if it is standing there, its partner leaf.
+     *
+     * The left leaf swings a quarter turn counter-clockwise and the right leaf a quarter turn clockwise, so that they
+     * open away from each other. Both leaves are replaced together.
+     *
+     * @return The replacements with the clicked leaf first, or an empty list if [door] is not a straight wall.
+     */
+    private fun doubleSwaps(world: World, door: GameObject, type: DoorType, opening: Boolean): List<Swap> {
+        if (door.objectType != ObjectType.STRAIGHT_WALL) {
+            return emptyList()
+        }
+        val swaps = arrayListOf(doubleSwap(door, type, opening))
+
+        // The partner stands on the opposite side of the clicked leaf. Which side that is depends on the state.
+        val side = type.side!!
+        val away = if (opening) {
+            val offset = closeOffset(door.direction, false)
+            if (side == DoorSide.LEFT) offset else Pair(-offset.first, -offset.second)
+        } else {
+            val offset = openOffset(door.direction, false)
+            Pair(-offset.first, -offset.second)
+        }
+        val partner = world.objects.findAll(door.position.translate(away.first, away.second))
+            .filter { isPartner(it, side, opening) }
+            .findFirst().orElse(null)
+        if (partner != null) {
+            swaps += doubleSwap(partner, typeOf(partner.id)!!, opening)
+        }
+        return swaps
+    }
+
+    /**
+     * Computes the replacement for a single leaf of a double door.
+     */
+    private fun doubleSwap(leaf: GameObject, type: DoorType, opening: Boolean): Swap {
+        val left = type.side == DoorSide.LEFT
+        val offset = if (opening) {
+            openOffset(leaf.direction, false)
+        } else {
+            val offset = closeOffset(leaf.direction, false)
+            if (left) Pair(-offset.first, -offset.second) else offset
+        }
+        val turns = if (opening == left) 3 else 1
+        return Swap(leaf,
+                    if (opening) type.open else type.closed,
+                    leaf.position.translate(offset.first, offset.second),
+                    rotate(leaf.direction, turns))
+    }
+
+    /**
+     * Determines if [obj] is a leaf of the opposite [side] that is in the same state as the clicked leaf.
+     */
+    private fun isPartner(obj: GameObject, side: DoorSide, opening: Boolean): Boolean {
+        val type = typeOf(obj.id)
+        return obj.objectType == ObjectType.STRAIGHT_WALL &&
+                type != null &&
+                type.side != null &&
+                type.side != side &&
+                obj.id == (if (opening) type.closed else type.open)
+    }
+
+    /**
+     * The tile offset applied when a door opens. Diagonal doors use a different table than straight ones.
+     */
+    private fun openOffset(direction: ObjectDirection, diagonal: Boolean): Pair<Int, Int> {
+        return if (diagonal) {
+            when (direction) {
+                ObjectDirection.WEST -> Pair(0, 1)
+                ObjectDirection.NORTH -> Pair(1, 0)
+                ObjectDirection.EAST -> Pair(0, -1)
+                ObjectDirection.SOUTH -> Pair(-1, 0)
+            }
+        } else {
+            when (direction) {
+                ObjectDirection.WEST -> Pair(-1, 0)
+                ObjectDirection.NORTH -> Pair(0, 1)
+                ObjectDirection.EAST -> Pair(1, 0)
+                ObjectDirection.SOUTH -> Pair(0, -1)
+            }
+        }
+    }
+
+    /**
+     * The tile offset applied when a door closes. This is the inverse of [openOffset] after the direction has been
+     * rotated.
+     */
+    private fun closeOffset(direction: ObjectDirection, diagonal: Boolean): Pair<Int, Int> {
+        return if (diagonal) {
+            when (direction) {
+                ObjectDirection.WEST -> Pair(1, 0)
+                ObjectDirection.NORTH -> Pair(0, -1)
+                ObjectDirection.EAST -> Pair(-1, 0)
+                ObjectDirection.SOUTH -> Pair(0, 1)
+            }
+        } else {
+            when (direction) {
+                ObjectDirection.WEST -> Pair(0, 1)
+                ObjectDirection.NORTH -> Pair(1, 0)
+                ObjectDirection.EAST -> Pair(0, -1)
+                ObjectDirection.SOUTH -> Pair(-1, 0)
+            }
+        }
+    }
+
+    /**
+     * How far a player standing on the destination tile of an opening diagonal door is moved.
+     */
+    private fun openPlayerOffset(direction: ObjectDirection): Pair<Int, Int> {
         return when (direction) {
             ObjectDirection.WEST -> Pair(-1, 0)
             ObjectDirection.NORTH -> Pair(0, 1)
@@ -102,15 +253,14 @@ object Doors {
     }
 
     /**
-     * The tile offset applied when a straight wall door closes. This is the inverse of [openOffset] after the
-     * direction has been rotated.
+     * How far a player standing on the destination tile of a closing diagonal door is moved.
      */
-    private fun closeOffset(direction: ObjectDirection): Pair<Int, Int> {
+    private fun closePlayerOffset(direction: ObjectDirection): Pair<Int, Int> {
         return when (direction) {
-            ObjectDirection.WEST -> Pair(0, 1)
-            ObjectDirection.NORTH -> Pair(1, 0)
-            ObjectDirection.EAST -> Pair(0, -1)
-            ObjectDirection.SOUTH -> Pair(-1, 0)
+            ObjectDirection.WEST -> Pair(1, 1)
+            ObjectDirection.NORTH -> Pair(1, -1)
+            ObjectDirection.EAST -> Pair(-1, -1)
+            ObjectDirection.SOUTH -> Pair(-1, 1)
         }
     }
 

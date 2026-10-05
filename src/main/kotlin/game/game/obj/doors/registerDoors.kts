@@ -14,7 +14,13 @@ import java.nio.file.Paths
  */
 val PATH = Paths.get("data", "game", "world", "doors.json")
 
-Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java))
+/**
+ * The filesystem path to the double door definition file.
+ */
+val DOUBLE_PATH = Paths.get("data", "game", "world", "double_doors.json")
+
+Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java),
+           GsonUtils.readAsType(DOUBLE_PATH, Array<DoorType>::class.java))
 
 Doors.all.forEach { type ->
     object1(type.closed) {
