@@ -190,16 +190,29 @@ class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
-        return bot.combat.checkMultiCombat(newFocus)
+        val allowed = bot.combat.checkMultiCombat(newFocus)
+        if (!allowed) {
+            bot.log("Rejected combat target id=${newFocus.id} at ${newFocus.position}: multi-combat check failed.")
+        }
+        return allowed
     }
+
+    override val targetSearchTimeout: Duration = 180.seconds
 
     override suspend fun interactionOption(target: Npc): Int? {
         eatFood()
-        val reachable = bot.navigator.findPath(bot.position,
-                                               target.position,
-                                               PlayerPathfinder(bot.world.collisionManager, bot.z),
-                                               true).await()?.peekLast()?.isWithinDistance(target.position, 2) == true
-        if (!reachable) {
+        val start = bot.position
+        val destination = target.position
+        val startedAt = System.nanoTime()
+        val path = bot.navigator.findPath(start,
+                                         destination,
+                                         PlayerPathfinder(bot.world.collisionManager, start.z),
+                                         true).await()
+        val endpoint = path?.peekLast()
+        if (endpoint?.isWithinDistance(target.position, 2) != true) {
+            bot.log("Rejected combat target id=${target.id}: start=$start, " +
+                    "requested=$destination, current=${target.position}, endpoint=$endpoint, " +
+                    "pathSize=${path?.size}, elapsedMs=${(System.nanoTime() - startedAt) / 1_000_000}.")
             return null
         }
         bot.combat.attack(target)
