@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `price_history` (
 
 -- Dumping structure for table luna.prices
 CREATE TABLE IF NOT EXISTS `prices` (
-  `id` int unsigned NOT NULL,
+  `item_id` int unsigned NOT NULL,
   `price` double unsigned NOT NULL,
   `last_price` double unsigned NOT NULL,
   `samples` bigint unsigned NOT NULL,
