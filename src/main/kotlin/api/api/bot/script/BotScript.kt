@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.GameCoroutineScope
+import api.predef.*
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
@@ -151,8 +152,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                             break
                         }
                     }
+                } catch (e: Exception) {
+                    logger.catching(e)
+                    stop()
                 } finally {
-                    val normalExit = isActive
+                    val normalExit = isActive && !terminated
                     finish()
                     if (normalExit) {
                         completed()
