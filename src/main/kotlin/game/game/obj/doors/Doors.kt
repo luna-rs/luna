@@ -21,6 +21,11 @@ object Doors {
         private set
 
     /**
+     * The [DoorType]s that are leaves of a gate rather than a double door.
+     */
+    private val gateTypes: MutableSet<DoorType> = Collections.newSetFromMap(IdentityHashMap())
+
+    /**
      * Doors that are currently away from their home state, mapped to the object they replaced. A door only reverts
      * on its own if it is still in this map when its timer expires.
      */
@@ -41,17 +46,20 @@ object Doors {
      *
      * @param singles The single door pairs to load.
      * @param doubles The double door leaves to load.
+     * @param gates The gate leaves to load. The [DoorSide.LEFT] leaf of a gate is its hinge.
      */
-    fun load(singles: Array<DoorType>, doubles: Array<DoorType>) {
+    fun load(singles: Array<DoorType>, doubles: Array<DoorType>, gates: Array<DoorType>) {
         byId.clear()
-        for (type in singles + doubles) {
-            require((type.side != null) == (type in doubles)) {
-                "Door ${type.closed} must ${if (type in doubles) "" else "not "}have a side."
+        gateTypes.clear()
+        gateTypes.addAll(gates)
+        for (type in singles + doubles + gates) {
+            require((type.side != null) == (type !in singles)) {
+                "Door ${type.closed} must ${if (type in singles) "not " else ""}have a side."
             }
             require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
             require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
         }
-        all = (singles + doubles).toList()
+        all = (singles + doubles + gates).toList()
     }
 
     /**
@@ -75,7 +83,11 @@ object Doors {
     fun toggle(world: World, plr: Player, door: GameObject) {
         val type = typeOf(door.id) ?: return
         val opening = door.id == type.closed
-        val swaps = if (type.side == null) singleSwaps(door, opening) else doubleSwaps(world, door, type, opening)
+        val swaps = when {
+            type.side == null -> singleSwaps(door, opening)
+            type in gateTypes -> gateSwaps(world, door, type, opening)
+            else -> doubleSwaps(world, door, type, opening)
+        }
         if (swaps.isEmpty()) {
             return
         }
@@ -165,6 +177,42 @@ object Doors {
             swaps += doubleSwap(partner, typeOf(partner.id)!!, opening)
         }
         return swaps
+    }
+
+    /**
+     * Computes the replacements for both leaves of a gate.
+     *
+     * A gate is two leaves that stand in a line. The hinge leaf ([DoorSide.LEFT]) swings a quarter turn around its
+     * own corner exactly like a leaf of a double door, and the other leaf follows it so that the whole fence stays in
+     * one line. The leaves stand in the same relative position in both states, so the partner is found the same way
+     * when opening and closing.
+     *
+     * @return The replacements with the clicked leaf first, or an empty list if [door] is not a straight wall or its
+     * partner leaf cannot be found.
+     */
+    private fun gateSwaps(world: World, door: GameObject, type: DoorType, opening: Boolean): List<Swap> {
+        if (door.objectType != ObjectType.STRAIGHT_WALL) {
+            return emptyList()
+        }
+        val side = type.side!!
+        val toRight = closeOffset(door.direction, false)
+        val away = if (side == DoorSide.LEFT) toRight else Pair(-toRight.first, -toRight.second)
+        val partner = world.objects.findAll(door.position.translate(away.first, away.second))
+            .filter { isPartner(it, side, opening) }
+            .findFirst().orElse(null) ?: return emptyList()
+
+        val hinge = if (side == DoorSide.LEFT) door else partner
+        val far = if (side == DoorSide.LEFT) partner else door
+        val hingeSwap = doubleSwap(hinge, typeOf(hinge.id)!!, opening)
+
+        // The far leaf lines up with the hinge leaf: one tile further along the swing when opening, and back on the
+        // right side of the hinge leaf when closing.
+        val offset = if (opening) openOffset(hinge.direction, false) else closeOffset(hingeSwap.direction, false)
+        val farSwap = Swap(far,
+                           if (opening) typeOf(far.id)!!.open else typeOf(far.id)!!.closed,
+                           hingeSwap.position.translate(offset.first, offset.second),
+                           hingeSwap.direction)
+        return if (door === hinge) listOf(hingeSwap, farSwap) else listOf(farSwap, hingeSwap)
     }
 
     /**
