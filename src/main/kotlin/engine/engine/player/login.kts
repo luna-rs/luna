@@ -4,6 +4,7 @@ import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.predef.*
+import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
 import engine.player.punishment.PunishmentHandler
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
