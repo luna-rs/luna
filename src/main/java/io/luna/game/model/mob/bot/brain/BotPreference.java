@@ -535,48 +535,43 @@ public final class BotPreference {
     }
 
     /**
-     * Reduces this bot's desired amount for an item.
+     * Raises the desired total-ownership target for a wanted item.
      * <p>
-     * Definitions with a permanent minimum are not modified. Noted item ids are normalized to their unnoted form before
-     * lookup.
+     * Existing metadata such as minimum amount, associated skill, and maximum level is preserved. The target is never
+     * lowered by this method.
      *
      * @param id The item id.
-     * @param amount The amount to subtract from the current target.
-     * @return {@code true} if the wanted-item definition was adjusted, otherwise {@code false}.
+     * @param target The new desired ownership target.
      */
-    public boolean removeWantedItem(int id, int amount) {
+    public void raiseWantedItemTarget(int id, int target) {
         int unnotedId = toUnnotedId(id);
-        WantedItemDefinition def = wantedItems.get(unnotedId);
-        if (def != null) {
-            if (def.min() != -1) {
-                return false;
-            }
+        WantedItemDefinition current = wantedItems.get(unnotedId);
 
-            int target = def.target() - amount;
-            if (target > 0) {
-                WantedItemDefinition newDef = new WantedItemDefinition(
-                        def.id(),
-                        def.min(),
-                        target,
-                        def.skill(),
-                        def.maxLevel());
-
-                wantedItems.put(unnotedId, newDef);
-            }
-            return true;
+        if (current == null) {
+            // No existing definition means this is a new temporary wanted item.
+            addWantedItem(unnotedId, target);
+            return;
         }
-        return false;
+
+        if (target > current.target()) {
+            // Preserve the persistent/temporary status and every other piece of wanted-item metadata.
+            wantedItems.put(unnotedId, new WantedItemDefinition(
+                    current.id(),
+                    current.min(),
+                    target,
+                    current.skill(),
+                    current.maxLevel()));
+        }
     }
 
     /**
-     * Rebalances this bot's wanted items against its current state.
-     * <p>
-     * This should be invoked after login once the bot's inventory, equipment, bank, skills, and other persisted state have
-     * been fully loaded. The final implementation should reconcile existing wanted-item definitions with items the bot
-     * already owns and update any definitions whose requirements are no longer applicable.
+     * Completely removes a wanted-item definition.
+     *
+     * @param id The item id.
+     * @return {@code true} if a wanted-item definition was removed.
      */
-    public void rebalanceWantedItems() {
-        // TODO Reconcile wanted items with the bot's current ownership and requirements.
+    public boolean removeWantedItem(int id) {
+        return wantedItems.remove(toUnnotedId(id)) != null;
     }
 
     /**

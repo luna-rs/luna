@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
+import engine.bot.coordinator.MerchantingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
@@ -46,7 +47,7 @@ public enum BotActivity {
     /**
      * Economic interactions, such as trading with other bots or players.
      */
-    MERCHANTING(new SkillingCoordinator(true)),
+    MERCHANTING(MerchantingCoordinator.INSTANCE),
 
     /**
      * Generic activities like chatting, community events, buying items from stores, etc.

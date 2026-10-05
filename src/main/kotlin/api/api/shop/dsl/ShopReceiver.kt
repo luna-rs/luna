@@ -14,7 +14,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
  * @author lare96
  */
 class ShopReceiver(val name: String) {
-//todo docs
+    //todo docs
     /**
      * The buy policy.
      */
@@ -39,6 +39,13 @@ class ShopReceiver(val name: String) {
      * The next index to add an item to.
      */
     private var index = 0
+
+    /**
+     * Whether this shop should be considered a merchant-only shop by bot shopping systems.
+     *
+     * This does not grant access by itself. [botAccess] still decides whether an individual bot may open the shop.
+     */
+    private var merchantOnly = false
 
     /**
      * The added items.
@@ -73,15 +80,13 @@ class ShopReceiver(val name: String) {
      * Registers this shop. Is invoked implicitly once the shop closure exits.
      */
     fun register() {
-
-        // Create and initialize shop.
-        val shop = Shop(world, name, restock, buy, currency, botAccess)
+        // The shop registry remains the single source of truth. Bot shopping discovers shops from ShopManager later.
+        val shop = Shop(world, name, restock, buy, currency, botAccess, merchantOnly)
         shop.init(items)
 
-        // Add event listeners from the OpenReceiver.
+        // Normal players can still discover this shop through its configured NPC, object, or button listeners.
         openReceiver.addListeners(shop)
 
-        // Register shop!
         world.shops.register(shop)
     }
 
@@ -92,10 +97,31 @@ class ShopReceiver(val name: String) {
         items += ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
     }
 
-    fun merchantsAccessOnly(strict: Boolean = false, additionalFilter: Bot.() -> Boolean = { true }) {
+    /**
+     * Restricts this shop to bots interested in merchanting.
+     *
+     * Non-strict shops require the bot to like merchanting. Strict shops require the bot to love merchanting.
+     * [additionalFilter] may impose extra requirements such as combat level.
+     *
+     * The merchant-only flag is only used to categorize this shop during speculative bot shopping. [botAccess] remains
+     * authoritative, meaning a bot still has to satisfy every condition configured here before opening the shop.
+     */
+    fun merchantsAccessOnly(
+        strict: Boolean = false,
+        additionalFilter: Bot.() -> Boolean = { true }
+    ) {
+        // Mark this shop as part of the merchant shopping pool.
+        merchantOnly = true
+
+        // Access itself is always decided by the predicate, including strictness and any extra caller-supplied checks.
         botAccess = {
-            (if (strict) preferences.lovesActivity(BotActivity.MERCHANTING)
-            else preferences.likesActivity(BotActivity.MERCHANTING)) && additionalFilter(this)
+            val merchantAccess = if (strict) {
+                preferences.lovesActivity(BotActivity.MERCHANTING)
+            } else {
+                preferences.likesActivity(BotActivity.MERCHANTING)
+            }
+
+            merchantAccess && additionalFilter(this)
         }
     }
 }
