@@ -89,18 +89,16 @@ public final class ChunkRepository implements Iterable<Entity> {
     private final Set<GameObject> removedStaticObjects = new HashSet<>();
 
     /**
-     * The live collision matrices for this chunk, one per height level.
+     * The live collision matrices for this chunk, one per height level. Fully blocked if {@link #untraversable}.
      */
-    private final CollisionMatrix[] matrices = CollisionMatrix.createMatrices(
-            Position.HEIGHT_LEVELS.upperEndpoint(), SIZE, SIZE);
+    private final CollisionMatrix[] matrices;
 
     /**
      * Volatile snapshot of {@link #matrices} for safe reads.
      * <p>
      * Updated by {@link #snapshotCollisionMap()}.
      */
-    private volatile CollisionMatrix[] snapshot = CollisionMatrix.createMatrices(
-            Position.HEIGHT_LEVELS.upperEndpoint(), SIZE, SIZE);
+    private volatile CollisionMatrix[] snapshot;
 
     /**
      * True if this chunk has no map data in the cache index table and should be treated as entirely untraversable.
@@ -128,6 +126,10 @@ public final class ChunkRepository implements Iterable<Entity> {
                 .getMapIndexTable()
                 .getIndexTable()
                 .containsKey(chunk.getAbsPosition().getRegion());
+
+        // Chunks with no map data have every collision flag set, so queries against them always read as blocked.
+        matrices = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS.upperEndpoint(), SIZE, SIZE, untraversable);
+        snapshot = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS.upperEndpoint(), SIZE, SIZE, untraversable);
     }
 
     @Override
@@ -373,6 +375,13 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public CollisionMatrix[] getSnapshot() {
         return snapshot;
+    }
+
+    /**
+     * @return {@code true} if this chunk has no map data in the cache and is entirely blocked.
+     */
+    public boolean isUntraversable() {
+        return untraversable;
     }
 
     /**

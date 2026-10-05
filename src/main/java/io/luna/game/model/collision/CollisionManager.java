@@ -1,7 +1,6 @@
 package io.luna.game.model.collision;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -114,13 +113,16 @@ public final class CollisionManager {
      * <p>
      * This method optionally clears existing matrices, imports blocked and bridged tile data from the cache, registers
      * static map objects into the world, applies global blocked tiles as collision, and then snapshots the final
-     * repository state.
+     * repository state. Chunks that have no map data stay fully blocked when rebuilding.
      *
      * @param rebuilding {@code true} to reset existing matrices before rebuilding, otherwise {@code false}.
      */
     public void build(boolean rebuilding) {
         if (rebuilding) {
             for (ChunkRepository repository : chunks.getAll()) {
+                if (repository.isUntraversable()) {
+                    continue;
+                }
                 for (CollisionMatrix matrix : repository.getMatrices()) {
                     matrix.reset();
                 }
@@ -135,7 +137,8 @@ public final class CollisionManager {
                 Region region = entry.getKey().getRegion();
                 if (tile.isBlocked()) {
                     block(tile.getAbsPosition(region));
-                } else if (tile.isBridge()) {
+                }
+                if (tile.isBridge()) {
                     markBridged(tile.getAbsPosition(region));
                 }
             });
@@ -235,8 +238,8 @@ public final class CollisionManager {
             int localY = position.getY() % Chunk.SIZE;
 
             CollisionMatrix matrix = prev.getMatrices()[height];
-            ImmutableList<CollisionFlag> mobs = CollisionFlag.MOBS;
-            ImmutableList<CollisionFlag> projectiles = CollisionFlag.PROJECTILES;
+            int[] mobs = CollisionFlag.WALLS;
+            int[] projectiles = CollisionFlag.WALL_PROJ_BLOCKERS;
 
             for (DirectionFlag flag : entry.getValue()) {
                 Direction direction = flag.getDirection();
@@ -246,9 +249,9 @@ public final class CollisionManager {
 
                 int orientation = direction.getId();
                 if (flag.isImpenetrable()) {
-                    flag(type, matrix, localX, localY, projectiles.get(orientation));
+                    flag(type, matrix, localX, localY, projectiles[orientation]);
                 }
-                flag(type, matrix, localX, localY, mobs.get(orientation));
+                flag(type, matrix, localX, localY, mobs[orientation]);
             }
             snapshots.add(prev);
         }
@@ -409,7 +412,7 @@ public final class CollisionManager {
                       CollisionMatrix matrix,
                       int localX,
                       int localY,
-                      CollisionFlag flag) {
+                      int flag) {
 
         if (type == CollisionUpdateType.ADDING) {
             matrix.flag(localX, localY, flag);

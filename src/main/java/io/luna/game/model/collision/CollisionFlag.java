@@ -1,166 +1,236 @@
 package io.luna.game.model.collision;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 
 /**
- * A type of flag in a {@link CollisionMatrix}.
+ * The collision flags stored in a {@link CollisionMatrix}, one 32-bit mask per tile.
+ * <p>
+ * The layout is identical to the {@code CollisionFlag} object used by rsmod's routefinder, so that its pathfinder can read
+ * Luna's collision data directly. Wall flags describe which sides of a tile are walled off, {@link #LOC} marks a tile
+ * occupied by a solid object, and the {@code *_PROJ_BLOCKER} flags are the equivalents that also stop projectiles.
+ * </p>
+ * <p>
+ * A wall flag set on a tile blocks entering that tile from the flag's direction. For example, {@link #WALL_SOUTH} on a tile
+ * blocks a mob walking north into it from the tile below.
+ * </p>
  *
  * @author Major
+ * @author hydrozoa
  */
-public enum CollisionFlag {
+public final class CollisionFlag {
 
     /**
-     * The walk north west flag.
+     * The wall north west flag.
      */
-    MOB_NORTH_WEST(1),
+    public static final int WALL_NORTH_WEST = 0x1;
 
     /**
-     * The walk north flag.
+     * The wall north flag.
      */
-    MOB_NORTH(2),
+    public static final int WALL_NORTH = 0x2;
 
     /**
-     * The walk north east flag.
+     * The wall north east flag.
      */
-    MOB_NORTH_EAST(3),
+    public static final int WALL_NORTH_EAST = 0x4;
 
     /**
-     * The walk east flag.
+     * The wall east flag.
      */
-    MOB_EAST(4),
+    public static final int WALL_EAST = 0x8;
 
     /**
-     * The walk south east flag.
+     * The wall south east flag.
      */
-    MOB_SOUTH_EAST(5),
+    public static final int WALL_SOUTH_EAST = 0x10;
 
     /**
-     * The walk south flag.
+     * The wall south flag.
      */
-    MOB_SOUTH(6),
+    public static final int WALL_SOUTH = 0x20;
 
     /**
-     * The walk south west flag.
+     * The wall south west flag.
      */
-    MOB_SOUTH_WEST(7),
+    public static final int WALL_SOUTH_WEST = 0x40;
 
     /**
-     * The walk west flag.
+     * The wall west flag.
      */
-    MOB_WEST(8),
+    public static final int WALL_WEST = 0x80;
 
     /**
-     * The projectile north west flag.
+     * The flag for a tile occupied by a solid object.
      */
-    PROJECTILE_NORTH_WEST(9),
+    public static final int LOC = 0x100;
 
     /**
-     * The projectile north flag.
+     * The wall north west flag, for walls that also block projectiles.
      */
-    PROJECTILE_NORTH(10),
+    public static final int WALL_NORTH_WEST_PROJ_BLOCKER = 0x200;
 
     /**
-     * The projectile north east flag.
+     * The wall north flag, for walls that also block projectiles.
      */
-    PROJECTILE_NORTH_EAST(11),
+    public static final int WALL_NORTH_PROJ_BLOCKER = 0x400;
 
     /**
-     * The projectile east flag.
+     * The wall north east flag, for walls that also block projectiles.
      */
-    PROJECTILE_EAST(12),
+    public static final int WALL_NORTH_EAST_PROJ_BLOCKER = 0x800;
 
     /**
-     * The projectile south east flag.
+     * The wall east flag, for walls that also block projectiles.
      */
-    PROJECTILE_SOUTH_EAST(13),
+    public static final int WALL_EAST_PROJ_BLOCKER = 0x1000;
 
     /**
-     * The projectile south flag.
+     * The wall south east flag, for walls that also block projectiles.
      */
-    PROJECTILE_SOUTH(14),
+    public static final int WALL_SOUTH_EAST_PROJ_BLOCKER = 0x2000;
 
     /**
-     * The projectile south west flag.
+     * The wall south flag, for walls that also block projectiles.
      */
-    PROJECTILE_SOUTH_WEST(15),
+    public static final int WALL_SOUTH_PROJ_BLOCKER = 0x4000;
 
     /**
-     * The projectile west flag.
+     * The wall south west flag, for walls that also block projectiles.
      */
-    PROJECTILE_WEST(16);
+    public static final int WALL_SOUTH_WEST_PROJ_BLOCKER = 0x8000;
 
     /**
-     * Returns an array of CollisionFlags that indicate if the specified {@link EntityType} can be positioned on a tile.
+     * The wall west flag, for walls that also block projectiles.
+     */
+    public static final int WALL_WEST_PROJ_BLOCKER = 0x10000;
+
+    /**
+     * The flag for a tile occupied by a solid object that also blocks projectiles.
+     */
+    public static final int LOC_PROJ_BLOCKER = 0x20000;
+
+    /**
+     * The flag for a tile occupied by a solid ground decoration.
+     */
+    public static final int GROUND_DECOR = 0x40000;
+
+    /**
+     * The flag for a tile occupied by an NPC.
+     */
+    public static final int BLOCK_NPCS = 0x80000;
+
+    /**
+     * The flag for a tile occupied by a player.
+     */
+    public static final int BLOCK_PLAYERS = 0x100000;
+
+    /**
+     * The flag for a tile that is blocked terrain (solid ground or water).
+     */
+    public static final int BLOCK_WALK = 0x200000;
+
+    /**
+     * The wall north west flag, for objects that break route finding.
+     */
+    public static final int WALL_NORTH_WEST_ROUTE_BLOCKER = 0x400000;
+
+    /**
+     * The wall north flag, for objects that break route finding.
+     */
+    public static final int WALL_NORTH_ROUTE_BLOCKER = 0x800000;
+
+    /**
+     * The wall north east flag, for objects that break route finding.
+     */
+    public static final int WALL_NORTH_EAST_ROUTE_BLOCKER = 0x1000000;
+
+    /**
+     * The wall east flag, for objects that break route finding.
+     */
+    public static final int WALL_EAST_ROUTE_BLOCKER = 0x2000000;
+
+    /**
+     * The wall south east flag, for objects that break route finding.
+     */
+    public static final int WALL_SOUTH_EAST_ROUTE_BLOCKER = 0x4000000;
+
+    /**
+     * The wall south flag, for objects that break route finding.
+     */
+    public static final int WALL_SOUTH_ROUTE_BLOCKER = 0x8000000;
+
+    /**
+     * The wall south west flag, for objects that break route finding.
+     */
+    public static final int WALL_SOUTH_WEST_ROUTE_BLOCKER = 0x10000000;
+
+    /**
+     * The wall west flag, for objects that break route finding.
+     */
+    public static final int WALL_WEST_ROUTE_BLOCKER = 0x20000000;
+
+    /**
+     * The flag for a tile occupied by a solid object that breaks route finding.
+     */
+    public static final int LOC_ROUTE_BLOCKER = 0x40000000;
+
+    /**
+     * The flag for a tile that is covered by a roof, which is how indoor tiles are told apart from outdoor ones.
+     */
+    public static final int ROOF = 0x80000000;
+
+    /**
+     * The wall flags indexed by {@link io.luna.game.model.Direction#getId()}, in the order north west, north, north
+     * east, west, east, south west, south, south east. Must not be modified.
+     */
+    static final int[] WALLS = {
+            WALL_NORTH_WEST,
+            WALL_NORTH,
+            WALL_NORTH_EAST,
+            WALL_WEST,
+            WALL_EAST,
+            WALL_SOUTH_WEST,
+            WALL_SOUTH,
+            WALL_SOUTH_EAST
+    };
+
+    /**
+     * The projectile-blocking wall flags indexed by {@link io.luna.game.model.Direction#getId()}, in the same order as
+     * {@link #WALLS}. Must not be modified.
+     */
+    static final int[] WALL_PROJ_BLOCKERS = {
+            WALL_NORTH_WEST_PROJ_BLOCKER,
+            WALL_NORTH_PROJ_BLOCKER,
+            WALL_NORTH_EAST_PROJ_BLOCKER,
+            WALL_WEST_PROJ_BLOCKER,
+            WALL_EAST_PROJ_BLOCKER,
+            WALL_SOUTH_WEST_PROJ_BLOCKER,
+            WALL_SOUTH_PROJ_BLOCKER,
+            WALL_SOUTH_EAST_PROJ_BLOCKER
+    };
+
+    /**
+     * Every flag that stops projectiles.
+     */
+    static final int PROJECTILE_BLOCKERS = WALL_NORTH_WEST_PROJ_BLOCKER | WALL_NORTH_PROJ_BLOCKER |
+            WALL_NORTH_EAST_PROJ_BLOCKER | WALL_EAST_PROJ_BLOCKER | WALL_SOUTH_EAST_PROJ_BLOCKER |
+            WALL_SOUTH_PROJ_BLOCKER | WALL_SOUTH_WEST_PROJ_BLOCKER | WALL_WEST_PROJ_BLOCKER | LOC_PROJ_BLOCKER;
+
+    /**
+     * Returns the directional wall flags that decide whether the specified {@link EntityType} can enter a tile.
+     * <p>
+     * Projectiles are stopped by the projectile-blocking flags; everything else is stopped by the plain wall flags.
      *
-     * @param type The EntityType.
-     * @return The array of CollisionFlags.
+     * @param type The entity type.
+     * @return The flags, indexed by {@link io.luna.game.model.Direction#getId()}. Must not be modified.
      */
-    public static ImmutableList<CollisionFlag> forType(EntityType type) {
-        return type == EntityType.PROJECTILE ? PROJECTILES : MOBS;
+    static int[] forType(EntityType type) {
+        return type == EntityType.PROJECTILE ? WALL_PROJ_BLOCKERS : WALLS;
     }
 
     /**
-     * Returns an array of CollisionFlags that indicate if a Mob can be positioned on a tile.
-     *
-     * @return The array of CollisionFlags.
+     * Not instantiable.
      */
-    public static final ImmutableList<CollisionFlag> MOBS = ImmutableList.of(
-            MOB_NORTH_WEST,
-            MOB_NORTH,
-            MOB_NORTH_EAST,
-            MOB_WEST,
-            MOB_EAST,
-            MOB_SOUTH_WEST,
-            MOB_SOUTH,
-            MOB_SOUTH_EAST
-    );
-
-    /**
-     * Returns an array of CollisionFlags that indicate if a Projectile can be positioned on a tile.
-     *
-     * @return The array of CollisionFlags.
-     */
-    public static final ImmutableList<CollisionFlag> PROJECTILES = ImmutableList.of(
-            PROJECTILE_NORTH_WEST,
-            PROJECTILE_NORTH,
-            PROJECTILE_NORTH_EAST,
-            PROJECTILE_WEST,
-            PROJECTILE_EAST,
-            PROJECTILE_SOUTH_WEST,
-            PROJECTILE_SOUTH,
-            PROJECTILE_SOUTH_EAST
-    );
-
-    /**
-     * The index of the bit this flag is stored in.
-     */
-    private final int bit;
-
-    /**
-     * Creates the CollisionFlag.
-     *
-     * @param bit The index of the bit this flag is stored in.
-     */
-    CollisionFlag(int bit) {
-        this.bit = bit;
-    }
-
-    /**
-     * Gets this CollisionFlag, as a {@code short}.
-     *
-     * @return The value, as a {@code short}.
-     */
-    public short asShort() {
-        return (short) (1 << bit);
-    }
-
-    /**
-     * Gets the index of the bit this flag is stored in.
-     *
-     * @return The index of the bit.
-     */
-    public int getBit() {
-        return bit;
+    private CollisionFlag() {
     }
 }
