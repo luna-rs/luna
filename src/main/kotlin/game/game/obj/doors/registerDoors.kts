@@ -12,22 +12,22 @@ import java.nio.file.Paths
  * Read synchronously while this script is evaluated, because a click handler has to be registered for every door id
  * and the ids come from this file.
  */
-val PATH = Paths.get("data", "game", "world", "doors.json")
+val PATH = Paths.get("data", "game", "world", "doors", "doors.json")
 
 /**
  * The filesystem path to the double door definition file.
  */
-val DOUBLE_PATH = Paths.get("data", "game", "world", "double_doors.json")
+val DOUBLE_PATH = Paths.get("data", "game", "world", "doors", "double_doors.json")
 
 /**
  * The filesystem path to the gate definition file.
  */
-val GATE_PATH = Paths.get("data", "game", "world", "gates.json")
+val GATE_PATH = Paths.get("data", "game", "world", "doors", "gates.json")
 
 /**
  * The filesystem path to the curtain definition file.
  */
-val CURTAIN_PATH = Paths.get("data", "game", "world", "curtains.json")
+val CURTAIN_PATH = Paths.get("data", "game", "world", "doors", "curtains.json")
 
 Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java),
            GsonUtils.readAsType(DOUBLE_PATH, Array<DoorType>::class.java),

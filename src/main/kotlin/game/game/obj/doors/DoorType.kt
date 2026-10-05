@@ -3,8 +3,8 @@ package game.obj.doors
 import game.player.Sound
 
 /**
- * A single closed/open door pair, as defined in `data/game/world/doors.json`, or one leaf of a double door, as defined
- * in `data/game/world/double_doors.json`.
+ * A single closed/open door pair, as defined in `data/game/world/doors/doors.json`, or one leaf of a double door, as
+ * defined in `data/game/world/doors/double_doors.json`.
  *
  * Fields that are missing from the JSON are deserialized as `null`, so optional values are exposed through the
  * `*OrDefault` properties rather than constructor defaults (Gson does not run Kotlin default arguments).
