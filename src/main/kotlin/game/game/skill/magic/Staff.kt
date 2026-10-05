@@ -11,7 +11,7 @@ enum class Staff(val ids: Set<Int>, val represents: Set<Rune>) {
      * Staves that provide unlimited water runes.
      */
     WATER(ids = setOf(1383, 1395, 1403),
-        represents = setOf(Rune.WATER)),
+          represents = setOf(Rune.WATER)),
 
     /**
      * Staves that provide unlimited air runes.
@@ -23,25 +23,25 @@ enum class Staff(val ids: Set<Int>, val represents: Set<Rune>) {
      * Staves that provide unlimited earth runes.
      */
     EARTH(ids = setOf(1385, 1399, 1407),
-        represents = setOf(Rune.EARTH)),
+          represents = setOf(Rune.EARTH)),
 
     /**
      * Staves that provide unlimited fire runes.
      */
     FIRE(ids = setOf(1387, 1401, 1393),
-        represents = setOf(Rune.FIRE)),
+         represents = setOf(Rune.FIRE)),
 
     /**
      * Staves that provide unlimited fire and earth runes.
      */
     LAVA(ids = setOf(3053, 3054),
-        represents = setOf(Rune.FIRE, Rune.EARTH)),
+         represents = setOf(Rune.FIRE, Rune.EARTH)),
 
     /**
-     * Staves that provide unlimited fire and earth runes.
+     * Staves that provide unlimited water and earth runes.
      */
-    MUD(ids = setOf(3053, 3054),
-         represents = setOf(Rune.WATER, Rune.EARTH));
+    MUD(ids = setOf(6562, 6563),
+        represents = setOf(Rune.WATER, Rune.EARTH));
 
     companion object {
 
