@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * A coroutine-driven base class for bot behavior scripts.
@@ -152,6 +153,9 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                             break
                         }
                     }
+                } catch (e: CancellationException) {
+                    stop()
+                    throw e
                 } catch (e: Exception) {
                     logger.catching(e)
                     stop()
