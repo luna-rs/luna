@@ -12,6 +12,8 @@ import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
 import game.bot.scripts.skills.CutTreeBotScript
 import game.bot.scripts.skills.CutTreeBotScript.Companion.CutTreeData
+import game.bot.scripts.skills.FiremakingBotScript
+import game.bot.scripts.skills.FiremakingBotScript.Companion.FiremakingData
 import game.bot.scripts.skills.FishBotScript
 import game.bot.scripts.skills.FishBotScript.Companion.FishData
 import game.bot.scripts.skills.MineBotScript
@@ -52,4 +54,5 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
+    scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
 }
