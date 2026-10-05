@@ -151,12 +151,12 @@ object BotReactions {
     /**
      * Registers the reaction hook for witnessing another player's skill advancement.
      *
-     * When a skill change event is observed, happy and social bots may react with an [ReactionSpeech.OTHER_LEVEL_UP]
+     * When an actual level increase is observed, happy and social bots may react with an [ReactionSpeech.OTHER_LEVEL_UP]
      * line. Social bots also have a chance to refer to the player by a shortened name, stripping trailing digits for
      * more natural player-like speech.
      */
     fun reactToOtherLevelUp() {
-        inject(SkillChangeEvent::class).filter { true }.then {
+        inject(SkillChangeEvent::class).filter { msg.isLevelUp }.then {
             if (rand(bot.personality.social) && bot.emotions.isFeeling(EmotionType.HAPPY)) {
                 val delay = rand(4, 12)
                 bot.lastWitnessedSkillAdvance =
