@@ -49,8 +49,7 @@ abstract class InventoryBotScript(
             return false
         }
         if (!handler.hasAll(withdraw)) {
-            bot.log("Bot does not have required withdraw items. Adding to wanted list.")
-            withdraw.forEach { bot.preferences.addWantedItem(it.id, 750) }
+            bot.log("Bot does not have required withdraw items. Ending script.")
             return false
         }
         return true
