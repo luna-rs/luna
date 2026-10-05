@@ -43,50 +43,6 @@ import static io.luna.util.RandomUtils.roll;
  */
 public final class BotPreference {
 
-    // todo before trading can be done, wanted item system needs to be changed to IDs, amounts are resolved later when
-    //  needed based on combat level, personality, etc.
-// todo docs and cleanp
-    /*
-    fun resolveOptimalFood(): Set<Food> {
-        val hitpointsLevel = bot.hitpoints.staticLevel
-        return when {
-            hitpointsLevel < 10 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 0..3 }
-            hitpointsLevel < 20 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 0..5 }
-            hitpointsLevel < 40 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 3..8 }
-            hitpointsLevel < 60 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 9..14 }
-            hitpointsLevel < 80 -> Food.ID_TO_FOOD.values.filterToSet { it.heal in 12..17 }
-            else -> setOf(Food.SHARK, Food.MANTA_RAY, Food.KARAMBWAN, Food.TUNA_POTATO, Food.SEA_TURTLE)
-        }
-    }
-
-    fun resolveOptimalWeakFood(): Food {
-        val hitpointsLevel = bot.hitpoints.staticLevel
-        return when {
-            hitpointsLevel < 10 -> RandomUtils.randomFrom(Food.MEAT, Food.CHICKEN)
-            hitpointsLevel < 20 -> Food.SHRIMP
-            hitpointsLevel < 40 -> RandomUtils.randomFrom(Food.CAKE, Food.CHOCOLATE_CAKE)
-            hitpointsLevel < 60 -> Food.TROUT
-            hitpointsLevel < 80 -> RandomUtils.randomFrom(Food.TROUT, Food.TUNA)
-            hitpointsLevel < 90 -> Food.LOBSTER
-            else -> Food.SWORDFISH
-        }
-    }
-
-    fun resolveOptimalFoodAmount(): Int {
-        val base = 500
-        return (base *
-                (if (bot.emotions.isFeeling(EmotionType.SCARED)) {
-                    rand(1.25, 1.75)
-                } else if (bot.personality.isConfident) {
-                    rand(0.25, 0.75)
-                } else {
-                    rand(0.75, 1.25)
-                })).toInt()
-    }
-     */
-
-    // todo redo docs, etc.
-
     /**
      * Builder for constructing {@link BotPreference} instances.
      * <p>
@@ -197,7 +153,7 @@ public final class BotPreference {
         public Builder randomizeSmart() {
             double variance = ThreadLocalRandom.current().nextDouble(0.05, 0.25);
             Supplier<Double> varianceSupplier = () -> ThreadLocalRandom.current().nextDouble(-variance, variance);
-            PersonalityTemplate template = personalityManager.getTemplate(RandomUtils.random(PersonalityTemplateType.ALL));
+            PersonalityTemplate template = personalityManager.getTemplate(RandomUtils.random(PersonalityTemplateType.ALL_EXCEPT_NONE));
             for (var entry : template.activities.entrySet()) {
                 activities.put(entry.getKey(), entry.getValue() + varianceSupplier.get());
             }
@@ -393,8 +349,11 @@ public final class BotPreference {
     private final Set<Integer> skills;
 
     /**
-     * The immutable set of preferred item IDs.
-     *///todo =redo docs
+     * The items this bot currently wants to obtain, keyed by unnoted item id.
+     * <p>
+     * Each definition describes the desired amount and any skill or level restrictions associated with the item.
+     * Wanted items may be added or adjusted at runtime as the bot's needs change.
+     */
     private final Map<Integer, WantedItemDefinition> wantedItems;
 
     /**
@@ -529,65 +488,110 @@ public final class BotPreference {
     }
 
     /**
-     * Adds an item to this bot's wanted item preferences.
+     * Adds or replaces an item in this bot's wanted-item list.
      * <p>
-     * Wanted items represent items the bot personally values and may seek while idling, trading, buying, selling, looting,
-     * or making future economy decisions.
+     * Noted item ids are normalized to their unnoted form so both versions of an item share the same definition.
      *
-     * @param id The item id to add.
-     */// todo docs
+     * @param id The item id.
+     * @param target The desired amount.
+     * @param skill The associated skill id, or {@code -1} if unrestricted.
+     * @param maxLevel The maximum skill level this definition applies to, or {@code -1} if unrestricted.
+     */
     public void addWantedItem(int id, int target, int skill, int maxLevel) {
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, skill, maxLevel);
-        if (def.isNoted() && def.getUnnotedId().isPresent()) {
-            int newId = def.getUnnotedId().getAsInt();
-            wantedItems.put(newId, item.copy(newId));
-        } else {
-            wantedItems.put(item.id(), item);
-        }
-    }
-
-    public void addWantedItem(int id, int target) {
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        WantedItemDefinition item = new WantedItemDefinition(id, -1, target, -1, -1);
-        if (def.isNoted() && def.getUnnotedId().isPresent()) {
-            int newId = def.getUnnotedId().getAsInt();
-            wantedItems.put(newId, item.copy(newId));
-        } else {
-            wantedItems.put(item.id(), item);
-        }
-    }
-
-    public WantedItemDefinition getWantedItem(int id) {
-        // todo convert noted id to unnoted
-        return wantedItems.get(id);
-    }
-
-    public boolean hasWantedItem(int id) {
-        return wantedItems.containsKey(id);
+        int unnotedId = toUnnotedId(id);
+        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel));
     }
 
     /**
-     * Removes an item from this bot's wanted item preferences.
+     * Adds or replaces an unrestricted item in this bot's wanted-item list.
      *
-     * @param id The item id to remove     .
-     */ // todo docs
+     * @param id The item id.
+     * @param target The desired amount.
+     */
+    public void addWantedItem(int id, int target) {
+        addWantedItem(id, target, -1, -1);
+    }
+
+    /**
+     * Returns this bot's wanted-item definition for the specified item.
+     * <p>
+     * Noted item ids are normalized to their unnoted form before lookup.
+     *
+     * @param id The item id.
+     * @return The wanted-item definition, or {@code null} if the bot does not want the item.
+     */
+    public WantedItemDefinition getWantedItem(int id) {
+        return wantedItems.get(toUnnotedId(id));
+    }
+
+    /**
+     * Determines whether this bot currently wants the specified item.
+     *
+     * @param id The item id.
+     * @return {@code true} if a wanted-item definition exists.
+     */
+    public boolean hasWantedItem(int id) {
+        return wantedItems.containsKey(toUnnotedId(id));
+    }
+
+    /**
+     * Reduces this bot's desired amount for an item.
+     * <p>
+     * Definitions with a permanent minimum are not modified. Noted item ids are normalized to their unnoted form before
+     * lookup.
+     *
+     * @param id The item id.
+     * @param amount The amount to subtract from the current target.
+     * @return {@code true} if the wanted-item definition was adjusted, otherwise {@code false}.
+     */
     public boolean removeWantedItem(int id, int amount) {
-        WantedItemDefinition def = wantedItems.get(id);
+        int unnotedId = toUnnotedId(id);
+        WantedItemDefinition def = wantedItems.get(unnotedId);
         if (def != null) {
             if (def.min() != -1) {
-                // Wanted items with a minimum value are never removed.
                 return false;
             }
+
             int target = def.target() - amount;
             if (target > 0) {
-                WantedItemDefinition newDef = new WantedItemDefinition(def.id(), def.min(), target,
-                        def.skill(), def.maxLevel());
-                wantedItems.put(id, newDef);
+                WantedItemDefinition newDef = new WantedItemDefinition(
+                        def.id(),
+                        def.min(),
+                        target,
+                        def.skill(),
+                        def.maxLevel());
+
+                wantedItems.put(unnotedId, newDef);
             }
             return true;
         }
         return false;
+    }
+
+    /**
+     * Rebalances this bot's wanted items against its current state.
+     * <p>
+     * This should be invoked after login once the bot's inventory, equipment, bank, skills, and other persisted state have
+     * been fully loaded. The final implementation should reconcile existing wanted-item definitions with items the bot
+     * already owns and update any definitions whose requirements are no longer applicable.
+     */
+    public void rebalanceWantedItems() {
+        // TODO Reconcile wanted items with the bot's current ownership and requirements.
+    }
+
+    /**
+     * Converts a noted item id to its unnoted id, so noted and unnoted copies count as the same wanted item.
+     *
+     * @param id The item id.
+     * @return The unnoted id, or {@code id} itself if it isn't a noted item.
+     */
+    private static int toUnnotedId(int id) {
+        if (!ItemDefinition.isIdValid(id)) {
+            return id;
+        }
+        return ItemDefinition.ALL.get(id)
+                .map(def -> def.getUnnotedId().orElse(id))
+                .orElse(id);
     }
 
     /**
@@ -612,7 +616,6 @@ public final class BotPreference {
      * @param amount The amount to add to the player's current feeling value.
      */
     public void adjustFeelingsToward(String username, double amount) {
-        // todo combat, etc.
         playerFeelings.compute(username, (k, v) -> {
             double current = v == null ? 0.5 : v;
             return Math.max(0.0, Math.min(1.0, current + amount));
@@ -670,18 +673,34 @@ public final class BotPreference {
         return getFeelingsToward(username) > 0.80;
     }
 
-
+    /**
+     * Determines whether this bot strongly prefers the specified activity.
+     *
+     * @param activity The activity to check.
+     * @return {@code true} if the activity's preference weight is greater than {@code 0.75}.
+     */
     public boolean lovesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) > 0.75;
     }
 
+    /**
+     * Determines whether this bot likes the specified activity.
+     *
+     * @param activity The activity to check.
+     * @return {@code true} if the activity's preference weight is greater than {@code 0.60}.
+     */
     public boolean likesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) > 0.60;
     }
 
+    /**
+     * Determines whether this bot strongly dislikes the specified activity.
+     *
+     * @param activity The activity to check.
+     * @return {@code true} if the activity's preference weight is less than {@code 0.20}.
+     */
     public boolean hatesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) < 0.20;
-
     }
 
     /**
@@ -699,10 +718,11 @@ public final class BotPreference {
     }
 
     /**
-     * @return The immutable set of item preferences.
+     * Returns an iterator over this bot's current wanted-item definitions.
+     *
+     * @return An unmodifiable iterator over the wanted items.
      */
     public UnmodifiableIterator<WantedItemDefinition> getWantedItems() {
-        // TODO add all default definitions to wanted map on first iteration to avoid this..
         return Iterators.unmodifiableIterator(wantedItems.values().iterator());
     }
 

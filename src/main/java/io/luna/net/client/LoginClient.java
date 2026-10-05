@@ -125,6 +125,8 @@ public class LoginClient extends Client<LoginRequestMessage> {
             channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 
+            // Packets queued by loadData can't be encoded until the game encoder is installed below, so hold them.
+            gameClient.holdOutgoingMessages();
             player.loadData(data);
             sendLoginResponse(player, LoginResponse.NORMAL);
 
@@ -133,6 +135,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
             var messageDecoder = new GameMessageDecoder(message.getDecryptor(), messageRepository);
             pipeline.replace("login-encoder", "game-encoder", messageEncoder);
             pipeline.replace("login-decoder", "game-decoder", messageDecoder);
+            gameClient.releaseHeldMessages();
             return true;
         }
     }

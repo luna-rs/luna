@@ -1050,7 +1050,7 @@ public class ItemContainer implements Iterable<Item> {
      *
      * @return The list of indexed items with capacity {@link #size()}.
      */
-    public final List<IndexedItem> toList() {
+    public final List<IndexedItem> save() {
         var list = new ArrayList<IndexedItem>(size);
         for (int index = 0; index < capacity; index++) {
             Item item = get(index);

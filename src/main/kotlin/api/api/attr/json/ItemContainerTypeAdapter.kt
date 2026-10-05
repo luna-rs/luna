@@ -21,7 +21,7 @@ object ItemContainerTypeAdapter : TypeAdapter<ItemContainer>() {
         writer.name("stack_policy").value(value.policy.name)
         writer.name("widget_id").value(value.primaryWidget)
         writer.name("items").beginArray()
-        for (item in value.toList()) {
+        for (item in value.save()) {
             writer.jsonValue(Attribute.getGsonInstance().toJson(item))
         }
         writer.endArray().endObject()

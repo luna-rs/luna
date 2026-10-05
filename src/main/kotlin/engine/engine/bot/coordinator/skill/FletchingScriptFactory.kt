@@ -5,7 +5,9 @@ import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CutLogBotScript
+import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.StringBowBotScript
+import game.skill.fletching.attachArrow.Arrow
 import game.skill.fletching.cutLog.Log
 import game.skill.fletching.stringBow.Bow.*
 import game.skill.fletching.stringBow.Bow.Companion.BOW_STRING
@@ -62,10 +64,36 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         return resolveScript(bot, level, true)
     }
 
-    /**
-     * Retrieves a random script for the parameters set.
-     */
     private fun resolveScript(bot: Bot, level: Int, randomized: Boolean): BotScript {
+
+        /**
+         * Creates an arrow-making script when the bot has headless arrows, matching arrowtips, and the required level.
+         *
+         * Arrow tiers scale using the same randomized progression as bow tiers. When not randomized, the highest available
+         * arrow tier is selected.
+         */
+        fun getArrowScript(): BotScript? {
+            if (!bot.itemTracker.contains(Arrow.HEADLESS)) {
+                return null
+            }
+
+            fun canMake(arrow: Arrow): Boolean {
+                return level >= arrow.level && bot.itemTracker.contains(arrow.tip)
+            }
+
+            val arrow = when {
+                canMake(Arrow.RUNE_ARROW) && (!randomized || rand(2) == 0) -> Arrow.RUNE_ARROW
+                canMake(Arrow.ADAMANT_ARROW) && (!randomized || rand(4) == 0) -> Arrow.ADAMANT_ARROW
+                canMake(Arrow.MITHRIL_ARROW) && (!randomized || rand(8) == 0) -> Arrow.MITHRIL_ARROW
+                canMake(Arrow.STEEL_ARROW) && (!randomized || rand(16) == 0) -> Arrow.STEEL_ARROW
+                canMake(Arrow.IRON_ARROW) && (!randomized || rand(32) == 0) -> Arrow.IRON_ARROW
+                canMake(Arrow.BRONZE_ARROW) && (!randomized || rand(64) == 0) -> Arrow.BRONZE_ARROW
+                else -> return null
+            }
+
+            return MakeArrowBotScript(bot, arrow, getDuration(bot))
+        }
+
         /**
          * Creates either a cutting or stringing script for the supplied log tier.
          *
@@ -77,12 +105,20 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
             if (index == 1 && level < log.bows[1].level) {
                 index = 0
             }
+
             return if (randBoolean() && bot.itemTracker.contains(BOW_STRING) &&
                 log.unstrungIds.find { bot.itemTracker.contains(it) } != null) {
                 StringBowBotScript(bot, log.bows[index], getDuration(bot))
             } else {
                 CutLogBotScript(bot, log, index, getDuration(bot))
             }
+        }
+
+        /*
+         * Give arrow-making a chance before falling back to the normal bow/log selection.
+         */
+        if (randBoolean()) {
+            getArrowScript()?.let { return it }
         }
 
         if (level >= MAGIC_SHORTBOW.level && (!randomized || rand(2) == 0)) {

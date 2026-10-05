@@ -47,8 +47,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      *
      * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
      */
-    suspend fun fleeWilderness()
-            : Boolean {
+    suspend fun fleeWilderness(): Boolean {
         // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
         //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
         bot.walking.isRunning = true
@@ -56,35 +55,35 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         if (bot.inWilderness()) {
             bot.isWandering = false
             bot.combat.isDisabled = true
-
-            if (bot.wildernessLevel < 20) {
-                bot.output.sendCommand("home")
-                bot.combat.isDisabled = false
-                val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
-                if (success) {
-                    return true
+            try {
+                if (bot.wildernessLevel < 20) {
+                    bot.output.sendCommand("home")
+                    bot.combat.isDisabled = false
+                    val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                    if (success) {
+                        return true
+                    }
                 }
-            }
 
-            val outside = bot.subZone?.outside?.invoke(bot)
-            val parent = bot.subZone?.parent?.invoke(bot)
-            if (outside != null && parent != null) {
-                bot.subZone.leave(bot, parent, outside)
-            }
+                val outside = bot.subZone?.outside?.invoke(bot)
+                val parent = bot.subZone?.parent?.invoke(bot)
+                if (outside != null && parent != null) {
+                    bot.subZone.leave(bot, parent, outside)
+                }
 
-            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
-            if (bot.subZone == SubZone.HOME ||
-                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
-                    .await() == NavigationResult.REACHED
-            ) {
-                bot.output.sendCommand("home")
-                return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
+                if (bot.subZone == SubZone.HOME ||
+                    bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
+                        .await() == NavigationResult.REACHED
+                ) {
+                    bot.output.sendCommand("home")
+                    return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                }
+            } finally {
+                bot.combat.isDisabled = false
             }
-
-            bot.combat.isDisabled = false
             return false
         }
-
         return true
     }
 

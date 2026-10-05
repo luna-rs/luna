@@ -16,6 +16,8 @@ import game.bot.scripts.skills.FiremakingBotScript
 import game.bot.scripts.skills.FiremakingBotScript.Companion.FiremakingData
 import game.bot.scripts.skills.FishBotScript
 import game.bot.scripts.skills.FishBotScript.Companion.FishData
+import game.bot.scripts.skills.MakeArrowBotScript
+import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -55,4 +57,5 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
+    scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
 }
