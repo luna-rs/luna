@@ -45,6 +45,11 @@ public final class CollisionUpdate {
         private CollisionUpdateType type;
 
         /**
+         * If the positions are in map coordinates.
+         */
+        private boolean mapCoordinates;
+
+        /**
          * Sets the type of the {@link CollisionUpdate}.
          *
          * <p>
@@ -56,6 +61,18 @@ public final class CollisionUpdate {
         public void type(CollisionUpdateType type) {
             Preconditions.checkState(this.type == null, "update type has already been set");
             this.type = type;
+        }
+
+        /**
+         * Marks the positions of this update as map coordinates, as used by terrain and objects. The tiles of a
+         * bridged column are stored one level lower in map coordinates than where mobs stand on them, so updates in
+         * map coordinates have that adjustment applied.
+         * <p>
+         * Updates for mobs use the coordinates they actually stand on, and must not be marked.
+         * </p>
+         */
+        public void mapCoordinates() {
+            mapCoordinates = true;
         }
 
         /**
@@ -179,7 +196,7 @@ public final class CollisionUpdate {
          */
         public CollisionUpdate build() {
             Preconditions.checkNotNull(type, "update type must not be null");
-            return new CollisionUpdate(type, ImmutableMap.copyOf(flags));
+            return new CollisionUpdate(type, ImmutableMap.copyOf(flags), mapCoordinates);
         }
 
         /**
@@ -213,14 +230,30 @@ public final class CollisionUpdate {
     private final ImmutableMap<Position, Integer> flags;
 
     /**
+     * If the positions are in map coordinates, where bridged tiles are stored one level lower.
+     */
+    private final boolean mapCoordinates;
+
+    /**
      * Creates a new {@link CollisionUpdate}.
      *
      * @param type The {@link CollisionUpdateType} describing whether collision is being added or removed.
      * @param flags A map of positions to their flag masks.
+     * @param mapCoordinates If the positions are in map coordinates.
      */
-    public CollisionUpdate(CollisionUpdateType type, ImmutableMap<Position, Integer> flags) {
+    public CollisionUpdate(CollisionUpdateType type, ImmutableMap<Position, Integer> flags, boolean mapCoordinates) {
         this.type = type;
         this.flags = flags;
+        this.mapCoordinates = mapCoordinates;
+    }
+
+    /**
+     * Returns whether the positions of this update are in map coordinates.
+     *
+     * @return {@code true} if bridged tiles must be moved down a level when applying this update.
+     */
+    public boolean isMapCoordinates() {
+        return mapCoordinates;
     }
 
     /**

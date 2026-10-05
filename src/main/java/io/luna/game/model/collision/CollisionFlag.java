@@ -277,6 +277,12 @@ public final class CollisionFlag {
     };
 
     /**
+     * The flags that stop an NPC from entering a tile, on top of {@link #MOB_BLOCKS}. NPCs are stopped by other NPCs
+     * and by players, but nothing is stopped by an NPC other than another NPC.
+     */
+    private static final int NPC_BLOCKS = BLOCK_NPCS | BLOCK_PLAYERS;
+
+    /**
      * The flags that stop a projectile from entering a tile, indexed like {@link #MOB_BLOCKS}. These are the walls and
      * objects of {@link #MOB_BLOCKS} moved onto their projectile-blocking counterparts, which are 9 bits higher. The
      * floor flags are left out, so projectiles fly over water. Must not be modified.
@@ -295,14 +301,21 @@ public final class CollisionFlag {
      * direction.
      * <p>
      * Projectiles are stopped by the projectile-blocking flags; everything else is stopped by the plain wall flags
-     * along with objects and blocked floors.
+     * along with objects and blocked floors. NPCs are additionally stopped by other NPCs and players.
      *
      * @param type The entity type.
      * @param directionId The {@link io.luna.game.model.Direction#getId()} of the movement.
      * @return The flags that block that movement.
      */
     static int blocks(EntityType type, int directionId) {
-        return type == EntityType.PROJECTILE ? PROJECTILE_BLOCKS[directionId] : MOB_BLOCKS[directionId];
+        switch (type) {
+            case PROJECTILE:
+                return PROJECTILE_BLOCKS[directionId];
+            case NPC:
+                return MOB_BLOCKS[directionId] | NPC_BLOCKS;
+            default:
+                return MOB_BLOCKS[directionId];
+        }
     }
 
     /**

@@ -122,7 +122,7 @@ public final class PursuitAction extends Action<Npc> {
         // When diagonally adjacent, attempt to step into one of the cardinal components.
         if (policy.getDistance() == 1 && position.isWithinDistance(targetPosition, 1) && nextDirection.isDiagonal()) {
             for (Direction dir : Direction.diagonalComponents(nextDirection)) {
-                if (collision.traversable(position, EntityType.NPC, dir)) {
+                if (collision.traversable(position, EntityType.NPC, dir, mob.size())) {
                     return dir;
                 }
             }
@@ -140,17 +140,19 @@ public final class PursuitAction extends Action<Npc> {
         Direction directionY = dy > 0 ? Direction.NORTH : dy < 0 ? Direction.SOUTH : Direction.NONE;
 
         // Try the direct diagonal or straight-line direction first.
-        if (collision.traversable(position, EntityType.NPC, nextDirection)) {
+        if (collision.traversable(position, EntityType.NPC, nextDirection, mob.size())) {
             return nextDirection;
         }
 
         // Fall back to the x-axis component.
-        if (directionX != Direction.NONE && collision.traversable(position, EntityType.NPC, directionX)) {
+        if (directionX != Direction.NONE &&
+                collision.traversable(position, EntityType.NPC, directionX, mob.size())) {
             return directionX;
         }
 
         // Fall back to the y-axis component.
-        if (directionY != Direction.NONE && collision.traversable(position, EntityType.NPC, directionY)) {
+        if (directionY != Direction.NONE &&
+                collision.traversable(position, EntityType.NPC, directionY, mob.size())) {
             return directionY;
         }
 

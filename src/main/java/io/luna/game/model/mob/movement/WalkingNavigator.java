@@ -260,7 +260,8 @@ public class WalkingNavigator {
      * @return {@code true} if the step was queued, otherwise {@code false}.
      */
     public boolean step(Direction direction) {
-        if (direction != Direction.NONE && collisionManager.traversable(mob.getPosition(), mob.getType(), direction)) {
+        if (direction != Direction.NONE &&
+                collisionManager.traversable(mob.getPosition(), mob.getType(), direction, mob.size())) {
             mob.getWalking().addStep(direction);
             return true;
         }
@@ -277,7 +278,7 @@ public class WalkingNavigator {
         ImmutableList<Direction> directions = includeDiagonals ? Direction.ALL_EXCEPT_NONE : Direction.NESW;
         List<Direction> selectFrom = new ArrayList<>(directions.size());
         for (Direction next : directions) {
-            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next)) {
+            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next, mob.size())) {
                 selectFrom.add(next);
             }
         }

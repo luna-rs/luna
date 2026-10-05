@@ -54,12 +54,6 @@ public final class CollisionManager {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The flags that stop an NPC's tile from being entered. NPCs block every side until they get their own flag.
-     */
-    private static final int NPC_TILE = CollisionFlag.WALL_NORTH | CollisionFlag.WALL_EAST |
-            CollisionFlag.WALL_SOUTH | CollisionFlag.WALL_WEST;
-
-    /**
      * Globally blocked tiles keyed by chunk.
      * <p>
      * Positions stored here get {@link CollisionFlag#BLOCK_WALK} when collision is built.
@@ -165,6 +159,7 @@ public final class CollisionManager {
         // Apply blocked and roofed tiles. Bridged tiles are moved down a level when the update is applied.
         CollisionUpdate.Builder tiles = new CollisionUpdate.Builder();
         tiles.type(CollisionUpdateType.ADDING);
+        tiles.mapCoordinates();
         for (Position position : blocked.values()) {
             tiles.flag(position, CollisionFlag.BLOCK_WALK);
         }
@@ -182,29 +177,68 @@ public final class CollisionManager {
     /**
      * Applies or removes collision for a runtime entity.
      * <p>
-     * This is used for dynamic world changes such as spawned or removed objects and NPCs. Players are ignored because
-     * their blocking behavior is handled through movement and pathing rather than static tile collision.
+     * This is used for dynamic world changes such as spawned or removed objects, NPCs and players. Objects add their
+     * walls and solid tiles. NPCs add {@link CollisionFlag#BLOCK_NPCS} to every tile they cover and players add
+     * {@link CollisionFlag#BLOCK_PLAYERS} to the tile they stand on. Use {@link #moveEntity(Entity, Position)} to keep
+     * NPCs and players up to date as they move.
      *
      * @param entity The entity whose collision should be updated.
      * @param removal {@code true} to remove collision, {@code false} to add it.
      */
     public void updateEntity(Entity entity, boolean removal) {
-        if (entity.getType() == EntityType.PLAYER) {
-            return;
-        }
-
-        CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
-        if (!removal) {
-            builder.type(CollisionUpdateType.ADDING);
-        } else {
-            builder.type(CollisionUpdateType.REMOVING);
-        }
-        if (entity.getType() == EntityType.OBJECT) {
+        EntityType type = entity.getType();
+        if (type == EntityType.OBJECT) {
+            CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
+            builder.type(removal ? CollisionUpdateType.REMOVING : CollisionUpdateType.ADDING);
+            builder.mapCoordinates();
             builder.object((GameObject) entity);
-        } else if (entity.getType() == EntityType.NPC) {
-            builder.flag(entity.getPosition(), NPC_TILE);
+            apply(builder.build(), false);
+        } else if (type == EntityType.NPC || type == EntityType.PLAYER) {
+            occupy(entity.getPosition(), entity.size(), type, !removal);
         }
-        apply(builder.build(), false);
+    }
+
+    /**
+     * Moves the {@link CollisionFlag#BLOCK_NPCS} or {@link CollisionFlag#BLOCK_PLAYERS} of an NPC or player from the
+     * tiles it covered at {@code from} to the ones it covers now. Other entity types are ignored.
+     *
+     * @param entity The entity that moved. Its position must already be updated.
+     * @param from The position it moved from.
+     */
+    public void moveEntity(Entity entity, Position from) {
+        EntityType type = entity.getType();
+        if (type == EntityType.NPC || type == EntityType.PLAYER) {
+            int size = entity.size();
+            occupy(from, size, type, false);
+            occupy(entity.getPosition(), size, type, true);
+        }
+    }
+
+    /**
+     * Adds or removes the flag of an NPC or player on every tile of its footprint.
+     *
+     * @param position The south west tile of the footprint.
+     * @param size The width and length of the footprint.
+     * @param type The type of entity, {@link EntityType#NPC} or {@link EntityType#PLAYER}.
+     * @param add {@code true} to add the flag, {@code false} to remove it.
+     */
+    private void occupy(Position position, int size, EntityType type, boolean add) {
+        int flag = type == EntityType.NPC ? CollisionFlag.BLOCK_NPCS : CollisionFlag.BLOCK_PLAYERS;
+        ChunkRepository repository = null;
+
+        for (int dx = 0; dx < size; dx++) {
+            for (int dy = 0; dy < size; dy++) {
+                Position tile = new Position(position.getX() + dx, position.getY() + dy, position.getZ());
+                if (repository == null || !repository.getChunk().equals(tile.getChunk())) {
+                    repository = chunks.load(tile);
+                }
+
+                CollisionMatrix matrix = repository.getMatrices()[tile.getZ()];
+                flag(add ? CollisionUpdateType.ADDING : CollisionUpdateType.REMOVING, matrix,
+                        tile.getX() % Chunk.SIZE, tile.getY() % Chunk.SIZE, flag);
+                pendingSnapshots.add(repository);
+            }
+        }
     }
 
     /**
@@ -228,8 +262,8 @@ public final class CollisionManager {
             Chunk chunk = position.getChunk();
 
             int height = position.getZ();
-            // Adjust for bridges: some tiles are effectively one level lower.
-            if (bridges.contains(new Position(position.getX(), position.getY(), 1))) {
+            // Adjust for bridges: map coordinates of some tiles are effectively one level lower.
+            if (update.isMapCoordinates() && bridges.contains(new Position(position.getX(), position.getY(), 1))) {
                 if (--height < 0) {
                     continue;
                 }
@@ -497,6 +531,71 @@ public final class CollisionManager {
      */
     public boolean traversable(Position position, EntityType type, Direction direction) {
         return traversable(position, type, direction, false);
+    }
+
+    /**
+     * Returns whether an entity of {@code type} covering {@code size} by {@code size} tiles may move one step in
+     * {@code direction}. {@code position} is the south west tile of the entity.
+     * <p>
+     * Only the tiles the entity moves into are checked, never the ones it already covers, so an entity is not stopped
+     * by its own {@link CollisionFlag#BLOCK_NPCS}. A diagonal step needs both of its orthogonal steps to be possible, as
+     * well as the corner tile it moves into.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type attempting the move.
+     * @param direction The direction being attempted.
+     * @param size The width and length of the entity, in tiles.
+     * @param safe {@code true} to use snapshot matrices, otherwise {@code false} to use live matrices.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position,
+                               EntityType type,
+                               Direction direction,
+                               int size,
+                               boolean safe) {
+
+        if (size <= 1 || direction == Direction.NONE) {
+            return traversable(position, type, direction, safe);
+        }
+
+        int dx = direction.getTranslateX();
+        int dy = direction.getTranslateY();
+        if (direction.isDiagonal()) {
+            for (Direction component : Direction.diagonalComponents(direction)) {
+                if (!traversable(position, type, component, size, safe)) {
+                    return false;
+                }
+            }
+
+            int cornerX = position.getX() + (dx > 0 ? size : -1);
+            int cornerY = position.getY() + (dy > 0 ? size : -1);
+            Position corner = new Position(cornerX, cornerY, position.getZ());
+            return chunks.load(corner).traversable(corner, type, direction, safe);
+        }
+
+        for (int i = 0; i < size; i++) {
+            int x = dx > 0 ? position.getX() + size : dx < 0 ? position.getX() - 1 : position.getX() + i;
+            int y = dy > 0 ? position.getY() + size : dy < 0 ? position.getY() - 1 : position.getY() + i;
+            Position next = new Position(x, y, position.getZ());
+            if (!chunks.load(next).traversable(next, type, direction, safe)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Convenience overload of {@link #traversable(Position, EntityType, Direction, int, boolean)} that uses live
+     * matrices.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type.
+     * @param direction The attempted direction.
+     * @param size The width and length of the entity, in tiles.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position, EntityType type, Direction direction, int size) {
+        return traversable(position, type, direction, size, false);
     }
 
     /**

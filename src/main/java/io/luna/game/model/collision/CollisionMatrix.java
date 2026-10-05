@@ -112,6 +112,16 @@ public final class CollisionMatrix {
     private final int[] matrix;
 
     /**
+     * The low bit of each flag's overlap counter, or {@code null} until a flag is first set twice.
+     */
+    private int[] overlapLow;
+
+    /**
+     * The high bit of each flag's overlap counter, or {@code null} until a flag is first set twice.
+     */
+    private int[] overlapHigh;
+
+    /**
      * The width (X dimension) of this matrix.
      */
     private final int width;
@@ -208,18 +218,74 @@ public final class CollisionMatrix {
      * @param flag The collision flag to clear.
      */
     void clear(int x, int y, int flag) {
-        matrix[indexOf(x, y)] &= ~flag;
+        int index = indexOf(x, y);
+        int held = releaseOverlap(index, flag);
+        matrix[index] &= ~(flag & ~held);
     }
 
     /**
      * Sets (ORs) the specified {@link CollisionFlag} for the tile at (x, y).
+     * <p>
+     * A flag that is already set is counted, so that it stays set until every {@link #flag(int, int, int)} call that
+     * set it has been matched by a {@link #clear(int, int, int)} call. This lets overlapping objects, or several
+     * entities standing on one tile, share a flag without the first one to leave clearing it for the rest.
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
      * @param flag The collision flag to set.
      */
     void flag(int x, int y, int flag) {
-        matrix[indexOf(x, y)] |= flag;
+        int index = indexOf(x, y);
+        int shared = matrix[index] & flag;
+        if (shared != 0) {
+            retainOverlap(index, shared);
+        }
+        matrix[index] |= flag;
+    }
+
+    /**
+     * Counts one more holder of each flag in {@code flags}, which are already set on the tile at {@code index}.
+     * <p>
+     * Each flag has a two bit counter spread over {@link #overlapLow} and {@link #overlapHigh}, so a flag can be held
+     * by up to four callers at once. A flag held by more callers than that stays at the maximum.
+     *
+     * @param index The index of the tile.
+     * @param flags The flags that are already set.
+     */
+    private void retainOverlap(int index, int flags) {
+        if (overlapLow == null) {
+            overlapLow = new int[matrix.length];
+            overlapHigh = new int[matrix.length];
+        }
+        int low = overlapLow[index];
+        int high = overlapHigh[index];
+
+        int counted = flags & ~(low & high);
+        int carry = low & counted;
+        overlapLow[index] = low ^ counted;
+        overlapHigh[index] = high ^ carry;
+    }
+
+    /**
+     * Releases one holder of each flag in {@code flags} on the tile at {@code index}.
+     *
+     * @param index The index of the tile.
+     * @param flags The flags being cleared.
+     * @return The flags that other callers still hold, and so must stay set.
+     */
+    private int releaseOverlap(int index, int flags) {
+        if (overlapLow == null) {
+            return 0;
+        }
+        int low = overlapLow[index];
+        int high = overlapHigh[index];
+
+        int held = (low | high) & flags;
+        int lowOnly = low & held;
+        int highOnly = high & held & ~low;
+        overlapLow[index] = (low & ~lowOnly) | highOnly;
+        overlapHigh[index] = high & ~highOnly;
+        return held;
     }
 
     /**
@@ -273,6 +339,8 @@ public final class CollisionMatrix {
      */
     void reset() {
         Arrays.fill(matrix, ALL_ALLOWED);
+        overlapLow = null;
+        overlapHigh = null;
     }
 
     /**
@@ -601,7 +669,8 @@ public final class CollisionMatrix {
     }
 
     /**
-     * Creates a thread-safe deep copy of this matrix.
+     * Creates a thread-safe deep copy of this matrix. Only the flags are copied; the overlap counters are only needed
+     * to apply changes, which a read-only snapshot never does.
      */
     public CollisionMatrix copy() {
         return new CollisionMatrix(width, length, Arrays.copyOf(matrix, matrix.length));
