@@ -156,7 +156,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     logger.catching(e)
                     stop()
                 } finally {
-                    val normalExit = isActive && !terminated
+                    val normalExit = isActive
                     finish()
                     if (normalExit) {
                         completed()
