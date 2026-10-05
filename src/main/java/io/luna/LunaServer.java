@@ -106,7 +106,7 @@ public final class LunaServer {
      * @throws Exception If a fatal startup failure occurs.
      */
     public void init() throws Exception {
-        try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
+        try (ScanResult result = new ClassGraph().enableClassInfo().scan()) {
             classpath = result;
             Stopwatch launchTimer = Stopwatch.createStarted();
 
