@@ -18,6 +18,8 @@ import java.util.*
  * - Curtains, which are replaced in place without moving.
  *
  * Doors that are away from their home state revert on their own after a while.
+ *
+ * @author Hydrozoa
  */
 object Doors {
 
@@ -59,29 +61,55 @@ object Doors {
     private class Swap(val old: GameObject, val id: Int, val position: Position, val direction: ObjectDirection)
 
     /**
-     * Loads all door definitions, replacing any previously loaded ones.
+     * The kinds of door, each of which is loaded from its own file.
      *
-     * @param singles The single door pairs to load.
-     * @param doubles The double door leaves to load. Each must have a side.
-     * @param gates The gate leaves to load. Each must have a side, and the [DoorSide.LEFT] leaf is the hinge.
-     * @param curtains The curtain pairs to load.
+     * @param hasSide Whether doors of this kind must have a [DoorType.side].
+     */
+    enum class Kind(val hasSide: Boolean) {
+
+        /**
+         * A single door.
+         */
+        SINGLE(false),
+
+        /**
+         * One leaf of a double door.
+         */
+        DOUBLE(true),
+
+        /**
+         * One leaf of a gate, where the [DoorSide.LEFT] leaf is the hinge.
+         */
+        GATE(true),
+
+        /**
+         * A curtain.
+         */
+        CURTAIN(false)
+    }
+
+    /**
+     * Adds door definitions of a single [Kind] to the ones already loaded. Must be called on the game thread.
+     *
+     * @param kind The kind of door being added.
+     * @param types The doors to add.
      * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if an id is used by
      * more than one door.
      */
-    fun load(singles: Array<DoorType>, doubles: Array<DoorType>, gates: Array<DoorType>, curtains: Array<DoorType>) {
-        byId.clear()
-        gateTypes.clear()
-        gateTypes.addAll(gates)
-        curtainTypes.clear()
-        curtainTypes.addAll(curtains)
-        for (type in singles + doubles + gates + curtains) {
-            require((type.side != null) == (type in doubles || type in gates)) {
+    fun add(kind: Kind, types: List<DoorType>) {
+        for (type in types) {
+            require((type.side != null) == kind.hasSide) {
                 "Door ${type.closed} must ${if (type.side != null) "not " else ""}have a side."
             }
             require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
             require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
+            when (kind) {
+                Kind.GATE -> gateTypes += type
+                Kind.CURTAIN -> curtainTypes += type
+                else -> {}
+            }
         }
-        all = (singles + doubles + gates + curtains).toList()
+        all += types
     }
 
     /**

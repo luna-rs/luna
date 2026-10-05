@@ -1,45 +1,29 @@
 package game.obj.doors
 
 import api.predef.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.*
 import io.luna.game.model.`object`.*
-import io.luna.util.GsonUtils
 import java.nio.file.Paths
 
-/**
- * The filesystem path to the door definition file.
- *
- * Read synchronously while this script is evaluated, because a click handler has to be registered for every door id
- * and the ids come from this file.
- */
-val PATH = Paths.get("data", "game", "world", "doors", "doors.json")
-
-/**
- * The filesystem path to the double door definition file.
- */
-val DOUBLE_PATH = Paths.get("data", "game", "world", "doors", "double_doors.json")
-
-/**
- * The filesystem path to the gate definition file.
- */
-val GATE_PATH = Paths.get("data", "game", "world", "doors", "gates.json")
-
-/**
- * The filesystem path to the curtain definition file.
- */
-val CURTAIN_PATH = Paths.get("data", "game", "world", "doors", "curtains.json")
-
-Doors.load(GsonUtils.readAsType(PATH, Array<DoorType>::class.java),
-           GsonUtils.readAsType(DOUBLE_PATH, Array<DoorType>::class.java),
-           GsonUtils.readAsType(GATE_PATH, Array<DoorType>::class.java),
-           GsonUtils.readAsType(CURTAIN_PATH, Array<DoorType>::class.java))
-
-Doors.all.forEach { type ->
-    object1(type.closed) {
-        handleDoorClick(gameObject, plr)
-    }
-    object1(type.open) {
-        handleDoorClick(gameObject, plr)
+// Load the door files on server launch. Handlers are registered once each file has been parsed, on the game thread.
+on(ServerLaunchEvent::class) {
+    val files = mapOf(Doors.Kind.SINGLE to "doors.json",
+                      Doors.Kind.DOUBLE to "double_doors.json",
+                      Doors.Kind.GATE to "gates.json",
+                      Doors.Kind.CURTAIN to "curtains.json")
+    files.forEach { (kind, file) ->
+        val path = Paths.get("data", "game", "world", "doors", file)
+        taskPool.execute(DoorFileParser(path, kind) { types ->
+            types.forEach { type ->
+                object1(type.closed) {
+                    handleDoorClick(gameObject, plr)
+                }
+                object1(type.open) {
+                    handleDoorClick(gameObject, plr)
+                }
+            }
+        })
     }
 }
 

@@ -20,6 +20,8 @@ import game.player.Sound
  * @param openSound The sound played on opening, or `null` for [Sound.DOOR_OPEN].
  * @param closeSound The sound played on closing, or `null` for [Sound.DOOR_CLOSE].
  * @param duration The ticks before the door reverts on its own, or `null` for [DEFAULT_DURATION].
+ *
+ * @author Hydrozoa
  */
 class DoorType(val closed: Int,
                val open: Int,
