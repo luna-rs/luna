@@ -157,9 +157,9 @@ public class PlayerData {
         lastIp = player.getClient().getIpAddress();
         logoutTime = Instant.now();
         appearance = player.getAppearance().toArray();
-        inventory = player.getInventory().toList();
-        bank = player.getBank().toList();
-        equipment = player.getEquipment().toList();
+        inventory = player.getInventory().save();
+        bank = player.getBank().save();
+        equipment = player.getEquipment().save();
         skills = player.getSkills().toArray();
         friends = new ArrayList<>(player.getFriends());
         ignores = new ArrayList<>(player.getIgnores());
