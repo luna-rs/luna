@@ -546,6 +546,14 @@ enum class SubZone(val inside: Position,
                                    parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
+     * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
+     * Covers both warrior-woman spawns and their five-tile wander range.
+     */
+    ARDOUGNE_WARRIOR_THIEVING(inside = Position(2629, 3295),
+                              area = SimpleBoxArea.of(2624, 3290, 2637, 3304),
+                              parent = { ARDOUGNE }),
+
+    /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
      * - Paladins
      * - Guards
