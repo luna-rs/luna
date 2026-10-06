@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
+import io.luna.game.model.collision.CollisionFlag
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 import io.luna.game.model.path.route.RouteStrategy
@@ -25,7 +26,7 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
         /**
          * The path to the file.
          */
-        private val PATH = Paths.get("data", "game", "world", "npc_spawns.json")
+        private val PATH = Paths.get("data", "game", "world", "npc_spawns.jsonc")
     }
 
     override fun convert(token: JsonObject): PersistentNpc {
@@ -68,8 +69,25 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
 
     override fun onCompleted(tokenObjects: ImmutableList<PersistentNpc>) {
         if (tokenObjects.isNotEmpty()) {
-            gameService.sync { tokenObjects.forEach { world.npcs.add(it) } }
+            gameService.sync {
+                checkIndoorsSpawns(tokenObjects)
+                tokenObjects.forEach { world.npcs.add(it) }
+            }
             logger.debug("Loaded ${tokenObjects.size} global NPC spawns!")
+        }
+    }
+
+    /**
+     * Warns about [RouteStrategy.INDOORS] spawns that are not on a roofed tile. Such an NPC could never move, so the
+     * strategy was most likely given to the wrong spawn or the map has no roof there.
+     */
+    private fun checkIndoorsSpawns(spawns: List<PersistentNpc>) {
+        val view = world.collisionManager.view(false)
+        spawns.filter { it.routeStrategy == RouteStrategy.INDOORS }.forEach {
+            val pos = it.position
+            if (view.get(pos.x, pos.y, pos.z) and CollisionFlag.ROOF == 0) {
+                logger.warn("Indoors NPC [${it.id}] at $pos is not on a roofed tile.")
+            }
         }
     }
 }
