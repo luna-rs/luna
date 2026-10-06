@@ -171,6 +171,11 @@ public class Player extends Mob {
     private boolean regionChanged;
 
     /**
+     * The position chunk updates were last sent for, or {@code null} if none have been sent.
+     */
+    private Position lastViewPosition;
+
+    /**
      * The current dialogue queue, or {@code null} if none is active.
      */
     private DialogueQueue dialogues;
@@ -708,30 +713,28 @@ public class Player extends Mob {
     }
 
     /**
-     * Sends a region update if needed and refreshes nearby {@link Entity} instances.
-     * <p>
-     * This method:
-     * </p>
-     * <ol>
-     *     <li>Detects if a region change has occurred and sends a {@link RegionMessageWriter} if required.</li>
-     *     <li>Handles pending placement (full refresh).</li>
-     *     <li>Delegates to {@link io.luna.game.model.chunk.ChunkManager#sendUpdates(Player, Position, boolean)}.</li>
-     * </ol>
-     *
-     * @param oldPosition The previous position before movement processing.
+     * Sends a {@link RegionMessageWriter} if a region change has occurred. This must happen before player updating.
      */
-    public void updateLocalView(Position oldPosition) {
-        boolean fullRefresh = false;
+    public void updateRegion() {
         if (lastRegion == null || needsRegionUpdate()) {
-            fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
             queue(new RegionMessageWriter(position));
         }
-        if (isPendingPlacement()) {
-            fullRefresh = true;
-        }
-        world.getChunks().sendUpdates(this, oldPosition, fullRefresh);
+    }
+
+    /**
+     * Refreshes nearby {@link Entity} instances through
+     * {@link io.luna.game.model.chunk.ChunkManager#sendUpdates(Player, Position, boolean)}. A region change or
+     * pending placement refreshes every viewable chunk.
+     * <p>
+     * This must happen after player updating, because the #377 client applies chunk updates to the height level it
+     * is on.
+     */
+    public void updateLocalView() {
+        Position oldPosition = lastViewPosition != null ? lastViewPosition : position;
+        lastViewPosition = position;
+        world.getChunks().sendUpdates(this, oldPosition, regionChanged || isPendingPlacement());
     }
 
     /**

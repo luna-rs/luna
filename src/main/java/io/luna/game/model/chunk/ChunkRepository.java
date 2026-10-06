@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +74,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * This typically stores "display/show" style requests that must be re-applied when a player loads the chunk
      * or when the chunk is refreshed.
      */
-    private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new HashMap<>();
+    private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new LinkedHashMap<>();
 
     /**
      * One-tick update requests for {@link StationaryEntity} types in this chunk.
@@ -226,12 +226,13 @@ public final class ChunkRepository implements Iterable<Entity> {
      * <p>
      * The request is appended to {@link #temporaryUpdates} and will be considered by {@link #getUpdates(Player)}.
      * Persistent requests are still queued here first and later moved to {@link #persistentUpdates} by
-     * {@link #resetUpdates()}.
+     * {@link #resetUpdates()}, which runs at the end of this tick even if no player receives the request.
      *
      * @param update The update request to queue.
      */
     public void queueUpdate(ChunkUpdatableRequest update) {
         temporaryUpdates.add(update);
+        world.getChunks().markUpdated(this);
     }
 
     /**
@@ -291,8 +292,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * Collects all queued temporary update messages that are visible to {@code player}.
      * <p>
-     * Visibility is determined by {@link ChunkUpdatableView#isViewableFor(Player)} using each updatable's
-     * {@link ChunkUpdatable#computeCurrentView()}.
+     * Visibility is determined by {@link #isViewableFor(ChunkUpdatableRequest, Player)}.
      * <p>
      * This method only reads {@link #temporaryUpdates}. Persistent requests are exposed via
      * {@link #getPersistentUpdates()} for the chunk system to re-apply when appropriate.
@@ -303,12 +303,29 @@ public final class ChunkRepository implements Iterable<Entity> {
     public List<ChunkUpdatableMessage> getUpdates(Player player) {
         List<ChunkUpdatableMessage> messages = new ArrayList<>();
         for (ChunkUpdatableRequest request : temporaryUpdates) {
-            ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
-            if (view.isViewableFor(player)) {
+            if (isViewableFor(request, player)) {
                 messages.add(request.getMessage());
             }
         }
         return messages;
+    }
+
+    /**
+     * Determines if {@code request} should be sent to {@code player}.
+     * <p>
+     * The updatable must be on the player's height level, because the #377 client applies chunk updates to the level
+     * it is on. Its {@link ChunkUpdatable#computeCurrentView()} must also include the player.
+     *
+     * @param request The update request.
+     * @param player The player.
+     * @return {@code true} if {@code player} should receive the update.
+     */
+    static boolean isViewableFor(ChunkUpdatableRequest request, Player player) {
+        ChunkUpdatable updatable = request.getUpdatable();
+        if (updatable instanceof Entity entity && entity.getPosition().getZ() != player.getPosition().getZ()) {
+            return false;
+        }
+        return updatable.computeCurrentView().isViewableFor(player);
     }
 
     /**
