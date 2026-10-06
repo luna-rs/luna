@@ -67,16 +67,21 @@ class SmithBarBotScript(
      */
     private var smithingItem: SmithingItem? = null
 
+    override fun bankWithdraw(): List<Item> = withdraw()
+
     override fun withdraw(): List<Item> {
         // Resolve smithing bar type and item type.
         selectedItems.removeIf {
-            bot.smithing.staticLevel < it.level || bot.itemTracker.count(it.barType.id) < 27
+            bot.smithing.staticLevel < it.level || bot.itemTracker.count(it.barType.id) < SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
         }
         if (selectedItems.isEmpty()) {
             // Important: Always attempt bars from the lowest -> the highest level.
             var smithingBar: BarType? = null
             for (bar in BarType.VALUES) {
-                if (bot.itemTracker.count(bar.id) >= 27) {
+                if (SmithingTable.BAR_TO_ITEM[bar].any {
+                        bot.smithing.staticLevel >= it.level &&
+                            bot.itemTracker.count(bar.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
+                    }) {
                     smithingBar = bar
                     break
                 }
@@ -88,7 +93,8 @@ class SmithBarBotScript(
                 return listOf()
             }
             for (item in SmithingTable.BAR_TO_ITEM[smithingBar]) {
-                if (bot.smithing.staticLevel >= item.level) {
+                if (bot.smithing.staticLevel >= item.level &&
+                    bot.itemTracker.count(item.barType.id) >= SmithingTable.ID_TO_TABLE[item.item.id]!!.bars) {
                     selectedItems += item
                 }
             }
@@ -107,7 +113,7 @@ class SmithBarBotScript(
             bot.log("Could not resolve smithing item.")
             return listOf()
         }
-        return listOf(Item(HAMMER), Item(item.barType.id, 27))
+        return listOf(Item(HAMMER), Item(item.barType.id, bot.itemTracker.count(item.barType.id).coerceAtMost(27)))
     }
 
     override suspend fun onExecuteInZone(): Boolean {
@@ -158,7 +164,7 @@ class SmithBarBotScript(
         bot.naturalDecisionDelay()
 
         if (selectedItems.size > 1) {
-            smithingItem = selectedItems.random()
+            smithingItem = selectedItems.filter { it.barType == bar }.random()
         }
         return true
     }

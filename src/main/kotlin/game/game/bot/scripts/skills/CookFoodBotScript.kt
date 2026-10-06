@@ -96,6 +96,8 @@ class CookFoodBotScript(
         return BotGearSelector.find(bot, purpose).replace(HANDS, 775).buildLocator()
     }
 
+    override fun bankWithdraw(): List<Item> = withdraw()
+
     override fun withdraw(): List<Item> {
         cooking = null
         if (selectedFood == null) {
@@ -113,7 +115,8 @@ class CookFoodBotScript(
 
         val food = cooking
         if (food != null) {
-            return listOf(Item(food.raw, 28))
+            val amount = bot.itemTracker.count(food.raw).coerceAtMost(28)
+            if (amount > 0) return listOf(Item(food.raw, amount))
         }
 
         bot.log("No raw food for cooking could be found in the bank.")

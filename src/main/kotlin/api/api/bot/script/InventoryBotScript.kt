@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.zone.SubZone
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -29,8 +30,8 @@ abstract class InventoryBotScript(
     /**
      * The items this script needs to withdraw from the bank.
      *
-     * This is cached during initialization from [withdraw] so the requirement list remains stable for the current script
-     * run.
+     * This is initialized from [withdraw]. Scripts with variable batch sizes can refresh it through [bankWithdraw]
+     * after each deposit.
      */
     protected var withdraw: List<Item> = emptyList()
         private set
@@ -48,7 +49,7 @@ abstract class InventoryBotScript(
         if (isTerminated()) {
             return false
         }
-        if (!handler.hasAll(withdraw)) {
+        if (!withdraw.all { bot.itemTracker.count(it.id) >= it.amount }) {
             bot.log("Bot does not have required withdraw items. Ending script.")
             return false
         }
@@ -95,6 +96,8 @@ abstract class InventoryBotScript(
      * @param initial `true` if this is the first bank-open call for the current banking request.
      */
     final override suspend fun onBankOpen(initial: Boolean) {
+        withdraw = bankWithdraw()
+        if (isTerminated() || withdraw.isEmpty()) return
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("We no longer have the required withdraw items. Stopping script.")
             stop()
@@ -109,6 +112,9 @@ abstract class InventoryBotScript(
      * @return The items needed for one inventory-processing cycle.
      */
     abstract fun withdraw(): List<Item>
+
+    /** Supplies for this banking cycle; fixed-recipe scripts retain the initial list by default. */
+    protected open fun bankWithdraw(): List<Item> = withdraw
 
     /**
      * Executes one activity-specific cycle inside the active zone.
