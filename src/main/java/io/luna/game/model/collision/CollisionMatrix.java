@@ -618,7 +618,7 @@ public final class CollisionMatrix {
                     reachedFacingEntity(start, object, sizeX, sizeY, OptionalInt.of(packedDirections));
         } else {
             int objectTypeId = object.getObjectType().getId();
-            if ((objectTypeId < 5 || objectTypeId == 10)) {
+            if ((objectTypeId < 5 || objectTypeId == 9 || objectTypeId == 10)) {
                 return reachedWall(start, object);
             }
             if (objectTypeId < 10) {

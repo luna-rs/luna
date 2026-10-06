@@ -17,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +74,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * This typically stores "display/show" style requests that must be re-applied when a player loads the chunk
      * or when the chunk is refreshed.
      */
-    private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new HashMap<>();
+    private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new LinkedHashMap<>();
 
     /**
      * One-tick update requests for {@link StationaryEntity} types in this chunk.
