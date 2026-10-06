@@ -28,6 +28,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatStance
+import io.luna.game.model.mob.combat.state.PlayerRangedCombat
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.path.Pathfinders
 import io.luna.net.msg.out.GameChatboxMessageWriter
@@ -141,8 +142,8 @@ class NpcCombatScript(bot: Bot,
                 for (inMsg in messages) {
                     val msg = inMsg.message
                     if (inMsg.timestamp.isAfter(threshold) && msg is GameChatboxMessageWriter) {
-                        if (msg.message == "You have no arrows left in your quiver." ||
-                            msg.message == "You can't use that type of ammunition with this weapon."
+                        if (msg.message == PlayerRangedCombat.NO_AMMO_MESSAGE ||
+                            msg.message == PlayerRangedCombat.WRONG_AMMO_MESSAGE
                         ) {
                             stop()
                             bot.log("No valid ammo left. Stopping script.")
