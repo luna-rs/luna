@@ -84,7 +84,7 @@ class NavigationCancellationTest {
         Position target = new Position(3202, 3200);
         NavigationRequest request = request(target, false);
         navigator.submit(request);
-        CompletableFuture<Void> pending = navigator.walk(request, target);
+        CompletableFuture<Void> pending = navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
         Deque<Position> path = path(target);
         navigator.searches.getFirst().complete(path);
         verify(mob.getWalking(), never()).replacePath(any());
@@ -99,7 +99,7 @@ class NavigationCancellationTest {
         Position target = new Position(3202, 3200);
         NavigationRequest request = request(target, false);
         navigator.submit(request);
-        CompletableFuture<Void> pending = navigator.walk(request, target);
+        CompletableFuture<Void> pending =navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
         navigator.searches.getFirst().complete(path(target));
         assertFalse(gameTasks.isEmpty());
         pending.cancel(false);
@@ -113,7 +113,7 @@ class NavigationCancellationTest {
         Position target = new Position(3202, 3200);
         NavigationRequest request = request(target, false);
         navigator.submit(request);
-        navigator.walk(request, target);
+        navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
         navigator.cancel();
         navigator.searches.getFirst().complete(path(target));
         runGameTasks();
@@ -125,11 +125,11 @@ class NavigationCancellationTest {
         Position oldTarget = new Position(3202, 3200);
         NavigationRequest old = request(oldTarget, false);
         navigator.submit(old);
-        navigator.walk(old, oldTarget);
+        navigator.walk(old.getTarget(), old.getPathfinder(), old.isAsync());
         Position newTarget = new Position(3203, 3200);
         NavigationRequest latest = request(newTarget, false);
         navigator.submit(latest);
-        navigator.walk(latest, newTarget);
+        navigator.walk(latest.getTarget(), latest.getPathfinder(), latest.isAsync());
         Deque<Position> latestPath = path(newTarget);
         navigator.searches.get(1).complete(latestPath);
         runGameTasks();
@@ -208,7 +208,7 @@ class NavigationCancellationTest {
         when(request.getPathfinder()).thenReturn(finder);
         when(finder.find(mob.getPosition(), target)).thenReturn(new PathResult<>(PathResultType.COMPLETE, path));
         real.submit(request);
-        CompletableFuture<Void> pending = real.walk(request, target);
+        CompletableFuture<Void> pending = real.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
         runGameTasks();
         verify(mob.getWalking()).replacePath(path);
         assertTrue(pending.isDone());
