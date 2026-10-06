@@ -8,8 +8,8 @@ import io.luna.game.cache.map.MapTile;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.path.astar.AStarPathfinder;
-import io.luna.game.model.path.astar.PlayerPathfinder;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.Pathfinders;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
@@ -154,7 +154,7 @@ public final class SmartWanderingAction extends WanderingAction {
      * @return A future representing the waypoint build operation.
      */
     private CompletableFuture<Void> buildWaypointsAsync(GameService game, Position dest) {
-        AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
+        GamePathfinder<Position> pf = Pathfinders.forNpc(mob);
         return mob.getNavigator().findPath(mob.getPosition(), dest, pf, true).thenAcceptAsync(path -> {
                     if (path != null && !path.isEmpty()) {
                         waypoints.addAll(path);

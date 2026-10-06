@@ -9,7 +9,7 @@ import io.luna.game.model.path.route.RoutePathfinder;
 /**
  * A deterministic {@link AStarPathfinder} implementation for long distance movement.
  * <p>
- * Unlike the {@link RoutePathfinder}, which only searches the area around a mob, a {@code PlayerPathfinder} can find
+ * Unlike the {@link RoutePathfinder}, which only searches the area around a mob, a {@code LongRangePathfinder} can find
  * routes of any length. A {@link FallbackPathfinder} gives it the destinations that are too far away for the {@link RoutePathfinder}. All
  * searches use the {@link Heuristic#CHEBYSHEV} heuristic, which exactly matches RuneScape's 8-direction
  * movement model where diagonal and cardinal steps share identical traversal cost.
@@ -17,7 +17,7 @@ import io.luna.game.model.path.route.RoutePathfinder;
  *
  * @author lare96
  */
-public class PlayerPathfinder extends AStarPathfinder<Position> {
+public class LongRangePathfinder extends AStarPathfinder<Position> {
 
     /**
      * The plane (height level) this pathfinder operates on.
@@ -25,12 +25,12 @@ public class PlayerPathfinder extends AStarPathfinder<Position> {
     private final int plane;
 
     /**
-     * Creates a new {@link PlayerPathfinder}.
+     * Creates a new {@link LongRangePathfinder}.
      *
      * @param collisionManager The {@link CollisionManager} used for traversability checks.
      * @param plane The plane paths will be routed on.
      */
-    public PlayerPathfinder(CollisionManager collisionManager, int plane) {
+    public LongRangePathfinder(CollisionManager collisionManager, int plane) {
         super(collisionManager);
         this.plane = plane;
     }

@@ -4,7 +4,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionFlag;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.path.astar.PlayerPathfinder;
+import io.luna.game.model.path.astar.LongRangePathfinder;
 import io.luna.game.model.path.route.RoutePathfinder;
 import io.luna.game.model.path.route.RouteStrategy;
 
@@ -12,7 +12,7 @@ import io.luna.game.model.path.route.RouteStrategy;
  * Creates the pathfinders that suit each kind of mob.
  * <p>
  * Routes are found with a {@link RoutePathfinder}, which only searches around the mob. Destinations farther away are
- * given to a {@link PlayerPathfinder}, which has no such limit, by a {@link FallbackPathfinder}.
+ * given to a {@link LongRangePathfinder}, which has no such limit, by a {@link FallbackPathfinder}.
  *
  * @author hydrozoa
  */
@@ -34,7 +34,7 @@ public final class Pathfinders {
      * Creates a pathfinder for an NPC. NPCs are stopped by other NPCs and by players, so the routes go around them.
      * The NPC moves onto tiles as its {@link Mob#getRouteStrategy() route strategy} allows.
      * <p>
-     * Only an NPC with the {@link RouteStrategy#NORMAL} strategy falls back to a {@link PlayerPathfinder}. That one
+     * Only an NPC with the {@link RouteStrategy#NORMAL} strategy falls back to a {@link LongRangePathfinder}. That one
      * knows nothing of strategies, and would lead any other NPC off the terrain it belongs to, so those NPCs fail to
      * find destinations that are too far away.
      *
@@ -69,11 +69,11 @@ public final class Pathfinders {
     }
 
     /**
-     * Wraps a route pathfinder so that destinations beyond its reach are given to a {@link PlayerPathfinder}.
+     * Wraps a route pathfinder so that destinations beyond its reach are given to a {@link LongRangePathfinder}.
      */
     private static GamePathfinder<Position> withFallback(RoutePathfinder routes) {
         return new FallbackPathfinder<>(routes,
-                origin -> new PlayerPathfinder(routes.collisionManager, origin.getZ()));
+                origin -> new LongRangePathfinder(routes.collisionManager, origin.getZ()));
     }
 
     private Pathfinders() {}
