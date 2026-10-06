@@ -8,14 +8,22 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
+import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectDirection;
+import io.luna.game.model.object.ObjectType;
+import io.luna.game.model.path.route.RouteStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.OptionalInt;
 
 import static io.luna.game.model.collision.CollisionFlag.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -180,6 +188,17 @@ final class CollisionManagerTest {
     }
 
     @Test
+    void testBlockedStrategyKeepsSizeOneNpcOnWater() {
+        Position start = new Position(320, 320, 0);
+        matrixAt(new Position(321, 320, 0)).flag(321 % Chunk.SIZE, 320 % Chunk.SIZE, BLOCK_WALK);
+
+        assertTrue(manager.traversable(start, EntityType.NPC, Direction.EAST, 1, RouteStrategy.BLOCKED));
+        assertFalse(manager.traversable(start, EntityType.NPC, Direction.WEST, 1, RouteStrategy.BLOCKED));
+        assertFalse(manager.traversable(start, EntityType.NPC, Direction.EAST, 1, RouteStrategy.NORMAL));
+        assertTrue(manager.traversable(start, EntityType.NPC, Direction.WEST, 1, RouteStrategy.NORMAL));
+    }
+
+    @Test
     void testBridgeShiftAppliesToMapDataOnly() {
         manager.markBridged(new Position(400, 400, 1));
 
@@ -203,6 +222,33 @@ final class CollisionManagerTest {
         live.flag(new Position(400, 400, 0), LOC_ROUTE_BLOCKER);
         manager.apply(live.build(), false);
         assertEquals(BLOCK_NPCS | LOC | LOC_ROUTE_BLOCKER, flagsAt(400, 400, 0));
+    }
+
+    @Test
+    void testObjectIsLoweredByBridgeAsAWhole() {
+        // A north facing wall on a bridged tile whose northern neighbour is not bridged, as at Lumbridge (3249, 3226).
+        manager.markBridged(new Position(600, 600, 1));
+
+        GameObjectDefinition definition = new GameObjectDefinition(1, "test", "test", 1, 1, 0, true, false, false,
+                OptionalInt.empty(), ImmutableList.of(), false, null);
+        GameObject wall = Mockito.mock(GameObject.class);
+        Mockito.when(wall.def()).thenReturn(definition);
+        Mockito.when(wall.getObjectType()).thenReturn(ObjectType.STRAIGHT_WALL);
+        Mockito.when(wall.getDirection()).thenReturn(ObjectDirection.NORTH);
+        Mockito.when(wall.getPosition()).thenReturn(new Position(600, 600, 1));
+
+        CollisionUpdate.Builder map = new CollisionUpdate.Builder();
+        map.type(CollisionUpdateType.ADDING);
+        map.mapCoordinates();
+        map.object(wall);
+        manager.apply(map.build(), true);
+
+        // Both halves of the wall land on the lowered level, and none are left behind on the level above.
+        assertEquals(WALL_NORTH, flagsAt(600, 600, 0));
+        assertEquals(WALL_SOUTH, flagsAt(600, 601, 0));
+        assertEquals(0, flagsAt(600, 601, 1));
+        assertFalse(manager.traversable(new Position(600, 600, 0), EntityType.PLAYER, Direction.NORTH, false));
+        assertFalse(manager.traversable(new Position(600, 601, 0), EntityType.PLAYER, Direction.SOUTH, false));
     }
 
     @Test

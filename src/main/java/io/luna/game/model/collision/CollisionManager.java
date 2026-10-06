@@ -259,13 +259,17 @@ public final class CollisionManager {
         CollisionUpdateType type = update.getType();
         Set<ChunkRepository> snapshots = new HashSet<>();
 
+        // An object is lowered by a bridge as a whole, according to its own tile, so a wall is never split in two.
+        Position origin = update.getOrigin();
+        boolean bridgedObject = update.isMapCoordinates() && origin != null && isBridged(origin);
+
         for (Map.Entry<Position, Integer> entry : update.getFlags().entrySet()) {
             Position position = entry.getKey();
             Chunk chunk = position.getChunk();
 
             int height = position.getZ();
             // Adjust for bridges: map coordinates of some tiles are effectively one level lower.
-            if (update.isMapCoordinates() && bridges.contains(new Position(position.getX(), position.getY(), 1))) {
+            if (update.isMapCoordinates() && (origin != null ? bridgedObject : isBridged(position))) {
                 if (--height < 0) {
                     continue;
                 }
@@ -373,6 +377,16 @@ public final class CollisionManager {
     }
 
     /**
+     * Returns whether the column of tiles at {@code position} is bridged, in map coordinates.
+     *
+     * @param position The tile to test. Its height is ignored.
+     * @return {@code true} if the tile is bridged.
+     */
+    private boolean isBridged(Position position) {
+        return bridges.contains(new Position(position.getX(), position.getY(), 1));
+    }
+
+    /**
      * Returns whether an entity of {@code type} may move one step from {@code position} in {@code direction}.
      * <p>
      * This method performs a collision lookup in the appropriate {@link ChunkRepository}. For diagonal movement, both
@@ -445,14 +459,39 @@ public final class CollisionManager {
                                Direction direction,
                                int size,
                                boolean safe) {
+        return traversable(position, type, direction, size, RouteStrategy.NORMAL, safe);
+    }
 
-        if (size <= 1 || direction == Direction.NONE) {
+    /**
+     * Returns whether an entity of {@code type} covering {@code size} by {@code size} tiles may move one step in
+     * {@code direction}, moving onto tiles as {@code strategy} allows. {@code position} is the south west tile of the
+     * entity.
+     * <p>
+     * A size 1 entity walking on ordinary ground is checked against the collision matrix directly. Every other entity
+     * is checked by {@link StepValidator}.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type attempting the move.
+     * @param direction The direction being attempted.
+     * @param size The width and length of the entity, in tiles.
+     * @param strategy The rule for moving onto a tile.
+     * @param safe {@code true} to use snapshot matrices, otherwise {@code false} to use live matrices.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position,
+                               EntityType type,
+                               Direction direction,
+                               int size,
+                               RouteStrategy strategy,
+                               boolean safe) {
+
+        if (direction == Direction.NONE || (size <= 1 && strategy == RouteStrategy.NORMAL)) {
             return traversable(position, type, direction, safe);
         }
 
         int extraFlag = type == EntityType.NPC ? CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS : 0;
         return StepValidator.canTravel(view(safe), position.getZ(), position.getX(), position.getY(),
-                direction.getTranslateX(), direction.getTranslateY(), size, extraFlag, RouteStrategy.NORMAL);
+                direction.getTranslateX(), direction.getTranslateY(), size, extraFlag, strategy);
     }
 
     /**
@@ -467,6 +506,22 @@ public final class CollisionManager {
      */
     public boolean traversable(Position position, EntityType type, Direction direction, int size) {
         return traversable(position, type, direction, size, false);
+    }
+
+    /**
+     * Convenience overload of {@link #traversable(Position, EntityType, Direction, int, RouteStrategy, boolean)} that
+     * uses live matrices.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type.
+     * @param direction The attempted direction.
+     * @param size The width and length of the entity, in tiles.
+     * @param strategy The rule for moving onto a tile.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position, EntityType type, Direction direction, int size,
+                               RouteStrategy strategy) {
+        return traversable(position, type, direction, size, strategy, false);
     }
 
     /**

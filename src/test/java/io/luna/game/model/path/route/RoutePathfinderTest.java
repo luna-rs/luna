@@ -99,6 +99,13 @@ final class RoutePathfinderTest {
     }
 
     @Test
+    void testNonNormalStrategyDoesNotFallBackToTheOldPathfinder() {
+        RoutePathfinder water = new RoutePathfinder(map.manager(), 1, 0, RouteStrategy.BLOCKED);
+        PathResult<Position> result = water.find(new Position(100, 100), new Position(300, 100));
+        assertEquals(PathResultType.FAILED, result.getType());
+    }
+
+    @Test
     void testFullIntelligenceAlwaysTakesTheRouteOfTheGame() {
         RoutePathfinder standard = pathfinder(1, 0);
         RoutePathfinder smart = new RoutePathfinder(map.manager(), 1, 0, RouteStrategy.NORMAL, 1.0);
@@ -142,6 +149,7 @@ final class RoutePathfinderTest {
         Mockito.when(mob.getWorld()).thenReturn(world);
         Mockito.when(mob.getType()).thenReturn(entityType);
         Mockito.when(mob.size()).thenReturn(size);
+        Mockito.when(mob.getRouteStrategy()).thenReturn(RouteStrategy.NORMAL);
         return mob;
     }
 
@@ -178,6 +186,7 @@ final class RoutePathfinderTest {
         Mob walker = Mockito.mock(Npc.class);
         Mockito.when(walker.getWorld()).thenReturn(world);
         Mockito.when(walker.size()).thenReturn(1);
+        Mockito.when(walker.getRouteStrategy()).thenReturn(RouteStrategy.NORMAL);
         assertTrue(RoutePathfinder.forNpc(walker).find(start, end).getPath().size() > 1);
     }
 

@@ -258,7 +258,8 @@ public class WalkingNavigator {
      */
     public boolean step(Direction direction) {
         if (direction != Direction.NONE &&
-                collisionManager.traversable(mob.getPosition(), mob.getType(), direction, mob.size())) {
+                collisionManager.traversable(mob.getPosition(), mob.getType(), direction, mob.size(),
+                        mob.getRouteStrategy())) {
             mob.getWalking().addStep(direction);
             return true;
         }
@@ -275,7 +276,8 @@ public class WalkingNavigator {
         ImmutableList<Direction> directions = includeDiagonals ? Direction.ALL_EXCEPT_NONE : Direction.NESW;
         List<Direction> selectFrom = new ArrayList<>(directions.size());
         for (Direction next : directions) {
-            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next, mob.size())) {
+            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next, mob.size(),
+                    mob.getRouteStrategy())) {
                 selectFrom.add(next);
             }
         }

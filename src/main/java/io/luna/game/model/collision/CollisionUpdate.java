@@ -50,6 +50,11 @@ public final class CollisionUpdate {
         private boolean mapCoordinates;
 
         /**
+         * The tile of the object this update was built for, or {@code null} if it was not built from an object.
+         */
+        private Position origin;
+
+        /**
          * Sets the type of the {@link CollisionUpdate}.
          *
          * <p>
@@ -155,6 +160,7 @@ public final class CollisionUpdate {
         public void object(GameObject object) {
             GameObjectDefinition definition = object.def();
             Position position = object.getPosition();
+            origin = position;
             int type = object.getObjectType().getId();
             boolean impenetrable = definition.isImpenetrable();
             int orientation = object.getDirection().getId();
@@ -196,7 +202,7 @@ public final class CollisionUpdate {
          */
         public CollisionUpdate build() {
             Preconditions.checkNotNull(type, "update type must not be null");
-            return new CollisionUpdate(type, ImmutableMap.copyOf(flags), mapCoordinates);
+            return new CollisionUpdate(type, ImmutableMap.copyOf(flags), mapCoordinates, origin);
         }
 
         /**
@@ -235,16 +241,25 @@ public final class CollisionUpdate {
     private final boolean mapCoordinates;
 
     /**
+     * The tile of the object this update was built for, or {@code null} if it was not built from an object. Objects
+     * are lowered by a bridge as a whole, according to this tile, so that a wall is never split across two levels.
+     */
+    private final Position origin;
+
+    /**
      * Creates a new {@link CollisionUpdate}.
      *
      * @param type The {@link CollisionUpdateType} describing whether collision is being added or removed.
      * @param flags A map of positions to their flag masks.
      * @param mapCoordinates If the positions are in map coordinates.
+     * @param origin The tile of the object the update was built for, or {@code null}.
      */
-    public CollisionUpdate(CollisionUpdateType type, ImmutableMap<Position, Integer> flags, boolean mapCoordinates) {
+    public CollisionUpdate(CollisionUpdateType type, ImmutableMap<Position, Integer> flags, boolean mapCoordinates,
+                           Position origin) {
         this.type = type;
         this.flags = flags;
         this.mapCoordinates = mapCoordinates;
+        this.origin = origin;
     }
 
     /**
@@ -254,6 +269,15 @@ public final class CollisionUpdate {
      */
     public boolean isMapCoordinates() {
         return mapCoordinates;
+    }
+
+    /**
+     * Returns the tile of the object this update was built for.
+     *
+     * @return The tile of the object, or {@code null} if the update was not built from an object.
+     */
+    public Position getOrigin() {
+        return origin;
     }
 
     /**

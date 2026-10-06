@@ -110636,6 +110636,7 @@
       "y": 3259,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110684,6 +110685,7 @@
       "y": 3238,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110696,6 +110698,7 @@
       "y": 3244,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110708,6 +110711,7 @@
       "y": 3246,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110736,6 +110740,7 @@
       "y": 3235,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110748,6 +110753,7 @@
       "y": 3230,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110760,6 +110766,7 @@
       "y": 3234,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110772,6 +110779,7 @@
       "y": 3228,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110904,6 +110912,7 @@
       "y": 3221,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -110940,6 +110949,7 @@
       "y": 3220,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111144,6 +111154,7 @@
       "y": 3212,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111324,6 +111335,7 @@
       "y": 3322,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111348,6 +111360,7 @@
       "y": 3313,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111360,6 +111373,7 @@
       "y": 3314,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111372,6 +111386,7 @@
       "y": 3318,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111384,6 +111399,7 @@
       "y": 3320,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111408,6 +111424,7 @@
       "y": 3303,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111420,6 +111437,7 @@
       "y": 3314,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111444,6 +111462,7 @@
       "y": 3287,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111456,6 +111475,7 @@
       "y": 3285,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111468,6 +111488,7 @@
       "y": 3288,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111492,6 +111513,7 @@
       "y": 3281,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111600,6 +111622,7 @@
       "y": 3271,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111648,6 +111671,7 @@
       "y": 3267,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111660,6 +111684,7 @@
       "y": 3270,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111684,6 +111709,7 @@
       "y": 3267,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111696,6 +111722,7 @@
       "y": 3268,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -111708,6 +111735,7 @@
       "y": 3265,
       "z": 0
     },
+    "route_strategy": "BLOCKED",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"

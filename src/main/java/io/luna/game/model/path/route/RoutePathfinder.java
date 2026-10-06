@@ -20,7 +20,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * waypoints, which the walking queue fills in with the tiles between them.
  * <p>
  * The search only covers about {@value RouteFinder#SEARCH_SIZE} tiles around the mob. Destinations farther away are
- * given to a {@link PlayerPathfinder}, which has no such limit.
+ * given to a {@link PlayerPathfinder}, which has no such limit. That one knows nothing of a {@link RouteStrategy}, so
+ * when the strategy is not {@link RouteStrategy#NORMAL} such destinations are not searched for and the search fails.
  * <p>
  * Use {@link #forPlayer(Mob)}, {@link #forNpc(Mob)} and {@link #forBot(Mob)} to create the pathfinder that suits a mob.
  *
@@ -57,13 +58,14 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
 
     /**
      * Creates a pathfinder for an NPC. NPCs are stopped by other NPCs and by players, so the routes go around them.
+     * The NPC moves onto tiles as its {@link Mob#getRouteStrategy() route strategy} allows.
      *
      * @param mob The NPC that will walk the routes.
      * @return The new pathfinder.
      */
     public static RoutePathfinder forNpc(Mob mob) {
         return new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(),
-                CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS, RouteStrategy.NORMAL, 1.0);
+                CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS, mob.getRouteStrategy(), 1.0);
     }
 
     /**
@@ -147,6 +149,10 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
             return new PathResult<>(PathResultType.EMPTY, new ArrayDeque<>(0));
         } else if (Math.abs(origin.getX() - target.getX()) > MAX_RANGE ||
                 Math.abs(origin.getY() - target.getY()) > MAX_RANGE) {
+            if (strategy != RouteStrategy.NORMAL) {
+                // The fallback knows nothing of strategies, and would lead the mob off the terrain it belongs to.
+                return failed();
+            }
             return new PlayerPathfinder(collisionManager, origin.getZ()).find(origin, target);
         }
 
