@@ -15,6 +15,7 @@ ShopHandler.create("Slayer Equipment") {
         "Enchanted gem" x 50
         "Mirror shield" x 100
         "Leaf-bladed spear" x 50
+        4160 x 50000 // Broad arrows
         "Bag of salt" x 5000
         "Rock hammer" x 50
         "Facemask" x 50
