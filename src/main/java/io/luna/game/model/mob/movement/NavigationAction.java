@@ -156,7 +156,7 @@ final class NavigationAction extends Action<Mob> {
         }
 
         // Cancel any active asynchronous path before re-pathing a continuous request.
-        if (current != null && !current.isDone() && request.isContinuous()) {
+        if (current != null && !current.isDone() && request.isContinuous() && targetChanged) {
             current.cancel(true);
             current = null;
         }
@@ -164,9 +164,8 @@ final class NavigationAction extends Action<Mob> {
         // Re-path to target if needed.
         if (current == null) {
             current = isTargetMob ?
-                    navigator.walk(navigator.computeOffsetPosition((Entity) target, request.getOffsetDir()),
-                            request.getPathfinder(), request.isAsync()) :
-                    navigator.walk(target, request.getPathfinder(), request.isAsync());
+                    navigator.walk(request, navigator.computeOffsetPosition((Entity) target, request.getOffsetDir())) :
+                    navigator.walk(request, target);
             lastPosition = targetPos;
         }
         return false;
@@ -174,6 +173,10 @@ final class NavigationAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
+        if (current != null) {
+            current.cancel(false);
+            current = null;
+        }
         mob.interact(null);
         if (reachedOnce) {
             result = NavigationResult.REACHED;

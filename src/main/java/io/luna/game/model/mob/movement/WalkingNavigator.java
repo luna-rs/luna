@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
 
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
@@ -368,6 +369,12 @@ public class WalkingNavigator {
             }
             return null;
         });
+        pathFuture.whenComplete((path, error) -> {
+            if (pathFuture.isCancelled()) {
+                // Prevent queued searches from starting. Running searches are not interrupted by CompletableFuture.
+                pathResultFuture.cancel(false);
+            }
+        });
         return handleExceptions(target, pathFuture);
     }
 
@@ -377,14 +384,35 @@ public class WalkingNavigator {
      * The path is computed using the supplied pathfinder, then applied to the mob's walking queue on the game
      * executor.
      *
+     * @param request The navigation request that owns this path.
      * @param destination The destination to walk to.
-     * @param pathfinder The pathfinder implementation to use.
-     * @param async {@code true} to perform pathfinding asynchronously, otherwise {@code false}.
      * @return A future that completes once the path has been computed and queued.
      */
-    CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
-        CompletableFuture<Void> result = findPath(mob.getPosition(), destination.abs(), pathfinder, async)
-                .thenAcceptAsync(path -> mob.getWalking().replacePath(path), mob.getService().getGameExecutor());
+    CompletableFuture<Void> walk(NavigationRequest request, Locatable destination) {
+        CompletableFuture<Void> result = new CompletableFuture<>();
+        CompletableFuture<Deque<Position>> search = findPath(mob.getPosition(), destination.abs(),
+                request.getPathfinder(), request.isAsync());
+        CompletableFuture<Void> application = search.thenAcceptAsync(path -> {
+            // Checked on the game thread immediately before mutating walking. A newer search within the same
+            // request cancels result; a replacement or finished request invalidates ownership.
+            if (result.isDone() || active != request || request.getPending().isDone()) {
+                return;
+            }
+            mob.getWalking().replacePath(path);
+        }, mob.getService().getGameExecutor());
+        application.whenComplete((ignored, error) -> {
+            if (error == null) {
+                result.complete(null);
+            } else {
+                result.completeExceptionally(error);
+            }
+        });
+        result.whenComplete((ignored, error) -> {
+            if (result.isCancelled()) {
+                search.cancel(false);
+                application.cancel(false);
+            }
+        });
         return handleExceptions(destination, result);
     }
 
@@ -421,13 +449,23 @@ public class WalkingNavigator {
      * @return A future that logs unexpected failures and returns {@code null} when recovery is needed.
      */
     <T> CompletableFuture<T> handleExceptions(Locatable target, CompletableFuture<T> result) {
-        return result.exceptionally(ex -> {
-            boolean ignored = ex instanceof CancellationException;
+        CompletableFuture<T> handled = result.exceptionally(ex -> {
+            Throwable cause = ex;
+            while (cause instanceof CompletionException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            boolean ignored = cause instanceof CancellationException;
             if (!ignored) {
                 logger.error("Pathfinding for mob {} to target {} failed!", mob, target, ex);
             }
             return null;
         });
+        handled.whenComplete((value, error) -> {
+            if (handled.isCancelled()) {
+                result.cancel(false);
+            }
+        });
+        return handled;
     }
 
     /**
