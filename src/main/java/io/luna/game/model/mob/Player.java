@@ -39,7 +39,7 @@ import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
-import io.luna.game.model.path.PlayerPathfinder;
+import io.luna.game.model.path.RoutePathfinder;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.LunaChannelFilter;
@@ -380,8 +380,8 @@ public class Player extends Mob {
     }
 
     @Override
-    public PlayerPathfinder getInteractionPf() {
-        return new PlayerPathfinder(world.getCollisionManager(), getZ());
+    public RoutePathfinder getInteractionPf() {
+        return RoutePathfinder.forPlayer(this);
     }
 
     @Override

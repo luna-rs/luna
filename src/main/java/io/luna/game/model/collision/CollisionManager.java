@@ -24,6 +24,9 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.path.LineOfSight;
+import io.luna.game.model.path.RouteStrategy;
+import io.luna.game.model.path.StepValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,7 +35,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -287,140 +289,31 @@ public final class CollisionManager {
     }
 
     /**
-     * Casts a projectile-style line-of-sight ray between two positions.
+     * Determines if there is a clear line of sight between two positions.
      * <p>
-     * This is a convenience overload of {@link #raycast(Position, Position, BiFunction)} that treats projectile
-     * collision as the blocking condition.
+     * Walls and objects that stop projectiles also stop sight. Reads the live collision data, so this must only be
+     * called from the game thread.
      *
-     * @param start The ray start position.
-     * @param end The ray end position.
-     * @return {@code true} if the ray reaches {@code end} without hitting an impenetrable obstacle,
-     * otherwise {@code false}.
+     * @param start The position of the viewer.
+     * @param end The position of what is viewed.
+     * @return {@code true} if nothing that blocks sight is between {@code start} and {@code end}.
+     * @throws IllegalArgumentException If the positions are not on the same height level.
      */
     public boolean raycast(Position start, Position end) {
-        return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
+        checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
+        return LineOfSight.hasLineOfSight(view(false), start.getZ(), start.getX(), start.getY(), end.getX(),
+                end.getY());
     }
 
     /**
-     * Casts a ray between {@code start} and {@code end} using Bresenham's line algorithm.
-     * <p>
-     * For each step in the line, the direction from the previous tile to the current tile is passed to {@code cond}.
-     * If {@code cond} returns {@code true} for any step, the ray is considered blocked and this method returns
-     * {@code false}. Otherwise, the ray reaches its endpoint and this method returns {@code true}.
+     * Creates a reader of the collision flags of tiles.
      *
-     * @param start The ray start position.
-     * @param end The ray end position.
-     * @param cond The blocking condition applied to each traversed segment.
-     * @return {@code true} if the ray reaches {@code end}, otherwise {@code false}.
-     * @throws IllegalArgumentException If the positions are not on the same height level.
+     * @param safe {@code true} to read the snapshots, which is safe on any thread, or {@code false} to read the live
+     * data, which is only safe on the game thread.
+     * @return The new view. Views are cheap and not thread safe: use a new one for every search.
      */
-    public boolean raycast(Position start,
-                           Position end,
-                           BiFunction<Position, Direction, Boolean> cond) {
-        checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
-        if (start.equals(end)) {
-            return true;
-        }
-
-        int x0 = start.getX();
-        int y0 = start.getY();
-        int x1 = end.getX();
-        int y1 = end.getY();
-
-        boolean steep = Math.abs(x0 - x1) < Math.abs(y0 - y1);
-
-        // If the line is steep, swap x/y for both endpoints.
-        if (steep) {
-            int tmp = x0;
-            x0 = y0;
-            y0 = tmp;
-            tmp = x1;
-            x1 = y1;
-            y1 = tmp;
-        }
-
-        // Ensure we always iterate from left to right.
-        if (x0 > x1) {
-            int tmp = x0;
-            x0 = x1;
-            x1 = tmp;
-            tmp = y0;
-            y0 = y1;
-            y1 = tmp;
-        }
-
-        int dx = x1 - x0;
-        int dy = y1 - y0;
-
-        // Vertical line guard (after swaps).
-        if (dx == 0) {
-            int stepY = (y1 > y0) ? 1 : -1;
-
-            int lastX = start.getX();
-            int lastY = start.getY();
-            boolean first = true;
-
-            for (int y = y0; y != y1 + stepY; y += stepY) {
-                int currX = steep ? y : x0;
-                int currY = steep ? x0 : y;
-
-                if (first) {
-                    first = false;
-                } else {
-                    Direction direction = Direction.between(lastX, lastY, currX, currY);
-                    Position last = new Position(lastX, lastY, start.getZ());
-
-                    if (cond.apply(last, direction)) {
-                        return false;
-                    }
-                }
-
-                lastX = currX;
-                lastY = currY;
-            }
-            return true;
-        }
-
-        int yStep = (y1 > y0) ? 1 : -1;
-        float derror = Math.abs(dy / (float) dx);
-        float error = 0.0f;
-
-        int y = y0;
-        int lastX = start.getX();
-        int lastY = start.getY();
-        boolean first = true;
-
-        for (int x = x0; x <= x1; x++) {
-            int currX, currY;
-            if (steep) {
-                currX = y;
-                currY = x;
-            } else {
-                currX = x;
-                currY = y;
-            }
-
-            error += derror;
-            if (error >= 0.5f) {
-                y += yStep;
-                error -= 1.0f;
-            }
-
-            if (first) {
-                first = false;
-            } else {
-                Direction direction = Direction.between(lastX, lastY, currX, currY);
-                Position last = new Position(lastX, lastY, start.getZ());
-
-                if (cond.apply(last, direction)) {
-                    return false;
-                }
-            }
-
-            lastX = currX;
-            lastY = currY;
-        }
-        return true;
+    public CollisionView view(boolean safe) {
+        return new CollisionView(chunks, safe);
     }
 
     /**
@@ -538,8 +431,7 @@ public final class CollisionManager {
      * {@code direction}. {@code position} is the south west tile of the entity.
      * <p>
      * Only the tiles the entity moves into are checked, never the ones it already covers, so an entity is not stopped
-     * by its own {@link CollisionFlag#BLOCK_NPCS}. A diagonal step needs both of its orthogonal steps to be possible, as
-     * well as the corner tile it moves into.
+     * by its own {@link CollisionFlag#BLOCK_NPCS}. The rules are those of {@link StepValidator}.
      *
      * @param position The south west tile the entity covers.
      * @param type The entity type attempting the move.
@@ -558,30 +450,9 @@ public final class CollisionManager {
             return traversable(position, type, direction, safe);
         }
 
-        int dx = direction.getTranslateX();
-        int dy = direction.getTranslateY();
-        if (direction.isDiagonal()) {
-            for (Direction component : Direction.diagonalComponents(direction)) {
-                if (!traversable(position, type, component, size, safe)) {
-                    return false;
-                }
-            }
-
-            int cornerX = position.getX() + (dx > 0 ? size : -1);
-            int cornerY = position.getY() + (dy > 0 ? size : -1);
-            Position corner = new Position(cornerX, cornerY, position.getZ());
-            return chunks.load(corner).traversable(corner, type, direction, safe);
-        }
-
-        for (int i = 0; i < size; i++) {
-            int x = dx > 0 ? position.getX() + size : dx < 0 ? position.getX() - 1 : position.getX() + i;
-            int y = dy > 0 ? position.getY() + size : dy < 0 ? position.getY() - 1 : position.getY() + i;
-            Position next = new Position(x, y, position.getZ());
-            if (!chunks.load(next).traversable(next, type, direction, safe)) {
-                return false;
-            }
-        }
-        return true;
+        int extraFlag = type == EntityType.NPC ? CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS : 0;
+        return StepValidator.canTravel(view(safe), position.getZ(), position.getX(), position.getY(),
+                direction.getTranslateX(), direction.getTranslateY(), size, extraFlag, RouteStrategy.NORMAL);
     }
 
     /**

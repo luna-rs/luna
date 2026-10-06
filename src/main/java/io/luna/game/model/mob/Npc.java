@@ -19,7 +19,7 @@ import io.luna.game.model.mob.movement.wandering.PatrolAction;
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
-import io.luna.game.model.path.SimplePathfinder;
+import io.luna.game.model.path.RoutePathfinder;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -193,10 +193,8 @@ public class Npc extends Mob {
     }
 
     @Override
-    public SimplePathfinder getInteractionPf() {
-        // TODO@0.5.0 Some NPCs should use the player's intelligent pathfinder.
-        // TODO@0.5.0 How does this relate to pursuit action? Is this ever even used?
-        return new SimplePathfinder(world.getCollisionManager());
+    public RoutePathfinder getInteractionPf() {
+        return RoutePathfinder.forNpc(this);
     }
 
     @Override

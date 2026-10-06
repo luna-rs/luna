@@ -11,12 +11,9 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
-import io.luna.game.model.path.BotPathfinder;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
-import io.luna.game.model.path.PlayerPathfinder;
-import io.luna.game.model.path.SimplePathfinder;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -390,24 +387,21 @@ public class WalkingNavigator {
     }
 
     /**
-     * Selects the default pathfinder for this mob.
-     * <ul>
-     *     <li>{@link Bot} mobs use {@link BotPathfinder}.</li>
-     *     <li>{@link Player} mobs use {@link PlayerPathfinder}.</li>
-     *     <li>All other mobs use {@link SimplePathfinder}.</li>
-     * </ul>
+     * Selects the default pathfinder for this mob: {@link PathfinderType#BOT} for bots, {@link PathfinderType#PLAYER}
+     * for other players and {@link PathfinderType#NPC} for NPCs.
      *
      * @return The default pathfinder for this mob.
      */
     GamePathfinder<Position> getDefaultPathfinder() {
-        int plane = mob.getPosition().getZ();
+        PathfinderType type;
         if (mob instanceof Bot) {
-            return new BotPathfinder(collisionManager, plane);
+            type = PathfinderType.BOT;
         } else if (mob instanceof Player) {
-            return new PlayerPathfinder(collisionManager, plane);
+            type = PathfinderType.PLAYER;
         } else {
-            return new SimplePathfinder(collisionManager);
+            type = PathfinderType.NPC;
         }
+        return type.getPfFunction().apply(mob);
     }
 
     /**

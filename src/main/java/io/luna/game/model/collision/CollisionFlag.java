@@ -225,6 +225,31 @@ public final class CollisionFlag {
     public static final int BLOCK_SOUTH_EAST = WALL_NORTH_WEST | WALL_NORTH | WALL_WEST | LOC | FLOOR_BLOCKED;
 
     /**
+     * The flags for the middle tiles of the leading edge of a large mob that is moving west. A tile there must be open
+     * on every side but the one the mob is leaving.
+     */
+    public static final int BLOCK_NORTH_AND_SOUTH_EAST =
+            WALL_NORTH | WALL_NORTH_EAST | WALL_EAST | WALL_SOUTH_EAST | WALL_SOUTH | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags for the middle tiles of the leading edge of a large mob that is moving east.
+     */
+    public static final int BLOCK_NORTH_AND_SOUTH_WEST =
+            WALL_NORTH_WEST | WALL_NORTH | WALL_SOUTH | WALL_SOUTH_WEST | WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags for the middle tiles of the leading edge of a large mob that is moving south.
+     */
+    public static final int BLOCK_NORTH_EAST_AND_WEST =
+            WALL_NORTH_WEST | WALL_NORTH | WALL_NORTH_EAST | WALL_EAST | WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
+     * The flags for the middle tiles of the leading edge of a large mob that is moving north.
+     */
+    public static final int BLOCK_SOUTH_EAST_AND_WEST =
+            WALL_EAST | WALL_SOUTH_EAST | WALL_SOUTH | WALL_SOUTH_WEST | WALL_WEST | LOC | FLOOR_BLOCKED;
+
+    /**
      * The wall flags indexed by {@link io.luna.game.model.Direction#getId()}, in the order north west, north, north
      * east, west, east, south west, south, south east. Must not be modified.
      */
