@@ -19,6 +19,10 @@ import static io.luna.game.model.object.ObjectType.*;
  * Instances of this class are typically created via the nested {@link Builder} and then consumed by
  * {@link CollisionManager#apply(CollisionUpdate, boolean)}.
  * </p>
+ * <p>
+ * The object collision rules in {@link Builder#object} are ported from rsmod's {@code toggleLoc}, which is licensed
+ * under the ISC License, Copyright (c) 2025 RS Mod. See the third party notices in LICENSE.txt.
+ * </p>
  *
  * @author Major
  * @author lare96

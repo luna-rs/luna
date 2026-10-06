@@ -13,6 +13,9 @@ import static io.luna.game.model.collision.CollisionFlag.*;
  * are the same ones the real game crosses.
  * <p>
  * The algorithm follows rsmod's routefinder.
+ * <p>
+ * Portions of this class are derived from rsmod's routefinder, which is licensed under the ISC License, Copyright (c)
+ * 2025 RS Mod. See the third party notices in LICENSE.txt.
  *
  * @author hydrozoa
  */

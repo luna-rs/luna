@@ -13,6 +13,9 @@ import static io.luna.game.model.collision.CollisionFlag.*;
  * entered from, so that a large mob cannot squeeze through a gap that is too narrow for it.
  * <p>
  * The rules follow rsmod's routefinder, which emulates the way the real game walks mobs.
+ * <p>
+ * Portions of this class are derived from rsmod's routefinder, which is licensed under the ISC License, Copyright (c)
+ * 2025 RS Mod. See the third party notices in LICENSE.txt.
  *
  * @author hydrozoa
  */

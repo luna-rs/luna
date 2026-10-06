@@ -13,6 +13,10 @@ import io.luna.game.model.EntityType;
  * A wall flag set on a tile blocks entering that tile from the flag's direction. For example, {@link #WALL_SOUTH} on a tile
  * blocks a mob walking north into it from the tile below.
  * </p>
+ * <p>
+ * The flag layout is derived from rsmod's routefinder, which is licensed under the ISC License, Copyright (c) 2025
+ * RS Mod. See the third party notices in LICENSE.txt.
+ * </p>
  *
  * @author Major
  * @author hydrozoa
