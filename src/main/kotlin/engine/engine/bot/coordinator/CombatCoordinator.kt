@@ -109,13 +109,15 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             zones += SubZone.VARROCK_SEWERS
 
             if (bot.combatLevel > 70) {
-                // green dragon
+                zones += SubZone.GREEN_DRAGONS
             }
         } else if (bot.combatLevel < 100) {
+            zones += SubZone.GREEN_DRAGONS
             // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
             //Dust devil, Aberrant specter, Greater demon
 
         } else if (bot.combatLevel >= 100 && bot.combatLevel <= 126) {
+            zones += SubZone.GREEN_DRAGONS
             // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
             // Kurask, Blue dragon, Saradomin/Zamorak Wizards
             // Gargoyle, Nechryael, Abyssal demon, Ice troll, Blue dragon

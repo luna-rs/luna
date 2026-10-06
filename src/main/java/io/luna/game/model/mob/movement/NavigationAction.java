@@ -117,7 +117,7 @@ final class NavigationAction extends Action<Mob> {
         if (reached) {
             // When reached: clear walking queue, cancel pathing, and stop action if tracking isn't required.
             reachedOnce = true;
-            if(!request.isContinuous()) {
+            if (!request.isContinuous()) {
                 // TODO: More testing around this with following, combat, and normal interactions..
                 mob.getWalking().clear();
             }
@@ -161,8 +161,8 @@ final class NavigationAction extends Action<Mob> {
         // Re-path to target if needed.
         if (current == null) {
             current = isTargetMob ?
-                    navigator.walk(request, navigator.computeOffsetPosition((Entity) target, request.getOffsetDir())) :
-                    navigator.walk(request, target);
+                    navigator.walk(navigator.computeOffsetPosition((Entity) request.getTarget(), request.getOffsetDir()), request.getPathfinder(), request.isAsync()) :
+                    navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
             lastPosition = targetPos;
         }
         return false;

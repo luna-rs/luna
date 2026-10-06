@@ -65,6 +65,18 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             return true
         }
 
+        if(bot.inventory.isFull) {
+            if(handler.banking.travelToBankDepositAll()) {
+                bot.log("Clearing full inventory and preparing.")
+                prepareInventory(budget)
+                return false
+            } else {
+                bot.log("Could not clear full inventory.")
+                stop()
+                return true
+            }
+        }
+
         // Budget is based on total GP wealth, but shops can only spend coins physically carried in the inventory.
         var remainingBudget = minOf(budget, bot.inventory.computeAmountForId(COINS_ID))
         if (remainingBudget < 1) {

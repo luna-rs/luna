@@ -15,6 +15,7 @@ import java.util.List;
  * grouped by their concrete message class so scripts and handlers can quickly check for specific response types.
  *
  * @author lare96
+ * @author TheLining
  */
 public final class BotInputMessageHandler {
 
@@ -54,7 +55,7 @@ public final class BotInputMessageHandler {
         List<BotMessage<?>> messages = received.get(msg.getMessage().getClass());
         messages.add(msg);
         if (messages.size() > MAX_MESSAGES_PER_TYPE) {
-            messages.remove(0);
+            messages.removeFirst();
         }
     }
 

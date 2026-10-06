@@ -86,8 +86,6 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
      */
     suspend fun fleeWilderness(): Boolean {
-        // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
-        //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
         bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
@@ -137,8 +135,6 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()
         } else if (bot.healthPercent < 15) {
-            // TODO@1.0 Only smart bots should always flee using ::home. Less intelligent bots should sometimes
-            //  panic-run, misclick, hesitate, or continue fighting too long.
             bot.output.sendCommand("home")
         } else {
             // TODO@0.5.0 Add a reverse-pursuit action for bots. First check nearby tiles in the opposite direction

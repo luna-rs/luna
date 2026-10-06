@@ -3,9 +3,7 @@ package api.bot.action
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
-import api.bot.SuspendableFuture.SuspendableFutureSuccess
 import api.bot.zone.SubZone
-import api.bot.zone.Zone
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
@@ -20,27 +18,22 @@ import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 
 /**
- * Handles bank-related actions for a single [io.luna.game.model.mob.bot.Bot].
+ * Handles banking actions performed by [bot].
  *
- * This action handler exposes higher-level suspendable banking operations such as depositing items,
- * withdrawing items, depositing the inventory, locating the home bank, and toggling noted withdrawal mode.
+ * Provides higher-level operations for depositing and withdrawing items, locating banks, opening the bank interface, and
+ * configuring the bot's withdrawal mode. Banking interactions that use the client interface suspend until the expected
+ * inventory, bank, or overlay state changes.
  *
- * Most actions simulate normal client interaction by clicking the appropriate bank widget option and waiting until
- * the expected bank or inventory state changes.
- *
- * @param bot The bot that will perform the banking actions.
- * @param handler The parent bot action handler that owns this banking handler.
+ * @param bot The bot performing the banking actions.
+ * @param handler The parent action handler used for travel, interactions, and supply management.
  * @author lare96
  */
 class BotBankingActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
-    // todo clean up redo docs
     companion object {
 
         /**
-         * The known home-area bank booth positions.
-         *
-         * These positions are lazily resolved into loaded [GameObject] instances the first time [homeBank] is called.
+         * Positions of the bank booths used by bots in the home area.
          */
         val HOME_BANK_POSITIONS = listOf(
             Position(3186, 3446),
@@ -52,10 +45,12 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         )
 
         /**
-         * The cached home bank booth objects.
+         * Lazily resolved bank objects at [HOME_BANK_POSITIONS].
          *
-         * This cache is shared across all banking handlers because the home bank booths are static world objects.
-         * It is populated lazily from its getter.
+         * The cache is populated the first time it is accessed and shared by all banking handlers. Only objects registered
+         * as banking objects by [Banking] are included.
+         *
+         * @throws IllegalStateException If no banking objects can be resolved from [HOME_BANK_POSITIONS].
          */
         private val homeBanks = HashSet<GameObject>()
             get() {
@@ -80,28 +75,25 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Returns a random loaded bank object from the home area.
+     * Returns a random bank object from the configured home bank booths.
      *
-     * The home bank objects are looked up lazily and cached after the first successful lookup.
-     * Only objects whose ids are registered in [Banking.bankingObjects] are accepted.
-     *
-     * @return A random home-area bank object.
-     * @throws IllegalStateException If none of the configured home bank positions contain a loaded
-     * banking object.
+     * @return A loaded home bank object.
+     * @throws IllegalStateException If the home bank objects cannot be resolved.
      */
     fun homeBank(): GameObject {
         return homeBanks.random()
     }
 
     /**
-     * Deposits the requested [item] from the bot's inventory into the open bank.
+     * Deposits [item] from the bot's inventory into the currently open bank.
      *
-     * If the requested amount is greater than the amount currently held, the action deposits the
-     * amount the bot actually has. The method chooses the matching bank menu option for 1, 5, 10,
-     * all, or X, then waits until the inventory amount decreases.
+     * The requested amount is capped to the amount currently held. The corresponding deposit option is used for amounts of
+     * 1, 5, 10, or all; other amounts use the deposit-X interface. The action succeeds once the held amount decreases.
      *
-     * @param item The item id and amount to deposit.
-     * @return `true` if the inventory amount changed after the deposit attempt, otherwise `false`.
+     * If the inventory slot exists but reports an amount of zero, the stale slot is cleared and the action succeeds.
+     *
+     * @param item The item and amount to deposit.
+     * @return `true` if the deposit completed or a stale zero-amount slot was cleared.
      */
     suspend fun deposit(item: Item): Boolean {
         bot.log("Depositing ${name(item)}.")
@@ -124,6 +116,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             bot.inventory[inventoryIndex] = null
             return true
         }
+
         var depositItem = item
         if (depositItem.amount > existingAmount) {
             depositItem = depositItem.withAmount(existingAmount)
@@ -169,26 +162,22 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Deposits every inventory item matching [id].
+     * Deposits the bot's entire inventory stack of [id].
      *
-     * This is a convenience wrapper around [deposit] that requests [Int.MAX_VALUE] as the amount,
-     * causing the handler to use the bank's deposit-all option when possible.
-     *
-     * @param id The id of the item to deposit.
-     * @return `true` if the item amount changed after the deposit attempt, otherwise `false`.
+     * @param id The item id to deposit.
+     * @return `true` if the deposit succeeds.
      */
     suspend fun depositAll(id: Int): Boolean {
         return deposit(Item(id, Int.MAX_VALUE))
     }
 
     /**
-     * Deposits every inventory item except the ids listed in [except].
+     * Deposits all carried items except those whose ids are contained in [except].
      *
-     * The bank must already be open before this method is called. Each item is deposited one at a time
-     * through [depositAll]. Failed deposits are logged, and the remaining items are still attempted.
+     * The bank must already be open. Every eligible inventory item is attempted even if an earlier deposit fails.
      *
-     * @param except Item ids that should remain in the bot's inventory.
-     * @return `true` if no items remain except those listed in [except], otherwise `false`.
+     * @param except Item ids that should remain in the inventory.
+     * @return `true` if no items other than those in [except] remain.
      */
     suspend fun depositInventory(except: Set<Int> = emptySet()): Boolean {
         if (!bot.bank.isOpen) {
@@ -211,14 +200,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Withdraws the requested [item] from the open bank into the bot's inventory.
+     * Withdraws [item] from the currently open bank.
      *
-     * If the requested amount is greater than the amount currently stored in the bank, the action
-     * withdraws the amount that is actually available. The method chooses the matching bank menu
-     * option for 1, 5, 10, all, or X, then waits until the bank amount decreases.
+     * The requested amount is capped to the amount currently banked. The corresponding withdrawal option is used for
+     * amounts of 1, 5, 10, or all; other amounts use the withdraw-X interface. The action succeeds once the banked amount
+     * decreases.
      *
-     * @param item The item id and amount to withdraw.
-     * @return `true` if the bank amount changed after the withdrawal attempt, otherwise `false`.
+     * @param item The item and amount to withdraw.
+     * @return `true` if the withdrawal succeeds.
      */
     suspend fun withdraw(item: Item): Boolean {
         bot.log("Withdrawing ${name(item)}.")
@@ -237,6 +226,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
 
         val existingAmount = bot.bank.computeAmountForId(item.id)
+
         var withdrawItem = item
         if (withdrawItem.amount > existingAmount) {
             withdrawItem = withdrawItem.withAmount(existingAmount)
@@ -280,22 +270,29 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Withdraws every banked item matching [id].
+     * Withdraws the entire bank stack of [id].
      *
-     * This is a convenience wrapper around [withdraw] that requests [Int.MAX_VALUE] as the amount,
-     * causing the handler to use the bank's withdraw-all option when possible.
-     *
-     * @param id The id of the item to withdraw.
-     * @return `true` if the bank amount changed after the withdraw attempt, otherwise `false`.
+     * @param id The item id to withdraw.
+     * @return `true` if the withdrawal succeeds.
      */
     suspend fun withdrawAll(id: Int): Boolean {
         return withdraw(Item(id, Int.MAX_VALUE))
     }
 
+    /**
+     * Withdraws every item in [items].
+     *
+     * If the inventory cannot currently hold all requested items, it is deposited first. All withdrawals are attempted even
+     * if an earlier withdrawal fails.
+     *
+     * @param items The items and amounts to withdraw.
+     * @return `true` if every requested withdrawal succeeds.
+     */
     suspend fun withdrawAll(items: List<Item>): Boolean {
         if (!bot.inventory.hasSpaceForAll(items)) {
             depositInventory()
         }
+
         var success = true
         for (it in items) {
             if (!withdraw(it)) {
@@ -305,10 +302,20 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         return success
     }
 
+    /**
+     * Attempts to withdraw each item in [items].
+     *
+     * If the inventory cannot currently hold all requested items, it is deposited first. Every item is attempted regardless
+     * of whether another withdrawal succeeds or fails.
+     *
+     * @param items The items and amounts to attempt to withdraw.
+     * @return `true` if at least one withdrawal succeeds.
+     */
     suspend fun withdrawAny(items: List<Item>): Boolean {
         if (!bot.inventory.hasSpaceForAll(items)) {
             depositInventory()
         }
+
         var success = false
         for (it in items) {
             if (withdraw(it)) {
@@ -319,20 +326,19 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Attempts to withdraw food from the bot's bank.
+     * Attempts to withdraw up to [amount] food items from the bot's bank.
      *
-     * The bank is scanned from start to finish, selecting food whose heal amount falls between [minimumHeal] and
-     * [maximumHeal]. If a single stack cannot satisfy the requested [amount], additional matching food stacks are selected
-     * until the requested amount is reached or no more valid food is available.
+     * Food is selected in bank order when its heal amount is within [minimumHeal] and [maximumHeal]. Multiple food stacks may
+     * be selected until the requested amount is satisfied or no more matching food remains.
      *
-     * If [retry] is enabled and the first pass finds no matching food, the method may retry with no heal restrictions. This
-     * lets callers prefer a specific food range while still falling back to any available food instead of failing outright.
+     * When [retry] is enabled and no food matches the requested heal range, the bank is scanned again without heal
+     * restrictions. If no withdrawal succeeds, the bot's preferred food is added to its wanted-item list.
      *
-     * @param amount The total number of food items to withdraw.
-     * @param minimumHeal The minimum heal amount each selected food item must provide.
-     * @param maximumHeal The maximum heal amount each selected food item may provide.
-     * @param retry If `true`, retry with no heal restrictions when the restricted search finds no food.
-     * @return `true` if at least one selected food item was successfully withdrawn.
+     * @param amount The number of food items to withdraw.
+     * @param minimumHeal The minimum permitted heal amount.
+     * @param maximumHeal The maximum permitted heal amount.
+     * @param retry Whether to retry using any available food if the preferred heal range produces no matches.
+     * @return `true` if at least one food withdrawal succeeds.
      */
     suspend fun withdrawAnyFood(
         amount: Int,
@@ -344,10 +350,12 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         fun resolveWithdrawList(min: Int, max: Int): List<Item> {
             val withdraw = ArrayList<Item>()
+
             for (item in bot.bank) {
                 if (currentAmount < 1) {
                     break
                 }
+
                 if (item == null) {
                     continue
                 }
@@ -375,6 +383,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
                 success = true
             }
         }
+
         if (!success) {
             // We have no food. Ensure the bot starts looking for some.
             handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
@@ -383,80 +392,91 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Toggles the bank withdrawal mode between noted and unnoted.
+     * Sets whether bank withdrawals should produce noted items.
      *
-     * The bank must already be open. If the requested mode is already active, this method returns
-     * [SuspendableFutureSuccess] immediately. Otherwise, it clicks the matching bank button and waits
-     * until [PersistentVarp.WITHDRAW_AS_NOTE] reflects the requested mode.
+     * The setting is only changed while the bank is open.
      *
-     * @param noted `true` to withdraw items as notes, or `false` to withdraw items normally.
-     * @return `true` if the change succeeded, `false` otherwise.
+     * @param noted `true` to withdraw items as notes, or `false` to withdraw them normally.
      */
     fun clickBankingMode(noted: Boolean) {
         if (!bot.bank.isOpen) {
             return
         }
+
         bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, if (noted) 1 else 0)
     }
 
     /**
-     * Travels to the nearest usable bank object.
+     * Finds and travels to a usable bank.
      *
-     * If the bot is already inside [Zone.HOME], this method uses the configured home bank. Otherwise, it first searches
-     * for visible banking objects and tries to navigate to them. If no nearby bank can be reached, the bot attempts to
-     * travel home and use the home bank as a fallback.
+     * Bots already in [SubZone.HOME] use the closest configured home bank. Otherwise, bank anchors for the current zone are
+     * attempted first, followed by viewable banking objects. If neither produces a usable bank, the bot attempts to travel
+     * home and use a configured home bank as a fallback.
      *
-     * @return The reachable bank object, or `null` if no bank could be found or reached.
+     * @return A usable bank object, or `null` if no bank can be found or reached.
      */
     suspend fun travelToNearestBank(): GameObject? {
         bot.log("Travelling to nearest bank.")
+
         if (bot.subZone == SubZone.HOME) {
             // We're home, use closest home bank.
             return homeBanks.minByOrNull { it.position.computeLongestDistance(bot.position) }
         }
+
         bot.log("Looking in current zone.")
         val localBanks = bot.zone?.bankAnchors
         if (!localBanks.isNullOrEmpty()) {
             for (bank in localBanks) {
-                val bankObj = world.locator.findObjectsOnTile(bank) { it.id in Banking.bankingObjects }.firstOrNull()
-                if (bankObj != null && (bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED ||
+                val bankObj = world.locator
+                    .findObjectsOnTile(bank) { it.id in Banking.bankingObjects }
+                    .firstOrNull()
+
+                if (bankObj != null &&
+                    (bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED ||
                             bankObj.isWithinDistance(bot, 2))
                 ) {
                     return bankObj
                 }
+
                 bot.log("Bank $bankObj inaccessible.")
                 bot.naturalDecisionDelay()
             }
         }
+
         bot.log("Looking nearby.")
         val banks = world.locator.findViewableObjects(bot) { it.id in Banking.bankingObjects }
         if (banks.isNotEmpty()) {
             // Try to travel to nearby banks.
             bot.log("Found ${banks.size}.")
+
             for (it in banks) {
                 if (bot.navigator.navigate(it, true).await() != NavigationResult.NO_VALID_PATH) {
                     return it
                 }
+
                 bot.log("Bank $it inaccessible.")
                 bot.naturalDecisionDelay()
             }
         }
+
         // Travel home, then use home bank.
         bot.log("Trying to travel home for a bank.")
         if (handler.travelTo(SubZone.HOME)) {
             return homeBank()
         }
+
         bot.log("Cannot travel or find a bank.")
         return null
     }
 
     /**
-     * Travels to the nearest bank and opens it.
+     * Travels to a bank and opens it.
      *
-     * If the bank is already open, this method succeeds immediately. Otherwise, it finds a reachable bank through
-     * [travelToNearestBank], applies a natural delay, interacts with the bank object, and waits until the bank interface opens.
+     * If the bank is already open, no action is performed. Otherwise, [travelToNearestBank] is used to locate a bank before
+     * the bot interacts with it. After the interaction delay, the bot's bank is opened directly if it has not already been
+     * marked open.
      *
-     * @return `true` if the bank was already open or opened successfully.
+     * @return `true` if the bank is open after the operation.
      */
     suspend fun travelToBankOpen(): Boolean {
         if (bot.bank.isOpen) {
@@ -467,8 +487,10 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (bank != null) {
             bot.naturalDelay()
             bot.log("Opening bank.")
+
             if (handler.interactions.interact(2, bank)) {
                 bot.naturalDelay()
+
                 if (!bot.bank.isOpen) {
                     bot.bank.open()
                 }
@@ -482,19 +504,20 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Travels to the nearest bank, opens it, and withdraws the requested items.
+     * Travels to a bank, opens it, and withdraws every item in [items].
      *
-     * If the inventory does not have enough space for [items], the bot first deposits all carried items. Each requested
-     * item is then withdrawn individually. The method reports partial failure if any single withdraw action fails.
+     * If the inventory cannot hold all requested items, its current contents are deposited first. All requested withdrawals
+     * are attempted even if one fails.
      *
-     * @param items The items to withdraw.
-     * @return `true` if the bank was opened and every requested item was withdrawn.
+     * @param items The items and amounts to withdraw.
+     * @return `true` if the bank opens and every requested withdrawal succeeds.
      */
     suspend fun travelToBankWithdraw(items: List<Item>): Boolean {
         if (travelToBankOpen()) {
             if (!bot.inventory.hasSpaceForAll(items)) {
                 depositInventory()
             }
+
             var success = true
             for (it in items) {
                 if (!withdraw(it)) {
@@ -507,17 +530,17 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Travels to the nearest bank, opens it, and deposits the requested items.
+     * Travels to a bank, opens it, and deposits every item in [items].
      *
-     * Each requested item is deposited individually after the bank is opened. The method reports partial failure if any
-     * single deposit action fails.
+     * All requested deposits are attempted even if one fails.
      *
-     * @param items The items to deposit.
-     * @return `true` if the bank was opened and every requested item was deposited.
+     * @param items The items and amounts to deposit.
+     * @return `true` if the bank opens and every requested deposit succeeds.
      */
     suspend fun travelToBankDeposit(items: List<Item>): Boolean {
         if (travelToBankOpen()) {
             var success = true
+
             for (it in items) {
                 if (!deposit(it)) {
                     success = false
@@ -529,9 +552,9 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Travels to the nearest bank, opens it, and deposits all carried inventory items.
+     * Travels to a bank, opens it, and deposits the bot's entire inventory.
      *
-     * @return `true` if the bank was opened and the deposit-all action succeeded.
+     * @return `true` if the bank opens and the inventory is successfully deposited.
      */
     suspend fun travelToBankDepositAll(): Boolean {
         if (travelToBankOpen()) {
@@ -539,5 +562,4 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
         return false
     }
-
 }

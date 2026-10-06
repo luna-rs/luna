@@ -28,7 +28,6 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatStance
-import io.luna.game.model.mob.combat.state.PlayerRangedCombat
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.path.Pathfinders
 import io.luna.net.msg.out.GameChatboxMessageWriter
@@ -142,8 +141,8 @@ class NpcCombatScript(bot: Bot,
                 for (inMsg in messages) {
                     val msg = inMsg.message
                     if (inMsg.timestamp.isAfter(threshold) && msg is GameChatboxMessageWriter) {
-                        if (msg.message == PlayerRangedCombat.NO_AMMO_MESSAGE ||
-                            msg.message == PlayerRangedCombat.WRONG_AMMO_MESSAGE
+                        if (msg.message == "You have no arrows left in your quiver." ||
+                            msg.message == "You can't use that type of ammunition with this weapon."
                         ) {
                             stop()
                             bot.log("No valid ammo left. Stopping script.")
@@ -206,14 +205,14 @@ class NpcCombatScript(bot: Bot,
         val destination = target.position
         val startedAt = System.nanoTime()
         val path = bot.navigator.findPath(start,
-                                         destination,
-                                         Pathfinders.forBot(bot),
-                                         true).await()
+                                          destination,
+                                          Pathfinders.forBot(bot),
+                                          true).await()
         val endpoint = path?.peekLast()
         if (endpoint?.isWithinDistance(target.position, 2) != true) {
             bot.log("Rejected combat target id=${target.id}: start=$start, " +
-                    "requested=$destination, current=${target.position}, endpoint=$endpoint, " +
-                    "pathSize=${path?.size}, elapsedMs=${(System.nanoTime() - startedAt) / 1_000_000}.")
+                            "requested=$destination, current=${target.position}, endpoint=$endpoint, " +
+                            "pathSize=${path?.size}, elapsedMs=${(System.nanoTime() - startedAt) / 1_000_000}.")
             return null
         }
         bot.combat.attack(target)
