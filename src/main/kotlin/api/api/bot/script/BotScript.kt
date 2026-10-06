@@ -154,7 +154,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                         }
                     }
                 } catch (e: CancellationException) {
-                    stop()
+                    // Pausing cancels the job too; only an explicit stop should terminate the script.
                     throw e
                 } catch (e: Exception) {
                     logger.catching(e)
