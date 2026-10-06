@@ -39,7 +39,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
             }
             val lowAlch = type == AlchemyType.LOW
             val itemValue = item.itemDef.value
-            val goldAmount = (if (lowAlch) itemValue * 0.4 else itemValue * 0.6).toInt()
+            val goldAmount = (itemValue * type.valueMultiplier).toInt()
             if (!item.itemDef.isTradeable || itemValue == 0) {
                 mob.sendMessage("You cannot use alchemy on that item.")
                 return

@@ -74,4 +74,12 @@ enum class TradePrice(
         buy = 0.0..0.05,
         sell = 0.0..0.025
     );
+
+    fun getModifier(purpose: BotTradePurpose): ClosedFloatingPointRange<Double> {
+        return when(purpose) {
+            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> buy
+            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> sell
+            else -> throw IllegalStateException("Invalid purpose.")
+        }
+    }
 }

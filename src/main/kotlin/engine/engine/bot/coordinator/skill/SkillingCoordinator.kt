@@ -91,6 +91,7 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         SmithingScriptFactory,
         CookingScriptFactory,
         FishingScriptFactory,
+        MagicScriptFactory,
         RunecraftingScriptFactory
     ).associateBy { it.skillId }
 

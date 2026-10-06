@@ -3,12 +3,17 @@ package api.bot.action
 import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
+import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
+import game.skill.magic.Staff
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
@@ -35,6 +40,39 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             : Boolean {
         // TODO@.5.0 Expand by checking mob type, if it's a boss, equipment, skills, etc.
         return mob.combatLevel > bot.combatLevel * 2
+    }
+
+    /**
+     * Configures [spell] as the bot's active autocast spell.
+     *
+     * The bot must be using the correct spellbook, wielding a valid staff, and currently meet all spell requirements.
+     *
+     * @return `true` if autocasting was configured successfully.
+     */
+    fun setAutocastSpell(spell: CombatSpellDefinition): Boolean {
+        if (spell == CombatSpellDefinition.NONE || spell.spellbook != bot.spellbook) {
+            return false
+        }
+
+        val weaponId = bot.equipment.weapon?.id ?: return false
+        if (bot.combat.weapon.type != Weapon.STAFF) {
+            return false
+        }
+
+        if (bot.spellbook == Spellbook.ANCIENT && weaponId !in Staff.AUTOCAST_ANCIENTS) {
+            return false
+        }
+
+        if (Magic.checkRequirements(bot, spell, true) == null) {
+            return false
+        }
+
+        val magic = bot.combat.magic
+        magic.selectedSpell = CombatSpellDefinition.NONE
+        magic.autocastSpell = spell
+        magic.isAutocasting = true
+        magic.refreshAutocast()
+        return true
     }
 
     /**

@@ -17,58 +17,62 @@ import io.luna.game.model.mob.overlay.NumberInput
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Handles item offering on the first trade screen for a bot.
+ * Handles the offer stage of a bot trade.
  *
- * This stage is responsible for moving items from the bot's inventory into the active trade offer.
- * It expects the first trade interface, [OfferTradeInterface], to already be open before offer actions
- * are attempted.
+ * This stage manages the first trade screen, where the bot can add items to its offer and accept the trade. Once both
+ * participants accept, the trade advances to a [BotTradeConfirmStage].
  *
- * Offer amounts are resolved against the bot's current inventory before clicking. If the requested
- * amount is larger than the amount available, the offer is capped to the amount  he bot actually has.
- *
- * @param bot The bot performing the trade actions.
- * @param other The player being traded with.
+ * @param bot The bot performing the trade.
+ * @param other The player trading with the bot.
+ * @param lastStage The stage that preceded this one.
  * @author lare96
  */
-class BotTradeOfferStage(bot: Bot,
-                         other: Player,
-                         purpose: TradePurpose,
-                         lastStage: BotTradeStage?) : BotTradeStage(bot, other, purpose, lastStage) {
+class BotTradeOfferStage(
+    bot: Bot,
+    other: Player,
+    val lastStage: BotTradeStage
+) : BotTradeStage(bot, other) {
 
     /**
-     * If the accept button was pressed.
+     * Whether this bot has accepted the current offer.
      */
     var offered = false
         private set
 
     /**
-     * Clicks the accept button on the first trade screen.
+     * Accepts the current offer and waits for the trade to advance to the confirmation screen.
      *
-     * This only sends the accept click when [OfferTradeInterface] is currently open. It does not wait
-     * for the trade to advance to the next confirmation screen.
+     * A short natural delay is performed before accepting. After the accept button is clicked, this method waits up to
+     * [OFFER_WAIT_SECONDS] for the other participant to accept and the [ConfirmTradeInterface] to open.
      *
-     * @return `true` if the offer interface was open and the accept click was sent, otherwise `false`.
+     * The trade is declined if the offer interface is no longer open or the other participant does not accept before
+     * the timeout expires.
+     *
+     * @return The resulting confirmation stage if both participants accept, or `null` if the trade is declined.
      */
     suspend fun offerAndAwait(): BotTradeConfirmStage? {
         bot.log("Added items to offer screen.")
-        if(randBoolean()) {
+        if (randBoolean()) {
             bot.naturalDecisionDelay()
-        } else if(randBoolean()) {
+        } else if (randBoolean()) {
             bot.naturalDelay()
         } else {
             bot.naturalMicroDelay()
         }
-        if (OfferTradeInterface::class in bot.overlays) {
+
+        val offerInterface = bot.overlays[OfferTradeInterface::class]
+        if (offerInterface != null) {
             bot.output.clickButton(3420)
             bot.log("Clicked accept button on offer interface, waiting for ${other.username}...")
             offered = true
+
             return if (waitFor(OFFER_WAIT_SECONDS.seconds) { ConfirmTradeInterface::class in bot.overlays }) {
                 bot.log("${other.username} accepted, now on confirm screen.")
-                BotTradeConfirmStage(bot, other, purpose,  this)
+                BotTradeConfirmStage(bot, other, this)
             } else {
                 bot.log("${other.username} took too long to accept.")
                 decline()
-                return null
+                null
             }
         } else {
             bot.log("Offer trade interface is not open, declining trade.")
@@ -78,20 +82,18 @@ class BotTradeOfferStage(bot: Bot,
     }
 
     /**
-     * Offers an item into the current trade.
+     * Adds an item from the bot's inventory to the current trade offer.
      *
-     * The requested amount is capped to the amount available in the bot's inventory. Small exact
-     * amounts use the built-in offer options, over-sized requests use `Offer-All`, and all other
+     * The requested amount is capped to the amount currently held in the inventory. Amounts of `1`, `5`, and `10` use
+     * their respective built-in offer options. Requests exceeding the available amount use `Offer-All`, while other
      * amounts use `Offer-X`.
      *
-     * This method waits for the bot's inventory amount to decrease after the offer action. A decreased
-     * inventory amount is treated as confirmation that the item was successfully moved into the trade
-     * offer.
+     * The operation is considered successful once the amount of the item in the bot's inventory decreases.
      *
-     * @param item The item id and requested amount to offer.
-     * @return `true` if the item was offered and the bot's inventory amount decreased, otherwise `false`.
+     * @param item The item and amount to offer.
+     * @return `true` if at least some of the item was successfully moved into the trade offer.
      */
-     suspend fun offer(item: Item): Boolean {
+    suspend fun offer(item: Item): Boolean {
         bot.log("Offering ${name(item)}.")
 
         val offer = bot.overlays[OfferTradeInterface::class]
@@ -148,22 +150,43 @@ class BotTradeOfferStage(bot: Bot,
     }
 
     /**
-     * Offers each item in a collection into the current trade.
+     * Adds each item in [items] to the current trade offer.
      *
-     * Every item is attempted even if an earlier offer fails. This allows callers to make a best-effort
-     * trade offer while still detecting whether the full requested offer could not be completed.
+     * Null entries are ignored and every non-null item is attempted even if an earlier offer fails.
+     *
+     * The number of trade slots occupied by successfully offered items is logged after all items have been processed.
+     * Stackable items occupy one slot, while non-stackable items occupy one slot per item.
      *
      * @param items The items to offer.
-     * @return `true` if one or more item offers failed, otherwise `false`.
+     * @return `true` if every non-null item was successfully offered, otherwise `false`.
      */
-      suspend fun offerAll(items: Collection<Item>): Boolean {
+    suspend fun offerAll(items: Collection<Item?>): Boolean {
         var failed = false
+        var count = 0
+
         for (it in items) {
-            if (!offer(it)) {
+            if (it == null) {
+                continue
+            } else if (!offer(it)) {
                 failed = true
+            } else if (it.itemDef.isStackable) {
+                count++
+            } else {
+                count += it.amount
             }
         }
+
+        bot.log("Offered items taking up $count slots on the trade screen.")
         return !failed
     }
 
+    /**
+     * Returns the items currently being offered by the other participant.
+     *
+     * @return A snapshot of the other participant's offer, or an empty list if their offer interface is not open.
+     */
+    fun getOtherTradeItems(): List<Item> {
+        val overlay = other.overlays[OfferTradeInterface::class] ?: return emptyList()
+        return overlay.items.toList()
+    }
 }

@@ -22,9 +22,8 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotTradeRequestStage(
     bot: Bot,
-    other: Player,
-    purpose: TradePurpose
-) : BotTradeStage(bot, other, purpose, null) {
+    other: Player
+) : BotTradeStage(bot, other) {
 
     /**
      * Sends a trade request to the other player and waits for the trade offer interface to open.
@@ -35,7 +34,7 @@ class BotTradeRequestStage(
     suspend fun sendAndAwait(): BotTradeOfferStage? {
         return if (bot.actionHandler.interactions.interact(3, other)) {
             if (waitFor(REQUEST_WAIT_SECONDS.seconds) { OfferTradeInterface::class in bot.overlays })
-                BotTradeOfferStage(bot, other, purpose, this)
+                BotTradeOfferStage(bot, other, this)
             else null
         } else {
             null

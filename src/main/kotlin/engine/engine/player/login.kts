@@ -4,6 +4,7 @@ import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.predef.*
+import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
 import engine.player.punishment.PunishmentHandler
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
@@ -49,6 +50,7 @@ on(LoginEvent::class, EventPriority.HIGH) {
     plr.status.load()
     if(plr is Bot) {
         val bot = plr as Bot
+        bot.preferences.rebalanceWantedItems()
         Zone.updateZone(bot, bot.position.regionId)
         SubZone.updateLocalSubZones(bot, bot.position.regionId)
         SubZone.updateSubZone(bot)

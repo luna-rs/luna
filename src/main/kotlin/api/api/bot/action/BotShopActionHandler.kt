@@ -58,7 +58,16 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             return SuspendableFutureFailed
         }
         val shopItem = shopInterface.shop.items[shopIndex]
-        if (shopItem == null || !bot.inventory.hasSpaceFor(shopItem)) {
+        if (shopItem == null || shopItem.amount < 1) {
+            bot.log("Shop doesn't have that item in stock.")
+            return SuspendableFutureFailed
+        }
+
+        // Only require enough room for one item here.
+        //
+        // Shop.buy already clamps Buy 5/Buy 10 to the amount that actually fits in the inventory. Checking against the entire
+        // shop stack would incorrectly reject something like Buy 1 on a non-stackable item when the shop currently stocks 50.
+        if (!bot.inventory.hasSpaceFor(shopItem.withAmount(1))) {
             bot.log("Not enough inventory space to buy this item.")
             return SuspendableFutureFailed
         }
