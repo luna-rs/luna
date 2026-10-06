@@ -134,7 +134,7 @@ class CookFoodBotScript(
 
         if (cookingObject == null) {
             cookingObject = world.locator
-                .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in COOKING_OBJECTS }
+                .findObjects(zone.area.centerPosition.setZ(zone.inside.z), zone.area.tileRadius) { it.id in COOKING_OBJECTS }
                 .firstOrNull()
         }
 
@@ -180,6 +180,10 @@ class CookFoodBotScript(
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data
+    }
+
+    override fun onNewActiveZone(lastZone: SubZone?) {
+        cookingObject = null
     }
 
     override fun onPaused() {
