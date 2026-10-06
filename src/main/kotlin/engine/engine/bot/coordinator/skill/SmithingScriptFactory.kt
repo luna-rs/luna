@@ -3,6 +3,7 @@ package engine.bot.coordinator.skill
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
 import game.skill.smithing.BarType
@@ -80,8 +81,8 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
      * The factory first attempts to select a smithable item from [TRAINING]. If a suitable item is found, the bot will
      * smith that item from bars.
      *
-     * If no smithable item can be selected, the factory falls back to smelting the best available [BarType]. Since bronze
-     * smelting starts at level 1, [BarType.BRONZE] is used as a final safety fallback.
+     * If no affordable smithable item can be selected, the factory chooses a level-appropriate [BarType] from owned
+     * ores. A null selection lets the smelting script gather supplies when no ore combination is available.
      *
      * @param bot The bot that will run the script.
      * @param level The bot's current smithing level.
@@ -93,13 +94,17 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        val smithingItem = getBestActivity(bot, level, { it.level }, TRAINING)
+        val smithingItem = getBestActivity(bot, level, { it.level }, TRAINING.filter {
+            bot.itemTracker.count(it.barType.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
+        })
         if (smithingItem != null) {
             return SmithBarBotScript(bot, mutableListOf(smithingItem), getDuration(bot))
         }
 
-        // Smelting starts at level 1, so it is always the final training fallback.
-        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES) ?: BarType.BRONZE
+        // Prefer owned ore combinations; the script gathers supplies when none are available.
+        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES.filter { bar ->
+            bar.oreList.all { bot.itemTracker.count(it.id) >= it.amount }
+        })
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
         zones += SubZone.AL_KHARID_BANK
@@ -149,7 +154,9 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
      * @return A smithing script when at least one profitable item is available, otherwise `null`.
      */
     fun getSmithingScript(bot: Bot, level: Int): SmithBarBotScript? {
-        val smithingItems = getActivities(level, { it.level }, PROFIT)
+        val smithingItems = getActivities(level, { it.level }, PROFIT).filter {
+            bot.itemTracker.count(it.barType.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
+        }
         if (smithingItems.isNotEmpty()) {
             return SmithBarBotScript(bot, smithingItems.toMutableList(), getDuration(bot))
         }
@@ -157,8 +164,10 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
     }
     //todo docs
     fun getSmeltingScript(bot: Bot, level: Int): SmeltOreBotScript{
-        // Smelting starts at level 1, so it is always the final training fallback.
-        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES) ?: BarType.BRONZE
+        // Prefer owned ore combinations; the script gathers supplies when none are available.
+        val smeltBar = getBestActivity(bot, level, { it.level }, BarType.VALUES.filter { bar ->
+            bar.oreList.all { bot.itemTracker.count(it.id) >= it.amount }
+        })
       val zones = mutableListOf<SubZone>()
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
    // todo boilerplate

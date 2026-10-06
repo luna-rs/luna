@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -391,6 +392,12 @@ public class WalkingNavigator {
             }
             return null;
         });
+        pathFuture.whenComplete((path, error) -> {
+            if (pathFuture.isCancelled()) {
+                // Prevent queued searches from starting. Running searches are not interrupted by CompletableFuture.
+                pathResultFuture.cancel(false);
+            }
+        });
         return handleExceptions(target, pathFuture);
     }
 
@@ -402,6 +409,7 @@ public class WalkingNavigator {
      * requested, if paths were {@link #discardPaths() discarded}, if the request it was computed for is no longer
      * active, or if the mob has since moved more than {@link #MAX_PATH_DRIFT} tiles from where the path starts.
      *
+     * @param request The navigation request that owns this path.
      * @param destination The destination to walk to.
      * @param pathfinder The pathfinder implementation to use.
      * @param async {@code true} to perform pathfinding asynchronously, otherwise {@code false}.
@@ -471,13 +479,23 @@ public class WalkingNavigator {
      * @return A future that logs unexpected failures and returns {@code null} when recovery is needed.
      */
     <T> CompletableFuture<T> handleExceptions(Locatable target, CompletableFuture<T> result) {
-        return result.exceptionally(ex -> {
-            boolean ignored = ex instanceof CancellationException;
+        CompletableFuture<T> handled = result.exceptionally(ex -> {
+            Throwable cause = ex;
+            while (cause instanceof CompletionException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            boolean ignored = cause instanceof CancellationException;
             if (!ignored) {
                 logger.error("Pathfinding for mob {} to target {} failed!", mob, target, ex);
             }
             return null;
         });
+        handled.whenComplete((value, error) -> {
+            if (handled.isCancelled()) {
+                result.cancel(false);
+            }
+        });
+        return handled;
     }
 
     /**
