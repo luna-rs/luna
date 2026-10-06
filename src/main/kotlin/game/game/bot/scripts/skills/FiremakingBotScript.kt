@@ -17,7 +17,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.PlayerPathfinder
+import io.luna.game.model.path.Pathfinders
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -320,8 +320,8 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     }
 
     /**
-     * Walks onto [tile]. Navigating would stop the bot a tile short, so this walks a player path like
-     * [api.bot.zone.WalkingTravelStrategy] does.
+     * Walks onto [tile]. Navigating would stop the bot a tile short, so this walks a bot route straight to
+     * the tile, like [api.bot.zone.WalkingTravelStrategy] does.
      *
      * @return `true` if the bot is standing on [tile].
      */
@@ -330,7 +330,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return true
         }
         val path =
-            bot.navigator.findPath(bot.position, tile, PlayerPathfinder(world.collisionManager, bot.z), true).await()
+            bot.navigator.findPath(bot.position, tile, Pathfinders.forBot(bot), true).await()
         if (path?.peekLast() != tile) {
             return false
         }

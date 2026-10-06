@@ -76,7 +76,7 @@ class ThievingScriptFactoryTest {
     @Test
     fun warriorZoneSearchCoversBothSpawnWanderEnvelopesWithoutOverlappingOtherZones() {
         val zone = SubZone.ARDOUGNE_WARRIOR_THIEVING
-        val spawns = JsonParser.parseString(Files.readString(Path.of("data/game/world/npc_spawns.json")))
+        val spawns = JsonParser.parseString(Files.readString(Path.of("data/game/world/npc_spawns.jsonc")))
             .asJsonArray.map { it.asJsonObject }.filter {
                 val pos = it.getAsJsonObject("position")
                 it.get("id").asInt == 15 && pos.get("x").asInt in 2620..2640 && pos.get("y").asInt in 3280..3315

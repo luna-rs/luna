@@ -29,7 +29,7 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
-import io.luna.game.model.path.PlayerPathfinder
+import io.luna.game.model.path.Pathfinders
 import io.luna.net.msg.out.GameChatboxMessageWriter
 import kotlinx.coroutines.future.await
 import java.time.Instant
@@ -206,7 +206,7 @@ class NpcCombatScript(bot: Bot,
         val startedAt = System.nanoTime()
         val path = bot.navigator.findPath(start,
                                          destination,
-                                         PlayerPathfinder(bot.world.collisionManager, start.z),
+                                         Pathfinders.forBot(bot),
                                          true).await()
         val endpoint = path?.peekLast()
         if (endpoint?.isWithinDistance(target.position, 2) != true) {

@@ -1,9 +1,12 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.astar;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.PathResult;
+import io.luna.game.model.path.PathResultType;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

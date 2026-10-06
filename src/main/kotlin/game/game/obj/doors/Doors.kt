@@ -24,6 +24,11 @@ import java.util.*
 object Doors {
 
     /**
+     * The most ticks a diagonal door waits for a player to walk off the tile it moves onto, before it is placed anyway.
+     */
+    private const val MAX_PUSH_WAIT = 5
+
+    /**
      * Maps both the closed id and the open id of every door to its [DoorType].
      */
     private val byId: HashMap<Int, DoorType> = HashMap()
@@ -43,6 +48,11 @@ object Doors {
      * The [DoorType]s that are curtains, which are replaced in place.
      */
     private val curtainTypes: MutableSet<DoorType> = Collections.newSetFromMap(IdentityHashMap())
+
+    /**
+     * The doors that are waiting for a player to walk out of the way of their swing. Compared by identity.
+     */
+    private val swinging: MutableSet<GameObject> = Collections.newSetFromMap(IdentityHashMap())
 
     /**
      * Doors that are currently away from their home state, mapped to the object they replaced. A door only reverts
@@ -149,40 +159,86 @@ object Doors {
             return
         }
 
-        // The clicked door is always first. Fails if it was already replaced, so a stale click cannot spawn a duplicate.
-        val self = swaps.first()
-        if (!world.removeObject(self.old)) {
+        // A door that is waiting for a player to walk out of its way cannot be clicked again.
+        if (swinging.contains(door)) {
             return
         }
-        if (!curtain && door.objectType == ObjectType.DIAGONAL_WALL && plr.position == self.position) {
-            // A diagonal door swings across the tile the player is standing on, so move them out of the way.
-            val away = if (opening) openPlayerOffset(door.direction) else closePlayerOffset(door.direction)
-            plr.move(self.position.translate(away.first, away.second))
+
+        /*
+         * A diagonal door swings across the tile the player is standing on, so the player walks around the door to a
+         * free tile beside it. The door isn't swapped until the player is out of the way, so it never appears to
+         * vanish.
+         */
+        val self = swaps.first()
+        val blocking = !curtain && door.objectType == ObjectType.DIAGONAL_WALL && plr.position == self.position
+        val stepped = blocking && stepAround(plr, door.position)
+        var selfRemoved = false
+
+        if (!stepped) {
+            // The clicked door is always first. Fails if it was already replaced, so a stale click cannot spawn a duplicate.
+            if (!world.removeObject(self.old)) {
+                return
+            }
+            selfRemoved = true
+            if (blocking) {
+                // There's no way around, so the player is moved onto the tile that the door leaves.
+                plr.move(door.position)
+            }
         }
         plr.playSound(if (opening) type.openSoundOrDefault else type.closeSoundOrDefault)
 
-        val replaced = ArrayList<Pair<GameObject, GameObject>>()
-        for (swap in swaps) {
-            if (swap !== self && !world.removeObject(swap.old)) {
-                continue
-            }
-            val new = world.addObject(swap.id, swap.position, swap.old.objectType, swap.direction)
-            replaced += Pair(new, swap.old)
-        }
-
         // Leaves that were away from home are home again, and have nothing left to revert.
         val wasAwayFromHome = swaps.count { displaced.remove(it.old) != null } > 0
-        if (wasAwayFromHome) {
-            return
-        }
-        for ((new, old) in replaced) {
-            displaced[new] = old
-            world.scheduleOnce(type.durationOrDefault) {
-                if (displaced.remove(new) != null && world.removeObject(new)) {
-                    world.addObject(old.id, old.position, old.objectType, old.direction)
+        val place = {
+            swinging.remove(door)
+            val replaced = ArrayList<Pair<GameObject, GameObject>>()
+            for (swap in swaps) {
+                if (!(swap === self && selfRemoved) && !world.removeObject(swap.old)) {
+                    continue
+                }
+                val new = world.addObject(swap.id, swap.position, swap.old.objectType, swap.direction)
+                replaced += Pair(new, swap.old)
+            }
+            if (!wasAwayFromHome) {
+                for ((new, old) in replaced) {
+                    displaced[new] = old
+                    world.scheduleOnce(type.durationOrDefault) {
+                        if (displaced.remove(new) != null && world.removeObject(new)) {
+                            world.addObject(old.id, old.position, old.objectType, old.direction)
+                        }
+                    }
                 }
             }
         }
+        if (blocking) {
+            // The client won't draw an object on a tile that the player is still standing on when it spawns, so the door
+            // is placed once the player has left it.
+            swinging.add(door)
+            var waited = 0
+            world.schedule(1) {
+                if (plr.position != self.position || ++waited >= MAX_PUSH_WAIT) {
+                    it.cancel()
+                    place()
+                }
+            }
+        } else {
+            place()
+        }
+    }
+
+    /**
+     * Queues a single step that takes [player] off the tile it is standing on, without passing through [door].
+     *
+     * The player prefers to walk directly away from the door, and otherwise to either side of it.
+     *
+     * @param player The player to move.
+     * @param door The tile that the player must not walk onto.
+     * @return `true` if a step was queued, or `false` if there is no free tile to walk to.
+     */
+    private fun stepAround(player: Player, door: Position): Boolean {
+        val toDoor = Direction.between(player.position, door)
+        val sides = Direction.NESW.filter { it != toDoor && it != toDoor.opposite() }
+        return (listOf(toDoor.opposite()) + sides).any { player.navigator.step(it) }
     }
 
     /**
@@ -349,30 +405,6 @@ object Doors {
                 ObjectDirection.EAST -> Pair(0, -1)
                 ObjectDirection.SOUTH -> Pair(-1, 0)
             }
-        }
-    }
-
-    /**
-     * How far a player standing on the destination tile of an opening diagonal door is moved.
-     */
-    private fun openPlayerOffset(direction: ObjectDirection): Pair<Int, Int> {
-        return when (direction) {
-            ObjectDirection.WEST -> Pair(-1, 0)
-            ObjectDirection.NORTH -> Pair(0, 1)
-            ObjectDirection.EAST -> Pair(1, 0)
-            ObjectDirection.SOUTH -> Pair(0, -1)
-        }
-    }
-
-    /**
-     * How far a player standing on the destination tile of a closing diagonal door is moved.
-     */
-    private fun closePlayerOffset(direction: ObjectDirection): Pair<Int, Int> {
-        return when (direction) {
-            ObjectDirection.WEST -> Pair(1, 1)
-            ObjectDirection.NORTH -> Pair(1, -1)
-            ObjectDirection.EAST -> Pair(-1, -1)
-            ObjectDirection.SOUTH -> Pair(-1, 1)
         }
     }
 

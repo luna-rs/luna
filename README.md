@@ -19,4 +19,5 @@ For more help, inquiries, or just to discuss the state of the project please joi
 - Graham
 - [Apollo](https://github.com/apollo-rsps/apollo) development team
 - [Lost City RS](https://github.com/LostCityRS/Content/tree/377-wip) development team
+- [RS Mod](https://github.com/rsmod/rsmod) development team, whose routefinder our pathfinding is based on
 - All [contributors](https://github.com/luna-rs/luna/graphs/contributors) and supporters of the project

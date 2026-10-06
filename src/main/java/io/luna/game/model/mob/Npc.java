@@ -19,7 +19,9 @@ import io.luna.game.model.mob.movement.wandering.PatrolAction;
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
-import io.luna.game.model.path.SimplePathfinder;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.Pathfinders;
+import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -56,6 +58,11 @@ public class Npc extends Mob {
      * still turn to face interacting entities if logic elsewhere overrides this behaviour.
      */
     private Optional<Direction> defaultDirection = Optional.empty();
+
+    /**
+     * The rule for moving onto a tile, such as {@link RouteStrategy#BLOCKED} for an NPC that stays on water.
+     */
+    private RouteStrategy routeStrategy = RouteStrategy.NORMAL;
 
     /**
      * The current NPC definition (may change if the NPC is transformed).
@@ -193,10 +200,22 @@ public class Npc extends Mob {
     }
 
     @Override
-    public SimplePathfinder getInteractionPf() {
-        // TODO@0.5.0 Some NPCs should use the player's intelligent pathfinder.
-        // TODO@0.5.0 How does this relate to pursuit action? Is this ever even used?
-        return new SimplePathfinder(world.getCollisionManager());
+    public GamePathfinder<Position> getInteractionPf() {
+        return Pathfinders.forNpc(this);
+    }
+
+    @Override
+    public RouteStrategy getRouteStrategy() {
+        return routeStrategy;
+    }
+
+    /**
+     * Sets the rule for moving onto a tile. It applies to wandering, single steps and the routes of this NPC.
+     *
+     * @param routeStrategy The new rule.
+     */
+    public void setRouteStrategy(RouteStrategy routeStrategy) {
+        this.routeStrategy = Objects.requireNonNull(routeStrategy);
     }
 
     @Override

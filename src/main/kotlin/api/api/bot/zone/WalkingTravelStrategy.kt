@@ -8,7 +8,7 @@ import api.bot.zone.WalkingTravelStrategy.path
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.PlayerPathfinder
+import io.luna.game.model.path.Pathfinders
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 
@@ -54,7 +54,7 @@ object WalkingTravelStrategy : TravelStrategy {
      */
     private suspend fun setPath(bot: Bot, dest: Position): Boolean {
         val computedPath =
-            bot.navigator.findPath(bot.position, dest, PlayerPathfinder(world.collisionManager, bot.z), true).await()
+            bot.navigator.findPath(bot.position, dest, Pathfinders.forBot(bot), true).await()
         if (computedPath?.peekLast()?.isViewableFrom(dest) == true) {
             bot.path = java.util.ArrayDeque(computedPath)
             return true

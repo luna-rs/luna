@@ -12,7 +12,6 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.movement.NavigationRequest;
-import io.luna.game.model.mob.movement.PathfinderType;
 
 /**
  * An {@link Action} that drives a mob's active combat loop against its current
@@ -107,7 +106,7 @@ public final class CombatAction extends Action<Mob> {
             } else if (!target.equals(mob.getNavigator().getCurrentTarget()) && mob instanceof Player) {
                 // For players, submit a navigation request to track our target if needed.
                 var request = NavigationRequest.builder(mob).policy(policy).continuous(true).
-                        target(combat.getTarget()).pathfinder(PathfinderType.PLAYER).build();
+                        target(combat.getTarget()).build();
                 mob.getNavigator().submit(request);
             }
             // Stay active while combat should continue.

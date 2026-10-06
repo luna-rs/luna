@@ -22,6 +22,7 @@ import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.movement.WalkingNavigator;
 import io.luna.game.model.mob.movement.WalkingQueue;
 import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.route.RouteStrategy;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 import io.luna.net.codec.ByteMessage;
@@ -214,6 +215,13 @@ public abstract class Mob extends Entity {
      * @return The pathfinder to be used for interactions.
      */
     public abstract GamePathfinder<Position> getInteractionPf();
+
+    /**
+     * @return The rule for moving onto a tile. Mobs walk on ordinary ground unless a subclass says otherwise.
+     */
+    public RouteStrategy getRouteStrategy() {
+        return RouteStrategy.NORMAL;
+    }
 
     /**
      * @return The combat context holding important combat data.

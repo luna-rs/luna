@@ -81,7 +81,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             .continuous(false)
             .policy(InteractionPolicy(InteractionType.SIZE, 1))
             .target(target)
-            .pathfinder(PathfinderType.PLAYER)
+            .pathfinder(PathfinderType.BOT)
             bot.navigator.submit(request.build()).await()
         val cond = SuspendableCondition {
             bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)

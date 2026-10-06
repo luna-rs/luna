@@ -2,7 +2,6 @@ package io.luna.game.model.collision;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import io.luna.Luna;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
@@ -20,8 +19,8 @@ import java.util.OptionalInt;
 /**
  * A 2D grid of collision data for a single chunk plane.
  * <p>
- * Each cell in the matrix encodes a set of {@link CollisionFlag} values in a packed {@code short}, describing which
- * movement and projectile directions are blocked for the tile at that local (x, y) coordinate.
+ * Each cell in the matrix is a 32-bit mask of {@link CollisionFlag} values, describing what blocks movement and
+ * projectiles on the tile at that local (x, y) coordinate.
  * </p>
  *
  * @author Major
@@ -32,20 +31,45 @@ public final class CollisionMatrix {
     /**
      * Bit pattern representing a fully open tile (no collision flags set).
      */
-    private static final short ALL_ALLOWED = 0b00000000_00000000;
+    private static final int ALL_ALLOWED = 0;
 
     /**
-     * Bit pattern representing a fully blocked tile (all movement and projectile flags set).
+     * Bit pattern representing a fully blocked tile (every collision flag set).
      */
-    private static final short ALL_BLOCKED = (short) 0b11111111_11111111;
+    private static final int ALL_BLOCKED = -1;
 
     /**
      * Bit pattern representing a tile where mobs are blocked but projectiles may still pass.
      */
-    private static final short ALL_MOBS_BLOCKED = (short) 0b11111111_00000000;
+    private static final int ALL_MOBS_BLOCKED = ALL_BLOCKED & ~CollisionFlag.PROJECTILE_BLOCKERS;
 
     /**
-     * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
+     * The flags that stop a mob standing on a tile from stepping off it, regardless of side.
+     */
+    private static final int SOLID = CollisionFlag.LOC | CollisionFlag.BLOCK_WALK;
+
+    /**
+     * The flags that stop a mob from stepping off a tile to the north, used by the reach checks.
+     */
+    private static final int NORTH_BLOCKED = CollisionFlag.WALL_NORTH | SOLID;
+
+    /**
+     * The flags that stop a mob from stepping off a tile to the east, used by the reach checks.
+     */
+    private static final int EAST_BLOCKED = CollisionFlag.WALL_EAST | SOLID;
+
+    /**
+     * The flags that stop a mob from stepping off a tile to the south, used by the reach checks.
+     */
+    private static final int SOUTH_BLOCKED = CollisionFlag.WALL_SOUTH | SOLID;
+
+    /**
+     * The flags that stop a mob from stepping off a tile to the west, used by the reach checks.
+     */
+    private static final int WEST_BLOCKED = CollisionFlag.WALL_WEST | SOLID;
+
+    /**
+     * Creates an array of fully open {@link CollisionMatrix} instances, each with identical width and length.
      *
      * @param count The number of matrices to create.
      * @param width The width (X dimension) of each matrix.
@@ -53,8 +77,27 @@ public final class CollisionMatrix {
      * @return A new array of {@code count} {@link CollisionMatrix} objects.
      */
     public static CollisionMatrix[] createMatrices(int count, int width, int length) {
+        return createMatrices(count, width, length, false);
+    }
+
+    /**
+     * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
+     *
+     * @param count The number of matrices to create.
+     * @param width The width (X dimension) of each matrix.
+     * @param length The length (Y dimension) of each matrix.
+     * @param blocked {@code true} to create every tile fully blocked, {@code false} to create every tile fully open.
+     * @return A new array of {@code count} {@link CollisionMatrix} objects.
+     */
+    public static CollisionMatrix[] createMatrices(int count, int width, int length, boolean blocked) {
         CollisionMatrix[] matrices = new CollisionMatrix[count];
-        Arrays.setAll(matrices, index -> new CollisionMatrix(width, length));
+        Arrays.setAll(matrices, index -> {
+            CollisionMatrix matrix = new CollisionMatrix(width, length);
+            if (blocked) {
+                Arrays.fill(matrix.matrix, ALL_BLOCKED);
+            }
+            return matrix;
+        });
         return matrices;
     }
 
@@ -64,9 +107,19 @@ public final class CollisionMatrix {
     private final int length;
 
     /**
-     * The underlying collision data, as a flat array of packed {@code short} flags.
+     * The underlying collision data, as a flat array of packed {@link CollisionFlag} masks.
      */
-    private final short[] matrix;
+    private final int[] matrix;
+
+    /**
+     * The low bit of each flag's overlap counter, or {@code null} until a flag is first set twice.
+     */
+    private int[] overlapLow;
+
+    /**
+     * The high bit of each flag's overlap counter, or {@code null} until a flag is first set twice.
+     */
+    private int[] overlapHigh;
 
     /**
      * The width (X dimension) of this matrix.
@@ -82,7 +135,7 @@ public final class CollisionMatrix {
     CollisionMatrix(int width, int length) {
         this.width = width;
         this.length = length;
-        matrix = new short[width * length];
+        matrix = new int[width * length];
     }
 
     /**
@@ -90,9 +143,9 @@ public final class CollisionMatrix {
      *
      * @param width The width (X dimension) of the matrix.
      * @param length The length (Y dimension) of the matrix.
-     * @param matrix The underlying collision data, as a flat array of packed {@code short} flags.
+     * @param matrix The underlying collision data, as a flat array of packed {@link CollisionFlag} masks.
      */
-   private CollisionMatrix(int width, int length, short[] matrix) {
+    private CollisionMatrix(int width, int length, int[] matrix) {
         this.width = width;
         this.length = length;
         this.matrix = matrix;
@@ -106,8 +159,8 @@ public final class CollisionMatrix {
      * @param flags The collision flags to test.
      * @return {@code true} if every flag in {@code flags} is set; otherwise {@code false}.
      */
-    public boolean all(int x, int y, CollisionFlag... flags) {
-        for (CollisionFlag flag : flags) {
+    public boolean all(int x, int y, int... flags) {
+        for (int flag : flags) {
             if (!flagged(x, y, flag)) {
                 return false;
             }
@@ -123,8 +176,8 @@ public final class CollisionMatrix {
      * @param flags The collision flags to test.
      * @return {@code true} if at least one flag in {@code flags} is set; otherwise {@code false}.
      */
-    public boolean any(int x, int y, CollisionFlag... flags) {
-        for (CollisionFlag flag : flags) {
+    public boolean any(int x, int y, int... flags) {
+        for (int flag : flags) {
             if (flagged(x, y, flag)) {
                 return true;
             }
@@ -164,19 +217,75 @@ public final class CollisionMatrix {
      * @param y The local Y coordinate.
      * @param flag The collision flag to clear.
      */
-    void clear(int x, int y, CollisionFlag flag) {
-        set(x, y, (short) (matrix[indexOf(x, y)] & ~flag.asShort()));
+    void clear(int x, int y, int flag) {
+        int index = indexOf(x, y);
+        int held = releaseOverlap(index, flag);
+        matrix[index] &= ~(flag & ~held);
     }
 
     /**
      * Sets (ORs) the specified {@link CollisionFlag} for the tile at (x, y).
+     * <p>
+     * A flag that is already set is counted, so that it stays set until every {@link #flag(int, int, int)} call that
+     * set it has been matched by a {@link #clear(int, int, int)} call. This lets overlapping objects, or several
+     * entities standing on one tile, share a flag without the first one to leave clearing it for the rest.
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
      * @param flag The collision flag to set.
      */
-    void flag(int x, int y, CollisionFlag flag) {
-        matrix[indexOf(x, y)] |= flag.asShort();
+    void flag(int x, int y, int flag) {
+        int index = indexOf(x, y);
+        int shared = matrix[index] & flag;
+        if (shared != 0) {
+            retainOverlap(index, shared);
+        }
+        matrix[index] |= flag;
+    }
+
+    /**
+     * Counts one more holder of each flag in {@code flags}, which are already set on the tile at {@code index}.
+     * <p>
+     * Each flag has a two bit counter spread over {@link #overlapLow} and {@link #overlapHigh}, so a flag can be held
+     * by up to four callers at once. A flag held by more callers than that stays at the maximum.
+     *
+     * @param index The index of the tile.
+     * @param flags The flags that are already set.
+     */
+    private void retainOverlap(int index, int flags) {
+        if (overlapLow == null) {
+            overlapLow = new int[matrix.length];
+            overlapHigh = new int[matrix.length];
+        }
+        int low = overlapLow[index];
+        int high = overlapHigh[index];
+
+        int counted = flags & ~(low & high);
+        int carry = low & counted;
+        overlapLow[index] = low ^ counted;
+        overlapHigh[index] = high ^ carry;
+    }
+
+    /**
+     * Releases one holder of each flag in {@code flags} on the tile at {@code index}.
+     *
+     * @param index The index of the tile.
+     * @param flags The flags being cleared.
+     * @return The flags that other callers still hold, and so must stay set.
+     */
+    private int releaseOverlap(int index, int flags) {
+        if (overlapLow == null) {
+            return 0;
+        }
+        int low = overlapLow[index];
+        int high = overlapHigh[index];
+
+        int held = (low | high) & flags;
+        int lowOnly = low & held;
+        int highOnly = high & held & ~low;
+        overlapLow[index] = (low & ~lowOnly) | highOnly;
+        overlapHigh[index] = high & ~highOnly;
+        return held;
     }
 
     /**
@@ -187,8 +296,8 @@ public final class CollisionMatrix {
      * @param flag The collision flag to test.
      * @return {@code true} if the flag is set; otherwise {@code false}.
      */
-    public boolean flagged(int x, int y, CollisionFlag flag) {
-        return (get(x, y) & flag.asShort()) != 0;
+    public boolean flagged(int x, int y, int flag) {
+        return (get(x, y) & flag) != 0;
     }
 
     /**
@@ -196,10 +305,10 @@ public final class CollisionMatrix {
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
-     * @return The packed 16-bit collision value for that tile.
+     * @return The packed 32-bit collision value for that tile.
      */
     public int get(int x, int y) {
-        return matrix[indexOf(x, y)] & 0xFFFF;
+        return matrix[indexOf(x, y)];
     }
 
     /**
@@ -209,10 +318,10 @@ public final class CollisionMatrix {
      * </p>
      *
      * @param position The absolute world position.
-     * @return The packed 16-bit collision value for that tile.
+     * @return The packed 32-bit collision value for that tile.
      */
     public int get(Position position) {
-        return matrix[indexOf(position.getX() % Chunk.SIZE, position.getY() % Chunk.SIZE)] & 0xFFFF;
+        return matrix[indexOf(position.getX() % Chunk.SIZE, position.getY() % Chunk.SIZE)];
     }
 
     /**
@@ -229,22 +338,20 @@ public final class CollisionMatrix {
      * Resets all tiles in this matrix to a fully open state.
      */
     void reset() {
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < length; y++) {
-                reset(x, y);
-            }
-        }
+        Arrays.fill(matrix, ALL_ALLOWED);
+        overlapLow = null;
+        overlapHigh = null;
     }
 
     /**
-     * Replaces all flags for the tile at (x, y) with the supplied {@link CollisionFlag}.
+     * Replaces all flags for the tile at (x, y) with the supplied {@link CollisionFlag} mask.
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
-     * @param flag The collision flag to set (overwriting any existing flags).
+     * @param flag The collision flag mask to set (overwriting any existing flags).
      */
-    void set(int x, int y, CollisionFlag flag) {
-        set(x, y, flag.asShort());
+    void set(int x, int y, int flag) {
+        matrix[indexOf(x, y)] = flag;
     }
 
     @Override
@@ -260,8 +367,8 @@ public final class CollisionMatrix {
      * Determines whether an entity of the given {@link EntityType} is blocked from entering the tile at (x, y)
      * when attempting to move in the given {@link Direction}.
      * <p>
-     * This method interprets directional collision flags using the same semantics as the original RS2 client,
-     * mapping the entity's approach direction to the appropriate directional flag(s) that would prevent movement.
+     * Walls, solid objects and blocked floors on the tile stop the movement according to the {@code BLOCK_*} masks
+     * in {@link CollisionFlag}. Projectiles are only stopped by walls and objects that also block projectiles.
      *
      * @param x The local X coordinate of the tile being entered.
      * @param y The local Y coordinate of the tile being entered.
@@ -270,38 +377,15 @@ public final class CollisionMatrix {
      * @return {@code true} if the tile is blocked when approached from {@code direction}; otherwise {@code false}.
      */
     public boolean untraversable(int x, int y, EntityType entity, Direction direction) {
-        ImmutableList<CollisionFlag> flags = CollisionFlag.forType(entity);
-        int northwest = 0, north = 1, northeast = 2, west = 3, east = 4, southwest = 5, south = 6, southeast = 7;
-
-        switch (direction) {
-            case NORTH_WEST:
-                return flagged(x, y, flags.get(southeast)) || flagged(x, y, flags.get(south)) ||
-                        flagged(x, y, flags.get(east));
-            case NORTH:
-                return flagged(x, y, flags.get(south));
-            case NORTH_EAST:
-                return flagged(x, y, flags.get(southwest)) || flagged(x, y, flags.get(south)) ||
-                        flagged(x, y, flags.get(west));
-            case EAST:
-                return flagged(x, y, flags.get(west));
-            case SOUTH_EAST:
-                return flagged(x, y, flags.get(northwest)) || flagged(x, y, flags.get(north)) ||
-                        flagged(x, y, flags.get(west));
-            case SOUTH:
-                return flagged(x, y, flags.get(north));
-            case SOUTH_WEST:
-                return flagged(x, y, flags.get(northeast)) || flagged(x, y, flags.get(north)) ||
-                        flagged(x, y, flags.get(east));
-            case WEST:
-                return flagged(x, y, flags.get(east));
-            default:
-                throw new IllegalArgumentException("Unrecognised direction " + direction + ".");
+        if (direction == Direction.NONE) {
+            throw new IllegalArgumentException("Unrecognised direction " + direction + ".");
         }
+        return flagged(x, y, CollisionFlag.blocks(entity, direction.getId()));
     }
 
     /**
      * Returns whether the tile at (x, y) is blocked for the given {@link EntityType}, regardless of direction. This
-     * checks all directional flags associated with the entity type and reports {@code true} if any are set.
+     * reports {@code true} if any flag that stops the entity type from entering the tile is set.
      *
      * @param x The local X coordinate.
      * @param y The local Y coordinate.
@@ -309,13 +393,7 @@ public final class CollisionMatrix {
      * @return {@code true} if the tile is blocked for that entity type; otherwise {@code false}.
      */
     public boolean isBlocked(int x, int y, EntityType entity) {
-        ImmutableList<CollisionFlag> entityFlags = CollisionFlag.forType(entity);
-        for (CollisionFlag flag : entityFlags) {
-            if (flagged(x, y, flag)) {
-                return true;
-            }
-        }
-        return false;
+        return flagged(x, y, CollisionFlag.anyBlock(entity));
     }
 
     /**
@@ -337,17 +415,6 @@ public final class CollisionMatrix {
             }
         }
         return y * width + x;
-    }
-
-    /**
-     * Writes a raw packed value into the tile at (x, y), overwriting any existing flags.
-     *
-     * @param x The local X coordinate.
-     * @param y The local Y coordinate.
-     * @param value The packed 16-bit collision value to set.
-     */
-    private void set(int x, int y, short value) {
-        matrix[indexOf(x, y)] = value;
     }
 
     /**
@@ -376,30 +443,30 @@ public final class CollisionMatrix {
             if (wallObject.getDirection() == ObjectDirection.WEST) {
                 if (startX == endX - 1 && startY == endY) {
                     return true;
-                } else if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0) {
+                } else if (startX == endX && startY == endY + 1 && (get(start) & SOUTH_BLOCKED) == 0) {
                     return true;
                 }
-                return startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0;
+                return startX == endX && startY == endY - 1 && (get(start) & NORTH_BLOCKED) == 0;
             } else if (wallObject.getDirection() == ObjectDirection.NORTH) {
                 if (startX == endX && startY == endY + 1) {
                     return true;
-                } else if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0) {
+                } else if (startX == endX - 1 && startY == endY && (get(start) & EAST_BLOCKED) == 0) {
                     return true;
                 }
-                return startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0;
+                return startX == endX + 1 && startY == endY && (get(start) & WEST_BLOCKED) == 0;
             } else if (wallObject.getDirection() == ObjectDirection.EAST) {
                 if (startX == endX + 1 && startY == endY)
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                if (startX == endX && startY == endY + 1 && (get(start) & SOUTH_BLOCKED) == 0)
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                if (startX == endX && startY == endY - 1 && (get(start) & NORTH_BLOCKED) == 0)
                     return true;
             } else if (wallObject.getDirection() == ObjectDirection.SOUTH) {
                 if (startX == endX && startY == endY - 1)
                     return true;
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & EAST_BLOCKED) == 0)
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & WEST_BLOCKED) == 0)
                     return true;
             }
         } else if (wallObject.getObjectType() == ObjectType.WALL_CORNER) {
@@ -408,23 +475,23 @@ public final class CollisionMatrix {
                     return true;
                 if (startX == endX && startY == endY + 1)
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & WEST_BLOCKED) == 0)
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                if (startX == endX && startY == endY - 1 && (get(start) & NORTH_BLOCKED) == 0)
                     return true;
             } else if (wallObject.getDirection() == ObjectDirection.NORTH) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & EAST_BLOCKED) == 0)
                     return true;
                 if (startX == endX && startY == endY + 1)
                     return true;
                 if (startX == endX + 1 && startY == endY)
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                if (startX == endX && startY == endY - 1 && (get(start) & NORTH_BLOCKED) == 0)
                     return true;
             } else if (wallObject.getDirection() == ObjectDirection.EAST) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & EAST_BLOCKED) == 0)
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                if (startX == endX && startY == endY + 1 && (get(start) & SOUTH_BLOCKED) == 0)
                     return true;
                 if (startX == endX + 1 && startY == endY)
                     return true;
@@ -433,21 +500,21 @@ public final class CollisionMatrix {
             } else if (wallObject.getDirection() == ObjectDirection.SOUTH) {
                 if (startX == endX - 1 && startY == endY)
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                if (startX == endX && startY == endY + 1 && (get(start) & SOUTH_BLOCKED) == 0)
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & WEST_BLOCKED) == 0)
                     return true;
                 if (startX == endX && startY == endY - 1)
                     return true;
             }
         } else if (wallObject.getObjectType() == ObjectType.DIAGONAL_WALL) {
-            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+            if (startX == endX && startY == endY + 1 && (get(start) & CollisionFlag.WALL_SOUTH) == 0)
                 return true;
-            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+            if (startX == endX && startY == endY - 1 && (get(start) & CollisionFlag.WALL_NORTH) == 0)
                 return true;
-            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+            if (startX == endX - 1 && startY == endY && (get(start) & CollisionFlag.WALL_EAST) == 0)
                 return true;
-            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+            if (startX == endX + 1 && startY == endY && (get(start) & CollisionFlag.WALL_WEST) == 0)
                 return true;
         }
         return false;
@@ -480,35 +547,35 @@ public final class CollisionMatrix {
             if (objectType == 7)
                 objectRotation = objectRotation + 2 & 3;
             if (objectRotation == 0) {
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & CollisionFlag.WALL_WEST) == 0)
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+                if (startX == endX && startY == endY - 1 && (get(start) & CollisionFlag.WALL_NORTH) == 0)
                     return true;
             } else if (objectRotation == 1) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & CollisionFlag.WALL_EAST) == 0)
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+                if (startX == endX && startY == endY - 1 && (get(start) & CollisionFlag.WALL_NORTH) == 0)
                     return true;
             } else if (objectRotation == 2) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & CollisionFlag.WALL_EAST) == 0)
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+                if (startX == endX && startY == endY + 1 && (get(start) & CollisionFlag.WALL_SOUTH) == 0)
                     return true;
             } else if (objectRotation == 3) {
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & CollisionFlag.WALL_WEST) == 0)
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+                if (startX == endX && startY == endY + 1 && (get(start) & CollisionFlag.WALL_SOUTH) == 0)
                     return true;
             }
         }
         if (objectType == 8) {
-            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+            if (startX == endX && startY == endY + 1 && (get(start) & CollisionFlag.WALL_SOUTH) == 0)
                 return true;
-            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+            if (startX == endX && startY == endY - 1 && (get(start) & CollisionFlag.WALL_NORTH) == 0)
                 return true;
-            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+            if (startX == endX - 1 && startY == endY && (get(start) & CollisionFlag.WALL_EAST) == 0)
                 return true;
-            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+            if (startX == endX + 1 && startY == endY && (get(start) & CollisionFlag.WALL_WEST) == 0)
                 return true;
         }
         return false;
@@ -556,7 +623,7 @@ public final class CollisionMatrix {
                     reachedFacingEntity(start, object, sizeX, sizeY, OptionalInt.of(packedDirections));
         } else {
             int objectTypeId = object.getObjectType().getId();
-            if ((objectTypeId < 5 || objectTypeId == 10)) {
+            if ((objectTypeId < 5 || objectTypeId == 9 || objectTypeId == 10)) {
                 return reachedWall(start, object);
             }
             if (objectTypeId < 10) {
@@ -600,14 +667,15 @@ public final class CollisionMatrix {
         int radiusY = (endY + sizeY) - 1;
         if (startX >= endX && startX <= radiusX && startY >= endY && startY <= radiusY)
             return true;
-        return startX == endX - 1 && startY >= endY && startY <= radiusY && (get(start) & 8) == 0 && (packed & 8) == 0
-                || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (get(start) & 0x80) == 0 && (packed & 2) == 0
-                || startY == endY - 1 && startX >= endX && startX <= radiusX && (get(start) & 2) == 0 && (packed & 4) == 0
-                || startY == radiusY + 1 && startX >= endX && startX <= radiusX && (get(start) & 0x20) == 0 && (packed & 1) == 0;
+        return startX == endX - 1 && startY >= endY && startY <= radiusY && (get(start) & CollisionFlag.WALL_EAST) == 0 && (packed & 8) == 0
+                || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (get(start) & CollisionFlag.WALL_WEST) == 0 && (packed & 2) == 0
+                || startY == endY - 1 && startX >= endX && startX <= radiusX && (get(start) & CollisionFlag.WALL_NORTH) == 0 && (packed & 4) == 0
+                || startY == radiusY + 1 && startX >= endX && startX <= radiusX && (get(start) & CollisionFlag.WALL_SOUTH) == 0 && (packed & 1) == 0;
     }
 
     /**
-     * Creates a thread-safe deep copy of this matrix.
+     * Creates a thread-safe deep copy of this matrix. Only the flags are copied; the overlap counters are only needed
+     * to apply changes, which a read-only snapshot never does.
      */
     public CollisionMatrix copy() {
         return new CollisionMatrix(width, length, Arrays.copyOf(matrix, matrix.length));
