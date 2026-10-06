@@ -14,13 +14,25 @@ final class PositionTest {
 
     @Test
     void invalidUpperZ() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4),
+        var exception = assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4),
                 "Z must be in range [0, 3] inclusively.");
+        assertEquals("4 (z >= 0 && z < 4)", exception.getMessage());
     }
 
     @Test
     void invalidLowerZ() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, -1));
+        var exception = assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, -1));
+        assertEquals("-1 (z >= 0 && z < 4)", exception.getMessage());
+    }
+
+    @Test
+    void allValidPlanesPreserveCoordinates() {
+        for (int z = 0; z < 4; z++) {
+            Position position = new Position(-10, 5000, z);
+            assertEquals(-10, position.getX());
+            assertEquals(5000, position.getY());
+            assertEquals(z, position.getZ());
+        }
     }
 
     @Test

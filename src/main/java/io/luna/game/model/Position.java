@@ -65,8 +65,8 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
-            checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        if (Luna.settings().game().betaMode() && !HEIGHT_LEVELS.contains(z)) {
+            throw new IllegalArgumentException(z + " (z >= 0 && z < 4)");
         }
         this.x = x;
         this.y = y;
