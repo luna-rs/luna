@@ -1,14 +1,12 @@
 package io.luna.game.model.path.route;
 
 import io.luna.game.model.Position;
-import io.luna.game.model.collision.CollisionFlag;
 import io.luna.game.model.collision.CollisionManager;
-import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.path.FallbackPathfinder;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
-import io.luna.game.model.path.astar.PlayerPathfinder;
+import io.luna.game.model.path.Pathfinders;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,10 +18,10 @@ import java.util.concurrent.ThreadLocalRandom;
  * waypoints, which the walking queue fills in with the tiles between them.
  * <p>
  * The search only covers about {@value RouteFinder#SEARCH_SIZE} tiles around the mob. Destinations farther away are
- * given to a {@link PlayerPathfinder}, which has no such limit. That one knows nothing of a {@link RouteStrategy}, so
- * when the strategy is not {@link RouteStrategy#NORMAL} such destinations are not searched for and the search fails.
+ * not {@link #supports(Position, Position) supported}, and fail when searched for. A {@link FallbackPathfinder} can
+ * give them to another pathfinder.
  * <p>
- * Use {@link #forPlayer(Mob)}, {@link #forNpc(Mob)} and {@link #forBot(Mob)} to create the pathfinder that suits a mob.
+ * Use {@link Pathfinders} to create the pathfinder that suits a mob.
  *
  * @author hydrozoa
  */
@@ -44,50 +42,6 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
      * The route finders of the threads that search. A route finder reuses its buffers, so it can't be shared.
      */
     private static final ThreadLocal<RouteFinder> FINDERS = ThreadLocal.withInitial(RouteFinder::new);
-
-    /**
-     * Creates a pathfinder for a player. Players are never stopped by NPCs or by other players, so the routes lead
-     * straight through them.
-     *
-     * @param mob The player that will walk the routes.
-     * @return The new pathfinder.
-     */
-    public static RoutePathfinder forPlayer(Mob mob) {
-        return new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0, RouteStrategy.NORMAL, 1.0);
-    }
-
-    /**
-     * Creates a pathfinder for an NPC. NPCs are stopped by other NPCs and by players, so the routes go around them.
-     * The NPC moves onto tiles as its {@link Mob#getRouteStrategy() route strategy} allows.
-     *
-     * @param mob The NPC that will walk the routes.
-     * @return The new pathfinder.
-     */
-    public static RoutePathfinder forNpc(Mob mob) {
-        return new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(),
-                CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS, mob.getRouteStrategy(), 1.0);
-    }
-
-    /**
-     * Creates a pathfinder for a bot, which does not always take the same route that a player would.
-     * <p>
-     * There is usually more than one route of the shortest length between two tiles. A player's pathfinder always
-     * takes the same one, and a bot would too, so that bots going the same way would walk in identical lines. Instead
-     * a bot takes the player's route with a chance equal to its intelligence, and otherwise takes a route of a
-     * different shape. Like players, bots are never stopped by other mobs. A mob that is not a bot always takes the
-     * player's route.
-     *
-     * @param mob The bot that will walk the routes.
-     * @return The new pathfinder.
-     */
-    public static RoutePathfinder forBot(Mob mob) {
-        double standardChance = 1.0;
-        if (mob instanceof Bot) {
-            standardChance = ((Bot) mob).getPersonality().getIntelligence();
-        }
-        return new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0, RouteStrategy.NORMAL,
-                standardChance);
-    }
 
     /**
      * The width and length of the mob, in tiles.
@@ -142,18 +96,21 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
     }
 
     @Override
+    public boolean supports(Position origin, Position target) {
+        // Searches between planes are left to fail in find, as no pathfinder could do them.
+        return origin.getZ() != target.getZ() ||
+                (Math.abs(origin.getX() - target.getX()) <= MAX_RANGE &&
+                        Math.abs(origin.getY() - target.getY()) <= MAX_RANGE);
+    }
+
+    @Override
     public PathResult<Position> find(Position origin, Position target) {
         if (origin.getZ() != target.getZ()) {
             return failed();
         } else if (origin.equals(target)) {
             return new PathResult<>(PathResultType.EMPTY, new ArrayDeque<>(0));
-        } else if (Math.abs(origin.getX() - target.getX()) > MAX_RANGE ||
-                Math.abs(origin.getY() - target.getY()) > MAX_RANGE) {
-            if (strategy != RouteStrategy.NORMAL) {
-                // The fallback knows nothing of strategies, and would lead the mob off the terrain it belongs to.
-                return failed();
-            }
-            return new PlayerPathfinder(collisionManager, origin.getZ()).find(origin, target);
+        } else if (!supports(origin, target)) {
+            return failed();
         }
 
         Route route = FINDERS.get().find(collisionManager.view(true), origin.getZ(), origin.getX(), origin.getY(),

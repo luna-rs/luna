@@ -17,7 +17,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.route.RoutePathfinder
+import io.luna.game.model.path.Pathfinders
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -330,7 +330,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return true
         }
         val path =
-            bot.navigator.findPath(bot.position, tile, RoutePathfinder.forBot(bot), true).await()
+            bot.navigator.findPath(bot.position, tile, Pathfinders.forBot(bot), true).await()
         if (path?.peekLast() != tile) {
             return false
         }

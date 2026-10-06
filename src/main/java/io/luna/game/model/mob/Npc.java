@@ -19,7 +19,8 @@ import io.luna.game.model.mob.movement.wandering.PatrolAction;
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
-import io.luna.game.model.path.route.RoutePathfinder;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.Pathfinders;
 import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.Objects;
@@ -199,8 +200,8 @@ public class Npc extends Mob {
     }
 
     @Override
-    public RoutePathfinder getInteractionPf() {
-        return RoutePathfinder.forNpc(this);
+    public GamePathfinder<Position> getInteractionPf() {
+        return Pathfinders.forNpc(this);
     }
 
     @Override

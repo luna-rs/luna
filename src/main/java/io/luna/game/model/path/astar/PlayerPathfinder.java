@@ -3,13 +3,14 @@ package io.luna.game.model.path.astar;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
+import io.luna.game.model.path.FallbackPathfinder;
 import io.luna.game.model.path.route.RoutePathfinder;
 
 /**
  * A deterministic {@link AStarPathfinder} implementation for long distance movement.
  * <p>
  * Unlike the {@link RoutePathfinder}, which only searches the area around a mob, a {@code PlayerPathfinder} can find
- * routes of any length. The {@link RoutePathfinder} hands destinations that are too far away to this class. All
+ * routes of any length. A {@link FallbackPathfinder} gives it the destinations that are too far away for the {@link RoutePathfinder}. All
  * searches use the {@link Heuristic#CHEBYSHEV} heuristic, which exactly matches RuneScape's 8-direction
  * movement model where diagonal and cardinal steps share identical traversal cost.
  * </p>
