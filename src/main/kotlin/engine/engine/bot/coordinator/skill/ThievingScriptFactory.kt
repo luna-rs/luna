@@ -102,7 +102,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
                     }
 
                     npcs += ThievingNpcType.WARRIOR
-                    zones += SubZone.ARDOUGNE_SQUARE_THIEVING
+                    zones += SubZone.ARDOUGNE_WARRIOR_THIEVING
                 }
             }
 
