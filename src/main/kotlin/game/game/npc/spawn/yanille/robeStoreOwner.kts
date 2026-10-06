@@ -23,5 +23,7 @@ ShopHandler.create("Magic Guild Store (Mystic Robes)") {
         "Mystic boots" x 1000
     }
 
-    // TODO: Resolve and bind the Wizard Sinina NPC ID; it is not identifiable in the 377 NPC cache.
+    open {
+        npc2 += 1658
+    }
 }

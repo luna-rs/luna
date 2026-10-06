@@ -111,7 +111,12 @@ enum class SpecialLadder(val ladder: Position, val destination: Position) {
     CANIFIS_CELLAR_UP(ladder = Position(3477, 9846), destination = Position(3494, 3464)),
     WEREWOLF_AGILITY_COURSE_UP(ladder = Position(3549, 9864), destination = Position(3543, 3462)),
     ECTOFUNTUS_UP(ladder = Position(3668, 9888, 3), destination = Position(3653, 3519)),
-    MOURNER_HEADQUARTERS_UP(ladder = Position(2044, 4650), destination = Position(2542, 3327));
+    MOURNER_HEADQUARTERS_UP(ladder = Position(2044, 4650), destination = Position(2542, 3327)),
+    PHASMATYS_BREWERY_UP(ladder = Position(3682, 9962), destination = Position(3681, 3498)),
+
+    // Rat pits, out to the manhole above.
+    PORT_SARIM_RAT_PIT_UP(ladder = Position(2962, 9651), destination = Position(3018, 3233)),
+    VARROCK_RAT_PIT_UP(ladder = Position(2895, 5097), destination = Position(3267, 3400));
 
     companion object {
 

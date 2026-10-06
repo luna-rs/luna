@@ -37,9 +37,9 @@ import java.util.stream.StreamSupport;
  *     <li>Sends grouped updates + persistent replays for chunks newly entering view.</li>
  * </ul>
  * <p>
- * <b>Reset flow:</b> Any chunk that was sent updates is tracked in {@link #updated}. After all players have been
- * processed for the tick, callers should invoke {@link #resetUpdatedChunks()} to drain/clear temporary requests and
- * promote any persistent requests in those chunks.
+ * <b>Reset flow:</b> Any chunk that had updates queued is tracked in {@link #updated}, whether or not a player received
+ * them. After all players have been processed for the tick, callers should invoke {@link #resetUpdatedChunks()} to
+ * drain/clear temporary requests and promote any persistent requests in those chunks.
  *
  * @author lare96
  */
@@ -56,9 +56,9 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     private final Map<Chunk, ChunkRepository> repositories = new ConcurrentHashMap<>(29_278);
 
     /**
-     * Chunks that have had updates sent this tick and therefore must be reset in {@link #resetUpdatedChunks()}.
+     * Chunks that have had updates queued this tick and therefore must be reset in {@link #resetUpdatedChunks()}.
      * <p>
-     * Using a {@link Set} prevents duplicate resets of the same chunk when multiple players observe it in one tick.
+     * Using a {@link Set} prevents duplicate resets of the same chunk when several updates are queued in one tick.
      */
     private final Set<ChunkRepository> updated = new HashSet<>();
 
@@ -139,10 +139,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * </ul>
      * <p>
      * For chunks remaining in view, only the current tick's queued updates are sent. For chunks newly entering
-     * view, persistent updates are replayed in addition to current tick updates.
-     * <p>
-     * Any chunk that has updates sent is tracked in {@link #updated} so the caller can later invoke
-     * {@link #resetUpdatedChunks()} once per tick.
+     * view, persistent updates are replayed first, followed by current tick updates.
      *
      * @param player The player to send updates to.
      * @param oldPosition The player's previous position.
@@ -166,29 +163,38 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
         for (ChunkRepository chunk : viewableOldChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
             if (!updates.isEmpty()) {
-                updated.add(chunk);
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
         }
 
         // Send grouped updates + persistent replays for newly viewable chunks.
         for (ChunkRepository chunk : newChunks) {
-            List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
+            List<ChunkUpdatableMessage> updates = new ArrayList<>();
 
             // Replay persistent updates (objects/items/etc.) when the chunk is treated as "new" to the client.
             for (ChunkUpdatableRequest request : chunk.getPersistentUpdates()) {
-                ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
-                if (view.isViewableFor(player)) {
+                if (ChunkRepository.isViewableFor(request, player)) {
                     updates.add(request.getMessage());
                 }
             }
 
+            // This tick's updates are newer than the persistent ones, so they go last.
+            updates.addAll(chunk.getUpdates(player));
+
             if (!updates.isEmpty()) {
-                updated.add(chunk);
                 player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
         }
+    }
+
+    /**
+     * Marks {@code chunk} to be reset in {@link #resetUpdatedChunks()}.
+     *
+     * @param chunk The chunk that had an update queued.
+     */
+    void markUpdated(ChunkRepository chunk) {
+        updated.add(chunk);
     }
 
     /**

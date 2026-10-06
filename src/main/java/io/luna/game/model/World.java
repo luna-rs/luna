@@ -465,7 +465,7 @@ public final class World {
                  * Handle region changes before player updating to ensure no other packets related to it are sent.
                  * Queued data will be sent after updating completes, within the synchronization task.
                  */
-                player.updateLocalView(player.getPosition());
+                player.updateRegion();
 
                 // Prepare local mobs for updating and encode them using our thread pool.
                 List<Player> localPlayers = locator.computeVisiblePlayersFor(player);
@@ -479,6 +479,18 @@ public final class World {
 
         // Wait for all registered parties to finish.
         synchronizer.arriveAndAwaitAdvance();
+
+        // Chunk updates go after player updating, so the client applies them to the height level it is now on.
+        for (Player player : playerList) {
+            if (player.getClient().isPendingLogout() || player.isBot()) {
+                continue;
+            }
+            try {
+                player.updateLocalView();
+            } catch (Exception e) {
+                logger.error("Error occurred while sending chunk updates.", e);
+            }
+        }
     }
 
     /**
