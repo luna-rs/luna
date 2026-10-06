@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.Luna;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.util.HashUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -105,7 +106,7 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        return (z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF);
+        return HashUtils.mix32((z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF));
     }
 
     @Override
