@@ -5,6 +5,9 @@ import api.shop.dsl.ShopHandler
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
+
+val shopkeeperId = 461
 
 /**
  * Magic Guild Store (Runes and Staves) in the Wizards' Guild.
@@ -35,5 +38,22 @@ ShopHandler.create("Magic Guild Store (Runes and Staves)") {
         "Staff of earth" x 20
     }
 
-    // TODO: Resolve and bind the Wizard Akutha NPC ID; it is not identifiable in the 377 NPC cache.
+    open {
+        npc2 += shopkeeperId
+    }
+}
+
+/**
+ * Dialogue for "Talk" option.
+ */
+npc1(shopkeeperId) {
+    plr.newDialogue()
+        .npc(targetNpc.id, "Welcome to the Magic Guild Store.", "Would you like to buy some magic supplies?")
+        .options("Yes please.", {
+            plr.newDialogue().player("Yes please.")
+                .then { it.overlays.open(ShopInterface(world, "Magic Guild Store (Runes and Staves)")) }.open()
+        }, "No thank you.", {
+            plr.newDialogue().player("No thank you.").open()
+        })
+        .open()
 }
