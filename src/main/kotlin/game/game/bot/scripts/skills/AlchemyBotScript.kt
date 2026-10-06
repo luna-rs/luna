@@ -269,8 +269,6 @@ class AlchemyBotScript(
          */
         handler.banking.clickBankingMode(false)
 
-        prepareFireStaff()
-
         if (Rune.NATURE.id in bot.bank) {
             handler.banking.withdrawAll(Rune.NATURE.id)
         }
@@ -285,12 +283,6 @@ class AlchemyBotScript(
 
         if (!hasNatureRunesForOneCast()) {
             requestNatureRunes()
-            stop()
-            return
-        }
-
-        if (!hasEquippedFireStaff() && !hasFireRunesForOneCast()) {
-            requestFireRunes()
             stop()
             return
         }
@@ -327,6 +319,14 @@ class AlchemyBotScript(
 
         if (targetId == null) {
             bot.log("Alchemy target was not found after withdrawal.")
+            stop()
+            return
+        }
+
+        // Equipping closes the bank, so finish all bank interactions first.
+        prepareFireStaff()
+        if (!hasEquippedFireStaff() && !hasFireRunesForOneCast()) {
+            requestFireRunes()
             stop()
         }
     }
