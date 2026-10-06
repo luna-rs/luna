@@ -97,15 +97,18 @@ class CookFoodBotScript(
     }
 
     override fun withdraw(): List<Item> {
+        cooking = null
         if (selectedFood == null) {
             for (food in Food.entries) {
-                if (bot.itemTracker.count(food.raw) >= 28) {
+                if (bot.cooking.staticLevel >= food.lvl && bot.itemTracker.count(food.raw) > 0) {
                     cooking = food
                     break
                 }
             }
         } else {
-            cooking = selectedFood
+            if (bot.cooking.staticLevel >= selectedFood.lvl) {
+                cooking = selectedFood
+            }
         }
 
         val food = cooking
