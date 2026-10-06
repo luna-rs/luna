@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
 
@@ -65,6 +66,13 @@ public class WalkingNavigator {
     private static final ForkJoinPool pool = new ForkJoinPool(2, defaultForkJoinWorkerThreadFactory, null, true);
 
     /**
+     * The farthest, in tiles, that a mob may have moved from where a path was computed for the path to still be
+     * applied. A mob that walked on while the path was being computed is still close enough for the walking queue to
+     * splice the path in, but one that was teleported is not.
+     */
+    private static final int MAX_PATH_DRIFT = 4;
+
+    /**
      * The collision manager used for step validation and pathfinding.
      */
     private final CollisionManager collisionManager;
@@ -80,6 +88,13 @@ public class WalkingNavigator {
      * A request remains active until its pending future is completed or cancelled.
      */
     private NavigationRequest active;
+
+    /**
+     * The generation of the most recent path request. A path is only applied if no newer request has been made, and
+     * nothing has been cancelled, since it was requested. Cancelling the future returned by {@link #walk} does not stop
+     * work that is already in flight, so this is what keeps stale paths from being applied.
+     */
+    private final AtomicInteger pathGeneration = new AtomicInteger();
 
     /**
      * Creates a new walking navigator for a mob.
@@ -292,9 +307,17 @@ public class WalkingNavigator {
      * Cancels the currently active navigation request, if one exists.
      */
     public void cancel() {
+        discardPaths();
         if (isActive()) {
             active.getPending().cancel(true);
         }
+    }
+
+    /**
+     * Discards the paths that are still being computed, so that they are not applied once they are done.
+     */
+    void discardPaths() {
+        pathGeneration.incrementAndGet();
     }
 
     /**
@@ -375,17 +398,47 @@ public class WalkingNavigator {
      * Computes and queues a path to a destination.
      * <p>
      * The path is computed using the supplied pathfinder, then applied to the mob's walking queue on the game
-     * executor.
+     * executor. The path is dropped instead of applied if it went stale in the meantime: if a newer path was
+     * requested, if paths were {@link #discardPaths() discarded}, if the request it was computed for is no longer
+     * active, or if the mob has since moved more than {@link #MAX_PATH_DRIFT} tiles from where the path starts.
      *
      * @param destination The destination to walk to.
      * @param pathfinder The pathfinder implementation to use.
      * @param async {@code true} to perform pathfinding asynchronously, otherwise {@code false}.
-     * @return A future that completes once the path has been computed and queued.
+     * @return A future that completes once the path has been computed and queued, or dropped.
      */
     CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
-        CompletableFuture<Void> result = findPath(mob.getPosition(), destination.abs(), pathfinder, async)
-                .thenAcceptAsync(path -> mob.getWalking().replacePath(path), mob.getService().getGameExecutor());
+        Position start = mob.getPosition();
+        NavigationRequest request = active;
+        int generation = pathGeneration.incrementAndGet();
+        CompletableFuture<Void> result = findPath(start, destination.abs(), pathfinder, async)
+                .thenAcceptAsync(path -> {
+                    if (isStale(start, request, generation)) {
+                        return;
+                    }
+                    mob.getWalking().replacePath(path);
+                }, mob.getService().getGameExecutor());
         return handleExceptions(destination, result);
+    }
+
+    /**
+     * Determines if a path that was computed from {@code start} should no longer be applied. Must be called on the
+     * game thread.
+     *
+     * @param start The position the path was computed from.
+     * @param request The request that was active when the path was requested.
+     * @param generation The path generation of the request.
+     * @return {@code true} if the path is stale and should be dropped.
+     */
+    private boolean isStale(Position start, NavigationRequest request, int generation) {
+        if (generation != pathGeneration.get()) {
+            return true;
+        }
+        if (request != null && (active != request || request.getPending().isDone())) {
+            return true;
+        }
+        Position current = mob.getPosition();
+        return current.getZ() != start.getZ() || current.computeLongestDistance(start) > MAX_PATH_DRIFT;
     }
 
     /**

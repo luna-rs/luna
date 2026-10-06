@@ -11,6 +11,7 @@ import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.movement.PathfinderType;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
+import io.luna.game.model.path.Pathfinders;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -162,7 +163,7 @@ final class RoutePathfinderTest {
 
         Mob player = mob(Player.class, EntityType.PLAYER, 1);
         assertEquals(1, PathfinderType.PLAYER.getPfFunction().apply(player).find(start, end).getPath().size());
-        assertEquals(1, RoutePathfinder.forPlayer(player).find(start, end).getPath().size());
+        assertEquals(1, Pathfinders.forPlayer(player).find(start, end).getPath().size());
 
         Bot bot = bot(1.0);
         assertEquals(1, PathfinderType.BOT.getPfFunction().apply(bot).find(start, end).getPath().size());
@@ -176,7 +177,7 @@ final class RoutePathfinderTest {
 
         Mob npc = mob(Npc.class, EntityType.NPC, 1);
         assertTrue(PathfinderType.NPC.getPfFunction().apply(npc).find(start, end).getPath().size() > 1);
-        assertTrue(RoutePathfinder.forNpc(npc).find(start, end).getPath().size() > 1);
+        assertTrue(Pathfinders.forNpc(npc).find(start, end).getPath().size() > 1);
 
         // The same goes for a player standing in the way.
         TestMap other = new TestMap();
@@ -187,7 +188,7 @@ final class RoutePathfinderTest {
         Mockito.when(walker.getWorld()).thenReturn(world);
         Mockito.when(walker.size()).thenReturn(1);
         Mockito.when(walker.getRouteStrategy()).thenReturn(RouteStrategy.NORMAL);
-        assertTrue(RoutePathfinder.forNpc(walker).find(start, end).getPath().size() > 1);
+        assertTrue(Pathfinders.forNpc(walker).find(start, end).getPath().size() > 1);
     }
 
     @Test
@@ -199,10 +200,10 @@ final class RoutePathfinderTest {
         Position end = new Position(110, 100);
 
         Mob small = mob(Player.class, EntityType.PLAYER, 1);
-        assertEquals(PathResultType.COMPLETE, RoutePathfinder.forPlayer(small).find(start, end).getType());
+        assertEquals(PathResultType.COMPLETE, Pathfinders.forPlayer(small).find(start, end).getType());
 
         Mob large = mob(Npc.class, EntityType.NPC, 2);
-        assertEquals(PathResultType.PARTIAL, RoutePathfinder.forNpc(large).find(start, end).getType());
+        assertEquals(PathResultType.PARTIAL, Pathfinders.forNpc(large).find(start, end).getType());
     }
     @Test
     void testBotsVaryWithTheirIntelligence() {
@@ -228,9 +229,9 @@ final class RoutePathfinderTest {
         Position start = new Position(100, 100);
         Position end = new Position(110, 103);
         Mob player = mob(Player.class, EntityType.PLAYER, 1);
-        List<Position> standard = list(RoutePathfinder.forPlayer(player).find(start, end));
+        List<Position> standard = list(Pathfinders.forPlayer(player).find(start, end));
         for (int i = 0; i < 30; i++) {
-            assertEquals(standard, list(RoutePathfinder.forBot(player).find(start, end)));
+            assertEquals(standard, list(Pathfinders.forBot(player).find(start, end)));
         }
     }
 
@@ -244,7 +245,8 @@ final class RoutePathfinderTest {
 
     @Test
     void testFarDestinationsUseTheLongRangePathfinder() {
-        PathResult<Position> result = pathfinder(1, 0).find(new Position(100, 100), new Position(200, 100));
+        Mob player = mob(Player.class, EntityType.PLAYER, 1);
+        PathResult<Position> result = Pathfinders.forPlayer(player).find(new Position(100, 100), new Position(200, 100));
         assertEquals(PathResultType.COMPLETE, result.getType());
         assertEquals(new Position(200, 100), result.getPath().peekLast());
     }
