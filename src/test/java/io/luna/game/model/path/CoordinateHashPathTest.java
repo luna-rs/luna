@@ -5,9 +5,13 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
+import io.luna.game.model.path.astar.AStarPathfinder;
+import io.luna.game.model.path.astar.Heuristic;
+import io.luna.game.model.path.route.RoutePathfinder;
+import io.luna.game.model.path.route.RouteStrategy;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class CoordinateHashPathTest {
@@ -48,7 +52,7 @@ class CoordinateHashPathTest {
                 }
                 @Override public Heuristic getHeuristic() { return Heuristic.CHEBYSHEV; }
             };
-            PlayerPathfinder mixed = new PlayerPathfinder(collision, plane);
+            GamePathfinder<Position> mixed = new RoutePathfinder(collision, 1, 0, RouteStrategy.NORMAL);
             Position start = new Position(3205, 3205, plane);
             for (Position target : new Position[]{new Position(3240, 3240, plane), start}) {
                 PathResult<LegacyPosition> before = legacy.find(new LegacyPosition(start), new LegacyPosition(target));
