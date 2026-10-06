@@ -35,12 +35,14 @@ fun climbEither(plr: Player, stairs: GameObject) {
     val down = StairDestination.destination(stairs, plr.position, false)
     when {
         up != null && down != null && up != down -> {
-            // TODO Title this dialogue "Climb up or down the stairs?" like the original game. Setting it as the option
-            //  dialogue's title clips the text, so it needs another way.
-            val (climbUp, climbDown) = KnownStairs.forStairs(stairs)?.choices
-                ?: Pair("Climb up the stairs.", "Climb down the stairs.")
-            plr.newDialogue().options(climbUp, { climb(plr, stairs, true) },
-                                      climbDown, { climb(plr, stairs, false) }).open()
+            val choices = KnownStairs.forStairs(stairs)?.choices
+            val (climbUp, climbDown) = choices ?: Pair("Climb up the stairs.", "Climb down the stairs.")
+            val dialogue = plr.newDialogue().options(climbUp, { climb(plr, stairs, true) },
+                                                     climbDown, { climb(plr, stairs, false) })
+            if (choices == null) {
+                dialogue.title("Climb up or down the stairs?")
+            }
+            dialogue.open()
         }
 
         up != null -> climb(plr, stairs, true)
