@@ -206,6 +206,30 @@
     ]
   },
   {
+    "type": "BROAD_ARROW",
+    "strength": 28,
+    "start_graphic": {
+      "id": 325,
+      "height": 100,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 326,
+      "delay": 44,
+      "speed": 12,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
+    },
+    "weapons": [
+      861, // Magic shortbow
+      859 // Magic longbow
+    ],
+    "ammo": [
+      4160 // Broad arrows
+    ]
+  },
+  {
     "type": "CRYSTAL_ARROW",
     "strength": 58,
     "start_graphic": {
