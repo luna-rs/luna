@@ -327,9 +327,14 @@ public final class CollisionMatrix {
      * @throws ArrayIndexOutOfBoundsException If (x, y) is out of range for this matrix.
      */
     private int indexOf(int x, int y) {
-        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
-            Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
-            Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+        if (Luna.settings().game().betaMode()) {
+            // Construct debug bounds descriptions only when validation fails.
+            if (x < 0 || x >= width) {
+                Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
+            }
+            if (y < 0 || y >= length) {
+                Preconditions.checkElementIndex(y, length, "Y coordinate must be [0, " + length + "), received " + y + ".");
+            }
         }
         return y * width + x;
     }
