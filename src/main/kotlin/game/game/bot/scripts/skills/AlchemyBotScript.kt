@@ -247,12 +247,12 @@ class AlchemyBotScript(
 
         fireStaffId = resolveFireStaff()
 
-        if (!hasNatureRunesForOneCast()) {
+        if (bot.itemTracker.count(Rune.NATURE.id) < natureRunesPerCast()) {
             requestNatureRunes()
             return false
         }
 
-        if (fireStaffId == null && !hasFireRunesForOneCast()) {
+        if (fireStaffId == null && inventoryFireRunes() + bankedFireRunes() < fireRunesPerCast()) {
             requestFireRunes()
             return false
         }
