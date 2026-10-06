@@ -172,6 +172,10 @@ class SmeltOreBotScript(
         return true
     }
 
+    override suspend fun onInventoryBankRequested(): Boolean {
+        return forceBanking || !(smelting?.let { bot.inventory.containsAll(it.oreList) } == true)
+    }
+
     override fun snapshot(): BotScriptData {
         val data = ZonedBotScriptData()
         data.duration = duration

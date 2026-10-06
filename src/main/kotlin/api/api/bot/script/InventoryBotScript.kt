@@ -68,6 +68,9 @@ abstract class InventoryBotScript(
         if (initial) {
             return true
         }
+        if (bot.actions.size(ActionType.WEAK) > 0) {
+            return false
+        }
         return onInventoryBankRequested()
     }
 

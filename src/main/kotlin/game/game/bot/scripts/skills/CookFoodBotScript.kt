@@ -165,6 +165,9 @@ class CookFoodBotScript(
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
+        if (!forceBanking && cooking?.let { it.raw in bot.inventory } == true) {
+            return false
+        }
         if (activeZone == SubZone.ROGUES_DEN) {
             // Use banker NPC when at rogues' den.
             cachedBank = ROGUES_DEN_BANK.value
