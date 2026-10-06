@@ -22,6 +22,7 @@ class ThievingScriptFactoryTest {
         @JvmStatic
         @BeforeAll
         fun initializeScriptFixtures() {
+            if (ItemDefinition.ALL.get(0).isPresent) return
             // Factory construction initializes drop tables through the Kotlin script bindings.
             // Use a mock context without starting a server, and fixture names for drop item lookup.
             PluginBootstrap::class.java.getDeclaredMethod("setBindings", LunaContext::class.java).apply {
@@ -35,7 +36,7 @@ class ThievingScriptFactoryTest {
                     ItemDefinition.ALL.storeDefinition(ItemDefinition(
                         item.get("id").asInt, item.get("name").asString, "", 0, 0, 0, 0, 0, 0, 0,
                         false, 0, false, emptyArray(), emptyArray(), OptionalInt.empty(),
-                        0, 0, 0, OptionalInt.empty(), 0.0, false
+                        0, 0, 0, OptionalInt.empty(), 0.0, item.get("tradeable").asBoolean
                     ))
                 }
             }
