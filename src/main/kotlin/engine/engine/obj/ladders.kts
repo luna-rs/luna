@@ -1,6 +1,5 @@
 package engine.obj
 
-import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
@@ -20,6 +19,11 @@ val LADDER_ACTIONS = listOf("Climb", "Climb-up", "Climb-down", "Climb-Down")
  * The Mining Guild ladder, which needs 60 Mining.
  */
 val MINING_GUILD_LADDER = 2113
+
+/**
+ * The ladder out of the Port Phasmatys brewery's cellar, whose name isn't capitalised.
+ */
+val PHASMATYS_BREWERY_LADDER = 7433
 
 /**
  * The Barbarian Outpost agility course ladders, which barbarian_outpost.kts climbs instead.
@@ -98,15 +102,8 @@ fun handleIndex(id: Int, index: Int, name: String) {
 
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
-        if (def.name == "Ladder") {
+        if (def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER) {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id(), index, name) }
-        } else if (def.name == "Trapdoor") {
-            // TODO Trapdoor handling here?
         }
     }
-}
-
-// Temp -- rogues den trapdoor.
-object1(7257) {
-    plr.move(SubZone.ROGUES_DEN.inside)
 }
