@@ -1,8 +1,9 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.astar;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
+import io.luna.game.model.path.route.RoutePathfinder;
 
 /**
  * A deterministic {@link AStarPathfinder} implementation for long distance movement.

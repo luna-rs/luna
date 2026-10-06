@@ -3,7 +3,7 @@ package io.luna.game.model.mob.movement;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.path.GamePathfinder;
-import io.luna.game.model.path.RoutePathfinder;
+import io.luna.game.model.path.route.RoutePathfinder;
 
 import java.util.function.Function;
 

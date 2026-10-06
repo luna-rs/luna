@@ -1,4 +1,4 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.astar;
 
 import io.luna.game.model.Locatable;
 

@@ -1,4 +1,4 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.route;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionView;

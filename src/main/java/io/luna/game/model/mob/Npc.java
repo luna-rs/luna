@@ -19,7 +19,7 @@ import io.luna.game.model.mob.movement.wandering.PatrolAction;
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingAction;
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency;
-import io.luna.game.model.path.RoutePathfinder;
+import io.luna.game.model.path.route.RoutePathfinder;
 
 import java.util.Objects;
 import java.util.Optional;

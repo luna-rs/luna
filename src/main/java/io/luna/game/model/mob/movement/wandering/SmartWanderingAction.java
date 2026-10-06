@@ -8,8 +8,8 @@ import io.luna.game.cache.map.MapTile;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.path.AStarPathfinder;
-import io.luna.game.model.path.PlayerPathfinder;
+import io.luna.game.model.path.astar.AStarPathfinder;
+import io.luna.game.model.path.astar.PlayerPathfinder;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 

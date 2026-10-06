@@ -8,7 +8,7 @@ import api.bot.zone.WalkingTravelStrategy.path
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.PlayerPathfinder
+import io.luna.game.model.path.astar.PlayerPathfinder
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
 

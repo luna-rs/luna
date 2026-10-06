@@ -1,4 +1,4 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.route;
 
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -9,6 +9,8 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.movement.PathfinderType;
+import io.luna.game.model.path.PathResult;
+import io.luna.game.model.path.PathResultType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

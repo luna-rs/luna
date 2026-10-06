@@ -1,10 +1,14 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.route;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionFlag;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.PathResult;
+import io.luna.game.model.path.PathResultType;
+import io.luna.game.model.path.astar.PlayerPathfinder;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.ThreadLocalRandom;

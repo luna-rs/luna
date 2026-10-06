@@ -24,9 +24,9 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
-import io.luna.game.model.path.LineOfSight;
-import io.luna.game.model.path.RouteStrategy;
-import io.luna.game.model.path.StepValidator;
+import io.luna.game.model.path.route.LineOfSight;
+import io.luna.game.model.path.route.RouteStrategy;
+import io.luna.game.model.path.route.StepValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

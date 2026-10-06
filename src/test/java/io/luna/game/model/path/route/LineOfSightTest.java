@@ -1,4 +1,4 @@
-package io.luna.game.model.path;
+package io.luna.game.model.path.route;
 
 import org.junit.jupiter.api.Test;
 

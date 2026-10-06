@@ -29,7 +29,7 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
-import io.luna.game.model.path.PlayerPathfinder
+import io.luna.game.model.path.astar.PlayerPathfinder
 import io.luna.net.msg.out.GameChatboxMessageWriter
 import kotlinx.coroutines.future.await
 import java.time.Instant
