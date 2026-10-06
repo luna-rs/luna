@@ -154,7 +154,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                         }
                     }
                 } catch (e: CancellationException) {
-                    // Pausing cancels the job too; only an explicit stop should terminate the script.
+                    // An externally cancelled job may be paused, or already replaced by a resumed job.
+                    // Only an exception from a still-active coroutine should terminate the script.
+                    if (isActive) {
+                        stop()
+                    }
                     throw e
                 } catch (e: Exception) {
                     logger.catching(e)
