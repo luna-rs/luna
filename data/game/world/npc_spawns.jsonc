@@ -90852,6 +90852,7 @@
       "y": 3389,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -90891,6 +90892,7 @@
       "y": 3386,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"

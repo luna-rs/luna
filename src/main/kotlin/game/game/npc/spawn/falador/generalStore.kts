@@ -8,7 +8,7 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
 
-val shopkeeperId = ImmutableList.of(524, 525)
+val shopkeeperId = ImmutableList.of(526, 527)
 
 /**
  * General store shop.
