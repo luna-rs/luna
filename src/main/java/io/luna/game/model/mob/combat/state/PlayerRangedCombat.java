@@ -22,6 +22,16 @@ import static java.util.Objects.requireNonNullElse;
 public class PlayerRangedCombat {
 
     /**
+     * The message sent when a ranged attack needs ammo and none is equipped.
+     */
+    public static final String NO_AMMO_MESSAGE = "There is no ammo left in your quiver.";
+
+    /**
+     * The message sent when the equipped ammo can't be fired from the equipped weapon.
+     */
+    public static final String WRONG_AMMO_MESSAGE = "You can't use that type of ammunition with this weapon.";
+
+    /**
      * The player whose ranged combat state is being tracked.
      */
     private final Player player;
@@ -72,14 +82,14 @@ public class PlayerRangedCombat {
         int weaponId = rangedWeapon.getId();
         if (ammo == UNEQUIPPED) {
             // We have a ranged weapon equipped but no ammo.
-            player.sendMessage("You do not have enough ammo in your quiver.");
+            player.sendMessage(NO_AMMO_MESSAGE);
             // todo bots can bypass this but need to match the right ammo with the right weapon
             return false;
         } else if (ammo.isNeedsWeapon()) {
             // We have ammo and are using a weapon that requires explicit ammo.
             if (!ammo.getWeapons().contains(weaponId)) {
                 // Weapon and ammo are incompatible.
-                player.sendMessage("You can't use that type of ammunition with this weapon.");
+                player.sendMessage(WRONG_AMMO_MESSAGE);
                 return false;
             }
             // Decrement the ammo from the ammunition slot.
