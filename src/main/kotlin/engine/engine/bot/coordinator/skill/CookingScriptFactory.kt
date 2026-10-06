@@ -4,6 +4,7 @@ import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.SKILL_COOKING
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
 
@@ -50,7 +51,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
 
         return CookFoodBotScript(
             bot,
-            getBestActivity(bot, level, { it.lvl }, Food.entries),
+            getBestActivity(bot, level, { it.lvl }, Food.entries.filter { bot.itemTracker.count(it.raw) > 0 }),
             getDuration(bot),
             zones
         )

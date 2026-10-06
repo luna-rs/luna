@@ -2,37 +2,37 @@ package io.luna.game.model.mob.movement;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.path.BotPathfinder;
 import io.luna.game.model.path.GamePathfinder;
-import io.luna.game.model.path.PlayerPathfinder;
-import io.luna.game.model.path.SimplePathfinder;
+import io.luna.game.model.path.Pathfinders;
 
 import java.util.function.Function;
 
 /**
  * Represents the pathfinder strategy used by a {@link Mob}.
  * <p>
- * Each type creates the appropriate {@link GamePathfinder} implementation for the supplied mob. This allows
- * players, bots, and simple entities to use different pathfinding behavior while sharing the same movement system.
+ * Each type creates a pathfinder, from {@link Pathfinders}, for the supplied mob, which is sized for it. There is a type for each kind
+ * of mob that walks, because they differ in how they treat other mobs and in how much their routes vary.
  *
  * @author lare96
  */
 public enum PathfinderType {
 
     /**
-     * A full player pathfinder that uses collision data and the mob's current height level.
+     * The routes of the game, for players. Players walk through NPCs and through other players, so their routes do too.
      */
-    PLAYER(mob -> new PlayerPathfinder(mob.getWorld().getCollisionManager(), mob.getZ())),
+    PLAYER(Pathfinders::forPlayer),
 
     /**
-     * A bot-specific pathfinder that uses collision data and the mob's current height level.
+     * Routes that vary from bot to bot, for bots. A bot takes the route of the game with a chance equal to its
+     * intelligence, and otherwise takes a route of a different shape, so that bots do not all walk in identical lines.
+     * Like players, bots walk through other mobs.
      */
-    BOT(mob -> new BotPathfinder(mob.getWorld().getCollisionManager(), mob.getZ())),
+    BOT(Pathfinders::forBot),
 
     /**
-     * A simple pathfinder that uses collision data without height-level specific setup.
+     * The routes of the game, for NPCs. NPCs are stopped by other NPCs and by players, so their routes go around them.
      */
-    DUMB(mob -> new SimplePathfinder(mob.getWorld().getCollisionManager()));
+    NPC(Pathfinders::forNpc);
 
     /**
      * Creates a pathfinder instance for a mob.

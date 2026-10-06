@@ -106,8 +106,7 @@ final class NavigationAction extends Action<Mob> {
             // Step away if occupying same tile and interaction policy isn't equal position.
             boolean stepped = navigator.stepRandom(false);
             if (stepped && current != null) {
-                current.cancel(true);
-                current = null;
+                cancelCurrent();
             } else if (!stepped && !request.isContinuous()) {
                 result = NavigationResult.DIDNT_REACH;
                 return true;
@@ -123,8 +122,7 @@ final class NavigationAction extends Action<Mob> {
                 mob.getWalking().clear();
             }
             if (current != null) {
-                current.cancel(true);
-                current = null;
+                cancelCurrent();
             }
             return !request.isContinuous();
         }
@@ -157,23 +155,35 @@ final class NavigationAction extends Action<Mob> {
 
         // Cancel any active asynchronous path before re-pathing a continuous request.
         if (current != null && !current.isDone() && request.isContinuous()) {
-            current.cancel(true);
-            current = null;
+            cancelCurrent();
         }
 
         // Re-path to target if needed.
         if (current == null) {
             current = isTargetMob ?
-                    navigator.walk(navigator.computeOffsetPosition((Entity) target, request.getOffsetDir()),
-                            request.getPathfinder(), request.isAsync()) :
-                    navigator.walk(target, request.getPathfinder(), request.isAsync());
+                    navigator.walk(request, navigator.computeOffsetPosition((Entity) target, request.getOffsetDir())) :
+                    navigator.walk(request, target);
             lastPosition = targetPos;
         }
         return false;
     }
 
+    /**
+     * Cancels the active pathfinding future and discards its path. Cancelling the future alone does not stop a path
+     * that is already being computed from being applied, so the navigator is told to discard it as well.
+     */
+    private void cancelCurrent() {
+        current.cancel(true);
+        current = null;
+        navigator.discardPaths();
+    }
+
     @Override
     public void onFinished() {
+        if (current != null) {
+            current.cancel(false);
+            current = null;
+        }
         mob.interact(null);
         if (reachedOnce) {
             result = NavigationResult.REACHED;

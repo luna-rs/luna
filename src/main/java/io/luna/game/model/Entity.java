@@ -205,9 +205,9 @@ public abstract class Entity implements Attributable, Locatable {
      *   <li>{@link EntityState#INACTIVE} is terminal.</li>
      * </ul>
      * <p>
-     * When becoming {@link EntityState#ACTIVE}, this ensures a valid position, assigns chunk membership, triggers
-     * {@link #onActive()}, and updates collision tracking. When becoming {@link EntityState#INACTIVE}, it triggers
-     * {@link #onInactive()}, updates collision tracking, and removes chunk membership.
+     * When becoming {@link EntityState#ACTIVE}, this ensures a valid position, assigns chunk membership, updates
+     * collision tracking, and triggers {@link #onActive()}. When becoming {@link EntityState#INACTIVE}, it updates
+     * collision tracking, triggers {@link #onInactive()}, and removes chunk membership.
      * <p>
      * <b>Note:</b> Movement restriction checks for players are enforced here and in {@link #setPosition(Position)}.
      *
@@ -223,16 +223,18 @@ public abstract class Entity implements Attributable, Locatable {
             case ACTIVE:
                 checkState(position != null, this + " cannot be registered until its position is set.");
 
+                // Collision goes in before onActive() so that moves made by it are tracked.
                 setCurrentChunk();
-                onActive();
                 world.getCollisionManager().updateEntity(this, false);
+                onActive();
                 break;
 
             case INACTIVE:
+                // Collision comes out before onInactive(), since moves made by it are no longer tracked.
+                world.getCollisionManager().updateEntity(this, true);
                 try {
                     onInactive();
                 } finally {
-                    world.getCollisionManager().updateEntity(this, true);
                     removeCurrentChunk();
                 }
                 break;
@@ -247,6 +249,7 @@ public abstract class Entity implements Attributable, Locatable {
      *   <li>Player movement is validated by controllers before accepting the new position.</li>
      *   <li>If a {@link Player} changes {@link Region}, a {@link RegionChangedEvent} is posted.</li>
      *   <li>Chunk membership is updated if the entity crosses a chunk boundary.</li>
+     *   <li>The collision of an NPC or player moves with it.</li>
      * </ul>
      * <p>
      * {@link LocalEntity} instances are excluded from chunk tracking here since they are not part of the persistent
@@ -257,9 +260,11 @@ public abstract class Entity implements Attributable, Locatable {
     public final void setPosition(Position newPosition) {
         boolean isLocal = this instanceof LocalEntity;
         if (!newPosition.equals(position) && !isLocal) {
+            Position previous = position;
             Region old = position == null ? null : position.getRegion();
             position = newPosition;
             if (state == EntityState.ACTIVE) {
+                world.getCollisionManager().moveEntity(this, previous);
                 if (type == EntityType.PLAYER) {
                     if (old != null) {
                         Region now = newPosition.getRegion();

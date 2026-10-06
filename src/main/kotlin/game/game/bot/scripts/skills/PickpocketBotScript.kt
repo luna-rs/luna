@@ -15,6 +15,7 @@ import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Trains Thieving by pickpocketing configured NPC types inside selected zones.
@@ -40,6 +41,9 @@ class PickpocketBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.thieving) {
+
+    // Move on if no eligible NPC can be selected, rather than waiting until the entire script expires.
+    override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
 

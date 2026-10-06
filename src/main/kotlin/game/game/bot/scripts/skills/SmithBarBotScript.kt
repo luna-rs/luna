@@ -163,6 +163,12 @@ class SmithBarBotScript(
         return true
     }
 
+    override suspend fun onInventoryBankRequested(): Boolean {
+        return forceBanking || !(smithingItem?.let {
+                bot.inventory.contains(Item(it.barType.id, SmithingTable.ID_TO_TABLE[it.item.id]!!.bars))
+            } == true)
+    }
+
     override fun snapshot(): BotScriptData {
         val data = ZonedBotScriptData()
         data.duration = duration

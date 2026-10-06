@@ -167,7 +167,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone
                     .continuous(false)
                     .policy(InteractionPolicy.EQUAL_POSITION)
                     .target(SEERS_HOUSE_INSIDE)
-                    .pathfinder(PathfinderType.PLAYER)
+                    .pathfinder(PathfinderType.BOT)
                 bot.navigator.submit(walk.build()).await()
                 if (bot !in SEERS_HOUSE) {
                     bot.log("Could not walk into the Seers' Village house. position=${bot.position}")

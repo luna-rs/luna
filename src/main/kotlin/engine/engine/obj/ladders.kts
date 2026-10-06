@@ -76,7 +76,8 @@ fun handleAction(name: String): EventAction<ObjectClickEvent> =
                 val plr = event.plr
                 plr.newDialogue().options("Climb up", { climb(plr, event.gameObject, true) },
                                           "Climb down", { climb(plr, event.gameObject, false) },
-                                          "Nevermind", { plr.overlays.closeWindows() }).open()
+                                          "Nevermind", { plr.overlays.closeWindows() })
+                    .title("Climb up or down the ladder?").open()
             }
 
         else -> throw IllegalArgumentException(

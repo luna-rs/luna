@@ -3,6 +3,7 @@ package io.luna.game.model.chunk;
 import com.google.common.base.MoreObjects;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
+import io.luna.util.HashUtils;
 
 import java.util.Objects;
 
@@ -82,7 +83,7 @@ public final class Chunk implements Locatable {
 
     @Override
     public int hashCode() {
-        return (x << 16) | (y & 0xFFFF);
+        return HashUtils.mix32((x << 16) | (y & 0xFFFF));
     }
 
     @Override
