@@ -546,7 +546,6 @@ public final class BotOutputMessageHandler {
                 opcode = 241;
                 break;
             case 3:
-                // Mirrors ObjectClickMessageReader: y, then the id, then x.
                 msg.putShort(y, ValueType.ADD);
                 msg.putShort(id, ByteOrder.LITTLE);
                 msg.putShort(x, ByteOrder.LITTLE, ValueType.ADD);
