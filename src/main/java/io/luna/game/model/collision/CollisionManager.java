@@ -20,7 +20,6 @@ import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -579,10 +578,6 @@ public final class CollisionManager {
             return true;
         } else if (start.getZ() != end.getZ()) {
             return false;
-        } else if (source instanceof Bot) {
-            if(source.isWithinDistance(target, 1))
-                return true;
-            return policy.getType() == InteractionType.LINE_OF_SIGHT && raycast(start, end);
         } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
@@ -600,7 +595,8 @@ public final class CollisionManager {
                 if (distance == 1) {
                     if (target instanceof Mob) {
                         // Check if we're right beside a mob.
-                        return matrices.reachedFacingEntity(start, (Mob) target, 1, 1, OptionalInt.empty());
+                        return matrices.reachedFacingEntity(start, (Mob) target,
+                                ((Mob) target).sizeX(), ((Mob) target).sizeY(), OptionalInt.empty());
                     } else if (target instanceof GameObject) {
                         // Check if we're right beside an object.
                         return matrices.reachedObject(start, (GameObject) target);

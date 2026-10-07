@@ -40,6 +40,12 @@ public final class CombatAction extends Action<Mob> {
      */
     private final CombatContext<?> combat;
 
+    /** Give a pending engagement 30 ticks without movement or an attack before abandoning it. */
+    private static final int MAX_STALLED_TICKS = 30;
+    private Position lastProgressPosition;
+    private Mob pendingTarget;
+    private int stalledTicks;
+
     /**
      * Creates a new {@link CombatAction} for the specified mob.
      *
@@ -110,7 +116,7 @@ public final class CombatAction extends Action<Mob> {
                 mob.getNavigator().submit(request);
             }
             // Stay active while combat should continue.
-            return !combat.inCombat();
+            return pendingAttackExpired(target);
         }
 
         // Run final close-range combat checks before attacking.
@@ -127,9 +133,29 @@ public final class CombatAction extends Action<Mob> {
         if (combat.isAttackReady() || attack.isIgnoreAttackDelay()) {
             mob.interact(target);
             attack.apply();
+            stalledTicks = 0;
             return false;
         }
-        return !combat.inCombat();
+        return pendingAttackExpired(target);
+    }
+
+    /** The combat timer starts after an attack; it cannot decide whether a first attack is still pending. */
+    private boolean pendingAttackExpired(Mob target) {
+        Position position = mob.getPosition();
+        if (pendingTarget != target || !position.equals(lastProgressPosition)) {
+            pendingTarget = target;
+            lastProgressPosition = position;
+            stalledTicks = 0;
+        } else {
+            stalledTicks++;
+        }
+        if (stalledTicks >= MAX_STALLED_TICKS && !combat.inCombat()) {
+            if (target.equals(mob.getNavigator().getCurrentTarget()) && mob.getNavigator().isCurrentContinuous()) {
+                mob.getNavigator().cancel();
+            }
+            return clearTarget();
+        }
+        return false;
     }
 
     @Override

@@ -29,9 +29,8 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
-import io.luna.game.model.path.Pathfinders
+import io.luna.game.model.mob.combat.CombatAction
 import io.luna.net.msg.out.GameChatboxMessageWriter
-import kotlinx.coroutines.future.await
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -156,7 +155,8 @@ class NpcCombatScript(bot: Bot,
         }
 
         eatFood()
-        if (bot.combat.lastCombatWith != null && bot.combat.inCombat()) {
+        if (bot.combat.lastCombatWith?.isAlive == true && bot.combat.inCombat() &&
+            !bot.actions.contains(CombatAction::class.java)) {
             handler.interactions.interact(3, bot.combat.lastCombatWith)
             bot.naturalDelay()
         } else if (focus?.isAlive != true) {
@@ -166,11 +166,11 @@ class NpcCombatScript(bot: Bot,
 
     override suspend fun refocus(): Boolean {
         eatFood()
-        if (focus?.isAlive != true || bot.combat.lastCombatWith == null) {
+        if (focus?.isAlive != true) {
             lootItems()
             return true
         }
-        if (bot.combat.inCombat() && bot.combat.target == focus && focus?.isAlive == true) {
+        if (bot.combat.target == focus && bot.actions.contains(CombatAction::class.java)) {
             return false
         }
         if (!bot.combat.checkMultiCombat(focus)) {
@@ -180,13 +180,10 @@ class NpcCombatScript(bot: Bot,
             } else {
                 handler.combat.fleeCombat()
             }
-        }
-        if (bot.walking.isEmpty && !bot.combat.inCombat()) {
-            bot.navigator.navigate(activeZone!!.inside, true)
-                .await() // Temporary, pathfinding sucks sometimes bots get stuck
             return true
         }
-        return false
+        // Retry the current target through the same click path as a human, and abandon it on failure.
+        return !handler.interactions.interact(3, focus)
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
@@ -201,22 +198,6 @@ class NpcCombatScript(bot: Bot,
 
     override suspend fun interactionOption(target: Npc): Int? {
         eatFood()
-        val start = bot.position
-        val destination = target.position
-        val startedAt = System.nanoTime()
-        val path = bot.navigator.findPath(start,
-                                          destination,
-                                          Pathfinders.forBot(bot),
-                                          true).await()
-        val endpoint = path?.peekLast()
-        if (endpoint?.isWithinDistance(target.position, 2) != true) {
-            bot.log("Rejected combat target id=${target.id}: start=$start, " +
-                            "requested=$destination, current=${target.position}, endpoint=$endpoint, " +
-                            "pathSize=${path?.size}, elapsedMs=${(System.nanoTime() - startedAt) / 1_000_000}.")
-            return null
-        }
-        bot.combat.attack(target)
-        bot.naturalDelay()
         return 3
     }
 

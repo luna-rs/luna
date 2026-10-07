@@ -11,6 +11,9 @@ import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
@@ -49,6 +52,13 @@ final class CollisionManagerTest {
         World world = Mockito.mock(World.class);
         ChunkManager chunks = Mockito.mock(ChunkManager.class);
         Mockito.when(world.getChunks()).thenReturn(chunks);
+        Mockito.when(chunks.load(Mockito.any(Chunk.class))).thenAnswer(invocation -> {
+            Chunk chunk = invocation.getArgument(0);
+            ChunkRepository repository = Mockito.mock(ChunkRepository.class);
+            Mockito.when(repository.getMatrices()).thenReturn(
+                    matrices.computeIfAbsent(chunk, ignored -> CollisionMatrix.createMatrices(4, 8, 8)));
+            return repository;
+        });
         Mockito.when(chunks.load(Mockito.any(Position.class))).thenAnswer(invocation -> {
             Position position = invocation.getArgument(0);
             ChunkRepository repository = Mockito.mock(ChunkRepository.class);
@@ -82,8 +92,58 @@ final class CollisionManagerTest {
         Entity entity = type == EntityType.NPC ? Mockito.mock(Npc.class) : Mockito.mock(Player.class);
         Mockito.when(entity.getType()).thenReturn(type);
         Mockito.when(entity.size()).thenReturn(size);
+        Mockito.when(entity.sizeX()).thenReturn(size);
+        Mockito.when(entity.sizeY()).thenReturn(size);
         Mockito.when(entity.getPosition()).thenAnswer(invocation -> position[0]);
+        Mockito.when(entity.abs()).thenAnswer(invocation -> position[0]);
         return entity;
+    }
+
+    private Bot botAt(Position position) {
+        Bot bot = Mockito.mock(Bot.class);
+        Mockito.when(bot.abs()).thenReturn(position);
+        Mockito.when(bot.isWithinDistance(Mockito.any(), Mockito.anyInt())).thenCallRealMethod();
+        return bot;
+    }
+
+    @Test
+    void botAndCombatAgreeOnDiagonalAndCardinalMeleeReach() {
+        Npc target = (Npc) mob(EntityType.NPC, 1, new Position[]{new Position(111, 111, 0)});
+        Position diagonal = new Position(110, 110, 0);
+        assertFalse(manager.reached(botAt(diagonal), target, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(diagonal, target, InteractionPolicy.STANDARD_SIZE));
+        Position beside = new Position(110, 111, 0);
+        assertTrue(manager.reached(botAt(beside), target, InteractionPolicy.STANDARD_SIZE));
+        assertTrue(manager.reached(beside, target, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void adjacentBotCannotAttackThroughWall() {
+        Position source = new Position(110, 111, 0);
+        Npc target = (Npc) mob(EntityType.NPC, 1, new Position[]{new Position(111, 111, 0)});
+        CollisionUpdate.Builder update = new CollisionUpdate.Builder();
+        update.type(CollisionUpdateType.ADDING);
+        update.flag(source, WALL_EAST);
+        manager.apply(update.build(), false);
+        assertFalse(manager.reached(botAt(source), target, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(source, target, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void botRespectsExactTileAndRangedDistancePolicies() {
+        Position source = new Position(110, 110, 0);
+        assertFalse(manager.reached(botAt(source), new Position(111, 110, 0),
+                new InteractionPolicy(InteractionType.SIZE, 0)));
+        assertTrue(manager.reached(botAt(source), source, new InteractionPolicy(InteractionType.SIZE, 0)));
+        assertTrue(manager.reached(botAt(source), new Position(120, 110, 0), InteractionPolicy.STANDARD_LINE_OF_SIGHT));
+        assertFalse(manager.reached(botAt(source), new Position(121, 110, 0), InteractionPolicy.STANDARD_LINE_OF_SIGHT));
+    }
+
+    @Test
+    void meleeReachUsesLargeNpcFootprint() {
+        Npc target = (Npc) mob(EntityType.NPC, 2, new Position[]{new Position(111, 111, 0)});
+        assertTrue(manager.reached(botAt(new Position(113, 112, 0)), target, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(botAt(new Position(113, 113, 0)), target, InteractionPolicy.STANDARD_SIZE));
     }
 
     private static void move(CollisionManager manager, Entity entity, Position[] position, Position to) {

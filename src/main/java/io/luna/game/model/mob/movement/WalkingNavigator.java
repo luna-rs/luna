@@ -513,6 +513,16 @@ public class WalkingNavigator {
      * @return The computed adjacent offset position.
      */
     Position computeOffsetPosition(Entity target, Optional<Direction> offsetDir) {
+        if (offsetDir.isEmpty()) {
+            // Default interaction approaches must end at a side that satisfies the same reach check as combat.
+            var candidates = Direction.NESW.stream()
+                    .map(direction -> computeOffsetPosition(target, Optional.of(direction))).toList();
+            java.util.Comparator<Position> distance = java.util.Comparator.comparingInt(
+                    candidate -> candidate.computeLongestDistance(mob.getPosition()));
+            return candidates.stream()
+                    .filter(candidate -> collisionManager.reached(candidate, target, InteractionPolicy.STANDARD_SIZE))
+                    .min(distance).orElseGet(() -> candidates.stream().min(distance).orElseThrow());
+        }
         Position targetPosition = target.getPosition();
         int sizeX = mob.sizeX();
         int sizeY = mob.sizeY();
@@ -523,7 +533,7 @@ public class WalkingNavigator {
         Position position = mob.getPosition();
         int height = position.getZ();
 
-        Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
+        Direction direction = offsetDir.get();
         int dx = direction.getTranslateX();
         int dy = direction.getTranslateY();
 
