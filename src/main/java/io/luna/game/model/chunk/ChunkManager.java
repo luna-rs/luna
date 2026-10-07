@@ -51,6 +51,11 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     public static final int VIEWABLE_RADIUS = 3;
 
     /**
+     * The width and height, in tiles, of the map area the client has loaded around the last region base.
+     */
+    private static final int CLIENT_REGION_SIZE = 104;
+
+    /**
      * Loaded chunk repositories keyed by {@link Chunk}.
      */
     private final Map<Chunk, ChunkRepository> repositories = new ConcurrentHashMap<>(29_278);
@@ -159,6 +164,12 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
             newChunks.removeAll(oldChunks);
         }
 
+        // The view radius can reach past the map the client has loaded, and the client can't index those chunks. A
+        // region change always forces a full refresh, so skipping them loses nothing.
+        Position lastRegion = player.getLastRegion();
+        viewableOldChunks.removeIf(chunk -> !isInsideClientRegion(chunk, lastRegion));
+        newChunks.removeIf(chunk -> !isInsideClientRegion(chunk, lastRegion));
+
         // Send grouped updates for chunks that remain in view.
         for (ChunkRepository chunk : viewableOldChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
@@ -186,6 +197,24 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
         }
+    }
+
+    /**
+     * Determines whether {@code chunk} lies entirely within the map area the client loaded for {@code lastRegion}.
+     * <p>
+     * Chunk update packets encode their chunk relative to the region base, and the client indexes its ground item
+     * and object arrays with it, so a chunk outside that area crashes the client.
+     *
+     * @param chunk The chunk to check.
+     * @param lastRegion The region base the client was last sent.
+     * @return {@code true} if the chunk can be addressed by the client.
+     */
+    private static boolean isInsideClientRegion(ChunkRepository chunk, Position lastRegion) {
+        Position placement = chunk.getChunk().getAbsPosition();
+        int localX = placement.getLocalX(lastRegion);
+        int localY = placement.getLocalY(lastRegion);
+        int max = CLIENT_REGION_SIZE - Chunk.SIZE;
+        return localX >= 0 && localX <= max && localY >= 0 && localY <= max;
     }
 
     /**
