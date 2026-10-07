@@ -63,8 +63,14 @@ object Doors {
     private val displaced: IdentityHashMap<GameObject, GameObject> = IdentityHashMap()
 
     /**
-     * The [DoorType] that each open door was opened from. An open id can be shared by several closed doors, so this is
-     * what lets an open door close back to the door that it was opened from. Compared by identity.
+     * The open ids that are shared by more than one closed door.
+     */
+    private val sharedOpenIds: MutableSet<Int> = HashSet()
+
+    /**
+     * The [DoorType] that each open door was opened from, for the open doors that have a shared open id. Their id cannot
+     * tell which closed door they came from, so this is what lets them close back to it. Open doors with their own open
+     * id are not kept here, and neither are closed doors. Compared by identity.
      */
     private val origins: IdentityHashMap<GameObject, DoorType> = IdentityHashMap()
 
@@ -125,6 +131,9 @@ object Doors {
             val sharing = byId.putIfAbsent(type.open, type)
             require(sharing == null || (sharing.open == type.open && sharing.side == type.side)) {
                 "Duplicate door id ${type.open} in door files."
+            }
+            if (sharing != null) {
+                sharedOpenIds += type.open
             }
             when (kind) {
                 Kind.GATE -> gateTypes += type
@@ -218,7 +227,7 @@ object Doors {
                 val from = typeOf(swap.old)
                 origins.remove(swap.old)
                 val new = world.addObject(swap.id, swap.position, swap.old.objectType, swap.direction)
-                if (from != null && swap.id == from.open) {
+                if (from != null && swap.id == from.open && from.open in sharedOpenIds) {
                     origins[new] = from
                 }
                 replaced += Pair(new, swap.old)
@@ -231,7 +240,7 @@ object Doors {
                             val from = typeOf(new)
                             origins.remove(new)
                             val restored = world.addObject(old.id, old.position, old.objectType, old.direction)
-                            if (from != null && old.id == from.open) {
+                            if (from != null && old.id == from.open && from.open in sharedOpenIds) {
                                 origins[restored] = from
                             }
                         }
