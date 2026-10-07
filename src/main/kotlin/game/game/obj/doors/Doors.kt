@@ -29,7 +29,8 @@ object Doors {
     private const val MAX_PUSH_WAIT = 5
 
     /**
-     * Maps both the closed id and the open id of every door to its [DoorType].
+     * Maps both the closed id and the open id of every door to its [DoorType]. An open id that is shared by several
+     * doors maps to the first of them, which is the door that it closes back to.
      */
     private val byId: HashMap<Int, DoorType> = HashMap()
 
@@ -103,8 +104,8 @@ object Doors {
      *
      * @param kind The kind of door being added.
      * @param types The doors to add.
-     * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if an id is used by
-     * more than one door.
+     * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if a closed id is used by
+     * more than one door, or an open id is shared with a door of the other side or a different open id.
      */
     fun add(kind: Kind, types: List<DoorType>) {
         for (type in types) {
@@ -112,7 +113,11 @@ object Doors {
                 "Door ${type.closed} must ${if (type.side != null) "not " else ""}have a side."
             }
             require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
-            require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
+            // An open id may be shared by several closed doors that look the same, which then all close back to the first.
+            val sharing = byId.putIfAbsent(type.open, type)
+            require(sharing == null || (sharing.open == type.open && sharing.side == type.side)) {
+                "Duplicate door id ${type.open} in door files."
+            }
             when (kind) {
                 Kind.GATE -> gateTypes += type
                 Kind.CURTAIN -> curtainTypes += type

@@ -12,15 +12,18 @@ on(ServerLaunchEvent::class) {
                       Doors.Kind.DOUBLE to "double_doors.json",
                       Doors.Kind.GATE to "gates.json",
                       Doors.Kind.CURTAIN to "curtains.json")
+    // An open id can be shared by several doors, but its click handler must only be registered once.
+    val registered = HashSet<Int>()
     files.forEach { (kind, file) ->
         val path = Paths.get("data", "game", "world", "doors", file)
         taskPool.execute(DoorFileParser(path, kind) { types ->
             types.forEach { type ->
-                object1(type.closed) {
-                    handleDoorClick(gameObject, plr)
-                }
-                object1(type.open) {
-                    handleDoorClick(gameObject, plr)
+                for (id in listOf(type.closed, type.open)) {
+                    if (registered.add(id)) {
+                        object1(id) {
+                            handleDoorClick(gameObject, plr)
+                        }
+                    }
                 }
             }
         })
