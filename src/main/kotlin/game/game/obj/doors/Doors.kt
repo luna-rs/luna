@@ -29,7 +29,9 @@ object Doors {
     private const val MAX_PUSH_WAIT = 5
 
     /**
-     * Maps both the closed id and the open id of every door to its [DoorType].
+     * Maps both the closed id and the open id of every door to its [DoorType]. An open id that is shared by several
+     * doors maps to the first of them. That is only used for an open door whose origin is not in [origins], such as one
+     * that the map placed open.
      */
     private val byId: HashMap<Int, DoorType> = HashMap()
 
@@ -59,6 +61,18 @@ object Doors {
      * on its own if it is still in this map when its timer expires.
      */
     private val displaced: IdentityHashMap<GameObject, GameObject> = IdentityHashMap()
+
+    /**
+     * The open ids that are shared by more than one closed door.
+     */
+    private val sharedOpenIds: MutableSet<Int> = HashSet()
+
+    /**
+     * The [DoorType] that each open door was opened from, for the open doors that have a shared open id. Their id cannot
+     * tell which closed door they came from, so this is what lets them close back to it. Open doors with their own open
+     * id are not kept here, and neither are closed doors. Compared by identity.
+     */
+    private val origins: IdentityHashMap<GameObject, DoorType> = IdentityHashMap()
 
     /**
      * A single object replacement made while opening or closing a door.
@@ -103,8 +117,8 @@ object Doors {
      *
      * @param kind The kind of door being added.
      * @param types The doors to add.
-     * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if an id is used by
-     * more than one door.
+     * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if a closed id is used by
+     * more than one door, or an open id is shared with a door of the other side or a different open id.
      */
     fun add(kind: Kind, types: List<DoorType>) {
         for (type in types) {
@@ -112,7 +126,15 @@ object Doors {
                 "Door ${type.closed} must ${if (type.side != null) "not " else ""}have a side."
             }
             require(byId.putIfAbsent(type.closed, type) == null) { "Duplicate door id ${type.closed} in door files." }
-            require(byId.putIfAbsent(type.open, type) == null) { "Duplicate door id ${type.open} in door files." }
+            // An open id may be shared by several closed doors that look the same. Each one closes back to the door
+            // that it was opened from, see [origins].
+            val sharing = byId.putIfAbsent(type.open, type)
+            require(sharing == null || (sharing.open == type.open && sharing.side == type.side)) {
+                "Duplicate door id ${type.open} in door files."
+            }
+            if (sharing != null) {
+                sharedOpenIds += type.open
+            }
             when (kind) {
                 Kind.GATE -> gateTypes += type
                 Kind.CURTAIN -> curtainTypes += type
@@ -126,6 +148,12 @@ object Doors {
      * @return The [DoorType] that [id] belongs to, or `null` if it is not a known door.
      */
     fun typeOf(id: Int): DoorType? = byId[id]
+
+    /**
+     * @return The [DoorType] that [obj] is, or `null` if it is not a known door. An open door is the type that it was
+     * opened from, which is not always the type that its id maps to when the open id is shared.
+     */
+    private fun typeOf(obj: GameObject): DoorType? = origins[obj] ?: typeOf(obj.id)
 
     /**
      * Opens [door] if it is closed, or closes it if it is open.
@@ -146,7 +174,7 @@ object Doors {
      * @param door The door that was clicked.
      */
     fun toggle(world: World, plr: Player, door: GameObject) {
-        val type = typeOf(door.id) ?: return
+        val type = typeOf(door) ?: return
         val opening = door.id == type.closed
         val curtain = type in curtainTypes
         val swaps = when {
@@ -196,7 +224,12 @@ object Doors {
                 if (!(swap === self && selfRemoved) && !world.removeObject(swap.old)) {
                     continue
                 }
+                val from = typeOf(swap.old)
+                origins.remove(swap.old)
                 val new = world.addObject(swap.id, swap.position, swap.old.objectType, swap.direction)
+                if (from != null && swap.id == from.open && from.open in sharedOpenIds) {
+                    origins[new] = from
+                }
                 replaced += Pair(new, swap.old)
             }
             if (!wasAwayFromHome) {
@@ -204,7 +237,12 @@ object Doors {
                     displaced[new] = old
                     world.scheduleOnce(type.durationOrDefault) {
                         if (displaced.remove(new) != null && world.removeObject(new)) {
-                            world.addObject(old.id, old.position, old.objectType, old.direction)
+                            val from = typeOf(new)
+                            origins.remove(new)
+                            val restored = world.addObject(old.id, old.position, old.objectType, old.direction)
+                            if (from != null && old.id == from.open && from.open in sharedOpenIds) {
+                                origins[restored] = from
+                            }
                         }
                     }
                 }
@@ -259,7 +297,7 @@ object Doors {
             ObjectType.DIAGONAL_WALL -> true
             else -> return emptyList()
         }
-        val type = typeOf(door.id)!!
+        val type = typeOf(door)!!
         val offset = if (opening) openOffset(door.direction, diagonal) else closeOffset(door.direction, diagonal)
         return listOf(Swap(door,
                            if (opening) type.open else type.closed,
@@ -294,7 +332,7 @@ object Doors {
             .filter { isPartner(it, side, opening) }
             .findFirst().orElse(null)
         if (partner != null) {
-            swaps += doubleSwap(partner, typeOf(partner.id)!!, opening)
+            swaps += doubleSwap(partner, typeOf(partner)!!, opening)
         }
         return swaps
     }
@@ -323,13 +361,13 @@ object Doors {
 
         val hinge = if (side == DoorSide.LEFT) door else partner
         val far = if (side == DoorSide.LEFT) partner else door
-        val hingeSwap = doubleSwap(hinge, typeOf(hinge.id)!!, opening)
+        val hingeSwap = doubleSwap(hinge, typeOf(hinge)!!, opening)
 
         // The far leaf lines up with the hinge leaf: one tile further along the swing when opening, and back on the
         // right side of the hinge leaf when closing.
         val offset = if (opening) openOffset(hinge.direction, false) else closeOffset(hingeSwap.direction, false)
         val farSwap = Swap(far,
-                           if (opening) typeOf(far.id)!!.open else typeOf(far.id)!!.closed,
+                           if (opening) typeOf(far)!!.open else typeOf(far)!!.closed,
                            hingeSwap.position.translate(offset.first, offset.second),
                            hingeSwap.direction)
         return if (door === hinge) listOf(hingeSwap, farSwap) else listOf(farSwap, hingeSwap)
@@ -357,7 +395,7 @@ object Doors {
      * Determines if [obj] is a leaf of the opposite [side] that is in the same state as the clicked leaf.
      */
     private fun isPartner(obj: GameObject, side: DoorSide, opening: Boolean): Boolean {
-        val type = typeOf(obj.id)
+        val type = typeOf(obj)
         return obj.objectType == ObjectType.STRAIGHT_WALL &&
                 type != null &&
                 type.side != null &&
