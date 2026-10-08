@@ -37,6 +37,10 @@ npc1(1174) {
     fish(this, Tool.MONKFISH_NET)
 }
 
+npc1(3848) {
+    fish(this, Tool.HARPOON)
+}
+
 // Second click fishing spots.
 on(NpcSecondClickEvent::class)
     .match(309, 310, 311, 314, 315, 316, 317, 318, 319, 320, 323, 325, 326, 327, 328, 329, 330, 331, 332)
@@ -49,3 +53,5 @@ on(NpcSecondClickEvent::class)
 on(NpcSecondClickEvent::class)
     .match(313, 322, 334)
     .then { fish(this, Tool.SHARK_HARPOON) }
+
+npc2(3848) { fish(this, Tool.MONKFISH_NET) }

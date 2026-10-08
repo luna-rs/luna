@@ -51,6 +51,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 zones += SubZone.VARROCK_DARK_WIZARDS
                 names.put(SubZone.ICE_MOUNTAIN, "Dwarf")
             } else {
+                zones += SubZone.CHAOS_DRUID_TOWER
                 zones += SubZone.ROCK_CRABS
                 zones += SubZone.AL_KHARID_PALACE
                 zones += SubZone.EDGEVILLE_MONASTERY
@@ -80,6 +81,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             }
             zones += SubZone.DRAYNOR_SEWERS
             zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
+            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
+            if(bot.personality.isDumb) {
+                zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
+            }
         } else if (bot.combatLevel < 50) {
             if (bot.personality.isIntelligent || roll(1 of 4)) {
                 zones += SubZone.ROCK_CRABS
@@ -89,6 +94,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             zones += SubZone.DRAYNOR_SEWERS
             zones += SubZone.HAM_CULT
             zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
+            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
+            if(bot.personality.isDumb) {
+                zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
+            }
         } else if (bot.combatLevel < 60) {
             if (bot.personality.isIntelligent || roll(1 of 4)) {
                 zones += SubZone.ROCK_CRABS
@@ -98,6 +107,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             zones += SubZone.DRAYNOR_SEWERS
             zones += SubZone.HAM_CULT
             zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
+            if(bot.personality.isDumb) {
+              zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
+            }
         } else if (bot.combatLevel < 80) {
             // TODO ice giant, ice warrior, earth warrior, jogre, cyclops,
             // zamorak wizard, infernal mage, mountain troll
@@ -107,29 +119,46 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             zones += SubZone.ROCK_CRABS
             zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
             zones += SubZone.VARROCK_SEWERS
+            zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
 
-            if (bot.combatLevel > 70) {
+            if (bot.combatLevel > 70 && !training) {
                 zones += SubZone.GREEN_DRAGONS
             }
         } else if (bot.combatLevel < 100) {
-            zones += SubZone.GREEN_DRAGONS
+            if (!training) {
+                zones += SubZone.GREEN_DRAGONS
+                zones += SubZone.KBD_LAIR
+
+            }
+            zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
+
             // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
             //Dust devil, Aberrant specter, Greater demon
+            zones += SubZone.KARAMJA_DUNGEON
 
-        } else if (bot.combatLevel >= 100 && bot.combatLevel <= 126) {
-            zones += SubZone.GREEN_DRAGONS
+            names.put(SubZone.KARAMJA_DUNGEON, "Lesser demon")
+        } else {
+            if (!training) {
+                zones += SubZone.GREEN_DRAGONS
+                zones += SubZone.KBD_LAIR
+            }
+            zones += SubZone.KARAMJA_DUNGEON
+
+            names.put(SubZone.KARAMJA_DUNGEON, "Lesser demon")
+
             // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
             // Kurask, Blue dragon, Saradomin/Zamorak Wizards
             // Gargoyle, Nechryael, Abyssal demon, Ice troll, Blue dragon
 
-        } else {
-            zones += SubZone.ROCK_CRABS
         }
         val duration =
             if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
                 bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
             )
                 rand(100, 350).minutes else rand(45, 120).minutes
+        if(zones.isEmpty()) {
+            zones += SubZone.ROCK_CRABS
+        }
         bot.scriptStack.push(NpcCombatScript(bot, duration, zones, names))
     }
 }
