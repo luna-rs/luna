@@ -1,6 +1,8 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import api.predef.*
+import engine.controllers.Controllers.inMultiArea
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
@@ -11,9 +13,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 /**
- * The maximum number of nearby secondary targets hit per mob category.
- *
- * This limit is applied separately to local players and local NPCs.
+ * The maximum number of mobs a single special attack can hit, including the primary target.
  */
 val MAX_TARGETS = 14
 
@@ -28,23 +28,37 @@ val ANIMATION = 3157
 val GRAPHIC = Graphic(559, 0, 0)
 
 /**
- * Attempts to apply the Dragon 2h sword special attack's secondary hit to a nearby target.
+ * Finds the other mobs hit by the Dragon 2h sword special attack.
  *
- * A hit is only applied if the supplied [victim] is within melee distance of [attacker]. When that condition is met,
- * a melee damage roll is resolved immediately and submitted as a [CombatDamageAction].
+ * Other mobs are only hit in multi-combat areas. They must be the same type of mob as [victim] (players or NPCs),
+ * stand within one tile of [attacker], and be attackable.
  *
  * @param attacker The player performing the special attack.
- * @param victim The nearby mob being checked for a secondary hit.
- * @param attack The parent combat attack associated with the special attack.
- * @return `true` if a secondary hit was submitted for the target, or `false` if the target was out of range.
+ * @param victim The primary target of the special attack.
+ * @return Up to [MAX_TARGETS] - 1 other mobs to hit.
  */
-fun sendHit(attacker: Player, victim: Mob, attack: CombatAttack<Player>?): Boolean {
-    if (victim.isWithinDistance(attacker, 1)) {
-        val otherDamage = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).build().resolve()
-        victim.submitAction(CombatDamageAction(otherDamage, attack, true))
-        return true
+fun findOtherTargets(attacker: Player, victim: Mob): List<Mob> {
+    if (!attacker.inMultiArea()) {
+        return emptyList()
     }
-    return false
+    return world.locator.findViewable<Mob>(victim.type, attacker) {
+        it != attacker && it != victim && it.isWithinDistance(attacker, 1) &&
+                it.inMultiArea() && it.combat.isAttackable
+    }.take(MAX_TARGETS - 1)
+}
+
+/**
+ * Applies the Dragon 2h sword special attack's secondary hit to a nearby target.
+ *
+ * A melee damage roll is resolved immediately and submitted as a [CombatDamageAction].
+ *
+ * @param attacker The player performing the special attack.
+ * @param victim The nearby mob being hit.
+ * @param attack The parent combat attack associated with the special attack.
+ */
+fun sendHit(attacker: Player, victim: Mob, attack: CombatAttack<Player>?) {
+    val otherDamage = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).build().resolve()
+    victim.submitAction(CombatDamageAction(otherDamage, attack, true))
 }
 
 attack(type = DRAGON_2H_SWORD,
@@ -53,29 +67,11 @@ attack(type = DRAGON_2H_SWORD,
     // Override the primary melee animation.
     attack { melee(ANIMATION) }
 
-    // Hit nearby players and NPCs when applicable.
+    // Hit nearby mobs of the victim's type when applicable.
     launched {
         attacker.graphic(GRAPHIC)
-        var playersHit = 0
-        var npcsHit = 0
-        // TODO Does it only damage mobs of the same type?
-        // Apply potential damage to players.
-        for (local in attacker.localMobs.localPlayers()) {
-            if (playersHit >= MAX_TARGETS) {
-                break
-            }
-            if (local != victim && sendHit(attacker, local, attack)) {
-                playersHit++
-            }
-        }
-        // Apply potential damage to NPCs.
-        for (local in attacker.localMobs.localNpcs()) {
-            if (npcsHit >= MAX_TARGETS) {
-                break
-            }
-            if (local != victim && sendHit(attacker, local, attack)) {
-                npcsHit++
-            }
+        for (other in findOtherTargets(attacker, victim)) {
+            sendHit(attacker, other, attack)
         }
         damage // Preserves the original primary hit result from the special attack DSL.
     }

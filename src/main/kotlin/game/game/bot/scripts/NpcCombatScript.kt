@@ -9,6 +9,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.SetMultimap
+import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
@@ -31,6 +32,7 @@ import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.combat.CombatAction
 import io.luna.net.msg.out.GameChatboxMessageWriter
+import io.luna.util.GsonUtils
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -44,6 +46,30 @@ class NpcCombatScript(bot: Bot,
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
+
+        /** Per-zone NPC restrictions must survive script persistence. */
+        class NpcCombatData : ZonedBotScriptData() {
+            var names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of()
+
+            override fun load(data: JsonObject) {
+                super.load(data)
+                val builder = ImmutableSetMultimap.builder<SubZone, String>()
+                val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
+                savedNames?.entrySet()?.forEach { (zone, npcs) ->
+                    npcs.asJsonArray.forEach { builder.put(SubZone.valueOf(zone), it.asString) }
+                }
+                names = builder.build()
+            }
+
+            override fun save(data: JsonObject) {
+                super.save(data)
+                val savedNames = JsonObject()
+                names.asMap().forEach { (zone, npcs) ->
+                    savedNames.add(zone.name, GsonUtils.toJsonTree(npcs))
+                }
+                data.add("names", savedNames)
+            }
+        }
 
         // when looting sort by wanted item, etc etc value
         //  add all noted versions as well
@@ -68,7 +94,9 @@ class NpcCombatScript(bot: Bot,
 
     }
 
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
+    // Retain the base-data constructor so existing persisted scripts still load.
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
+        (data as? NpcCombatData)?.names ?: ImmutableSetMultimap.of())
 
     override suspend fun equipment(): BotGearLocator {
         // Higher chance to train melee.
@@ -201,10 +229,11 @@ class NpcCombatScript(bot: Bot,
         return 3
     }
 
-    override fun snapshot(): ZonedBotScriptData {
-        val data = ZonedBotScriptData()
+    override fun snapshot(): NpcCombatData {
+        val data = NpcCombatData()
         data.duration = duration
         data.zones = originalZones.toMutableList()
+        data.names = ImmutableSetMultimap.copyOf(names)
         return data
     }
 

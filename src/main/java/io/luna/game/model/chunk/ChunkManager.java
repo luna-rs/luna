@@ -31,7 +31,8 @@ import java.util.stream.StreamSupport;
  * inclusive radius.
  * <p>
  * <b>Update dispatch:</b> {@link #sendUpdates(Player, Position, boolean)} compares the chunks around the player's old
- * and new positions and:
+ * and new positions, limited to those inside the map the client has loaded (see
+ * {@link #findViewableChunks(Position, Position)}), and:
  * <ul>
  *     <li>Sends grouped updates for chunks that remain visible.</li>
  *     <li>Sends grouped updates + persistent replays for chunks newly entering view.</li>
@@ -49,6 +50,12 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * How many "layers" of chunks are considered viewable around a base chunk.
      */
     public static final int VIEWABLE_RADIUS = 3;
+
+    /**
+     * How many chunks the map the client has loaded extends from the chunk the region was centered on. The loaded map is
+     * {@code 2 * CLIENT_REGION_RADIUS + 1} chunks (104 tiles) wide and tall.
+     */
+    public static final int CLIENT_REGION_RADIUS = 6;
 
     /**
      * Loaded chunk repositories keyed by {@link Chunk}.
@@ -119,14 +126,52 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      */
     public List<ChunkRepository> findViewableChunks(Position base) {
         Chunk chunk = base.getChunk();
-        List<ChunkRepository> viewable = new ArrayList<>(16);
-        for (int x = -VIEWABLE_RADIUS; x <= VIEWABLE_RADIUS; x++) {
-            for (int y = -VIEWABLE_RADIUS; y <= VIEWABLE_RADIUS; y++) {
-                ChunkRepository repository = load(chunk.translate(x, y));
-                viewable.add(repository);
+        return loadChunks(chunk.getX() - VIEWABLE_RADIUS, chunk.getX() + VIEWABLE_RADIUS,
+                chunk.getY() - VIEWABLE_RADIUS, chunk.getY() + VIEWABLE_RADIUS);
+    }
+
+    /**
+     * Computes the repositories for chunks in the viewable area around {@code base} that the client can address.
+     * <p>
+     * This is {@link #findViewableChunks(Position)} clamped to the map the client loaded for {@code region}. Chunk
+     * update packets encode their chunk relative to the region base, and the client indexes its ground item and object
+     * arrays with it, so a chunk outside the loaded map crashes the client. {@link Player#needsRegionUpdate()} only
+     * re-bases the region once the player is within two chunks of the map's edge, so the view radius can reach a chunk
+     * past it. A region change always forces a full refresh, so skipping those chunks loses nothing.
+     * <p>
+     * Repositories are only loaded for the chunks that are returned.
+     *
+     * @param base The base position.
+     * @param region The region base the client was last sent.
+     * @return A list of repositories surrounding {@code base}'s chunk that lie inside the client's loaded map.
+     */
+    public List<ChunkRepository> findViewableChunks(Position base, Position region) {
+        Chunk chunk = base.getChunk();
+        Chunk regionChunk = region.getChunk();
+        return loadChunks(Math.max(chunk.getX() - VIEWABLE_RADIUS, regionChunk.getX() - CLIENT_REGION_RADIUS),
+                Math.min(chunk.getX() + VIEWABLE_RADIUS, regionChunk.getX() + CLIENT_REGION_RADIUS),
+                Math.max(chunk.getY() - VIEWABLE_RADIUS, regionChunk.getY() - CLIENT_REGION_RADIUS),
+                Math.min(chunk.getY() + VIEWABLE_RADIUS, regionChunk.getY() + CLIENT_REGION_RADIUS));
+    }
+
+    /**
+     * Loads the repositories for every chunk in the inclusive chunk-space range, in deterministic nested-loop order.
+     * The list is empty if either range is empty.
+     *
+     * @param minX The lowest chunk x coordinate.
+     * @param maxX The highest chunk x coordinate.
+     * @param minY The lowest chunk y coordinate.
+     * @param maxY The highest chunk y coordinate.
+     * @return The loaded repositories.
+     */
+    private List<ChunkRepository> loadChunks(int minX, int maxX, int minY, int maxY) {
+        List<ChunkRepository> chunks = new ArrayList<>(Math.max(0, maxX - minX + 1) * Math.max(0, maxY - minY + 1));
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                chunks.add(load(new Chunk(x, y)));
             }
         }
-        return viewable;
+        return chunks;
     }
 
     /**
@@ -146,8 +191,9 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * @param fullRefresh If {@code true}, treat all viewable chunks as "new" (forces full resend).
      */
     public void sendUpdates(Player player, Position oldPosition, boolean fullRefresh) {
-        List<ChunkRepository> oldChunks = findViewableChunks(oldPosition);
-        List<ChunkRepository> newChunks = findViewableChunks(player.getPosition());
+        Position lastRegion = player.getLastRegion();
+        List<ChunkRepository> oldChunks = findViewableChunks(oldPosition, lastRegion);
+        List<ChunkRepository> newChunks = findViewableChunks(player.getPosition(), lastRegion);
         List<ChunkRepository> viewableOldChunks = new ArrayList<>();
 
         if (!fullRefresh) {
