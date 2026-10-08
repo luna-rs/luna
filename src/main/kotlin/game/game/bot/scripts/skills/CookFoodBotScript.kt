@@ -96,21 +96,27 @@ class CookFoodBotScript(
         return BotGearSelector.find(bot, purpose).replace(HANDS, 775).buildLocator()
     }
 
+    override fun bankWithdraw(): List<Item> = withdraw()
+
     override fun withdraw(): List<Item> {
+        cooking = null
         if (selectedFood == null) {
             for (food in Food.entries) {
-                if (bot.itemTracker.count(food.raw) >= 28) {
+                if (bot.cooking.staticLevel >= food.lvl && bot.itemTracker.count(food.raw) > 0) {
                     cooking = food
                     break
                 }
             }
         } else {
-            cooking = selectedFood
+            if (bot.cooking.staticLevel >= selectedFood.lvl) {
+                cooking = selectedFood
+            }
         }
 
         val food = cooking
         if (food != null) {
-            return listOf(Item(food.raw, 28))
+            val amount = bot.itemTracker.count(food.raw).coerceAtMost(28)
+            if (amount > 0) return listOf(Item(food.raw, amount))
         }
 
         bot.log("No raw food for cooking could be found in the bank.")
@@ -134,7 +140,7 @@ class CookFoodBotScript(
 
         if (cookingObject == null) {
             cookingObject = world.locator
-                .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in COOKING_OBJECTS }
+                .findObjects(zone.area.centerPosition.setZ(zone.inside.z), zone.area.tileRadius) { it.id in COOKING_OBJECTS }
                 .firstOrNull()
         }
 
@@ -165,6 +171,9 @@ class CookFoodBotScript(
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
+        if (!forceBanking && cooking?.let { it.raw in bot.inventory } == true) {
+            return false
+        }
         if (activeZone == SubZone.ROGUES_DEN) {
             // Use banker NPC when at rogues' den.
             cachedBank = ROGUES_DEN_BANK.value
@@ -177,6 +186,10 @@ class CookFoodBotScript(
         data.duration = duration
         data.zones = originalZones.toMutableList()
         return data
+    }
+
+    override fun onNewActiveZone(lastZone: SubZone?) {
+        cookingObject = null
     }
 
     override fun onPaused() {

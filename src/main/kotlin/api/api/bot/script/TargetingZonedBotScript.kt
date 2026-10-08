@@ -12,6 +12,7 @@ import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 
 /**
  * A zone-based bot script that searches for, selects, and maintains focus on a target entity.
@@ -74,6 +75,26 @@ abstract class TargetingZonedBotScript<E : Entity>(
      */
     private var searchTimes = 0
 
+    /** Maximum time spent searching without selecting a target; opt-in for each script. */
+    protected open val targetSearchTimeout: Duration = Duration.INFINITE
+
+    /** Monotonic clock, overridable for deterministic recovery tests. */
+    protected open fun targetSearchTimeNanos(): Long = System.nanoTime()
+
+    private var searchStartedAt: Long? = null
+    private var searchZone: SubZone? = null
+
+    private fun abandonExpiredSearch(): Boolean {
+        val startedAt = searchStartedAt ?: return false
+        val elapsed = (targetSearchTimeNanos() - startedAt).nanoseconds
+        if (elapsed < targetSearchTimeout) {
+            return false
+        }
+        bot.log("Abandoning $activeZone after $elapsed without selecting an interactable target.")
+        clearTargetCache("target search timed out")
+        return true
+    }
+
     /**
      * Executes one targeting cycle inside the active zone.
      *
@@ -104,6 +125,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * [ZonedBotScript] to choose another one.
      */
     final override suspend fun executeInZone(): Boolean {
+        if (searchZone != activeZone) {
+            clearTargetCache("active zone changed")
+            searchZone = activeZone
+        }
         val currentFocus = focus
         val invalidReason = getInvalidFocusReason(currentFocus)
         val refocus = refocus()
@@ -113,6 +138,12 @@ abstract class TargetingZonedBotScript<E : Entity>(
             return true
         }
         if (invalidReason != null || refocus) {
+            if (searchStartedAt == null) {
+                searchStartedAt = targetSearchTimeNanos()
+            }
+            if (abandonExpiredSearch()) {
+                return false
+            }
             onExecuteInZone(true)
             focus = null
             bot.log("Searching for a new target in $zone because ${invalidReason ?: "refocus was requested"}.")
@@ -144,6 +175,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
             val iterator = lastOptions.iterator()
 
             while (iterator.hasNext()) {
+                // Check between attempts: one scan can contain many expensive path searches.
+                if (abandonExpiredSearch()) {
+                    return false
+                }
                 val target = iterator.next()
                 iterator.remove()
 
@@ -158,10 +193,14 @@ abstract class TargetingZonedBotScript<E : Entity>(
 
                 focus = target
                 searchTimes = 0
+                searchStartedAt = null
                 bot.log("Selected new focus target ${describeTarget(target)}.")
                 return true
             }
 
+            if (abandonExpiredSearch()) {
+                return false
+            }
             bot.naturalDecisionDelay()
 
             if (searchTimes >= 10) {
@@ -348,6 +387,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
      */
     private fun clearTargetCache(reason: String) {
         focus = null
+        searchTimes = 0
+        searchStartedAt = null
         lastOptions = mutableListOf()
         bot.log("Cleared targeting cache because $reason.")
     }

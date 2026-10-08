@@ -76,7 +76,8 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
 
     override suspend fun onExecuteInZone(): Boolean {
         if (armor.hides != null) {
-            if (!bot.inventory.containsAll(NEEDLE_ID, THREAD_ID, armor.hides.first.tan)) {
+            val neededItems = listOf(Item(NEEDLE_ID), Item(THREAD_ID), Item(armor.hides.first.tan, armor.hides.second))
+            if (!bot.inventory.containsAll(neededItems)) {
                 bot.log("Not all required supplies are in inventory; requesting bank trip.")
                 forceBanking = true
                 return true

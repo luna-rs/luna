@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.Luna;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.util.HashUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -65,8 +66,8 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
-        if (Luna.settings().game().betaMode()) { // this block causes significant performance degradation, so it's important to disable when finished debugging
-            checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
+        if (Luna.settings().game().betaMode() && !HEIGHT_LEVELS.contains(z)) {
+            throw new IllegalArgumentException(z + " (z >= 0 && z < 4)");
         }
         this.x = x;
         this.y = y;
@@ -105,7 +106,7 @@ public final class Position implements Locatable {
 
     @Override
     public int hashCode() {
-        return (z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF);
+        return HashUtils.mix32((z << 28) | ((x & 0x3FFF) << 14) | (y & 0x3FFF));
     }
 
     @Override

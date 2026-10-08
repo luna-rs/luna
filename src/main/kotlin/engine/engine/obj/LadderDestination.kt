@@ -128,7 +128,7 @@ object LadderDestination {
     /**
      * Returns `true` if [tile] has a floor and a player can walk onto it.
      */
-    private fun canLand(tile: Position) =
+    fun canLand(tile: Position) =
         hasFloor(tile) && Direction.NESW.any {
             world.collisionManager.traversable(tile.translate(1, it), EntityType.PLAYER, it.opposite())
         }

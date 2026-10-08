@@ -1,6 +1,5 @@
 package engine.bot.coordinator.skill
 
-import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -10,6 +9,7 @@ import game.bot.scripts.skills.StealBotScript
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import game.skill.thieving.searchForTraps.ThievingChest
 import game.skill.thieving.stealFromStall.ThievingStallType
+import io.luna.game.model.mob.bot.Bot
 import java.util.*
 
 /**
@@ -102,7 +102,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
                     }
 
                     npcs += ThievingNpcType.WARRIOR
-                    zones += SubZone.ARDOUGNE_SQUARE_THIEVING
+                    zones += SubZone.ARDOUGNE_WARRIOR_THIEVING
                 }
             }
 
@@ -185,21 +185,21 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
          */
         fun searchForTraps(bot: Bot): SearchBotScript {
             val chests = EnumSet.noneOf(ThievingChest::class.java)
-             if (level >= ThievingChest.STEEL_ARROWTIPS.level) {
-                chests += ThievingChest.STEEL_ARROWTIPS
-                zones += SubZone.HEMENSTER_CHEST_ROOM
-            } else if (level >= ThievingChest.BLOOD_RUNES.level) {
+            if (level >= ThievingChest.BLOOD_RUNES.level) {
                 chests += ThievingChest.BLOOD_RUNES
                 zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
-            }
+            } else if (level >= ThievingChest.STEEL_ARROWTIPS.level) {
+                chests += ThievingChest.STEEL_ARROWTIPS
+                zones += SubZone.HEMENSTER_CHEST_ROOM
+            } else
 
-            chests.removeIf { level < it.level }
+                chests.removeIf { level < it.level }
             return SearchBotScript(bot, chests, getDuration(bot), zones)
         }
 
         return if (rand(bot.personality.intelligence) || level < ThievingStallType.SEED.level) {
             pickpocketing(bot)
-        } else if(randBoolean() || level < ThievingChest.STEEL_ARROWTIPS.level) {
+        } else if (randBoolean() || level < ThievingChest.STEEL_ARROWTIPS.level) {
             stealingFromStalls(bot)
         } else {
             searchForTraps(bot)

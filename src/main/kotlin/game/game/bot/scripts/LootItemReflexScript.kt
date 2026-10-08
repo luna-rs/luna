@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalMicroDelay
 import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
+import api.predef.ext.*
 import game.bot.scripts.LootItemReflexScript.Companion.JUNK_ITEMS
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
@@ -108,6 +109,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             }
         }
 
+        // Reconcile temporary wanted items only after pickup attempts have actually occurred.
+        //
+        // This prevents a failed ground-item interaction from falsely satisfying and removing a wanted-item requirement.
+        bot.preferences.rebalanceWantedItems()
+
         // Clean up script state and return to prior activities.
         droppedJunk = false
         return true
@@ -143,7 +149,6 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 }
             } else if (bot.preferences.hasWantedItem(groundItem.id)) {
                 valuableItems += groundItem
-                bot.preferences.removeWantedItem(item.id, item.amount)
                 found = true
             } else if (world.economy.getTotalPrice(item) > minimumLootValue) {
                 valuableItems += groundItem

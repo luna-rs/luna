@@ -17,6 +17,7 @@ import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A thieving bot script that steals from configured stall types inside selected subzones.
@@ -43,6 +44,9 @@ class StealBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : SkillingBotScript<GameObject>(bot, duration, zones, bot.thieving) {
+
+    // Move on if stalls remain unavailable or unsafe, rather than waiting until the entire script expires.
+    override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
 

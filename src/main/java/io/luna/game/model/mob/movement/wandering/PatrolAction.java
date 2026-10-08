@@ -6,7 +6,6 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.movement.NavigationRequest;
 import io.luna.game.model.mob.movement.NavigationResult;
-import io.luna.game.model.mob.movement.PathfinderType;
 import io.luna.game.model.mob.movement.WalkingNavigator;
 import io.luna.game.model.mob.movement.WalkingQueue;
 import io.luna.util.RandomUtils;
@@ -207,7 +206,7 @@ public final class PatrolAction extends WanderingAction {
      * if pathfinding fails.
      */
     private CompletableFuture<NavigationResult> computeAndQueuePathAsync(Position dest) {
-        var request = NavigationRequest.builder(mob).async(true).pathfinder(PathfinderType.PLAYER).
+        var request = NavigationRequest.builder(mob).async(true).
                 continuous(false).target(dest).policy(InteractionPolicy.EQUAL_POSITION).build();
         return mob.getNavigator().submit(request);
     }

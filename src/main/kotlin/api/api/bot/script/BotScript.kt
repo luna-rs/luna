@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.GameCoroutineScope
+import api.predef.*
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
@@ -9,6 +10,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * A coroutine-driven base class for bot behavior scripts.
@@ -151,6 +153,16 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                             break
                         }
                     }
+                } catch (e: CancellationException) {
+                    // An externally cancelled job may be paused, or already replaced by a resumed job.
+                    // Only an exception from a still-active coroutine should terminate the script.
+                    if (isActive) {
+                        stop()
+                    }
+                    throw e
+                } catch (e: Exception) {
+                    logger.catching(e)
+                    stop()
                 } finally {
                     val normalExit = isActive
                     finish()

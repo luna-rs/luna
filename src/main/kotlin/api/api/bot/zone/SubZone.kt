@@ -546,6 +546,14 @@ enum class SubZone(val inside: Position,
                                    parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
+     * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
+     * Covers both warrior-woman spawns and their five-tile wander range.
+     */
+    ARDOUGNE_WARRIOR_THIEVING(inside = Position(2629, 3295),
+                              area = SimpleBoxArea.of(2624, 3290, 2637, 3304),
+                              parent = { ARDOUGNE }),
+
+    /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
      * - Paladins
      * - Guards
@@ -890,6 +898,13 @@ enum class SubZone(val inside: Position,
                       parent = { FALADOR }),
 
     /**
+     * The Falador east bank and the open square north of its entrance. Intended for firemakers.
+     */
+    FALADOR_EAST_BANK(inside = Position(3013, 3360),
+                      area = SimpleBoxArea.of(3000, 3348, 3035, 3370),
+                      parent = { FALADOR }),
+
+    /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
      * training and telegrabbing wines money-making method.
      * - Zamorak wine
@@ -901,7 +916,8 @@ enum class SubZone(val inside: Position,
     NORTH_FALADOR_CHAOS_TEMPLE(inside = Position(2934, 3515),
                                area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
                                parent =
-                               { FALADOR });
+                               { FALADOR }),
+
     /*
      * TODO@0.5.0 Implement Mining Guild access and routing.
      *
@@ -910,13 +926,7 @@ enum class SubZone(val inside: Position,
      */
 
     /*
-     * TODO@0.5.0 Implement KBD_LAIR.
-     *
-     * Planned definition:
-     * - inside = Position(2900, 3294)
-     * - outside = Position(3004, 3849)
-     * - area = SimpleBoxArea.of(2249, 4674, 2291, 4717)
-     * - parent = WILDERNESS
+     * King Black Dragon lair.
      *
      * Remaining work:
      * - Verify the inside/outside coordinates.
@@ -927,13 +937,13 @@ enum class SubZone(val inside: Position,
      * - TODO@1.0 enter(): Implement wilderness dungeon + lever route into the KBD lair.
      * - TODO@1.0 leave(): Implement lever route out of the KBD lair.
      */
+    KBD_LAIR(inside = Position(2900, 3294),
+             outside = { Position(3004, 3849) },
+             area = SimpleBoxArea.of(2249, 4674, 2291, 4717),
+             parent = { WILDERNESS }),
 
     /*
-     * TODO@0.5.0 Implement LVL_20_WILDERNESS_CHAOS_TEMPLE.
-     *
-     * Planned definition:
-     * - area = SimpleBoxArea.of(2929, 3511, 2942, 3519)
-     * - parent = EDGEVILLE
+     * Level 20 Wilderness chaos temple.
      *
      * Used for:
      * - Telegrabbing wines money-making method.
@@ -941,13 +951,12 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
+    LVL_20_WILDERNESS_CHAOS_TEMPLE(inside = Position(2934, 3515),
+                                   area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
+                                   parent = { EDGEVILLE }),
 
     /*
-     * TODO@0.5.0 Implement LVL_40_WILDERNESS_CHAOS_TEMPLE.
-     *
-     * Planned definition:
-     * - area = SimpleBoxArea.of(2929, 3511, 2942, 3519)
-     * - parent = EDGEVILLE
+     * Level 40 Wilderness chaos temple.
      *
      * Used for:
      * - Telegrabbing wines money-making method.
@@ -955,6 +964,9 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
+    LVL_40_WILDERNESS_CHAOS_TEMPLE(inside = Position(2934, 3515),
+                                   area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
+                                   parent = { EDGEVILLE });
 
     companion object {
 

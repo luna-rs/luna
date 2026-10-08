@@ -5,6 +5,11 @@ import api.predef.*
 import io.luna.Luna
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.AmmoType
+import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.attack.MagicCombatAttack
+import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
+import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
@@ -32,18 +37,34 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * @return `true` if the player is using a ranged weapon with broad arrows, otherwise `false`.
      */
     fun usingBroadArrows(plr: Player): Boolean =
-        // TODO Implement broad arrow data.
         plr.combat.ranged.ammo.type == AmmoType.BROAD_ARROW && plr.combat.weapon.isRanged
+
+    /**
+     * Determines whether an attack can damage a Turoth or Kurask.
+     *
+     * Melee attacks need a leaf-bladed spear, ranged attacks need broad arrows, and magic attacks need the Magic Dart
+     * spell.
+     *
+     * @param plr The attacking player.
+     * @param source The attack being defended against.
+     * @return `true` if the attack can deal damage, otherwise `false`.
+     */
+    fun canDamage(plr: Player, source: CombatAttack<*>): Boolean =
+        when (source) {
+            is MeleeCombatAttack<*> -> plr.equipment.weapon?.id == LEAF_BLADED_SPEAR
+            is RangedCombatAttack<*> -> usingBroadArrows(plr)
+            is MagicCombatAttack<*> -> source.spellEffect?.spell == CombatSpell.MAGIC_DART
+            else -> false
+        }
 
     for (id in TUROTH + KURASK) {
         /*
-         * When slayer equipment restrictions are enabled, players must use either a leaf-bladed spear or broad arrows
-         * from a ranged weapon to deal damage. Any other attack is negated.
+         * When slayer equipment restrictions are enabled, players must use a leaf-bladed spear, broad arrows, or Magic
+         * Dart to deal damage. Any other attack is negated.
          */
         combat(id) {
             defend {
-                if (other is Player && other.equipment.weapon?.id != LEAF_BLADED_SPEAR &&
-                    !usingBroadArrows(other)) {
+                if (other is Player && !canDamage(other, source)) {
                     damage = null
                     other.sendMessage("Your attack seems to have no effect...")
                 }

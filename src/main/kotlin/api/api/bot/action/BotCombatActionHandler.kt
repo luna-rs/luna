@@ -3,12 +3,17 @@ package api.bot.action
 import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
+import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
+import game.skill.magic.Staff
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration.Companion.seconds
@@ -38,6 +43,39 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
+     * Configures [spell] as the bot's active autocast spell.
+     *
+     * The bot must be using the correct spellbook, wielding a valid staff, and currently meet all spell requirements.
+     *
+     * @return `true` if autocasting was configured successfully.
+     */
+    fun setAutocastSpell(spell: CombatSpellDefinition): Boolean {
+        if (spell == CombatSpellDefinition.NONE || spell.spellbook != bot.spellbook) {
+            return false
+        }
+
+        val weaponId = bot.equipment.weapon?.id ?: return false
+        if (bot.combat.weapon.type != Weapon.STAFF) {
+            return false
+        }
+
+        if (bot.spellbook == Spellbook.ANCIENT && weaponId !in Staff.AUTOCAST_ANCIENTS) {
+            return false
+        }
+
+        if (Magic.checkRequirements(bot, spell, true) == null) {
+            return false
+        }
+
+        val magic = bot.combat.magic
+        magic.selectedSpell = CombatSpellDefinition.NONE
+        magic.autocastSpell = spell
+        magic.isAutocasting = true
+        magic.refreshAutocast()
+        return true
+    }
+
+    /**
      * Attempts to escape from the Wilderness.
      *
      * Low-level Wilderness bots teleport home immediately. Higher-level Wilderness bots first attempt to navigate to
@@ -47,44 +85,41 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      *
      * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
      */
-    suspend fun fleeWilderness()
-            : Boolean {
-        // TODO@1.0 Bots need to support zones and area recognition. Specialized cases such as KBD lair, Mage Arena,
-        //  resource area, and Wilderness agility should not blindly path to generic Wilderness anchors.
+    suspend fun fleeWilderness(): Boolean {
         bot.walking.isRunning = true
 
         if (bot.inWilderness()) {
             bot.isWandering = false
             bot.combat.isDisabled = true
-
-            if (bot.wildernessLevel < 20) {
-                bot.output.sendCommand("home")
-                bot.combat.isDisabled = false
-                val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
-                if (success) {
-                    return true
+            try {
+                if (bot.wildernessLevel < 20) {
+                    bot.output.sendCommand("home")
+                    bot.combat.isDisabled = false
+                    val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                    if (success) {
+                        return true
+                    }
                 }
-            }
 
-            val outside = bot.subZone?.outside?.invoke(bot)
-            val parent = bot.subZone?.parent?.invoke(bot)
-            if (outside != null && parent != null) {
-                bot.subZone.leave(bot, parent, outside)
-            }
+                val outside = bot.subZone?.outside?.invoke(bot)
+                val parent = bot.subZone?.parent?.invoke(bot)
+                if (outside != null && parent != null) {
+                    bot.subZone.leave(bot, parent, outside)
+                }
 
-            // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
-            if (bot.subZone == SubZone.HOME ||
-                bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
-                    .await() == NavigationResult.REACHED
-            ) {
-                bot.output.sendCommand("home")
-                return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
+                if (bot.subZone == SubZone.HOME ||
+                    bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
+                        .await() == NavigationResult.REACHED
+                ) {
+                    bot.output.sendCommand("home")
+                    return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                }
+            } finally {
+                bot.combat.isDisabled = false
             }
-
-            bot.combat.isDisabled = false
             return false
         }
-
         return true
     }
 
@@ -100,8 +135,6 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()
         } else if (bot.healthPercent < 15) {
-            // TODO@1.0 Only smart bots should always flee using ::home. Less intelligent bots should sometimes
-            //  panic-run, misclick, hesitate, or continue fighting too long.
             bot.output.sendCommand("home")
         } else {
             // TODO@0.5.0 Add a reverse-pursuit action for bots. First check nearby tiles in the opposite direction

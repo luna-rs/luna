@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -15,9 +16,11 @@ import java.util.Queue;
 /**
  * A model representing a walking queue for a {@link Mob}.
  * <p>
- * This class does <strong>not</strong> perform any path validation or collision checks. It will blindly follow
- * whatever sequence of {@link Position} tiles it is given. Higher-level systems (such as {@link WalkingNavigator}) are
- * responsible for generating valid paths and avoiding blocked tiles.
+ * This class does <strong>not</strong> perform any path validation or collision checks, with one exception: an NPC with
+ * a {@link RouteStrategy} other than {@link RouteStrategy#NORMAL} stops, and drops its queue, when its next step is not
+ * allowed by that strategy. Otherwise it will blindly follow whatever sequence of {@link Position} tiles it is given.
+ * Higher-level systems (such as {@link WalkingNavigator}) are responsible for generating valid paths and avoiding
+ * blocked tiles.
  *
  * @author lare96
  * @author Graham
@@ -108,6 +111,12 @@ public final class WalkingQueue {
 
         // Process a single step.
         Direction firstStepDir = Direction.between(currentStep, nextStep);
+        if (!allowsStep(currentStep.setZ(plane), firstStepDir)) {
+            clear();
+            mob.setWalkingDirection(Direction.NONE);
+            mob.setRunningDirection(Direction.NONE);
+            return;
+        }
         history.add(nextStep);
         mob.setLastDirection(firstStepDir);
         mob.setWalkingDirection(firstStepDir);
@@ -116,6 +125,12 @@ public final class WalkingQueue {
         // If we're running, process another step.
         if (running && decrementRunEnergy() && (nextStep = current.poll()) != null) {
             Direction nextStepDir = Direction.between(currentStep, nextStep);
+            if (!allowsStep(currentStep.setZ(plane), nextStepDir)) {
+                clear();
+                mob.setRunningDirection(Direction.NONE);
+                mob.setPosition(currentStep.setZ(plane));
+                return;
+            }
             history.add(nextStep);
             mob.setLastDirection(nextStepDir);
             mob.setRunningDirection(nextStepDir);
@@ -259,6 +274,23 @@ public final class WalkingQueue {
             }
             current.add(new Position(nextX - deltaX, nextY - deltaY));
         }
+    }
+
+    /**
+     * Determines if the mob may take a step, as a last check before it moves. Only NPCs with a
+     * {@link RouteStrategy} other than {@link RouteStrategy#NORMAL} are checked, so that they cannot leave the terrain
+     * they belong to, however the step got in the queue. All other mobs may take any step.
+     *
+     * @param from The tile the step is taken from.
+     * @param direction The direction of the step.
+     * @return {@code true} if the step is allowed.
+     */
+    private boolean allowsStep(Position from, Direction direction) {
+        if (!(mob instanceof Npc) || mob.getRouteStrategy() == RouteStrategy.NORMAL) {
+            return true;
+        }
+        return mob.getWorld().getCollisionManager()
+                .traversable(from, mob.getType(), direction, mob.size(), mob.getRouteStrategy());
     }
 
     /**

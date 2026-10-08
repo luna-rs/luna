@@ -122,10 +122,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * only called once the bot is close enough to the zone.
      */
     protected var activeZone: SubZone? = null
-        private set(value) {
-            onNewActiveZone(field)
-            field = value
-        }
+        private set
 
     /**
      * The original candidate-zone list used for one retry pass after travel-based selection failures.
@@ -307,7 +304,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
     }
 
-    open fun onNewActiveZone(lastZone: SubZone?) {
+    open suspend fun onNewActiveZone(lastZone: SubZone?) {
 
     }
 
@@ -383,14 +380,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             bot.log("Trying candidate zone. zone=$newZone, remainingCandidates=${zones.size}")
 
             if (bot.subZone == newZone) {
+                val lastZone = activeZone
                 activeZone = newZone
+                onNewActiveZone(lastZone)
                 cachedBank = null
                 bot.log("Selected active zone because bot is already inside it. zone=$newZone")
                 return true
             }
 
             if (handler.travelTo(newZone)) {
+                val lastZone = activeZone
                 activeZone = newZone
+                onNewActiveZone(lastZone)
                 cachedBank = null
                 bot.log("Selected active zone after successful travel request. zone=$newZone")
                 return true

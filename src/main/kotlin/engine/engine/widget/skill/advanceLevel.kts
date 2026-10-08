@@ -127,12 +127,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
 
         plr.graphic(fireworksGraphic)
         if (Skill.isCombatSkill(skillId)) {
-            val oldCombatLevel = plr.skills.combatLevel
             plr.skills.resetCombatLevel()
-            if (oldCombatLevel != plr.skills.combatLevel) {
-                // Only flag appearance block if combat level changed.
-                plr.flags.flag(UpdateFlag.APPEARANCE)
-            }
         }
     }
 }

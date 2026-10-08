@@ -289,7 +289,6 @@ class BotActionHandler(val bot: Bot) {
         return remaining.isEmpty()
     }
 
-    // TODO@0.5.0 Better integrate both zone systems, remove boilerplate (use an interface).
     /**
      * Travels to a target zone using walking, teleportation, or any configured zone travel strategy.
      *

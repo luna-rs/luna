@@ -9,7 +9,9 @@ import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.FiremakingScriptFactory
 import engine.bot.coordinator.skill.FletchingScriptFactory
+import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.TreeStump
@@ -140,8 +142,17 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override suspend fun completed() {
+        // Chance to burn the logs we chopped, more likely for bots that like Firemaking. Burning logs never makes
+        // money, so bots chopping for profit keep them.
+        val firemakingChance = if (SKILL_FIREMAKING in bot.preferences.skills) 0.5 else 0.2
+        if (!bot.profitMode && rand(firemakingChance)) {
+            val script = FiremakingScriptFactory.getBurnScript(bot)
+            if (script != null) {
+                bot.scriptStack.pushTail(script, 2)
+                return
+            }
+        }
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
-            // TODO Chance to queue firemaking script.
             val script =
                 FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)

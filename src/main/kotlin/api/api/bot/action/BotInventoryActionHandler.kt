@@ -142,6 +142,33 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
     }
 
     /**
+     * Casts a spell on an inventory item.
+     *
+     * If [index] is not supplied, the first inventory slot containing [id] is used.
+     *
+     * @param spellId The spell widget identifier.
+     * @param id The target item identifier.
+     * @param index The preferred inventory slot, or `-1` to search by item id.
+     * @return `true` if the magic-on-item packet was sent.
+     */
+    fun useSpellOnItem(spellId: Int, id: Int, index: Int = -1): Boolean {
+        val targetIndex = if (index == -1) bot.inventory.computeIndexForId(id) else index
+        if (targetIndex == -1) {
+            bot.log("Can't find ${itemName(id)}.")
+            return false
+        }
+
+        val targetId = bot.inventory[targetIndex]?.id
+        if (targetId != id) {
+            bot.log("Can't find ${itemName(id)} at index $targetIndex.")
+            return false
+        }
+
+        bot.log("Casting spell $spellId on ${itemName(id)}.")
+        return bot.output.useSpellOnItem(spellId, targetIndex, id)
+    }
+
+    /**
      * Creates an action builder for using an inventory item on another target.
      *
      * If [index] is supplied, the builder will attempt to use the item from that exact inventory slot.

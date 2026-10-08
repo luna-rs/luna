@@ -65,7 +65,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
         String username = msg.getUsername();
         String password = msg.getPassword();
 
-        if (!username.matches("^[a-z0-9_ ]{1,12}$") ||
+        if (!PlayerCredentials.isValidUsername(username) ||
                 password.isEmpty() || password.length() > 20) {
             // Username/password format invalid, drop connection. Or we're already loading player data.
             channel.close();
@@ -125,6 +125,8 @@ public class LoginClient extends Client<LoginRequestMessage> {
             channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 
+            // Packets queued by loadData can't be encoded until the game encoder is installed below, so hold them.
+            gameClient.holdOutgoingMessages();
             player.loadData(data);
             sendLoginResponse(player, LoginResponse.NORMAL);
 
@@ -133,6 +135,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
             var messageDecoder = new GameMessageDecoder(message.getDecryptor(), messageRepository);
             pipeline.replace("login-encoder", "game-encoder", messageEncoder);
             pipeline.replace("login-decoder", "game-decoder", messageDecoder);
+            gameClient.releaseHeldMessages();
             return true;
         }
     }

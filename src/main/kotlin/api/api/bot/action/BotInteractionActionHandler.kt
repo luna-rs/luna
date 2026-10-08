@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.mob.movement.NavigationRequest
+import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.movement.PathfinderType
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.GroundItemClickMessageReader
@@ -46,14 +47,14 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * - [GameObject] targets use [ObjectClickMessageReader] handling.
      * - [GroundItem] targets use [GroundItemClickMessageReader] handling.
      *
-     * This method returns `true` once the bot is no longer walking and has reached the target according to
-     * [InteractionPolicy.STANDARD_SIZE]. It does not currently verify that the target accepted the action, opened an
-     * interface, started combat, picked up an item, or triggered any other post-interaction result.
+     * NPC attacks return `true` only after a new attack against that NPC is recorded. Other interactions return
+     * `true` once the bot is stationary and has reached the target according to [InteractionPolicy.STANDARD_SIZE];
+     * their interface, item pickup, or other post-interaction outcomes are not verified here.
      *
      * @param option The interaction option index to send.
      * @param target The entity to interact with, or `null` if no target is available.
-     * @return `true` if the bot reached the target after sending the interaction; `false` if the target was `null` or
-     * the reach condition timed out.
+     * @return `true` if the reach or NPC attack condition succeeds; `false` for a missing target, failed navigation,
+     * or a condition timeout.
      * @throws IllegalStateException If [target] is an entity type that this handler does not know how to interact with.
      */
     suspend fun interact(option: Int, target: Entity?): Boolean {
@@ -81,10 +82,20 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             .continuous(false)
             .policy(InteractionPolicy(InteractionType.SIZE, 1))
             .target(target)
-            .pathfinder(PathfinderType.PLAYER)
-            bot.navigator.submit(request.build()).await()
+            .pathfinder(PathfinderType.BOT)
+        if (bot.navigator.submit(request.build()).await() != NavigationResult.REACHED) {
+            bot.log("Interaction failed: navigation did not reach the target.")
+            return false
+        }
+        val previousAttack = bot.combat.lastAttackSent
+        val npcAttack = target is Npc && option == 3
         val cond = SuspendableCondition {
-            bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
+            if (npcAttack) {
+                val attack = bot.combat.lastAttackSent
+                attack != null && attack !== previousAttack && attack.victim === target
+            } else {
+                bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
+            }
         }
         when (target) {
             is Player -> bot.output.sendPlayerInteraction(option, target)

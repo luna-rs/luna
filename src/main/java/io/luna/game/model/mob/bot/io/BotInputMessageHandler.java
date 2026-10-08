@@ -1,8 +1,12 @@
 package io.luna.game.model.mob.bot.io;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.net.msg.GameMessageWriter;
+
+import java.util.List;
 
 /**
  * Stores input messages received by a {@link Bot}.
@@ -11,13 +15,19 @@ import io.luna.game.model.mob.bot.Bot;
  * grouped by their concrete message class so scripts and handlers can quickly check for specific response types.
  *
  * @author lare96
+ * @author TheLining
  */
 public final class BotInputMessageHandler {
 
     /**
+     * The most messages of a single type that are kept. Once a type is over this, its oldest message is dropped.
+     */
+    static final int MAX_MESSAGES_PER_TYPE = 100;
+
+    /**
      * The messages received by this bot, grouped by message class.
      */
-    private final Multimap<Class<?>, BotMessage<?>> received = ArrayListMultimap.create();
+    private final ListMultimap<Class<?>, BotMessage<?>> received = ArrayListMultimap.create();
 
     /**
      * The bot that owns this message handler.
@@ -36,12 +46,17 @@ public final class BotInputMessageHandler {
     /**
      * Records a message that was received from the server.
      * <p>
-     * The message is stored under its concrete runtime class. Multiple messages of the same type may be stored.
+     * The message is stored under the class of its {@link GameMessageWriter}. Up to {@link #MAX_MESSAGES_PER_TYPE}
+     * messages of the same type are kept, newest last.
      *
      * @param msg The received message.
      */
-    void add(BotMessage<?> msg) { // todo Autoclear every 100 entries or so.
-        received.put(msg.getClass(), msg);
+    void add(BotMessage<?> msg) {
+        List<BotMessage<?>> messages = received.get(msg.getMessage().getClass());
+        messages.add(msg);
+        if (messages.size() > MAX_MESSAGES_PER_TYPE) {
+            messages.removeFirst();
+        }
     }
 
     /**

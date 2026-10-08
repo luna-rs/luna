@@ -1,0 +1,12 @@
+[
+  {"closed": 1506, "open": 1507, "side": "RIGHT"},
+  {"closed": 1508, "open": 1511, "side": "LEFT"},
+  {"closed": 1516, "open": 1517, "side": "LEFT"},
+  {"closed": 1519, "open": 1520, "side": "RIGHT"},
+  {"closed": 1542, "open": 1543, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 1544, "open": 1545, "side": "LEFT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 1557, "open": 1560, "side": "LEFT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 1558, "open": 1561, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 1596, "open": 1560, "side": "LEFT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 1597, "open": 1561, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"}
+]

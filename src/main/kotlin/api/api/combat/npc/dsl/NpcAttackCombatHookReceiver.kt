@@ -1,7 +1,9 @@
 package api.combat.npc.dsl
 
+import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.AmmoType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.CombatStyle
@@ -79,6 +81,64 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
      */
     fun ranged(style: CombatStyle, ammo: AmmoType) =
         RangedCombatAttack(npc, other, style, ammo)
+
+    /**
+     * Creates a ranged combat attack that fires the specified ammunition, with optional overrides for the attack
+     * animation, maximum hit, attack range, and attack speed.
+     *
+     * The launch graphic and projectile are the ones the ammunition uses when fired by a player.
+     *
+     * @param ammo The ammunition to fire.
+     * @param animationId The attack animation to play.
+     * @param maxHit The maximum damage this attack can deal.
+     * @param range The maximum distance the attack can be fired from.
+     * @param speed The attack delay in ticks.
+     * @param launch The listener applied when the ranged attack is actually launched.
+     * @return The configured ranged combat attack.
+     */
+    fun ranged(
+        ammo: AmmoType,
+        animationId: Int = npc.combat.getAttackAnimation(CombatDamageType.RANGED),
+        maxHit: Int = npc.combatDef().maximumHit,
+        range: Int = 10,
+        speed: Int = npc.combatDef().attackSpeed,
+        launch: RangedCombatAttack<Npc>.(CombatDamage?) -> CombatDamage? = { it },
+    ) = ranged(ammo.def.startGraphic, ammo.def.projectile::apply, animationId, maxHit, range, speed, launch)
+
+    /**
+     * Creates a ranged combat attack that fires a custom projectile, with optional overrides for the attack
+     * animation, maximum hit, attack range, and attack speed.
+     *
+     * Damage is rolled using ranged accuracy against the current victim and is capped by the supplied maximum hit.
+     *
+     * @param start The graphic displayed on the NPC when it fires, or `null` if none.
+     * @param projectile Creates the projectile that travels from the NPC to the victim.
+     * @param animationId The attack animation to play.
+     * @param maxHit The maximum damage this attack can deal.
+     * @param range The maximum distance the attack can be fired from.
+     * @param speed The attack delay in ticks.
+     * @param launch The listener applied when the ranged attack is actually launched.
+     * @return The configured ranged combat attack.
+     */
+    fun ranged(
+        start: Graphic?,
+        projectile: (Mob, Mob) -> LocalProjectile,
+        animationId: Int = npc.combat.getAttackAnimation(CombatDamageType.RANGED),
+        maxHit: Int = npc.combatDef().maximumHit,
+        range: Int = 10,
+        speed: Int = npc.combatDef().attackSpeed,
+        launch: RangedCombatAttack<Npc>.(CombatDamage?) -> CombatDamage? = { it },
+    ) = object : RangedCombatAttack<Npc>(npc, other, animationId, start, projectile, null, speed, range) {
+
+        override fun calculateDamage(other: Mob): CombatDamage {
+            return CombatDamageRequest.Builder(attacker, other, CombatDamageType.RANGED)
+                .setBaseMaxHit(maxHit).build().resolve()
+        }
+
+        override fun onAttack(damage: CombatDamage?): CombatDamage? {
+            return launch(this, damage)
+        }
+    }
 
     /**
      * Gets the attacker's default combat attack against the current victim.

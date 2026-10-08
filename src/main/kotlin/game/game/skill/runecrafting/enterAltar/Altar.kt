@@ -127,7 +127,7 @@ enum class Altar(
         tiara = 5547,
         portal = 2475,
         enter = Position(2208, 4830),
-        exit = Position(3222, 3222),
+        exit = Position(1859, 4637),
         zone = SubZone.DEATH_ALTAR
     );
 

@@ -1,7 +1,6 @@
 package io.luna.game.model.collision;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -20,22 +19,21 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
-import io.luna.game.model.collision.CollisionUpdate.DirectionFlag;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.path.route.LineOfSight;
+import io.luna.game.model.path.route.RouteStrategy;
+import io.luna.game.model.path.route.StepValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -59,9 +57,16 @@ public final class CollisionManager {
     /**
      * Globally blocked tiles keyed by chunk.
      * <p>
-     * Positions stored here are treated as fully blocked in all directions when collision is built.
+     * Positions stored here get {@link CollisionFlag#BLOCK_WALK} when collision is built.
      */
     private final Multimap<Chunk, Position> blocked = Multimaps.synchronizedMultimap(HashMultimap.create());
+
+    /**
+     * Tiles that are covered by a roof, keyed by chunk.
+     * <p>
+     * Positions stored here get {@link CollisionFlag#ROOF} when collision is built.
+     */
+    private final Multimap<Chunk, Position> roofed = Multimaps.synchronizedMultimap(HashMultimap.create());
 
     /**
      * Tiles that belong to bridged structures.
@@ -112,15 +117,18 @@ public final class CollisionManager {
     /**
      * Builds or rebuilds all world collision data.
      * <p>
-     * This method optionally clears existing matrices, imports blocked and bridged tile data from the cache, registers
-     * static map objects into the world, applies global blocked tiles as collision, and then snapshots the final
-     * repository state.
+     * This method optionally clears existing matrices, imports blocked, bridged and roofed tile data from the cache,
+     * registers static map objects into the world, applies the blocked and roofed tiles as collision, and then
+     * snapshots the final repository state. Chunks that have no map data stay fully blocked when rebuilding.
      *
      * @param rebuilding {@code true} to reset existing matrices before rebuilding, otherwise {@code false}.
      */
     public void build(boolean rebuilding) {
         if (rebuilding) {
             for (ChunkRepository repository : chunks.getAll()) {
+                if (repository.isUntraversable()) {
+                    continue;
+                }
                 for (CollisionMatrix matrix : repository.getMatrices()) {
                     matrix.reset();
                 }
@@ -131,12 +139,16 @@ public final class CollisionManager {
         LunaContext context = world.getContext();
         MapIndexTable table = context.getCache().getMapIndexTable();
         for (Map.Entry<MapIndex, MapTileGrid> entry : table.getTileSet()) {
+            Region region = entry.getKey().getRegion();
             entry.getValue().forEach(tile -> {
-                Region region = entry.getKey().getRegion();
                 if (tile.isBlocked()) {
                     block(tile.getAbsPosition(region));
-                } else if (tile.isBridge()) {
+                }
+                if (tile.isBridge()) {
                     markBridged(tile.getAbsPosition(region));
+                }
+                if (tile.isRoof()) {
+                    markRoofed(tile.getAbsPosition(region));
                 }
             });
         }
@@ -145,22 +157,15 @@ public final class CollisionManager {
             world.getObjects().register(mapObject.toGameObject(context));
         }
 
-        // Apply global blocked tiles.
+        // Apply blocked and roofed tiles. Bridged tiles are moved down a level when the update is applied.
         CollisionUpdate.Builder tiles = new CollisionUpdate.Builder();
         tiles.type(CollisionUpdateType.ADDING);
+        tiles.mapCoordinates();
         for (Position position : blocked.values()) {
-            int x = position.getX();
-            int y = position.getY();
-            int height = position.getZ();
-
-            // Handle bridged tiles by dropping one level when needed.
-            if (bridges.contains(new Position(x, y, 1))) {
-                height--;
-            }
-
-            if (height >= 0) {
-                tiles.tile(new Position(x, y, height), false, Direction.NESW);
-            }
+            tiles.flag(position, CollisionFlag.BLOCK_WALK);
+        }
+        for (Position position : roofed.values()) {
+            tiles.flag(position, CollisionFlag.ROOF);
         }
         apply(tiles.build(), true);
 
@@ -173,35 +178,74 @@ public final class CollisionManager {
     /**
      * Applies or removes collision for a runtime entity.
      * <p>
-     * This is used for dynamic world changes such as spawned or removed objects and NPCs. Players are ignored because
-     * their blocking behavior is handled through movement and pathing rather than static tile collision.
+     * This is used for dynamic world changes such as spawned or removed objects, NPCs and players. Objects add their
+     * walls and solid tiles. NPCs add {@link CollisionFlag#BLOCK_NPCS} to every tile they cover and players add
+     * {@link CollisionFlag#BLOCK_PLAYERS} to the tile they stand on. Use {@link #moveEntity(Entity, Position)} to keep
+     * NPCs and players up to date as they move.
      *
      * @param entity The entity whose collision should be updated.
      * @param removal {@code true} to remove collision, {@code false} to add it.
      */
     public void updateEntity(Entity entity, boolean removal) {
-        if (entity.getType() == EntityType.PLAYER) {
-            return;
-        }
-
-        CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
-        if (!removal) {
-            builder.type(CollisionUpdateType.ADDING);
-        } else {
-            builder.type(CollisionUpdateType.REMOVING);
-        }
-        if (entity.getType() == EntityType.OBJECT) {
+        EntityType type = entity.getType();
+        if (type == EntityType.OBJECT) {
+            CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
+            builder.type(removal ? CollisionUpdateType.REMOVING : CollisionUpdateType.ADDING);
+            builder.mapCoordinates();
             builder.object((GameObject) entity);
-        } else if (entity.getType() == EntityType.NPC) {
-            builder.tile(entity.getPosition(), false, Direction.NESW);
+            apply(builder.build(), false);
+        } else if (type == EntityType.NPC || type == EntityType.PLAYER) {
+            occupy(entity.getPosition(), entity.size(), type, !removal);
         }
-        apply(builder.build(), false);
+    }
+
+    /**
+     * Moves the {@link CollisionFlag#BLOCK_NPCS} or {@link CollisionFlag#BLOCK_PLAYERS} of an NPC or player from the
+     * tiles it covered at {@code from} to the ones it covers now. Other entity types are ignored.
+     *
+     * @param entity The entity that moved. Its position must already be updated.
+     * @param from The position it moved from.
+     */
+    public void moveEntity(Entity entity, Position from) {
+        EntityType type = entity.getType();
+        if (type == EntityType.NPC || type == EntityType.PLAYER) {
+            int size = entity.size();
+            occupy(from, size, type, false);
+            occupy(entity.getPosition(), size, type, true);
+        }
+    }
+
+    /**
+     * Adds or removes the flag of an NPC or player on every tile of its footprint.
+     *
+     * @param position The south west tile of the footprint.
+     * @param size The width and length of the footprint.
+     * @param type The type of entity, {@link EntityType#NPC} or {@link EntityType#PLAYER}.
+     * @param add {@code true} to add the flag, {@code false} to remove it.
+     */
+    private void occupy(Position position, int size, EntityType type, boolean add) {
+        int flag = type == EntityType.NPC ? CollisionFlag.BLOCK_NPCS : CollisionFlag.BLOCK_PLAYERS;
+        ChunkRepository repository = null;
+
+        for (int dx = 0; dx < size; dx++) {
+            for (int dy = 0; dy < size; dy++) {
+                Position tile = new Position(position.getX() + dx, position.getY() + dy, position.getZ());
+                if (repository == null || !repository.getChunk().equals(tile.getChunk())) {
+                    repository = chunks.load(tile);
+                }
+
+                CollisionMatrix matrix = repository.getMatrices()[tile.getZ()];
+                flag(add ? CollisionUpdateType.ADDING : CollisionUpdateType.REMOVING, matrix,
+                        tile.getX() % Chunk.SIZE, tile.getY() % Chunk.SIZE, flag);
+                pendingSnapshots.add(repository);
+            }
+        }
     }
 
     /**
      * Applies a {@link CollisionUpdate} to the world.
      * <p>
-     * Each flagged tile in the update is translated into one or more {@link CollisionFlag}s on the appropriate
+     * The {@link CollisionFlag}s of each tile in the update are added to or removed from the appropriate
      * {@link CollisionMatrix}, with bridge height adjustments applied where necessary. When the world is live, the
      * modified repositories are queued for snapshot refresh.
      *
@@ -212,16 +256,19 @@ public final class CollisionManager {
         ChunkRepository prev = null;
 
         CollisionUpdateType type = update.getType();
-        Map<Position, Collection<DirectionFlag>> map = update.getFlags().asMap();
         Set<ChunkRepository> snapshots = new HashSet<>();
 
-        for (Map.Entry<Position, Collection<DirectionFlag>> entry : map.entrySet()) {
+        // An object is lowered by a bridge as a whole, according to its own tile, so a wall is never split in two.
+        Position origin = update.getOrigin();
+        boolean bridgedObject = update.isMapCoordinates() && origin != null && isBridged(origin);
+
+        for (Map.Entry<Position, Integer> entry : update.getFlags().entrySet()) {
             Position position = entry.getKey();
             Chunk chunk = position.getChunk();
 
             int height = position.getZ();
-            // Adjust for bridges: some tiles are effectively one level lower.
-            if (bridges.contains(new Position(position.getX(), position.getY(), 1))) {
+            // Adjust for bridges: map coordinates of some tiles are effectively one level lower.
+            if (update.isMapCoordinates() && (origin != null ? bridgedObject : isBridged(position))) {
                 if (--height < 0) {
                     continue;
                 }
@@ -234,22 +281,7 @@ public final class CollisionManager {
             int localX = position.getX() % Chunk.SIZE;
             int localY = position.getY() % Chunk.SIZE;
 
-            CollisionMatrix matrix = prev.getMatrices()[height];
-            ImmutableList<CollisionFlag> mobs = CollisionFlag.MOBS;
-            ImmutableList<CollisionFlag> projectiles = CollisionFlag.PROJECTILES;
-
-            for (DirectionFlag flag : entry.getValue()) {
-                Direction direction = flag.getDirection();
-                if (direction == Direction.NONE) {
-                    continue;
-                }
-
-                int orientation = direction.getId();
-                if (flag.isImpenetrable()) {
-                    flag(type, matrix, localX, localY, projectiles.get(orientation));
-                }
-                flag(type, matrix, localX, localY, mobs.get(orientation));
-            }
+            flag(type, prev.getMatrices()[height], localX, localY, entry.getValue());
             snapshots.add(prev);
         }
 
@@ -260,156 +292,47 @@ public final class CollisionManager {
     }
 
     /**
-     * Casts a projectile-style line-of-sight ray between two positions.
+     * Determines if there is a clear line of sight between two positions.
      * <p>
-     * This is a convenience overload of {@link #raycast(Position, Position, BiFunction)} that treats projectile
-     * collision as the blocking condition.
+     * Walls and objects that stop projectiles also stop sight. Reads the live collision data, so this must only be
+     * called from the game thread.
      *
-     * @param start The ray start position.
-     * @param end The ray end position.
-     * @return {@code true} if the ray reaches {@code end} without hitting an impenetrable obstacle,
-     * otherwise {@code false}.
-     */
-    public boolean raycast(Position start, Position end) {
-        return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
-    }
-
-    /**
-     * Casts a ray between {@code start} and {@code end} using Bresenham's line algorithm.
-     * <p>
-     * For each step in the line, the direction from the previous tile to the current tile is passed to {@code cond}.
-     * If {@code cond} returns {@code true} for any step, the ray is considered blocked and this method returns
-     * {@code false}. Otherwise, the ray reaches its endpoint and this method returns {@code true}.
-     *
-     * @param start The ray start position.
-     * @param end The ray end position.
-     * @param cond The blocking condition applied to each traversed segment.
-     * @return {@code true} if the ray reaches {@code end}, otherwise {@code false}.
+     * @param start The position of the viewer.
+     * @param end The position of what is viewed.
+     * @return {@code true} if nothing that blocks sight is between {@code start} and {@code end}.
      * @throws IllegalArgumentException If the positions are not on the same height level.
      */
-    public boolean raycast(Position start,
-                           Position end,
-                           BiFunction<Position, Direction, Boolean> cond) {
+    public boolean raycast(Position start, Position end) {
         checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
-        if (start.equals(end)) {
-            return true;
-        }
-
-        int x0 = start.getX();
-        int y0 = start.getY();
-        int x1 = end.getX();
-        int y1 = end.getY();
-
-        boolean steep = Math.abs(x0 - x1) < Math.abs(y0 - y1);
-
-        // If the line is steep, swap x/y for both endpoints.
-        if (steep) {
-            int tmp = x0;
-            x0 = y0;
-            y0 = tmp;
-            tmp = x1;
-            x1 = y1;
-            y1 = tmp;
-        }
-
-        // Ensure we always iterate from left to right.
-        if (x0 > x1) {
-            int tmp = x0;
-            x0 = x1;
-            x1 = tmp;
-            tmp = y0;
-            y0 = y1;
-            y1 = tmp;
-        }
-
-        int dx = x1 - x0;
-        int dy = y1 - y0;
-
-        // Vertical line guard (after swaps).
-        if (dx == 0) {
-            int stepY = (y1 > y0) ? 1 : -1;
-
-            int lastX = start.getX();
-            int lastY = start.getY();
-            boolean first = true;
-
-            for (int y = y0; y != y1 + stepY; y += stepY) {
-                int currX = steep ? y : x0;
-                int currY = steep ? x0 : y;
-
-                if (first) {
-                    first = false;
-                } else {
-                    Direction direction = Direction.between(lastX, lastY, currX, currY);
-                    Position last = new Position(lastX, lastY, start.getZ());
-
-                    if (cond.apply(last, direction)) {
-                        return false;
-                    }
-                }
-
-                lastX = currX;
-                lastY = currY;
-            }
-            return true;
-        }
-
-        int yStep = (y1 > y0) ? 1 : -1;
-        float derror = Math.abs(dy / (float) dx);
-        float error = 0.0f;
-
-        int y = y0;
-        int lastX = start.getX();
-        int lastY = start.getY();
-        boolean first = true;
-
-        for (int x = x0; x <= x1; x++) {
-            int currX, currY;
-            if (steep) {
-                currX = y;
-                currY = x;
-            } else {
-                currX = x;
-                currY = y;
-            }
-
-            error += derror;
-            if (error >= 0.5f) {
-                y += yStep;
-                error -= 1.0f;
-            }
-
-            if (first) {
-                first = false;
-            } else {
-                Direction direction = Direction.between(lastX, lastY, currX, currY);
-                Position last = new Position(lastX, lastY, start.getZ());
-
-                if (cond.apply(last, direction)) {
-                    return false;
-                }
-            }
-
-            lastX = currX;
-            lastY = currY;
-        }
-        return true;
+        return LineOfSight.hasLineOfSight(view(false), start.getZ(), start.getX(), start.getY(), end.getX(),
+                end.getY());
     }
 
     /**
-     * Applies or clears a single {@link CollisionFlag} on a {@link CollisionMatrix}.
+     * Creates a reader of the collision flags of tiles.
+     *
+     * @param safe {@code true} to read the snapshots, which is safe on any thread, or {@code false} to read the live
+     * data, which is only safe on the game thread.
+     * @return The new view. Views are cheap and not thread safe: use a new one for every search.
+     */
+    public CollisionView view(boolean safe) {
+        return new CollisionView(chunks, safe);
+    }
+
+    /**
+     * Applies or clears a mask of {@link CollisionFlag}s on a {@link CollisionMatrix}.
      *
      * @param type The update type.
      * @param matrix The matrix to modify.
      * @param localX The local X coordinate within the chunk.
      * @param localY The local Y coordinate within the chunk.
-     * @param flag The collision flag to apply or clear.
+     * @param flag The collision flags to apply or clear.
      */
     private void flag(CollisionUpdateType type,
                       CollisionMatrix matrix,
                       int localX,
                       int localY,
-                      CollisionFlag flag) {
+                      int flag) {
 
         if (type == CollisionUpdateType.ADDING) {
             matrix.flag(localX, localY, flag);
@@ -421,12 +344,23 @@ public final class CollisionManager {
     /**
      * Marks {@code position} as globally blocked.
      * <p>
-     * Blocked positions are applied as fully blocked tiles during {@link #build(boolean)}.
+     * Blocked positions are applied with {@link CollisionFlag#BLOCK_WALK} during {@link #build(boolean)}.
      *
      * @param position The tile to block.
      */
     public void block(Position position) {
         blocked.put(position.getChunk(), position);
+    }
+
+    /**
+     * Marks {@code position} as covered by a roof.
+     * <p>
+     * Roofed positions are applied with {@link CollisionFlag#ROOF} during {@link #build(boolean)}.
+     *
+     * @param position The roofed tile.
+     */
+    public void markRoofed(Position position) {
+        roofed.put(position.getChunk(), position);
     }
 
     /**
@@ -439,6 +373,16 @@ public final class CollisionManager {
      */
     public void markBridged(Position position) {
         bridges.add(position);
+    }
+
+    /**
+     * Returns whether the column of tiles at {@code position} is bridged, in map coordinates.
+     *
+     * @param position The tile to test. Its height is ignored.
+     * @return {@code true} if the tile is bridged.
+     */
+    private boolean isBridged(Position position) {
+        return bridges.contains(new Position(position.getX(), position.getY(), 1));
     }
 
     /**
@@ -496,6 +440,90 @@ public final class CollisionManager {
     }
 
     /**
+     * Returns whether an entity of {@code type} covering {@code size} by {@code size} tiles may move one step in
+     * {@code direction}. {@code position} is the south west tile of the entity.
+     * <p>
+     * Only the tiles the entity moves into are checked, never the ones it already covers, so an entity is not stopped
+     * by its own {@link CollisionFlag#BLOCK_NPCS}. The rules are those of {@link StepValidator}.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type attempting the move.
+     * @param direction The direction being attempted.
+     * @param size The width and length of the entity, in tiles.
+     * @param safe {@code true} to use snapshot matrices, otherwise {@code false} to use live matrices.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position,
+                               EntityType type,
+                               Direction direction,
+                               int size,
+                               boolean safe) {
+        return traversable(position, type, direction, size, RouteStrategy.NORMAL, safe);
+    }
+
+    /**
+     * Returns whether an entity of {@code type} covering {@code size} by {@code size} tiles may move one step in
+     * {@code direction}, moving onto tiles as {@code strategy} allows. {@code position} is the south west tile of the
+     * entity.
+     * <p>
+     * A size 1 entity walking on ordinary ground is checked against the collision matrix directly. Every other entity
+     * is checked by {@link StepValidator}.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type attempting the move.
+     * @param direction The direction being attempted.
+     * @param size The width and length of the entity, in tiles.
+     * @param strategy The rule for moving onto a tile.
+     * @param safe {@code true} to use snapshot matrices, otherwise {@code false} to use live matrices.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position,
+                               EntityType type,
+                               Direction direction,
+                               int size,
+                               RouteStrategy strategy,
+                               boolean safe) {
+
+        if (direction == Direction.NONE || (size <= 1 && strategy == RouteStrategy.NORMAL)) {
+            return traversable(position, type, direction, safe);
+        }
+
+        int extraFlag = type == EntityType.NPC ? CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS : 0;
+        return StepValidator.canTravel(view(safe), position.getZ(), position.getX(), position.getY(),
+                direction.getTranslateX(), direction.getTranslateY(), size, extraFlag, strategy);
+    }
+
+    /**
+     * Convenience overload of {@link #traversable(Position, EntityType, Direction, int, boolean)} that uses live
+     * matrices.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type.
+     * @param direction The attempted direction.
+     * @param size The width and length of the entity, in tiles.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position, EntityType type, Direction direction, int size) {
+        return traversable(position, type, direction, size, false);
+    }
+
+    /**
+     * Convenience overload of {@link #traversable(Position, EntityType, Direction, int, RouteStrategy, boolean)} that
+     * uses live matrices.
+     *
+     * @param position The south west tile the entity covers.
+     * @param type The entity type.
+     * @param direction The attempted direction.
+     * @param size The width and length of the entity, in tiles.
+     * @param strategy The rule for moving onto a tile.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
+     */
+    public boolean traversable(Position position, EntityType type, Direction direction, int size,
+                               RouteStrategy strategy) {
+        return traversable(position, type, direction, size, strategy, false);
+    }
+
+    /**
      * Returns whether {@code position} is blocked for player movement.
      *
      * @param position The tile to test.
@@ -550,10 +578,6 @@ public final class CollisionManager {
             return true;
         } else if (start.getZ() != end.getZ()) {
             return false;
-        } else if (source instanceof Bot) {
-            if(source.isWithinDistance(target, 1))
-                return true;
-            return policy.getType() == InteractionType.LINE_OF_SIGHT && raycast(start, end);
         } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
@@ -561,7 +585,8 @@ public final class CollisionManager {
             // Distance of 0 always requires player to occupy tile.
             return start.equals(end);
         }
-        CollisionMatrix matrices = world.getChunks().load(end.getChunk()).getMatrices()[end.getZ()];
+        // The reach checks read the flags of the start tile, so they need the matrix of the chunk the start is in.
+        CollisionMatrix matrices = world.getChunks().load(start.getChunk()).getMatrices()[start.getZ()];
         switch (policy.getType()) {
             case LINE_OF_SIGHT:
                 // Line of sight requires raycast and being within the distance.
@@ -570,7 +595,8 @@ public final class CollisionManager {
                 if (distance == 1) {
                     if (target instanceof Mob) {
                         // Check if we're right beside a mob.
-                        return matrices.reachedFacingEntity(start, (Mob) target, 1, 1, OptionalInt.empty());
+                        return matrices.reachedFacingEntity(start, (Mob) target,
+                                ((Mob) target).sizeX(), ((Mob) target).sizeY(), OptionalInt.empty());
                     } else if (target instanceof GameObject) {
                         // Check if we're right beside an object.
                         return matrices.reachedObject(start, (GameObject) target);

@@ -206,6 +206,10 @@ public final class ActionQueue {
      * </ol>
      */
     public void process() {
+        // Most world NPCs have no actions. Avoid allocating multimap iterators for an idle queue.
+        if (processing.isEmpty() && executing.isEmpty()) {
+            return;
+        }
         // 1) Remove actions that are no longer actively processing.
         processing.values().removeIf(action -> action.getState() != ActionState.PROCESSING);
 
@@ -257,6 +261,9 @@ public final class ActionQueue {
      * Normalizes all delays when actions are scheduled within actions.
      */
     public void normalize() {
+        if (processing.isEmpty()) {
+            return;
+        }
         for (Action<?> action : processing.values()) {
             if (action.processed) {
                 action.processed = false;
