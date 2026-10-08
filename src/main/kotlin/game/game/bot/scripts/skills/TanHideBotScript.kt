@@ -11,6 +11,7 @@ import api.predef.ext.*
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
+import game.skill.crafting.armorCrafting.HideArmor
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
 import io.luna.game.model.item.Item
@@ -113,10 +114,13 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             var hide = Hide.HIDE_TO_HIDE[item.id]
             if (hide != null) {
                 if (hide == Hide.HARD_LEATHER) {
-                    hide = if (roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
+                    // One roll covers the whole run, so a bot that can't craft hard leather would lose every hide to it.
+                    val canCraftHard = bot.crafting.staticLevel >= HideArmor.HARD_LEATHER_BODY.level
+                    hide = if (canCraftHard && roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
                 }
                 tanning = hide
-                return listOf(Item(995, hide.cost * 27), Item(hide.hide, 27))
+                val amount = minOf(item.amount, 27)
+                return listOf(Item(995, hide.cost * amount), Item(hide.hide, amount))
             }
         }
 
