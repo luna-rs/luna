@@ -2,14 +2,16 @@ package api.bot.action
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
-import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import game.player.item.consume.food.Food
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
@@ -53,17 +55,19 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * searches its inventory for [usedId]. Otherwise, the supplied index is trusted and then validated against
          * the expected item id.
          *
-         * After the item slot is resolved, the bot attempts to navigate close enough to [target]. If navigation
-         * succeeds, [action] is invoked with the resolved inventory index to send the appropriate item-on-entity packet.
+         * After the item slot is resolved, the bot attempts to navigate close enough to [target] using [policy]. If
+         * navigation succeeds, [action] is invoked with the resolved inventory index to send the appropriate
+         * item-on-entity packet.
          *
          * The action is considered successful if the bot either reaches a ground item target within one tile, or
          * begins interacting with the supplied target.
          *
          * @param target The entity that the inventory item should be used on.
+         * @param policy The policy that should be used to interact with the entity.
          * @param action The packet-sending action that accepts the resolved inventory index.
          * @return `true` if the use action appeared to start successfully; otherwise `false`.
          */
-        private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): Boolean {
+        private suspend fun useOnEntity(target: Entity, policy: InteractionPolicy, action: (Int) -> Unit): Boolean {
             val index = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else usedIndex
             if (index == -1) {
                 bot.log("I don't have ${itemName(usedId)}.")
@@ -78,7 +82,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
 
             val navigationResult = bot.navigator.navigate(target, true).await()
             if (navigationResult == NavigationResult.REACHED &&
-                world.collisionManager.reached(bot, target, io.luna.game.model.mob.interact.InteractionPolicy.STANDARD_SIZE)) {
+                world.collisionManager.reached(bot, target, policy)) {
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index)
                 return true
@@ -118,7 +122,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-NPC action appeared to start successfully.
          */
         suspend fun onNpc(target: Npc) =
-            useOnEntity(target) { bot.output.useItemOnNpc(it, usedId, target) }
+            useOnEntity(target, InteractionPolicy.STANDARD_SIZE) { bot.output.useItemOnNpc(it, usedId, target) }
 
         /**
          * Uses the selected inventory item on a player.
@@ -129,7 +133,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-player action appeared to start successfully.
          */
         suspend fun onPlayer(target: Player) =
-            useOnEntity(target) { bot.output.useItemOnPlayer(it, usedId, target) }
+            useOnEntity(target, InteractionPolicy.STANDARD_SIZE) { bot.output.useItemOnPlayer(it, usedId, target) }
 
         /**
          * Uses the selected inventory item on a game object.
@@ -140,7 +144,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @return `true` if the item-on-object action appeared to start successfully.
          */
         suspend fun onObject(target: GameObject) =
-            useOnEntity(target) { bot.output.useItemOnObject(it, usedId, target) }
+            useOnEntity(target, InteractionPolicy(InteractionType.SIZE, target.size())) { bot.output.useItemOnObject(it, usedId, target) }
     }
 
     /**
@@ -305,7 +309,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                     repeat(10) {
                         bot.output.sendInventoryItemClick(1, index, item.id)
                         bot.naturalDelay()
-                        if(bot.healthPercent > lastHealth || bot.healthPercent == 100) {
+                        if (bot.healthPercent > lastHealth || bot.healthPercent == 100) {
                             return true
                         }
                     }
