@@ -9,7 +9,6 @@ import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.interact.InteractionType
 import io.luna.game.model.mob.movement.NavigationRequest
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.movement.PathfinderType
@@ -48,8 +47,9 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * - [GroundItem] targets use [GroundItemClickMessageReader] handling.
      *
      * NPC attacks return `true` only after a new attack against that NPC is recorded. Other interactions return
-     * `true` once the bot is stationary and has reached the target according to [InteractionPolicy.STANDARD_SIZE];
-     * their interface, item pickup, or other post-interaction outcomes are not verified here.
+     * `true` once the bot is stationary and has reached the target according to [InteractionPolicy.STANDARD_SIZE], or
+     * [InteractionPolicy.EQUAL_POSITION] when picking up a ground item; their interface, item pickup, or other
+     * post-interaction outcomes are not verified here.
      *
      * @param option The interaction option index to send.
      * @param target The entity to interact with, or `null` if no target is available.
@@ -77,10 +77,13 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         if(!bot.navigator.isCurrentContinuous) {
             bot.navigator.currentPending?.await()
         }
+        // The pickup handler only runs from the item's own tile, so stopping beside it fails with "I can't reach that!".
+        val policy = if (target is GroundItem && option == 1) InteractionPolicy.EQUAL_POSITION
+        else InteractionPolicy.STANDARD_SIZE
         val request = NavigationRequest.builder(bot)
             .async(true)
             .continuous(false)
-            .policy(InteractionPolicy(InteractionType.SIZE, 1))
+            .policy(policy)
             .target(target)
             .pathfinder(PathfinderType.BOT)
         if (bot.navigator.submit(request.build()).await() != NavigationResult.REACHED) {
@@ -94,7 +97,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
                 val attack = bot.combat.lastAttackSent
                 attack != null && attack !== previousAttack && attack.victim === target
             } else {
-                bot.walking.isEmpty && world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
+                bot.walking.isEmpty && world.collisionManager.reached(bot, target, policy)
             }
         }
         when (target) {

@@ -5,6 +5,8 @@ import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
+import game.bot.scripts.skills.CollectHidesBotScript
+import game.bot.scripts.skills.CollectHidesBotScript.Companion.CollectHidesData
 import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
@@ -53,6 +55,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
+    scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }

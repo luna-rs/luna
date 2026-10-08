@@ -64,6 +64,35 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
                 data.addProperty("armor", armor.name)
             }
         }
+
+        /**
+         * The materials withdrawn for each inventory of [armor].
+         *
+         * @param armor The armour being crafted.
+         * @return The items and amounts withdrawn.
+         */
+        fun supplies(armor: HideArmor): List<Item> {
+            return if (armor.hides != null) {
+                listOf(Item(armor.hides.first.tan, 26))
+            } else if (armor == HideArmor.STUDDED_BODY) {
+                listOf(Item(HideArmor.LEATHER_BODY.id, 14), Item(CraftStuddedActionItem.STUDS, 14))
+            } else if (armor == HideArmor.STUDDED_CHAPS) {
+                listOf(Item(HideArmor.LEATHER_CHAPS.id, 14), Item(CraftStuddedActionItem.STUDS, 14))
+            } else {
+                throw IllegalStateException("Invalid armor type $armor.")
+            }
+        }
+
+        /**
+         * Determines if [bot] owns enough materials to start crafting [armor].
+         *
+         * @param bot The bot to check.
+         * @param armor The armour being crafted.
+         * @return `true` if every material in [supplies] is owned in full.
+         */
+        fun hasSupplies(bot: Bot, armor: HideArmor): Boolean {
+            return supplies(armor).all { bot.itemTracker.count(it.id) >= it.amount }
+        }
     }
 
     /**
@@ -134,16 +163,8 @@ class CraftArmorBotScript(bot: Bot, val armor: HideArmor, duration: Duration) :
 
     override fun withdraw(): List<Item> {
 
-        val items = if (armor.hides != null) {
-            listOf(Item(armor.hides.first.tan, 26))
-        } else if (armor == HideArmor.STUDDED_BODY) {
-            listOf(Item(HideArmor.LEATHER_BODY.id, 14), Item(CraftStuddedActionItem.STUDS, 14))
-        } else if (armor == HideArmor.STUDDED_CHAPS) {
-            listOf(Item(HideArmor.LEATHER_CHAPS.id, 14), Item(CraftStuddedActionItem.STUDS, 14))
-        } else {
-            throw IllegalStateException("Invalid armor type $armor.")
-        }
-        if(items.find { bot.itemTracker.count(it.id) < it.amount } != null) {
+        val items = supplies(armor)
+        if(!hasSupplies(bot, armor)) {
             val tannedHide = armor.hides?.first?.tan
             if(tannedHide != null) {
                 bot.preferences.addWantedItem(tannedHide, 5000)

@@ -11,10 +11,13 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.runecrafting.enterAltar.Altar
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A smaller rectangular bot activity area within a broader [Zone].
@@ -669,6 +672,67 @@ enum class SubZone(val inside: Position,
                       area = SimpleBoxArea.of(3240, 3253, 3265, 3298),
                       parent = { LUMBRIDGE }),
 
+    /**
+     * The gated cow field north of the Lumbridge windmill.
+     */
+    NORTH_LUMBRIDGE_COW_FIELD(inside = Position(3175, 3320),
+                              outside = { Position(3174, 3315) },
+                              area = SimpleBoxArea.of(3153, 3316, 3200, 3352),
+                              parent = { DRAYNOR }) {
+        private val gate = listOf(Position(3174, 3316), Position(3175, 3316))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The gated cow field around the Crafting Guild.
+     */
+    CRAFTING_GUILD_COW_FIELD(inside = Position(2923, 3289),
+                             outside = { Position(2923, 3293) },
+                             area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
+                             parent = { FALADOR }) {
+        private val gate = listOf(Position(2923, 3292), Position(2924, 3292))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The gated cow field north of East Ardougne.
+     */
+    NORTH_ARDOUGNE_COW_FIELD(inside = Position(2671, 3349),
+                             outside = { Position(2676, 3349) },
+                             area = SimpleBoxArea.of(2642, 3340, 2675, 3359),
+                             parent = { ARDOUGNE }) {
+        private val gate = listOf(Position(2675, 3349), Position(2675, 3350))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The open cow field north of Yanille.
+     */
+    NORTH_YANILLE_COW_FIELD(inside = Position(2590, 3117),
+                            area = SimpleBoxArea.of(2576, 3111, 2608, 3126),
+                            parent = { YANILLE }),
+
     GREEN_DRAGONS(inside = Position(3141, 3690),
                   area = SimpleBoxArea.of(3120, 3690, 3155, 3721),
                   parent = { WILDERNESS }),
@@ -986,6 +1050,28 @@ enum class SubZone(val inside: Position,
             }
 
             ImmutableSetMultimap.copyOf(map)
+        }
+
+        /**
+         * Opens the gate on [gateTiles] if it's closed, then walks [bot] to [destination].
+         *
+         * @param bot The bot passing through the gate.
+         * @param gateTiles The tiles the closed gate stands on.
+         * @param destination Where the bot should end up on the other side.
+         * @return `true` if the bot reached [destination].
+         */
+        suspend fun walkThroughGate(bot: Bot, gateTiles: List<Position>, destination: Position): Boolean {
+            val gate = gateTiles.firstNotNullOfOrNull { tile ->
+                world.locator.findObjectsOnTile(tile) { "Open" in it.def().actions }.firstOrNull()
+            }
+            if (gate != null) {
+                // Ignore a failed click: someone else may have opened the gate first.
+                bot.actionHandler.interactions.interact(gate.def().actions.indexOf("Open") + 1, gate)
+
+                // The gate opens on a later tick, and pathing before then finds no way through.
+                waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
+            }
+            return bot.navigator.navigate(destination, true).await() == NavigationResult.REACHED
         }
 
         /**
