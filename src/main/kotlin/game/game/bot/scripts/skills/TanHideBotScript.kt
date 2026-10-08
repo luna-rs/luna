@@ -11,6 +11,7 @@ import api.predef.ext.*
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.crafting.armorCrafting.HideArmor
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
@@ -106,6 +107,8 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
         return true
     }
 
+    override fun bankWithdraw(): List<Item> = withdraw()
+
     override fun withdraw(): List<Item> {
         for (item in bot.bank) {
             if (item == null) {
@@ -119,14 +122,17 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
                     hide = if (canCraftHard && roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
                 }
                 tanning = hide
-                val amount = minOf(item.amount, 27)
-                return listOf(Item(995, hide.cost * amount), Item(hide.hide, amount))
+                val amount = minOf(item.amount, 27, bot.itemTracker.count(995) / hide.cost)
+                if (amount > 0) {
+                    return listOf(Item(995, hide.cost * amount), Item(hide.hide, amount))
+                }
             }
         }
 
         stop()
         Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.addWantedItem(it, 500) }
-        bot.log("No untanned hides in bank, ending script.")
+        bot.preferences.addWantedItem(995, 500)
+        bot.log("No affordable untanned hide batch in bank, ending script.")
         return listOf()
     }
 
