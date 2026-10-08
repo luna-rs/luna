@@ -2,6 +2,7 @@ package game.bot.scripts
 
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
+import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -9,6 +10,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
 import com.google.common.collect.SetMultimap
+import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
@@ -24,13 +26,15 @@ import game.skill.woodcutting.cutTree.Tree
 import io.luna.game.model.Position
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.item.DeathGroundItem
+import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
-import io.luna.game.model.mob.combat.CombatAction
 import io.luna.net.msg.out.GameChatboxMessageWriter
+import io.luna.util.GsonUtils
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -44,6 +48,34 @@ class NpcCombatScript(bot: Bot,
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
+
+        val DRAGON_ZONES = setOf(
+            SubZone.GREEN_DRAGONS
+        )
+
+        /** Per-zone NPC restrictions must survive script persistence. */
+        class NpcCombatData : ZonedBotScriptData() {
+            var names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of()
+
+            override fun load(data: JsonObject) {
+                super.load(data)
+                val builder = ImmutableSetMultimap.builder<SubZone, String>()
+                val savedNames = data.get("names")?.takeUnless { it.isJsonNull }?.asJsonObject
+                savedNames?.entrySet()?.forEach { (zone, npcs) ->
+                    npcs.asJsonArray.forEach { builder.put(SubZone.valueOf(zone), it.asString) }
+                }
+                names = builder.build()
+            }
+
+            override fun save(data: JsonObject) {
+                super.save(data)
+                val savedNames = JsonObject()
+                names.asMap().forEach { (zone, npcs) ->
+                    savedNames.add(zone.name, GsonUtils.toJsonTree(npcs))
+                }
+                data.add("names", savedNames)
+            }
+        }
 
         // when looting sort by wanted item, etc etc value
         //  add all noted versions as well
@@ -68,7 +100,9 @@ class NpcCombatScript(bot: Bot,
 
     }
 
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
+    // Retain the base-data constructor so existing persisted scripts still load.
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
+                                                           (data as? NpcCombatData)?.names ?: ImmutableSetMultimap.of())
 
     override suspend fun equipment(): BotGearLocator {
         // Higher chance to train melee.
@@ -110,17 +144,35 @@ class NpcCombatScript(bot: Bot,
         return true
     }
 
+    val antiDragonShield = item("Anti-dragon shield")
     override suspend fun onBankOpen(initial: Boolean) {
+
+        // todo temporary workaround until zone selection moved before banking
+        if (DRAGON_ZONES.any { it in originalZones } && !handler.banking.withdraw(antiDragonShield)) {
+            bot.bank.add(antiDragonShield)
+            bot.naturalMicroDelay()
+            if (!handler.banking.withdraw(antiDragonShield)) {
+                stop()
+                return
+            }
+        }
         if (!handler.inventory.hasAnyFood()) {
             // todo change minimum heal scaling to combat level
             handler.banking.withdrawAnyFood(amount = 8)
         }
+
     }
 
-    override fun onNewActiveZone(lastZone: SubZone?) {
-        if (lastZone != activeZone && activeZone == SubZone.GREEN_DRAGONS) {
-            // todo ensure we have an anti-dragon shield
-            // onBankOpen(true)
+    override suspend fun onNewActiveZone(lastZone: SubZone?) {
+        if (activeZone in DRAGON_ZONES && 1540 !in bot.equipment) {
+            if(antiDragonShield.id !in bot.inventory || !handler.equipment.equip(antiDragonShield.id) || bot.equipment.weapon == null) {
+                if (!BotGearSelector.find(bot, setOf(BotGearPurpose.MELEE))
+                        .replace(Equipment.SHIELD, antiDragonShield.id)
+                        .buildLocator().locateAndEquip()) {
+                    stop()
+                    return
+                }
+            }
         }
     }
     // todo auto bury bones after each kill
@@ -156,7 +208,8 @@ class NpcCombatScript(bot: Bot,
 
         eatFood()
         if (bot.combat.lastCombatWith?.isAlive == true && bot.combat.inCombat() &&
-            !bot.actions.contains(CombatAction::class.java)) {
+            !bot.actions.contains(CombatAction::class.java)
+        ) {
             handler.interactions.interact(3, bot.combat.lastCombatWith)
             bot.naturalDelay()
         } else if (focus?.isAlive != true) {
@@ -201,10 +254,11 @@ class NpcCombatScript(bot: Bot,
         return 3
     }
 
-    override fun snapshot(): ZonedBotScriptData {
-        val data = ZonedBotScriptData()
+    override fun snapshot(): NpcCombatData {
+        val data = NpcCombatData()
         data.duration = duration
         data.zones = originalZones.toMutableList()
+        data.names = ImmutableSetMultimap.copyOf(names)
         return data
     }
 

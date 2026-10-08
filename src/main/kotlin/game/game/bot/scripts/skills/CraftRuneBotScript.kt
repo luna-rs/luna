@@ -103,11 +103,11 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration) : Inven
         }
 
         val requiresPureEssence = craftingRune.level > 20
-         essence = when {
-            requiresPureEssence && bot.itemTracker.count(PURE_ESSENCE) >= 27 -> PURE_ESSENCE
+        essence = when {
+            requiresPureEssence && bot.itemTracker.count(PURE_ESSENCE) > 0 -> PURE_ESSENCE
             requiresPureEssence -> null
-            bot.itemTracker.count(RUNE_ESSENCE) >= 27 -> RUNE_ESSENCE
-            bot.itemTracker.count(PURE_ESSENCE) >= 27 -> PURE_ESSENCE
+            bot.itemTracker.count(RUNE_ESSENCE) > 0 -> RUNE_ESSENCE
+            bot.itemTracker.count(PURE_ESSENCE) > 0 -> PURE_ESSENCE
             else -> null
         }
 
@@ -122,7 +122,9 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration) : Inven
             bot.bank.add(altar.talisman)
         }
 
-        return listOf(Item(essence!!, 27), Item(altar.talisman))
+        // One slot is reserved for the talisman; partial loads are still usable.
+        val amount = minOf(bot.itemTracker.count(essence!!), bot.inventory.capacity() - 1)
+        return listOf(Item(essence!!, amount), Item(altar.talisman))
     }
 
     override suspend fun onExecuteInZone(): Boolean {
