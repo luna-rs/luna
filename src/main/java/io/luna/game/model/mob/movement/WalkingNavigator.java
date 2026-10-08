@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
+import io.luna.game.model.object.GameObject;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
@@ -427,6 +428,76 @@ public class WalkingNavigator {
                     mob.getWalking().replacePath(path);
                 }, mob.getService().getGameExecutor());
         return handleExceptions(destination, result);
+    }
+
+    /**
+     * Paths to a usable object interaction tile rather than the object's occupied origin. Reach is checked on the
+     * game thread using the same rotated footprint/access/collision rules as the eventual interaction. Try another
+     * legal side if the nearest side has no complete route; retain a partial route for long-distance travel.
+     */
+    CompletableFuture<Void> walkToObject(GameObject target, Optional<Direction> offsetDir,
+                                         GamePathfinder<Position> pathfinder, boolean async) {
+        Position start = mob.getPosition();
+        NavigationRequest request = active;
+        int generation = pathGeneration.incrementAndGet();
+        List<Position> candidates = objectApproachPositions(target, offsetDir);
+        var search = async ? CompletableFuture.supplyAsync(() -> findObjectPath(start, candidates, pathfinder), pool) :
+                CompletableFuture.completedFuture(findObjectPath(start, candidates, pathfinder));
+        var result = search.thenAcceptAsync(path -> {
+            if (!isStale(start, request, generation)) {
+                mob.getWalking().replacePath(path);
+            }
+        }, mob.getService().getGameExecutor());
+        result.whenComplete((value, error) -> {
+            if (result.isCancelled()) {
+                search.cancel(false);
+            }
+        });
+        return handleExceptions(target, result);
+    }
+
+    /** Returns the full legal perimeter, including interior tiles along a multi-tile object's sides. */
+    List<Position> objectApproachPositions(GameObject target, Optional<Direction> offsetDir) {
+        List<Position> candidates = new ArrayList<>();
+        if (offsetDir.isPresent()) {
+            candidates.add(computeOffsetPosition(target, offsetDir));
+        } else {
+            Position origin = target.getPosition();
+            for (int x = origin.getX() - mob.sizeX() + 1; x < origin.getX() + target.sizeX(); x++) {
+                candidates.add(new Position(x, origin.getY() - mob.sizeY(), origin.getZ()));
+                candidates.add(new Position(x, origin.getY() + target.sizeY(), origin.getZ()));
+            }
+            for (int y = origin.getY() - mob.sizeY() + 1; y < origin.getY() + target.sizeY(); y++) {
+                candidates.add(new Position(origin.getX() - mob.sizeX(), y, origin.getZ()));
+                candidates.add(new Position(origin.getX() + target.sizeX(), y, origin.getZ()));
+            }
+        }
+        return candidates.stream()
+                .filter(position -> collisionManager.reached(position, target, InteractionPolicy.STANDARD_SIZE))
+                .sorted(java.util.Comparator.comparingInt(position -> position.computeLongestDistance(mob.getPosition())))
+                .toList();
+    }
+
+    /** Complete endpoints are preferred over a nearer side's fallback path. */
+    Deque<Position> findObjectPath(Position start, List<Position> candidates, GamePathfinder<Position> pathfinder) {
+        Deque<Position> partial = null;
+        int partialDistance = Integer.MAX_VALUE;
+        for (Position candidate : candidates) {
+            PathResult<Position> result = pathfinder.find(start, candidate);
+            Deque<Position> path = result.getPath();
+            if (result.getType() == PathResultType.COMPLETE ||
+                    (result.getType() == PathResultType.EMPTY && start.equals(candidate))) {
+                return path;
+            }
+            if (result.getType() == PathResultType.PARTIAL && path != null && !path.isEmpty()) {
+                int distance = path.peekLast().computeLongestDistance(candidate);
+                if (distance < partialDistance) {
+                    partial = path;
+                    partialDistance = distance;
+                }
+            }
+        }
+        return partial;
     }
 
     /**
