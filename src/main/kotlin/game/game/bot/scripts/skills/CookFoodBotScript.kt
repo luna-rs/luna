@@ -188,7 +188,7 @@ class CookFoodBotScript(
         return data
     }
 
-    override fun onNewActiveZone(lastZone: SubZone?) {
+    override suspend fun onNewActiveZone(lastZone: SubZone?) {
         cookingObject = null
     }
 

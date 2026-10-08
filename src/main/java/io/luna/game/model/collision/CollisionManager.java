@@ -585,6 +585,7 @@ public final class CollisionManager {
             // Distance of 0 always requires player to occupy tile.
             return start.equals(end);
         }
+
         // The reach checks read the flags of the start tile, so they need the matrix of the chunk the start is in.
         CollisionMatrix matrices = world.getChunks().load(start.getChunk()).getMatrices()[start.getZ()];
         switch (policy.getType()) {

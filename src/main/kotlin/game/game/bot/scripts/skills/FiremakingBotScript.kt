@@ -277,7 +277,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         return forceBanking
     }
 
-    override fun onNewActiveZone(lastZone: SubZone?) {
+    override suspend fun onNewActiveZone(lastZone: SubZone?) {
         // Our lane and spot belong to the zone we're leaving. This also runs when the script pauses.
         lane = null
         FiremakingSpot.leave(this)
