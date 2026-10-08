@@ -103,7 +103,10 @@ abstract class InventoryBotScript(
             stop()
             return
         }
-        handler.banking.withdrawAll(withdraw)
+        if (!withdrawBankItems(withdraw)) {
+            bot.log("Could not withdraw required inventory items. Stopping script.")
+            stop()
+        }
     }
 
     /**
@@ -115,6 +118,13 @@ abstract class InventoryBotScript(
 
     /** Supplies for this banking cycle; fixed-recipe scripts retain the initial list by default. */
     protected open fun bankWithdraw(): List<Item> = withdraw
+
+    /**
+     * Withdraws the current batch. Subclasses may select a banking mode or bound their own withdrawal attempt.
+     *
+     * Returning false ends the script instead of continuing with an incomplete inventory.
+     */
+    protected open suspend fun withdrawBankItems(items: List<Item>): Boolean = handler.banking.withdrawAll(items)
 
     /**
      * Executes one activity-specific cycle inside the active zone.
