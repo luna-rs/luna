@@ -76,7 +76,9 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
 
-            if (bot.navigator.navigate(target, true).await() != NavigationResult.NO_VALID_PATH) {
+            val navigationResult = bot.navigator.navigate(target, true).await()
+            if (navigationResult == NavigationResult.REACHED &&
+                world.collisionManager.reached(bot, target, io.luna.game.model.mob.interact.InteractionPolicy.STANDARD_SIZE)) {
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index)
                 return true
