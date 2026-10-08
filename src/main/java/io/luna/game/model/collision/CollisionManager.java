@@ -19,10 +19,12 @@ import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectType;
 import io.luna.game.model.path.route.LineOfSight;
 import io.luna.game.model.path.route.RouteStrategy;
 import io.luna.game.model.path.route.StepValidator;
@@ -568,7 +570,6 @@ public final class CollisionManager {
      */
     public boolean reached(Locatable source, Locatable target, InteractionPolicy policy) {
         int distance = policy.getDistance();
-        int size = target instanceof Entity ? ((Entity) target).size() : 1;
         checkArgument(distance <= Position.VIEWING_DISTANCE, "Distance must be below max viewable range.");
 
         Position start = source.abs();
@@ -593,7 +594,12 @@ public final class CollisionManager {
                 // Line of sight requires raycast and being within the distance.
                 return start.isWithinDistance(end, distance) && raycast(start, end);
             case SIZE:
-                if (distance == 1) {
+                if (target instanceof GroundItem) {
+                    // TODO Probably not the best way to do this? Maybe create a flag in GroundItem isOnFurniture to
+                    //  speed this up?
+                    return start.isWithinDistance(end, distance) && raycast(start, end)
+                            && !world.getLocator().findObjectsOnTile(end, it -> it.getObjectType() == ObjectType.DEFAULT).isEmpty();
+                } else if (distance == 1) {
                     if (target instanceof Mob) {
                         // Check if we're right beside a mob.
                         return matrices.reachedFacingEntity(start, (Mob) target,

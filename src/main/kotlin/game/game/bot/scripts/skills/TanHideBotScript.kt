@@ -131,7 +131,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
 
         stop()
         Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.addWantedItem(it, 500) }
-        bot.preferences.addWantedItem(995, 500)
+        bot.preferences.addWantedItem(995, 100_000)
         bot.log("No affordable untanned hide batch in bank, ending script.")
         return listOf()
     }
