@@ -619,6 +619,144 @@ enum class SubZone(val inside: Position,
                            { SEERS_VILLAGE }),
 
     /**
+     * The magic trees between the Sorcerer's Tower and the yews south of Seers' Village. Intended for high-level
+     * woodcutters and money-makers.
+     * - 3 magic trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_SEERS_VILLAGE_MAGICS(inside = Position(2691, 3426),
+                               area = SimpleBoxArea.of(2685, 3419, 2710, 3435),
+                               parent =
+                               { SEERS_VILLAGE }),
+
+    /**
+     * The maple trees south of the Sorcerer's Tower. Intended for mid-level woodcutters and money-makers.
+     * - 6 maple trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_SORCERERS_TOWER_MAPLES(inside = Position(2713, 3376),
+                                 area = SimpleBoxArea.of(2700, 3360, 2720, 3388),
+                                 parent =
+                                 { SEERS_VILLAGE }),
+
+    /**
+     * The maple trees north-west of Seers' Village. Intended for mid-level woodcutters and money-makers.
+     * - 25 maple trees
+     * - 5 willow trees
+     * - Normal trees
+     */
+    NORTH_WEST_SEERS_VILLAGE_MAPLES(inside = Position(2668, 3531),
+                                    area = SimpleBoxArea.of(2648, 3515, 2701, 3546),
+                                    parent =
+                                    { SEERS_VILLAGE }),
+
+    /**
+     * The maple forest north of Seers' Village. Intended for mid -> high level woodcutters and money-makers.
+     * - 43 maple trees
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_SEERS_VILLAGE_MAPLES(inside = Position(2707, 3563),
+                               area = SimpleBoxArea.of(2660, 3547, 2735, 3592),
+                               parent =
+                               { SEERS_VILLAGE }),
+
+    /**
+     * The willow trees on the beach west of the Catherby bank. Intended for dexterous willow trainers.
+     * - 3 willow trees
+     */
+    CATHERBY_BEACH_WILLOWS(inside = Position(2783, 3428),
+                           area = SimpleBoxArea.of(2775, 3418, 2800, 3434),
+                           parent =
+                           { CATHERBY }),
+
+    /**
+     * The trees north of Catherby. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_CATHERBY_TREES(inside = Position(2783, 3459),
+                         area = SimpleBoxArea.of(2760, 3436, 2805, 3480),
+                         parent =
+                         { CATHERBY }),
+
+    /**
+     * The willow trees south of Ardougne. Intended for mid-level woodcutters.
+     * - 13 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_ARDOUGNE_WILLOWS(inside = Position(2654, 3241),
+                           area = SimpleBoxArea.of(2626, 3220, 2680, 3262),
+                           parent =
+                           { ARDOUGNE }),
+
+    /**
+     * The willow trees north of Ardougne, south of Hemenster. Intended for mid-level woodcutters.
+     * - 9 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_ARDOUGNE_WILLOWS(inside = Position(2627, 3401),
+                           area = SimpleBoxArea.of(2615, 3380, 2665, 3409),
+                           parent =
+                           { ARDOUGNE }),
+
+    /**
+     * The willow trees east of Ardougne, south of the Legends' Guild. Intended for mid-level woodcutters.
+     * - 16 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    EAST_ARDOUGNE_WILLOWS(inside = Position(2711, 3309),
+                          area = SimpleBoxArea.of(2690, 3285, 2725, 3325),
+                          parent =
+                          { ARDOUGNE }),
+
+    /**
+     * The willow trees south of Yanille. Intended for mid-level woodcutters.
+     * - 5 willow trees
+     * - Normal trees
+     */
+    SOUTH_YANILLE_WILLOWS(inside = Position(2609, 3060),
+                          area = SimpleBoxArea.of(2598, 3048, 2622, 3070),
+                          parent =
+                          { YANILLE }),
+
+    /**
+     * The willow trees west of Draynor Village. Intended for dexterous willow trainers.
+     * - 4 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    WEST_DRAYNOR_WILLOWS(inside = Position(3059, 3253),
+                         area = SimpleBoxArea.of(3050, 3244, 3072, 3262),
+                         parent =
+                         { DRAYNOR }),
+
+    /**
+     * The trees west of Varrock. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    WEST_VARROCK_TREES(inside = Position(3140, 3425),
+                       area = SimpleBoxArea.of(3110, 3395, 3170, 3455),
+                       parent =
+                       { VARROCK }),
+
+    /**
+     * The trees east of Edgeville. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    EAST_EDGEVILLE_TREES(inside = Position(3145, 3493),
+                         area = SimpleBoxArea.of(3100, 3460, 3170, 3518),
+                         parent =
+                         { EDGEVILLE }),
+
+    /**
      * The iconic barbarian village, intended for low-level combat training, crafting training, and low -> high level
      * drop-fishing training.
      * - Fly fishing spots
