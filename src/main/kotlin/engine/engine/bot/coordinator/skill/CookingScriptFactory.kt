@@ -18,7 +18,8 @@ import api.predef.rand
  * A [SkillingScriptFactory] that creates cooking bot scripts.
  *
  * Cooking bots train by selecting the best cookable food for their current Cooking level, then running
- * a [CookFoodBotScript] for a generated duration.
+ * a [CookFoodBotScript] for a generated duration. Owned plain pizzas and toppings can instead be assembled
+ * into meat, anchovy, or pineapple pizzas, which award Cooking experience.
  *
  * Zone selection is personality-based:
  *
@@ -41,6 +42,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        getAssemblyScript(bot, level, training = true)?.let { return it }
         if (bot.personality.isDumb && !bot.personality.isDextrous) {
             zones += SubZone.AL_KHARID_BANK
             zones += SubZone.VARROCK_EAST_BANK
@@ -81,10 +83,13 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         return listOfNotNull(getPreparationScript(bot, level), cutting, getAssemblyScript(bot, level)).randomOrNull()
     }
 
-    /** Selects an owned, validated food-assembly recipe using the existing level and personality rules. */
-    internal fun getAssemblyScript(bot: Bot, level: Int): AssembleFoodBotScript? =
+    /**
+     * Selects an owned, validated food-assembly recipe using the existing level and personality rules.
+     * Training requires positive recipe experience; zero-XP preparation and water refills are non-training only.
+     */
+    internal fun getAssemblyScript(bot: Bot, level: Int, training: Boolean = false): AssembleFoodBotScript? =
         getBestActivity(bot, level, { it.requiredLevel },
-            AssembleFoodBotScript.RECIPES.flatMap { food ->
+            AssembleFoodBotScript.RECIPES.filter { !training || it.exp > 0.0 }.flatMap { food ->
                 food.otherIngredients.map { AssembleFoodBotScript(bot, food, getDuration(bot), secondary = it) }
-            }.filter { it.isEligible() || it.canPrepareWater() })
+            }.filter { it.isEligible() || (!training && it.canPrepareWater()) })
 }

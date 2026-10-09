@@ -26,8 +26,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
- * Supports plain-pizza assembly, pie shells, and all implemented pie assembly stages. Cooking requirements
- * range from level 1 to 95; these preparation stages award no experience. Each step uses two inputs and creates
+ * Supports plain-pizza assembly and toppings, pie shells, and all implemented pie assembly stages. Cooking
+ * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
+ * respectively; plain-pizza and pie assembly award none. Each step uses two inputs and creates
  * a product, plus an empty container when water is used. [PrepareFoodActionItem] owns conversions and returns.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
@@ -35,8 +36,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * up to fourteen balanced pairs. Missing startup ingredients request total stock targets of 1,000. Three failed
  * interactions or unresolved bank requests stop the script; snapshots preserve the recipe and retry budgets.
  * Missing water can queue the reusable filling prerequisite from owned containers. Non-training Cooking selects
- * owned supplies or an available refill. Dough making and baking remain separate; this script does not repair
- * mismatched or missing pie entries in the existing cooking table.
+ * owned supplies or an available refill; training selects only recipes that award experience. Dough making and
+ * baking remain separate activities, and higher-tier pie baking still requires entries in the cooking table.
  *
  * @param bot The bot assembling food.
  * @property food A supported preparation recipe.
@@ -57,6 +58,7 @@ class AssembleFoodBotScript(
         /** Validated two-input recipes whose outputs fit within their input inventory footprint. */
         val RECIPES = setOf(
             IncompleteFood.INCOMPLETE_PIZZA, IncompleteFood.UNCOOKED_PLAIN_PIZZA,
+            IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
             IncompleteFood.PIE_SHELL, IncompleteFood.UNCOOKED_BERRY_PIE, IncompleteFood.UNCOOKED_MEAT_PIE,
             IncompleteFood.PART_MUD_PIE_1, IncompleteFood.PART_MUD_PIE_2, IncompleteFood.RAW_MUD_PIE,
             IncompleteFood.UNCOOKED_APPLE_PIE,

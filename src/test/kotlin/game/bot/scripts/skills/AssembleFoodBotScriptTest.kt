@@ -33,7 +33,7 @@ class AssembleFoodBotScriptTest {
         `when`(it.cooking.level).thenReturn(level)
     }
 
-    @Test fun everyRecipeAndAlternativeProcessesFullInventoryThroughRealGameplayWithoutExperience() {
+    @Test fun everyRecipeAndAlternativeProcessesFullInventoryThroughRealGameplayWithRecipeExperience() {
         for (food in AssembleFoodBotScript.RECIPES) for (secondary in food.otherIngredients) {
             val bot = bot(food.lvl)
             InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, 14), Item(secondary, 14))
@@ -48,7 +48,8 @@ class AssembleFoodBotScriptTest {
             WaterResource.FILLABLES.inverse()[secondary]?.let { empty ->
                 assertEquals(14, bot.inventory.computeAmountForId(empty))
             }
-            verify(bot.cooking, never()).addExperience(anyDouble())
+            if (food.exp > 0.0) verify(bot.cooking, times(14)).addExperience(food.exp)
+            else verify(bot.cooking, never()).addExperience(anyDouble())
         }
     }
 
@@ -110,6 +111,9 @@ class AssembleFoodBotScriptTest {
             val interactions = listOf(
                 IncompleteFood.INCOMPLETE_PIZZA to 1982,
                 IncompleteFood.UNCOOKED_PLAIN_PIZZA to 1985,
+                IncompleteFood.MEAT_PIZZA to 2142,
+                IncompleteFood.ANCHOVY_PIZZA to 319,
+                IncompleteFood.PINEAPPLE_PIZZA to 2118,
                 IncompleteFood.UNCOOKED_MEAT_PIE to 2140,
                 IncompleteFood.PART_MUD_PIE_2 to 1937)
             for ((food, secondary) in interactions) {
@@ -232,5 +236,54 @@ class AssembleFoodBotScriptTest {
             assertEquals(data.failures, snapshot.failures)
             assertEquals(data.bankFailures, snapshot.bankFailures)
         } finally { `when`(world.botManager.scriptManager).thenReturn(previous) }
+    }
+
+    @Test fun pizzaToppingsSelectOwnedAlternativesAtTheirRequiredLevelsForTrainingAndProfit() {
+        for (food in listOf(IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA,
+                            IncompleteFood.PINEAPPLE_PIZZA)) for (secondary in food.otherIngredients) {
+            val bot = bot(food.lvl - 1)
+            InventoryProductionFixtures.bank(bot, Item(2289, 50), Item(secondary, 3))
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, food.lvl - 1, training = true))
+            `when`(bot.cooking.staticLevel).thenReturn(food.lvl)
+            `when`(bot.cooking.level).thenReturn(food.lvl)
+            for (training in listOf(false, true)) {
+                val script = CookingScriptFactory.getAssemblyScript(bot, food.lvl, training)!!
+                assertEquals(food, script.food)
+                assertEquals(secondary, script.secondary)
+                assertEquals(listOf(Item(2289, 3), Item(secondary, 3)), script.bankBatch())
+            }
+            val training = CookingScriptFactory.getTrainingScript(bot, food.lvl, mutableListOf())
+                as AssembleFoodBotScript
+            assertEquals(food, training.food)
+            assertEquals(secondary, training.secondary)
+            val json = JsonObject()
+            training.snapshot().save(json)
+            val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+            assertEquals(food, restored.food)
+            assertEquals(secondary, restored.secondary)
+        }
+    }
+
+    @Test fun trainingExcludesZeroExperiencePreparationAndNeedsBothPizzaInputs() {
+        val bot = bot(65)
+        InventoryProductionFixtures.bank(bot, Item(2289, 100), Item(2283, 100), Item(1982, 100))
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 65, training = true))
+        assertInstanceOf(CookFoodBotScript::class.java,
+            CookingScriptFactory.getTrainingScript(bot, 65, mutableListOf()))
+        InventoryProductionFixtures.bank(bot, Item(2118, 100))
+        assertEquals(IncompleteFood.PINEAPPLE_PIZZA,
+            CookingScriptFactory.getAssemblyScript(bot, 65, training = true)!!.food)
+        bot.bank.clear()
+        InventoryProductionFixtures.bank(bot, Item(2118, 100))
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 65, training = true))
+    }
+
+    @Test fun toppingDefinitionsMatchLunaItemsAndExperience() {
+        assertEquals("Plain pizza", itemName(IncompleteFood.MEAT_PIZZA.baseIngredient))
+        assertEquals("Meat pizza", itemName(IncompleteFood.MEAT_PIZZA.id))
+        assertEquals("Anchovy pizza", itemName(IncompleteFood.ANCHOVY_PIZZA.id))
+        assertEquals("Pineapple pizza", itemName(IncompleteFood.PINEAPPLE_PIZZA.id))
+        assertEquals(listOf(26.0, 39.0, 45.0), listOf(IncompleteFood.MEAT_PIZZA.exp,
+            IncompleteFood.ANCHOVY_PIZZA.exp, IncompleteFood.PINEAPPLE_PIZZA.exp))
     }
 }
