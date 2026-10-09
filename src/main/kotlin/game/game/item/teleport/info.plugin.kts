@@ -8,6 +8,7 @@ plugin {
         """
         Items that teleport the player.
         -> Ectophial, to the Ectofuntus, where it is refilled
+        -> Enchanted lyre, to Rellekka, charged at the Strange altar
         """
     version = "1.0"
     authors += "TheLining"
