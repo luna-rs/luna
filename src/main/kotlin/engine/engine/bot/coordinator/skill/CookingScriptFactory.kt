@@ -19,7 +19,8 @@ import api.predef.rand
  *
  * Cooking bots train by selecting the best cookable food for their current Cooking level, then running
  * a [CookFoodBotScript] for a generated duration. Owned plain pizzas and toppings can instead be assembled
- * into meat, anchovy, or pineapple pizzas, which award Cooking experience.
+ * into meat, anchovy, or pineapple pizzas, which award Cooking experience. Whole cakes can also be prepared
+ * with owned chocolate bars or chocolate dust at level 50 for 30 Cooking experience each.
  *
  * Zone selection is personality-based:
  *

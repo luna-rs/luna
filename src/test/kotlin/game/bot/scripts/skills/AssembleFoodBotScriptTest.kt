@@ -114,6 +114,8 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.MEAT_PIZZA to 2142,
                 IncompleteFood.ANCHOVY_PIZZA to 319,
                 IncompleteFood.PINEAPPLE_PIZZA to 2118,
+                IncompleteFood.CHOCOLATE_CAKE to 1973,
+                IncompleteFood.CHOCOLATE_CAKE to 1975,
                 IncompleteFood.UNCOOKED_MEAT_PIE to 2140,
                 IncompleteFood.PART_MUD_PIE_2 to 1937)
             for ((food, secondary) in interactions) {
@@ -285,5 +287,57 @@ class AssembleFoodBotScriptTest {
         assertEquals("Pineapple pizza", itemName(IncompleteFood.PINEAPPLE_PIZZA.id))
         assertEquals(listOf(26.0, 39.0, 45.0), listOf(IncompleteFood.MEAT_PIZZA.exp,
             IncompleteFood.ANCHOVY_PIZZA.exp, IncompleteFood.PINEAPPLE_PIZZA.exp))
+    }
+
+    @Test fun chocolateCakeUsesEitherOwnedChocolateInputAndRestoresItForTrainingAndProfit() {
+        val food = IncompleteFood.CHOCOLATE_CAKE
+        assertEquals(50, food.lvl)
+        assertEquals(30.0, food.exp)
+        assertEquals("Cake", itemName(food.baseIngredient))
+        assertEquals("Chocolate cake", itemName(food.id))
+        assertEquals(listOf("Chocolate bar", "Chocolate dust"), food.otherIngredients.map { itemName(it) })
+        for (secondary in food.otherIngredients) {
+            val bot = bot(49)
+            InventoryProductionFixtures.bank(bot, Item(food.baseIngredient, 50), Item(secondary, 3))
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, 49))
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, 49, training = true))
+            val script = AssembleFoodBotScript(bot, food, 10.minutes, secondary = secondary)
+            assertFalse(script.isEligible())
+            `when`(bot.cooking.staticLevel).thenReturn(50)
+            `when`(bot.cooking.level).thenReturn(50)
+            assertTrue(script.isEligible())
+            for (training in listOf(false, true)) {
+                val chosen = CookingScriptFactory.getAssemblyScript(bot, 50, training)!!
+                assertEquals(food, chosen.food)
+                assertEquals(secondary, chosen.secondary)
+                assertEquals(listOf(Item(food.baseIngredient, 3), Item(secondary, 3)), chosen.bankBatch())
+            }
+            assertEquals(food, (CookingScriptFactory.getTrainingScript(bot, 50, mutableListOf())
+                as AssembleFoodBotScript).food)
+            val json = JsonObject()
+            script.snapshot().save(json)
+            val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+            assertEquals(food, restored.food)
+            assertEquals(secondary, restored.secondary)
+            bot.bank.clear()
+            InventoryProductionFixtures.bank(bot, Item(secondary, 10))
+            assertFalse(script.isEligible())
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, 50, training = true))
+        }
+    }
+
+    @Test fun chocolateCakeActionRejectsInsufficientLevelWithoutConsumingOrAwardingExperience() {
+        val food = IncompleteFood.CHOCOLATE_CAKE
+        for (secondary in food.otherIngredients) {
+            val bot = bot(49)
+            InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient), Item(secondary))
+            val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), 1)
+            bot.actions.submit(action)
+            assertTrue(action.run())
+            assertTrue(bot.inventory.contains(food.baseIngredient))
+            assertTrue(bot.inventory.contains(secondary))
+            assertFalse(bot.inventory.contains(food.id))
+            verify(bot.cooking, never()).addExperience(anyDouble())
+        }
     }
 }

@@ -26,9 +26,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
- * Supports plain-pizza assembly and toppings, pie shells, and all implemented pie assembly stages. Cooking
+ * Supports plain-pizza assembly and toppings, chocolate cakes, pie shells, and all implemented pie assembly stages. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
- * respectively; plain-pizza and pie assembly award none. Each step uses two inputs and creates
+ * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
+ * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
  * a product, plus an empty container when water is used. [PrepareFoodActionItem] owns conversions and returns.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
@@ -59,6 +60,7 @@ class AssembleFoodBotScript(
         val RECIPES = setOf(
             IncompleteFood.INCOMPLETE_PIZZA, IncompleteFood.UNCOOKED_PLAIN_PIZZA,
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
+            IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.PIE_SHELL, IncompleteFood.UNCOOKED_BERRY_PIE, IncompleteFood.UNCOOKED_MEAT_PIE,
             IncompleteFood.PART_MUD_PIE_1, IncompleteFood.PART_MUD_PIE_2, IncompleteFood.RAW_MUD_PIE,
             IncompleteFood.UNCOOKED_APPLE_PIE,
