@@ -7,6 +7,10 @@ import api.predef.SKILL_COOKING
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
+import game.bot.scripts.skills.MakeDoughBotScript
+import game.obj.resource.fillable.WaterResource
+import game.skill.cooking.prepareFood.IncompleteFood
+import api.predef.rand
 
 /**
  * A [SkillingScriptFactory] that creates cooking bot scripts.
@@ -21,22 +25,13 @@ import game.skill.cooking.cookFood.Food
  *   - Varrock East Bank
  * - All other bots use Rogues' Den, which is the more efficient cooking spot.
  *
- * Profit cooking currently uses the same behavior as training cooking.
+ * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
+ * These recipes grant no experience. Ordinary food cooking remains the fallback activity.
  *
  * @author lare96
  */
 object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
 
-    /**
-     * Builds a Cooking training script for the bot.
-     *
-     * The bot's personality determines which cooking zones are added:
-     *
-     * - Dumb, non-dextrous bots are sent to normal banks.
-     * - Smarter or more dextrous bots are sent to Rogues' Den.
-     *
-     * The selected food is the best available [Food] entry for the bot's current Cooking level.
-     */
     override fun getTrainingScript(
         bot: Bot,
         level: Int,
@@ -57,17 +52,20 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         )
     }
 
-    /**
-     * Builds a Cooking profit script.
-     *
-     * Cooking profit behavior currently matches training behavior, meaning profit bots still cook the best available
-     * food for their level using the same personality-based zone selection.
-     */
     override fun getProfitScript(
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        if (rand(0.25)) getPreparationScript(bot, level)?.let { return it }
         return getTrainingScript(bot, level, zones)
+    }
+
+    /** Selects a level-appropriate owned dough recipe using the existing personality rules. */
+    internal fun getPreparationScript(bot: Bot, level: Int): MakeDoughBotScript? {
+        val options = IncompleteFood.DOUGH.values.flatMap { food ->
+            WaterResource.FILLED_IDS.map { MakeDoughBotScript(bot, food, it, getDuration(bot)) }
+        }.filter { it.isEligible() || it.canPrepareWater() }
+        return getBestActivity(bot, level, { it.requiredLevel }, options)
     }
 }
