@@ -11,6 +11,8 @@ plugin {
         -> Enchanted lyre, to Rellekka, charged at the Strange altar
         -> Teleport crystal, to Lletya, recharged by Eluned
         -> Camulet, to Enakhra's Temple, recharged with camel dung
+        -> Magic whistle, between Karamja and the Fisher Realm
+        -> Grail bell, into the Grail castle
         """
     version = "1.0"
     authors += "TheLining"
