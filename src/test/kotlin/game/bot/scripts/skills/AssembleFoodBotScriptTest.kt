@@ -48,6 +48,7 @@ class AssembleFoodBotScriptTest {
             WaterResource.FILLABLES.inverse()[secondary]?.let { empty ->
                 assertEquals(14, bot.inventory.computeAmountForId(empty))
             }
+            if (secondary == 1927) assertEquals(14, bot.inventory.computeAmountForId(1925))
             if (food.exp > 0.0) verify(bot.cooking, times(14)).addExperience(food.exp)
             else verify(bot.cooking, never()).addExperience(anyDouble())
         }
@@ -116,6 +117,7 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.PINEAPPLE_PIZZA to 2118,
                 IncompleteFood.CHOCOLATE_CAKE to 1973,
                 IncompleteFood.CHOCOLATE_CAKE to 1975,
+                IncompleteFood.MILKY_NETTLE_TEA to 1927,
                 IncompleteFood.UNCOOKED_MEAT_PIE to 2140,
                 IncompleteFood.PART_MUD_PIE_2 to 1937)
             for ((food, secondary) in interactions) {
@@ -339,5 +341,64 @@ class AssembleFoodBotScriptTest {
             assertFalse(bot.inventory.contains(food.id))
             verify(bot.cooking, never()).addExperience(anyDouble())
         }
+    }
+
+    @Test fun milkyNettleTeaIsNonTrainingOnlyRequiresBothInputsAndPreservesSelectedRecipe() {
+        val food = IncompleteFood.MILKY_NETTLE_TEA
+        assertEquals(20, food.lvl)
+        assertEquals(0.0, food.exp)
+        assertEquals("Nettle tea", itemName(food.baseIngredient))
+        assertEquals("Bucket of milk", itemName(food.otherIngredients.single()))
+        assertEquals("Nettle tea", itemName(food.id))
+        val bot = bot(19)
+        InventoryProductionFixtures.bank(bot, Item(food.baseIngredient, 30), Item(1927, 2))
+        val script = AssembleFoodBotScript(bot, food, 10.minutes)
+        assertFalse(script.isEligible())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 19))
+        `when`(bot.cooking.staticLevel).thenReturn(20)
+        `when`(bot.cooking.level).thenReturn(20)
+        assertTrue(script.isEligible())
+        val selected = CookingScriptFactory.getAssemblyScript(bot, 20)!!
+        assertEquals(food, selected.food)
+        assertEquals(listOf(Item(food.baseIngredient, 2), Item(1927, 2)), selected.bankBatch())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 20, training = true))
+        assertInstanceOf(CookFoodBotScript::class.java,
+            CookingScriptFactory.getTrainingScript(bot, 20, mutableListOf()))
+        assertInstanceOf(AssembleFoodBotScript::class.java,
+            CookingScriptFactory.getNonTrainingPreparation(bot, 20))
+        val json = JsonObject()
+        selected.snapshot().save(json)
+        val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+        assertEquals(food, restored.food)
+        assertEquals(1927, restored.secondary)
+        bot.bank.clear()
+        InventoryProductionFixtures.bank(bot, Item(food.baseIngredient, 30))
+        assertFalse(script.isEligible())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 20))
+        bot.bank.clear()
+        InventoryProductionFixtures.bank(bot, Item(1927, 30))
+        assertFalse(script.isEligible())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 20))
+    }
+
+    @Test fun milkyNettleTeaPreservesExistingEmptyBucketsAndRejectsLowLevelsWithoutConsumption() {
+        val food = IncompleteFood.MILKY_NETTLE_TEA
+        val bot = bot(19)
+        InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient), Item(1927), Item(1925, 2))
+        val rejected = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, 1927), 1)
+        bot.actions.submit(rejected)
+        assertTrue(rejected.run())
+        assertTrue(bot.inventory.contains(food.baseIngredient))
+        assertTrue(bot.inventory.contains(1927))
+        assertFalse(bot.inventory.contains(food.id))
+        assertEquals(2, bot.inventory.computeAmountForId(1925))
+        `when`(bot.cooking.level).thenReturn(20)
+        InventoryProductionFixtures.execute(bot,
+            PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, 1927), 1))
+        assertFalse(bot.inventory.contains(food.baseIngredient))
+        assertFalse(bot.inventory.contains(1927))
+        assertEquals(1, bot.inventory.computeAmountForId(food.id))
+        assertEquals(3, bot.inventory.computeAmountForId(1925))
+        verify(bot.cooking, never()).addExperience(anyDouble())
     }
 }

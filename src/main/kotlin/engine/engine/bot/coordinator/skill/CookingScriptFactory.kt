@@ -32,6 +32,7 @@ import api.predef.rand
  * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
  * Owned pineapples can also be cut into rings when a knife is available. These recipes grant no experience.
  * Pizza and pie assembly select owned ingredients, including alternate meats and refillable water containers.
+ * Owned bowls of nettle tea can be combined with milk at level 20, returning the empty bucket without awarding XP.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96
