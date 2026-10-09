@@ -9,6 +9,7 @@ import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
 import game.bot.scripts.skills.MakeDoughBotScript
 import game.bot.scripts.skills.CutFoodBotScript
+import game.bot.scripts.skills.AssembleFoodBotScript
 import game.obj.resource.fillable.WaterResource
 import game.skill.cooking.prepareFood.IncompleteFood
 import api.predef.rand
@@ -28,6 +29,7 @@ import api.predef.rand
  *
  * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
  * Owned pineapples can also be cut into rings when a knife is available. These recipes grant no experience.
+ * Pizza and pie assembly select owned ingredients, including alternate meats and refillable water containers.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96
@@ -71,11 +73,18 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         return getBestActivity(bot, level, { it.requiredLevel }, options)
     }
 
-    /** Chooses between eligible owned dough preparation and pineapple cutting without selecting zero-XP training. */
+    /** Chooses eligible owned dough preparation, food cutting, or food assembly for non-training Cooking. */
     internal fun getNonTrainingPreparation(bot: Bot, level: Int): BotScript? {
         val cutting = getBestActivity(bot, level, { it.requiredLevel },
             CutFoodBotScript.RECIPES.keys.map { CutFoodBotScript(bot, it, getDuration(bot)) }
                 .filter { it.isEligible() })
-        return listOfNotNull(getPreparationScript(bot, level), cutting).randomOrNull()
+        return listOfNotNull(getPreparationScript(bot, level), cutting, getAssemblyScript(bot, level)).randomOrNull()
     }
+
+    /** Selects an owned, validated food-assembly recipe using the existing level and personality rules. */
+    internal fun getAssemblyScript(bot: Bot, level: Int): AssembleFoodBotScript? =
+        getBestActivity(bot, level, { it.requiredLevel },
+            AssembleFoodBotScript.RECIPES.flatMap { food ->
+                food.otherIngredients.map { AssembleFoodBotScript(bot, food, getDuration(bot), secondary = it) }
+            }.filter { it.isEligible() || it.canPrepareWater() })
 }
