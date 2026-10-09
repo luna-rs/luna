@@ -1,6 +1,7 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.InventoryBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -9,9 +10,11 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.TanHideBotScript
 import game.skill.crafting.armorCrafting.HideArmor
+import game.skill.crafting.gemCutting.Gem
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.textileCrafting.Textile
 import io.luna.game.model.mob.bot.Bot
@@ -20,9 +23,10 @@ import io.luna.util.RandomUtils.roll
 /**
  * Creates crafting scripts for bots.
  *
- * Crafting currently supports leather armour crafting for training, fed by collecting and tanning cowhides, and flax,
- * bowstring, hide-collecting or hide-tanning behaviour for profit. Additional crafting branches can be added here as
- * their bot scripts become available.
+ * Training and profit selection first have a 25% chance to attempt precious-gem cutting when the bot owns a chisel
+ * and an eligible uncut gem. Selection uses the inherited level/personality rules and excludes semi-precious gems.
+ * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
+ * Choosing a profit activity does not guarantee a market margin.
  *
  * @author lare96
  */
@@ -41,25 +45,15 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      */
     private val ALL_COW_FIELDS = NEAR_BANK_COW_FIELDS + SubZone.LUMBRIDGE_COW_PEN
 
-    /**
-     * Creates a crafting training script for the bot's current level.
-     *
-     * Bots collect cowhides until they own [CollectHidesBotScript.hideTarget], then tan every hide they own, then craft
-     * the best [HideArmor] they have the materials for until the leather runs out.
-     *
-     * @param bot The bot that will run the script.
-     * @param level The bot's current crafting level.
-     * @param zones The candidate zones available to the factory.
-     *
-     * @return A crafting script suitable for training.
-     */
     override fun getTrainingScript(
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        if (rand(0.25)) {
+            getProductionScript(bot, level, true)?.let { return it }
+        }
         // TODO
-        //  gem cutting
         //  battlestaff crafting
         //  glass making
         //  jewellery making
@@ -83,23 +77,14 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         return getCollectHidesScript(bot, zones)
     }
 
-    /**
-     * Creates a crafting profit script for the bot's current level and bank contents.
-     *
-     * Bots that can make bowstrings may spin flax when the random branch is selected. Otherwise, bots that own
-     * [CollectHidesBotScript.hideTarget] hides tan them. Everyone else either collects cowhides or harvests flax.
-     *
-     * @param bot The bot that will run the script.
-     * @param level The bot's current crafting level.
-     * @param zones The candidate zones available to the factory.
-     *
-     * @return A crafting script suitable for profit-oriented activity.
-     */
     override fun getProfitScript(
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        if (rand(0.25)) {
+            getProductionScript(bot, level, false)?.let { return it }
+        }
         if (randBoolean() && level >= Textile.BOWSTRING.level) {
             zones += SubZone.FLAX_SPINNING_MAIN
             return SpinFlaxBotScript(bot, getDuration(bot))
@@ -140,8 +125,35 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         return CollectHidesBotScript(bot, getDuration(bot), zones, pickUpHides)
     }
 
+    /**
+     * Creates the level-one leather-glove fallback with a personality-based session duration.
+     *
+     * @param bot The bot that will run the script.
+     * @return The basic armour-crafting activity.
+     */
     fun getBasicScript(bot: Bot): CraftArmorBotScript {
         // todo chance of pottery crafting
         return CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot))
+    }
+
+    /**
+     * Selects a precious-gem recipe for which the bot owns both a chisel and at least one uncut gem.
+     *
+     * Semi-precious recipes are excluded. Candidates pass their permanent level and owned-supply checks before
+     * the inherited level/personality selector chooses one. All candidates share the same session duration and
+     * use the script's default processing zones. Actual current-level and safety checks occur at startup/execution.
+     *
+     * @param bot The bot whose inventory, bank, and personality determine eligibility and selection.
+     * @param level The Crafting level supplied by the coordinator to the inherited recipe selector.
+     * @param training Whether the caller wants training; precious gems are eligible for either activity mode.
+     * @return An eligible gem-cutting script, or null so the caller can select its existing fallback.
+     */
+    internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
+        val duration = getDuration(bot)
+        val candidates = Gem.entries.filter { !it.isSemiPrecious() }
+            .map { CutGemBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+            .map { it.requiredLevel to it }
+        return getBestActivity(bot, level, { it.first }, candidates)?.second
     }
 }

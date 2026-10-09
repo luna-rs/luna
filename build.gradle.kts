@@ -1,4 +1,3 @@
-import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -33,9 +32,9 @@ dependencies {
     implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.8.1"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.mockito:mockito-core:5.14.2")
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.apache.commons:commons-compress:1.27.1")
+    testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.4")

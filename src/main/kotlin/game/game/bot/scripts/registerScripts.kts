@@ -12,6 +12,8 @@ import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
+import game.bot.scripts.skills.CutGemBotScript
+import game.bot.scripts.skills.CutGemBotScript.Companion.CutGemData
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
 import game.bot.scripts.skills.CutTreeBotScript
@@ -39,7 +41,13 @@ import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
- * Register all scripts.
+ * Registers bot-script constructors once during server launch.
+ *
+ * Each callback reconstructs its script from the corresponding saved data type when the script stack is loaded.
+ * Activity selection remains in the existing coordinators and factories; these callbacks restore saved sessions.
+ * Recipe-specific scripts such as gem cutting retain their recipe and retry counters through their data classes.
+ *
+ * @author lare96
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
@@ -54,6 +62,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<CutGemData>(CutGemBotScript::class) { bot, data -> CutGemBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }

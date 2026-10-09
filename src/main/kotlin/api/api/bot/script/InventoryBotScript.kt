@@ -36,14 +36,6 @@ abstract class InventoryBotScript(
     protected var withdraw: List<Item> = emptyList()
         private set
 
-    /**
-     * Initializes this script and verifies that the bot owns the required withdrawal items.
-     *
-     * Missing items are added to the bot's wanted-item list so another system can try to obtain them later.
-     *
-     * @param resumed `true` if this script is being restored from a saved snapshot.
-     * @return `true` if the bot has the required items, or `false` if the script cannot start yet.
-     */
     final override suspend fun onInit(resumed: Boolean): Boolean {
         withdraw = withdraw()
         if (isTerminated()) {
@@ -56,15 +48,6 @@ abstract class InventoryBotScript(
         return true
     }
 
-    /**
-     * Decides whether this script should bank.
-     *
-     * The first banking check is always accepted so the script can prepare its starting inventory. Later checks are
-     * delegated to [onInventoryBankRequested].
-     *
-     * @param initial `true` if this is the first banking check for the current request.
-     * @return `true` if banking should continue.
-     */
     final override suspend fun onBankRequested(initial: Boolean): Boolean {
         if (initial) {
             return true
@@ -75,13 +58,6 @@ abstract class InventoryBotScript(
         return onInventoryBankRequested()
     }
 
-    /**
-     * Executes this script inside the selected zone when the bot is idle.
-     *
-     * If the bot already has a weak action running, this method does nothing and keeps the current zone active.
-     *
-     * @return `true` if this zone should remain active, or `false` if the script should abandon it.
-     */
     final override suspend fun executeInZone(): Boolean {
         if (bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
@@ -90,11 +66,6 @@ abstract class InventoryBotScript(
         return onExecuteInZone()
     }
 
-    /**
-     * Withdraws this script's required items while the bank is open.
-     *
-     * @param initial `true` if this is the first bank-open call for the current banking request.
-     */
     final override suspend fun onBankOpen(initial: Boolean) {
         withdraw = bankWithdraw()
         if (isTerminated() || withdraw.isEmpty()) return
@@ -103,7 +74,10 @@ abstract class InventoryBotScript(
             stop()
             return
         }
-        handler.banking.withdrawAll(withdraw)
+        if (!withdrawBankItems(withdraw)) {
+            bot.log("Could not withdraw required inventory items. Stopping script.")
+            stop()
+        }
     }
 
     /**
@@ -115,6 +89,13 @@ abstract class InventoryBotScript(
 
     /** Supplies for this banking cycle; fixed-recipe scripts retain the initial list by default. */
     protected open fun bankWithdraw(): List<Item> = withdraw
+
+    /**
+     * Withdraws the current batch. Subclasses may select a banking mode or bound their own withdrawal attempt.
+     *
+     * Returning false ends the script instead of continuing with an incomplete inventory.
+     */
+    protected open suspend fun withdrawBankItems(items: List<Item>): Boolean = handler.banking.withdrawAll(items)
 
     /**
      * Executes one activity-specific cycle inside the active zone.

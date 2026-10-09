@@ -50,8 +50,17 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * @param amount The amount to make.
      */
     suspend fun clickMakeItem(index: Int, amount: Int) {
-        bot.overlays[MakeItemDialogue::class] ?: return
-        val button = INDEX_MAP[index] ?: return
+        val dialogue = bot.overlays[MakeItemDialogue::class] ?: return
+        if (index !in 0 until dialogue.length) return
+        // The client uses a different button group for each dialogue length (see engine.widget.make.makeItem).
+        val button = when (dialogue.length) {
+            1 -> ButtonIndex(make1 = 8893, index = 0)
+            2 -> ButtonIndex(make1 = 8874 + index * 4, index = index)
+            3 -> ButtonIndex(make1 = 8889 + index * 4, index = index)
+            4 -> ButtonIndex(make1 = 8909 + index * 4, index = index)
+            5 -> INDEX_MAP[index]
+            else -> null
+        } ?: return
         when (amount) {
             1 -> bot.output.clickButton(button.make1)
             5 -> bot.output.clickButton(button.make5)
