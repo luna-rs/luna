@@ -48,7 +48,7 @@ class IdentifyHerbBotScriptTest {
         val bot = InventoryProductionFixtures.bot()
         val script = HerbloreScriptFactory.getTrainingScript(bot, 3, mutableListOf())
         assertTrue(script.run())
-        verify(bot.preferences).addWantedItem(Herb.GUAM_LEAF.id, 28)
+        verify(bot.preferences).raiseWantedItemTarget(Herb.GUAM_LEAF.id, 1_000)
     }
 
     @ParameterizedTest @EnumSource(Herb::class)
@@ -108,7 +108,7 @@ class IdentifyHerbBotScriptTest {
         assertEquals(3, skill.staticLevel)
         assertEquals(SkillSet.experienceForLevel(3).toDouble(), skill.experience)
         verify(skill, times(1)).addExperience(SkillSet.experienceForLevel(3).toDouble())
-        verify(bot.preferences).addWantedItem(Herb.GUAM_LEAF.id, 28)
+        verify(bot.preferences).raiseWantedItemTarget(Herb.GUAM_LEAF.id, 1_000)
     }
 
     @ParameterizedTest @ValueSource(booleans = [true, false])
@@ -176,7 +176,7 @@ class IdentifyHerbBotScriptTest {
         bot.inventory.remove(Herb.GUAM_LEAF.idItem)
         assertFalse(InventoryProductionFixtures.active(
             IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, 10.minutes)).onInit(false))
-        verify(bot.preferences).addWantedItem(Herb.GUAM_LEAF.id, 28)
+        verify(bot.preferences).raiseWantedItemTarget(Herb.GUAM_LEAF.id, 1_000)
     }
 
     @Test fun unsafeStartupAndCurrentLevelLossPreventProcessing() = runBlocking {

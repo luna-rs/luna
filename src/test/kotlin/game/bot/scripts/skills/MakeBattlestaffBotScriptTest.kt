@@ -94,8 +94,8 @@ class MakeBattlestaffBotScriptTest {
         bot.inventory.remove(Battlestaff.WATER.orb)
         val script = InventoryProductionFixtures.active(MakeBattlestaffBotScript(bot, Battlestaff.WATER, 10.minutes))
         assertFalse(script.onInit(false))
-        verify(bot.preferences).addWantedItem(Battlestaff.WATER.orb, 28)
-        verify(bot.preferences, never()).addWantedItem(Battlestaff.BATTLESTAFF, 28)
+        verify(bot.preferences).raiseWantedItemTarget(Battlestaff.WATER.orb, 1_000)
+        verify(bot.preferences, never()).raiseWantedItemTarget(Battlestaff.BATTLESTAFF, 1_000)
     }
 
     @Test fun startupRejectsDeathCombatAndInsufficientLevel() = runBlocking {

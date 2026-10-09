@@ -11,8 +11,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
-import game.skill.herblore.grindIngredient.GrindActionItem
-import game.skill.herblore.grindIngredient.Ingredient
+import game.skill.herblore.makeUnfPotion.MakeUnfActionItem
+import game.skill.herblore.makeUnfPotion.UnfPotion
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -22,31 +22,32 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Grinds one configured ingredient with a retained pestle and mortar through the normal make-item dialogue.
+ * Combines one configured identified herb with vials of water through the normal make-item dialogue.
  *
  * [InventoryBotScript] supplies banking, zone travel, session expiry, and weak-action gating. After depositing
- * the previous inventory, the script withdraws one pestle and mortar and up to twenty-seven ingredients.
- * Smaller remaining batches are allowed; exhausted inputs or a missing tool end the session.
+ * the previous inventory, each bank visit withdraws up to fourteen herbs and fourteen vials of water. The
+ * smaller available stock limits the batch, allowing remaining partial batches without requesting absent inputs.
+ * No reusable tool is needed; each conversion consumes one herb and one water vial.
  *
- * The existing [GrindActionItem] performs conversion without awarding Herblore experience. This activity
- * prepares owned supplies for other uses and is selected only by the factory's profit mode. It neither buys
- * inputs nor assumes that their processed form will sell at a profit. Missing startup supplies are added to
- * wanted items before stopping.
+ * The existing [MakeUnfActionItem] validates the recipe's Herblore level and converts the inputs without
+ * awarding experience. This script prepares owned supplies and is selected only by the factory's profit mode.
+ * It does not purchase inputs or assume a market margin. Missing startup ingredients are added to wanted
+ * items before stopping, and current Herblore level is checked again before each production interaction.
  *
- * Each interaction must consume an input within ten seconds. Three consecutive failed interactions or
- * unresolved banking requests exhaust their separate budgets. Withdrawals are unnoted, verified, and limited
- * to fifteen seconds; failed withdrawals stop through the inherited banking hook. Snapshots retain the recipe,
- * duration, candidate zones, and retry counters rather than live inventory slots or actions.
+ * Three consecutive interactions without input consumption end the session. Unresolved banking requests
+ * have a separate retry budget. Withdrawals are unnoted, verified, and bounded to fifteen seconds; failure ends
+ * the script through the inherited banking hook. Snapshots retain the recipe, duration, candidate zones, and
+ * retry counters rather than live inventory slots or actions.
  *
  * @param bot The bot running this script.
- * @property ingredient The grinding recipe to process throughout the session.
+ * @property potion The unfinished-potion recipe to prepare throughout the session.
  * @param duration The session duration managed by the inherited lifecycle.
  * @param zones Candidate processing zones with existing banking and travel support.
  * @author lare96
  */
-class GrindIngredientBotScript(
+class MakeUnfinishedPotionBotScript(
     bot: Bot,
-    val ingredient: Ingredient,
+    val potion: UnfPotion,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
@@ -56,15 +57,15 @@ class GrindIngredientBotScript(
         private const val MAX_FAILURES = 3
 
         /**
-         * Saved recipe and retry counters alongside the inherited duration and candidate zones.
-         * Restoring a session retains exhausted retry budgets instead of granting fresh attempts.
+         * Saved recipe and retry counters alongside inherited duration and candidate zones.
+         * Restoring a session preserves its exhausted budgets instead of granting fresh attempts.
          *
          * @author lare96
          */
-        class IngredientData : ZonedBotScriptData() {
-            /** [Ingredient] enum name used to reconstruct the configured recipe. */
+        class UnfinishedPotionData : ZonedBotScriptData() {
+            /** [UnfPotion] enum name used to reconstruct the configured recipe. */
             var recipe = ""
-            /** Consecutive interactions that did not consume an ingredient. */
+            /** Consecutive interactions that did not consume an identified herb. */
             var failures = 0
             /** Banking requests since the last successfully verified withdrawal. */
             var bankFailures = 0
@@ -85,36 +86,34 @@ class GrindIngredientBotScript(
         }
     }
 
-    /** Grinding has no recipe-specific Herblore level gate in the existing gameplay action. */
-    val requiredLevel = 1
-    /** Minimum ingredient supply for one conversion. */
-    private val materials = listOf(ingredient.oldItem)
-    /** The reusable tool reserved in each batch and retained by the grinding action. */
-    private val tools = setOf(Ingredient.PESTLE_AND_MORTAR)
-    /** Consecutive failed interactions, reset after an ingredient is consumed. */
+    /** Permanent Herblore level required for selection and startup validation. */
+    val requiredLevel = potion.level
+    /** One identified herb and one water vial, the minimum supplies for a single conversion. */
+    private val materials = listOf(potion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
+    /** Consecutive failed production interactions, reset after an herb is consumed. */
     private var failures = 0
     /** Unresolved banking requests, reset after the entire batch is withdrawn. */
     private var bankFailures = 0
 
     /**
-     * Restores the recipe, session configuration, and retry budgets from a saved snapshot.
-     * Initialization still checks current supplies and bot safety before the script can run.
+     * Restores the recipe, session configuration, and retry budgets from saved state.
+     * Initialization still checks current supplies and bot safety before the restored script can run.
      *
      * @param bot The bot that owns the saved script.
-     * @param data Previously serialized ingredient-grinding state.
+     * @param data Previously serialized unfinished-potion state.
      */
-    constructor(bot: Bot, data: IngredientData) :
-        this(bot, Ingredient.valueOf(data.recipe), data.duration, data.zones) {
+    constructor(bot: Bot, data: UnfinishedPotionData) :
+        this(bot, UnfPotion.valueOf(data.recipe), data.duration, data.zones) {
         failures = data.failures
         bankFailures = data.bankFailures
     }
 
-    /** Checks permanent level eligibility and an owned ingredient plus pestle and mortar across inventory and bank. */
-    fun isEligible(): Boolean =
-        bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel && bot.ownsProductionSupplies(materials, tools)
+    /** Checks permanent level eligibility and one complete input pair across inventory and bank. */
+    fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
+            bot.ownsProductionSupplies(materials)
 
-    /** Returns one mortar and up to twenty-seven banked ingredients, or an empty batch when either is missing. */
-    fun bankBatch(): List<Item> = bot.productionBatch(materials, tools)
+    /** Returns up to fourteen balanced input pairs, or an empty batch when either banked ingredient is missing. */
+    fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
     override fun withdraw(): List<Item> {
         if (failures >= MAX_FAILURES || bankFailures >= MAX_FAILURES ||
@@ -123,17 +122,17 @@ class GrindIngredientBotScript(
             stop()
             return emptyList()
         }
-        if (!bot.ownsProductionSupplies(materials, tools)) {
+        if (!bot.ownsProductionSupplies(materials)) {
             val missing = materials.filter {
                 bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-            }.map { it.id } + tools.filter { !bot.ownsProductionSupplies(emptyList(), setOf(it)) }
-            missing.forEach { bot.preferences.raiseWantedItemTarget(it, if (it in tools) 3 else 1_000) }
+            }.map { it.id }
+            missing.forEach { bot.preferences.raiseWantedItemTarget(it, 1_000) }
             stop()
             return emptyList()
         }
         // InventoryBotScript validates these minimum supplies; the bank hook calculates the actual batch.
         forceBanking = true
-        return tools.map { Item(it) } + materials
+        return materials
     }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
@@ -164,8 +163,8 @@ class GrindIngredientBotScript(
         return true
     }
 
-    /** Whether inventory contains the reusable tool and at least one configured ingredient. */
-    private fun hasMaterials() = bot.inventory.containsAll(materials) && tools.all { it in bot.inventory }
+    /** Whether inventory currently holds a complete pair of the configured recipe's inputs. */
+    private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
         if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
@@ -191,9 +190,9 @@ class GrindIngredientBotScript(
         return true
     }
 
-    /** Uses the mortar on an ingredient, waits for the single-recipe dialogue, and requests the carried batch. */
+    /** Uses a water vial on the identified herb, waits for the single-recipe dialogue, and requests the batch. */
     private suspend fun startProduction(): Boolean {
-        if (!handler.inventory.useItem(Ingredient.PESTLE_AND_MORTAR).onItem(ingredient.id)) return false
+        if (!handler.inventory.useItem(UnfPotion.VIAL_OF_WATER).onItem(potion.herb)) return false
         if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
         val amount = materials.minOf { bot.inventory.computeAmountForId(it.id) / it.amount }
         handler.widgets.clickMakeItem(0, amount)
@@ -201,11 +200,11 @@ class GrindIngredientBotScript(
     }
 
     override suspend fun finish() {
-        bot.actions.first(GrindActionItem::class.java)?.interrupt()
+        bot.actions.first(MakeUnfActionItem::class.java)?.interrupt()
     }
 
-    override fun snapshot(): IngredientData = IngredientData().also {
-        it.recipe = ingredient.name
+    override fun snapshot(): UnfinishedPotionData = UnfinishedPotionData().also {
+        it.recipe = potion.name
         it.duration = duration
         it.zones = originalZones.toMutableList()
         it.failures = failures

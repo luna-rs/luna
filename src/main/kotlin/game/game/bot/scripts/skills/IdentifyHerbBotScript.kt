@@ -122,7 +122,7 @@ class IdentifyHerbBotScript(
             val missing = materials.filter {
                 bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
             }.map { it.id }
-            missing.forEach { bot.preferences.addWantedItem(it, 28) }
+            missing.forEach { bot.preferences.raiseWantedItemTarget(it, 1_000) }
             stop()
             return emptyList()
         }

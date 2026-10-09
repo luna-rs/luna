@@ -77,7 +77,7 @@ class CutGemBotScriptTest {
         bot.inventory.remove(Gem.CHISEL)
         val script = InventoryProductionFixtures.active(CutGemBotScript(bot, Gem.SAPPHIRE, 10.minutes))
         assertFalse(script.onInit(false))
-        verify(bot.preferences).addWantedItem(Gem.CHISEL, 3)
+        verify(bot.preferences).raiseWantedItemTarget(Gem.CHISEL, 3)
     }
 
     @Test fun deathCombatAndInsufficientLevelsRejectStartup() = runBlocking {

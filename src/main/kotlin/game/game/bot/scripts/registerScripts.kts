@@ -30,6 +30,8 @@ import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
+import game.bot.scripts.skills.MakeUnfinishedPotionBotScript
+import game.bot.scripts.skills.MakeUnfinishedPotionBotScript.Companion.UnfinishedPotionData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -72,6 +74,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
     scriptManager.addScript<HerbData>(IdentifyHerbBotScript::class) { bot, data -> IdentifyHerbBotScript(bot, data) }
     scriptManager.addScript<IngredientData>(GrindIngredientBotScript::class) { bot, data -> GrindIngredientBotScript(bot, data) }
+    scriptManager.addScript<UnfinishedPotionData>(MakeUnfinishedPotionBotScript::class) { bot, data -> MakeUnfinishedPotionBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }

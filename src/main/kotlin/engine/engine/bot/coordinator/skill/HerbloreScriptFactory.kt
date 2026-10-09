@@ -7,7 +7,9 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
+import game.bot.scripts.skills.MakeUnfinishedPotionBotScript
 import game.skill.herblore.grindIngredient.Ingredient
+import game.skill.herblore.makeUnfPotion.UnfPotion
 import game.skill.herblore.identifyHerb.Herb
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.SkillSet
@@ -15,9 +17,9 @@ import io.luna.game.model.mob.SkillSet
 /**
  * Creates herb-identification sessions from the bot's owned unidentified herbs.
  *
- * Training selects herb identification. Profit mode also considers ingredient grinding when the bot owns
- * a pestle and mortar and an unprocessed ingredient. Candidates require their permanent level and supplies
- * in inventory or bank, then use the inherited level/personality selector. Grinding awards no experience;
+ * Training selects herb identification. Profit mode also considers grinding with an owned pestle and mortar,
+ * or unfinished potions with owned identified herbs and water vials. Candidates require their permanent level
+ * and supplies in inventory or bank, then use the inherited level/personality selector. Preparation awards no XP;
  * selecting a profit activity does not guarantee a market margin.
  *
  * Before either mode checks recipes or supplies, bots below permanent level three receive only the experience
@@ -37,7 +39,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
             override suspend fun run(): Boolean {
                 // The implemented herb-identification recipes begin at level 3.
                 if (bot.herblore.staticLevel >= Herb.GUAM_LEAF.level) {
-                    bot.preferences.addWantedItem(Herb.GUAM_LEAF.id, 28)
+                    bot.preferences.raiseWantedItemTarget(Herb.GUAM_LEAF.id, 1_000)
                 }
                 return true
             }
@@ -69,13 +71,13 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     }
 
     /**
-     * Selects owned herb identification or profit-only grinding with inherited level/personality rules.
+     * Selects identification or profit-only ingredient/potion preparation with inherited level/personality rules.
      *
      * Scripts use their default processing zones and recheck current level and safety during execution.
      *
      * @param bot The bot whose stock and personality determine eligibility and selection.
      * @param level The Herblore level supplied by the coordinator to the inherited recipe selector.
-     * @param training Whether to exclude grinding, which prepares supplies without awarding experience.
+     * @param training Whether to exclude grinding and unfinished potions, which award no experience.
      * @return An eligible script, or null when no usable owned recipe is available in the requested mode.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
@@ -85,6 +87,8 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             if (!training) {
                 addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
+                    .filter { it.isEligible() }.map { it.requiredLevel to it })
+                addAll(UnfPotion.entries.map { MakeUnfinishedPotionBotScript(bot, it, duration) }
                     .filter { it.isEligible() }.map { it.requiredLevel to it })
             }
         }

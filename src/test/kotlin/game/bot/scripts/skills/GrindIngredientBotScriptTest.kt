@@ -93,8 +93,8 @@ class GrindIngredientBotScriptTest {
         bot.inventory.remove(Ingredient.PESTLE_AND_MORTAR)
         assertFalse(InventoryProductionFixtures.active(
             GrindIngredientBotScript(bot, Ingredient.CHOCOLATE_DUST, 10.minutes)).onInit(false))
-        verify(bot.preferences).addWantedItem(Ingredient.PESTLE_AND_MORTAR, 3)
-        verify(bot.preferences, never()).addWantedItem(Ingredient.CHOCOLATE_DUST.id, 28)
+        verify(bot.preferences).raiseWantedItemTarget(Ingredient.PESTLE_AND_MORTAR, 3)
+        verify(bot.preferences, never()).raiseWantedItemTarget(Ingredient.CHOCOLATE_DUST.id, 1_000)
     }
 
     @Test fun deathCombatAndLocksRejectStartup() = runBlocking {

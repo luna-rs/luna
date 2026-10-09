@@ -130,7 +130,7 @@ class CutGemBotScript(
             val missing = materials.filter {
                 bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
             }.map { it.id } + tools.filter { !bot.ownsProductionSupplies(emptyList(), setOf(it)) }
-            missing.forEach { bot.preferences.addWantedItem(it, if (it in tools) 3 else 28) }
+            missing.forEach { bot.preferences.raiseWantedItemTarget(it, if (it in tools) 3 else 1_000) }
             stop()
             return emptyList()
         }
