@@ -136,8 +136,8 @@ object BorderGate {
      * Determines if [plr] may pass without paying.
      */
     fun isFree(plr: Player): Boolean {
-        // TODO@ Return true once the player has completed Prince Ali Rescue, which makes them a friend of Al Kharid.
-        //  There is no quest system yet, so for now everybody pays.
+        // TODO Return true once the player has completed Prince Ali Rescue.
+        // There is no quest system yet, so for now everybody pays.
         return false
     }
 
