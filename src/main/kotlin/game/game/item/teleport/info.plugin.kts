@@ -10,6 +10,7 @@ plugin {
         -> Ectophial, to the Ectofuntus, where it is refilled
         -> Enchanted lyre, to Rellekka, charged at the Strange altar
         -> Teleport crystal, to Lletya, recharged by Eluned
+        -> Camulet, to Enakhra's Temple, recharged with camel dung
         """
     version = "1.0"
     authors += "TheLining"
