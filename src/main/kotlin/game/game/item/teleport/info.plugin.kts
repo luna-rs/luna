@@ -13,6 +13,7 @@ plugin {
         -> Camulet, to Enakhra's Temple, recharged with camel dung
         -> Magic whistle, between Karamja and the Fisher Realm
         -> Grail bell, into the Grail castle
+        -> Mystic jewel, out of the Rogues' Den maze
         """
     version = "1.0"
     authors += "TheLining"
