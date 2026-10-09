@@ -51,6 +51,8 @@ import game.bot.scripts.skills.StringBowBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.SearchNestBotScript
+import game.bot.scripts.SearchNestBotScript.Companion.NestData
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.OpenCrystalChestBotScript.Companion.ChestData
 import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
@@ -92,6 +94,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<DoughData>(MakeDoughBotScript::class) { bot, data -> MakeDoughBotScript(bot, data) }
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
+    scriptManager.addScript<NestData>(SearchNestBotScript::class) { bot, data -> SearchNestBotScript(bot, data) }
     scriptManager.addScript<ChestData>(OpenCrystalChestBotScript::class) { bot, data -> OpenCrystalChestBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }

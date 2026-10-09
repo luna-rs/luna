@@ -5,6 +5,8 @@ import api.predef.*
 import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
+import game.bot.scripts.SearchNestBotScript
+import game.skill.woodcutting.searchNest.Nest
 import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
@@ -16,7 +18,8 @@ import kotlin.time.Duration.Companion.minutes
  * Selects useful general activities from supplies the bot already owns.
  *
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
- * are filled toward their wanted-stock target. These tasks do not depend on a Crafting or combat preference.
+ * are filled toward their wanted-stock target. Owned unsearched bird nests can also be opened and their contents
+ * banked. These tasks do not depend on a Crafting or combat preference.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
  * @author lare96
@@ -53,6 +56,9 @@ object GeneralActivityCoordinator : BotCoordinator {
             }
         }
         MakeCrystalKeyBotScript(bot, duration).let { if (it.isEligible()) return it }
+        Nest.VALUES.filter { owned(bot, it.id) > 0 }.randomOrNull()?.let {
+            return SearchNestBotScript(bot, it, duration)
+        }
         for ((empty, filled) in WaterResource.FILLABLES) {
             val emptyStock = owned(bot, empty)
             val filledStock = owned(bot, filled)
