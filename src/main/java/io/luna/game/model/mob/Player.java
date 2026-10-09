@@ -8,6 +8,7 @@ import game.player.Sound;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
+import io.luna.game.event.impl.DamageReceivedEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
@@ -404,6 +405,7 @@ public class Player extends Mob {
         } else {
             //playSound(Sound.UNARMED_BLOCK);
         }*/
+        plugins.post(new DamageReceivedEvent(this, hit));
     }
 
     /**

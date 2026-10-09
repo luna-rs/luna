@@ -43,11 +43,6 @@ object DegradableEquipmentHandler {
     const val RING_OF_RECOIL_CHARGES = 40
 
     /**
-     * The health percentage at or below which a Ring of Life should activate.
-     */
-    const val RING_OF_LIFE_HEALTH_PERCENT = 10
-
-    /**
      * The starting charge count assigned to Crystal items managed by this handler.
      */
     const val CRYSTAL_ITEMS_CHARGES = 2500
