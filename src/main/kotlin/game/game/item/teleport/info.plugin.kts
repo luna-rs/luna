@@ -14,6 +14,7 @@ plugin {
         -> Magic whistle, between Karamja and the Fisher Realm
         -> Grail bell, into the Grail castle
         -> Mystic jewel, out of the Rogues' Den maze
+        -> Spade, dug on a Barrows mound, into that brother's crypt
         """
     version = "1.0"
     authors += "TheLining"
