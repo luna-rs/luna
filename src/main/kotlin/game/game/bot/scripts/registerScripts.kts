@@ -29,6 +29,8 @@ import game.bot.scripts.skills.GrindIngredientBotScript.Companion.IngredientData
 import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.MakeBattlestaffBotScript
+import game.bot.scripts.skills.MakeSoftClayBotScript
+import game.bot.scripts.skills.MakeSoftClayBotScript.Companion.SoftClayData
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
 import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
@@ -81,6 +83,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
     scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
     scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
+    scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
