@@ -11,10 +11,13 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.runecrafting.enterAltar.Altar
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A smaller rectangular bot activity area within a broader [Zone].
@@ -619,6 +622,144 @@ enum class SubZone(val inside: Position,
                            { SEERS_VILLAGE }),
 
     /**
+     * The magic trees between the Sorcerer's Tower and the yews south of Seers' Village. Intended for high-level
+     * woodcutters and money-makers.
+     * - 3 magic trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_SEERS_VILLAGE_MAGICS(inside = Position(2691, 3426),
+                               area = SimpleBoxArea.of(2685, 3419, 2710, 3435),
+                               parent =
+                               { SEERS_VILLAGE }),
+
+    /**
+     * The maple trees south of the Sorcerer's Tower. Intended for mid-level woodcutters and money-makers.
+     * - 6 maple trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_SORCERERS_TOWER_MAPLES(inside = Position(2713, 3376),
+                                 area = SimpleBoxArea.of(2700, 3360, 2720, 3388),
+                                 parent =
+                                 { SEERS_VILLAGE }),
+
+    /**
+     * The maple trees north-west of Seers' Village. Intended for mid-level woodcutters and money-makers.
+     * - 25 maple trees
+     * - 5 willow trees
+     * - Normal trees
+     */
+    NORTH_WEST_SEERS_VILLAGE_MAPLES(inside = Position(2668, 3531),
+                                    area = SimpleBoxArea.of(2648, 3515, 2701, 3546),
+                                    parent =
+                                    { SEERS_VILLAGE }),
+
+    /**
+     * The maple forest north of Seers' Village. Intended for mid -> high level woodcutters and money-makers.
+     * - 43 maple trees
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_SEERS_VILLAGE_MAPLES(inside = Position(2707, 3563),
+                               area = SimpleBoxArea.of(2660, 3547, 2735, 3592),
+                               parent =
+                               { SEERS_VILLAGE }),
+
+    /**
+     * The willow trees on the beach west of the Catherby bank. Intended for dexterous willow trainers.
+     * - 3 willow trees
+     */
+    CATHERBY_BEACH_WILLOWS(inside = Position(2783, 3428),
+                           area = SimpleBoxArea.of(2775, 3418, 2800, 3434),
+                           parent =
+                           { CATHERBY }),
+
+    /**
+     * The trees north of Catherby. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_CATHERBY_TREES(inside = Position(2783, 3459),
+                         area = SimpleBoxArea.of(2760, 3436, 2805, 3480),
+                         parent =
+                         { CATHERBY }),
+
+    /**
+     * The willow trees south of Ardougne. Intended for mid-level woodcutters.
+     * - 13 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    SOUTH_ARDOUGNE_WILLOWS(inside = Position(2654, 3241),
+                           area = SimpleBoxArea.of(2626, 3220, 2680, 3262),
+                           parent =
+                           { ARDOUGNE }),
+
+    /**
+     * The willow trees north of Ardougne, south of Hemenster. Intended for mid-level woodcutters.
+     * - 9 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    NORTH_ARDOUGNE_WILLOWS(inside = Position(2627, 3401),
+                           area = SimpleBoxArea.of(2615, 3380, 2665, 3409),
+                           parent =
+                           { ARDOUGNE }),
+
+    /**
+     * The willow trees east of Ardougne, south of the Legends' Guild. Intended for mid-level woodcutters.
+     * - 16 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    EAST_ARDOUGNE_WILLOWS(inside = Position(2711, 3309),
+                          area = SimpleBoxArea.of(2690, 3285, 2725, 3325),
+                          parent =
+                          { ARDOUGNE }),
+
+    /**
+     * The willow trees south of Yanille. Intended for mid-level woodcutters.
+     * - 5 willow trees
+     * - Normal trees
+     */
+    SOUTH_YANILLE_WILLOWS(inside = Position(2609, 3060),
+                          area = SimpleBoxArea.of(2598, 3048, 2622, 3070),
+                          parent =
+                          { YANILLE }),
+
+    /**
+     * The willow trees west of Draynor Village. Intended for dexterous willow trainers.
+     * - 4 willow trees
+     * - Normal trees
+     * - Oak trees
+     */
+    WEST_DRAYNOR_WILLOWS(inside = Position(3059, 3253),
+                         area = SimpleBoxArea.of(3050, 3244, 3072, 3262),
+                         parent =
+                         { DRAYNOR }),
+
+    /**
+     * The trees west of Varrock. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    WEST_VARROCK_TREES(inside = Position(3140, 3425),
+                       area = SimpleBoxArea.of(3110, 3395, 3170, 3455),
+                       parent =
+                       { VARROCK }),
+
+    /**
+     * The trees east of Edgeville. Intended for low-level woodcutters.
+     * - Normal trees
+     * - Oak trees
+     */
+    EAST_EDGEVILLE_TREES(inside = Position(3145, 3493),
+                         area = SimpleBoxArea.of(3100, 3460, 3170, 3518),
+                         parent =
+                         { EDGEVILLE }),
+
+    /**
      * The iconic barbarian village, intended for low-level combat training, crafting training, and low -> high level
      * drop-fishing training.
      * - Fly fishing spots
@@ -668,6 +809,67 @@ enum class SubZone(val inside: Position,
     LUMBRIDGE_COW_PEN(inside = Position(3257, 3279),
                       area = SimpleBoxArea.of(3240, 3253, 3265, 3298),
                       parent = { LUMBRIDGE }),
+
+    /**
+     * The gated cow field north of the Lumbridge windmill.
+     */
+    NORTH_LUMBRIDGE_COW_FIELD(inside = Position(3175, 3320),
+                              outside = { Position(3174, 3315) },
+                              area = SimpleBoxArea.of(3153, 3316, 3200, 3352),
+                              parent = { DRAYNOR }) {
+        private val gate = listOf(Position(3174, 3316), Position(3175, 3316))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The gated cow field around the Crafting Guild.
+     */
+    CRAFTING_GUILD_COW_FIELD(inside = Position(2923, 3289),
+                             outside = { Position(2923, 3293) },
+                             area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
+                             parent = { FALADOR }) {
+        private val gate = listOf(Position(2923, 3292), Position(2924, 3292))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The gated cow field north of East Ardougne.
+     */
+    NORTH_ARDOUGNE_COW_FIELD(inside = Position(2671, 3349),
+                             outside = { Position(2676, 3349) },
+                             area = SimpleBoxArea.of(2642, 3340, 2675, 3359),
+                             parent = { ARDOUGNE }) {
+        private val gate = listOf(Position(2675, 3349), Position(2675, 3350))
+
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return walkThroughGate(bot, gate, inside)
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
+        }
+    },
+
+    /**
+     * The open cow field north of Yanille.
+     */
+    NORTH_YANILLE_COW_FIELD(inside = Position(2590, 3117),
+                            area = SimpleBoxArea.of(2576, 3111, 2608, 3126),
+                            parent = { YANILLE }),
 
     GREEN_DRAGONS(inside = Position(3141, 3690),
                   area = SimpleBoxArea.of(3120, 3690, 3155, 3721),
@@ -986,6 +1188,28 @@ enum class SubZone(val inside: Position,
             }
 
             ImmutableSetMultimap.copyOf(map)
+        }
+
+        /**
+         * Opens the gate on [gateTiles] if it's closed, then walks [bot] to [destination].
+         *
+         * @param bot The bot passing through the gate.
+         * @param gateTiles The tiles the closed gate stands on.
+         * @param destination Where the bot should end up on the other side.
+         * @return `true` if the bot reached [destination].
+         */
+        suspend fun walkThroughGate(bot: Bot, gateTiles: List<Position>, destination: Position): Boolean {
+            val gate = gateTiles.firstNotNullOfOrNull { tile ->
+                world.locator.findObjectsOnTile(tile) { "Open" in it.def().actions }.firstOrNull()
+            }
+            if (gate != null) {
+                // Ignore a failed click: someone else may have opened the gate first.
+                bot.actionHandler.interactions.interact(gate.def().actions.indexOf("Open") + 1, gate)
+
+                // The gate opens on a later tick, and pathing before then finds no way through.
+                waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
+            }
+            return bot.navigator.navigate(destination, true).await() == NavigationResult.REACHED
         }
 
         /**

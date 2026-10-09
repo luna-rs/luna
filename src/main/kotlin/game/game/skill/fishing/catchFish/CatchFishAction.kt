@@ -8,6 +8,7 @@ import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
+import io.luna.util.StringUtils
 
 /**
  * An [InventoryAction] implementation that will catch fish.
@@ -100,7 +101,7 @@ class CatchFishAction(val msg: NpcClickEvent, private val tool: Tool) :
     }
 
     override fun onNoMaterials(): String =
-        if (tool.bait != null) "You don't have enough ${itemName(tool.bait)} to fish here." else
+        if (tool.bait != null) "You don't have enough ${StringUtils.addPlural(itemName(tool.bait))} to fish here." else
             super.onNoMaterials()
 
     override fun onInventoryFull(): String = "Your inventory is too full to hold any more fish."

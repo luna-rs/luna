@@ -52,7 +52,29 @@ fun openDialogue(plr: Player, event: ItemClickEvent, index: Int, jewellery: Tele
 fun teleport(plr: Player, destination: Pair<String, Position>, event: ItemClickEvent,
              index: Int, jewellery: TeleportJewellery) {
     val (name, location) = destination
-    plr.teleport(location) { plr.sendMessage("You teleport to ${StringUtils.capitalize(name)}.") }
+    if (!holdsRubbedItem(plr, event, index, jewellery)) {
+        return
+    }
+    plr.teleport(location) {
+        plr.sendMessage("You teleport to ${StringUtils.capitalize(name)}.")
+        useCharge(plr, event, index, jewellery)
+    }
+}
+
+/**
+ * Checks that the inventory slot that was rubbed still holds the same jewellery.
+ */
+fun holdsRubbedItem(plr: Player, event: ItemClickEvent, index: Int, jewellery: TeleportJewellery) =
+    plr.inventory[event.index]?.id == jewellery.items[index]
+
+/**
+ * Replaces the rubbed jewellery with its next charge, or removes it when it crumbles. Only called once the teleport
+ * has passed every check.
+ */
+fun useCharge(plr: Player, event: ItemClickEvent, index: Int, jewellery: TeleportJewellery) {
+    if (!holdsRubbedItem(plr, event, index, jewellery)) {
+        return
+    }
     plr.inventory[event.index] = null
 
     val lastIndex = jewellery.items.size - 1

@@ -27,6 +27,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.Equipment
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -40,10 +41,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 // TODO rename to fightnpcbotscript
-class NpcCombatScript(bot: Bot,
-                      duration: Duration,
-                      zones: MutableList<SubZone>,
-                      private val names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of()) :
+open class NpcCombatScript(bot: Bot,
+                           duration: Duration,
+                           zones: MutableList<SubZone>,
+                           private val names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of()) :
     TargetingZonedBotScript<Npc>(bot, duration, zones) {
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
@@ -54,7 +55,7 @@ class NpcCombatScript(bot: Bot,
         )
 
         /** Per-zone NPC restrictions must survive script persistence. */
-        class NpcCombatData : ZonedBotScriptData() {
+        open class NpcCombatData : ZonedBotScriptData() {
             var names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of()
 
             override fun load(data: JsonObject) {
@@ -279,12 +280,17 @@ class NpcCombatScript(bot: Bot,
         return npc.combatLevel < 15 || npc.combatLevel / 2 < bot.combatLevel
     }
 
+    /**
+     * Determines if the bot should pick up [item] after a kill.
+     */
+    protected open fun isLoot(item: GroundItem): Boolean {
+        return item is DeathGroundItem || item.id in ALL_LOOT_ITEMS.value
+    }
+
     private suspend fun lootItems() {
         eatFood()
         delay(2.seconds, 4.seconds)
-        val groundItems = world.locator.findViewableItems(bot) {
-            (it is DeathGroundItem || it.id in ALL_LOOT_ITEMS.value) && it.isVisibleTo(bot)
-        }
+        val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
         for (item in groundItems) {
             val inventoryItem = item.toItem()
             val countBefore = bot.itemTracker.count(inventoryItem.id)

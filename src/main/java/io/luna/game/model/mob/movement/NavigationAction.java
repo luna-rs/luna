@@ -6,6 +6,8 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.interact.InteractionType;
+import io.luna.game.model.object.GameObject;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -160,9 +162,14 @@ final class NavigationAction extends Action<Mob> {
 
         // Re-path to target if needed.
         if (current == null) {
-            current = isTargetMob ?
+            if (target instanceof GameObject object && request.getPolicy().getType() == InteractionType.SIZE &&
+                    request.getPolicy().getDistance() == 1) {
+                current = navigator.walkToObject(object, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
+            } else {
+                current = isTargetMob ?
                     navigator.walk(navigator.computeOffsetPosition((Entity) request.getTarget(), request.getOffsetDir()), request.getPathfinder(), request.isAsync()) :
                     navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
+            }
             lastPosition = targetPos;
         }
         return false;

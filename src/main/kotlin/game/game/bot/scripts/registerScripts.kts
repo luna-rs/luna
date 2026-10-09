@@ -5,11 +5,15 @@ import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
+import game.bot.scripts.skills.CollectHidesBotScript
+import game.bot.scripts.skills.CollectHidesBotScript.Companion.CollectHidesData
 import game.bot.scripts.skills.CookFoodBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
+import game.bot.scripts.skills.CutGemBotScript
+import game.bot.scripts.skills.CutGemBotScript.Companion.CutGemData
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.CutLogBotScript.Companion.CutLogData
 import game.bot.scripts.skills.CutTreeBotScript
@@ -18,8 +22,16 @@ import game.bot.scripts.skills.FiremakingBotScript
 import game.bot.scripts.skills.FiremakingBotScript.Companion.FiremakingData
 import game.bot.scripts.skills.FishBotScript
 import game.bot.scripts.skills.FishBotScript.Companion.FishData
+import game.bot.scripts.skills.IdentifyHerbBotScript
+import game.bot.scripts.skills.IdentifyHerbBotScript.Companion.HerbData
+import game.bot.scripts.skills.GrindIngredientBotScript
+import game.bot.scripts.skills.GrindIngredientBotScript.Companion.IngredientData
 import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
+import game.bot.scripts.skills.MakeBattlestaffBotScript
+import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
+import game.bot.scripts.skills.MakeUnfPotionBotScript
+import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -32,12 +44,22 @@ import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
+import game.bot.scripts.skills.StringJewelleryBotScript
+import game.bot.scripts.MakeCrystalKeyBotScript
+import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
+import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
 import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
- * Register all scripts.
+ * Registers bot-script constructors once during server launch.
+ *
+ * Each callback reconstructs its script from the corresponding saved data type when the script stack is loaded.
+ * Activity selection remains in the existing coordinators and factories; these callbacks restore saved sessions.
+ * Recipe-specific scripts such as gem cutting retain their recipe and retry counters through their data classes.
+ *
+ * @author lare96
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
@@ -52,7 +74,15 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<CutGemData>(CutGemBotScript::class) { bot, data -> CutGemBotScript(bot, data) }
+    scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
+    scriptManager.addScript<HerbData>(IdentifyHerbBotScript::class) { bot, data -> IdentifyHerbBotScript(bot, data) }
+    scriptManager.addScript<IngredientData>(GrindIngredientBotScript::class) { bot, data -> GrindIngredientBotScript(bot, data) }
+    scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
+    scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
+    scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
+    scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }

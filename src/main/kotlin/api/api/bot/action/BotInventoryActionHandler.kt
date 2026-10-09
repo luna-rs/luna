@@ -2,14 +2,15 @@ package api.bot.action
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
-import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
 import game.player.item.consume.food.Food
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
@@ -76,7 +77,9 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
 
-            if (bot.navigator.navigate(target, true).await() != NavigationResult.NO_VALID_PATH) {
+            val navigationResult = bot.navigator.navigate(target, true).await()
+            if (navigationResult == NavigationResult.REACHED &&
+                world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)) {
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index)
                 return true
@@ -303,7 +306,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                     repeat(10) {
                         bot.output.sendInventoryItemClick(1, index, item.id)
                         bot.naturalDelay()
-                        if(bot.healthPercent > lastHealth || bot.healthPercent == 100) {
+                        if (bot.healthPercent > lastHealth || bot.healthPercent == 100) {
                             return true
                         }
                     }

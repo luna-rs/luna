@@ -44,11 +44,19 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
                 // Dexterous bots focus on efficient willow training.
                 trees += Tree.WILLOW
                 zones += SubZone.DRAYNOR_MAIN
+                zones += SubZone.WEST_DRAYNOR_WILLOWS
+                zones += SubZone.CATHERBY_BEACH_WILLOWS
+                zones += SubZone.SOUTH_ARDOUGNE_WILLOWS
             } else if (!bot.personality.isDumb) {
-                // Non-dumb bots use stronger training trees at Seers' Village.
+                // Non-dumb bots use stronger training trees around Seers' Village, Ardougne, and Yanille.
                 trees += Tree.MAPLE
                 trees += Tree.WILLOW
                 zones += SubZone.SEERS_VILLAGE_MAIN
+                zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
+                willowZones(zones)
+                if (level >= Tree.MAPLE.level) {
+                    mapleZones(zones)
+                }
             } else {
                 // Dumb bots use any accessible tree type, regardless of efficiency.
                 for (tree in Tree.ALL.values) {
@@ -62,6 +70,12 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
                 zones += SubZone.SOUTH_SEERS_VILLAGE_YEWS
                 zones += SubZone.LUMBRIDGE_RIVER
                 zones += SubZone.SEERS_VILLAGE_MAIN
+                zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
+                zones += SubZone.WEST_DRAYNOR_WILLOWS
+                zones += SubZone.CATHERBY_BEACH_WILLOWS
+                willowZones(zones)
+                mapleZones(zones)
+                treeZones(zones)
             }
         } else {
             // Starter bots cut basic trees until better routes are unlocked.
@@ -72,6 +86,8 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             zones += SubZone.DRAYNOR_MAIN
             zones += SubZone.LUMBER_YARD_YEWS
             zones += SubZone.SOUTH_FALADOR_YEWS
+            zones += SubZone.BARBARIAN_VILLAGE
+            treeZones(zones)
         }
 
         trees.removeIf { level < it.level }
@@ -102,11 +118,19 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         if (level < Tree.WILLOW.level) {
             trees += Tree.NORMAL
             defaultZones()
+            treeZones(zones)
         } else if (level < Tree.YEW.level) {
             trees += Tree.WILLOW
             trees += Tree.MAPLE
 
             zones += SubZone.SEERS_VILLAGE_MAIN
+            zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
+            if (level >= Tree.MAPLE.level) {
+                mapleZones(zones)
+            } else {
+                zones += SubZone.CATHERBY_BEACH_WILLOWS
+                willowZones(zones)
+            }
 
             if (bot.personality.isDumb) {
                 trees += Tree.OAK
@@ -126,6 +150,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         } else {
             trees += Tree.MAGIC
             zones += SubZone.SORCERERS_TOWER_MAGICS
+            zones += SubZone.SOUTH_SEERS_VILLAGE_MAGICS
 
             if (bot.personality.isDumb) {
                 trees += Tree.WILLOW
@@ -138,5 +163,32 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         trees.removeIf { level < it.level }
         require(trees.isNotEmpty()) { "No tree types were selected." }
         return CutTreeBotScript(bot, trees, getDuration(bot), zones)
+    }
+
+    /**
+     * Adds the willow zones around Ardougne and Yanille.
+     */
+    private fun willowZones(zones: MutableList<SubZone>) {
+        zones += SubZone.SOUTH_ARDOUGNE_WILLOWS
+        zones += SubZone.NORTH_ARDOUGNE_WILLOWS
+        zones += SubZone.EAST_ARDOUGNE_WILLOWS
+        zones += SubZone.SOUTH_YANILLE_WILLOWS
+    }
+
+    /**
+     * Adds the maple zones that have no willows. Only add these for bots that can cut maples.
+     */
+    private fun mapleZones(zones: MutableList<SubZone>) {
+        zones += SubZone.NORTH_SEERS_VILLAGE_MAPLES
+        zones += SubZone.SOUTH_SORCERERS_TOWER_MAPLES
+    }
+
+    /**
+     * Adds the zones meant for normal and oak trees.
+     */
+    private fun treeZones(zones: MutableList<SubZone>) {
+        zones += SubZone.WEST_VARROCK_TREES
+        zones += SubZone.EAST_EDGEVILLE_TREES
+        zones += SubZone.NORTH_CATHERBY_TREES
     }
 }

@@ -28,4 +28,11 @@ public final class ArrangeItemMessageReader extends GameMessageReader<ArrangeIte
         return event.getFromIndex() > -1 && event.getToIndex() > -1 && event.getWidgetId() > 0 &&
                 (event.getInsertionMode() == 0 || event.getInsertionMode() == 1);
     }
+
+    @Override
+    public void handle(Player player, ArrangeItemEvent event) {
+        if (event.getWidgetId() == 3214) {
+            player.getOverlays().closeWindows(false);
+        }
+    }
 }
