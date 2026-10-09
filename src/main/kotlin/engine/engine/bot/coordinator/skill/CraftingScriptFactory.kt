@@ -11,9 +11,11 @@ import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CutGemBotScript
+import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.TanHideBotScript
 import game.skill.crafting.armorCrafting.HideArmor
+import game.skill.crafting.battlestaffCrafting.Battlestaff
 import game.skill.crafting.gemCutting.Gem
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.textileCrafting.Textile
@@ -23,8 +25,9 @@ import io.luna.util.RandomUtils.roll
 /**
  * Creates crafting scripts for bots.
  *
- * Training and profit selection first have a 25% chance to attempt precious-gem cutting when the bot owns a chisel
- * and an eligible uncut gem. Selection uses the inherited level/personality rules and excludes semi-precious gems.
+ * Training and profit selection first have a 25% chance to attempt precious-gem cutting or battlestaff assembly
+ * when the bot owns the required inputs and tools. Selection uses the inherited level/personality rules and
+ * excludes semi-precious gems. Battlestaff recipes require matching charged orbs rather than an orb-charging route.
  * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
  * Choosing a profit activity does not guarantee a market margin.
  *
@@ -54,7 +57,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             getProductionScript(bot, level, true)?.let { return it }
         }
         // TODO
-        //  battlestaff crafting
         //  glass making
         //  jewellery making
         //  pottery crafting
@@ -137,7 +139,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
     }
 
     /**
-     * Selects a precious-gem recipe for which the bot owns both a chisel and at least one uncut gem.
+     * Selects an owned precious-gem or elemental battlestaff recipe.
      *
      * Semi-precious recipes are excluded. Candidates pass their permanent level and owned-supply checks before
      * the inherited level/personality selector chooses one. All candidates share the same session duration and
@@ -145,15 +147,17 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      *
      * @param bot The bot whose inventory, bank, and personality determine eligibility and selection.
      * @param level The Crafting level supplied by the coordinator to the inherited recipe selector.
-     * @param training Whether the caller wants training; precious gems are eligible for either activity mode.
-     * @return An eligible gem-cutting script, or null so the caller can select its existing fallback.
+     * @param training Whether the caller wants training; both recipe groups are eligible for either activity mode.
+     * @return An eligible production script, or null so the caller can select its existing fallback.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
         val duration = getDuration(bot)
-        val candidates = Gem.entries.filter { !it.isSemiPrecious() }
-            .map { CutGemBotScript(bot, it, duration) }
-            .filter { it.isEligible() }
-            .map { it.requiredLevel to it }
+        val candidates = buildList<Pair<Int, InventoryBotScript>> {
+            addAll(Gem.entries.filter { !it.isSemiPrecious() }.map { CutGemBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Battlestaff.entries.map { MakeBattlestaffBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+        }
         return getBestActivity(bot, level, { it.first }, candidates)?.second
     }
 }

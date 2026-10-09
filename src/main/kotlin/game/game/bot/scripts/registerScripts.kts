@@ -24,6 +24,8 @@ import game.bot.scripts.skills.FishBotScript
 import game.bot.scripts.skills.FishBotScript.Companion.FishData
 import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
+import game.bot.scripts.skills.MakeBattlestaffBotScript
+import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -63,6 +65,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
     scriptManager.addScript<CutGemData>(CutGemBotScript::class) { bot, data -> CutGemBotScript(bot, data) }
+    scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
