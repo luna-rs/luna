@@ -8,6 +8,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
 import game.bot.scripts.skills.MakeDoughBotScript
+import game.bot.scripts.skills.CutFoodBotScript
 import game.obj.resource.fillable.WaterResource
 import game.skill.cooking.prepareFood.IncompleteFood
 import api.predef.rand
@@ -26,7 +27,8 @@ import api.predef.rand
  * - All other bots use Rogues' Den, which is the more efficient cooking spot.
  *
  * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
- * These recipes grant no experience. Ordinary food cooking remains the fallback activity.
+ * Owned pineapples can also be cut into rings when a knife is available. These recipes grant no experience.
+ * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96
  */
@@ -57,7 +59,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        if (rand(0.25)) getPreparationScript(bot, level)?.let { return it }
+        if (rand(0.25)) getNonTrainingPreparation(bot, level)?.let { return it }
         return getTrainingScript(bot, level, zones)
     }
 
@@ -67,5 +69,13 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
             WaterResource.FILLED_IDS.map { MakeDoughBotScript(bot, food, it, getDuration(bot)) }
         }.filter { it.isEligible() || it.canPrepareWater() }
         return getBestActivity(bot, level, { it.requiredLevel }, options)
+    }
+
+    /** Chooses between eligible owned dough preparation and pineapple cutting without selecting zero-XP training. */
+    internal fun getNonTrainingPreparation(bot: Bot, level: Int): BotScript? {
+        val cutting = getBestActivity(bot, level, { it.requiredLevel },
+            CutFoodBotScript.RECIPES.keys.map { CutFoodBotScript(bot, it, getDuration(bot)) }
+                .filter { it.isEligible() })
+        return listOfNotNull(getPreparationScript(bot, level), cutting).randomOrNull()
     }
 }

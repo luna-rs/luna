@@ -31,6 +31,8 @@ import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeSoftClayBotScript
 import game.bot.scripts.skills.MakeDoughBotScript
+import game.bot.scripts.skills.CutFoodBotScript
+import game.bot.scripts.skills.CutFoodBotScript.Companion.CutFoodData
 import game.bot.scripts.skills.MakeDoughBotScript.Companion.DoughData
 import game.bot.scripts.skills.MakeSoftClayBotScript.Companion.SoftClayData
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
@@ -91,6 +93,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
     scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
     scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
+    scriptManager.addScript<CutFoodData>(CutFoodBotScript::class) { bot, data -> CutFoodBotScript(bot, data) }
     scriptManager.addScript<DoughData>(MakeDoughBotScript::class) { bot, data -> MakeDoughBotScript(bot, data) }
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
