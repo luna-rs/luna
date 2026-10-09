@@ -12,6 +12,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.obj.resource.fillable.WaterResource
+import game.bot.scripts.FillWaterBotScript
 import game.skill.crafting.potteryCrafting.MakeSoftClayActionItem
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
@@ -29,7 +30,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * containers. It awards no experience and has no skill requirement. Selection is limited to the Crafting
  * factory's non-training mode as pottery preparation; no sale price or market margin is assumed.
  *
- * This script uses existing filled containers rather than refilling them, mining clay, or making pottery.
+ * If water runs out while clay and matching empty containers remain, a bounded [FillWaterBotScript] prerequisite
+ * refills enough for the next clay batch. Activity selection can then choose preparation using the new stock.
+ * This script does not mine clay or make pottery.
  * Missing startup inputs raise total wanted-stock targets to at least 1,000 before stopping. Three consecutive
  * interactions without clay consumption or unresolved bank requests end the session. Snapshots retain the
  * water-container id, duration, zones, and retry budgets, while live inventory and safety are checked again.
@@ -110,6 +113,23 @@ class MakeSoftClayBotScript(
     /** Whether at least one clay and configured filled water container are owned across inventory and bank. */
     fun isEligible(): Boolean = bot.ownsProductionSupplies(materials)
 
+    /** Whether owned clay and matching empties can satisfy missing water through the refill prerequisite. */
+    fun canPrepareWater(): Boolean = !bot.ownsProductionSupplies(listOf(Item(water))) &&
+        bot.ownsProductionSupplies(listOf(Item(CLAY), Item(WaterResource.FILLABLES.inverse().getValue(water))))
+
+    /** Queues one bounded refill only when both clay and matching empties remain; no acquisition loop is created. */
+    private fun queueWaterPreparation(): Boolean {
+        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
+            bot.actions.size(ActionType.STRONG) > 0) return false
+        if (!canPrepareWater()) return false
+        val empty = WaterResource.FILLABLES.inverse().getValue(water)
+        val clayStock = bot.bank.computeAmountForId(CLAY).toLong() + bot.inventory.computeAmountForId(CLAY)
+        val emptyStock = bot.bank.computeAmountForId(empty).toLong() + bot.inventory.computeAmountForId(empty)
+        bot.scriptStack.softPushHead(FillWaterBotScript(bot, empty, minOf(14L, clayStock, emptyStock).toInt(), duration))
+        stop()
+        return true
+    }
+
     /** Returns up to fourteen balanced banked input pairs, or an empty batch when either input is absent. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
@@ -121,6 +141,7 @@ class MakeSoftClayBotScript(
             return emptyList()
         }
         if (!bot.ownsProductionSupplies(materials)) {
+            if (queueWaterPreparation()) return emptyList()
             val missing = materials.filter {
                 bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
             }.map { it.id }
@@ -134,7 +155,7 @@ class MakeSoftClayBotScript(
     }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty() && !queueWaterPreparation()) stop()
     }
 
     override suspend fun withdrawBankItems(items: List<Item>): Boolean {

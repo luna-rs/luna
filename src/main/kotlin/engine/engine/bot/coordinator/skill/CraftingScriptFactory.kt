@@ -167,7 +167,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
-                    .filter { it.isEligible() }.map { it.requiredLevel to it })
+                    .filter { it.isEligible() || it.canPrepareWater() }.map { it.requiredLevel to it })
             }
         }
         return getBestActivity(bot, level, { it.first }, candidates)?.second

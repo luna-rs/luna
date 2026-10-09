@@ -48,6 +48,10 @@ import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
 import game.bot.scripts.MakeCrystalKeyBotScript
+import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.OpenCrystalChestBotScript
+import game.bot.scripts.OpenCrystalChestBotScript.Companion.ChestData
+import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
 import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
 import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
@@ -84,6 +88,8 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
     scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
+    scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
+    scriptManager.addScript<ChestData>(OpenCrystalChestBotScript::class) { bot, data -> OpenCrystalChestBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
