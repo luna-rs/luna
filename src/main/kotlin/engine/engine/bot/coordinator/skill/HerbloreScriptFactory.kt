@@ -6,6 +6,8 @@ import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.IdentifyHerbBotScript
+import game.bot.scripts.skills.GrindIngredientBotScript
+import game.skill.herblore.grindIngredient.Ingredient
 import game.skill.herblore.identifyHerb.Herb
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.SkillSet
@@ -13,9 +15,10 @@ import io.luna.game.model.mob.SkillSet
 /**
  * Creates herb-identification sessions from the bot's owned unidentified herbs.
  *
- * Training and profit modes currently share the same recipes. Candidates require their permanent Herblore
- * level and at least one unidentified herb in inventory or bank, then use the inherited level/personality
- * selector. Identification converts owned stock; selecting profit mode does not guarantee a market margin.
+ * Training selects herb identification. Profit mode also considers ingredient grinding when the bot owns
+ * a pestle and mortar and an unprocessed ingredient. Candidates require their permanent level and supplies
+ * in inventory or bank, then use the inherited level/personality selector. Grinding awards no experience;
+ * selecting a profit activity does not guarantee a market margin.
  *
  * Before either mode checks recipes or supplies, bots below permanent level three receive only the experience
  * needed to reach that level. This supplies the initial Herblore unlock while bot questing is unavailable.
@@ -66,20 +69,24 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     }
 
     /**
-     * Selects an owned herb recipe with the inherited level/personality rules and session duration.
+     * Selects owned herb identification or profit-only grinding with inherited level/personality rules.
      *
      * Scripts use their default processing zones and recheck current level and safety during execution.
      *
      * @param bot The bot whose stock and personality determine eligibility and selection.
      * @param level The Herblore level supplied by the coordinator to the inherited recipe selector.
-     * @param training Whether the caller wants training; identification is eligible in either mode.
-     * @return An eligible identification script, or null when no usable owned herb is available.
+     * @param training Whether to exclude grinding, which prepares supplies without awarding experience.
+     * @return An eligible script, or null when no usable owned recipe is available in the requested mode.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
         val duration = getDuration(bot)
         val candidates = buildList<Pair<Int, InventoryBotScript>> {
             addAll(Herb.entries.map { IdentifyHerbBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
+            if (!training) {
+                addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
+                    .filter { it.isEligible() }.map { it.requiredLevel to it })
+            }
         }
         return getBestActivity(bot, level, { it.first }, candidates)?.second
     }
