@@ -21,7 +21,8 @@ open class TeleportAction(plr: Player,
                           val xp: Double = 0.0,
                           val destination: Position,
                           val style: TeleportSequence,
-                          val requirements: List<SpellRequirement> = emptyList()) : LockedAction(plr) {
+                          val requirements: List<SpellRequirement> = emptyList(),
+                          val maxWildernessLevel: Int = 20) : LockedAction(plr) {
 
     companion object {
 
@@ -47,6 +48,11 @@ open class TeleportAction(plr: Player,
     }
 
     override fun onLock() {
+        if (mob.status.isTeleBlocked()) {
+            mob.sendMessage("A magical force stops you from teleporting.")
+            complete()
+            return
+        }
         if (!mob.controllers.checkTeleport(this)) {
             complete()
             return

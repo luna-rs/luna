@@ -249,15 +249,18 @@ object Magic {
      *
      * @param destination The target destination.
      * @param style The teleport sequence to use. Defaults to the style of the player's spellbook.
+     * @param maxWildernessLevel The deepest Wilderness level this teleport works from.
      * @param onLand A callback invoked on the tick the player lands.
      * @param onTeleport A callback invoked once the teleport has passed every check.
      */
     fun Player.teleport(destination: Position,
                         style: TeleportSequence? = null,
+                        maxWildernessLevel: Int = 20,
                         onLand: () -> Unit = {},
                         onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style =
-            style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR)) {
+            style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR),
+                                             maxWildernessLevel = maxWildernessLevel) {
             override fun onTeleport() {
                 onTeleport()
             }
