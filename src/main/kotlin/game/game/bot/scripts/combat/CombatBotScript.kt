@@ -1,6 +1,7 @@
 package game.bot.scripts.combat
 
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.DynamicBotScript
 import api.combat.specialAttack.SpecialAttackHandler
@@ -17,6 +18,7 @@ import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Handles active combat behaviour for a bot.
@@ -28,9 +30,13 @@ import kotlin.time.Duration.Companion.seconds
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
  * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
+ * @param pkSession Optional parent enforcing a bounded melee PK session and valid Wilderness targets.
  * @author lare96
  */
-class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
+class CombatBotScript @JvmOverloads constructor(bot: Bot,
+                                               private var focus: Mob,
+                                               private val initialState: InitialState = InitialState.ATTACK,
+                                               private val pkSession: PkBotScript? = null) :
     DynamicBotScript(bot) {
 
     /**
@@ -69,7 +75,20 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     override suspend fun init(resumed: Boolean): Boolean {
         when (initialState) {
             InitialState.ATTACK -> {
-                bot.combat.attack(focus)
+                if (pkSession != null) {
+                    if (!canContinuePk()) return true
+                    val engaged = withTimeoutOrNull(15_000) {
+                        handler.interactions.interact(1, focus) && waitFor(5.seconds) {
+                            bot.combat.target === focus || bot.combat.lastCombatWith === focus && bot.combat.inCombat()
+                        }
+                    } == true
+                    if (!engaged || !canContinuePk()) {
+                        pkSession.failedEngagement()
+                        return true
+                    }
+                } else {
+                    bot.combat.attack(focus)
+                }
                 bot.speechStack.setDisableGeneral(true)
                 delay(600.milliseconds)
 
@@ -93,9 +112,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun run(): Boolean {
+        if (pkSession != null && !canContinuePk()) return true
         targetEnemy()
         delay(600.milliseconds, 1200.milliseconds)
 
+        if (pkSession != null && !canContinuePk()) return true
         if (!bot.combat.inCombat()) {
             return true
         }
@@ -111,12 +132,25 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun finish() {
+        if (pkSession != null && !isPaused()) {
+            bot.combat.target = null
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
     }
 
     override suspend fun completed() {
         restoreWeapons()
+    }
+
+    override fun paused() {
+        if (pkSession != null) {
+            bot.combat.target = null
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
     }
 
     /**
@@ -126,6 +160,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      * is dead, unreachable, out of view, or no longer valid for multi-combat, the bot looks for nearby loot instead.
      */
     private suspend fun targetEnemy() {
+        if (pkSession != null) {
+            if (canContinuePk()) output.sendPlayerInteraction(1, focus as Player)
+            return
+        }
         if (focus.isAlive && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
             if (focus is Player && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
@@ -233,6 +271,8 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      * the previous weapon and shield are re-equipped.
      */
     private suspend fun useSpecialAttack() {
+        // PK sessions currently support the validated melee loadout, without an unvalidated weapon swap.
+        if (pkSession != null) return
         val weaponId = bot.equipment.weapon?.id
 
         if (specialWeapon == null) {
@@ -393,4 +433,9 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             else -> false
         }
     }
+
+    /** Rechecks the parent deadline, supplies and target before every PK attack cycle. */
+    private fun canContinuePk(): Boolean = pkSession?.let {
+        it.canHunt() && focus is Player && it.isValidTarget(focus as Player)
+    } ?: true
 }

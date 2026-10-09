@@ -2,6 +2,8 @@ package game.bot.scripts
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
+import game.bot.scripts.combat.PkBotScript
+import game.bot.scripts.combat.PkBotScript.Companion.PkData
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
@@ -71,6 +73,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<PkData>(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
     scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }
     scriptManager.addScript<MineData>(MineBotScript::class) { bot, data -> MineBotScript(bot, data) }
     scriptManager.addScript<PickpocketData>(PickpocketBotScript::class) { bot, data -> PickpocketBotScript(bot, data) }

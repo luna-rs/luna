@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
 import engine.bot.coordinator.GeneralActivityCoordinator;
 import engine.bot.coordinator.MerchantingCoordinator;
+import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
@@ -43,7 +44,7 @@ public enum BotActivity {
     /**
      * Player-versus-player combat, including wilderness fights and PK strategies.
      */
-    PKING(new SkillingCoordinator(true)),
+    PKING(PkingCoordinator.INSTANCE),
 
     /**
      * Economic interactions, such as trading with other bots or players.

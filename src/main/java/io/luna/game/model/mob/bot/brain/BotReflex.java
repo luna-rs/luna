@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.ReflexBotScript;
 import game.bot.scripts.combat.CombatBotScript;
+import game.bot.scripts.combat.PkBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.PlayerAppearance;
@@ -97,7 +98,9 @@ public final class BotReflex {
         }
 
         // Automatically respond to combat if we aren't already.
-        if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+        if (!disableCombatReflex && bot.getCombat().inCombat() &&
+                !(bot.getScriptStack().current() instanceof CombatBotScript) &&
+                !(bot.getScriptStack().current() instanceof PkBotScript)) {
             Mob focus = bot.getCombat().getTarget();
             if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
                 focus = bot.getCombat().getLastAttackReceived().getAttacker();

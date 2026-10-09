@@ -1,33 +1,36 @@
 package game.bot.scripts.combat
 
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.waitFor
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
-import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
+import game.player.item.consume.food.Food
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
-import io.luna.game.model.mob.Npc
+import io.luna.game.model.item.Equipment
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.combat.Weapon
+import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.DurationUnit
 
 /**
  * Wilderness PK bot behaviour script.
  *
- * This script sends a bot into the Wilderness, moves it through configured PK hotspots, searches for valid player
- * targets, and reacts to combat encounters. Once the configured [duration] expires, the bot attempts to flee the
- * Wilderness and finish safely.
+ * This script prepares owned food for an already equipped melee bot, enters the lower Wilderness and searches for
+ * valid player targets. The deadline survives combat pauses. Expiry, missing supplies and repeated failures trigger
+ * bounded walking escape attempts; no travel fallback bypasses normal Wilderness restrictions.
  *
  * Movement is currently based on manually verified anchor points. Future versions should move more of this into the
  * zone/area system so bots can recognize caves, gates, one-way routes, high-risk paths, and special escape cases.
@@ -37,7 +40,7 @@ import kotlin.time.DurationUnit
  * @author lare96
  */
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
-    // TODO Load in registerscripts
+
     // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
     //  distance. Then it should cache that bank and use that as the home bank for PKing activities.
     // TODO@0.5.0 Anchor points for entering the wild from those banks (or use LOW_LEVEL_ANCHOR_POINTS sorted by distance?).
@@ -87,14 +90,47 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             Position(3143, 3677, 0)
         )
 
+        internal const val MAX_SESSION_MS = 30 * 60 * 1000L
+        private const val START_FOOD = 8
+        private const val MINIMUM_HEAL = 10
+        private const val MAX_ROUTE_FAILURES = 3
+        private const val MAX_EMPTY_SEARCHES = 60
+        private const val MAX_ESCAPE_ATTEMPTS = 3
+
+        /** Eligible profiles already wear melee gear and own enough food for a bounded session. */
+        internal fun isEligible(bot: Bot): Boolean = bot.isAlive && bot.state == EntityState.ACTIVE &&
+            bot.position.z == 0 && !bot.inWilderness() && !bot.combat.isDisabled && hasMeleeEquipment(bot) &&
+            foodCount(bot.inventory) + foodCount(bot.bank) >= START_FOOD
+
+        private fun hasMeleeEquipment(bot: Bot): Boolean = bot.equipment.weapon != null &&
+            bot.equipment[Equipment.CHEST] != null && bot.equipment[Equipment.LEGS] != null &&
+            !bot.combat.weapon.isRanged && bot.combat.weapon.type != Weapon.STAFF &&
+            !bot.combat.magic.isAutocasting
+
+        private fun foodCount(items: Iterable<Item?>): Long = items.sumOf { item ->
+            if (item != null && (Food.ID_TO_FOOD[item.id]?.heal ?: 0) >= MINIMUM_HEAL) item.amount.toLong() else 0L
+        }
+
         class PkData : BotScriptData() {
             var duration = Duration.ZERO
+            var returning = false
+            var routeFailures = 0
+            var emptySearches = 0
+            var escapeAttempts = 0
             override fun load(data: JsonObject) {
-                duration = data.get("duration").asLong.milliseconds
+                duration = (data.get("duration")?.asLong ?: 0).coerceIn(0, MAX_SESSION_MS).milliseconds
+                returning = data.get("returning")?.asBoolean ?: false
+                routeFailures = data.get("routeFailures")?.asInt ?: 0
+                emptySearches = data.get("emptySearches")?.asInt ?: 0
+                escapeAttempts = data.get("escapeAttempts")?.asInt ?: 0
             }
 
             override fun save(data: JsonObject) {
-                data.addProperty("duration", duration.inWholeMilliseconds)
+                data.addProperty("duration", duration.inWholeMilliseconds.coerceIn(0, MAX_SESSION_MS))
+                data.addProperty("returning", returning)
+                data.addProperty("routeFailures", routeFailures)
+                data.addProperty("emptySearches", emptySearches)
+                data.addProperty("escapeAttempts", escapeAttempts)
             }
         }
     }
@@ -350,239 +386,176 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         }
     }
 
-    /**
-     * Absolute script expiry time in nanoseconds.
-     *
-     * Once this time is reached, the bot stops hunting and attempts to flee the Wilderness.
-     */
-    var expireAt: Long = System.currentTimeMillis() + duration.toLong(DurationUnit.MILLISECONDS)
+    /** Absolute session deadline in milliseconds; combat pauses do not renew it. */
+    var expireAt: Long = System.currentTimeMillis() + duration.inWholeMilliseconds.coerceIn(0, MAX_SESSION_MS)
+
+    private var returning = false
+    private var routeFailures = 0
+    private var emptySearches = 0
+    private var escapeAttempts = 0
+
+    constructor(bot: Bot, data: PkData) : this(bot, data.duration) {
+        returning = data.returning
+        routeFailures = data.routeFailures.coerceIn(0, MAX_ROUTE_FAILURES)
+        emptySearches = data.emptySearches.coerceIn(0, MAX_EMPTY_SEARCHES)
+        escapeAttempts = data.escapeAttempts.coerceIn(0, MAX_ESCAPE_ATTEMPTS)
+    }
 
     override suspend fun init(resumed: Boolean): Boolean {
-        // todo@0.5.0 Make sure we go to the bank first and prepare items (resetItem())
-        return false
+        if (!bot.isAlive || bot.state != EntityState.ACTIVE) return true
+        if (isExpired() || returning) {
+            returning = true
+            return false
+        }
+        // A restored or interrupted session already in the Wilderness must not bank through a travel fallback.
+        if (bot.inWilderness()) {
+            returning = !hasCombatSupplies()
+            return false
+        }
+        if (!isEligible(bot) || bot.combat.inCombat()) return true
+        val prepared = withTimeoutOrNull(120_000) { prepareSupplies() } == true
+        if (!prepared) bot.log("PK preparation failed or timed out; ending session.")
+        return !prepared
     }
 
     override fun paused() {
-        // todo@0.5.0 Return to ::home or last bank.
+        bot.navigator.cancel()
+        bot.walking.clear()
+    }
+
+    override suspend fun finish() {
+        // Combat belongs to the child script after a PK pause, not to this cleanup hook.
+        if (!isPaused()) {
+            bot.navigator.cancel()
+            bot.walking.clear()
+            bot.combat.target = null
+        }
     }
 
     override suspend fun run(): Boolean {
-        if (System.currentTimeMillis() > expireAt) {
-            bot.log("Script expired. Travelling back home.")
-
-            val finished = handler.travelTo(SubZone.HOME)
-            bot.log("travelHome finished=$finished, inWilderness=${bot.inWilderness()}")
-
-            delay(1.seconds, 3.seconds)
-            return finished
-        }
-
-        if (checkCombat()) {
-            bot.log("checkCombat handled current state.")
-            delay(1.seconds, 3.seconds)
-            return false
-        }
-
-        if (!resetItems()) {
-            bot.log("resetItems returned false.")
-            delay(1.seconds, 3.seconds)
-            return false
-        }
-
+        if (!bot.isAlive || bot.state != EntityState.ACTIVE) return true
+        if (isExpired() || !hasCombatSupplies() || bot.healthPercent < 30) returning = true
+        if (returning) return returnHome()
+        if (checkCombat()) return false
         if (!enterWild()) {
-            bot.log("enterWild returned false.")
-            delay(1.seconds, 3.seconds)
+            routeFailures++
+            if (routeFailures >= MAX_ROUTE_FAILURES) returning = true
+            delay(3.seconds)
             return false
         }
-
-        travelToNewArea()
-
         if (!searchAndAttack()) {
-            bot.log("No target found. Delaying before retry.")
-            delay(1.seconds, 3.seconds)
-            return false
+            emptySearches++
+            if (emptySearches >= MAX_EMPTY_SEARCHES) returning = true
+            delay(3.seconds)
         }
-
-        bot.log("Target found. Combat script should now be active.")
-        return bot.combat.inCombat()
+        // pushHead cancels this coroutine; the parent must remain resumable after the fight.
+        return false
     }
 
-    override fun snapshot(): PkData {
-        val remaining = expireAt - System.currentTimeMillis()
-        val data = PkData()
-        data.duration = if (remaining < 1) Duration.ZERO else remaining.nanoseconds
-        return data
+    override fun snapshot(): PkData = PkData().also {
+        it.duration = (expireAt - System.currentTimeMillis()).coerceIn(0, MAX_SESSION_MS).milliseconds
+        it.returning = returning
+        it.routeFailures = routeFailures
+        it.emptySearches = emptySearches
+        it.escapeAttempts = escapeAttempts
     }
 
-    /**
-     * Handles the bot's current combat state.
-     *
-     * If the bot is attacked outside the Wilderness, it immediately teleports home. Wilderness NPC combat may cause the
-     * bot to flee depending on NPC strength and randomness. Wilderness player combat pushes a dedicated
-     * [CombatBotScript] so the bot can fight back using combat-specific behaviour.
-     *
-     * @return `true` if combat state was handled this tick, otherwise `false`.
-     */
+    /** Whether this session may still initiate or continue a fight. */
+    internal fun canHunt(): Boolean = !returning && !isExpired() && bot.isAlive &&
+        bot.state == EntityState.ACTIVE && hasCombatSupplies() && bot.healthPercent >= 30
+
+    internal fun isExpired(): Boolean = System.currentTimeMillis() >= expireAt
+
+    /** Uses the existing controller and single/multi-combat rules in addition to Wilderness membership. */
+    internal fun isValidTarget(other: Player): Boolean = other !== bot && bot.inWilderness() &&
+        other.inWilderness() && other.state == EntityState.ACTIVE && other.isAlive &&
+        other.position.z == bot.position.z && other.isViewableFrom(bot) &&
+        bot.combat.isAttackable && other.combat.isAttackable &&
+        bot.controllers.checkCombat(other) && bot.combat.checkMultiCombat(other)
+
+    /** Defends against a valid player, or leaves when the current encounter is unsuitable for this PK session. */
     suspend fun checkCombat(): Boolean {
+        if (!bot.combat.inCombat()) return false
         val attacker = bot.combat.lastCombatWith
-
-        if (bot.combat.inCombat() && attacker != null) {
-            bot.log(
-                "In combat. attacker=${attacker.javaClass.simpleName}, " +
-                        "inWilderness=${bot.inWilderness()}, attacker=$attacker"
-            )
-
-            if (!bot.inWilderness()) {
-                bot.log("Bot is in combat outside wilderness. Sending home command.")
-                output.sendCommand("home")
-                return true
-            } else if (attacker is Npc) {
-                val shouldFlee =
-                    attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3) // TODO@1.0 Base on intelligence.
-                bot.log(
-                    "Npc attacker=${attacker.id}, npcLevel=${attacker.def().combatLevel}, " +
-                            "botLevel=${bot.combatLevel}, shouldFlee=$shouldFlee"
-                )
-
-                if (shouldFlee) {
-                    bot.log("Fleeing NPC combat.")
-                    handler.combat.fleeCombat()
-                } else {
-                    bot.log("NPC attacker detected, but bot chose not to flee this tick.")
-                    bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
-                }
-
-                return true
-            } else if (attacker is Player) {
-                bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
-                bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
-                return true
-            }
+        if (attacker is Player && canHunt() && isValidTarget(attacker)) {
+            bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
+        } else {
+            returning = true
         }
-
-        return false
+        return true
     }
 
-    /**
-     * Searches nearby viewable players and attacks the first suitable target.
-     *
-     * Candidate targets must be alive, active, and valid according to multi-combat rules. If multiple candidates are
-     * found, the bot may sort them by distance or health to create less predictable target selection.
-     *
-     * @return `true` if a target was selected and attacked, otherwise `false`.
-     */
+    /** Queues one combat child; actual attacks use the ordinary player interaction packet. */
     fun searchAndAttack(): Boolean {
-
-        /**
-         * Checks whether [other] is a valid target candidate for this bot.
-         */
-        fun check(other: Player): Boolean {
-            return other.isAlive &&
-                    bot.combat.checkMultiCombat(other) &&
-                    other.state == EntityState.ACTIVE
-        }
-
-        if (bot.combat.inCombat()) {
-            bot.log("Skipping target search because bot is already in combat.")
-            return false
-        }
-
-        if (!bot.inWilderness()) {
-            bot.log("Skipping target search because bot is not in wilderness.")
-            return false
-        }
-
-        val targets = ArrayList<Player>()
-        for (other in world.locator.findViewablePlayers(bot)) {
-            if (other != bot && check(other)) {
-                targets += other
-            }
-        }
-
-        bot.log("Found ${targets.size} candidate targets in view.")
-
-        if (targets.size > 1) {
-            if (rand(1 of 3)) {
-                bot.log("Sorting candidate targets by distance.")
-                targets.sortWith(LocatableDistanceComparator(bot))
-            } else if (rand(1 of 4)) {
-                bot.log("Sorting candidate targets by health percent.")
-                targets.sortBy { it.healthPercent }
-            } else {
-                bot.log("Leaving candidate targets unsorted.")
-            }
-        }
-
-        for (other in targets) {
-            if (check(other)) {
-                bot.log("Selected target $other. Pushing CombatBotScript.")
-                bot.combat.attack(other)
-                bot.scriptStack.pushHead(CombatBotScript(bot, other))
-                return true
-            }
-        }
-
-        bot.log("No valid target selected after filtering.")
-        return false
-    }
-
-    /**
-     * Occasionally sends the bot to a random configured PK area.
-     *
-     * The bot only travels when it is in the Wilderness, not already navigating, not in combat, and has enough tolerance
-     * remaining to justify moving to another hotspot.
-     */
-    private suspend fun travelToNewArea() {
-        if (!bot.combat.inCombat() &&
-            bot.inWilderness() &&
-            !bot.navigator.isActive &&
-            bot.tolerance.duration.toMinutes() > 10
-        ) {
-            val area = PkArea.ALL.random()
-            val anchor = area.anchors.random()
-
-            bot.log("Travelling to new area ${area.name}, anchor=$anchor")
-            bot.navigator.navigate(anchor, true).await()
-        }
-    }
-
-    /**
-     * Verifies and resets the bot's PK supplies.
-     *
-     * This is currently a placeholder. Future logic should verify food, runes, ammunition, teleport options, combat
-     * gear, and other resources required by the bot's combat profile.
-     *
-     * @return `true` if the bot is ready to continue PKing, otherwise `false`.
-     */
-    private fun resetItems(): Boolean {
-        bot.log("resetItems called.")
-        // TODO@0.5.0 Make sure we have food and proper combat equipment.
+        if (!canHunt() || bot.combat.inCombat() || !bot.inWilderness()) return false
+        val targets = world.locator.findViewablePlayers(bot).filter { isValidTarget(it) }
+            .sortedWith(LocatableDistanceComparator(bot))
+        val target = targets.firstOrNull() ?: return false
+        emptySearches = 0
+        bot.scriptStack.pushHead(CombatBotScript(bot, target, pkSession = this))
         return true
     }
 
-    /**
-     * Ensures the bot is inside the Wilderness before searching for targets.
-     *
-     * If the bot is outside the Wilderness, it navigates to a random low-level Wilderness anchor and verifies that the
-     * destination actually placed it inside the Wilderness.
-     *
-     * @return `true` if the bot is in the Wilderness, otherwise `false`.
-     */
+    /** Reports failed engagement so an unreachable target cannot restart combat indefinitely. */
+    internal fun failedEngagement() {
+        routeFailures++
+        if (routeFailures >= MAX_ROUTE_FAILURES) returning = true
+    }
+
+    private fun hasCombatSupplies(): Boolean = hasMeleeEquipment(bot) && foodCount(bot.inventory) >= 2
+
+    /** Deposits carried items and withdraws owned food without generating equipment or supplies. */
+    private suspend fun prepareSupplies(): Boolean {
+        if (!handler.banking.travelToBankDepositAll()) return false
+        handler.banking.clickBankingMode(false)
+        if (!handler.banking.withdrawAnyFood(START_FOOD, MINIMUM_HEAL, retry = false)) return false
+        return foodCount(bot.inventory) >= START_FOOD && hasMeleeEquipment(bot) &&
+            handler.widgets.clickCloseInterface()
+    }
+
     private suspend fun enterWild(): Boolean {
-        if (!bot.inWilderness()) {
-            val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
+        if (bot.inWilderness()) return true
+        val anchor = PkArea.LOW_LEVEL.anchors.filter { it.y >= 3520 }.minBy { it.computeLongestDistance(bot.position) }
+        bot.walking.isRunning = true
+        return navigate(anchor, interruptForCombat = true) && bot.inWilderness()
+    }
 
-            bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
-            bot.walking.isRunning = true
-            bot.navigator.navigate(anchor, true).await()
-
-            if (!bot.inWilderness()) {
-                bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
-                return false
-            }
-
-            bot.log("Bot entered wilderness successfully at position=${bot.position}")
+    /** Cancels both the navigation request and queued walking when a bounded route times out. */
+    private suspend fun navigate(position: Position, interruptForCombat: Boolean = false): Boolean {
+        val reached = withTimeoutOrNull(45_000) {
+            val pending = bot.navigator.navigate(position, true)
+            while (!pending.isDone && !(interruptForCombat && bot.combat.inCombat())) delay(600.milliseconds)
+            pending.isDone && !pending.isCancelled && pending.await() == NavigationResult.REACHED
+        } == true
+        if (!reached) {
+            bot.navigator.cancel()
+            bot.walking.clear()
         }
-        return true
+        return reached
+    }
+
+    /** Attempts real walking/teleport actions only; no forced travel fallback bypasses Wilderness restrictions. */
+    private suspend fun returnHome(): Boolean {
+        bot.combat.target = null
+        if (!bot.inWilderness()) return true
+        if (escapeAttempts >= MAX_ESCAPE_ATTEMPTS) {
+            bot.log("PK escape budget exhausted; ending session for normal reflex handling.")
+            return true
+        }
+        escapeAttempts++
+        val escaped = withTimeoutOrNull(60_000) {
+            // Walking out also handles teleblock; these anchors are south of the Wilderness boundary.
+            val outside = listOf(Position(3092, 3517), Position(3194, 3517), Position(3274, 3517))
+                .minBy { it.computeLongestDistance(bot.position) }
+            if (!navigate(outside) || bot.inWilderness()) return@withTimeoutOrNull false
+            output.sendCommand("home")
+            waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+        } == true
+        if (!escaped) {
+            bot.navigator.cancel()
+            bot.walking.clear()
+            delay(3.seconds)
+        }
+        return escaped || !bot.inWilderness()
     }
 }
