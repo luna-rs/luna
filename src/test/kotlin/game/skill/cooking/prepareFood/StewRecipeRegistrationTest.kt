@@ -38,6 +38,10 @@ class StewRecipeRegistrationTest {
                 assertTrue(food.baseIngredient to secondary in matcher.keys(), food.name)
                 assertTrue(secondary to food.baseIngredient in matcher.keys(), food.name)
             }
+            assertFalse(1980 to 1927 in matcher.keys())
+            assertFalse(1927 to 1980 in matcher.keys())
+            assertTrue(4242 to 1927 in matcher.keys())
+            assertTrue(1927 to 4242 in matcher.keys())
             for (food in listOf(IncompleteFood.UNCOOKED_STEW_FROM_POTATO, IncompleteFood.UNCOOKED_STEW_FROM_MEAT)) {
                 for (secondary in food.otherIngredients) for (reverse in listOf(false, true)) {
                     val bot = InventoryProductionFixtures.bot()

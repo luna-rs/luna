@@ -42,6 +42,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * retain the source bowl rather than returning an additional empty bowl.
  * Pouring a bowl of nettle tea into an empty cup requires level 20, returns the bowl, and awards the 52 XP
  * defined by the player preparation recipe. A full batch uses fourteen cups and fourteen bowls of tea.
+ * Adding milk to an existing cup of nettle tea also requires level 20, returns the empty bucket, and awards no XP.
+ * Empty cups cannot substitute for tea in this milk recipe.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
@@ -75,6 +77,7 @@ class AssembleFoodBotScript(
             IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.MILKY_NETTLE_TEA,
             IncompleteFood.CUP_OF_NETTLE_TEA,
+            IncompleteFood.CUP_OF_MILKY_NETTLE_TEA,
             IncompleteFood.NETTLE_WATER, IncompleteFood.INCOMPLETE_STEW_WITH_POTATO,
             IncompleteFood.INCOMPLETE_STEW_WITH_MEAT,
             IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_STEW_FROM_POTATO,

@@ -40,6 +40,7 @@ import api.predef.rand
  * first when the other ingredient is already available; training requires a complete XP-awarding input set.
  * Owned bowls of nettle tea and empty cups can be processed at level 20 for the existing recipe's 52 XP,
  * with the empty bowl returned. This recipe is eligible for training and non-training selection.
+ * Milk can be added to owned cups of nettle tea at level 20 as a non-training step, returning the empty bucket.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96

@@ -127,6 +127,7 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.MILKY_NETTLE_TEA to 1927,
                 IncompleteFood.NETTLE_WATER to 4241,
                 IncompleteFood.CUP_OF_NETTLE_TEA to 4239,
+                IncompleteFood.CUP_OF_MILKY_NETTLE_TEA to 1927,
                 IncompleteFood.INCOMPLETE_STEW_WITH_POTATO to 1942,
                 IncompleteFood.INCOMPLETE_STEW_WITH_MEAT to 2140,
                 IncompleteFood.INCOMPLETE_STEW_WITH_MEAT to 2142,
@@ -596,6 +597,55 @@ class AssembleFoodBotScriptTest {
         assertTrue(bot.inventory.contains(4239))
         assertFalse(bot.inventory.contains(4242))
         assertFalse(bot.inventory.contains(1923))
+        verify(bot.cooking, never()).addExperience(anyDouble())
+    }
+
+    @Test fun milkyTeaCupsRequireExistingTeaAndAreSelectedOnlyForNonTrainingAtLevel20() {
+        val food = IncompleteFood.CUP_OF_MILKY_NETTLE_TEA
+        assertEquals(4242, food.baseIngredient)
+        assertEquals(20, food.lvl)
+        assertEquals(0.0, food.exp)
+        assertEquals("Cup of tea", itemName(food.baseIngredient))
+        assertEquals("Cup of tea", itemName(food.id))
+        val bot = bot(19)
+        InventoryProductionFixtures.bank(bot, Item(4242, 100), Item(1927, 2))
+        val script = AssembleFoodBotScript(bot, food, 10.minutes)
+        assertFalse(script.isEligible())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 19))
+        `when`(bot.cooking.staticLevel).thenReturn(20)
+        val selected = CookingScriptFactory.getAssemblyScript(bot, 20)!!
+        assertEquals(food, selected.food)
+        assertEquals(listOf(Item(4242, 2), Item(1927, 2)), selected.bankBatch())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 20, training = true))
+        val json = JsonObject()
+        selected.snapshot().save(json)
+        val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+        assertEquals(food, restored.food)
+        assertEquals(1927, restored.secondary)
+        bot.bank.clear()
+        InventoryProductionFixtures.bank(bot, Item(1980, 100), Item(1927, 100))
+        assertFalse(script.isEligible())
+        assertNull(CookingScriptFactory.getAssemblyScript(bot, 20))
+        assertFalse(script.canPrepareWater())
+    }
+
+    @Test fun milkyTeaCupsRejectEmptyCupsAndLowLevelsWithoutConsumptionOrExperience() {
+        val food = IncompleteFood.CUP_OF_MILKY_NETTLE_TEA
+        val bot = bot(20)
+        InventoryProductionFixtures.inventory(bot, Item(1980), Item(1927))
+        InventoryProductionFixtures.execute(bot,
+            PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, 1927), 1))
+        assertTrue(bot.inventory.contains(1980))
+        assertTrue(bot.inventory.contains(1927))
+        assertFalse(bot.inventory.contains(4243))
+        assertFalse(bot.inventory.contains(1925))
+        InventoryProductionFixtures.inventory(bot, Item(4242))
+        `when`(bot.cooking.level).thenReturn(19)
+        InventoryProductionFixtures.execute(bot,
+            PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, 1927), 1))
+        assertTrue(bot.inventory.contains(4242))
+        assertTrue(bot.inventory.contains(1927))
+        assertFalse(bot.inventory.contains(4243))
         verify(bot.cooking, never()).addExperience(anyDouble())
     }
 }
