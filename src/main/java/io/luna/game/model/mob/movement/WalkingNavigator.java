@@ -122,7 +122,8 @@ public class WalkingNavigator {
      * @return The pending navigation result.
      */
     public CompletableFuture<NavigationResult> submit(NavigationRequest request) {
-        if (request.equals(active)) {
+        // A completed result describes an earlier attempt, not this retry's current reachability.
+        if (isActive() && request.equals(active)) {
             return active.getPending();
         }
         if (isActive()) {
