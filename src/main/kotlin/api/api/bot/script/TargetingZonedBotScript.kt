@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
+import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
 import api.predef.*
@@ -11,8 +12,13 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.Region
+import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.movement.NavigationRequest
+import io.luna.game.model.mob.movement.PathfinderType
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A zone-based bot script that searches for, selects, and maintains focus on a target entity.
@@ -77,6 +83,9 @@ abstract class TargetingZonedBotScript<E : Entity>(
 
     /** Maximum time spent searching without selecting a target; opt-in for each script. */
     protected open val targetSearchTimeout: Duration = Duration.INFINITE
+
+    /** Maximum discovery travel before abandoning a distant Mob candidate. */
+    protected open val targetApproachTimeout: Duration = 30.seconds
 
     /** Monotonic clock, overridable for deterministic recovery tests. */
     protected open fun targetSearchTimeNanos(): Long = System.nanoTime()
@@ -185,6 +194,17 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 if (target.state != EntityState.ACTIVE || !onAssignFocus(target)) {
                     continue
                 }
+                val needsApproach = target is Mob && !bot.position.isViewable(target.position)
+                if (!approachTarget(target)) {
+                    continue
+                }
+                // Eligibility can change during travel (combat restrictions, inventory, etc.).
+                if (needsApproach && !onAssignFocus(target)) {
+                    continue
+                }
+                if (forceBanking) {
+                    return true
+                }
                 val option = interactionOption(target) ?: continue
                 if (!handler.interactions.interact(option, target)) {
                     bot.log("Failed to interact with target ${describeTarget(target)} using option $option.")
@@ -234,6 +254,57 @@ abstract class TargetingZonedBotScript<E : Entity>(
 
         onExecuteInZone(false)
         return true
+    }
+
+    /**
+     * Approaches a newly discovered Mob's fixed location until it becomes visible, then leaves normal Mob
+     * navigation to the interaction handler. Objects retain their existing interaction path. This does not
+     * weaken NavigationAction's dead/out-of-view Mob guard or continuously chase an unseen moving target.
+     */
+    protected suspend fun approachTarget(target: E): Boolean {
+        if (target.state != EntityState.ACTIVE) return false
+        if (target !is Mob) return true
+        if (!target.isAlive) return false
+        if (bot.position.isViewable(target.position)) return true
+
+        val remainingSearch = searchStartedAt?.let {
+            targetSearchTimeout - (targetSearchTimeNanos() - it).nanoseconds
+        } ?: targetSearchTimeout
+        val timeout = minOf(targetApproachTimeout, remainingSearch)
+        if (timeout <= Duration.ZERO || forceBanking || bot.navigator.isActive) return false
+
+        val destination = target.position
+        val pending = bot.navigator.submit(NavigationRequest.builder(bot)
+            .async(true)
+            .continuous(false)
+            .policy(InteractionPolicy.STANDARD_SIZE)
+            .pathfinder(PathfinderType.BOT)
+            .target(destination)
+            .build())
+        try {
+            waitFor(timeout) {
+                pending.isDone || bot.navigator.currentPending !== pending || forceBanking ||
+                    !target.isAlive || target.state != EntityState.ACTIVE || target.position != destination ||
+                    bot.position.isViewable(target.position) ||
+                    (searchStartedAt != null &&
+                        (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds >= targetSearchTimeout)
+            }
+            // Completed requests disappear from currentPending; a finished approach can still reveal the target.
+            val current = bot.navigator.currentPending
+            val available = current === pending || (current == null && pending.isDone)
+            return available && !pending.isCancelled && !forceBanking &&
+                target.isAlive && target.state == EntityState.ACTIVE && target.position == destination &&
+                bot.position.isViewable(target.position) &&
+                (searchStartedAt == null ||
+                    (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds < targetSearchTimeout)
+        } finally {
+            // Timeout, visibility, target invalidation and coroutine cancellation all stop our discovery walk.
+            // A replacement request belongs to another activity and must not be cancelled or have its queue cleared.
+            if (bot.navigator.currentPending === pending) {
+                if (!pending.isDone) bot.navigator.cancel()
+                bot.walking.clear()
+            }
+        }
     }
 
     /**
