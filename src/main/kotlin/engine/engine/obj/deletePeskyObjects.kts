@@ -11,10 +11,6 @@ import io.luna.game.model.`object`.ObjectDirection
 on(ServerLaunchEvent::class) {
     val positions = listOf(
 
-        // Falador -> Taverly gates.
-        Position(2935, 3450),
-        Position(2935, 3451),
-
         // King black dragon gates.
         Position(3008, 3850),
         Position(3008, 3849),
@@ -22,10 +18,6 @@ on(ServerLaunchEvent::class) {
         // Deep wilderness red dragons.
         Position(3201, 3856),
         Position(3202, 3856),
-
-        // Al Kharid gates.
-        Position(3268, 3227),
-        Position(3268, 3228),
 
         // Edgeville dungeon brass key door.
         Position(3115, 3450),
@@ -56,13 +48,6 @@ on(ServerLaunchEvent::class) {
         Position(3336, 3896),
         Position(2948, 3904),
         Position(2947, 3904),
-
-        // Lumbridge cow and chicken pen gates.
-        Position(3253, 3266),
-        Position(3253, 3267),
-
-        Position(3236, 3295),
-        Position(3236, 3296),
 
         // Al-kharid palace
         Position(3287, 3172),
