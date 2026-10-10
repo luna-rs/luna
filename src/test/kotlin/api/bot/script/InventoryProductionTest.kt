@@ -1,6 +1,10 @@
 package api.bot.script
 
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.zone.SubZone
+import api.predef.*
+import com.google.gson.JsonObject
+import io.luna.game.task.Task
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.runBlocking
@@ -105,5 +109,143 @@ class InventoryProductionTest {
         assertEquals(listOf(Item(1623)), attempted)
         verify(bot.actionHandler.banking, never()).withdrawAll(anyList())
         assertFalse(script.isTerminated())
+    }
+
+    private class Production(bot: Bot, data: InventoryScriptData? = null, val limit: Int = 3) : Recipe(bot) {
+        override val maxFailures get() = limit
+        override val verifiedProductionWithdrawals = true
+        var interact: suspend (Int) -> Boolean = { false }
+        var available = true
+        val inputs = listOf(Item(1623))
+        val tools = setOf(1755)
+        init { if (data != null) restoreInventoryState(data) }
+        override fun withdraw() = productionWithdraw(inputs, tools)
+        override fun bankWithdraw() = bot.productionBatch(inputs, tools)
+        override suspend fun onInventoryBankRequested() = requestProductionBank(bot.inventory.containsAll(inputs) &&
+            tools.all { bot.inventory.contains(it) })
+        override suspend fun onExecuteInZone(): Boolean {
+            if (!productionReady(bot.inventory.containsAll(inputs) && tools.all { bot.inventory.contains(it) })) return true
+            attemptProduction(1623, dexterityDelay = false, available = available, start = interact)
+            return true
+        }
+        override fun snapshot() = InventoryScriptData().also { saveInventoryState(it) }
+    }
+
+    @Test fun nativeRetryStateReadsLegacyFieldsAndMissingFieldsDefaultToZero() {
+        val data = InventoryScriptData()
+        val legacy = JsonObject().apply {
+            addProperty("duration", 600_000)
+            add("zones", com.google.gson.JsonArray().apply { add("HOME") })
+        }
+        data.load(legacy)
+        assertEquals(0, data.failures)
+        assertEquals(0, data.bankFailures)
+        val old = legacy.deepCopy().apply {
+            addProperty("failures", 2)
+            addProperty("bankFailures", 1)
+        }
+        data.load(old)
+        val script = Production(InventoryProductionFixtures.bot(), data)
+        val saved = JsonObject().also { script.snapshot().save(it) }
+        assertEquals(2, saved.get("failures").asInt)
+        assertEquals(1, saved.get("bankFailures").asInt)
+        assertEquals(10.minutes, script.snapshot().duration)
+        assertEquals(listOf(SubZone.HOME), script.snapshot().zones)
+    }
+
+    @Test fun nativeProductionUsesTheConfiguredFailureLimitAndExhaustionSurvivesRestore() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        InventoryProductionFixtures.inventory(bot, Item(1623), Item(1755))
+        `when`(bot.actionHandler.widgets.clickCloseInterface()).thenReturn(false)
+        val script = Production(bot, limit = 2)
+        script.executeInZone()
+        assertFalse(script.isTerminated())
+        assertEquals(1, script.snapshot().failures)
+        script.executeInZone()
+        assertTrue(script.isTerminated())
+        assertEquals(2, script.snapshot().failures)
+        assertEquals(0, script.snapshot().bankFailures)
+        val resumed = Production(bot, script.snapshot(), limit = 2)
+        assertFalse(resumed.onInit(true))
+        assertTrue(resumed.isTerminated())
+        verify(bot.actionHandler.widgets, times(2)).clickCloseInterface()
+    }
+
+    @Test fun actualInputProgressResetsOnlyTheInteractionBudget() = runBlocking<Unit> {
+        val fixtureWorld = world
+        val scheduler = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
+        doAnswer { invocation -> scheduler.invoke(invocation.getArgument<Task>(0)); null }
+            .`when`(fixtureWorld).schedule(any(Task::class.java))
+        try {
+            val bot = InventoryProductionFixtures.bot()
+            InventoryProductionFixtures.inventory(bot, Item(1623, 2), Item(1755))
+            `when`(bot.actionHandler.widgets.clickCloseInterface()).thenReturn(true)
+            val script = Production(bot, InventoryScriptData().apply { failures = 2; bankFailures = 1 })
+            script.interact = { before -> assertEquals(2, before); bot.inventory.remove(1623) }
+            script.executeInZone()
+            assertEquals(0, script.snapshot().failures)
+            assertEquals(1, script.snapshot().bankFailures)
+            assertFalse(script.isTerminated())
+        } finally { doNothing().`when`(fixtureWorld).schedule(any(Task::class.java)) }
+    }
+
+    @Test fun incompleteVerifiedWithdrawalStopsWithoutResettingEitherBudget() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        InventoryProductionFixtures.bank(bot, Item(1755), Item(1623))
+        val script = Production(bot, InventoryScriptData().apply { failures = 1; bankFailures = 2 })
+        val batch = listOf(Item(1755), Item(1623))
+        `when`(bot.actionHandler.banking.withdrawAll(batch)).thenReturn(true)
+        script.onBankOpen(false)
+        assertTrue(script.isTerminated())
+        assertEquals(1, script.snapshot().failures)
+        assertEquals(2, script.snapshot().bankFailures)
+        verify(bot.actionHandler.banking).clickBankingMode(false)
+    }
+
+    @Test fun verifiedWithdrawalResetsOnlyBankingAndUsableStockPreventsMoreRequests() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        InventoryProductionFixtures.bank(bot, Item(1755), Item(1623))
+        InventoryProductionFixtures.inventory(bot, Item(1755), Item(1623))
+        val script = Production(bot, InventoryScriptData().apply { failures = 2; bankFailures = 1 })
+        assertTrue(script.onInit(true))
+        assertTrue(script.onBankRequested(false))
+        assertEquals(2, script.snapshot().bankFailures)
+        `when`(bot.actionHandler.banking.withdrawAll(listOf(Item(1755), Item(1623)))).thenReturn(true)
+        script.onBankOpen(false)
+        assertEquals(0, script.snapshot().bankFailures)
+        assertEquals(2, script.snapshot().failures)
+        assertFalse(script.onBankRequested(false))
+        assertFalse(script.isTerminated())
+    }
+
+    @Test fun unsafeAndWeakActionStatesDoNotSpendRetryBudgets() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        InventoryProductionFixtures.inventory(bot, Item(1755), Item(1623))
+        val script = Production(bot)
+        `when`(bot.isLocked).thenReturn(true)
+        assertFalse(script.onBankRequested(false))
+        script.executeInZone()
+        assertEquals(0, script.snapshot().failures)
+        assertEquals(0, script.snapshot().bankFailures)
+        `when`(bot.isLocked).thenReturn(false)
+        bot.actions.submit(object : io.luna.game.action.Action<Bot>(bot, io.luna.game.action.ActionType.WEAK) {
+            override fun run() = false
+        })
+        assertFalse(script.onBankRequested(false))
+        script.executeInZone()
+        assertEquals(0, script.snapshot().failures)
+        assertEquals(0, script.snapshot().bankFailures)
+        verify(bot.actionHandler.widgets, never()).clickCloseInterface()
+    }
+
+    @Test fun unavailableTargetsSpendFailuresWithoutClosingAnInterface() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        InventoryProductionFixtures.inventory(bot, Item(1755), Item(1623))
+        val script = Production(bot).apply { available = false }
+        repeat(3) { script.executeInZone() }
+        assertTrue(script.isTerminated())
+        assertEquals(3, script.snapshot().failures)
+        assertEquals(0, script.snapshot().bankFailures)
+        verify(bot.actionHandler.widgets, never()).clickCloseInterface()
     }
 }
