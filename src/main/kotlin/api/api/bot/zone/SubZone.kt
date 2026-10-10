@@ -343,8 +343,10 @@ enum class SubZone(val inside: Position,
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             if (bot.actionHandler.travelTo(BURTHORPE)) {
-                // Navigate to the trapdoor that leads us into the dungeon.
-                bot.navigator.navigate(selectedOutside, true).await()
+                // Walk to the trapdoor that leads us into the dungeon.
+                if (selectedOutside != null) {
+                    bot.actionHandler.webWalkTo(selectedOutside)
+                }
                 if (selectedOutside?.isViewableFrom(bot) == false) {
                     return false
                 }
@@ -385,8 +387,10 @@ enum class SubZone(val inside: Position,
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             if (bot.isViewableFrom(selectedOutside) || bot.actionHandler.travelTo(VARROCK)) {
 
-                // Navigate to the ladder that leads us into the dungeon.
-                bot.navigator.navigate(selectedOutside, true).await()
+                // Walk to the ladder that leads us into the dungeon.
+                if (selectedOutside != null) {
+                    bot.actionHandler.webWalkTo(selectedOutside)
+                }
                 if (selectedOutside?.isViewableFrom(bot) == false) {
                     return false
                 }

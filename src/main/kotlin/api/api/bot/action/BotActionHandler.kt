@@ -16,9 +16,7 @@ import game.skill.magic.Magic.teleport
 import io.luna.Luna
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
-import kotlinx.coroutines.future.await
 
 /**
  * Provides high-level action helpers for a server-controlled [Bot].
@@ -295,11 +293,12 @@ class BotActionHandler(val bot: Bot) {
     }
 
     /**
-     * Travels to a target zone using walking, teleportation, or any configured zone travel strategy.
+     * Travels to a target zone using the web-walker, or any configured zone travel strategy.
      *
      * The bot returns immediately if it is already inside the zone. If the bot is deep enough in the wilderness and the
-     * destination is safe, it first attempts to flee the wilderness before using normal travel strategies. Nearby targets
-     * are attempted by walking before the zone's configured travel strategy list is evaluated.
+     * destination is safe, it first attempts to flee the wilderness before using normal travel strategies. The
+     * web-walker is attempted before the zone's configured travel strategy list is evaluated, which is only used if
+     * the web-walker can't get the bot there.
      *
      * @param zone The zone to travel to.
      * @return `true` if the bot reached or was already inside [zone], otherwise `false`.
@@ -337,17 +336,13 @@ class BotActionHandler(val bot: Bot) {
                 }
             }
             val dest = zone.anchor
-            val distance = bot.position.computeLongestDistance(dest)
-            var attemptedWalking = false
-            if (distance < 128) {
-                // Just try and run there before using all strategies.
-                if (WalkingTravelStrategy.travel(bot, this, dest)) {
-                    return true
-                }
-                attemptedWalking = true
+            // Let the web-walker plan the cheapest trip first, which covers walking, doors, ladders and teleports.
+            if (webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || bot.isViewableFrom(dest)) {
+                return true
             }
             for (strategy in zone.travel) {
-                if (attemptedWalking && strategy is WalkingTravelStrategy) {
+                if (strategy is WalkingTravelStrategy) {
+                    // The web-walker already tried to walk there.
                     continue
                 }
                 bot.log("Attempting strategy ${strategy.javaClass.simpleName}.")
@@ -379,15 +374,14 @@ class BotActionHandler(val bot: Bot) {
      * 1. If the bot is already inside [zone], the request succeeds immediately.
      * 2. If the bot is currently inside another sub-zone, it attempts to leave that sub-zone first.
      * 3. It travels to the requested sub-zone's parent zone, then either enters through the configured
-     *    outside/inside transition anchors or paths directly to the inside anchor.
+     *    outside/inside transition anchors or walks directly to the inside anchor.
      *
-     * Sub-zones with an [SubZone.outside] anchor are treated as transition-based areas. The bot first paths
-     * to the outside anchor, calls [SubZone.enter], and then optionally paths toward [SubZone.inside] if the
-     * sub-zone state did not update immediately.
+     * Sub-zones with an [SubZone.outside] anchor are treated as transition-based areas. The bot first walks
+     * to the outside anchor, calls [SubZone.enter], and then optionally walks toward [SubZone.inside] if the
+     * sub-zone state did not update immediately. All walking is done with the web-walker.
      *
-     * Sub-zones without an outside anchor are treated as normal walkable areas. The bot simply navigates to
-     * the inside anchor and succeeds if navigation reaches the target or the bot's sub-zone updates during
-     * movement.
+     * Sub-zones without an outside anchor are treated as normal walkable areas. The bot simply web-walks to
+     * the inside anchor and succeeds if it gets there or the bot's sub-zone updates during movement.
      *
      * @param zone The sub-zone to travel into.
      * @return `true` if the bot successfully reaches or enters [zone], otherwise `false`.
@@ -428,7 +422,7 @@ class BotActionHandler(val bot: Bot) {
 
                 // Travel to the outside anchor from the parent zone, if available.
                 if (outside != null) {
-                    if (bot.navigator.navigate(outside, true).await() == NavigationResult.NO_VALID_PATH) {
+                    if (!webWalkTo(outside, attempts = WEB_WALK_ATTEMPTS)) {
                         bot.log("Could not travel to $zone outside anchor.")
                         return false
                     }
@@ -441,13 +435,12 @@ class BotActionHandler(val bot: Bot) {
 
                     // Try and path to the inside anchor if the transition did not update sub-zone state immediately.
                     if (bot.subZone != zone) {
-                        bot.navigator.navigate(zone.inside, true).await()
+                        webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS)
                     }
                     return bot.subZone == zone
                 }
-                // Sub-zone has no transitions, path directly to the inside anchor.
-                return bot.navigator.navigate(zone.inside, true)
-                    .await() == NavigationResult.REACHED || bot.subZone == zone
+                // Sub-zone has no transitions, walk directly to the inside anchor.
+                return webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || bot.subZone == zone
             } finally {
                 bot.reflex.isDisableCombatReflex = stateBefore
             }
@@ -469,8 +462,8 @@ class BotActionHandler(val bot: Bot) {
      * ```
      *
      * The web-walker plans the cheapest trip for what the bot carries and can do right now, and takes it through doors,
-     * gates, up and down ladders and stairs, and by teleport. This is separate from [travelTo], which it doesn't use: it
-     * doesn't leave the wilderness first, and it never pays for a zone teleport. Use [webWalk] to learn why a walk failed,
+     * gates, up and down ladders and stairs, and by teleport. [travelTo] walks with it too, but it also leaves the wilderness
+     * first and falls back to paying for a zone teleport, which this never does. Use [webWalk] to learn why a walk failed,
      * which is also in the log of the bot.
      *
      * @param dest Where to go.
@@ -529,7 +522,7 @@ class BotActionHandler(val bot: Bot) {
      *
      * The nearest bank is the one that the cheapest trip ends at, for what the bot carries and can do right now, so a bot
      * that has a teleport and the runes for it may take that. The bot stops in front of a booth, on the side of the counter
-     * that customers use. This is separate from [BotBankingActionHandler.travelToNearestBank], which it doesn't use.
+     * that customers use. [BotBankingActionHandler.travelToNearestBank] uses this too, and falls back to going home.
      *
      * @param radius How close to the tile in front of the booth, in tiles, is close enough. The default is the exact tile.
      * @param attempts How many times to try, planning again each time. The default is to fail fast.
@@ -540,11 +533,17 @@ class BotActionHandler(val bot: Bot) {
         return world.locator.findObjectsOnTile(bank.booth) { it.id in Banking.bankingObjects }.firstOrNull()
     }
 
-    private companion object {
+    companion object {
 
         /**
          * How close, in tiles, to the anchor of a zone or sub-zone is close enough when walking there with the web-walker.
          */
         const val WEB_WALK_AREA_RADIUS = 2
+
+        /**
+         * How many times zone and sub-zone travel tries the web-walker, which plans again each time. A second attempt
+         * covers a bot that was held up on the way, such as at a door that somebody else was using.
+         */
+        const val WEB_WALK_ATTEMPTS = 2
     }
 }

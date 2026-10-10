@@ -1,6 +1,5 @@
 package api.bot.action
 
-import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
 import api.bot.zone.SubZone
@@ -11,7 +10,6 @@ import game.player.item.consume.food.Food
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
@@ -409,9 +407,9 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Finds and travels to a usable bank.
      *
-     * Bots already in [SubZone.HOME] use the closest configured home bank. Otherwise, bank anchors for the current zone are
-     * attempted first, followed by viewable banking objects. If neither produces a usable bank, the bot attempts to travel
-     * home and use a configured home bank as a fallback.
+     * Bots already in [SubZone.HOME] use the closest configured home bank. Otherwise, the bot web-walks to the nearest bank,
+     * which is the one that the cheapest trip ends at. If that fails, the bot attempts to travel home and use a configured
+     * home bank as a fallback.
      *
      * @return A usable bank object, or `null` if no bank can be found or reached.
      */
@@ -423,40 +421,10 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             return homeBanks.minByOrNull { it.position.computeLongestDistance(bot.position) }
         }
 
-        bot.log("Looking in current zone.")
-        val localBanks = bot.zone?.bankAnchors
-        if (!localBanks.isNullOrEmpty()) {
-            for (bank in localBanks) {
-                val bankObj = world.locator
-                    .findObjectsOnTile(bank) { it.id in Banking.bankingObjects }
-                    .firstOrNull()
-
-                if (bankObj != null &&
-                    (bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED ||
-                            bankObj.isWithinDistance(bot, 2))
-                ) {
-                    return bankObj
-                }
-
-                bot.log("Bank $bankObj inaccessible.")
-                bot.naturalDecisionDelay()
-            }
-        }
-
-        bot.log("Looking nearby.")
-        val banks = world.locator.findViewableObjects(bot) { it.id in Banking.bankingObjects }
-        if (banks.isNotEmpty()) {
-            // Try to travel to nearby banks.
-            bot.log("Found ${banks.size}.")
-
-            for (it in banks) {
-                if (bot.navigator.navigate(it, true).await() != NavigationResult.NO_VALID_PATH) {
-                    return it
-                }
-
-                bot.log("Bank $it inaccessible.")
-                bot.naturalDecisionDelay()
-            }
+        bot.log("Web-walking to the nearest bank.")
+        val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS)
+        if (bank != null) {
+            return bank
         }
 
         // Travel home, then use home bank.
