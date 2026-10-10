@@ -13,7 +13,10 @@ import io.luna.game.model.mob.Player
 import io.luna.game.task.Task
 
 /**
- * A [Task] implementation that will ferment all wines in the inventory and bank of a [Player].
+ * Advances dynamic unfermented wines in the inventory and bank of a [Player] once per game tick.
+ * Each wine retains its persisted counter and becomes a jug of wine after twenty ticks, awarding the
+ * preparation recipe experience once. Empty slots and unrelated items do not keep this task alive.
+ * The task stops when no pending dynamic wine remains, or when the player becomes inactive.
  *
  * @author lare96
  */
@@ -28,16 +31,18 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
     }
 
     /**
-     * Adds a tick to wine fermenting counter for [item] in [container] on [index].
+     * Advances the wine in [container] at [index], returning whether it still needs more ticks.
+     * Finished wines are replaced through the container setter so inventory listeners observe the conversion.
      */
-    private fun addCounter(item: Item?, container: ItemContainer, index: Int): Boolean {
+    private fun advanceWine(item: Item?, container: ItemContainer, index: Int): Boolean {
         if (item != null && item.id == 1995 && item is DynamicItem) {
             if (++item.wineFermentCounter >= 20) {
                 plr.cooking.addExperience(IncompleteFood.UNFERMENTED_WINE.exp)
                 item.wineFermentCounter = 0
                 container[index] = Item(1993)
-                return true
+                return false
             }
+            return true
         }
         return false
     }
@@ -49,12 +54,12 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
         }
         var cancel = true
         plr.inventory.forIndexedItems { index, item ->
-            if (!addCounter(item, plr.inventory, index)) {
+            if (advanceWine(item, plr.inventory, index)) {
                 cancel = false
             }
         }
         plr.bank.forIndexedItems { index, item ->
-            if (!addCounter(item, plr.bank, index)) {
+            if (advanceWine(item, plr.bank, index)) {
                 cancel = false
             }
         }

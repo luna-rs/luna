@@ -10,6 +10,8 @@ import io.luna.game.model.mob.Player
  * An [InventoryAction] that prepares an [IncompleteFood] type.
  * Consumed water, milk, and flour normally return their empty containers. Tea and stew prepared in a bowl
  * retain that bowl in the product; pouring nettle tea into a cup returns the emptied bowl instead.
+ * Raw cakes consume a cake tin, egg, milk, and flour together. The tin stays in the uncooked cake;
+ * only the milk bucket and flour pot are returned during preparation.
  *
  * @author lare96
  */
@@ -63,7 +65,7 @@ class PrepareFoodActionItem(plr: Player,
 
     override fun remove() = when {
         // Uncooked cake requires all ingredients at once.
-        food == IncompleteFood.UNCOOKED_CAKE -> listOf(*food.otherIngredients.map { Item(it) }.toTypedArray())
+        food == IncompleteFood.UNCOOKED_CAKE -> (listOf(food.baseIngredient) + food.otherIngredients).map { Item(it) }
         // Making uncooked curry requires 3 leaves.
         food == IncompleteFood.UNCOOKED_CURRY -> {
             removeIds.map {

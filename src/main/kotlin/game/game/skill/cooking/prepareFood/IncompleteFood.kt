@@ -174,7 +174,7 @@ enum class IncompleteFood(val id: Int, val lvl: Int, val exp: Double, val baseIn
     CUP_OF_MILKY_NETTLE_TEA(id = 4243,
                             lvl = 20,
                             exp = 0.0,
-                            baseIngredient = 1980,
+                            baseIngredient = 4242,
                             otherIngredients = listOf(1927)),
 
     // Pizzas
