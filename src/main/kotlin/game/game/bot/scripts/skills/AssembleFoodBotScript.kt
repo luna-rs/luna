@@ -27,7 +27,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
  * Supports plain-pizza assembly and toppings, chocolate cakes, milky nettle tea, pie shells, and all implemented
- * pie assembly stages, initial stew and nettle-water preparation, both stew completion paths, and curry preparation. Cooking
+ * pie assembly stages, initial stew and nettle-water preparation, tea pouring, both stew completion paths,
+ * and curry preparation. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
  * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
  * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
@@ -39,6 +40,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * while stews already containing meat accept a potato. Starting a stew uses a bowl of water and potato or cooked
  * meat at level 25 for 2 XP. Adding nettles to a bowl of water requires level 20 and awards no XP. These products
  * retain the source bowl rather than returning an additional empty bowl.
+ * Pouring a bowl of nettle tea into an empty cup requires level 20, returns the bowl, and awards the 52 XP
+ * defined by the player preparation recipe. A full batch uses fourteen cups and fourteen bowls of tea.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
@@ -71,6 +74,7 @@ class AssembleFoodBotScript(
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
             IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.MILKY_NETTLE_TEA,
+            IncompleteFood.CUP_OF_NETTLE_TEA,
             IncompleteFood.NETTLE_WATER, IncompleteFood.INCOMPLETE_STEW_WITH_POTATO,
             IncompleteFood.INCOMPLETE_STEW_WITH_MEAT,
             IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_STEW_FROM_POTATO,
