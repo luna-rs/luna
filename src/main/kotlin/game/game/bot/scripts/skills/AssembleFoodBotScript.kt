@@ -27,7 +27,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
  * Supports plain-pizza assembly and toppings, chocolate cakes, milky nettle tea, pie shells, and all implemented
- * pie assembly stages, both stew completion paths, and curry preparation. Cooking
+ * pie assembly stages, initial stew and nettle-water preparation, both stew completion paths, and curry preparation. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
  * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
  * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
@@ -36,7 +36,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  * [PrepareFoodActionItem] owns conversions and returns.
  * Stew completion requires level 25 and curry requires level 60; both award no XP. Curry consumes one spice
  * or three curry leaves per uncooked stew. Stews already containing potato accept either cooked meat alternative,
- * while stews already containing meat accept a potato. Preparation from bowls of water remains excluded.
+ * while stews already containing meat accept a potato. Starting a stew uses a bowl of water and potato or cooked
+ * meat at level 25 for 2 XP. Adding nettles to a bowl of water requires level 20 and awards no XP. These products
+ * retain the source bowl rather than returning an additional empty bowl.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
@@ -69,6 +71,8 @@ class AssembleFoodBotScript(
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
             IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.MILKY_NETTLE_TEA,
+            IncompleteFood.NETTLE_WATER, IncompleteFood.INCOMPLETE_STEW_WITH_POTATO,
+            IncompleteFood.INCOMPLETE_STEW_WITH_MEAT,
             IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_STEW_FROM_POTATO,
             IncompleteFood.UNCOOKED_CURRY,
             IncompleteFood.PIE_SHELL, IncompleteFood.UNCOOKED_BERRY_PIE, IncompleteFood.UNCOOKED_MEAT_PIE,
@@ -127,6 +131,8 @@ class AssembleFoodBotScript(
     val secondaryAmount = if (food == IncompleteFood.UNCOOKED_CURRY && secondary == 5970) 3 else 1
     /** Minimum supplies for one conversion, including the player action's three-leaf curry requirement. */
     private val materials = listOf(Item(food.baseIngredient), Item(secondary, secondaryAmount))
+    /** Filled water ingredient, whether the recipe uses it as its base or secondary input. */
+    private val waterIngredient = materials.firstOrNull { it.id in WaterResource.FILLED_IDS }?.id
     /** Consecutive failed interactions, reset after an input is consumed. */
     private var failures = 0
     /** Unresolved banking requests, reset only after the entire batch is withdrawn. */
@@ -152,21 +158,25 @@ class AssembleFoodBotScript(
     fun isEligible(): Boolean = bot.skill(SKILL_COOKING).staticLevel >= requiredLevel &&
             bot.ownsProductionSupplies(materials)
 
-    /** Whether owned base ingredients and empty containers can satisfy a missing water ingredient. */
-    fun canPrepareWater(): Boolean = secondary in WaterResource.FILLED_IDS &&
-        bot.cooking.staticLevel >= requiredLevel && !bot.ownsProductionSupplies(listOf(Item(secondary))) &&
-        bot.ownsProductionSupplies(listOf(Item(food.baseIngredient),
-            Item(WaterResource.FILLABLES.inverse().getValue(secondary))))
+    /** Whether all other ingredients and an empty container are owned for a missing water input. */
+    fun canPrepareWater(): Boolean {
+        val water = waterIngredient ?: return false
+        val supplies = materials.filter { it.id != water } + Item(WaterResource.FILLABLES.inverse().getValue(water))
+        return bot.cooking.staticLevel >= requiredLevel && !bot.ownsProductionSupplies(listOf(Item(water))) &&
+            bot.ownsProductionSupplies(supplies)
+    }
 
     /** Queues one bounded refill using owned containers, then returns selection to the activity coordinator. */
     private fun queueWaterPreparation(): Boolean {
         if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
             bot.actions.size(ActionType.STRONG) > 0 || !canPrepareWater()) return false
-        val empty = WaterResource.FILLABLES.inverse().getValue(secondary)
-        val baseStock = bot.bank.computeAmountForId(food.baseIngredient).toLong() +
-            bot.inventory.computeAmountForId(food.baseIngredient)
+        val water = waterIngredient ?: return false
+        val empty = WaterResource.FILLABLES.inverse().getValue(water)
+        val ingredientStock = materials.filter { it.id != water }.minOf {
+            (bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id)) / it.amount
+        }
         val emptyStock = bot.bank.computeAmountForId(empty).toLong() + bot.inventory.computeAmountForId(empty)
-        bot.scriptStack.softPushHead(FillWaterBotScript(bot, empty, minOf(14L, baseStock, emptyStock).toInt(), duration))
+        bot.scriptStack.softPushHead(FillWaterBotScript(bot, empty, minOf(14L, ingredientStock, emptyStock).toInt(), duration))
         stop()
         return true
     }

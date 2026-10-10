@@ -35,6 +35,9 @@ import api.predef.rand
  * Owned bowls of nettle tea can be combined with milk at level 20, returning the empty bucket without awarding XP.
  * Meat- or potato-based incomplete stews can be completed at level 25. Uncooked stews can be prepared as curry at level 60
  * with spice or three curry leaves per stew. These zero-XP preparation steps are selected only for non-training.
+ * Initial stews use owned bowls of water and potato or cooked meat at level 25 for 2 XP per operation.
+ * Nettle-water preparation requires level 20 and grants no XP. Non-training selection can fill owned empty bowls
+ * first when the other ingredient is already available; training requires a complete XP-awarding input set.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96

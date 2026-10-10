@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
+import org.mockito.ArgumentCaptor
 import kotlin.time.Duration.Companion.minutes
 
 class AssembleFoodBotScriptTest {
@@ -120,6 +121,10 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.CHOCOLATE_CAKE to 1973,
                 IncompleteFood.CHOCOLATE_CAKE to 1975,
                 IncompleteFood.MILKY_NETTLE_TEA to 1927,
+                IncompleteFood.NETTLE_WATER to 4241,
+                IncompleteFood.INCOMPLETE_STEW_WITH_POTATO to 1942,
+                IncompleteFood.INCOMPLETE_STEW_WITH_MEAT to 2140,
+                IncompleteFood.INCOMPLETE_STEW_WITH_MEAT to 2142,
                 IncompleteFood.UNCOOKED_STEW_FROM_MEAT to 1942,
                 IncompleteFood.UNCOOKED_STEW_FROM_POTATO to 2140,
                 IncompleteFood.UNCOOKED_STEW_FROM_POTATO to 2142,
@@ -495,6 +500,47 @@ class AssembleFoodBotScriptTest {
             val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
             assertEquals(food, restored.food)
             assertEquals(secondary, restored.secondary)
+        }
+    }
+
+    @Test fun initialBowlRecipesSelectOwnedSuppliesAndTrainingOnlyWhenTheyAwardExperience() {
+        for (food in listOf(IncompleteFood.NETTLE_WATER, IncompleteFood.INCOMPLETE_STEW_WITH_POTATO,
+                            IncompleteFood.INCOMPLETE_STEW_WITH_MEAT)) for (secondary in food.otherIngredients) {
+            val bot = bot(food.lvl - 1)
+            InventoryProductionFixtures.bank(bot, Item(1921, 100), Item(secondary, 2))
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, food.lvl - 1))
+            `when`(bot.cooking.staticLevel).thenReturn(food.lvl)
+            val selected = CookingScriptFactory.getAssemblyScript(bot, food.lvl)!!
+            assertEquals(food, selected.food)
+            assertEquals(secondary, selected.secondary)
+            assertEquals(listOf(Item(1921, 2), Item(secondary, 2)), selected.bankBatch())
+            val training = CookingScriptFactory.getAssemblyScript(bot, food.lvl, training = true)
+            if (food.exp > 0.0) assertEquals(food, training!!.food) else assertNull(training)
+            val json = JsonObject()
+            selected.snapshot().save(json)
+            val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+            assertEquals(food, restored.food)
+            assertEquals(secondary, restored.secondary)
+        }
+    }
+
+    @Test fun missingWaterBaseQueuesOnlyOwnedBowlsNeededForTheSelectedIngredient() = runBlocking<Unit> {
+        for (food in listOf(IncompleteFood.NETTLE_WATER, IncompleteFood.INCOMPLETE_STEW_WITH_POTATO,
+                            IncompleteFood.INCOMPLETE_STEW_WITH_MEAT)) for (secondary in food.otherIngredients) {
+            val bot = bot(food.lvl)
+            InventoryProductionFixtures.bank(bot, Item(1923, 30), Item(secondary, 5))
+            val selected = CookingScriptFactory.getAssemblyScript(bot, food.lvl)!!
+            assertEquals(food, selected.food)
+            assertTrue(selected.canPrepareWater())
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, food.lvl, training = true))
+            assertFalse(InventoryProductionFixtures.active(selected).onInit(false))
+            val queued = ArgumentCaptor.forClass(FillWaterBotScript::class.java)
+            verify(bot.scriptStack).softPushHead(queued.capture())
+            assertEquals(1923, queued.value.empty)
+            assertEquals(5, queued.value.target)
+            verify(bot.preferences, never()).raiseWantedItemTarget(1921, 1_000)
+            bot.bank.remove(Item(secondary, 5))
+            assertFalse(AssembleFoodBotScript(bot, food, 10.minutes, secondary = secondary).canPrepareWater())
         }
     }
 }
