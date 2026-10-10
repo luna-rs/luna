@@ -386,7 +386,9 @@ public final class BotPreference {
                          Map<Integer, WantedItemDefinition> wantedItems,
                          Set<BotGearSet> gear,
                          Map<String, Double> playerFeelings) {
-        this.activities = activities;
+        this.activities = new HashMap<>(activities);
+        // New and legacy profiles participate in general activities unless an explicit weight is provided.
+        this.activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
         this.skills = skills;
         this.wantedItems = wantedItems;
         this.gear = gear;
