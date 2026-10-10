@@ -10,6 +10,7 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.CraftJewelleryBotScript
 import game.bot.scripts.skills.MakeMoltenGlassBotScript
 import game.bot.scripts.skills.BlowGlassBotScript
 import game.skill.crafting.glassMaking.GlassMaterial
@@ -43,6 +44,7 @@ import io.luna.util.RandomUtils.roll
  * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
+ * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
  *
  * @author lare96
  */
@@ -71,7 +73,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         }
         // TODO
         //  glass making
-        //  jewellery making
         //  pottery crafting
         //  textile crafting (wool/silk etc.)
 
@@ -173,6 +174,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             addAll(StringJewelleryBotScript.UNSTRUNG_IDS.map { StringJewelleryBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(GlassMaterial.entries.map { BlowGlassBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(CraftJewelleryBotScript.RECIPES.keys.map { CraftJewelleryBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
             if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)
