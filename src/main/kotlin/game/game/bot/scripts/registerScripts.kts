@@ -12,6 +12,8 @@ import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
+import game.bot.scripts.skills.BlowGlassBotScript
+import game.bot.scripts.skills.BlowGlassBotScript.Companion.GlassData
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.CutGemBotScript.Companion.CutGemData
 import game.bot.scripts.skills.CutLogBotScript
@@ -90,6 +92,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<GlassData>(BlowGlassBotScript::class) { bot, data -> BlowGlassBotScript(bot, data) }
     scriptManager.addScript<CutGemData>(CutGemBotScript::class) { bot, data -> CutGemBotScript(bot, data) }
     scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
     scriptManager.addScript<HerbData>(IdentifyHerbBotScript::class) { bot, data -> IdentifyHerbBotScript(bot, data) }

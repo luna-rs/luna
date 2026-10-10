@@ -10,6 +10,8 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.BlowGlassBotScript
+import game.skill.crafting.glassMaking.GlassMaterial
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeSoftClayBotScript
@@ -36,6 +38,9 @@ import io.luna.util.RandomUtils.roll
  * Non-training mode can also prepare soft clay using owned clay and filled water containers, without experience.
  * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
  * Choosing a profit activity does not guarantee a market margin.
+ *
+ * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
+ * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  *
  * @author lare96
  */
@@ -164,6 +169,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             addAll(Battlestaff.entries.map { MakeBattlestaffBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(StringJewelleryBotScript.UNSTRUNG_IDS.map { StringJewelleryBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(GlassMaterial.entries.map { BlowGlassBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
