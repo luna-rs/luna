@@ -94,7 +94,8 @@ tasks.named<Test>("test") {
 
 // Starts the server and writes the bot web-walker's data (obstacles.jsonc, climbs.jsonc, teleports.jsonc and walk_graph.jsonc in
 // data/game/bots/webwalk) from the cache and the live world, then exits. Use -Pwebwalk=check to only report whether the
-// files are out of date. Disabling bots makes the server start and run faster.
+// files are out of date. Disabling bots makes the server start and run faster. The server also generates the files itself, and
+// goes on running, when it starts with bots and any of them is missing, so this task is for generating them again.
 tasks.register<JavaExec>("generateWebWalk") {
     group = "luna"
     description = "Generates the data that the bot web-walker travels by."

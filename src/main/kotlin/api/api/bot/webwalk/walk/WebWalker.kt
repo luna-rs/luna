@@ -15,6 +15,7 @@ import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Random
 import java.util.concurrent.CompletableFuture
@@ -40,9 +41,22 @@ object WebWalker {
     private val DIRECTORY = Path.of("data", "game", "bots", "webwalk")
 
     /**
-     * The web, which is read the first time that it is needed and is shared by all bots.
+     * The web, which is read the first time that it is needed and is shared by all bots. It is not read, and so not kept, while
+     * the generated files are missing: a missing file is an empty one to the loader, and an empty web would stay empty.
      */
-    private val graph: WebWalkGraph by lazy { checkHandlers(WebWalkLoader.load(DIRECTORY)) }
+    private val graph: WebWalkGraph by lazy {
+        missingData()?.let { throw WebWalkDataException(listOf(it)) }
+        checkHandlers(WebWalkLoader.load(DIRECTORY))
+    }
+
+    /**
+     * Determines if the generated files of the web are missing, which they are until the server has generated them.
+     *
+     * @return What to tell the user, or `null` if the files are there.
+     */
+    private fun missingData(): String? =
+        if (Files.exists(DIRECTORY.resolve(WebWalkLoader.WALK_GRAPH))) null
+        else "The web-walker data is missing. Start the server with bots enabled to generate it, or run the generateWebWalk Gradle task."
 
     /**
      * The planner, which is made the first time that it is needed. It reads the web and the collision of the world, and is
@@ -186,6 +200,7 @@ object WebWalker {
         if (isWithin(bot.position, destination, radius)) {
             return WebWalkResult(true, "Already at the destination.")
         }
+        missingData()?.let { return WebWalkResult(false, it) }
         return withAttempts(bot, attempts) { walkOnce(bot, destination, radius) }
     }
 
@@ -204,6 +219,7 @@ object WebWalker {
      */
     suspend fun webWalkToNearestBank(bot: Bot, radius: Int = 0, attempts: Int = 1): WebWalkResult {
         require(attempts >= 1) { "attempts must be at least 1, was $attempts" }
+        missingData()?.let { return WebWalkResult(false, it) }
         graph.banks.firstOrNull { isWithin(bot.position, it.stand, radius) }?.let {
             return WebWalkResult(true, "Already at a bank.", bank = it)
         }

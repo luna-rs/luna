@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.Service;
 import io.luna.LunaContext;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerReadyEvent;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -88,6 +89,9 @@ public final class GameService extends AbstractScheduledService {
 
             // Players won't be able to log in until startup tasks are complete, so it's fine to block the game thread.
             runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
+
+            // Runs once every launch listener is done, so that these tasks can rely on the world that they have set up.
+            runKotlinTasks(ServerReadyEvent::new, "Waiting for Kotlin post-launch tasks to complete...");
 
             // Release the lock in LunaServer so networking can begin accepting logins.
             onlineLock.complete(null);
