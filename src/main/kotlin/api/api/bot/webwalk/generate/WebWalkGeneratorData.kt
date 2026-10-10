@@ -1,8 +1,10 @@
 package api.bot.webwalk.generate
 
+import api.bot.webwalk.model.BankLink
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.model.TeleportKind
+import api.bot.webwalk.model.WebWalkNode
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.`object`.ObjectDirection
@@ -110,10 +112,14 @@ data class BankSeed(val id: String, val booth: Position, val candidates: List<Po
  * @property id The id of the bank.
  * @property booth Where the booth is.
  * @property stand The tile in front of the booth, that a bot walks to.
+ * @property links The walks to [stand] from the nodes nearest to it, which [BankLinks] finds.
  *
  * @author Hydrozoa
  */
-data class GeneratedBank(val id: String, val booth: Position, val stand: Position)
+data class GeneratedBank(val id: String,
+                         val booth: Position,
+                         val stand: Position,
+                         val links: List<BankLink> = emptyList())
 
 /**
  * What the generator did, for people to read.
@@ -294,9 +300,67 @@ object BankStands {
                 report.count("banks with both sides in the web")
             }
             banks += GeneratedBank(seed.id, seed.booth, seed.candidates[counts.indexOf(best)])
-            report.count("banks")
         }
         return banks
+    }
+}
+
+/**
+ * Links the stand of each bank to the nodes nearest to it, so that the planner doesn't have to find the nodes that a bank can
+ * be walked from every time that it starts.
+ *
+ * The nodes are chosen like the planner chooses the nodes that a destination can be walked from: the nearest ones by distance,
+ * of which the first few that can be walked from are kept.
+ *
+ * @author Hydrozoa
+ */
+object BankLinks {
+
+    /**
+     * Links every bank. Banks that no node can be walked from are left out and reported, because a trip could never arrive at
+     * them.
+     *
+     * @param banks The banks, with their stands chosen.
+     * @param nodes The nodes of the web that a bank may be linked to.
+     * @param sameArea Determines if the position of a node can be walked to the stand of a bank at all, which is that they are in
+     * the same walkable area. Nodes that it rejects are not tried, which saves the searches that would fail.
+     * @param pathCost Gives the time, in game ticks, of walking between two positions on the same plane, or `null` if it can't
+     * be walked.
+     * @param radius How far, in tiles, nodes are looked for.
+     * @param count How many nodes are linked to each bank, at most.
+     * @param report Where the left out banks are reported, and the banks and their links are counted.
+     * @return The banks with their links, which are not sorted.
+     */
+    fun generate(banks: Iterable<GeneratedBank>,
+                 nodes: Collection<WebWalkNode>,
+                 sameArea: (WebWalkNode, Position) -> Boolean,
+                 pathCost: (Position, Position) -> Int?,
+                 radius: Int,
+                 count: Int,
+                 report: GenerationReport): List<GeneratedBank> {
+        val linked = ArrayList<GeneratedBank>()
+        for (bank in banks) {
+            val candidates = nodes.filter { it.position.z == bank.stand.z && it.position.computeLongestDistance(bank.stand) <= radius }
+                .filter { sameArea(it, bank.stand) }
+                .sortedWith(compareBy({ it.position.computeLongestDistance(bank.stand) }, { it.id }))
+
+            val links = ArrayList<BankLink>()
+            for (node in candidates) {
+                if (links.size >= count) {
+                    break
+                }
+                pathCost(node.position, bank.stand)?.let { links += BankLink(node.id, it) }
+            }
+            if (links.isEmpty()) {
+                report.skipped += "bank ${bank.id} at ${DoorObstacles.describe(bank.booth)}: no node within $radius tiles of " +
+                        "${DoorObstacles.describe(bank.stand)} can be walked from"
+                continue
+            }
+            linked += bank.copy(links = links)
+            report.count("banks")
+            report.count("bank links", links.size)
+        }
+        return linked
     }
 }
 
@@ -396,11 +460,13 @@ object WebWalkWriter {
     }
 
     /**
-     * Writes `banks.jsonc`.
+     * Writes `banks.jsonc`. The links of a bank are written nearest first, as [BankLinks] found them.
      */
     fun banks(banks: Collection<GeneratedBank>): String {
         return lines(banks.sortedBy { it.id }.map { bank ->
-            "{ \"id\": ${quote(bank.id)}, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)} }"
+            val links = bank.links.joinToString(", ") { "{ \"node\": ${quote(it.nodeId)}, \"cost\": ${it.ticks} }" }
+            "{ \"id\": ${quote(bank.id)}, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)}, " +
+                    "\"links\": [$links] }"
         }, "[", "]")
     }
 

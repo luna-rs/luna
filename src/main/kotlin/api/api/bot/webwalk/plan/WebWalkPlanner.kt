@@ -14,7 +14,6 @@ import io.luna.game.model.Position
 import java.util.PriorityQueue
 import java.util.Random
 import java.util.SplittableRandom
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Plans trips between any two positions with the nodes and edges of a [WebWalkGraph].
@@ -26,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap
  * - The start and the destination are linked to the nodes nearest to them, which are the ones that a [WalkEstimator] says
  *   they can be walked to. A trip that is short enough is walked directly.
  * - A trip can also have several places it may end at, and goes to the one that costs least. That is how the nearest bank is
- *   found, see [planToNearestBank].
+ *   found, see [planToNearestBank]. The nodes that a bank is walked to from are not searched for: the generator linked them,
+ *   see [BankDefinition.links].
  * - Edges can be taken from any node: walks, doors, ladders and the like, ships, and teleports. Teleports are not stored
  *   in the graph for each bot. Instead the ones that the snapshot allows are taken from wherever a bot is, as long as it
  *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). Fairy rings can be
@@ -138,15 +138,14 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     private val grid: Map<Triple<Int, Int, Int>, List<Int>> = nodes.indices.groupBy { cell(nodes[it].position) }
 
     /**
-     * The tiles to stand on at the banks.
+     * The nodes that each bank is linked to, keyed by the tile to stand on at the bank, with the time that it takes to walk
+     * from each. The generator found them, so what can be walked to a bank is the same for every trip and nothing has to be
+     * searched for. Banks that share a stand share the links, and a node that two of them link keeps the quicker walk.
      */
-    private val bankStands: Set<Position> = graph.banks.map { it.stand }.toSet()
-
-    /**
-     * The nodes that each bank is linked to, which are found when they are first needed. The banks and the web don't change,
-     * so what can be walked to a bank is the same for every trip.
-     */
-    private val bankLinks = ConcurrentHashMap<Position, List<Link>>()
+    private val bankLinks: Map<Position, List<Link>> = graph.banks.groupBy { it.stand }.mapValues { (_, banks) ->
+        banks.flatMap { bank -> bank.links.mapNotNull { link -> indexById[link.nodeId]?.let { Link(it, link.ticks) } } }
+            .sortedBy { it.ticks }.distinctBy { it.node }
+    }
 
     /**
      * Plans a trip.
@@ -228,7 +227,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         val endLinks = HashMap<Int, MutableList<EndLink>>()
         val direct = ArrayList<EndLink>()
         for (destination in destinations) {
-            val links = if (destination in bankStands) bankLinks.computeIfAbsent(destination) { linkEnd(it) } else linkEnd(destination)
+            val links = bankLinks[destination] ?: linkEnd(destination)
             for (link in links) {
                 endLinks.getOrPut(link.node) { ArrayList() } += EndLink(destination, link.ticks)
             }

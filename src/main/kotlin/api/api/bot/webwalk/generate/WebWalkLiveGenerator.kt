@@ -43,7 +43,8 @@ import java.time.Instant
  *   teleport, so that they are never written out by hand.
  * - The banks of `banks.jsonc` are the bank booths at the bank anchors of the zones, each with the tile in front of it, on the
  *   side of the counter that customers use. They are not waypoints, because nothing is walked through them: they are where a
- *   trip to the nearest bank ends. See [BankStands].
+ *   trip to the nearest bank ends. Each is linked to the nodes nearest to it, which is where a trip walks the last stretch
+ *   from. See [BankStands] and [BankLinks].
  * - The waypoints of `walk_graph.jsonc` are made from the zones and the sub-zones, moved onto a tile that can be stood
  *   on. The ones of `waypoints_manual.json`, which only the generator reads, are copied into it as they are.
  * - The walk edges of `walk_graph.jsonc` link every node of the graph (the ones from the files that are not generated here too)
@@ -89,6 +90,17 @@ object WebWalkLiveGenerator {
      * off, but not for the cells that are skipped. Every walk is well inside the range of [RoutePathfinder].
      */
     private const val NEAR_LINK_RADIUS = 25
+
+    /**
+     * How far from the stand of a bank, in tiles, nodes are looked for to link it to. This is inside the range of
+     * [RoutePathfinder] like [NEAR_LINK_RADIUS], so the walks to the stand are found without a long range search.
+     */
+    private const val BANK_LINK_RADIUS = 25
+
+    /**
+     * How many nodes each bank is linked to, at most.
+     */
+    private const val BANK_LINK_COUNT = 6
 
     /**
      * The time of a teleport spell, in ticks: the cast is five ticks long (see `Magic.regularStyle`).
@@ -505,13 +517,19 @@ object WebWalkLiveGenerator {
 
         // The customers' side of a counter is in an area with nodes in it, and the banker's side is closed off from them.
         val nodesByArea = kept.groupingBy { componentById.getValue(it.id) }.eachCount()
-        val banks = BankStands.generate(gathered.banks, { nodesByArea[bankTileLabels.getValue(it)] ?: 0 }, gathered.report)
+        val stands = BankStands.generate(gathered.banks, { nodesByArea[bankTileLabels.getValue(it)] ?: 0 }, gathered.report)
+        // The nodes that a stand can be walked from are the ones in its area, so the others are not tried. The links are walked
+        // by the same estimator as the links between nodes, from the node to the stand.
+        val banks = BankLinks.generate(stands, kept, { node, stand -> componentById.getValue(node.id) == bankTileLabels.getValue(stand) },
+                                       pathfinderCost, BANK_LINK_RADIUS, BANK_LINK_COUNT, gathered.report)
         val banksText = WebWalkWriter.banks(banks)
-        // Checks the file as it will be loaded.
-        WebWalkLoader.fromSources(mapOf(WebWalkLoader.BANKS to banksText))
+        val walkGraphText = WebWalkWriter.walkGraph(waypoints, links)
+        // Checks the files as they will be loaded: the links of the banks are to nodes of the walk graph. The manual waypoints
+        // are already in the walk graph, so they are not read again.
+        WebWalkLoader.fromSources(sources - WebWalkLoader.WAYPOINTS_MANUAL +
+                                          mapOf(WebWalkLoader.BANKS to banksText, WebWalkLoader.WALK_GRAPH to walkGraphText))
 
-        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText,
-                      WebWalkWriter.walkGraph(waypoints, links))
+        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText, walkGraphText)
     }
 
     /**

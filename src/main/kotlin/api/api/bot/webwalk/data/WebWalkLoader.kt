@@ -1,6 +1,7 @@
 package api.bot.webwalk.data
 
 import api.bot.webwalk.model.BankDefinition
+import api.bot.webwalk.model.BankLink
 import api.bot.webwalk.model.EdgeAction
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.FairyRing
@@ -41,7 +42,9 @@ import java.nio.file.Path
  *   the `option`) that says which spell or jewellery it is.
  * - `banks.jsonc` (generated): bank booths, each with an `id`, the `booth` position and the `pos` to stand on in front of it,
  *   which is next to the booth. They are not nodes of the graph, only places for a trip to end at, see
- *   [api.bot.webwalk.plan.WebWalkPlanner.planToNearestBank].
+ *   [api.bot.webwalk.plan.WebWalkPlanner.planToNearestBank]. A bank also has `links`, which are the walks to its `pos` from
+ *   the nodes nearest to it (`node`, the id of a node on the same plane, and `cost`, the time of the walk in game ticks).
+ *   At least one is needed to arrive at the bank.
  * - `ships.json`: an object with `ports` (`id`, `pos`) and `routes` (`from`, `to`, `cost`), or an empty array.
  * - `fairy_rings.json`: fairy rings, each with an `id`, `code` and `pos`.
  *
@@ -184,6 +187,20 @@ object WebWalkLoader {
                               val reverseRequirements: Requirements? = null)
 
     /**
+     * A bank whose links have not been checked yet, because the nodes that they refer to may not all be read.
+     */
+    private class PendingBank(val where: String,
+                              val id: String,
+                              val booth: Position,
+                              val stand: Position,
+                              val links: List<PendingBankLink>)
+
+    /**
+     * A link of a bank whose node has not been checked yet.
+     */
+    private class PendingBankLink(val where: String, val nodeId: String, val ticks: Int)
+
+    /**
      * An entry of `obstacles.jsonc`, `climbs.jsonc` or `crossings.jsonc`, which overrides can still change.
      */
     private class Obstacle(val where: String,
@@ -231,9 +248,9 @@ object WebWalkLoader {
         val fairyRings = ArrayList<FairyRing>()
 
         /**
-         * The banks.
+         * The banks that still need the nodes of their links to be checked.
          */
-        val banks = ArrayList<BankDefinition>()
+        val pendingBanks = ArrayList<PendingBank>()
 
         /**
          * Reads every file and creates the graph.
@@ -251,6 +268,7 @@ object WebWalkLoader {
             for (edge in pending) {
                 resolve(edge, edges)
             }
+            val banks = pendingBanks.map { resolve(it) }
             if (errors.messages.isNotEmpty()) {
                 throw WebWalkDataException(errors.messages)
             }
@@ -561,6 +579,7 @@ object WebWalkLoader {
                 val id = readId(entry)
                 val booth = entry.position("booth")
                 val stand = entry.position("pos")
+                val links = readBankLinks(entry)
                 entry.finish()
 
                 if (id == null || booth == null || stand == null) {
@@ -570,12 +589,51 @@ object WebWalkLoader {
                     entry.reject("pos", "must be the tile next to 'booth' on the same plane")
                     continue
                 }
-                if (banks.any { it.id == id }) {
+                if (pendingBanks.any { it.id == id }) {
                     errors.add(entry.where, "duplicate bank id '$id'")
                     continue
                 }
-                banks += BankDefinition(id, booth, stand)
+                pendingBanks += PendingBank(entry.where, id, booth, stand, links)
             }
+        }
+
+        /**
+         * Reads the links of a bank, whose nodes are checked later.
+         */
+        fun readBankLinks(bank: FieldReader): List<PendingBankLink> {
+            val links = ArrayList<PendingBankLink>()
+            for (link in bank.objects("links")) {
+                val nodeId = link.string("node")
+                val ticks = link.int("cost", min = 0)
+                link.finish()
+                if (nodeId != null && ticks != null) {
+                    links += PendingBankLink(link.where, nodeId, ticks)
+                }
+            }
+            return links
+        }
+
+        /**
+         * Checks the links of a bank, which have to be to different nodes on the plane of the bank, and makes the bank.
+         */
+        fun resolve(bank: PendingBank): BankDefinition {
+            if (bank.links.isEmpty()) {
+                errors.add(bank.where, "'links' needs at least one link, or the bank can't be arrived at")
+            }
+            val links = ArrayList<BankLink>()
+            for (link in bank.links) {
+                val node = nodes[link.nodeId]
+                if (node == null) {
+                    errors.add(link.where, "'node' refers to unknown node '${link.nodeId}'")
+                } else if (node.position.z != bank.stand.z) {
+                    errors.add(link.where, "'node' refers to '${link.nodeId}', which is not on the plane of the bank")
+                } else if (links.any { it.nodeId == link.nodeId }) {
+                    errors.add(link.where, "duplicate link to node '${link.nodeId}'")
+                } else {
+                    links += BankLink(link.nodeId, link.ticks)
+                }
+            }
+            return BankDefinition(bank.id, bank.booth, bank.stand, links)
         }
 
         /**

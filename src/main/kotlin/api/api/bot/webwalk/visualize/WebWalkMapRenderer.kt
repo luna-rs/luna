@@ -245,7 +245,8 @@ object WebWalkMapRenderer {
             g.fillOval((x - dot / 2).roundToInt(), (y - dot / 2).roundToInt(), dot.roundToInt(), dot.roundToInt())
         }
 
-        // Banks are not nodes, so they are drawn after them: a square on the tile in front of the booth, with a line to the booth.
+        // Banks are not nodes, so they are drawn after them: a square on the tile in front of the booth, with a line to the booth
+        // and lines to the nodes that the bank is linked to.
         var banks = 0
         for (bank in graph.banks) {
             if (!visible(bank.stand)) {
@@ -254,6 +255,13 @@ object WebWalkMapRenderer {
             banks++
             g.stroke = BasicStroke(LINE_WIDTH)
             g.color = BANK
+            for (link in bank.links) {
+                val node = graph.node(link.nodeId) ?: continue
+                if (visible(node.position)) {
+                    g.drawLine(px(bank.stand).roundToInt(), py(bank.stand).roundToInt(),
+                               px(node.position).roundToInt(), py(node.position).roundToInt())
+                }
+            }
             g.drawLine(px(bank.stand).roundToInt(), py(bank.stand).roundToInt(), px(bank.booth).roundToInt(), py(bank.booth).roundToInt())
             val side = dot.roundToInt() + 1
             val x = px(bank.stand).roundToInt() - side / 2
