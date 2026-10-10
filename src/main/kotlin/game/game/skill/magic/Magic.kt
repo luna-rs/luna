@@ -10,12 +10,14 @@ import io.luna.Luna
 import io.luna.game.model.LocalSound
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.collision.CollisionFlag
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.path.route.LineOfSight
 import io.luna.util.StringUtils
 
 /**
@@ -242,6 +244,33 @@ object Magic {
     }
 
     /**
+     * Picks a random tile within [radius] of [centre] that can be stood on and has a straight walkable line to
+     * [centre]. Falls back to [centre] when no tile qualifies.
+     *
+     * @param centre The tile to land around.
+     * @param radius The furthest the landing tile may be from [centre].
+     * @return The landing tile.
+     */
+    fun findLandingTile(centre: Position, radius: Int): Position {
+        if (radius <= 0) {
+            return centre
+        }
+        val view = world.collisionManager.view(false)
+        val tiles = ArrayList<Position>()
+        for (x in centre.x - radius..centre.x + radius) {
+            for (y in centre.y - radius..centre.y + radius) {
+                if (view.get(x, y, centre.z) and (CollisionFlag.LOC or CollisionFlag.FLOOR_BLOCKED) != 0) {
+                    continue
+                }
+                if (LineOfSight.hasLineOfWalk(view, centre.z, x, y, centre.x, centre.y, 1, 1, 1, 1, 0)) {
+                    tiles += Position(x, y, centre.z)
+                }
+            }
+        }
+        return if (tiles.isEmpty()) centre else tiles.random()
+    }
+
+    /**
      * Teleports this player to [destination] using the given [style].
      *
      * This submits a [TeleportAction] for the player. [onTeleport] is invoked once the teleport has passed every
@@ -249,15 +278,18 @@ object Magic {
      *
      * @param destination The target destination.
      * @param style The teleport sequence to use. Defaults to the style of the player's spellbook.
+     * @param maxWildernessLevel The deepest Wilderness level this teleport works from.
      * @param onLand A callback invoked on the tick the player lands.
      * @param onTeleport A callback invoked once the teleport has passed every check.
      */
     fun Player.teleport(destination: Position,
                         style: TeleportSequence? = null,
+                        maxWildernessLevel: Int = 20,
                         onLand: () -> Unit = {},
                         onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style =
-            style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR)) {
+            style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR),
+                                             maxWildernessLevel = maxWildernessLevel) {
             override fun onTeleport() {
                 onTeleport()
             }

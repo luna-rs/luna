@@ -53,11 +53,6 @@ object DegradableEquipmentHandler {
     const val CRYSTAL_ITEMS_CHARGES = 2500
 
     /**
-     * Tracks whether the player's Ring of Life has already activated for the current situation.
-     */
-    var Player.ringOfLifeActive by Attr.boolean()
-
-    /**
      * The player's remaining Ring of Recoil capacity.
      */
     var Player.ringOfRecoilCharges by Attr.int { RING_OF_RECOIL_CHARGES }
