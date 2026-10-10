@@ -8,6 +8,7 @@ import engine.bot.coordinator.skill.CookingScriptFactory
 import game.bot.scripts.skills.AssembleFoodBotScript.Companion.AssemblyData
 import game.bot.scripts.FillWaterBotScript
 import game.obj.resource.fillable.WaterResource
+import game.skill.cooking.cookFood.MakeWineActionItem
 import game.skill.cooking.prepareFood.IncompleteFood
 import game.skill.cooking.prepareFood.PrepareFoodActionItem
 import io.luna.game.model.item.Item
@@ -41,14 +42,15 @@ class AssembleFoodBotScriptTest {
             val batches = 28 / (1 + secondaryAmount)
             InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, batches), Item(secondary, batches * secondaryAmount))
             assertTrue(bot.inventory.isFull)
-            val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
+            val action = if (food == IncompleteFood.UNFERMENTED_WINE) MakeWineActionItem(bot, batches)
+                else PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
             bot.actions.submit(action)
             repeat(batches - 1) { assertFalse(action.run()) }
             assertTrue(action.run())
             assertEquals(batches, bot.inventory.computeAmountForId(food.id))
             assertFalse(bot.inventory.contains(food.baseIngredient))
             assertFalse(bot.inventory.contains(secondary))
-            WaterResource.FILLABLES.inverse()[secondary]?.let { empty ->
+            if (food != IncompleteFood.UNFERMENTED_WINE) WaterResource.FILLABLES.inverse()[secondary]?.let { empty ->
                 assertEquals(batches, bot.inventory.computeAmountForId(empty))
             }
             if (secondary == 1927) assertEquals(batches, bot.inventory.computeAmountForId(1925))
@@ -56,7 +58,8 @@ class AssembleFoodBotScriptTest {
                 assertEquals(batches, bot.inventory.computeAmountForId(1923))
                 assertTrue(bot.inventory.isFull)
             }
-            if (food.exp > 0.0) verify(bot.cooking, times(batches)).addExperience(food.exp)
+            if (food.exp > 0.0 && food != IncompleteFood.UNFERMENTED_WINE)
+                verify(bot.cooking, times(batches)).addExperience(food.exp)
             else verify(bot.cooking, never()).addExperience(anyDouble())
         }
     }
@@ -117,6 +120,7 @@ class AssembleFoodBotScriptTest {
             .`when`(fixtureWorld).schedule(any(Task::class.java))
         try {
             val interactions = listOf(
+                IncompleteFood.UNFERMENTED_WINE to 1937,
                 IncompleteFood.INCOMPLETE_PIZZA to 1982,
                 IncompleteFood.UNCOOKED_PLAIN_PIZZA to 1985,
                 IncompleteFood.MEAT_PIZZA to 2142,
@@ -150,7 +154,8 @@ class AssembleFoodBotScriptTest {
                 `when`(bot.actionHandler.inventory.useItem(food.baseIngredient).onItem(secondary)).thenReturn(true)
                 val widgets = bot.actionHandler.widgets
                 doAnswer {
-                    val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
+                    val action = if (food == IncompleteFood.UNFERMENTED_WINE) MakeWineActionItem(bot, batches)
+                        else PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
                     bot.actions.submit(action)
                     repeat(batches) { action.run() }
                     null

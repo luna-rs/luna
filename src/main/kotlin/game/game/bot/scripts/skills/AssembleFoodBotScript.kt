@@ -13,6 +13,7 @@ import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.bot.scripts.FillWaterBotScript
 import game.obj.resource.fillable.WaterResource
+import game.skill.cooking.cookFood.MakeWineActionItem
 import game.skill.cooking.prepareFood.IncompleteFood
 import game.skill.cooking.prepareFood.PrepareFoodActionItem
 import io.luna.game.action.ActionType
@@ -34,7 +35,10 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
  * a product, plus an empty container when water or milk is used. Milky nettle tea requires level 20 and combines
  * an existing bowl of tea with one bucket of milk, returning the bucket and awarding no XP.
- * [PrepareFoodActionItem] owns conversions and returns.
+ * [PrepareFoodActionItem] owns ordinary conversions and returns. Wine uses [MakeWineActionItem], which
+ * combines grapes and a jug of water at level 35. Fourteen pairs produce fourteen dynamic unfermented wines;
+ * the existing fermentation task later awards 200 XP per jug. The jug remains in the wine product.
+ * Ending this script interrupts mixing while allowing already-made wine to continue fermenting.
  * Stew completion requires level 25 and curry requires level 60; both award no XP. Curry consumes one spice
  * or three curry leaves per uncooked stew. Stews already containing potato accept either cooked meat alternative,
  * while stews already containing meat accept a potato. Starting a stew uses a bowl of water and potato or cooked
@@ -74,7 +78,7 @@ class AssembleFoodBotScript(
         val RECIPES = setOf(
             IncompleteFood.INCOMPLETE_PIZZA, IncompleteFood.UNCOOKED_PLAIN_PIZZA,
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
-            IncompleteFood.CHOCOLATE_CAKE,
+            IncompleteFood.CHOCOLATE_CAKE, IncompleteFood.UNFERMENTED_WINE,
             IncompleteFood.MILKY_NETTLE_TEA,
             IncompleteFood.CUP_OF_NETTLE_TEA,
             IncompleteFood.CUP_OF_MILKY_NETTLE_TEA,
@@ -276,7 +280,11 @@ class AssembleFoodBotScript(
     }
 
     override suspend fun finish() {
-        bot.actions.first(PrepareFoodActionItem::class.java)?.takeIf { it.food == food }?.interrupt()
+        if (food == IncompleteFood.UNFERMENTED_WINE) {
+            bot.actions.first(MakeWineActionItem::class.java)?.interrupt()
+        } else {
+            bot.actions.first(PrepareFoodActionItem::class.java)?.takeIf { it.food == food }?.interrupt()
+        }
     }
 
     override fun snapshot(): AssemblyData = AssemblyData().also {

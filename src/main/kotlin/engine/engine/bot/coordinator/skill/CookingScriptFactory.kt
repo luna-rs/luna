@@ -41,6 +41,9 @@ import api.predef.rand
  * Owned bowls of nettle tea and empty cups can be processed at level 20 for the existing recipe's 52 XP,
  * with the empty bowl returned. This recipe is eligible for training and non-training selection.
  * Milk can be added to owned cups of nettle tea at level 20 as a non-training step, returning the empty bucket.
+ * Grapes and jugs of water can be mixed into wine at level 35 for training or non-training selection.
+ * Wine experience is awarded later by the existing fermentation task. Non-training preparation can first
+ * fill owned empty jugs when grapes are available; training requires already-filled jugs.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96
