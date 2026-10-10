@@ -17474,7 +17474,7 @@
     "id": 4298, // Ham shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -19532,7 +19532,7 @@
     "id": 4728, // Guthans platebody
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21534,7 +21534,7 @@
     "id": 4916, // Guthans body 100
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21561,7 +21561,7 @@
     "id": 4917, // Guthans body 75
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21588,7 +21588,7 @@
     "id": 4918, // Guthans body 50
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21615,7 +21615,7 @@
     "id": 4919, // Guthans body 25
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21642,7 +21642,7 @@
     "id": 4920, // Guthans body 0
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -24131,7 +24131,7 @@
     "id": 5575, // Initiate platemail
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
