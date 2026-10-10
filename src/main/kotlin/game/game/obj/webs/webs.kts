@@ -4,14 +4,14 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
 import io.luna.game.action.impl.LockedAction
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.def.ItemDefinition
+import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.def.WeaponAnimationDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -100,9 +100,12 @@ fun open(web: GameObject) {
 
 object1(WEB) { slash(plr, gameObject, plr.equipment[Equipment.WEAPON]?.id) }
 
-// Any item can be used on a web, but only a blade cuts it.
-on(ServerLaunchEvent::class) {
-    for (item in ItemDefinition.ALL.filterNotNull()) {
-        useItem(item.id()).onObject(WEB) { slash(plr, gameObject, usedItemId) }
+// Any item can be used on a web, but only a blade cuts it. This listener sees every object, so only webs get walked
+// to, and other objects still say "Nothing interesting happens."
+on(ItemOnObjectEvent::class, interaction = { _, target ->
+    if (target is GameObject && target.id == WEB) InteractionPolicy.STANDARD_SIZE else InteractionPolicy.UNSPECIFIED
+}) {
+    if (gameObject.id == WEB) {
+        slash(plr, gameObject, usedItemId)
     }
 }
