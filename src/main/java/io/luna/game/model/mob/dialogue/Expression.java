@@ -75,7 +75,12 @@ public enum Expression {
     /**
      * The shifty expressions, the same animations as {@link #ANGRY}.
      */
-    SHIFTY(592, 593, 594, 595);
+    SHIFTY(592, 593, 594, 595),
+
+    /**
+     * The shocked expressions.
+     */
+    SHOCKED(571, 572, 573, 574);
 
     /**
      * The expression identifiers.
