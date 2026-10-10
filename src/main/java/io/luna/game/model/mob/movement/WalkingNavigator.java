@@ -27,6 +27,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
@@ -457,8 +458,55 @@ public class WalkingNavigator {
         return handleExceptions(target, result);
     }
 
+    /**
+     * Checks for a complete walking route to a legal interaction tile without moving the mob.
+     * Partial paths are not proof of reachability. Targets and candidate tiles are captured on the game thread;
+     * searches run on the pathfinding pool and return false if no complete route is confirmed within five seconds.
+     * Each running search retains the pathfinder's existing node bound; timeout prevents further candidate searches.
+     */
+    public CompletableFuture<Boolean> canReachForInteraction(Entity target) {
+        Position start = mob.getPosition();
+        if (start.getZ() != target.getPosition().getZ()) {
+            return CompletableFuture.completedFuture(false);
+        }
+        if (collisionManager.reached(mob, target, InteractionPolicy.STANDARD_SIZE)) {
+            return CompletableFuture.completedFuture(true);
+        }
+        List<Position> candidates = interactionApproachPositions(target, Optional.empty());
+        GamePathfinder<Position> pathfinder = getDefaultPathfinder();
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        result.completeAsync(() -> {
+            for (Position candidate : candidates) {
+                if (result.isDone()) {
+                    return false;
+                }
+                PathResult<Position> path = pathfinder.find(start, candidate);
+                if (path.getType() == PathResultType.COMPLETE ||
+                        (path.getType() == PathResultType.EMPTY && start.equals(candidate))) {
+                    return true;
+                }
+            }
+            return false;
+        }, pool);
+        CompletableFuture<Boolean> checked = result.completeOnTimeout(false, 5, TimeUnit.SECONDS)
+                .exceptionally(error -> {
+                    logger.debug("Could not confirm an interaction route from {}.", start, error);
+                    return false;
+                });
+        checked.whenComplete((reachable, error) -> {
+            if (checked.isCancelled()) {
+                result.cancel(false);
+            }
+        });
+        return checked;
+    }
+
     /** Returns the full legal perimeter, including interior tiles along a multi-tile object's sides. */
     List<Position> objectApproachPositions(GameObject target, Optional<Direction> offsetDir) {
+        return interactionApproachPositions(target, offsetDir);
+    }
+
+    private List<Position> interactionApproachPositions(Entity target, Optional<Direction> offsetDir) {
         List<Position> candidates = new ArrayList<>();
         if (offsetDir.isPresent()) {
             candidates.add(computeOffsetPosition(target, offsetDir));
