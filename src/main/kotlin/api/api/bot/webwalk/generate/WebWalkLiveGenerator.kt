@@ -13,6 +13,7 @@ import api.predef.*
 import game.item.degradable.jewellery.TeleportJewellery
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
+import engine.bank.Banking
 import engine.obj.LadderDestination
 import engine.obj.LadderType
 import engine.obj.StairDestination
@@ -27,8 +28,8 @@ import java.nio.file.Path
 import java.time.Instant
 
 /**
- * Makes the generated files of the web-walker: `obstacles.jsonc`, `climbs.jsonc`, `crossings.jsonc`, `teleports.jsonc` and
- * `walk_graph.jsonc`.
+ * Makes the generated files of the web-walker: `obstacles.jsonc`, `climbs.jsonc`, `crossings.jsonc`, `teleports.jsonc`,
+ * `banks.jsonc` and `walk_graph.jsonc`.
  * Everything is made in a single run of the server, by the `generateWebWalk` Gradle task, because most of it needs a
  * running world. The files start with a comment that says they are generated and when, see [WebWalkWriter.header].
  *
@@ -40,7 +41,10 @@ import java.time.Instant
  *   [Trapdoor] say that they do, which is what players get.
  * - The teleports of `teleports.jsonc` are the teleport spells, the destinations of the teleport jewellery, and the home
  *   teleport, so that they are never written out by hand.
- * - The waypoints of `walk_graph.jsonc` are made from the zones, their banks and the sub-zones, moved onto a tile that can be stood
+ * - The banks of `banks.jsonc` are the bank booths at the bank anchors of the zones, each with the tile in front of it, on the
+ *   side of the counter that customers use. They are not waypoints, because nothing is walked through them: they are where a
+ *   trip to the nearest bank ends. See [BankStands].
+ * - The waypoints of `walk_graph.jsonc` are made from the zones and the sub-zones, moved onto a tile that can be stood
  *   on. The ones of `waypoints_manual.json`, which only the generator reads, are copied into it as they are.
  * - The walk edges of `walk_graph.jsonc` link every node of the graph (the ones from the files that are not generated here too)
  *   with the cost of walking between them, according to the collision of the world.
@@ -122,11 +126,13 @@ object WebWalkLiveGenerator {
      * @property climbs The ladders, stairs and trapdoors.
      * @property waypoints The waypoints.
      * @property teleports The teleports.
+     * @property banks The bank booths, whose tiles to stand on are chosen by [finish].
      * @property report What was made and what was left out.
      */
     class Gathered(val climbs: List<GeneratedObstacle>,
                    val waypoints: List<GeneratedWaypoint>,
                    val teleports: List<GeneratedTeleport>,
+                   val banks: List<BankSeed>,
                    val report: GenerationReport)
 
     /**
@@ -136,10 +142,11 @@ object WebWalkLiveGenerator {
      * @property climbs The text of `climbs.jsonc`.
      * @property crossings The text of `crossings.jsonc`.
      * @property teleports The text of `teleports.jsonc`.
+     * @property banks The text of `banks.jsonc`.
      * @property walkGraph The text of `walk_graph.jsonc`.
      */
     class Output(val obstacles: String, val climbs: String, val crossings: String, val teleports: String,
-                 val walkGraph: String)
+                 val banks: String, val walkGraph: String)
 
     /**
      * Reads the world. Must be called on the game thread.
@@ -166,7 +173,38 @@ object WebWalkLiveGenerator {
         }
         report.count("climbs", climbs.size)
         val waypoints = waypoints(report)
-        return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report), report)
+        return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report),
+                        bankSeeds(report), report)
+    }
+
+    /**
+     * Finds the bank booths at the bank anchors of the zones. Zones that share the anchors of another zone don't make them
+     * twice. Anchors with no bank booth on them, or with no tile next to them to stand on, are left out and reported. Must be
+     * called on the game thread.
+     */
+    private fun bankSeeds(report: GenerationReport): List<BankSeed> {
+        val seeds = ArrayList<BankSeed>()
+        val booths = HashSet<Position>()
+        for (zone in Zone.entries) {
+            zone.bankAnchors.forEachIndexed { index, booth ->
+                if (!booths.add(booth)) {
+                    return@forEachIndexed
+                }
+                val id = "${zone.name.lowercase()}_$index"
+                if (world.locator.findObjectsOnTile(booth) { it.id in Banking.bankingObjects }.isEmpty()) {
+                    report.skipped += "bank $id at ${DoorObstacles.describe(booth)}: no bank booth here"
+                    return@forEachIndexed
+                }
+                val candidates = listOf(booth.translate(-1, 0), booth.translate(0, -1), booth.translate(0, 1), booth.translate(1, 0))
+                    .filter { it.x >= 0 && it.y >= 0 && LadderDestination.canLand(it) }
+                if (candidates.isEmpty()) {
+                    report.skipped += "bank $id at ${DoorObstacles.describe(booth)}: no tile next to the booth to stand on"
+                    return@forEachIndexed
+                }
+                seeds += BankSeed(id, booth, candidates)
+            }
+        }
+        return seeds
     }
 
     /**
@@ -340,14 +378,12 @@ object WebWalkLiveGenerator {
     }
 
     /**
-     * Makes the waypoints of the zones, their banks and the sub-zones.
+     * Makes the waypoints of the zones and the sub-zones.
      */
     private fun waypoints(report: GenerationReport): List<GeneratedWaypoint> {
         val seeds = ArrayList<WaypointSeed>()
         for (zone in Zone.entries) {
-            val name = zone.name.lowercase()
-            seeds += WaypointSeed("zone_$name", zone.anchor, setOf("zone"))
-            zone.bankAnchors.forEachIndexed { index, bank -> seeds += WaypointSeed("bank_${name}_$index", bank, setOf("bank")) }
+            seeds += WaypointSeed("zone_${zone.name.lowercase()}", zone.anchor, setOf("zone"))
         }
         for (subZone in SubZone.entries) {
             seeds += WaypointSeed("subzone_${subZone.name.lowercase()}", subZone.inside, setOf("subzone"))
@@ -402,6 +438,8 @@ object WebWalkLiveGenerator {
         sources[WebWalkLoader.CROSSINGS] = crossings.text
         val teleportsText = WebWalkWriter.teleports(gathered.teleports)
         sources[WebWalkLoader.TELEPORTS] = teleportsText
+        // The banks are chosen further down, from how the nodes are linked, so the ones of an earlier run are left out.
+        sources.remove(WebWalkLoader.BANKS)
         sources[WebWalkLoader.WALK_GRAPH] = WebWalkWriter.walkGraph(gathered.waypoints, emptyList())
 
         val graph = WebWalkLoader.fromSources(sources)
@@ -413,9 +451,13 @@ object WebWalkLiveGenerator {
         // can. Otherwise every search for a node that can't be reached would cover everything that can.
         val view = collision.view(true)
         val nodes = graph.nodes.values.toList()
-        val labels = WalkableComponents { x, y, z, dx, dy ->
+        // The tiles beside the bank booths are labelled too, to tell which side of the counter is where customers stand.
+        val bankTiles = gathered.banks.flatMap { it.candidates }.distinct()
+        val allLabels = WalkableComponents { x, y, z, dx, dy ->
             StepValidator.canTravel(view, z, x, y, dx, dy, 1, 0, RouteStrategy.NORMAL)
-        }.label(nodes.map { it.position })
+        }.label(nodes.map { it.position } + bankTiles)
+        val labels = allLabels.copyOfRange(0, nodes.size)
+        val bankTileLabels = bankTiles.indices.associate { bankTiles[it] to allLabels[nodes.size + it] }
         gathered.report.count("walkable areas", labels.toSet().size)
 
         // A scattered waypoint in an area that has no other node can't be walked to from anywhere that matters, so it is left out.
@@ -461,7 +503,15 @@ object WebWalkLiveGenerator {
         gathered.report.count("nodes", kept.size)
         gathered.report.count("walk links", links.size)
 
-        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, WebWalkWriter.walkGraph(waypoints, links))
+        // The customers' side of a counter is in an area with nodes in it, and the banker's side is closed off from them.
+        val nodesByArea = kept.groupingBy { componentById.getValue(it.id) }.eachCount()
+        val banks = BankStands.generate(gathered.banks, { nodesByArea[bankTileLabels.getValue(it)] ?: 0 }, gathered.report)
+        val banksText = WebWalkWriter.banks(banks)
+        // Checks the file as it will be loaded.
+        WebWalkLoader.fromSources(mapOf(WebWalkLoader.BANKS to banksText))
+
+        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText,
+                      WebWalkWriter.walkGraph(waypoints, links))
     }
 
     /**
@@ -478,6 +528,7 @@ object WebWalkLiveGenerator {
         Files.writeString(directory.resolve(WebWalkLoader.CLIMBS), header + output.climbs)
         Files.writeString(directory.resolve(WebWalkLoader.CROSSINGS), header + output.crossings)
         Files.writeString(directory.resolve(WebWalkLoader.TELEPORTS), header + output.teleports)
+        Files.writeString(directory.resolve(WebWalkLoader.BANKS), header + output.banks)
         Files.writeString(directory.resolve(WebWalkLoader.WALK_GRAPH), header + output.walkGraph)
     }
 
@@ -494,6 +545,7 @@ object WebWalkLiveGenerator {
                              WebWalkLoader.CLIMBS to output.climbs,
                              WebWalkLoader.CROSSINGS to output.crossings,
                              WebWalkLoader.TELEPORTS to output.teleports,
+                             WebWalkLoader.BANKS to output.banks,
                              WebWalkLoader.WALK_GRAPH to output.walkGraph)
         val stale = ArrayList<String>()
         for ((file, text) in expected) {
@@ -569,7 +621,7 @@ object WebWalkGenerationRunner {
                 } else {
                     WebWalkLiveGenerator.write(output, DIRECTORY)
                     say("Wrote ${WebWalkLoader.OBSTACLES}, ${WebWalkLoader.CLIMBS}, ${WebWalkLoader.CROSSINGS}, " +
-                                "${WebWalkLoader.TELEPORTS} and ${WebWalkLoader.WALK_GRAPH} to $DIRECTORY.")
+                                "${WebWalkLoader.TELEPORTS}, ${WebWalkLoader.BANKS} and ${WebWalkLoader.WALK_GRAPH} to $DIRECTORY.")
                 }
             } catch (e: Throwable) {
                 failed = true

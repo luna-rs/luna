@@ -10,7 +10,7 @@ import io.luna.game.model.Position
 enum class NodeKind {
 
     /**
-     * A point the planner may route through, such as a town centre or a bank.
+     * A point the planner may route through, such as a town centre.
      */
     WAYPOINT,
 
@@ -119,7 +119,7 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
  * @property id The unique id of the node.
  * @property position The position of the node.
  * @property kind What the node stands for.
- * @property tags Free-form labels, such as `bank` or `town`.
+ * @property tags Free-form labels, such as `town`.
  * @property wildernessLevel The wilderness level at [position], or `0` outside the wilderness.
  *
  * @author Hydrozoa
@@ -248,19 +248,33 @@ data class FairyRing(val id: String,
                      val requirements: Requirements = Requirements.NONE)
 
 /**
+ * A bank booth, with the tile in front of it to stand on. Banks are not nodes of the graph: they are only places for a trip to
+ * end, so that the planner can find the nearest one. A bot at [stand] is the right side of the counter to use the booth.
+ *
+ * @property id The unique id of the bank.
+ * @property booth Where the booth is.
+ * @property stand The tile in front of the booth, that a bot walks to.
+ *
+ * @author Hydrozoa
+ */
+data class BankDefinition(val id: String, val booth: Position, val stand: Position)
+
+/**
  * The immutable web-walker graph, which is safe to share between threads.
  *
  * Use [api.bot.webwalk.data.WebWalkLoader] to create one.
  *
  * @property teleports The teleports a bot may use.
  * @property fairyRings The fairy rings.
+ * @property banks The banks that a trip can end at.
  *
  * @author Hydrozoa
  */
 class WebWalkGraph(nodes: Collection<WebWalkNode>,
                    edges: Collection<WebWalkEdge>,
                    val teleports: List<TeleportDefinition>,
-                   val fairyRings: List<FairyRing>) {
+                   val fairyRings: List<FairyRing>,
+                   val banks: List<BankDefinition> = emptyList()) {
 
     companion object {
 

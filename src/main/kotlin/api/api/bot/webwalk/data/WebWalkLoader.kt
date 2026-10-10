@@ -1,5 +1,6 @@
 package api.bot.webwalk.data
 
+import api.bot.webwalk.model.BankDefinition
 import api.bot.webwalk.model.EdgeAction
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.FairyRing
@@ -38,6 +39,9 @@ import java.nio.file.Path
  *   no obstacle is a problem, so overrides can't quietly rot after the obstacles are generated again.
  * - `teleports.jsonc` (generated): teleports, each with an `id`, `kind`, `dest`, `cost`, and the `key` (and for jewellery
  *   the `option`) that says which spell or jewellery it is.
+ * - `banks.jsonc` (generated): bank booths, each with an `id`, the `booth` position and the `pos` to stand on in front of it,
+ *   which is next to the booth. They are not nodes of the graph, only places for a trip to end at, see
+ *   [api.bot.webwalk.plan.WebWalkPlanner.planToNearestBank].
  * - `ships.json`: an object with `ports` (`id`, `pos`) and `routes` (`from`, `to`, `cost`), or an empty array.
  * - `fairy_rings.json`: fairy rings, each with an `id`, `code` and `pos`.
  *
@@ -94,6 +98,11 @@ object WebWalkLoader {
     const val TELEPORTS = "teleports.jsonc"
 
     /**
+     * The generated bank booths, and where to stand to use them.
+     */
+    const val BANKS = "banks.jsonc"
+
+    /**
      * The ships.
      */
     const val SHIPS = "ships.json"
@@ -106,7 +115,7 @@ object WebWalkLoader {
     /**
      * Every file that is loaded. [WAYPOINTS_MANUAL] is not one of them, as the generator copies it into [WALK_GRAPH].
      */
-    val FILES = listOf(WALK_GRAPH, OBSTACLES, CLIMBS, CROSSINGS, OBSTACLE_OVERRIDES, TELEPORTS, SHIPS, FAIRY_RINGS)
+    val FILES = listOf(WALK_GRAPH, OBSTACLES, CLIMBS, CROSSINGS, OBSTACLE_OVERRIDES, TELEPORTS, BANKS, SHIPS, FAIRY_RINGS)
 
     /**
      * The logger instance.
@@ -129,8 +138,8 @@ object WebWalkLoader {
             }
         }
         val graph = fromSources(sources)
-        logger.debug("Loaded web-walker graph: {} nodes, {} edges, {} teleports, {} fairy rings.",
-                     graph.nodes.size, graph.edges.size, graph.teleports.size, graph.fairyRings.size)
+        logger.debug("Loaded web-walker graph: {} nodes, {} edges, {} teleports, {} fairy rings, {} banks.",
+                     graph.nodes.size, graph.edges.size, graph.teleports.size, graph.fairyRings.size, graph.banks.size)
         return graph
     }
 
@@ -222,6 +231,11 @@ object WebWalkLoader {
         val fairyRings = ArrayList<FairyRing>()
 
         /**
+         * The banks.
+         */
+        val banks = ArrayList<BankDefinition>()
+
+        /**
          * Reads every file and creates the graph.
          */
         fun build(): WebWalkGraph {
@@ -229,6 +243,7 @@ object WebWalkLoader {
             readWaypoints(WAYPOINTS_MANUAL, edges = false)
             readObstacles()
             readTeleports()
+            readBanks()
             readShips()
             readFairyRings()
 
@@ -239,7 +254,7 @@ object WebWalkLoader {
             if (errors.messages.isNotEmpty()) {
                 throw WebWalkDataException(errors.messages)
             }
-            return WebWalkGraph(nodes.values, edges, teleports, fairyRings)
+            return WebWalkGraph(nodes.values, edges, teleports, fairyRings, banks)
         }
 
         /**
@@ -535,6 +550,31 @@ object WebWalkLoader {
                 }
                 addNode(entry.where, WebWalkNode(nodeId, dest, NodeKind.TELEPORT_DEST))
                 teleports += TeleportDefinition(id, kind, key, option, dest, nodeId, cost, requirements)
+            }
+        }
+
+        /**
+         * Reads the banks.
+         */
+        fun readBanks() {
+            for (entry in entries(BANKS)) {
+                val id = readId(entry)
+                val booth = entry.position("booth")
+                val stand = entry.position("pos")
+                entry.finish()
+
+                if (id == null || booth == null || stand == null) {
+                    continue
+                }
+                if (stand == booth || stand.z != booth.z || stand.computeLongestDistance(booth) != 1) {
+                    entry.reject("pos", "must be the tile next to 'booth' on the same plane")
+                    continue
+                }
+                if (banks.any { it.id == id }) {
+                    errors.add(entry.where, "duplicate bank id '$id'")
+                    continue
+                }
+                banks += BankDefinition(id, booth, stand)
             }
         }
 

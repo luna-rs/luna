@@ -26,6 +26,7 @@ val BOT_WEBWALK_USAGE = listOf(
     "::botwebwalk <bot> <x> <y> [z]  walks a bot to a position.",
     "::botwebwalk <bot> me  walks it to where you are.",
     "::botwebwalk <bot> <place>  walks it to a zone or sub-zone, such as varrock or wizards tower.",
+    "::botwebwalk <bot> bank  walks it to the nearest bank.",
     "If no bot has that name, a temporary one is made where you stand. You are moved to the bot every $FOLLOW_TICKS ticks.")
 
 /**
@@ -36,8 +37,9 @@ val BOT_WEBWALK_USAGE = listOf(
  * the walk is happening. No other bot is touched, and the web-walker is not used by anything else.
  */
 cmd("botwebwalk", RIGHTS_DEV) {
-    val destination = if (args.size < 2) null else parseDestination(plr, args.drop(1))
-    if (destination == null) {
+    val toBank = args.size == 2 && args[1].equals("bank", true)
+    val destination = if (args.size < 2 || toBank) null else parseDestination(plr, args.drop(1))
+    if (destination == null && !toBank) {
         if (args.size >= 2) {
             plr.sendMessage("I don't know where '${args.drop(1).joinToString(" ")}' is.")
         }
@@ -85,28 +87,29 @@ fun parseDestination(plr: Player, words: List<String>): Position? {
 
 /**
  * Plans a trip for [bot], tells [plr] about it, sets the bot on its way, and moves [plr] to the bot every [FOLLOW_TICKS]
- * ticks until it is done.
+ * ticks until it is done. The trip is to [destination], or to the nearest bank if that is `null`.
  */
-fun startWebWalk(plr: Player, bot: Bot, destination: Position) {
+fun startWebWalk(plr: Player, bot: Bot, destination: Position?) {
     val plan = try {
-        WebWalker.plan(bot, destination)
+        if (destination == null) WebWalker.planToNearestBank(bot) else WebWalker.plan(bot, destination)
     } catch (e: Exception) {
         plr.sendMessage("Could not plan a trip: $e")
         logger.error("Could not plan a web walk!", e)
         return
     }
+    val target = destination?.toString() ?: "the nearest bank"
     if (plan == null) {
-        plr.sendMessage("${bot.username} has no way from ${bot.position} to $destination.")
+        plr.sendMessage("${bot.username} has no way from ${bot.position} to $target.")
         return
     }
-    plr.sendMessage("${bot.username}: ${plan.legs.size} legs, cost ${"%.1f".format(plan.cost)}, from ${bot.position} to $destination.")
+    plr.sendMessage("${bot.username}: ${plan.legs.size} legs, cost ${"%.1f".format(plan.cost)}, from ${bot.position} to $target.")
     plan.legs.groupBy { it.type }.forEach { (type, legs) -> plr.sendMessage("  $type x${legs.size}") }
     plan.legs.mapNotNull { it.teleport?.id }.takeIf { it.isNotEmpty() }?.let { plr.sendMessage("  teleports: ${it.joinToString()}") }
 
     var finished = false
     bot.scriptStack.pushHead(object : DynamicBotScript(bot) {
         override suspend fun run(): Boolean {
-            val result = WebWalker.webWalk(bot, destination)
+            val result = if (destination == null) WebWalker.webWalkToNearestBank(bot) else handler.webWalk(destination)
             finished = true
             // The last teleport or climb may have been less than a follow ago, so the player catches up one last time.
             if (plr.state == EntityState.ACTIVE && bot.state == EntityState.ACTIVE) {

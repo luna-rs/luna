@@ -94,6 +94,28 @@ data class GeneratedTeleport(val id: String,
                              val maxWilderness: Int? = null)
 
 /**
+ * A bank booth that the generator found, before the tile to stand on in front of it has been chosen.
+ *
+ * @property id The id of the bank.
+ * @property booth Where the booth is.
+ * @property candidates The tiles next to the booth that can be stood on, which are on either side of its counter.
+ *
+ * @author Hydrozoa
+ */
+data class BankSeed(val id: String, val booth: Position, val candidates: List<Position>)
+
+/**
+ * A bank of `banks.jsonc` made by the generator.
+ *
+ * @property id The id of the bank.
+ * @property booth Where the booth is.
+ * @property stand The tile in front of the booth, that a bot walks to.
+ *
+ * @author Hydrozoa
+ */
+data class GeneratedBank(val id: String, val booth: Position, val stand: Position)
+
+/**
  * What the generator did, for people to read.
  *
  * @author Hydrozoa
@@ -239,6 +261,46 @@ object WaypointSeeds {
 }
 
 /**
+ * Chooses the tile to stand on in front of each bank booth.
+ *
+ * A booth is a counter with the customers on one side and the banker on the other, and the tiles on both sides can be stood
+ * on. The banker's side is a small area that is walled off, so it is told apart by how much of the web is in the area that a
+ * tile is in: the customers' side is part of the town, and the banker's side has nothing in it.
+ *
+ * @author Hydrozoa
+ */
+object BankStands {
+
+    /**
+     * Chooses the stand of every booth. Booths that have no tile with a node of the web in its area are left out and reported.
+     *
+     * @param seeds The booths, in the order that they win ties.
+     * @param nodesIn Finds how many nodes of the web are in the area that a tile is in, which is where it can be walked to.
+     * @param report Where the left out booths are reported, and booths that can be used from both sides are counted.
+     * @return The banks, which are not sorted.
+     */
+    fun generate(seeds: Iterable<BankSeed>, nodesIn: (Position) -> Int, report: GenerationReport): List<GeneratedBank> {
+        val banks = ArrayList<GeneratedBank>()
+        for (seed in seeds) {
+            val counts = seed.candidates.map { nodesIn(it) }
+            val best = counts.maxOrNull() ?: 0
+            if (best == 0) {
+                report.skipped += "bank ${seed.id} at ${DoorObstacles.describe(seed.booth)}: no tile next to the booth is " +
+                        "in an area with a node of the web"
+                continue
+            }
+            if (counts.count { it == best } > 1) {
+                // Nothing tells the sides apart, so the first one is used. Somebody should look at these.
+                report.count("banks with both sides in the web")
+            }
+            banks += GeneratedBank(seed.id, seed.booth, seed.candidates[counts.indexOf(best)])
+            report.count("banks")
+        }
+        return banks
+    }
+}
+
+/**
  * Writes the generated files as text. The text is stable, with one entry on each line and entries in a fixed order, so
  * that generating again changes nothing unless the data changed. The only thing that changes every time is the [header],
  * which is not part of that text: it is put on the files when they are written, and taken off again to compare them.
@@ -330,6 +392,15 @@ object WebWalkWriter {
             val requirements = if (limits.isEmpty()) "" else ", \"requirements\": { ${limits.joinToString(", ")} }"
             "{ \"id\": ${quote(teleport.id)}, \"kind\": \"${teleport.kind}\"$key$option, \"dest\": ${position(teleport.dest)}, " +
                     "\"cost\": ${teleport.cost}$requirements }"
+        }, "[", "]")
+    }
+
+    /**
+     * Writes `banks.jsonc`.
+     */
+    fun banks(banks: Collection<GeneratedBank>): String {
+        return lines(banks.sortedBy { it.id }.map { bank ->
+            "{ \"id\": ${quote(bank.id)}, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)} }"
         }, "[", "]")
     }
 

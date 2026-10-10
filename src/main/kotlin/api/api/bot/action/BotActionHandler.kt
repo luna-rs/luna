@@ -3,16 +3,21 @@ package api.bot.action
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
 import io.luna.game.model.mob.bot.Bot
+import api.bot.webwalk.walk.WebWalkResult
+import api.bot.webwalk.walk.WebWalker
 import api.bot.zone.HomeTravelStrategy
 import api.bot.zone.SubZone
 import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import api.predef.*
+import engine.bank.Banking
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.skill.magic.Magic.teleport
 import io.luna.Luna
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.movement.NavigationResult
+import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 
 /**
@@ -455,5 +460,91 @@ class BotActionHandler(val bot: Bot) {
             return waitFor { bot.isViewableFrom(zone.inside) }
         }
         return bot.isViewableFrom(zone.inside)
+    }
+
+    /**
+     * Walks this bot to a position with the web-walker, in one call from a script:
+     * ```
+     * if (!handler.webWalkTo(Position(3213, 3428))) return true
+     * ```
+     *
+     * The web-walker plans the cheapest trip for what the bot carries and can do right now, and takes it through doors,
+     * gates, up and down ladders and stairs, and by teleport. This is separate from [travelTo], which it doesn't use: it
+     * doesn't leave the wilderness first, and it never pays for a zone teleport. Use [webWalk] to learn why a walk failed,
+     * which is also in the log of the bot.
+     *
+     * @param dest Where to go.
+     * @param radius How close to [dest], in tiles on the same plane, is close enough. The default is the exact tile, which
+     * fails if the tile can't be stood on.
+     * @param attempts How many times to try, planning again each time. The default is to fail fast.
+     * @return `true` if the bot is within [radius] of [dest].
+     */
+    suspend fun webWalkTo(dest: Position, radius: Int = 0, attempts: Int = 1): Boolean =
+        webWalk(dest, radius, attempts).success
+
+    /**
+     * Walks this bot to the anchor of a zone with the web-walker. See [webWalkTo].
+     *
+     * @param zone The zone to go to.
+     * @param radius How close to the anchor, in tiles, is close enough. The default is [WEB_WALK_AREA_RADIUS], because the
+     * anchor of a zone is a place in it and not a tile that has to be stood on.
+     * @param attempts How many times to try, planning again each time.
+     * @return `true` if the bot is within [radius] of the anchor.
+     */
+    suspend fun webWalkTo(zone: Zone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1): Boolean =
+        webWalkTo(zone.anchor, radius, attempts)
+
+    /**
+     * Walks this bot to the inside anchor of a sub-zone with the web-walker. See [webWalkTo].
+     *
+     * Only the walking is done: a sub-zone that has to be entered some other way than by walking (a lever, a boat, a
+     * ditch, anything in [SubZone.enter]) is not entered, and the walk fails if the web has no way there.
+     *
+     * @param zone The sub-zone to go to.
+     * @param radius How close to the inside anchor, in tiles, is close enough. The default is [WEB_WALK_AREA_RADIUS].
+     * @param attempts How many times to try, planning again each time.
+     * @return `true` if the bot is within [radius] of the inside anchor.
+     */
+    suspend fun webWalkTo(zone: SubZone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1): Boolean =
+        webWalkTo(zone.inside, radius, attempts)
+
+    /**
+     * Walks this bot to a position with the web-walker, like [webWalkTo], but returns how it went and not only whether it
+     * worked.
+     *
+     * @param dest Where to go.
+     * @param radius How close to [dest], in tiles on the same plane, is close enough.
+     * @param attempts How many times to try, planning again each time.
+     * @return The result, with the trip that was planned, how far it got, and why it stopped.
+     */
+    suspend fun webWalk(dest: Position, radius: Int = 0, attempts: Int = 1): WebWalkResult =
+        WebWalker.webWalk(bot, dest, radius, attempts)
+
+    /**
+     * Walks this bot to the nearest bank with the web-walker, in one call from a script:
+     * ```
+     * val bank = handler.webWalkToNearestBank() ?: return true
+     * handler.interactions.interact(2, bank)
+     * ```
+     *
+     * The nearest bank is the one that the cheapest trip ends at, for what the bot carries and can do right now, so a bot
+     * that has a teleport and the runes for it may take that. The bot stops in front of a booth, on the side of the counter
+     * that customers use. This is separate from [BotBankingActionHandler.travelToNearestBank], which it doesn't use.
+     *
+     * @param radius How close to the tile in front of the booth, in tiles, is close enough. The default is the exact tile.
+     * @param attempts How many times to try, planning again each time. The default is to fail fast.
+     * @return The bank booth that the bot walked to, or `null` if it couldn't get to a bank. The log of the bot says why.
+     */
+    suspend fun webWalkToNearestBank(radius: Int = 0, attempts: Int = 1): GameObject? {
+        val bank = WebWalker.webWalkToNearestBank(bot, radius, attempts).takeIf { it.success }?.bank ?: return null
+        return world.locator.findObjectsOnTile(bank.booth) { it.id in Banking.bankingObjects }.firstOrNull()
+    }
+
+    private companion object {
+
+        /**
+         * How close, in tiles, to the anchor of a zone or sub-zone is close enough when walking there with the web-walker.
+         */
+        const val WEB_WALK_AREA_RADIUS = 2
     }
 }

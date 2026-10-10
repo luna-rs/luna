@@ -1,5 +1,6 @@
 package api.bot.webwalk.plan
 
+import api.bot.webwalk.model.BankDefinition
 import api.bot.webwalk.model.EdgeAction
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.FairyRing
@@ -13,6 +14,7 @@ import io.luna.game.model.Position
 import java.util.PriorityQueue
 import java.util.Random
 import java.util.SplittableRandom
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Plans trips between any two positions with the nodes and edges of a [WebWalkGraph].
@@ -23,6 +25,8 @@ import java.util.SplittableRandom
  *
  * - The start and the destination are linked to the nodes nearest to them, which are the ones that a [WalkEstimator] says
  *   they can be walked to. A trip that is short enough is walked directly.
+ * - A trip can also have several places it may end at, and goes to the one that costs least. That is how the nearest bank is
+ *   found, see [planToNearestBank].
  * - Edges can be taken from any node: walks, doors, ladders and the like, ships, and teleports. Teleports are not stored
  *   in the graph for each bot. Instead the ones that the snapshot allows are taken from wherever a bot is, as long as it
  *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). Fairy rings can be
@@ -69,6 +73,11 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     private class Link(val node: Int, val ticks: Int)
 
     /**
+     * A way to arrive at one of the places that a trip may end at, with the time that it takes to walk the last stretch.
+     */
+    private class EndLink(val destination: Position, val ticks: Int)
+
+    /**
      * A teleport, with the number of the node that it arrives at.
      */
     private class IndexedTeleport(val teleport: TeleportDefinition, val to: Int)
@@ -77,11 +86,10 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * What the planner needs to know about one trip before it starts searching.
      */
     private class Request(val start: Position,
-                          val destination: Position,
                           val snapshot: CapabilitySnapshot,
                           val startLinks: List<Link>,
-                          val endLinks: Map<Int, Int>,
-                          val direct: Int?,
+                          val endLinks: Map<Int, List<EndLink>>,
+                          val direct: List<EndLink>,
                           val teleports: List<IndexedTeleport>)
 
     /**
@@ -130,6 +138,17 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     private val grid: Map<Triple<Int, Int, Int>, List<Int>> = nodes.indices.groupBy { cell(nodes[it].position) }
 
     /**
+     * The tiles to stand on at the banks.
+     */
+    private val bankStands: Set<Position> = graph.banks.map { it.stand }.toSet()
+
+    /**
+     * The nodes that each bank is linked to, which are found when they are first needed. The banks and the web don't change,
+     * so what can be walked to a bank is the same for every trip.
+     */
+    private val bankLinks = ConcurrentHashMap<Position, List<Link>>()
+
+    /**
      * Plans a trip.
      *
      * @param start Where the trip starts.
@@ -143,11 +162,45 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
              destination: Position,
              snapshot: CapabilitySnapshot,
              intelligence: Double = 1.0,
-             random: Random = Random()): WebWalkPlan? {
-        if (start == destination) {
+             random: Random = Random()): WebWalkPlan? =
+        planToNearest(start, listOf(destination), snapshot, intelligence, random)
+
+    /**
+     * Plans a trip to the nearest bank, which is the one that the cheapest trip ends at. The last leg of the trip ends at the
+     * [BankDefinition.stand] of that bank.
+     *
+     * @param start Where the trip starts.
+     * @param snapshot What the bot can do.
+     * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip, and
+     * others may take a trip to another bank that is not much worse.
+     * @param random Where the variation of the trips of other bots comes from.
+     * @return The trip, or `null` if there are no banks or none can be reached. A trip from a bank to itself has no legs.
+     */
+    fun planToNearestBank(start: Position,
+                          snapshot: CapabilitySnapshot,
+                          intelligence: Double = 1.0,
+                          random: Random = Random()): WebWalkPlan? =
+        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random)
+
+    /**
+     * Plans a trip to the nearest of some destinations, which is the one that the cheapest trip ends at.
+     *
+     * @param start Where the trip starts.
+     * @param destinations The places the trip may end at.
+     * @param snapshot What the bot can do.
+     * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip.
+     * @param random Where the variation of the trips of other bots comes from.
+     * @return The trip, or `null` if none of the destinations can be reached. A trip from a destination to itself has no legs.
+     */
+    fun planToNearest(start: Position,
+                      destinations: Collection<Position>,
+                      snapshot: CapabilitySnapshot,
+                      intelligence: Double = 1.0,
+                      random: Random = Random()): WebWalkPlan? {
+        if (start in destinations) {
             return WebWalkPlan(emptyList(), 0.0)
         }
-        val request = prepare(start, destination, snapshot)
+        val request = prepare(start, destinations.distinct(), snapshot)
         val best = search(request, null) ?: return null
 
         var chosen = best
@@ -170,15 +223,28 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     /**
      * Links a trip to the graph, and finds the teleports that its bot can use.
      */
-    private fun prepare(start: Position, destination: Position, snapshot: CapabilitySnapshot): Request {
+    private fun prepare(start: Position, destinations: List<Position>, snapshot: CapabilitySnapshot): Request {
         val startLinks = link(start) { estimator.ticks(start, it) }
-        val endLinks = link(destination) { estimator.ticks(it, destination) }.associate { it.node to it.ticks }
-        val direct = if (start.z == destination.z &&
-            start.computeLongestDistance(destination) <= costs.linkRadius) estimator.ticks(start, destination) else null
+        val endLinks = HashMap<Int, MutableList<EndLink>>()
+        val direct = ArrayList<EndLink>()
+        for (destination in destinations) {
+            val links = if (destination in bankStands) bankLinks.computeIfAbsent(destination) { linkEnd(it) } else linkEnd(destination)
+            for (link in links) {
+                endLinks.getOrPut(link.node) { ArrayList() } += EndLink(destination, link.ticks)
+            }
+            if (start.z == destination.z && start.computeLongestDistance(destination) <= costs.linkRadius) {
+                estimator.ticks(start, destination)?.let { direct += EndLink(destination, it) }
+            }
+        }
         val teleports = graph.teleports.filter { it.id in snapshot.usableTeleports }
             .mapNotNull { teleport -> indexById[teleport.nodeId]?.let { IndexedTeleport(teleport, it) } }
-        return Request(start, destination, snapshot, startLinks, endLinks, direct, teleports)
+        return Request(start, snapshot, startLinks, endLinks, direct, teleports)
     }
+
+    /**
+     * Finds the nodes that a destination can be walked to from, nearest first.
+     */
+    private fun linkEnd(destination: Position): List<Link> = link(destination) { estimator.ticks(it, destination) }
 
     /**
      * Finds the nodes nearest to a position that it can be walked to or from, nearest first.
@@ -223,11 +289,8 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         val previous = IntArray(nodes.size + 2) { -1 }
         val queue = PriorityQueue<Pair<Double, Int>>(compareBy { it.first })
 
-        fun position(index: Int) = when (index) {
-            start -> request.start
-            end -> request.destination
-            else -> nodes[index].position
-        }
+        // The end is not a place, because a trip may end at one of several: the legs that arrive at it say which.
+        fun position(index: Int) = if (index == start) request.start else nodes[index].position
 
         fun level(index: Int) = if (index < nodes.size) nodes[index].wildernessLevel else
             WebWalkNode.wildernessLevelOf(position(index))
@@ -244,14 +307,16 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             }
         }
 
-        // Takes a step of a number of ticks, with what that adds to the cost.
+        // Takes a step of a number of ticks, with what that adds to the cost. A step to the end says where it ends.
         fun step(from: Int, to: Int, type: EdgeType, ticks: Double, extra: Double, action: EdgeAction? = null,
                  teleport: TeleportDefinition? = null, ring: FairyRing? = null, exposed: Boolean = true,
-                 requirements: Requirements = Requirements.NONE) {
+                 requirements: Requirements = Requirements.NONE, target: Position? = null) {
             val exposure = if (exposed) ticks else 0.0
-            val cost = ticks + extra + wildernessPenalty(level(from), level(to), exposure)
-            val key = (from * 31 + to) * 31 + type.ordinal + (teleport?.id?.hashCode() ?: 0)
-            relax(from, to, PlanLeg(type, position(from), position(to), cost, action, teleport, ring, requirements), key)
+            val arrival = target ?: position(to)
+            val arrivalLevel = if (target != null) WebWalkNode.wildernessLevelOf(target) else level(to)
+            val cost = ticks + extra + wildernessPenalty(level(from), arrivalLevel, exposure)
+            val key = (from * 31 + to) * 31 + type.ordinal + (teleport?.id?.hashCode() ?: 0) + (target?.hashCode() ?: 0)
+            relax(from, to, PlanLeg(type, position(from), arrival, cost, action, teleport, ring, requirements), key)
         }
 
         dist[start] = 0.0
@@ -268,7 +333,9 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
 
             if (node == start) {
                 request.startLinks.forEach { step(start, it.node, EdgeType.WALK, it.ticks.toDouble(), 0.0) }
-                request.direct?.let { step(start, end, EdgeType.WALK, it.toDouble(), 0.0) }
+                for (link in request.direct) {
+                    step(start, end, EdgeType.WALK, link.ticks.toDouble(), 0.0, target = link.destination)
+                }
             } else {
                 for (indexed in outgoing[node]) {
                     val edge = indexed.edge
@@ -279,7 +346,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                     step(node, indexed.to, edge.type, ticks, edge.requirements.coins * costs.coinWeight, edge.action,
                          requirements = edge.requirements)
                 }
-                request.endLinks[node]?.let { step(node, end, EdgeType.WALK, it.toDouble(), 0.0) }
+                request.endLinks[node]?.forEach { step(node, end, EdgeType.WALK, it.ticks.toDouble(), 0.0, target = it.destination) }
                 ringByNode[node]?.let { ring ->
                     if (CapabilitySnapshot.FAIRY_RINGS in request.snapshot.flags && request.snapshot.meets(ring.requirements, here)) {
                         for ((other, target) in rings) {
