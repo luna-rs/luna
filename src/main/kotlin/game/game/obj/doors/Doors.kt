@@ -82,7 +82,7 @@ object Doors {
      * @param position The position of the replacement.
      * @param direction The direction of the replacement.
      */
-    private class Swap(val old: GameObject, val id: Int, val position: Position, val direction: ObjectDirection)
+    internal class Swap(val old: GameObject, val id: Int, val position: Position, val direction: ObjectDirection)
 
     /**
      * The kinds of door, each of which is loaded from its own file.
@@ -374,9 +374,10 @@ object Doors {
     }
 
     /**
-     * Computes the replacement for a single leaf of a double door.
+     * Computes the replacement for a single leaf of a double door. Also used by doors that are scripted on their own and
+     * are not loaded from the door files, which pass a [DoorType] that has not been added.
      */
-    private fun doubleSwap(leaf: GameObject, type: DoorType, opening: Boolean): Swap {
+    internal fun doubleSwap(leaf: GameObject, type: DoorType, opening: Boolean): Swap {
         val left = type.side == DoorSide.LEFT
         val offset = if (opening) {
             openOffset(leaf.direction, false)
