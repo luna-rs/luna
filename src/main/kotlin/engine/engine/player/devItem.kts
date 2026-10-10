@@ -1,13 +1,16 @@
 package engine.player
 
 import api.bot.zone.SubZone
-import api.predef.useItem
+import api.predef.*
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportStyle
 
 val DEV_ITEM = 7500
 
 useItem(DEV_ITEM).onPlayer {
+    if (plr.rights < RIGHTS_DEV) {
+        return@onPlayer
+    }
     // todo open dialogue menu
     // todo player info, kick, ban, mute, move options
     if(targetPlr.isBot) {

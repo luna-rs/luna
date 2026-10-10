@@ -461,7 +461,7 @@
         "attack_animation": 451,
         "defence_animation": 404,
         "config": 2,
-        "bonus": "STAB_ATTACK",
+        "bonus": "SLASH_ATTACK",
         "button": 2284,
         "stance": "AGGRESSIVE",
         "range": 1,

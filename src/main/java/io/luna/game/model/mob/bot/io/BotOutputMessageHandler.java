@@ -367,9 +367,9 @@ public final class BotOutputMessageHandler {
                 opcode = 24;
                 break;
             case 3:
-                msg.putShort(itemId, ValueType.ADD);
                 msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(3214, ByteOrder.LITTLE);
                 opcode = 161;
                 break;
             case 4:
@@ -379,9 +379,9 @@ public final class BotOutputMessageHandler {
                 opcode = 228;
                 break;
             case 5:
-                msg.putShort(itemId, ValueType.ADD);
-                msg.putShort(3214);
-                msg.putShort(index, ValueType.ADD);
+                msg.putShort(index, ByteOrder.LITTLE);
+                msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
                 opcode = 4;
                 break;
             default:

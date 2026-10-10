@@ -11,6 +11,15 @@ import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.util.RandomUtils.roll
 import kotlin.time.Duration.Companion.minutes
 
+/**
+ * Selects combat sessions for training or profit according to the bot's combat level and personality.
+ *
+ * Training and profit modes select NPC combat using their existing zone and session-duration rules.
+ * Supply preparation and crystal-key activities are selected by [GeneralActivityCoordinator].
+ *
+ * @property training Whether to prioritize combat training instead of profit activities.
+ * @author lare96
+ */
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
 
     // TODO Add and test behaviour for retrieving items after dying. Very relevant to combat.
@@ -24,6 +33,11 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     // TODO Make cleaner
 
     override fun accept(bot: Bot) {
+        val duration =
+            if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
+                bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
+            )
+                rand(100, 350).minutes else rand(45, 120).minutes
         val names = HashMultimap.create<SubZone, String>()
         val zones = ArrayList<SubZone>()
         bot.log("Selecting combat zones for bot combat level ${bot.combatLevel}.")
@@ -151,11 +165,6 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             // Gargoyle, Nechryael, Abyssal demon, Ice troll, Blue dragon
 
         }
-        val duration =
-            if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
-                bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
-            )
-                rand(100, 350).minutes else rand(45, 120).minutes
         if(zones.isEmpty()) {
             zones += SubZone.ROCK_CRABS
         }

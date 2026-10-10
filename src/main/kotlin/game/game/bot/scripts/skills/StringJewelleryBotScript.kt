@@ -11,8 +11,9 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
-import game.skill.herblore.makeUnfPotion.MakeUnfActionItem
-import game.skill.herblore.makeUnfPotion.UnfPotion
+import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
+import game.skill.crafting.jewelleryMaking.SilverJewelleryTable
+import game.skill.crafting.jewelleryMaking.StringJewelleryAction
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -22,32 +23,27 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Combines one configured identified herb with vials of water through the normal make-item dialogue.
+ * Strings a configured unstrung gold amulet or silver symbol using owned balls of wool.
  *
- * [InventoryBotScript] supplies banking, zone travel, session expiry, and weak-action gating. After depositing
- * the previous inventory, each bank visit withdraws up to fourteen herbs and fourteen vials of water. The
- * smaller available stock limits the batch, allowing remaining partial batches without requesting absent inputs.
- * No reusable tool is needed; each conversion consumes one herb and one water vial.
+ * [InventoryBotScript] manages travel, banking, session expiry, and weak-action gating. Each bank visit
+ * withdraws up to fourteen balanced input pairs, limited by the smaller available stock. Production uses
+ * the ordinary wool-on-jewellery interaction and make dialogue; [StringJewelleryAction] converts the inputs
+ * and awards four Crafting experience per item. Stringing requires level one, regardless of the level needed
+ * to manufacture the unstrung item. This script does not make, enchant, or bless jewellery.
  *
- * The existing [MakeUnfActionItem] validates the recipe's Herblore level and converts the inputs without
- * awarding experience. This script prepares owned supplies and is selected only by the factory's profit mode.
- * It does not purchase inputs or assume a market margin. Missing startup ingredients are added to wanted
- * items before stopping, and current Herblore level is checked again before each production interaction.
- *
- * Three consecutive interactions without input consumption end the session. Unresolved banking requests
- * have a separate retry budget. Withdrawals are unnoted, verified, and bounded to fifteen seconds; failure ends
- * the script through the inherited banking hook. Snapshots retain the recipe, duration, candidate zones, and
- * retry counters rather than live inventory slots or actions.
+ * Missing startup inputs raise their total wanted-stock targets to at least 1,000 before stopping. Three
+ * consecutive interactions without input consumption or unresolved bank requests end the session. Snapshots
+ * preserve the item id, duration, zones, and retry counters; live inventory and actions are checked on resumption.
  *
  * @param bot The bot running this script.
- * @property potion The unfinished-potion recipe to prepare throughout the session.
+ * @property unstrung The supported unstrung jewellery item processed throughout the session.
  * @param duration The session duration managed by the inherited lifecycle.
  * @param zones Candidate processing zones with existing banking and travel support.
  * @author lare96
  */
-class MakeUnfinishedPotionBotScript(
+class StringJewelleryBotScript(
     bot: Bot,
-    val potion: UnfPotion,
+    val unstrung: Int,
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
@@ -56,16 +52,24 @@ class MakeUnfinishedPotionBotScript(
         /** Maximum consecutive failed interactions or unresolved banking requests before stopping. */
         private const val MAX_FAILURES = 3
 
+        /** Consumable used by every stringing interaction in makeJewellery.kts. */
+        const val BALL_OF_WOOL = 1759
+        /** Gold amulets and silver symbols supported by the existing item-on-item handler. */
+        val UNSTRUNG_IDS = GoldJewelleryTable.AMULETS.jewelleryItems.map { it.id } + listOf(
+            SilverJewelleryTable.SARADOMIN_SYMBOL.jewelleryItem.id,
+            SilverJewelleryTable.ZAMORAK_SYMBOL.jewelleryItem.id
+        )
+
         /**
-         * Saved recipe and retry counters alongside inherited duration and candidate zones.
-         * Restoring a session preserves its exhausted budgets instead of granting fresh attempts.
+         * Saved item id and retry counters alongside the inherited duration and candidate zones.
+         * Restoring a session retains exhausted budgets rather than granting new attempts.
          *
          * @author lare96
          */
-        class UnfinishedPotionData : ZonedBotScriptData() {
-            /** [UnfPotion] enum name used to reconstruct the configured recipe. */
+        class JewelleryData : ZonedBotScriptData() {
+            /** Decimal unstrung item id used to reconstruct the configured recipe. */
             var recipe = ""
-            /** Consecutive interactions that did not consume an identified herb. */
+            /** Consecutive interactions that did not consume unstrung jewellery. */
             var failures = 0
             /** Banking requests since the last successfully verified withdrawal. */
             var bankFailures = 0
@@ -86,38 +90,39 @@ class MakeUnfinishedPotionBotScript(
         }
     }
 
-    /** Permanent Herblore level required for selection and startup validation. */
-    val requiredLevel = potion.level
-    /** One identified herb and one water vial, the minimum supplies for a single conversion. */
-    private val materials = listOf(potion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
-    /** Consecutive failed production interactions, reset after an herb is consumed. */
+    init { require(unstrung in UNSTRUNG_IDS) }
+
+    /** Minimum Crafting level for stringing; manufacturing requirements do not apply. */
+    val requiredLevel = 1
+    /** One unstrung jewellery item and one ball of wool, the minimum inputs for a conversion. */
+    private val materials = listOf(Item(unstrung), Item(BALL_OF_WOOL))
+    /** Consecutive failed interactions, reset after an input is consumed. */
     private var failures = 0
-    /** Unresolved banking requests, reset after the entire batch is withdrawn. */
+    /** Unresolved banking requests, reset only after the entire batch is withdrawn. */
     private var bankFailures = 0
 
     /**
-     * Restores the recipe, session configuration, and retry budgets from saved state.
-     * Initialization still checks current supplies and bot safety before the restored script can run.
+     * Restores the supported item id, session configuration, and retry budgets from saved state.
+     * Normal lifecycle hooks validate current supplies and bot safety before production resumes.
      *
-     * @param bot The bot that owns the saved script.
-     * @param data Previously serialized unfinished-potion state.
+     * @param bot The bot that owns the saved session.
+     * @param data Previously serialized jewellery-stringing state.
      */
-    constructor(bot: Bot, data: UnfinishedPotionData) :
-        this(bot, UnfPotion.valueOf(data.recipe), data.duration, data.zones) {
+    constructor(bot: Bot, data: JewelleryData) : this(bot, data.recipe.toInt(), data.duration, data.zones) {
         failures = data.failures
         bankFailures = data.bankFailures
     }
 
-    /** Checks permanent level eligibility and one complete input pair across inventory and bank. */
-    fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
+    /** Checks permanent level eligibility and one input pair across inventory and bank. */
+    fun isEligible(): Boolean = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel &&
             bot.ownsProductionSupplies(materials)
 
-    /** Returns up to fourteen balanced input pairs, or an empty batch when either banked ingredient is missing. */
+    /** Returns up to fourteen balanced banked input pairs, or an empty batch if either input is absent. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
     override fun withdraw(): List<Item> {
         if (failures >= MAX_FAILURES || bankFailures >= MAX_FAILURES ||
-            bot.skill(SKILL_HERBLORE).staticLevel < requiredLevel || bot.health < 1 || bot.isLocked ||
+            bot.skill(SKILL_CRAFTING).staticLevel < requiredLevel || bot.health < 1 || bot.isLocked ||
             bot.combat.inCombat() || bot.actions.size(ActionType.STRONG) > 0) {
             stop()
             return emptyList()
@@ -163,13 +168,13 @@ class MakeUnfinishedPotionBotScript(
         return true
     }
 
-    /** Whether inventory currently holds a complete pair of the configured recipe's inputs. */
+    /** Whether inventory contains at least one complete pair of stringing inputs. */
     private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
         if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
             bot.actions.size(ActionType.STRONG) > 0) return true
-        if (bot.skill(SKILL_HERBLORE).level < requiredLevel) {
+        if (bot.skill(SKILL_CRAFTING).level < requiredLevel) {
             stop()
             return true
         }
@@ -190,9 +195,9 @@ class MakeUnfinishedPotionBotScript(
         return true
     }
 
-    /** Uses a water vial on the identified herb, waits for the single-recipe dialogue, and requests the batch. */
+    /** Uses wool on the configured jewellery, waits for its dialogue, and requests the carried balanced batch. */
     private suspend fun startProduction(): Boolean {
-        if (!handler.inventory.useItem(UnfPotion.VIAL_OF_WATER).onItem(potion.herb)) return false
+        if (!handler.inventory.useItem(BALL_OF_WOOL).onItem(unstrung)) return false
         if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
         val amount = materials.minOf { bot.inventory.computeAmountForId(it.id) / it.amount }
         handler.widgets.clickMakeItem(0, amount)
@@ -200,11 +205,11 @@ class MakeUnfinishedPotionBotScript(
     }
 
     override suspend fun finish() {
-        bot.actions.first(MakeUnfActionItem::class.java)?.interrupt()
+        bot.actions.first(StringJewelleryAction::class.java)?.interrupt()
     }
 
-    override fun snapshot(): UnfinishedPotionData = UnfinishedPotionData().also {
-        it.recipe = potion.name
+    override fun snapshot(): JewelleryData = JewelleryData().also {
+        it.recipe = unstrung.toString()
         it.duration = duration
         it.zones = originalZones.toMutableList()
         it.failures = failures
