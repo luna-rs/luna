@@ -31,6 +31,9 @@ fun climbIronLadder(plr: Player, up: Boolean) {
                      delay = 1, animation = if (up) 828 else 827)
 }
 
+// The tunnel in the Kendal's cave that can't be used (Mountain Daughter).
+object1(5859) { plr.sendMessage("You can't go into that tunnel, it's filled with skeletons.") }
+
 // Lalli's cave, which Lalli won't let anyone into.
 object1(4147) {
     plr.newDialogue()
