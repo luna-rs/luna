@@ -1161,8 +1161,8 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_20_WILDERNESS_CHAOS_TEMPLE(inside = Position(2934, 3515),
-                                   area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
+    LVL_20_WILDERNESS_CHAOS_TEMPLE(inside = Position(3239, 3619),
+                                   area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
                                    parent = { EDGEVILLE }),
 
     /*
@@ -1174,8 +1174,8 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_40_WILDERNESS_CHAOS_TEMPLE(inside = Position(2934, 3515),
-                                   area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
+    LVL_40_WILDERNESS_CHAOS_TEMPLE(inside = Position(2956, 3820),
+                                   area = SimpleBoxArea.ofRadius(2946, 3813, 13, 14),
                                    parent = { EDGEVILLE });
 
     companion object {
