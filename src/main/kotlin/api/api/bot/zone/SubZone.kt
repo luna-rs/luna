@@ -247,7 +247,15 @@ enum class SubZone(val inside: Position,
 
                 if (bot.walking.isEmpty) {
                     bot.log("Clicking Aubury essence teleport. bot=${bot.position}, subZone=${bot.subZone}")
-                    bot.actionHandler.interactions.interact(4, aubury)
+                    val interacted = bot.actionHandler.interactions.interact(4, aubury)
+                    // A queued teleport can arrive before the interaction confirmation finishes.
+                    if (area.contains(bot)) {
+                        break
+                    }
+                    if (!interacted) {
+                        bot.log("Aubury interaction failed before mine entry. Returning to travel recovery.")
+                        return false
+                    }
                 }
 
                 bot.naturalDecisionDelay()
