@@ -12,6 +12,8 @@ import game.bot.scripts.skills.CraftArmorBotScript
 import game.bot.scripts.skills.CraftArmorBotScript.Companion.CraftArmorData
 import game.bot.scripts.skills.CraftRuneBotScript
 import game.bot.scripts.skills.CraftRuneBotScript.Companion.CraftRuneData
+import game.bot.scripts.skills.MakePotteryBotScript
+import game.bot.scripts.skills.MakePotteryBotScript.Companion.PotteryData
 import game.bot.scripts.skills.CraftJewelleryBotScript
 import game.bot.scripts.skills.CraftJewelleryBotScript.Companion.CraftJewelleryData
 import game.bot.scripts.skills.MakeMoltenGlassBotScript
@@ -96,6 +98,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
+    scriptManager.addScript<PotteryData>(MakePotteryBotScript::class) { bot, data -> MakePotteryBotScript(bot, data) }
     scriptManager.addScript<CraftJewelleryData>(CraftJewelleryBotScript::class) { bot, data -> CraftJewelleryBotScript(bot, data) }
     scriptManager.addScript<MoltenGlassData>(MakeMoltenGlassBotScript::class) { bot, data -> MakeMoltenGlassBotScript(bot, data) }
     scriptManager.addScript<GlassData>(BlowGlassBotScript::class) { bot, data -> BlowGlassBotScript(bot, data) }

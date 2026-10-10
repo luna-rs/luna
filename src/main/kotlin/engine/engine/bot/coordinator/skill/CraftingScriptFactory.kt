@@ -10,9 +10,11 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.MakePotteryBotScript
 import game.bot.scripts.skills.CraftJewelleryBotScript
 import game.bot.scripts.skills.MakeMoltenGlassBotScript
 import game.bot.scripts.skills.BlowGlassBotScript
+import game.skill.crafting.potteryCrafting.Unfired
 import game.skill.crafting.glassMaking.GlassMaterial
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript
@@ -45,6 +47,7 @@ import io.luna.util.RandomUtils.roll
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
  * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
+ * Owned soft clay and unfired pottery enable all existing shaping/firing recipes in Barbarian Village.
  *
  * @author lare96
  */
@@ -73,7 +76,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         }
         // TODO
         //  glass making
-        //  pottery crafting
         //  textile crafting (wool/silk etc.)
 
         // TODO pottery making as level 1 alternative when we don't have soft leather
@@ -148,7 +150,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @return The basic armour-crafting activity.
      */
     fun getBasicScript(bot: Bot): CraftArmorBotScript {
-        // todo chance of pottery crafting
         return CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot))
     }
 
@@ -177,6 +178,9 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(CraftJewelleryBotScript.RECIPES.keys.map { CraftJewelleryBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Unfired.entries.flatMap { material ->
+                MakePotteryBotScript.Companion.Stage.entries.map { MakePotteryBotScript(bot, material, it, duration) }
+            }.filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
             if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)
             if (!training) {
