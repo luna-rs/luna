@@ -20,7 +20,7 @@ Which is why the long-term goal of Luna is to create a **self-sustaining, living
 - **Unique personalities**: No two bots are exactly alike, and their decisions can lead them down completely different paths.
 - **A living world**: Whether you're online or not, bots continue playing, interacting, and shaping the world around them.
 
-![](https://i.imgur.com/RJyOWFB.gif)
+![](https://i.imgur.com/ehAT0oP.gif)
 
 # Getting started
 
