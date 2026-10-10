@@ -8,6 +8,8 @@ import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.util.RandomUtils.roll
 import kotlin.time.Duration.Companion.minutes
 
@@ -33,6 +35,15 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     // TODO Make cleaner
 
     override fun accept(bot: Bot) {
+        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
+            // Skillers remain level 3 and do not train combat.
+            if(training) {
+                BotActivity.TRAINING_SKILLS.coordinator.accept(bot)
+            } else {
+                BotActivity.PROFIT_SKILLS.coordinator.accept(bot)
+            }
+            return
+        }
         val duration =
             if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
                 bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
