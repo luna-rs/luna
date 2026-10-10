@@ -139,10 +139,14 @@ final class NavigationAction extends Action<Mob> {
                     return true;
                 }
             } else if (current.isDone()) {
-                // Pathing finished without reaching the untracked target.
-                if (!request.isContinuous() && mob.getWalking().isEmpty()) {
-                    result = NavigationResult.DIDNT_REACH;
-                    return true;
+                if (!request.isContinuous()) {
+                    // Keep the completed path future while its queued steps are being walked. Otherwise, losing
+                    // this completion marker makes a one-shot request re-path forever when it stops short.
+                    if (mob.getWalking().isEmpty()) {
+                        result = NavigationResult.DIDNT_REACH;
+                        return true;
+                    }
+                    return false;
                 }
 
                 // Continuous request, prepare for re-pathing.
