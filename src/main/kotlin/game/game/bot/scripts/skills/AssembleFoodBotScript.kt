@@ -27,7 +27,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
  * Supports plain-pizza assembly and toppings, chocolate cakes, milky nettle tea, pie shells, and all implemented
- * pie assembly stages, meat-based stew completion, and curry preparation. Cooking
+ * pie assembly stages, both stew completion paths, and curry preparation. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
  * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
  * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
@@ -35,8 +35,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * an existing bowl of tea with one bucket of milk, returning the bucket and awarding no XP.
  * [PrepareFoodActionItem] owns conversions and returns.
  * Stew completion requires level 25 and curry requires level 60; both award no XP. Curry consumes one spice
- * or three curry leaves per uncooked stew. Only the stew-completion path present in the player registration is
- * supported; preparation from bowls of water and the unregistered potato-based completion remain excluded.
+ * or three curry leaves per uncooked stew. Stews already containing potato accept either cooked meat alternative,
+ * while stews already containing meat accept a potato. Preparation from bowls of water remains excluded.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
@@ -69,7 +69,8 @@ class AssembleFoodBotScript(
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
             IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.MILKY_NETTLE_TEA,
-            IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_CURRY,
+            IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_STEW_FROM_POTATO,
+            IncompleteFood.UNCOOKED_CURRY,
             IncompleteFood.PIE_SHELL, IncompleteFood.UNCOOKED_BERRY_PIE, IncompleteFood.UNCOOKED_MEAT_PIE,
             IncompleteFood.PART_MUD_PIE_1, IncompleteFood.PART_MUD_PIE_2, IncompleteFood.RAW_MUD_PIE,
             IncompleteFood.UNCOOKED_APPLE_PIE,

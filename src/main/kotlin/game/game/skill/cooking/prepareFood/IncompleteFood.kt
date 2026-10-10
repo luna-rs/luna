@@ -233,7 +233,9 @@ enum class IncompleteFood(val id: Int, val lvl: Int, val exp: Double, val baseIn
     companion object {
 
         /**
-         * A map of all [IncompleteFood.id] -> [IncompleteFood] entries.
+         * A lookup from output item id to one preparation recipe.
+         * Recipes sharing an output id collapse to the last entry. Use [entries] when registering ingredient
+         * interactions so both ways of preparing uncooked stew remain available.
          */
         val ALL = values().associateBy { it.id }
 

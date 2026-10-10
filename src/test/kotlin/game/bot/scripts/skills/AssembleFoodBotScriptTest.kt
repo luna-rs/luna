@@ -121,6 +121,8 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.CHOCOLATE_CAKE to 1975,
                 IncompleteFood.MILKY_NETTLE_TEA to 1927,
                 IncompleteFood.UNCOOKED_STEW_FROM_MEAT to 1942,
+                IncompleteFood.UNCOOKED_STEW_FROM_POTATO to 2140,
+                IncompleteFood.UNCOOKED_STEW_FROM_POTATO to 2142,
                 IncompleteFood.UNCOOKED_CURRY to 2007,
                 IncompleteFood.UNCOOKED_CURRY to 5970,
                 IncompleteFood.UNCOOKED_MEAT_PIE to 2140,
@@ -431,7 +433,7 @@ class AssembleFoodBotScriptTest {
                 assertEquals(selected.secondaryAmount, restored.secondaryAmount)
             }
         }
-        assertFalse(IncompleteFood.UNCOOKED_STEW_FROM_POTATO in AssembleFoodBotScript.RECIPES)
+        assertTrue(IncompleteFood.UNCOOKED_STEW_FROM_POTATO in AssembleFoodBotScript.RECIPES)
         assertEquals("Incomplete stew", itemName(IncompleteFood.UNCOOKED_STEW_FROM_MEAT.baseIngredient))
         assertEquals("Uncooked stew", itemName(IncompleteFood.UNCOOKED_STEW_FROM_MEAT.id))
         assertEquals("Uncooked curry", itemName(IncompleteFood.UNCOOKED_CURRY.id))
@@ -474,5 +476,25 @@ class AssembleFoodBotScriptTest {
         assertEquals(3, bot.inventory.computeAmountForId(5970))
         assertFalse(bot.inventory.contains(2009))
         verify(bot.cooking, never()).addExperience(anyDouble())
+    }
+
+    @Test fun potatoBasedStewSelectsEitherOwnedMeatAndRestoresItsExactRecipe() {
+        val food = IncompleteFood.UNCOOKED_STEW_FROM_POTATO
+        for (secondary in food.otherIngredients) {
+            val bot = bot(24)
+            InventoryProductionFixtures.bank(bot, Item(1997, 100), Item(secondary, 2))
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, 24))
+            `when`(bot.cooking.staticLevel).thenReturn(25)
+            val selected = CookingScriptFactory.getAssemblyScript(bot, 25)!!
+            assertEquals(food, selected.food)
+            assertEquals(secondary, selected.secondary)
+            assertEquals(listOf(Item(1997, 2), Item(secondary, 2)), selected.bankBatch())
+            assertNull(CookingScriptFactory.getAssemblyScript(bot, 25, training = true))
+            val json = JsonObject()
+            selected.snapshot().save(json)
+            val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+            assertEquals(food, restored.food)
+            assertEquals(secondary, restored.secondary)
+        }
     }
 }
