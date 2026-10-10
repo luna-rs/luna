@@ -26,9 +26,17 @@ import io.luna.game.model.mob.block.Graphic
  * @param npc The npc performing the tele-other action.
  * @param target The first mob that requested the teleport.
  * @param destination The position all queued mobs are moved to when the action completes.
+ * @param incantation What the npc says when it starts casting.
+ * @param message The message queued players receive when they land, or `null` for none.
+ * @param animate Whether the npc plays the casting animation. Npcs that aren't human-shaped skip it.
  * @author lare96
  */
-class NpcTeleOtherAction(npc: Npc, val target: Mob, val destination: Position) : Action<Npc>(npc, ActionType.STRONG) {
+class NpcTeleOtherAction(npc: Npc,
+                         val target: Mob,
+                         val destination: Position,
+                         private val incantation: String = "Senventior Disthine Molenko!",
+                         private val message: String? = "You are teleported to the Rune Essence Mine.",
+                         private val animate: Boolean = true) : Action<Npc>(npc, ActionType.STRONG) {
 
     /**
      * The mobs currently waiting to be teleported by this action.
@@ -40,7 +48,7 @@ class NpcTeleOtherAction(npc: Npc, val target: Mob, val destination: Position) :
     override fun onSubmit() {
         mob.interact(target)
         requests.add(target)
-        mob.speak("Senventior Disthine Molenko!")
+        mob.speak(incantation)
 
         requests.forEach {
             it.lockMovement()
@@ -58,7 +66,9 @@ class NpcTeleOtherAction(npc: Npc, val target: Mob, val destination: Position) :
     override fun run(): Boolean {
         return when (executions) {
             0 -> {
-                mob.animation(Animations.CAST_TELEOTHER)
+                if (animate) {
+                    mob.animation(Animations.CAST_TELEOTHER)
+                }
                 mob.graphic(Graphic(343, 50))
                 false
             }
@@ -88,8 +98,8 @@ class NpcTeleOtherAction(npc: Npc, val target: Mob, val destination: Position) :
                 requests.forEach {
                     it.move(destination)
 
-                    if (it is Player) {
-                        it.sendMessage("You are teleported to the Rune Essence Mine.")
+                    if (it is Player && message != null) {
+                        it.sendMessage(message)
                     }
 
                     it.animation(Animation.CANCEL)
