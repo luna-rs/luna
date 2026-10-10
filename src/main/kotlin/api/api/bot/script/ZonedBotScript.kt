@@ -486,7 +486,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
                 for (bank in sortedBanks) {
                     val option: Int = bank.def().actions.filter { it != "null" }.size
-                    if (handler.interactions.interact(option, bank)) {
+                    if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
                         bot.log("Cached bank selected. parent=$parent, bank=$bank, option=$option")
                         break
@@ -502,7 +502,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 if (npc != null) {
                     bot.log("Banking NPC ${npc.id} found!")
                     val option: Int = npc.def().actions.filter { it != "null" }.size
-                    if (handler.interactions.interact(option, npc)) {
+                    if (handler.interactions.interact(option, npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = npc
                     }
                 }
