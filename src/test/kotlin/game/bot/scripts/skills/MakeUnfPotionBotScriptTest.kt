@@ -5,7 +5,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.HerbloreScriptFactory
-import game.bot.scripts.skills.MakeUnfinishedPotionBotScript.Companion.UnfinishedPotionData
+import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
 import game.skill.herblore.makeUnfPotion.UnfPotion
 import game.skill.herblore.makeUnfPotion.MakeUnfActionItem
 import io.luna.game.model.item.Item
@@ -21,7 +21,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.Mockito.*
 import kotlin.time.Duration.Companion.minutes
 
-class MakeUnfinishedPotionBotScriptTest {
+class MakeUnfPotionBotScriptTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() = InventoryProductionFixtures.initialize()
     }
@@ -30,9 +30,9 @@ class MakeUnfinishedPotionBotScriptTest {
         val bot = InventoryProductionFixtures.bot()
         InventoryProductionFixtures.bank(bot, Item(UnfPotion.VIAL_OF_WATER, 100), Item(UnfPotion.GUAM.herb, 5))
         assertNull(HerbloreScriptFactory.getProductionScript(bot, 99, true))
-        assertInstanceOf(MakeUnfinishedPotionBotScript::class.java,
+        assertInstanceOf(MakeUnfPotionBotScript::class.java,
             HerbloreScriptFactory.getProductionScript(bot, 99, false))
-        val script = MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)
+        val script = MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)
         assertEquals(listOf(Item(UnfPotion.GUAM.herb, 5), Item(UnfPotion.VIAL_OF_WATER, 5)), script.bankBatch())
         `when`(bot.herblore.staticLevel).thenReturn(2)
         assertFalse(script.isEligible())
@@ -51,7 +51,7 @@ class MakeUnfinishedPotionBotScriptTest {
 
     @Test fun batchesRequireBothInputsAndRespectInventoryCapacity() {
         val bot = InventoryProductionFixtures.bot()
-        val script = MakeUnfinishedPotionBotScript(bot, UnfPotion.TORSTOL, 10.minutes)
+        val script = MakeUnfPotionBotScript(bot, UnfPotion.TORSTOL, 10.minutes)
         InventoryProductionFixtures.bank(bot, Item(UnfPotion.TORSTOL.herb, 100))
         assertFalse(script.isEligible())
         assertTrue(script.bankBatch().isEmpty())
@@ -67,17 +67,17 @@ class MakeUnfinishedPotionBotScriptTest {
         `when`(world.botManager.scriptManager).thenReturn(registry)
         try {
             InventoryProductionFixtures.register("Scripts")
-            val data = UnfinishedPotionData().apply {
+            val data = UnfPotionData().apply {
                 recipe = UnfPotion.RANARR.name
                 duration = 7.minutes
                 zones = mutableListOf(SubZone.DRAYNOR_MAIN)
                 failures = 2
                 bankFailures = 1
             }
-            val restored = registry.loadScript(MakeUnfinishedPotionBotScript::class.qualifiedName,
+            val restored = registry.loadScript(MakeUnfPotionBotScript::class.qualifiedName,
                 InventoryProductionFixtures.bot(), data)
-            assertInstanceOf(MakeUnfinishedPotionBotScript::class.java, restored)
-            val snapshot = (restored as MakeUnfinishedPotionBotScript).snapshot()
+            assertInstanceOf(MakeUnfPotionBotScript::class.java, restored)
+            val snapshot = (restored as MakeUnfPotionBotScript).snapshot()
             assertEquals(data.recipe, snapshot.recipe)
             assertEquals(data.duration, snapshot.duration)
             assertEquals(data.zones, snapshot.zones)
@@ -92,10 +92,10 @@ class MakeUnfinishedPotionBotScriptTest {
         val bot = InventoryProductionFixtures.bot()
         InventoryProductionFixtures.inventory(bot, UnfPotion.GUAM.herbItem, Item(UnfPotion.VIAL_OF_WATER))
         assertTrue(InventoryProductionFixtures.active(
-            MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+            MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         bot.inventory.remove(UnfPotion.VIAL_OF_WATER)
         assertFalse(InventoryProductionFixtures.active(
-            MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+            MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         verify(bot.preferences).raiseWantedItemTarget(UnfPotion.VIAL_OF_WATER, 1_000)
         verify(bot.preferences, never()).raiseWantedItemTarget(UnfPotion.GUAM.herb, 1_000)
     }
@@ -110,7 +110,7 @@ class MakeUnfinishedPotionBotScriptTest {
 
         repeat(2) {
             assertFalse(InventoryProductionFixtures.active(
-                MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+                MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         }
 
         val requestedHerb = preferences.getWantedItem(herb.id())
@@ -126,18 +126,18 @@ class MakeUnfinishedPotionBotScriptTest {
         InventoryProductionFixtures.inventory(bot, UnfPotion.GUAM.herbItem, Item(UnfPotion.VIAL_OF_WATER))
         `when`(bot.health).thenReturn(0)
         assertFalse(InventoryProductionFixtures.active(
-            MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+            MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         `when`(bot.health).thenReturn(99)
         `when`(bot.combat.inCombat()).thenReturn(true)
         assertFalse(InventoryProductionFixtures.active(
-            MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+            MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         `when`(bot.combat.inCombat()).thenReturn(false)
         `when`(bot.herblore.staticLevel).thenReturn(2)
         assertFalse(InventoryProductionFixtures.active(
-            MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
+            MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes)).onInit(false))
         `when`(bot.herblore.staticLevel).thenReturn(99)
         `when`(bot.herblore.level).thenReturn(2)
-        val script = InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
+        val script = InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
         script.executeInZone()
         assertTrue(script.isTerminated())
     }
@@ -146,22 +146,22 @@ class MakeUnfinishedPotionBotScriptTest {
         val bot = InventoryProductionFixtures.bot()
         InventoryProductionFixtures.inventory(bot, Item(UnfPotion.GUAM.herb, 14), Item(UnfPotion.VIAL_OF_WATER, 14))
         assertTrue(bot.inventory.isFull)
-        val script = InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
+        val script = InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
         assertFalse(script.onBankRequested(false))
     }
 
     @Test fun exhaustedBankingBudgetSurvivesSerialization() = runBlocking {
         val bot = InventoryProductionFixtures.bot()
         InventoryProductionFixtures.bank(bot, UnfPotion.GUAM.herbItem, Item(UnfPotion.VIAL_OF_WATER))
-        val script = InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
+        val script = InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
         assertTrue(script.onInit(false))
         repeat(3) { assertTrue(script.onBankRequested(false)) }
         assertFalse(script.onBankRequested(false))
         val json = JsonObject()
         script.snapshot().save(json)
-        val data = UnfinishedPotionData().apply { load(json) }
+        val data = UnfPotionData().apply { load(json) }
         assertEquals(3, data.bankFailures)
-        assertFalse(InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, data)).onInit(true))
+        assertFalse(InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, data)).onInit(true))
     }
 
     @Test fun failedInteractionsExhaustTheSavedBudget() = runBlocking {
@@ -169,10 +169,10 @@ class MakeUnfinishedPotionBotScriptTest {
         InventoryProductionFixtures.inventory(bot, UnfPotion.GUAM.herbItem, Item(UnfPotion.VIAL_OF_WATER))
         `when`(bot.actionHandler.widgets.clickCloseInterface()).thenReturn(false)
         `when`(bot.personality.isDextrous).thenReturn(true)
-        val script = InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
+        val script = InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, UnfPotion.GUAM, 10.minutes))
         repeat(3) { script.executeInZone() }
         assertEquals(3, script.snapshot().failures)
         assertTrue(script.isTerminated())
-        assertFalse(InventoryProductionFixtures.active(MakeUnfinishedPotionBotScript(bot, script.snapshot())).onInit(true))
+        assertFalse(InventoryProductionFixtures.active(MakeUnfPotionBotScript(bot, script.snapshot())).onInit(true))
     }
 }

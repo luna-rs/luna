@@ -3486,7 +3486,7 @@
   },
   {
     "id": 1035, // Zamorak robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -4771,7 +4771,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -4793,7 +4793,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -4815,7 +4815,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4842,7 +4842,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4869,7 +4869,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4896,7 +4896,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4923,7 +4923,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4950,7 +4950,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -11407,7 +11407,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -15825,7 +15825,7 @@
   },
   {
     "id": 4093, // Mystic robe bottom
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -17494,7 +17494,7 @@
   },
   {
     "id": 4300, // Ham robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29948,7 +29948,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -30892,7 +30892,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
