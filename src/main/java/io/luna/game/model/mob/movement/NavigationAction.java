@@ -91,7 +91,21 @@ final class NavigationAction extends Action<Mob> {
         Locatable target = request.getTarget();
         Position targetPos = target.abs();
 
-        if ((sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) || request.getPending().isCancelled()) {
+        if (target instanceof Mob targetMob && (!targetMob.isAlive() || !sourcePos.isViewable(targetPos))) {
+            // Stop tracking dead or out-of-view players and NPCs, including one-shot requests.
+            reachedOnce = false;
+            result = NavigationResult.DIDNT_REACH;
+            if (current != null) {
+                cancelCurrent();
+            } else {
+                navigator.discardPaths();
+            }
+            mob.getWalking().clear();
+            return true;
+        }
+
+        if ((!isTargetMob && sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) ||
+                request.getPending().isCancelled()) {
             result = NavigationResult.DIDNT_REACH;
             return true;
         }
@@ -139,10 +153,14 @@ final class NavigationAction extends Action<Mob> {
                     return true;
                 }
             } else if (current.isDone()) {
-                // Pathing finished without reaching the untracked target.
-                if (!request.isContinuous() && mob.getWalking().isEmpty()) {
-                    result = NavigationResult.DIDNT_REACH;
-                    return true;
+                if (!request.isContinuous()) {
+                    // Keep the completed path future while its queued steps are being walked. Otherwise, losing
+                    // this completion marker makes a one-shot request re-path forever when it stops short.
+                    if (mob.getWalking().isEmpty()) {
+                        result = NavigationResult.DIDNT_REACH;
+                        return true;
+                    }
+                    return false;
                 }
 
                 // Continuous request, prepare for re-pathing.

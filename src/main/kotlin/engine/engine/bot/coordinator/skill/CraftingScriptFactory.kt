@@ -10,8 +10,11 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.BlowGlassBotScript
+import game.skill.crafting.glassMaking.GlassMaterial
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript
+import game.bot.scripts.skills.MakeSoftClayBotScript
 import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
 import game.bot.scripts.skills.TanHideBotScript
@@ -20,6 +23,7 @@ import game.skill.crafting.battlestaffCrafting.Battlestaff
 import game.skill.crafting.gemCutting.Gem
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.textileCrafting.Textile
+import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils.roll
 
@@ -31,8 +35,12 @@ import io.luna.util.RandomUtils.roll
  * when the bot owns the required inputs and tools. Selection uses the inherited level/personality rules and
  * excludes semi-precious gems. Battlestaff recipes require matching charged orbs rather than an orb-charging route.
  * Stringing accepts existing unstrung gold amulets or silver symbols with wool at Crafting level one.
+ * Non-training mode can also prepare soft clay using owned clay and filled water containers, without experience.
  * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
  * Choosing a profit activity does not guarantee a market margin.
+ *
+ * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
+ * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  *
  * @author lare96
  */
@@ -142,7 +150,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
     }
 
     /**
-     * Selects an owned precious-gem, elemental battlestaff, or jewellery-stringing recipe.
+     * Selects an owned Crafting production recipe or non-training soft-clay preparation activity.
      *
      * Semi-precious recipes are excluded. Candidates pass their permanent level and owned-supply checks before
      * the inherited level/personality selector chooses one. All candidates share the same session duration and
@@ -150,7 +158,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      *
      * @param bot The bot whose inventory, bank, and personality determine eligibility and selection.
      * @param level The Crafting level supplied by the coordinator to the inherited recipe selector.
-     * @param training Whether the caller wants training; all recipe groups are eligible for either activity mode.
+     * @param training Whether the caller wants training; soft-clay preparation is excluded because it grants no XP.
      * @return An eligible production script, or null so the caller can select its existing fallback.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
@@ -162,6 +170,12 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(StringJewelleryBotScript.UNSTRUNG_IDS.map { StringJewelleryBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(GlassMaterial.entries.map { BlowGlassBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            if (!training) {
+                addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
+                    .filter { it.isEligible() || it.canPrepareWater() }.map { it.requiredLevel to it })
+            }
         }
         return getBestActivity(bot, level, { it.first }, candidates)?.second
     }

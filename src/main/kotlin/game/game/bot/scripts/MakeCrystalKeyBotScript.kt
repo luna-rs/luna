@@ -26,7 +26,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * [InventoryBotScript] manages banking, travel, session expiry, and weak-action gating. Each bank visit
  * withdraws up to fourteen balanced pairs, limited by the smaller available stock. The make dialogue starts
  * [MakeCrystalKeyActionItem], which consumes both halves and creates a key without experience or a skill
- * requirement. The combat coordinator selects this preparation activity only in profit-combat mode.
+ * requirement. The general-activities coordinator selects this task when both halves are owned.
  * This script does not open the crystal chest or claim a market profit.
  *
  * Missing startup halves raise their total wanted-stock targets to at least 1,000 before stopping. Three

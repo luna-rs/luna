@@ -10,7 +10,10 @@ import io.luna.game.model.mob.Player
 import io.luna.game.task.TaskState
 
 /**
- * An [InventoryAction] implementation that makes wine.
+ * Consumes grapes and a jug of water to create one dynamic unfermented wine per operation.
+ * Starts fermentation when no task is running, including the first preparation without a login task.
+ * Further operations share the running task, which tracks each wine separately in inventory and bank.
+ * Cooking experience is awarded by fermentation, rather than by mixing the ingredients.
  *
  * @author lare96
  */
@@ -46,7 +49,7 @@ class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 
         mob.sendMessage("You add the grapes to the jug of water.")
         
         when (mob.wineFermentTask?.state) {
-            TaskState.IDLE, TaskState.CANCELLED -> {
+            null, TaskState.IDLE, TaskState.CANCELLED -> {
                 val task = FermentWineTask(mob)
                 mob.wineFermentTask = task
                 world.schedule(task)

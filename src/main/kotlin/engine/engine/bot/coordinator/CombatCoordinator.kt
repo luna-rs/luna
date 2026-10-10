@@ -5,19 +5,19 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.collect.HashMultimap
 import game.bot.scripts.NpcCombatScript
-import game.bot.scripts.MakeCrystalKeyBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.util.RandomUtils.roll
 import kotlin.time.Duration.Companion.minutes
 
 /**
  * Selects combat sessions for training or profit according to the bot's combat level and personality.
  *
- * Profit mode first assembles owned crystal-key half pairs as preparation for using combat loot. When either
- * half is unavailable, normal NPC combat selection continues. Training mode always selects combat. Key assembly
- * grants no experience and does not open the chest; eligibility depends on owned halves rather than a skill level.
+ * Training and profit modes select NPC combat using their existing zone and session-duration rules.
+ * Supply preparation and crystal-key activities are selected by [GeneralActivityCoordinator].
  *
  * @property training Whether to prioritize combat training instead of profit activities.
  * @author lare96
@@ -35,18 +35,20 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     // TODO Make cleaner
 
     override fun accept(bot: Bot) {
+        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
+            // Skillers remain level 3 and do not train combat.
+            if(training) {
+                BotActivity.TRAINING_SKILLS.coordinator.accept(bot)
+            } else {
+                BotActivity.PROFIT_SKILLS.coordinator.accept(bot)
+            }
+            return
+        }
         val duration =
             if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
                 bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
             )
                 rand(100, 350).minutes else rand(45, 120).minutes
-        if (!training) {
-            val assembly = MakeCrystalKeyBotScript(bot, duration)
-            if (assembly.isEligible()) {
-                bot.scriptStack.push(assembly)
-                return
-            }
-        }
         val names = HashMultimap.create<SubZone, String>()
         val zones = ArrayList<SubZone>()
         bot.log("Selecting combat zones for bot combat level ${bot.combatLevel}.")

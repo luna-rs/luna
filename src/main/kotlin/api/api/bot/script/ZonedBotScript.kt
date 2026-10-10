@@ -13,6 +13,7 @@ import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
+import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -457,21 +458,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         val parent = activeZone.parent(bot)
 
         val bank = cachedBank
-        val outside = bot.subZone?.let { it.outside(bot) }
-        if (bank != null && outside != null && !bank.isWithinDistance(bot, 64)) {
-            /**
-             * We're inside a sub-zone with an entrance, such as an altar, a dungeon, or the essence mine, and can't
-             * walk to the cached bank. Travel to the parent zone first, the same way the first banking trip does.
-             */
-            bot.log(
-                "Cannot walk to cached bank from sub-zone. Travelling to parent zone first. " +
-                        "subZone=${bot.subZone}, parent=$parent, cachedBank=$bank"
-            )
-            if (!handler.travelTo(parent)) {
-                bot.log("Banking aborted because travel to parent zone failed. Clearing cached bank. parent=$parent")
-                cachedBank = null
+        if (bank != null && !bot.bank.isOpen) {
+            val origin = bot.position
+            val targetPosition = bank.position
+            val reachable = bot.navigator.canReachForInteraction(bank).await()
+            // An async result belongs to its original positions. Retry rather than route on a stale result.
+            if (bot.position != origin || bank.position != targetPosition) {
                 forceBanking = true
                 return
+            }
+            if (!reachable) {
+                bot.log("No complete walking route confirmed to cached bank. Resolving parent/home route. cachedBank=$bank")
+                cachedBank = null
             }
         }
 

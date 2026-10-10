@@ -3464,7 +3464,7 @@
   },
   {
     "id": 1033, // Zamorak robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -3488,7 +3488,7 @@
     "id": 1035, // Zamorak robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -4771,7 +4771,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -4793,7 +4793,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -4815,7 +4815,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4842,7 +4842,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4869,7 +4869,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4896,7 +4896,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4923,7 +4923,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -4950,7 +4950,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -11407,7 +11407,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -15825,7 +15825,7 @@
   },
   {
     "id": 4093, // Mystic robe bottom
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -17474,7 +17474,7 @@
     "id": 4298, // Ham shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -17494,7 +17494,7 @@
   },
   {
     "id": 4300, // Ham robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -19532,7 +19532,7 @@
     "id": 4728, // Guthans platebody
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21534,7 +21534,7 @@
     "id": 4916, // Guthans body 100
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21561,7 +21561,7 @@
     "id": 4917, // Guthans body 75
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21588,7 +21588,7 @@
     "id": 4918, // Guthans body 50
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21615,7 +21615,7 @@
     "id": 4919, // Guthans body 25
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -21642,7 +21642,7 @@
     "id": 4920, // Guthans body 0
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -24131,7 +24131,7 @@
     "id": 5575, // Initiate platemail
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -29948,7 +29948,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -30892,7 +30892,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",

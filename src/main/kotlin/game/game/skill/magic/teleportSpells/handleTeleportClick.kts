@@ -7,7 +7,7 @@ import io.luna.util.StringUtils
 /* Intercept all button clicks.*/
 for (spell in TeleportSpell.VALUES) {
     button(spell.button) {
-        if (!plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) { // So player can't button spam.
+        if (plr.teleportDelay.ready(2)) { // So player can't button spam.
             plr.submitAction(object : TeleportAction(plr,
                                                      spell.level,
                                                      spell.xp,
