@@ -7,7 +7,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
-import game.bot.scripts.skills.MakeUnfinishedPotionBotScript
+import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.skill.herblore.grindIngredient.Ingredient
 import game.skill.herblore.makeUnfPotion.UnfPotion
 import game.skill.herblore.identifyHerb.Herb
@@ -88,7 +88,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
             if (!training) {
                 addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
                     .filter { it.isEligible() }.map { it.requiredLevel to it })
-                addAll(UnfPotion.entries.map { MakeUnfinishedPotionBotScript(bot, it, duration) }
+                addAll(UnfPotion.entries.map { MakeUnfPotionBotScript(bot, it, duration) }
                     .filter { it.isEligible() }.map { it.requiredLevel to it })
             }
         }
