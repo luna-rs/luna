@@ -29,9 +29,17 @@ import game.bot.scripts.skills.GrindIngredientBotScript.Companion.IngredientData
 import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.MakeBattlestaffBotScript
+import game.bot.scripts.skills.MakeSoftClayBotScript
+import game.bot.scripts.skills.MakeDoughBotScript
+import game.bot.scripts.skills.CutFoodBotScript
+import game.bot.scripts.skills.AssembleFoodBotScript
+import game.bot.scripts.skills.AssembleFoodBotScript.Companion.AssemblyData
+import game.bot.scripts.skills.CutFoodBotScript.Companion.CutFoodData
+import game.bot.scripts.skills.MakeDoughBotScript.Companion.DoughData
+import game.bot.scripts.skills.MakeSoftClayBotScript.Companion.SoftClayData
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
-import game.bot.scripts.skills.MakeUnfinishedPotionBotScript
-import game.bot.scripts.skills.MakeUnfinishedPotionBotScript.Companion.UnfinishedPotionData
+import game.bot.scripts.skills.MakeUnfPotionBotScript
+import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
 import game.bot.scripts.skills.MineBotScript
 import game.bot.scripts.skills.MineBotScript.Companion.MineData
 import game.bot.scripts.skills.PickpocketBotScript
@@ -44,6 +52,16 @@ import game.bot.scripts.skills.SpinFlaxBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
+import game.bot.scripts.skills.StringJewelleryBotScript
+import game.bot.scripts.MakeCrystalKeyBotScript
+import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.SearchNestBotScript
+import game.bot.scripts.SearchNestBotScript.Companion.NestData
+import game.bot.scripts.OpenCrystalChestBotScript
+import game.bot.scripts.OpenCrystalChestBotScript.Companion.ChestData
+import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
+import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
+import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
 import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
@@ -74,7 +92,16 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
     scriptManager.addScript<HerbData>(IdentifyHerbBotScript::class) { bot, data -> IdentifyHerbBotScript(bot, data) }
     scriptManager.addScript<IngredientData>(GrindIngredientBotScript::class) { bot, data -> GrindIngredientBotScript(bot, data) }
-    scriptManager.addScript<UnfinishedPotionData>(MakeUnfinishedPotionBotScript::class) { bot, data -> MakeUnfinishedPotionBotScript(bot, data) }
+    scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
+    scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
+    scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }
+    scriptManager.addScript<AssemblyData>(AssembleFoodBotScript::class) { bot, data -> AssembleFoodBotScript(bot, data) }
+    scriptManager.addScript<CutFoodData>(CutFoodBotScript::class) { bot, data -> CutFoodBotScript(bot, data) }
+    scriptManager.addScript<DoughData>(MakeDoughBotScript::class) { bot, data -> MakeDoughBotScript(bot, data) }
+    scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
+    scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
+    scriptManager.addScript<NestData>(SearchNestBotScript::class) { bot, data -> SearchNestBotScript(bot, data) }
+    scriptManager.addScript<ChestData>(OpenCrystalChestBotScript::class) { bot, data -> OpenCrystalChestBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }

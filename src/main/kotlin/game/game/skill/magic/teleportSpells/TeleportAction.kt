@@ -23,7 +23,7 @@ open class TeleportAction(plr: Player,
                           val style: TeleportSequence,
                           val requirements: List<SpellRequirement> = emptyList(),
                           val maxWildernessLevel: Int = 20) : LockedAction(plr) {
-
+  
     companion object {
 
         /**

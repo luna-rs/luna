@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
+import engine.bot.coordinator.GeneralActivityCoordinator;
 import engine.bot.coordinator.MerchantingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
@@ -57,7 +58,12 @@ public enum BotActivity {
     /**
      * Participation in structured mini-games or cooperative content.
      */
-    MINIGAMES(new SkillingCoordinator(true));
+    MINIGAMES(new SkillingCoordinator(true)),
+
+    /**
+     * Useful errands and general content, such as filling containers and processing or using crystal keys.
+     */
+    GENERAL_ACTIVITIES(GeneralActivityCoordinator.INSTANCE);
 
     /**
      * All {@link BotActivity} types in this enum.
