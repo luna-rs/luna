@@ -22,8 +22,6 @@ Which is why the long-term goal of Luna is to create a **self-sustaining, living
 
 ![](https://i.imgur.com/RJyOWFB.gif)
 
-# Benchmarks
-
 # Getting started
 
 To get started, you'll need: 
@@ -32,10 +30,11 @@ To get started, you'll need:
 - **Client and cache:** [here](https://github.com/luna-rs/luna-client)
 - **Setup instructions:** Visit the [wiki](https://github.com/luna-rs/luna/wiki) for a streamlined guide to building, configuring, and running Luna
 
-For more help or inquiries, please join our [Discord server](https://discord.gg/udCqykV).
+# Useful links
 
+- [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
+- [Request help, contribute, chat with devs (Discord)](https://discord.gg/bqkGY7cmVX)
 
-# Community
 
 # Thanks
 - blakeman8192 
