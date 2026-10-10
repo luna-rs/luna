@@ -4,6 +4,11 @@ data/archives
 /data/game/saved_players
 /data/game/bots/saved_bots
 /data/game/bots/login_requests.json
+/data/game/bots/webwalk/climbs.jsonc
+/data/game/bots/webwalk/crossings.jsonc
+/data/game/bots/webwalk/obstacles.jsonc
+/data/game/bots/webwalk/teleports.jsonc
+/data/game/bots/webwalk/walk_graph.jsonc
 /.idea/
 /target/
 /.settings/
