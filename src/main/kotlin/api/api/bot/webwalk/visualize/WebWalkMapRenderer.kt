@@ -30,7 +30,8 @@ import kotlin.math.sin
  * Draws the web-walker graph over the terrain of the cache as a PNG, to get a quick idea of what the web looks like.
  *
  * The terrain is painted like the client does, see [WebWalkTerrain], with the walls over it. Nodes are
- * drawn as dots and edges as lines, with a colour for each [EdgeType] and [NodeKind], and a legend in the corner. An edge
+ * drawn as dots and edges as lines, with a colour for each [EdgeType] and [NodeKind], and a legend in the corner. Banks are
+ * squares on the tile in front of their booth, with a line to the booth. An edge
  * that has only one end on the drawn plane, like a ladder, is drawn as a ring on that end. One-way edges get an arrowhead.
  *
  * The `renderWebWalkMap` Gradle task runs this, see its properties in `build.gradle.kts`.
@@ -103,6 +104,11 @@ object WebWalkMapRenderer {
      * The size of a node, in pixels, whatever the scale is. The arrowheads and the rings of edges that leave the plane follow it.
      */
     private const val DOT_SIZE = 4.8
+
+    /**
+     * The colour of banks.
+     */
+    private val BANK = Color(255, 196, 0)
 
     /**
      * The colour of walls.
@@ -239,7 +245,26 @@ object WebWalkMapRenderer {
             g.fillOval((x - dot / 2).roundToInt(), (y - dot / 2).roundToInt(), dot.roundToInt(), dot.roundToInt())
         }
 
-        legend(g, plane, counts, kinds, walls, trees)
+        // Banks are not nodes, so they are drawn after them: a square on the tile in front of the booth, with a line to the booth.
+        var banks = 0
+        for (bank in graph.banks) {
+            if (!visible(bank.stand)) {
+                continue
+            }
+            banks++
+            g.stroke = BasicStroke(LINE_WIDTH)
+            g.color = BANK
+            g.drawLine(px(bank.stand).roundToInt(), py(bank.stand).roundToInt(), px(bank.booth).roundToInt(), py(bank.booth).roundToInt())
+            val side = dot.roundToInt() + 1
+            val x = px(bank.stand).roundToInt() - side / 2
+            val y = py(bank.stand).roundToInt() - side / 2
+            g.color = Color.BLACK
+            g.fillRect(x - 1, y - 1, side + 2, side + 2)
+            g.color = BANK
+            g.fillRect(x, y, side, side)
+        }
+
+        legend(g, plane, counts, kinds, banks, walls, trees)
         g.dispose()
         return image
     }
@@ -370,9 +395,10 @@ object WebWalkMapRenderer {
      * Draws the legend, with what is drawn and how many of each, in the top-left corner.
      */
     private fun legend(g: java.awt.Graphics2D, plane: Int, edges: Map<EdgeType, Int>, nodes: Map<NodeKind, Int>,
-                       walls: Int, trees: Int) {
+                       banks: Int, walls: Int, trees: Int) {
         val rows = EdgeType.entries.filter { it in edges }.map { Triple(EDGE_COLORS.getValue(it), "${it.name} edges", edges.getValue(it)) } +
                 NodeKind.entries.filter { it in nodes }.map { Triple(NODE_COLORS.getValue(it), "${it.name} nodes", nodes.getValue(it)) } +
+                (if (banks > 0) listOf(Triple(BANK, "banks", banks)) else emptyList()) +
                 Triple(WALL, "walls", walls) + Triple(TREE, "trees", trees)
         val font = Font(Font.SANS_SERIF, Font.BOLD, 18)
         g.font = font
