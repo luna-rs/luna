@@ -91,7 +91,21 @@ final class NavigationAction extends Action<Mob> {
         Locatable target = request.getTarget();
         Position targetPos = target.abs();
 
-        if ((sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) || request.getPending().isCancelled()) {
+        if (target instanceof Mob targetMob && (!targetMob.isAlive() || !sourcePos.isViewable(targetPos))) {
+            // Stop tracking dead or out-of-view players and NPCs, including one-shot requests.
+            reachedOnce = false;
+            result = NavigationResult.DIDNT_REACH;
+            if (current != null) {
+                cancelCurrent();
+            } else {
+                navigator.discardPaths();
+            }
+            mob.getWalking().clear();
+            return true;
+        }
+
+        if ((!isTargetMob && sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) ||
+                request.getPending().isCancelled()) {
             result = NavigationResult.DIDNT_REACH;
             return true;
         }
