@@ -47,6 +47,8 @@ object WildernessLocatableController : PlayerAreaListener() {
     }
 
     override fun computeLocatables(): ImmutableSet<Locatable> = ImmutableSet.of(
-        Area.of(2944, 3519, 3392, 3966)
+        Area.of(2944, 3519, 3392, 3966),
+        // The Wilderness dungeons, which sit 6400 tiles north of the surface.
+        Area.of(2944, 9920, 3391, 12799)
     )
 }
