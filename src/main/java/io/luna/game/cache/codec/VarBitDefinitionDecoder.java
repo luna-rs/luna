@@ -53,7 +53,7 @@ public final class VarBitDefinitionDecoder extends CacheDecoder<VarBitDefinition
         while (true) {
             int opcode = data.readUnsignedByte();
             if (opcode == 0) {
-                return new VarBitDefinition(id, parentVarpId, msb, lsb);
+                return new VarBitDefinition(id, parentVarpId, lsb, msb);
             } else if (opcode == 1) {
                 parentVarpId = data.readUnsignedShort();
                 lsb = data.readUnsignedByte();
