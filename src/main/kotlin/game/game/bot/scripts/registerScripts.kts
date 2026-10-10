@@ -38,6 +38,8 @@ import game.bot.scripts.skills.CutFoodBotScript.Companion.CutFoodData
 import game.bot.scripts.skills.MakeDoughBotScript.Companion.DoughData
 import game.bot.scripts.skills.MakeSoftClayBotScript.Companion.SoftClayData
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
+import game.bot.scripts.skills.MakePotionBotScript
+import game.bot.scripts.skills.MakePotionBotScript.Companion.PotionData
 import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
 import game.bot.scripts.skills.MineBotScript
@@ -92,6 +94,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<BattlestaffData>(MakeBattlestaffBotScript::class) { bot, data -> MakeBattlestaffBotScript(bot, data) }
     scriptManager.addScript<HerbData>(IdentifyHerbBotScript::class) { bot, data -> IdentifyHerbBotScript(bot, data) }
     scriptManager.addScript<IngredientData>(GrindIngredientBotScript::class) { bot, data -> GrindIngredientBotScript(bot, data) }
+    scriptManager.addScript<PotionData>(MakePotionBotScript::class) { bot, data -> MakePotionBotScript(bot, data) }
     scriptManager.addScript<UnfPotionData>(MakeUnfPotionBotScript::class) { bot, data -> MakeUnfPotionBotScript(bot, data) }
     scriptManager.addScript<JewelleryData>(StringJewelleryBotScript::class) { bot, data -> StringJewelleryBotScript(bot, data) }
     scriptManager.addScript<CrystalKeyData>(MakeCrystalKeyBotScript::class) { bot, data -> MakeCrystalKeyBotScript(bot, data) }

@@ -7,6 +7,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
+import game.bot.scripts.skills.MakePotionBotScript
+import game.skill.herblore.makePotion.FinishedPotion
 import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.skill.herblore.grindIngredient.Ingredient
 import game.skill.herblore.makeUnfPotion.UnfPotion
@@ -15,11 +17,14 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.SkillSet
 
 /**
- * Creates herb-identification sessions from the bot's owned unidentified herbs.
+ * Creates herb-identification and finished-potion sessions from the bot's owned supplies.
  *
- * Training selects herb identification. Profit mode also considers grinding with an owned pestle and mortar,
+ * Training selects herb identification or finished-potion mixing. Finished recipes consume an unfinished
+ * potion and its secondary ingredient through the existing player dialogue and award their configured XP.
+ * Profit mode also considers grinding with an owned pestle and mortar,
  * or unfinished potions with owned identified herbs and water vials. Candidates require their permanent level
- * and supplies in inventory or bank, then use the inherited level/personality selector. Preparation awards no XP;
+ * and supplies in inventory or bank, then use the inherited level/personality selector.
+ * Grinding and unfinished-potion preparation award no XP;
  * selecting a profit activity does not guarantee a market margin.
  *
  * Before either mode checks recipes or supplies, bots below permanent level three receive only the experience
@@ -71,7 +76,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     }
 
     /**
-     * Selects identification or profit-only ingredient/potion preparation with inherited level/personality rules.
+     * Selects identification, finished potions, or profit-only ingredient/potion preparation with inherited level/personality rules.
      *
      * Scripts use their default processing zones and recheck current level and safety during execution.
      *
@@ -84,6 +89,8 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
         val duration = getDuration(bot)
         val candidates = buildList<Pair<Int, InventoryBotScript>> {
             addAll(Herb.entries.map { IdentifyHerbBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(FinishedPotion.entries.map { MakePotionBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             if (!training) {
                 addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
