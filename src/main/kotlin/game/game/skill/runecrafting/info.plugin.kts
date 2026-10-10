@@ -9,6 +9,7 @@ plugin {
         A plugin that enables the Runecrafting skill. This includes
         -> Crafting all runes at all altars
         -> Using talismans and tiaras to enter the altars
+        -> Filling, emptying and repairing essence pouches
         """
     version = "1.0"
     authors += "lare96"

@@ -4,6 +4,7 @@ import api.predef.*
 import game.item.degradable.DegradableDropWarningDialogue
 import game.item.degradable.DegradableEquipmentHandler
 import game.player.Sound
+import game.skill.runecrafting.essencePouch.EssencePouch
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.DropItemEvent
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -28,7 +29,8 @@ on(DropItemEvent::class, EventPriority.HIGH) {
     val itemDef = item.itemDef
     if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
         plr.overlays.open(DegradableDropWarningDialogue(index, item.id))
-    } else if (itemDef.isTradeable && !itemDef.inventoryActions.contains("Destroy")) {
+    } else if ((itemDef.isTradeable || EssencePouch.ID_TO_POUCH.containsKey(item.id)) &&
+        !itemDef.inventoryActions.contains("Destroy")) {
         val drop = GroundItem(ctx, item, plr.position, ChunkUpdatableView.localView(plr))
         if (world.items.register(drop)) {
             plr.inventory[index] = null
