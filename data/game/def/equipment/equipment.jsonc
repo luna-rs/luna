@@ -3486,7 +3486,7 @@
   },
   {
     "id": 1035, // Zamorak robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -15825,7 +15825,7 @@
   },
   {
     "id": 4093, // Mystic robe bottom
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -17494,7 +17494,7 @@
   },
   {
     "id": 4300, // Ham robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
