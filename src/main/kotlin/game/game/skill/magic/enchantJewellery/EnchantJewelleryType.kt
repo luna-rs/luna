@@ -74,8 +74,8 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.COSMIC, 1)
           ),
           enchantMap = mapOf(
-              1645 to EnchantItem(2572, Animation(931), Graphic(238), Sound.ENCHANT_DRAGON_RING),   // Ring of wealth
-              1702 to EnchantItem(1712, Animation(720), Graphic(154, 100), Sound.ENCHANT_DRAGON_AMULET) // Amulet of glory
+              1645 to EnchantItem(2572, Animation(718), Graphic(238), Sound.ENCHANT_DRAGON_RING),   // Ring of wealth
+              1702 to EnchantItem(1704, Animation(720), Graphic(154, 100), Sound.ENCHANT_DRAGON_AMULET) // Amulet of glory
           )),
     LVL_6(spellId = 6003,
           level = 87,
