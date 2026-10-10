@@ -33,6 +33,8 @@ import api.predef.rand
  * Owned pineapples can also be cut into rings when a knife is available. These recipes grant no experience.
  * Pizza and pie assembly select owned ingredients, including alternate meats and refillable water containers.
  * Owned bowls of nettle tea can be combined with milk at level 20, returning the empty bucket without awarding XP.
+ * Meat-based incomplete stews can be completed at level 25. Uncooked stews can be prepared as curry at level 60
+ * with spice or three curry leaves per stew. These zero-XP preparation steps are selected only for non-training.
  * Ordinary food cooking remains the fallback activity.
  *
  * @author lare96

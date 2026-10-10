@@ -36,20 +36,22 @@ class AssembleFoodBotScriptTest {
     @Test fun everyRecipeAndAlternativeProcessesFullInventoryThroughRealGameplayWithRecipeExperience() {
         for (food in AssembleFoodBotScript.RECIPES) for (secondary in food.otherIngredients) {
             val bot = bot(food.lvl)
-            InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, 14), Item(secondary, 14))
+            val secondaryAmount = if (food == IncompleteFood.UNCOOKED_CURRY && secondary == 5970) 3 else 1
+            val batches = 28 / (1 + secondaryAmount)
+            InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, batches), Item(secondary, batches * secondaryAmount))
             assertTrue(bot.inventory.isFull)
-            val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), 14)
+            val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
             bot.actions.submit(action)
-            repeat(13) { assertFalse(action.run()) }
+            repeat(batches - 1) { assertFalse(action.run()) }
             assertTrue(action.run())
-            assertEquals(14, bot.inventory.computeAmountForId(food.id))
+            assertEquals(batches, bot.inventory.computeAmountForId(food.id))
             assertFalse(bot.inventory.contains(food.baseIngredient))
             assertFalse(bot.inventory.contains(secondary))
             WaterResource.FILLABLES.inverse()[secondary]?.let { empty ->
-                assertEquals(14, bot.inventory.computeAmountForId(empty))
+                assertEquals(batches, bot.inventory.computeAmountForId(empty))
             }
-            if (secondary == 1927) assertEquals(14, bot.inventory.computeAmountForId(1925))
-            if (food.exp > 0.0) verify(bot.cooking, times(14)).addExperience(food.exp)
+            if (secondary == 1927) assertEquals(batches, bot.inventory.computeAmountForId(1925))
+            if (food.exp > 0.0) verify(bot.cooking, times(batches)).addExperience(food.exp)
             else verify(bot.cooking, never()).addExperience(anyDouble())
         }
     }
@@ -118,11 +120,16 @@ class AssembleFoodBotScriptTest {
                 IncompleteFood.CHOCOLATE_CAKE to 1973,
                 IncompleteFood.CHOCOLATE_CAKE to 1975,
                 IncompleteFood.MILKY_NETTLE_TEA to 1927,
+                IncompleteFood.UNCOOKED_STEW_FROM_MEAT to 1942,
+                IncompleteFood.UNCOOKED_CURRY to 2007,
+                IncompleteFood.UNCOOKED_CURRY to 5970,
                 IncompleteFood.UNCOOKED_MEAT_PIE to 2140,
                 IncompleteFood.PART_MUD_PIE_2 to 1937)
             for ((food, secondary) in interactions) {
                 val bot = bot(food.lvl)
-                InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, 14), Item(secondary, 14))
+                val secondaryAmount = if (food == IncompleteFood.UNCOOKED_CURRY && secondary == 5970) 3 else 1
+                val batches = 28 / (1 + secondaryAmount)
+                InventoryProductionFixtures.inventory(bot, Item(food.baseIngredient, batches), Item(secondary, batches * secondaryAmount))
                 `when`(bot.personality.isDextrous).thenReturn(true)
                 `when`(bot.overlays.player).thenReturn(bot)
                 `when`(bot.overlays.has(MakeItemDialogue::class.java)).thenReturn(true)
@@ -130,17 +137,17 @@ class AssembleFoodBotScriptTest {
                 `when`(bot.actionHandler.inventory.useItem(food.baseIngredient).onItem(secondary)).thenReturn(true)
                 val widgets = bot.actionHandler.widgets
                 doAnswer {
-                    val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), 14)
+                    val action = PrepareFoodActionItem(bot, food, mutableSetOf(food.baseIngredient, secondary), batches)
                     bot.actions.submit(action)
-                    repeat(14) { action.run() }
+                    repeat(batches) { action.run() }
                     null
-                }.`when`(widgets).clickMakeItem(0, 14)
+                }.`when`(widgets).clickMakeItem(0, batches)
                 val script = InventoryProductionFixtures.active(
                     AssembleFoodBotScript(bot, food, 10.minutes, secondary = secondary))
                 assertTrue(withTimeout(5_000) { script.executeInZone() })
-                assertEquals(14, bot.inventory.computeAmountForId(food.id))
+                assertEquals(batches, bot.inventory.computeAmountForId(food.id))
                 assertEquals(0, script.snapshot().failures)
-                verify(widgets).clickMakeItem(0, 14)
+                verify(widgets).clickMakeItem(0, batches)
             }
         } finally { doNothing().`when`(fixtureWorld).schedule(any(Task::class.java)) }
     }
@@ -399,6 +406,73 @@ class AssembleFoodBotScriptTest {
         assertFalse(bot.inventory.contains(1927))
         assertEquals(1, bot.inventory.computeAmountForId(food.id))
         assertEquals(3, bot.inventory.computeAmountForId(1925))
+        verify(bot.cooking, never()).addExperience(anyDouble())
+    }
+
+    @Test fun stewAndCurrySelectRegisteredOwnedRecipesAtTheirLevelsWithoutTraining() {
+        for (food in listOf(IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_CURRY)) {
+            assertEquals(food, IncompleteFood.ALL[food.id])
+            assertEquals(0.0, food.exp)
+            for (secondary in food.otherIngredients) {
+                val bot = bot(food.lvl - 1)
+                InventoryProductionFixtures.bank(bot, Item(food.baseIngredient, 100), Item(secondary, 100))
+                assertNull(CookingScriptFactory.getAssemblyScript(bot, food.lvl - 1))
+                `when`(bot.cooking.staticLevel).thenReturn(food.lvl)
+                `when`(bot.cooking.level).thenReturn(food.lvl)
+                val selected = CookingScriptFactory.getAssemblyScript(bot, food.lvl)!!
+                assertEquals(food, selected.food)
+                assertEquals(secondary, selected.secondary)
+                assertNull(CookingScriptFactory.getAssemblyScript(bot, food.lvl, training = true))
+                val json = JsonObject()
+                selected.snapshot().save(json)
+                val restored = AssembleFoodBotScript(bot, AssemblyData().apply { load(json) })
+                assertEquals(food, restored.food)
+                assertEquals(secondary, restored.secondary)
+                assertEquals(selected.secondaryAmount, restored.secondaryAmount)
+            }
+        }
+        assertFalse(IncompleteFood.UNCOOKED_STEW_FROM_POTATO in AssembleFoodBotScript.RECIPES)
+        assertEquals("Incomplete stew", itemName(IncompleteFood.UNCOOKED_STEW_FROM_MEAT.baseIngredient))
+        assertEquals("Uncooked stew", itemName(IncompleteFood.UNCOOKED_STEW_FROM_MEAT.id))
+        assertEquals("Uncooked curry", itemName(IncompleteFood.UNCOOKED_CURRY.id))
+    }
+
+    @Test fun curryLeavesRespectThreePerOperationCapacityPartialStockAndMissingSupplyTargets() = runBlocking<Unit> {
+        val bot = bot(60)
+        val script = AssembleFoodBotScript(bot, IncompleteFood.UNCOOKED_CURRY, 10.minutes, secondary = 5970)
+        InventoryProductionFixtures.bank(bot, Item(2001, 100), Item(5970, 2))
+        assertFalse(script.isEligible())
+        assertEquals(emptyList<Item>(), script.bankBatch())
+        assertFalse(InventoryProductionFixtures.active(script).onInit(false))
+        verify(bot.preferences).raiseWantedItemTarget(5970, 1_000)
+        verify(bot.preferences, never()).raiseWantedItemTarget(2001, 1_000)
+        InventoryProductionFixtures.bank(bot, Item(5970))
+        assertTrue(script.isEligible())
+        assertEquals(listOf(Item(2001), Item(5970, 3)), script.bankBatch())
+        InventoryProductionFixtures.bank(bot, Item(5970, 17))
+        assertEquals(listOf(Item(2001, 6), Item(5970, 18)), script.bankBatch())
+        InventoryProductionFixtures.bank(bot, Item(5970, 100))
+        assertEquals(listOf(Item(2001, 7), Item(5970, 21)), script.bankBatch())
+        val spice = AssembleFoodBotScript(bot, IncompleteFood.UNCOOKED_CURRY, 10.minutes, secondary = 2007)
+        InventoryProductionFixtures.bank(bot, Item(2007, 100))
+        assertEquals(1, spice.secondaryAmount)
+        assertEquals(listOf(Item(2001, 14), Item(2007, 14)), spice.bankBatch())
+    }
+
+    @Test fun curryDoesNotConsumeAnIncompleteLeafSetOrAwardExperienceBelowRequiredLevel() {
+        val food = IncompleteFood.UNCOOKED_CURRY
+        val bot = bot(60)
+        InventoryProductionFixtures.inventory(bot, Item(2001), Item(5970, 2))
+        InventoryProductionFixtures.execute(bot, PrepareFoodActionItem(bot, food, mutableSetOf(2001, 5970), 1))
+        assertEquals(1, bot.inventory.computeAmountForId(2001))
+        assertEquals(2, bot.inventory.computeAmountForId(5970))
+        assertFalse(bot.inventory.contains(2009))
+        InventoryProductionFixtures.inventory(bot, Item(5970))
+        `when`(bot.cooking.level).thenReturn(59)
+        InventoryProductionFixtures.execute(bot, PrepareFoodActionItem(bot, food, mutableSetOf(2001, 5970), 1))
+        assertEquals(1, bot.inventory.computeAmountForId(2001))
+        assertEquals(3, bot.inventory.computeAmountForId(5970))
+        assertFalse(bot.inventory.contains(2009))
         verify(bot.cooking, never()).addExperience(anyDouble())
     }
 }

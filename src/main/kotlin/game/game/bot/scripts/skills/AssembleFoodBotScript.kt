@@ -27,17 +27,21 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
  *
  * Supports plain-pizza assembly and toppings, chocolate cakes, milky nettle tea, pie shells, and all implemented
- * pie assembly stages. Cooking
+ * pie assembly stages, meat-based stew completion, and curry preparation. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
  * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
  * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
  * a product, plus an empty container when water or milk is used. Milky nettle tea requires level 20 and combines
  * an existing bowl of tea with one bucket of milk, returning the bucket and awarding no XP.
  * [PrepareFoodActionItem] owns conversions and returns.
+ * Stew completion requires level 25 and curry requires level 60; both award no XP. Curry consumes one spice
+ * or three curry leaves per uncooked stew. Only the stew-completion path present in the player registration is
+ * supported; preparation from bowls of water and the unregistered potato-based completion remain excluded.
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
- * up to fourteen balanced pairs. Missing startup ingredients request total stock targets of 1,000. Three failed
+ * up to fourteen balanced pairs, or seven stews and twenty-one curry leaves. Missing startup ingredients request
+ * total stock targets of 1,000. Three failed
  * interactions or unresolved bank requests stop the script; snapshots preserve the recipe and retry budgets.
  * Missing water can queue the reusable filling prerequisite from owned containers. Non-training Cooking selects
  * owned supplies or an available refill; training selects only recipes that award experience. Dough making and
@@ -47,7 +51,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @property food A supported preparation recipe.
  * @param duration Session duration managed by the inherited lifecycle.
  * @param zones Existing processing zones with banking support.
- * @property secondary The selected ingredient from the recipe alternatives, consumed one per operation.
+ * @property secondary The selected ingredient from the recipe alternatives; curry requires three leaves per operation.
  * @author lare96
  */
 class AssembleFoodBotScript(
@@ -65,6 +69,7 @@ class AssembleFoodBotScript(
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
             IncompleteFood.CHOCOLATE_CAKE,
             IncompleteFood.MILKY_NETTLE_TEA,
+            IncompleteFood.UNCOOKED_STEW_FROM_MEAT, IncompleteFood.UNCOOKED_CURRY,
             IncompleteFood.PIE_SHELL, IncompleteFood.UNCOOKED_BERRY_PIE, IncompleteFood.UNCOOKED_MEAT_PIE,
             IncompleteFood.PART_MUD_PIE_1, IncompleteFood.PART_MUD_PIE_2, IncompleteFood.RAW_MUD_PIE,
             IncompleteFood.UNCOOKED_APPLE_PIE,
@@ -117,8 +122,10 @@ class AssembleFoodBotScript(
 
     /** Permanent Cooking level required for selection and startup validation. */
     val requiredLevel = food.lvl
-    /** One base ingredient and one secondary ingredient, the minimum supplies for a single conversion. */
-    private val materials = listOf(Item(food.baseIngredient), Item(secondary))
+    /** Secondary quantity consumed by the player action: three curry leaves, or one of any other ingredient. */
+    val secondaryAmount = if (food == IncompleteFood.UNCOOKED_CURRY && secondary == 5970) 3 else 1
+    /** Minimum supplies for one conversion, including the player action's three-leaf curry requirement. */
+    private val materials = listOf(Item(food.baseIngredient), Item(secondary, secondaryAmount))
     /** Consecutive failed interactions, reset after an input is consumed. */
     private var failures = 0
     /** Unresolved banking requests, reset only after the entire batch is withdrawn. */
@@ -162,7 +169,7 @@ class AssembleFoodBotScript(
         stop()
         return true
     }
-    /** Returns up to fourteen balanced input pairs from bank stock, or an empty batch if either input is absent. */
+    /** Returns balanced bank inputs limited by stock and capacity, including three leaves per curry. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
     override fun withdraw(): List<Item> {
@@ -214,7 +221,7 @@ class AssembleFoodBotScript(
         return true
     }
 
-    /** Whether inventory contains at least one complete pair of the configured recipe's inputs. */
+    /** Whether inventory contains enough of each ingredient for one operation of the configured recipe. */
     private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
