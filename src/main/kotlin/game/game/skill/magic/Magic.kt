@@ -4,6 +4,7 @@ import api.predef.*
 import com.google.common.collect.HashMultiset
 import game.player.Sound
 import game.skill.magic.teleportSpells.TeleportAction
+import game.skill.magic.teleportSpells.TeleportSequence
 import game.skill.magic.teleportSpells.TeleportStyle
 import io.luna.Luna
 import io.luna.game.model.LocalSound
@@ -23,6 +24,12 @@ import io.luna.util.StringUtils
  * @author lare96
  */
 object Magic {
+
+    /**
+     * The animation played when a regular teleport lands. The cast animation holds its last frame until it is
+     * replaced.
+     */
+    private val LANDING_ANIMATION = Animation.CANCEL
 
     /**
      * Checks whether [plr] meets the requirements needed to cast a spell.
@@ -162,8 +169,8 @@ object Magic {
     /**
      * Processes a teleport using the regular spellbook style.
      *
-     * This handles the staged teleport sequence for normal spellbook teleports, including sound playback, departure
-     * animation, departure graphic, movement, and arrival animation.
+     * The cast sound, animation and graphic play on the tick the teleport starts, and the player lands three ticks
+     * later.
      *
      * @param action The teleport action being processed.
      * @return `true` if the action should continue processing on the next execution step, or `false` if the teleport
@@ -172,9 +179,7 @@ object Magic {
     fun regularStyle(action: TeleportAction): Boolean {
         val plr = action.mob
         return when (action.executions) {
-            0 -> true
-
-            1 -> {
+            0 -> {
                 // Use a local sound so nearby players can hear.
                 val sound = LocalSound.of(ctx,
                                           Sound.TELEPORT_ALL,
@@ -186,11 +191,10 @@ object Magic {
                 true
             }
 
-            2 -> true
-            3 -> true
-            4 -> {
-                plr.move(action.destination)
-                plr.animation(Animation(715))
+            1, 2 -> true
+            3 -> {
+                action.land()
+                plr.animation(LANDING_ANIMATION)
                 false
             }
 
@@ -229,7 +233,7 @@ object Magic {
             2 -> true
             3 -> true
             4 -> {
-                plr.move(action.destination)
+                action.land()
                 false
             }
 
@@ -240,20 +244,26 @@ object Magic {
     /**
      * Teleports this player to [destination] using the given [style].
      *
-     * This submits a [TeleportAction] for the player and invokes [onTeleport] when the action reaches its completion
-     * hook.
+     * This submits a [TeleportAction] for the player. [onTeleport] is invoked once the teleport has passed every
+     * check, and [onLand] when the player arrives.
      *
      * @param destination The target destination.
-     * @param style The teleport style to use.
-     * @param onTeleport A callback invoked when the teleport finishes.
+     * @param style The teleport sequence to use. Defaults to the style of the player's spellbook.
+     * @param onLand A callback invoked on the tick the player lands.
+     * @param onTeleport A callback invoked once the teleport has passed every check.
      */
     fun Player.teleport(destination: Position,
-                        style: TeleportStyle? = null,
+                        style: TeleportSequence? = null,
+                        onLand: () -> Unit = {},
                         onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style =
             style ?: (TeleportStyle.SPELLBOOK_TO_STYLE[spellbook] ?: TeleportStyle.REGULAR)) {
             override fun onTeleport() {
                 onTeleport()
+            }
+
+            override fun onLand() {
+                onLand()
             }
         })
     }

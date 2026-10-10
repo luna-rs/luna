@@ -8,9 +8,11 @@ import io.luna.game.model.mob.Spellbook
  *
  * @author lare96
  */
-enum class TeleportStyle(val spellbook: Spellbook, val action: (TeleportAction) -> Boolean) {
+enum class TeleportStyle(val spellbook: Spellbook, val action: (TeleportAction) -> Boolean) : TeleportSequence {
     REGULAR(Spellbook.REGULAR, { Magic.regularStyle(it) }),
     ANCIENT(Spellbook.ANCIENT, { Magic.ancientStyle(it) });
+
+    override fun step(action: TeleportAction) = this.action(action)
 
     companion object {
 
