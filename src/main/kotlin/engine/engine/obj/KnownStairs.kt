@@ -125,6 +125,14 @@ object KnownStairs {
         up(2575, 3331, 0, offset(4, 0, 1)),
         down(2576, 3331, 1, offset(-4, 0, -1)),
 
+        // Barrows crypts, out onto the top of the brother's mound.
+        up(3558, 9703, 3, area(3566, 3289, 0, dx = -1..1, dy = -1..1)),
+        up(3557, 9718, 3, area(3575, 3298, 0, dx = -1..1, dy = -1..1)),
+        up(3534, 9705, 3, area(3577, 3283, 0, dx = -1..1, dy = -1..1)),
+        up(3546, 9685, 3, area(3566, 3275, 0, dx = -1..1, dy = -1..1)),
+        up(3565, 9683, 3, area(3553, 3283, 0, dx = -1..1, dy = -1..1)),
+        up(3578, 9703, 3, area(3557, 3298, 0, dx = -1..1, dy = -1..1)),
+
         // Black Arm Gang hideout.
         up(3188, 3389, 0, tile(3188, 3392, 1)),
         down(3188, 3390, 1, tile(3188, 3388, 0)),
