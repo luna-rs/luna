@@ -1,8 +1,12 @@
 package io.luna.util.parser.impl;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.WantedItemDefinition;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemTag;
+import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
 
 import java.nio.file.Paths;
@@ -28,7 +32,9 @@ public final class WantedItemDefinitionFileParser extends JsonFileParser<WantedI
         int target = token.get("target").getAsInt();
         int skill = token.get("skill").getAsInt();
         int maxLevel = token.get("max_level").getAsInt();
-        return new WantedItemDefinition(id, min, target, skill, maxLevel);
+        WantedItemPriority priority = WantedItemPriority.valueOf(token.get("priority").getAsString());
+        ImmutableSet<WantedItemTag> tags = ImmutableSet.copyOf(GsonUtils.getAsType(token.get("tags"), WantedItemTag[].class));
+        return new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags);
     }
 
     @Override

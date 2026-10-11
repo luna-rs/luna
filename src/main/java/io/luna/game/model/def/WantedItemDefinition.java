@@ -21,6 +21,8 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
                                    WantedItemPriority priority,
                                    ImmutableSet<WantedItemTag> tags) implements Definition {
 
+    // TODO Dynamic targets based on combat level/total level? A 126 player will want more runes than a level 3 player.
+
     /**
      * Represents a tag assigned to a wanted item dictating its purpose.
      */
