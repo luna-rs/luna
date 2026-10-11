@@ -19,6 +19,7 @@ import io.luna.game.model.mob.bot.Bot
  * Arrow production includes shaft-and-feather preparation and all six finished tiers. Partial owned stacks
  * qualify in both modes. Arrow and bow production share the inherited level/personality selector, with an
  * initial arrow opportunity and an owned-arrow fallback when no owned bow recipe is available.
+ * Owned logs and a knife also enable every unlocked cutting recipe, including partial log batches.
  * Profit mode does not guarantee a market margin; log-cutting fallback retains its existing acquisition behavior.
  *
  * @author lare96
@@ -62,6 +63,15 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         return getBestActivity(bot, level, { it.requiredLevel }, candidates)
     }
 
+    /** Selects a valid cutting recipe from an owned log tier and knife before using acquisition fallback. */
+    internal fun getOwnedLogScript(bot: Bot, level: Int): CutLogBotScript? {
+        val duration = getDuration(bot)
+        val candidates = Log.entries.flatMap { log ->
+            log.bows.indices.map { CutLogBotScript(bot, log, it, duration) }
+        }.filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.requiredLevel }, candidates)
+    }
+
     /** Keeps owned production ahead of the existing tier-based log-cutting fallback. */
     private fun resolveScript(bot: Bot, level: Int, randomized: Boolean): BotScript {
 
@@ -89,6 +99,7 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
 
         getOwnedBowScript(bot, level)?.let { return it }
         getOwnedArrowScript(bot, level)?.let { return it }
+        getOwnedLogScript(bot, level)?.let { return it }
 
         if (level >= MAGIC_SHORTBOW.level && (!randomized || rand(2) == 0)) {
             return getScriptForLog(Log.MAGIC)
