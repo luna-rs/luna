@@ -52,6 +52,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
         val options = mapOf(
             ChargeOrbType.WATER to SubZone.WATER_OBELISK,
             ChargeOrbType.EARTH to SubZone.EARTH_OBELISK,
+            ChargeOrbType.FIRE to SubZone.FIRE_OBELISK,
             ChargeOrbType.AIR to SubZone.AIR_OBELISK
         ).map { (type, zone) -> ChargeOrbBotScript(bot, type, duration, mutableListOf(zone)) }
             .filter { it.isEligible() }
