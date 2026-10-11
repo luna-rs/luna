@@ -3,6 +3,8 @@ package game.bot.scripts
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.BuryBoneBotScript
+import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript.Companion.SuperheatItemData
 import game.bot.scripts.skills.EnchantJewelleryBotScript
@@ -138,6 +140,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
+    scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }
