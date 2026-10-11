@@ -22,7 +22,7 @@ object GameCoroutineDispatcher : CoroutineDispatcher() {
             } catch (e: CancellationException) {
                 context.cancel(e)
                 logger.catching(e)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 logger.catching(e)
             }
         }

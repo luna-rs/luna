@@ -1,6 +1,6 @@
 package api.predef.ext
 
-import api.predef.itemDef
+import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.mob.bot.Bot
@@ -100,10 +100,7 @@ fun BotPreference.wantedItemsToAcquire(): List<WantedItemDefinition> {
     }
 
     // Keep shopping order natural between bots while still preserving minimum-stock urgency.
-    urgent.shuffle()
-    normal.shuffle()
-
-    return urgent + normal
+    return (urgent + normal).sortedBy { it.priority.level }
 }
 
 /**
