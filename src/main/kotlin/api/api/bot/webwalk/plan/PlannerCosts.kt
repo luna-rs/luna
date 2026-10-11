@@ -22,6 +22,12 @@ package api.bot.webwalk.plan
  * @property linkRadius How far, in tiles, nodes are looked for to link the start and the destination to. This is the range
  * of the route pathfinder, so that the estimates are made without the long range search.
  * @property linkCandidates How many of the nearest nodes are tried to link the start and the destination to.
+ * @property shortcutRadius How far, in tiles, a walk may go straight to a later node of the trip instead of through the nodes
+ * on the way. It is short of the range of the route pathfinder, because a bot is let go a few tiles before the end of a walk,
+ * so it starts the next one a little way off the node.
+ * @property scatterRadius How far, in tiles, a waypoint between two walks may be moved, so that bots don't all step on the
+ * same tiles. `0` keeps every waypoint where it is.
+ * @property scatterAttempts How many tiles are tried for each waypoint that is moved, before it is left where it is.
  * @property alternatives How many other trips are tried to vary the route of a bot.
  * @property jitter How much the cost of each edge may be changed, as a fraction, when trying other trips.
  * @property toleranceFraction How much more than the best trip a bot may take, as a fraction, at the lowest intelligence.
@@ -45,6 +51,9 @@ data class PlannerCosts(val doorTicks: Double = 3.0,
                         val wildernessLevelScale: Double = 0.1,
                         val linkRadius: Int = 56,
                         val linkCandidates: Int = 6,
+                        val shortcutRadius: Int = 48,
+                        val scatterRadius: Int = 2,
+                        val scatterAttempts: Int = 4,
                         val alternatives: Int = 8,
                         val jitter: Double = 0.3,
                         val toleranceFraction: Double = 0.2,

@@ -36,6 +36,11 @@ import java.util.SplittableRandom
  * - Bots can vary their route. The best trip is found first. A bot that is less than fully intelligent then tries other
  *   trips with the cost of every edge changed a little, and picks at random between the best trip and those of them that
  *   cost no more than a tolerance more, which gets smaller the more intelligent the bot is.
+ * - The trip that is chosen is then made to look less like a web. Walks in a row skip the nodes in between when the
+ *   [WalkEstimator] can walk straight to a later one, within [PlannerCosts.shortcutRadius], for no more than the walks cost.
+ *   Then every waypoint between two walks is moved to a random tile near it, within [PlannerCosts.scatterRadius], if both
+ *   walks can still be walked, so that bots going the same way don't all step on the same tiles. Doors, ladders and the like,
+ *   and the destination, are never moved.
  *
  * The planner is made once and used from any thread, and it only reads what it is given.
  *
@@ -216,7 +221,104 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             }
             chosen = options.values.toList()[random.nextInt(options.size)]
         }
-        return WebWalkPlan(chosen.legs, chosen.cost)
+        val legs = scatter(shorten(chosen.legs), random)
+        return WebWalkPlan(legs, legs.sumOf { it.cost })
+    }
+
+    /**
+     * Determines if a leg is a walk that can be changed: one that has no requirements, which would be lost if it were.
+     */
+    private fun isPlainWalk(leg: PlanLeg) = leg.type == EdgeType.WALK && leg.requirements.isEmpty
+
+    /**
+     * Makes a walk between two positions on the same plane, with what the [estimator] says it takes.
+     *
+     * @return The walk, or `null` if it can't be walked.
+     */
+    private fun walk(from: Position, to: Position): PlanLeg? {
+        if (from.z != to.z) {
+            return null
+        }
+        val ticks = estimator.ticks(from, to)?.toDouble() ?: return null
+        val penalty = wildernessPenalty(WebWalkNode.wildernessLevelOf(from), WebWalkNode.wildernessLevelOf(to), ticks)
+        return PlanLeg(EdgeType.WALK, from, to, ticks + penalty)
+    }
+
+    /**
+     * Skips nodes of a trip that don't need to be walked through. Each walk goes straight to the farthest node, among the walks
+     * that follow it in a row, that is within [PlannerCosts.shortcutRadius] and can be walked to for no more than the walks
+     * that it replaces.
+     *
+     * @param legs The legs of the trip.
+     * @return The legs, with the walks that were skipped joined.
+     */
+    private fun shorten(legs: List<PlanLeg>): List<PlanLeg> {
+        val shortened = ArrayList<PlanLeg>(legs.size)
+        var index = 0
+        while (index < legs.size) {
+            val leg = legs[index]
+            var last = index
+            if (isPlainWalk(leg)) {
+                while (last + 1 < legs.size && isPlainWalk(legs[last + 1])) {
+                    last++
+                }
+            }
+
+            // The farthest node first, so that as many as possible are skipped.
+            var joined = leg
+            var end = last
+            while (end > index) {
+                val to = legs[end].to
+                if (leg.from.z == to.z && leg.from.computeLongestDistance(to) <= costs.shortcutRadius) {
+                    val shortcut = walk(leg.from, to)
+                    if (shortcut != null && shortcut.cost <= (index..end).sumOf { legs[it].cost } + 1e-9) {
+                        joined = shortcut
+                        break
+                    }
+                }
+                end--
+            }
+            shortened += joined
+            index = end + 1
+        }
+        return shortened
+    }
+
+    /**
+     * Moves every waypoint between two walks to a random tile within [PlannerCosts.scatterRadius] of it, if both walks can
+     * still be walked. A waypoint is left where it is if none of the tiles tried will do.
+     *
+     * @param legs The legs of the trip.
+     * @param random Where the tiles come from.
+     * @return The legs, with the waypoints moved.
+     */
+    private fun scatter(legs: List<PlanLeg>, random: Random): List<PlanLeg> {
+        val radius = costs.scatterRadius
+        if (radius <= 0) {
+            return legs
+        }
+        val scattered = legs.toMutableList()
+        for (index in 0 until scattered.size - 1) {
+            val into = scattered[index]
+            val onward = scattered[index + 1]
+            if (!isPlainWalk(into) || !isPlainWalk(onward)) {
+                continue
+            }
+            for (attempt in 0 until costs.scatterAttempts) {
+                val dx = random.nextInt(radius * 2 + 1) - radius
+                val dy = random.nextInt(radius * 2 + 1) - radius
+                if (dx == 0 && dy == 0) {
+                    continue
+                }
+                val tile = Position(into.to.x + dx, into.to.y + dy, into.to.z)
+                val first = walk(into.from, tile) ?: continue
+                val second = walk(tile, onward.to) ?: continue
+                scattered[index] = first
+                scattered[index + 1] = second
+                break
+            }
+        }
+        return scattered
     }
 
     /**
