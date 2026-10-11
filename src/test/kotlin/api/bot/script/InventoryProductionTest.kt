@@ -116,6 +116,7 @@ class InventoryProductionTest {
         override val verifiedProductionWithdrawals = true
         var interact: suspend (Int) -> Boolean = { false }
         var available = true
+        var producedId: Int? = null
         val inputs = listOf(Item(1623))
         val tools = setOf(1755)
         init { if (data != null) restoreInventoryState(data) }
@@ -125,7 +126,7 @@ class InventoryProductionTest {
             tools.all { bot.inventory.contains(it) })
         override suspend fun onExecuteInZone(): Boolean {
             if (!productionReady(bot.inventory.containsAll(inputs) && tools.all { bot.inventory.contains(it) })) return true
-            attemptProduction(1623, dexterityDelay = false, available = available, start = interact)
+            attemptProduction(1623, dexterityDelay = false, available = available, outputId = producedId, start = interact)
             return true
         }
         override fun snapshot() = InventoryScriptData().also { saveInventoryState(it) }
@@ -183,6 +184,27 @@ class InventoryProductionTest {
             val script = Production(bot, InventoryScriptData().apply { failures = 2; bankFailures = 1 })
             script.interact = { before -> assertEquals(2, before); bot.inventory.remove(1623) }
             script.executeInZone()
+            assertEquals(0, script.snapshot().failures)
+            assertEquals(1, script.snapshot().bankFailures)
+            assertFalse(script.isTerminated())
+        } finally { doNothing().`when`(fixtureWorld).schedule(any(Task::class.java)) }
+    }
+
+    @Test fun verifiedOutputProgressResetsFailuresWithoutRequiringInputConsumption() = runBlocking<Unit> {
+        val fixtureWorld = world
+        val scheduler = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
+        doAnswer { invocation -> scheduler.invoke(invocation.getArgument<Task>(0)); null }
+            .`when`(fixtureWorld).schedule(any(Task::class.java))
+        try {
+            val bot = InventoryProductionFixtures.bot()
+            InventoryProductionFixtures.inventory(bot, Item(1623), Item(1755))
+            `when`(bot.actionHandler.widgets.clickCloseInterface()).thenReturn(true)
+            val script = Production(bot, InventoryScriptData().apply { failures = 2; bankFailures = 1 })
+            script.producedId = 1607
+            script.interact = { bot.inventory.add(Item(1607)) }
+            script.executeInZone()
+            assertTrue(bot.inventory.contains(1623))
+            assertTrue(bot.inventory.contains(1607))
             assertEquals(0, script.snapshot().failures)
             assertEquals(1, script.snapshot().bankFailures)
             assertFalse(script.isTerminated())

@@ -3,6 +3,8 @@ package game.bot.scripts
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.ChargeOrbBotScript
+import game.bot.scripts.skills.ChargeOrbBotScript.Companion.ChargeOrbData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
 import game.bot.scripts.skills.CollectHidesBotScript
@@ -126,5 +128,6 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
+    scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }
     scriptManager.addScript<AlchemyData>(AlchemyBotScript::class) { bot, data -> AlchemyBotScript(bot, data) }
 }

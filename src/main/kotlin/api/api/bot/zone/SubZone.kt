@@ -42,6 +42,21 @@ enum class SubZone(val inside: Position,
                    val outside: Bot.() -> Position? = { null },
                    val area: SimpleBoxArea,
                    val parent: Bot.() -> Zone) {
+    /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
+    WATER_OBELISK(inside = Position(2844, 3425),
+                   area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
+                   parent = { CATHERBY }),
+
+    /** Air-obelisk activity area, with Edgeville banking and shared travel fallback. */
+    AIR_OBELISK(inside = Position(3089, 3571),
+                 area = SimpleBoxArea.ofRadius(3082, 3564, 12, 13),
+                 parent = { EDGEVILLE }),
+
+    /** Earth-obelisk activity area, with Edgeville banking and shared travel fallback. */
+    EARTH_OBELISK(inside = Position(3087, 9935),
+                   area = SimpleBoxArea.ofRadius(3081, 9929, 13, 15),
+                   parent = { EDGEVILLE }),
+
     HAM_CULT(inside = Position(3149, 9652),
              outside = { Position(3167, 3246) },
              area = SimpleBoxArea.of(3135, 9606, 3189, 9660),
