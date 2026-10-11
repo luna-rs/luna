@@ -11,6 +11,7 @@ data/archives
 /data/game/bots/webwalk/teleports.jsonc
 /data/game/bots/webwalk/walk_graph.jsonc
 /.idea/
+.claude/
 /target/
 /.settings/
 /luna.iml
