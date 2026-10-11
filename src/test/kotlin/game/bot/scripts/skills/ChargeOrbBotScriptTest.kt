@@ -65,7 +65,7 @@ class ChargeOrbBotScriptTest {
         ChargeOrbType.WATER -> SubZone.WATER_OBELISK
         ChargeOrbType.AIR -> SubZone.AIR_OBELISK
         ChargeOrbType.EARTH -> SubZone.EARTH_OBELISK
-        ChargeOrbType.FIRE -> SubZone.HOME
+        ChargeOrbType.FIRE -> SubZone.FIRE_OBELISK
     }
     private fun script(bot: Bot, type: ChargeOrbType) =
         InventoryProductionFixtures.active(ChargeOrbBotScript(bot, type, 10.minutes, mutableListOf(zone(type))))
@@ -190,7 +190,7 @@ class ChargeOrbBotScriptTest {
     }
 
     @Test fun configuredOrbsAreSelectedInBothFactoryModesAndRespectCurrentLevel() {
-        for (type in listOf(ChargeOrbType.WATER, ChargeOrbType.EARTH, ChargeOrbType.AIR)) {
+        for (type in ChargeOrbType.entries) {
             for (training in listOf(false, true)) {
                 val bot = bot()
                 supplies(bot, type, 1)

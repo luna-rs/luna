@@ -47,6 +47,11 @@ enum class SubZone(val inside: Position,
                    area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
                    parent = { CATHERBY }),
 
+    /** Fire-obelisk activity area, using Taverly and the shared travel/banking fallback. */
+    FIRE_OBELISK(inside = Position(2821, 9827),
+                  area = SimpleBoxArea.ofRadius(2814, 9824, 9, 9),
+                  parent = { TAVERLY }),
+
     /** Air-obelisk activity area, with Edgeville banking and shared travel fallback. */
     AIR_OBELISK(inside = Position(3089, 3571),
                  area = SimpleBoxArea.ofRadius(3082, 3564, 12, 13),
@@ -1255,10 +1260,10 @@ enum class SubZone(val inside: Position,
         }
 
         /**
-         * Updates the bot's current subzone from its cached local subzones.
+         * Updates the bot's current subzones from its cached local subzones.
          *
-         * The bot is assigned the first local subzone whose [SubZone.area] contains it. If no local subzone contains
-         * the bot, [Bot.subZone] is cleared.
+         * [Bot.subZones] contains every cached local subzone whose [SubZone.area] contains the bot.
+         * The set is empty when no local subzone contains the bot.
          *
          * @param bot The bot whose current subzone is being updated.
          */
