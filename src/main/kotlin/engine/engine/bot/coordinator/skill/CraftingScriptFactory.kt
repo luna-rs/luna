@@ -45,6 +45,9 @@ import io.luna.util.RandomUtils.roll
  * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
  * Choosing a profit activity does not guarantee a market margin.
  *
+ * Owned leather, snakeskin, dragonhide, or leather armour and studs enable armour production in both modes.
+ * A single recipe qualifies; leather production also requires a needle and consumable thread.
+ *
  * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
@@ -168,6 +171,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         val duration = getDuration(bot)
         val candidates = buildList<Pair<Int, InventoryBotScript>> {
             addAll(Gem.entries.filter { !it.isSemiPrecious() }.map { CutGemBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(HideArmor.ALL.map { CraftArmorBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(Battlestaff.entries.map { MakeBattlestaffBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
