@@ -53,7 +53,7 @@ class FishBotScript(
 
         /**
          * Maps each fishing tool to the NPC fishing spots that use it as their first-click action.
-         */ // todo finish, go up from 334 (start at 335)
+         */
         val FIRST_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> = buildSpots { it.firstOption }
 
         /**
@@ -62,13 +62,14 @@ class FishBotScript(
         val SECOND_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> = buildSpots { it.secondOption }
 
         /**
-         * Maps each tool returned by [option] to the NPC fishing spots that use it.
+         * Maps each tool returned by [option] to the NPC fishing spots that use it. Bots don't fish in Miscellania,
+         * where the catch goes to Fisherman Frodi.
          */
         private fun buildSpots(option: (FishingSpot) -> Tool?): ImmutableSetMultimap<Tool, Int> {
             val spots = ImmutableSetMultimap.builder<Tool, Int>()
             for (spot in FishingSpot.entries) {
                 val tool = option(spot)
-                if (tool != null) {
+                if (tool != null && spot != FishingSpot.MISCELLANIA) {
                     spots.putAll(tool, spot.npcs)
                 }
             }

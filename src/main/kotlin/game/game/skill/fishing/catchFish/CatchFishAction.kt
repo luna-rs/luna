@@ -8,6 +8,7 @@ import game.skill.fishing.catchFish.Fish.*
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -19,6 +20,7 @@ import io.luna.game.model.mob.block.Animation
  */
 class CatchFishAction(plr: Player,
                       private val target: Entity,
+                      private val spot: FishingSpot,
                       private val tool: Tool) : Action<Player>(plr, ActionType.WEAK, false, 1) {
 
     companion object {
@@ -36,13 +38,19 @@ class CatchFishAction(plr: Player,
                                            CASKET to CASKET.chance,
                                            COD to COD.chance,
                                            BASS to BASS.chance)
+
+        /**
+         * Where Fisherman Frodi stands when he thanks the player for a catch.
+         */
+        private val FRODI_POSITION = Position(2576, 3852)
+
+        /**
+         * Fisherman Frodi's NPC id.
+         */
+        private const val FRODI = 1397
     }
 
     // TODO@0.5.0 Implement correct sounds: FISHING_CAST(377), FISH_SWIM(378), NET(379), CATCH(238), ?
-    /**
-     * The messages to send on harvest.
-     */
-    val messages = mutableListOf<String>()
 
     /**
      * Ticks since fishing started.
@@ -89,6 +97,10 @@ class CatchFishAction(plr: Player,
                 mob.animation(Animation(tool.animation))
             }
             roll()
+            if (tool == Tool.KARAMBWAN_VESSEL) {
+                // Each click lowers the vessel once.
+                return true
+            }
             nextRoll = ticks + tool.delay
             if (tool == Tool.PIKE_FISHING_ROD && rand(0, 4) == 0) {
                 // Pike fishers sometimes cast their line again, which takes an extra tick.
@@ -108,8 +120,18 @@ class CatchFishAction(plr: Player,
      * missing if fishing can't continue.
      */
     private fun canFish(): Boolean {
+        // TODO Tai Bwo Wannai Trio: Lubufu teaches Karambwan fishing during the quest. Players he hasn't taught get
+        //  "You don't even know how to use the vessel!".
+        if (tool == Tool.KARAMBWAN_VESSEL && mob.fishing.level < tool.level) {
+            mob.sendMessage(tool.levelMessage)
+            return false
+        }
         val message = when {
             mob.fishing.level < tool.level -> tool.levelMessage
+            tool == Tool.KARAMBWAN_VESSEL && tool.id !in mob.inventory &&
+                    Tool.EMPTY_KARAMBWAN_VESSEL in mob.inventory ->
+                "You need to load your vessel with a karambwanji to fish here."
+
             tool.id !in mob.inventory -> tool.toolMessage
             tool.bait != null && tool.bait !in mob.inventory -> tool.baitMessage
             (tool.checkSpaceOnCast || ticks - castTick >= 3) && isInventoryFull() -> tool.fullMessage
@@ -134,6 +156,16 @@ class CatchFishAction(plr: Player,
      */
     private fun roll() {
         val level = mob.fishing.level
+        if (tool == Tool.KARAMBWAN_VESSEL) {
+            mob.inventory.remove(Item(tool.id))
+            mob.inventory.add(Item(Tool.EMPTY_KARAMBWAN_VESSEL))
+            if (Skills.success(KARAMBWAN.chance, level)) {
+                catch(KARAMBWAN)
+            } else {
+                mob.sendMessage("A Karambwan deftly snatches the Karambwanji from your vessel!")
+            }
+            return
+        }
         if (tool == Tool.BIG_NET) {
             for ((fish, chance) in BIG_NET_ROLLS) {
                 if (level >= fish.level && Skills.success(chance, level)) {
@@ -158,14 +190,16 @@ class CatchFishAction(plr: Player,
         if (bait != null) {
             mob.inventory.remove(Item(bait))
         }
-        val item = fish.toItem(this)
-        messages.removeAll { mob.sendMessage(it); true }
-        if (item == null) {
+        if (spot == FishingSpot.MISCELLANIA) {
+            // TODO Managing Miscellania: each catch here should also raise the kingdom's approval rating.
+            world.locator.findNpcs(FRODI_POSITION, 2) { it.id == FRODI }.firstOrNull()?.speak("Thanks!")
+            mob.fishing.addExperience(0.1)
+            mob.sendMessage("${fish.message.dropLast(1)} and give it to Fisherman Frodi.")
             return
         }
-        if (!mob.inventory.add(item)) {
+        if (!mob.inventory.add(Item(fish.id))) {
             // A big net can catch more than the inventory has room for.
-            world.addItem(item.id, item.amount, mob.position, mob)
+            world.addItem(fish.id, 1, mob.position, mob)
         }
         mob.fishing.addExperience(fish.exp)
         mob.sendMessage(tool.catchMessages[fish] ?: fish.message)
