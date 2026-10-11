@@ -3,21 +3,18 @@ package game.bot.scripts.skills
 import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
+import api.bot.script.productionRuneCosts
+import api.bot.script.bypassesSpellCosts
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
-import game.skill.magic.CombinationRune
 import game.skill.magic.Magic
-import game.skill.magic.RuneRequirement
-import game.skill.magic.Staff
 import game.skill.magic.chargeOrb.ChargeOrbAction
 import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
 import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.chargeOrbDelay
 import game.skill.magic.chargeOrb.ChargeOrbType
-import io.luna.Luna
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
@@ -80,31 +77,8 @@ class ChargeOrbBotScript(bot: Bot, val type: ChargeOrbType, duration: Duration, 
         restoreInventoryState(data)
     }
 
-    /** Whether the shared Magic validator bypasses spell costs for this bot. */
-    private fun freeCast() = Luna.settings().game().betaMode() || bot.rights >= PlayerRights.ADMINISTRATOR
-
-    /**
-     * Resolves one cast's stackable rune costs for a bank or owned-stock plan.
-     * An equipped matching staff removes its elemental cost. Base runes are preferred when sufficient;
-     * otherwise one sufficient combination stack is selected. Cosmic runes never use substitution.
-     */
-    private fun runeCosts(bankedOnly: Boolean): List<Item> {
-        if (freeCast()) return emptyList()
-        fun owned(id: Int): Long = bot.bank.computeAmountForId(id).toLong() +
-            if (bankedOnly) 0 else bot.inventory.computeAmountForId(id)
-        val staff = bot.equipment.weapon?.id?.let { Staff.ID_TO_STAFF[it] }
-        return type.requirements.filterIsInstance<RuneRequirement>().mapNotNull { requirement ->
-            if (staff != null && requirement.rune in staff.represents) return@mapNotNull null
-            val id = if (owned(requirement.rune.id) >= requirement.amount) requirement.rune.id else
-                CombinationRune.entries.firstOrNull {
-                    requirement.rune in it.represents && owned(it.id) >= requirement.amount
-                }?.id ?: requirement.rune.id
-            Item(id, requirement.amount)
-        }
-    }
-
     /** Minimum owned inputs required by the normal production startup and wanted-item handling. */
-    private fun materials() = listOf(Item(UNPOWERED_ORB)) + runeCosts(false)
+    private fun materials() = listOf(Item(UNPOWERED_ORB)) + bot.productionRuneCosts(type.requirements)
 
     /** Checks permanent level, regular spellbook, and owned inputs across bank/inventory. */
     fun isEligible(): Boolean = bot.spellbook == Spellbook.REGULAR &&
@@ -112,8 +86,8 @@ class ChargeOrbBotScript(bot: Bot, val type: ChargeOrbType, duration: Duration, 
 
     /** Returns a balanced orb/rune batch, reserving one slot per stack and limiting casts to banked costs. */
     fun bankBatch(): List<Item> {
-        val costs = runeCosts(true)
-        val capacity = if (freeCast()) bot.inventory.capacity() / 2 else bot.inventory.capacity() - costs.size
+        val costs = bot.productionRuneCosts(type.requirements, bankedOnly = true)
+        val capacity = if (bot.bypassesSpellCosts()) bot.inventory.capacity() / 2 else bot.inventory.capacity() - costs.size
         val amount = minOf(capacity, bot.bank.computeAmountForId(UNPOWERED_ORB),
             costs.minOfOrNull { bot.bank.computeAmountForId(it.id) / it.amount } ?: Int.MAX_VALUE)
         if (amount < 1) return emptyList()
@@ -127,7 +101,7 @@ class ChargeOrbBotScript(bot: Bot, val type: ChargeOrbType, duration: Duration, 
 
     /** Checks carried inputs/costs, including output space for spells whose costs are bypassed. */
     private fun canContinue(): Boolean = bot.inventory.contains(UNPOWERED_ORB) &&
-        (!freeCast() || bot.inventory.hasSpaceFor(Item(type.chargedOrb))) &&
+        (!bot.bypassesSpellCosts() || bot.inventory.hasSpaceFor(Item(type.chargedOrb))) &&
         Magic.checkRequirements(bot, type.level, type.requirements) != null
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(canContinue())

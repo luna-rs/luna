@@ -5,6 +5,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.ChargeOrbBotScript
+import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
 import game.skill.magic.chargeOrb.ChargeOrbType
 import game.skill.magic.lowHighAlch.AlchemyType
@@ -14,8 +15,10 @@ import io.luna.game.model.mob.bot.Bot
  * Creates bot scripts used to train Magic.
  *
  * Magic currently shares its activity selection between normal and profit-oriented training.
- * Owned unpowered orbs and spell costs enable obelisk charging. Eligible alchemy items provide the next
- * choice when the required level is met; splashing remains the fallback.
+ * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
+ * enable all existing enchantments next, at the normal safe processing hubs. Eligible alchemy follows
+ * when the required level is met; splashing remains the fallback. Both production activities use the
+ * normal eligibility and personality rules.
  * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
  * its matching obelisk subzone and uses the shared travel and banking system.
  *
@@ -32,6 +35,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getOrbScript(bot, level)?.let { return it }
+        getEnchantScript(bot, level)?.let { return it }
         val alchemy = getAlchemyScript(bot, level)
         if (alchemy != null) {
             return alchemy
@@ -56,6 +60,22 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             ChargeOrbType.AIR to SubZone.AIR_OBELISK
         ).map { (type, zone) -> ChargeOrbBotScript(bot, type, duration, mutableListOf(zone)) }
             .filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.requiredLevel }, options)
+    }
+
+    /**
+     * Selects owned jewellery enchanting with the inherited level/personality policy.
+     * Candidates come only from the player spell maps and require the regular spellbook and one cast's inputs.
+     *
+     * @param bot The bot whose jewellery, rune stock, equipment, and permanent level determine eligibility.
+     * @param level Current Magic level used by the normal factory selection policy.
+     * @return An eligible enchantment, or `null` to continue to alchemy/splashing.
+     */
+    internal fun getEnchantScript(bot: Bot, level: Int): EnchantJewelleryBotScript? {
+        val duration = getDuration(bot)
+        val options = EnchantJewelleryBotScript.RECIPES.map { (type, inputId) ->
+            EnchantJewelleryBotScript(bot, type, inputId, duration)
+        }.filter { it.isEligible() }
         return getBestActivity(bot, level, { it.requiredLevel }, options)
     }
 
