@@ -49,7 +49,7 @@ abstract class InventoryBotScript(
          * @author lare96
          */
         open class InventoryScriptData : ZonedBotScriptData() {
-            /** Consecutive production interactions without input consumption. */
+            /** Consecutive production interactions without verified production progress. */
             var failures = 0
             /** Unresolved banking requests since the last verified withdrawal. */
             var bankFailures = 0
@@ -70,7 +70,7 @@ abstract class InventoryBotScript(
     protected open val maxFailures = 3
     /** Enables the common fifteen-second, unnoted, inventory-verified production withdrawal. */
     protected open val verifiedProductionWithdrawals = false
-    /** Consecutive interactions without input consumption; reset only by verified production progress. */
+    /** Consecutive interactions without verified production progress. */
     protected var failures = 0
         private set
     /** Unresolved production banking requests; reset only after a successful withdrawal. */
@@ -151,20 +151,25 @@ abstract class InventoryBotScript(
     }
 
     /**
-     * Runs a player interaction with a fifteen-second start bound and ten-second input-progress wait.
+     * Runs a player interaction with a fifteen-second start bound and ten-second progress wait.
      * Closing interfaces, progress detection, retries, and optional dexterity pacing are shared.
      * Unavailable targets fail without closing an interface or starting an interaction.
+     * Optional output tracking also accepts newly produced items, including spells with beta-mode cost bypasses.
      * The callback starts normal gameplay; it must not directly create products or award experience.
      */
     protected suspend fun attemptProduction(
-        inputId: Int, dexterityDelay: Boolean = true, available: Boolean = true,
+        inputId: Int, dexterityDelay: Boolean = true, available: Boolean = true, outputId: Int? = null,
         start: suspend (amount: Int) -> Boolean
     ) {
         val before = bot.inventory.computeAmountForId(inputId)
+        val outputBefore = outputId?.let { bot.inventory.computeAmountForId(it) } ?: 0
         val started = available && withTimeoutOrNull(15_000) {
             handler.widgets.clickCloseInterface() && start(before)
         } == true
-        val progressed = started && waitFor(10.seconds) { bot.inventory.computeAmountForId(inputId) < before }
+        val progressed = started && waitFor(10.seconds) {
+            bot.inventory.computeAmountForId(inputId) < before ||
+                (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore)
+        }
         if (progressed) failures = 0 else if (++failures >= maxFailures) stop()
         if (dexterityDelay) bot.naturalDexterityDelay()
     }
