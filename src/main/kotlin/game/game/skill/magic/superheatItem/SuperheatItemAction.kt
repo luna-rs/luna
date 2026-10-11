@@ -35,6 +35,9 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
     // TODO@0.5.0 Implement correct sounds: SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support.
     companion object {
 
+        /** Existing spellbook identifier shared by the player handler and bot interaction. */
+        const val SPELL_ID = 1173
+
         /**
          * The amount of magic XP to give.
          */
@@ -43,12 +46,12 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         /**
          * The magic level required.
          */
-        private const val LEVEL = 43
+        const val LEVEL = 43
 
         /**
          * The runes required.
          */
-        private val RUNES = listOf(
+        val RUNES = listOf(
             RuneRequirement(Rune.FIRE, 4),
             RuneRequirement(Rune.NATURE, 1)
         )
