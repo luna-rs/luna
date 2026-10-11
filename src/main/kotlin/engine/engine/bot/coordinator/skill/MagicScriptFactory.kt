@@ -7,8 +7,11 @@ import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
+import game.bot.scripts.skills.SuperheatItemBotScript
 import game.skill.magic.chargeOrb.ChargeOrbType
 import game.skill.magic.lowHighAlch.AlchemyType
+import game.skill.magic.superheatItem.SuperheatItemAction
+import game.skill.smithing.BarType
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -16,9 +19,9 @@ import io.luna.game.model.mob.bot.Bot
  *
  * Magic currently shares its activity selection between normal and profit-oriented training.
  * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
- * enable all existing enchantments next, at the normal safe processing hubs. Eligible alchemy follows
- * when the required level is met; splashing remains the fallback. Both production activities use the
- * normal eligibility and personality rules.
+ * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
+ * then enable superheating when both skill requirements are met. Eligible alchemy follows; splashing
+ * remains the fallback. Production activities use the normal eligibility and personality rules.
  * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
  * its matching obelisk subzone and uses the shared travel and banking system.
  *
@@ -36,6 +39,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         getOrbScript(bot, level)?.let { return it }
         getEnchantScript(bot, level)?.let { return it }
+        getSuperheatScript(bot, level)?.let { return it }
         val alchemy = getAlchemyScript(bot, level)
         if (alchemy != null) {
             return alchemy
@@ -77,6 +81,22 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
             EnchantJewelleryBotScript(bot, type, inputId, duration)
         }.filter { it.isEligible() }
         return getBestActivity(bot, level, { it.requiredLevel }, options)
+    }
+
+    /**
+     * Selects an owned superheating recipe using the inherited Smithing level and personality policy.
+     * Magic must meet the spell's requirement; both permanent levels, spellbook, and supplies are validated.
+     *
+     * @param bot The bot whose ore stock, rune costs, and skill levels determine eligibility.
+     * @param level Current Magic level supplied by the normal factory selection path.
+     * @return An eligible bar conversion, or `null` to continue to alchemy and splashing.
+     */
+    internal fun getSuperheatScript(bot: Bot, level: Int): SuperheatItemBotScript? {
+        if (level < SuperheatItemAction.LEVEL) return null
+        val duration = getDuration(bot)
+        val options = BarType.entries.map { SuperheatItemBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+        return getBestActivity(bot, bot.smithing.level, { it.barType.level }, options)
     }
 
     /**

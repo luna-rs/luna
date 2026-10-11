@@ -4,6 +4,7 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.skills.MakeCannonballBotScript
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
 import game.skill.smithing.BarType
@@ -13,13 +14,10 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates smithing scripts for bots.
  *
- * Smithing can currently be trained in two ways:
- *
- * - Smithing finished items from bars.
- * - Smelting ore into bars.
- *
- * Training prefers smithing level-appropriate equipment when possible, then falls back to smelting. Profit mode prefers
- * higher-value smithable items, then falls back to smelting any bar type the bot has ore for.
+ * Eligible bots with owned steel bars and an ammo mould first produce cannonballs through a furnace.
+ * Other training sessions prefer level-appropriate equipment, then smelting. Other profit sessions prefer
+ * higher-value smithable items, then smelting. Cannonball selection requires permanent level 35 and owned
+ * supplies; the script rechecks current level and inventory requirements before each player interaction.
  *
  * @author lare96
  */
@@ -75,25 +73,12 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         SmithingTable.PLATEBODY
     ).flatMap { it.items }
 
-    /**
-     * Creates a smithing training script for the bot's current smithing level.
-     *
-     * The factory first attempts to select a smithable item from [TRAINING]. If a suitable item is found, the bot will
-     * smith that item from bars.
-     *
-     * If no affordable smithable item can be selected, the factory chooses a level-appropriate [BarType] from owned
-     * ores. A null selection lets the smelting script gather supplies when no ore combination is available.
-     *
-     * @param bot The bot that will run the script.
-     * @param level The bot's current smithing level.
-     * @param zones Candidate zones available to the script.
-     * @return A smithing script suitable for training.
-     */
     override fun getTrainingScript(
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        getCannonballScript(bot, level)?.let { return it }
         val smithingItem = getBestActivity(bot, level, { it.level }, TRAINING.filter {
             bot.itemTracker.count(it.barType.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
         })
@@ -112,25 +97,12 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
     }
 
-    /**
-     * Creates a profit-oriented smithing script for the bot's current smithing level.
-     *
-     * Profit mode first attempts to smith profitable finished items from [PROFIT]. If no profitable smithing item is
-     * available for the bot's level, the factory falls back to smelting.
-     *
-     * When [SmeltOreBotScript] receives a `null` bar type, it chooses a suitable bar by scanning the bot's available ore
-     * supplies.
-     *
-     * @param bot The bot that will run the script.
-     * @param level The bot's current smithing level.
-     * @param zones Candidate zones available to the script.
-     * @return A smithing script suitable for profit-oriented activity.
-     */
     override fun getProfitScript(
         bot: Bot,
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
+        getCannonballScript(bot, level)?.let { return it }
         // Profit smithing prefers finished weapons, armor, and useful supplies when possible.
         val smithingScript = getSmithingScript(bot, level)
         if (smithingScript != null) {
@@ -141,6 +113,12 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         zones += SubZone.AL_KHARID_BANK
         zones += SubZone.FALADOR_WEST_BANK
         return SmeltOreBotScript(bot, null, getDuration(bot), zones)
+    }
+
+    /** Selects cannonball production only when the supplied level, permanent level, and owned supplies qualify. */
+    internal fun getCannonballScript(bot: Bot, level: Int): MakeCannonballBotScript? {
+        if (level < game.skill.smithing.makeCannonball.MakeCannonballAction.LEVEL) return null
+        return MakeCannonballBotScript(bot, getDuration(bot)).takeIf { it.isEligible() }
     }
 
     /**

@@ -3,6 +3,8 @@ package game.bot.scripts
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.SuperheatItemBotScript
+import game.bot.scripts.skills.SuperheatItemBotScript.Companion.SuperheatItemData
 import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript.Companion.EnchantJewelleryData
 import game.bot.scripts.skills.ChargeOrbBotScript
@@ -60,6 +62,8 @@ import game.bot.scripts.skills.PickpocketBotScript
 import game.bot.scripts.skills.PickpocketBotScript.Companion.PickpocketData
 import game.bot.scripts.skills.SearchBotScript
 import game.bot.scripts.skills.SearchBotScript.Companion.SearchData
+import game.bot.scripts.skills.MakeCannonballBotScript
+import game.bot.scripts.skills.MakeCannonballBotScript.Companion.CannonballData
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
 import game.bot.scripts.skills.SpinFlaxBotScript
@@ -99,6 +103,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CutLogData>(CutLogBotScript::class) { bot, data -> CutLogBotScript(bot, data) }
     scriptManager.addScript<StringBowData>(StringBowBotScript::class) { bot, data -> StringBowBotScript(bot, data) }
     scriptManager.addScript<SearchData>(SearchBotScript::class) { bot, data -> SearchBotScript(bot, data) }
+    scriptManager.addScript<CannonballData>(MakeCannonballBotScript::class) { bot, data -> MakeCannonballBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
@@ -130,6 +135,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
+    scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }
     scriptManager.addScript<AlchemyData>(AlchemyBotScript::class) { bot, data -> AlchemyBotScript(bot, data) }
