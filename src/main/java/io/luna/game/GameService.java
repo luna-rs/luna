@@ -347,7 +347,7 @@ public final class GameService extends AbstractScheduledService {
             @Override
             protected void execute() {
                 setDelay(1);
-                if(saveResult.isDone()) {
+                if (saveResult.isDone()) {
                     stopAsync();
                     cancel();
                 }

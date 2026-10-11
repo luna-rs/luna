@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.gson.JsonArray;
@@ -8,10 +9,13 @@ import com.google.gson.JsonObject;
 import engine.bot.gear.BotGearSet;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.WantedItemDefinition;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemTag;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplate;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType;
+import io.luna.util.GsonUtils;
 import io.luna.util.RandomUtils;
 
 import java.util.Arrays;
@@ -22,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_ALWAYS_TAGS;
 import static io.luna.util.RandomUtils.randomFrom;
 import static io.luna.util.RandomUtils.roll;
 
@@ -479,7 +484,9 @@ public final class BotPreference {
                 int target = itemJson.get("target").getAsInt();
                 int skill = itemJson.get("skill").getAsInt();
                 int maxLevel = itemJson.get("max_level").getAsInt();
-                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel));
+                WantedItemPriority priority = WantedItemPriority.valueOf(itemJson.get("priority").getAsString());
+                ImmutableSet<WantedItemTag> tags = ImmutableSet.copyOf(GsonUtils.getAsType(itemJson.get("tags"), WantedItemTag[].class));
+                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags));
             }
         });
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
@@ -501,7 +508,10 @@ public final class BotPreference {
      */
     public void addWantedItem(int id, int target, int skill, int maxLevel) {
         int unnotedId = toUnnotedId(id);
-        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel));
+        WantedItemDefinition existing = wantedItems.get(id);
+        var tags = existing != null ? existing.tags() :
+                WantedItemDefinition.DEFAULT.get(id).map(WantedItemDefinition::tags).orElse(DEFAULT_ALWAYS_TAGS);
+        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel, existing != null ? existing.priority() : WantedItemPriority.HIGH, tags));
     }
 
     /**
@@ -562,7 +572,9 @@ public final class BotPreference {
                     current.min(),
                     target,
                     current.skill(),
-                    current.maxLevel()));
+                    current.maxLevel(),
+                    current.priority(),
+                    current.tags()));
         }
     }
 
