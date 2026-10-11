@@ -1,50 +1,54 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
-import api.bot.script.BotScriptData
+import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.StationaryInventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.ownsProductionSupplies
+import api.bot.script.productionBatch
+import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.fletching.attachArrow.Arrow
+import game.skill.fletching.attachArrow.MakeArrowActionItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Handles stationary bot arrow-making by combining the two materials defined by an [Arrow].
+ * Produces headless arrows from shafts and feathers, or finished arrows from headless arrows and tips.
+ * One matching input pair qualifies. Bank withdrawals balance owned stacks up to [WITHDRAW_AMOUNT] of
+ * each input, including partial stock. Non-stackable definitions use a capacity-safe balanced withdrawal.
  *
- * This supports both stages of arrow production. [Arrow.HEADLESS_ARROW] attaches feathers to arrow shafts, while the
- * remaining arrow types attach metal arrowtips to headless arrows.
+ * Production uses the native item interaction and dialogue. Its quantity counts sets of up to fifteen,
+ * so the requested set count includes a final partial set. [MakeArrowActionItem] consumes the inputs and
+ * awards the configured experience. The shared inventory lifecycle provides verified banking, safety,
+ * travel, expiry, realistic missing-supply targets, and bounded retries retained in snapshots.
  *
- * @property arrow The arrow recipe this script should produce.
+ * @param bot The bot making arrows.
+ * @property arrow The configured headless or finished arrow recipe.
+ * @param duration The production session duration.
+ * @param zones Existing processing zones with banking and travel support.
  * @author lare96
  */
 class MakeArrowBotScript(
     bot: Bot,
     val arrow: Arrow,
-    duration: Duration
-) : StationaryInventoryBotScript(bot, duration) {
+    duration: Duration,
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     companion object {
+        /** Maximum units of each stackable input withdrawn per bank visit. */
+        const val WITHDRAW_AMOUNT = 1_000
 
-        /**
-         * The number of each arrow-making material withdrawn per banking cycle.
-         */
-        const val WITHDRAW_AMOUNT = 1000
-
-        /**
-         * Serializable data used to save and restore a [MakeArrowBotScript].
-         */
-        class MakeArrowData : ZonedBotScriptData() {
-
-            /**
-             * The arrow recipe the bot should produce.
-             */
+        /** Saved arrow recipe and inherited session/retry state. @author lare96 */
+        class MakeArrowData : InventoryScriptData() {
+            /** Arrow enum retained under its existing snapshot field name. */
             var arrow: Arrow = Arrow.HEADLESS_ARROW
 
             override fun load(data: JsonObject) {
@@ -59,71 +63,73 @@ class MakeArrowBotScript(
         }
     }
 
-    /**
-     * Recreates an arrow-making bot script from saved script data.
-     *
-     * @param bot The bot that owns this script.
-     * @param data The previously saved arrow-making script data.
-     */
-    constructor(bot: Bot, data: MakeArrowData) : this(bot, data.arrow, data.duration)
+    /** Permanent Fletching level required for selection and startup. */
+    val requiredLevel = arrow.level
+    /** Minimum paired consumables required for a partial native production set. */
+    private val materials = listOf(Item(arrow.tip), Item(arrow.with))
+
+    /** Restores the existing arrow field, saved zones, duration, and shared retry budgets. */
+    constructor(bot: Bot, data: MakeArrowData) : this(bot, data.arrow, data.duration, data.zones) {
+        restoreInventoryState(data)
+    }
+
+    /** Checks permanent level and one complete owned pair across inventory and bank. */
+    fun isEligible(): Boolean = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel &&
+            bot.ownsProductionSupplies(materials)
+
+    /** Returns balanced partial stacks, with a capacity-safe fallback for non-stackable definitions. */
+    fun bankBatch(): List<Item> {
+        if (!bot.inventory.stackable(arrow.id) || materials.any { !bot.inventory.stackable(it.id) }) {
+            return bot.productionBatch(materials)
+        }
+        val amount = minOf(WITHDRAW_AMOUNT, materials.minOf { bot.bank.computeAmountForId(it.id) })
+        return if (amount > 0) materials.map { Item(it.id, amount) } else emptyList()
+    }
+
+    override fun withdraw(): List<Item> = productionWithdraw(materials,
+        levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
+
+    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
+
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
+
+    /** Checks paired inputs and the inventory space released by the next full or partial native set. */
+    private fun hasMaterials(): Boolean {
+        if (!bot.inventory.containsAll(materials)) return false
+        val amount = minOf(Arrow.SET_AMOUNT, materials.minOf { bot.inventory.computeAmountForId(it.id) })
+        val freedSlots = materials.sumOf {
+            if (!bot.inventory.stackable(it.id)) amount
+            else if (bot.inventory.computeAmountForId(it.id) == amount) 1 else 0
+        }
+        val outputSlots = if (!bot.inventory.stackable(arrow.id)) amount
+                          else if (bot.inventory.contains(arrow.id)) 0 else 1
+        return bot.inventory.computeRemainingSize() + freedSlots >= outputSlots
+    }
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (arrow.tip !in bot.inventory) {
-            bot.log("No ${itemName(arrow.tip)} left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
-        }
-
-        if (arrow.with !in bot.inventory) {
-            bot.log("No ${itemName(arrow.with)} left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
-        }
-
-        val usedId: Int
-        val targetId: Int
-
-        if (arrow == Arrow.HEADLESS_ARROW) {
-            // Headless arrows are registered as arrow shaft -> feather.
-            usedId = arrow.tip
-            targetId = arrow.with
-        } else {
-            // Finished arrows are registered as headless arrow -> arrowtips.
-            usedId = arrow.with
-            targetId = arrow.tip
-        }
-
-        bot.log("Using ${itemName(usedId)} on ${itemName(targetId)}.")
-        handler.inventory.useItem(usedId).onItem(targetId)
-
-        if (!waitFor(1200.milliseconds) { MakeItemDialogue::class in bot.overlays }) {
-            bot.log("Make-item dialogue did not open for ${arrow.name}; retrying next cycle.")
-            return true
-        }
-
-        bot.log("Selecting make-item index 0 for ${arrow.name}.")
-        handler.widgets.clickMakeItem(0, Int.MAX_VALUE)
-
-        bot.naturalDexterityDelay()
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_FLETCHING).level >= requiredLevel)) return true
+        attemptProduction(arrow.tip) { startProduction() }
         return true
     }
 
-    override fun withdraw(): List<Item> {
-        return listOf(
-            Item(arrow.tip, WITHDRAW_AMOUNT),
-            Item(arrow.with, WITHDRAW_AMOUNT)
-        )
+    /** Uses the registered interaction direction and requests enough native sets for the balanced inputs. */
+    private suspend fun startProduction(): Boolean {
+        val usedId = if (arrow == Arrow.HEADLESS_ARROW) arrow.tip else arrow.with
+        val targetId = if (arrow == Arrow.HEADLESS_ARROW) arrow.with else arrow.tip
+        if (!handler.inventory.useItem(usedId).onItem(targetId)) return false
+        if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
+        val amount = materials.minOf { bot.inventory.computeAmountForId(it.id) }
+        val sets = (amount - 1) / Arrow.SET_AMOUNT + 1
+        handler.widgets.clickMakeItem(0, sets)
+        return true
     }
 
-    override fun tools(): Set<Int> {
-        return emptySet()
+    override suspend fun finish() {
+        bot.actions.first(MakeArrowActionItem::class.java)?.interrupt()
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = MakeArrowData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        data.arrow = arrow
-        return data
+    override fun snapshot(): MakeArrowData = MakeArrowData().also {
+        it.arrow = arrow
+        saveInventoryState(it)
     }
 }
