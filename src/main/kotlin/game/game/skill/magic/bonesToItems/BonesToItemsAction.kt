@@ -7,11 +7,18 @@ import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
 import io.luna.game.action.impl.QueuedAction
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 
 /**
- * A [QueuedAction] that converts bones into either bananas or peaches.
+ * Converts every carried normal bone into the selected food through the existing queued spell.
+ *
+ * The bone requirement validates that there is an input; it is converted in place rather than consumed
+ * as an additional spell cost. Current level, bones, staff/combination substitutions, and rune supplies
+ * are rechecked after the one-tick cast delay. Experience and effects require a successful conversion.
+ * Beta/administrator rune bypasses still require bones. Inactive/dead players cannot complete the cast,
+ * and the cast lock is released even if completion fails.
  *
  * @author lare96
  */
@@ -32,22 +39,26 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
     }
 
     override fun execute() {
-        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
-        if (removeItems != null) {
-            val count = mob.inventory.computeAmountForId(BONES)
-            if (count == 0) {
-                return
-            }
-            mob.lock()
-            mob.playSound(Sound.BONES_TO_BANANAS_ALL)
-            world.scheduleOnce(1) {
-                mob.inventory.removeAll(removeItems)
-                mob.inventory.replaceAll(BONES, type.id)
-                mob.animation(Animations.BONES_TO_ITEMS)
-                mob.graphic(Graphic(141, 100))
-                mob.magic.addExperience(type.xp)
+        if (Magic.checkRequirements(mob, type.level, type.requirements) == null || !mob.inventory.contains(BONES)) return
+        mob.lock()
+        mob.playSound(Sound.BONES_TO_BANANAS_ALL)
+        world.scheduleOnce(1) {
+            try {
+                if (mob.state == EntityState.ACTIVE && mob.health > 0) completeCast()
+            } finally {
                 mob.unlock()
             }
         }
+    }
+
+    /** Revalidates the delayed conversion, keeping the bone input separate from the actual rune cost. */
+    private fun completeCast() {
+        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements) ?: return
+        if (!mob.inventory.contains(BONES) || !mob.inventory.containsAll(removeItems)) return
+        if (mob.inventory.replaceAll(BONES, type.id) < 1) return
+        mob.inventory.removeAll(removeItems.filterNot { it.id == BONES })
+        mob.animation(Animations.BONES_TO_ITEMS)
+        mob.graphic(Graphic(141, 100))
+        mob.magic.addExperience(type.xp)
     }
 }
