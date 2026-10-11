@@ -1,6 +1,5 @@
 package io.luna;
 
-import api.bot.zone.SubZone;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -191,7 +190,6 @@ public final class LunaServer {
      */
     private void initLaunchTasks() {
         List<Runnable> taskList = new ArrayList<>();
-        taskList.add(SubZone.Companion::findAreaOverlaps);
         taskList.add(new EquipmentDefinitionFileParser());
         taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new WeaponTypeDefinitionFileParser());

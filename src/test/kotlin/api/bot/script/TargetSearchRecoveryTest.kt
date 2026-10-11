@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
+import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -66,7 +67,7 @@ class TargetSearchRecoveryTest {
     @Test
     fun zonedLifecycleRemovesRejectedZoneAndStopsWhenNoneRemain() = runBlocking {
         val bot = bot()
-        `when`(bot.subZone).thenReturn(SubZone.LUMBRIDGE_RIVER)
+        `when`(bot.subZones).thenReturn(EnumSet.of(SubZone.LUMBRIDGE_RIVER))
         val script = SearchScript(bot)
         assertFalse(script.init(true))
         assertTrue(script.run())

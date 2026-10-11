@@ -17,6 +17,7 @@ import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -240,13 +241,13 @@ enum class SubZone(val inside: Position,
                 if (!bot.isViewableFrom(aubury)) {
                     bot.log(
                         "Aubury is no longer viewable but bot is not inside essence mine. " +
-                                "bot=${bot.position}, subZone=${bot.subZone}"
+                                "bot=${bot.position}, subZones=${bot.subZones}"
                     )
                     break
                 }
 
                 if (bot.walking.isEmpty) {
-                    bot.log("Clicking Aubury essence teleport. bot=${bot.position}, subZone=${bot.subZone}")
+                    bot.log("Clicking Aubury essence teleport. bot=${bot.position}, subZones=${bot.subZones}")
                     val interacted = bot.actionHandler.interactions.interact(4, aubury)
                     // A queued teleport can arrive before the interaction confirmation finishes.
                     if (area.contains(bot)) {
@@ -262,7 +263,7 @@ enum class SubZone(val inside: Position,
             }
 
             val entered = waitFor { area.contains(bot) }
-            bot.log("Essence mine enter result=$entered, bot=${bot.position}, subZone=${bot.subZone}")
+            bot.log("Essence mine enter result=$entered, bot=${bot.position}, subZones=${bot.subZones}")
             return entered
         }
 
@@ -545,7 +546,7 @@ enum class SubZone(val inside: Position,
      * - Lobster pot fishing
      */
     EAST_CATHERBY_FISHING(inside = Position(2838, 3435),
-                          area = SimpleBoxArea.of(2829, 3417, 2864, 3437),
+                          area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
                           parent =
                           { CATHERBY }),
 
@@ -1166,6 +1167,11 @@ enum class SubZone(val inside: Position,
                                    parent = { EDGEVILLE }),
 
     /*
+
+
+     */
+
+    /*
      * Level 40 Wilderness chaos temple.
      *
      * Used for:
@@ -1221,73 +1227,6 @@ enum class SubZone(val inside: Position,
         }
 
         /**
-         * Describes a rectangular overlap between two subzone areas.
-         *
-         * @property first The first overlapping subzone.
-         * @property second The second overlapping subzone.
-         * @property southWest The inclusive south-west corner of the overlap.
-         * @property northEast The inclusive north-east corner of the overlap.
-         */
-        private data class AreaOverlap(
-            val first: SubZone,
-            val second: SubZone,
-            val southWest: Position,
-            val northEast: Position
-        )
-
-        /**
-         * Validates that no two subzone rectangles overlap.
-         *
-         * This is useful as a startup assertion or test helper. Overlaps are not automatically resolved because the
-         * correct fix depends on the intended gameplay area.
-         *
-         * @throws IllegalStateException If any two subzones overlap.
-         */
-        fun findAreaOverlaps() {
-            for (firstIndex in 0 until entries.size) {
-                val first = entries[firstIndex]
-
-                for (secondIndex in firstIndex + 1 until entries.size) {
-                    val second = entries[secondIndex]
-                    val overlap = findOverlap(first, second) ?: continue
-
-                    throw IllegalStateException("${overlap.first} overlaps ${overlap.second} at " +
-                                                        "SW=${overlap.southWest}, NE=${overlap.northEast}")
-                }
-            }
-        }
-
-        /**
-         * Finds the rectangular overlap between two subzones.
-         *
-         * @param first The first subzone to compare.
-         * @param second The second subzone to compare.
-         * @return The overlap details, or `null` if the areas do not overlap.
-         */
-        private fun findOverlap(first: SubZone, second: SubZone): AreaOverlap? {
-            val firstSouthWest = first.area.southWest
-            val firstNorthEast = first.area.northEast
-            val secondSouthWest = second.area.southWest
-            val secondNorthEast = second.area.northEast
-
-            val overlapSouthWestX = maxOf(firstSouthWest.x, secondSouthWest.x)
-            val overlapSouthWestY = maxOf(firstSouthWest.y, secondSouthWest.y)
-            val overlapNorthEastX = minOf(firstNorthEast.x, secondNorthEast.x)
-            val overlapNorthEastY = minOf(firstNorthEast.y, secondNorthEast.y)
-
-            if (overlapSouthWestX > overlapNorthEastX || overlapSouthWestY > overlapNorthEastY) {
-                return null
-            }
-
-            return AreaOverlap(
-                first = first,
-                second = second,
-                southWest = Position(overlapSouthWestX, overlapSouthWestY),
-                northEast = Position(overlapNorthEastX, overlapNorthEastY)
-            )
-        }
-
-        /**
          * Updates the cached local subzone list for a bot after its region changes.
          *
          * This should be called from movement/region-change handling before [updateSubZone]. The cached list keeps
@@ -1309,12 +1248,12 @@ enum class SubZone(val inside: Position,
          * @param bot The bot whose current subzone is being updated.
          */
         fun updateSubZone(bot: Bot) {
-            bot.subZone = null
-            if (bot.localSubZones.isNotEmpty()) {
+            // TODO Is there a way to do this where it doesn't have to be recalculated every step?
+            bot.subZones.clear()
+            if(bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
                     if (bot in zone.area) {
-                        bot.subZone = zone
-                        break
+                        bot.subZones.add(zone)
                     }
                 }
             }
@@ -1390,7 +1329,7 @@ enum class SubZone(val inside: Position,
      * @return `true` if [bot] is within [distance] of [inside] or [outside].
      */
     fun isWithinDistance(bot: Bot, distance: Int): Boolean {
-        if (bot.subZone == this || inside.isWithinDistance(bot, distance)) {
+        if (this in bot.subZones || inside.isWithinDistance(bot, distance)) {
             return true
         }
         val outsidePosition = outside(bot)

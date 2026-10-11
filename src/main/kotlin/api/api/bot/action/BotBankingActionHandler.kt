@@ -418,7 +418,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     suspend fun travelToNearestBank(): GameObject? {
         bot.log("Travelling to nearest bank.")
 
-        if (bot.subZone == SubZone.HOME) {
+        if (SubZone.HOME in bot.subZones) {
             // We're home, use closest home bank.
             return homeBanks.minByOrNull { it.position.computeLongestDistance(bot.position) }
         }

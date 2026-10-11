@@ -39,6 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -327,9 +328,9 @@ public final class Bot extends Player {
     private Zone zone;
 
     /**
-     * The bot's current sub-zone.
+     * The bot's current sub-zones.
      */
-    private SubZone subZone;
+    private final EnumSet<SubZone> subZones = EnumSet.noneOf(SubZone.class);
 
     /**
      * Local sub-zones in the bots current region.
@@ -745,19 +746,10 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return The bot's current {@link SubZone}, or {@code null} if no sub-zone has been assigned.
+     * @return All {@link SubZone}s this bot is in.
      */
-    public SubZone getSubZone() {
-        return subZone;
-    }
-
-    /**
-     * Sets the sub-zone this bot is currently assigned to.
-     *
-     * @param subZone The new {@link SubZone}, or {@code null} to clear the current sub-zone.
-     */
-    public void setSubZone(SubZone subZone) {
-        this.subZone = subZone;
+    public EnumSet<SubZone> getSubZones() {
+        return subZones;
     }
 
     /**

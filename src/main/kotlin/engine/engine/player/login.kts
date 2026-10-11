@@ -52,6 +52,8 @@ on(LoginEvent::class, EventPriority.HIGH) {
         val bot = plr as Bot
         bot.preferences.rebalanceWantedItems()
         Zone.updateZone(bot, bot.position.regionId)
+
+        // TODO Make more efficient, only update local subzones when the region changes, only update
         SubZone.updateLocalSubZones(bot, bot.position.regionId)
         SubZone.updateSubZone(bot)
     }

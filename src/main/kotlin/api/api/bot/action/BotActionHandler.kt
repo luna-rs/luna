@@ -32,6 +32,7 @@ import kotlinx.coroutines.future.await
  * @author lare96
  */
 class BotActionHandler(val bot: Bot) {
+    // TODO Reduce boilerplate in travelTo functions
 
     /**
      * Handles banking actions such as opening banks, depositing items, and withdrawing items.
@@ -314,11 +315,12 @@ class BotActionHandler(val bot: Bot) {
             }
 
             // Leave current sub-zone if needed.
-            if (bot.subZone != null) {
-                val parent = bot.subZone.parent(bot)
-                val outside = bot.subZone.outside(bot)
-                if (!bot.subZone.leave(bot, parent, outside)) {
-                    bot.log("Could not leave sub-zone{${bot.subZone}}.")
+            if (bot.subZones.isNotEmpty()) {
+                val subZone = bot.subZones.first()
+                val oldParent = subZone.parent(bot)
+                val oldOutside = subZone.outside(bot)
+                if (!subZone.leave(bot, oldParent, oldOutside)) {
+                    bot.log("Could not leave sub-zone {${subZone}}.")
                     return false
                 }
             }
@@ -393,7 +395,7 @@ class BotActionHandler(val bot: Bot) {
             try {
                 bot.reflex.isDisableCombatReflex = true
                 // We are already in this sub-zone.
-                if (bot.subZone == zone) {
+                if (zone in bot.subZones) {
                     return true
                 }
 
@@ -406,11 +408,13 @@ class BotActionHandler(val bot: Bot) {
 
 
                 // If we're in a sub-zone, try and leave first.
-                if (bot.subZone != null) {
-                    val oldParent = bot.subZone.parent(bot)
-                    val oldOutside = bot.subZone.outside(bot)
-                    if (!bot.subZone.leave(bot, oldParent, oldOutside)) {
-                        bot.log("Could not leave sub-zone {${bot.subZone}}.")
+                if (bot.subZones.isNotEmpty()) {
+                    // TODO This could incorrectly call the wrong subzone, but webwalking will fix this issue anyway.
+                    val subZone = bot.subZones.first()
+                    val oldParent = subZone.parent(bot)
+                    val oldOutside = subZone.outside(bot)
+                    if (!subZone.leave(bot, oldParent, oldOutside)) {
+                        bot.log("Could not leave sub-zone {${subZone}}.")
                         return false
                     }
                 }
@@ -435,14 +439,14 @@ class BotActionHandler(val bot: Bot) {
                     }
 
                     // Try and path to the inside anchor if the transition did not update sub-zone state immediately.
-                    if (bot.subZone != zone) {
+                    if (zone !in bot.subZones) {
                         bot.navigator.navigate(zone.inside, true).await()
                     }
-                    return bot.subZone == zone
+                    return zone in bot.subZones
                 }
                 // Sub-zone has no transitions, path directly to the inside anchor.
                 return bot.navigator.navigate(zone.inside, true)
-                    .await() == NavigationResult.REACHED || bot.subZone == zone
+                    .await() == NavigationResult.REACHED || zone in bot.subZones
             } finally {
                 bot.reflex.isDisableCombatReflex = stateBefore
             }

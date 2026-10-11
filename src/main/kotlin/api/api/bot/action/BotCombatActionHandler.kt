@@ -1,7 +1,6 @@
 package api.bot.action
 
 import api.bot.Suspendable.waitFor
-import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
@@ -12,6 +11,7 @@ import game.skill.magic.Staff
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Spellbook
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.movement.NavigationResult
@@ -95,25 +95,26 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
                 if (bot.wildernessLevel < 20) {
                     bot.output.sendCommand("home")
                     bot.combat.isDisabled = false
-                    val success = waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                    val success = waitFor(10.seconds) { SubZone.HOME in bot.subZones }
                     if (success) {
                         return true
                     }
                 }
 
-                val outside = bot.subZone?.outside?.invoke(bot)
-                val parent = bot.subZone?.parent?.invoke(bot)
+                val subZone = bot.subZones.firstOrNull()
+                val outside = subZone?.outside?.invoke(bot)
+                val parent = subZone?.parent?.invoke(bot)
                 if (outside != null && parent != null) {
-                    bot.subZone.leave(bot, parent, outside)
+                    subZone.leave(bot, parent, outside)
                 }
 
                 // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
-                if (bot.subZone == SubZone.HOME ||
+                if (SubZone.HOME in bot.subZones ||
                     bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
                         .await() == NavigationResult.REACHED
                 ) {
                     bot.output.sendCommand("home")
-                    return waitFor(10.seconds) { bot.subZone == SubZone.HOME }
+                    return waitFor(10.seconds) { SubZone.HOME in bot.subZones }
                 }
             } finally {
                 bot.combat.isDisabled = false
