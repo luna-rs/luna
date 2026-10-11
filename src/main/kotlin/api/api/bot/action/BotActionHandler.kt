@@ -444,7 +444,7 @@ class BotActionHandler(val bot: Bot) {
                     return zone in bot.subZones
                 }
                 // Sub-zone has no transitions, walk directly to the inside anchor.
-                return webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || bot.subZone == zone
+                return webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || zone in bot.subZones
             } finally {
                 bot.reflex.isDisableCombatReflex = stateBefore
             }
