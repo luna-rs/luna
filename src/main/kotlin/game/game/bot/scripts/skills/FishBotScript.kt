@@ -16,6 +16,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import java.util.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Bot script for Fishing.
@@ -152,6 +153,8 @@ class FishBotScript(
             it.id in fishingSpotIds.value
         }
     }
+
+    override val targetSearchTimeout: Duration = 180.seconds
 
     override fun tools(): SortedSet<SkillingTool> {
         return sortedSetOf(SkillingTool(selectedTool.id, selectedTool.level))

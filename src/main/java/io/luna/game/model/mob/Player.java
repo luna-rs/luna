@@ -178,6 +178,11 @@ public class Player extends Mob {
     private Position lastViewPosition;
 
     /**
+     * Whether the move in progress leaves this player's interfaces open.
+     */
+    private boolean keepWindowsOnMove;
+
+    /**
      * The current dialogue queue, or {@code null} if none is active.
      */
     private DialogueQueue dialogues;
@@ -349,7 +354,24 @@ public class Player extends Mob {
 
     @Override
     public void onMove(Position position) {
-        overlays.closeWindows();
+        if (!keepWindowsOnMove) {
+            overlays.closeWindows();
+        }
+    }
+
+    /**
+     * Immediately moves this player to {@code position} like {@link #move(Position)}, but leaves their interfaces
+     * open. Used when an open interface is showing the journey, so it keeps showing it while the new area loads.
+     *
+     * @param position The destination position.
+     */
+    public void moveKeepingWindows(Position position) {
+        keepWindowsOnMove = true;
+        try {
+            move(position);
+        } finally {
+            keepWindowsOnMove = false;
+        }
     }
 
     @Override

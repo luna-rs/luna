@@ -1,10 +1,9 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
 import api.bot.script.StationaryInventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
@@ -16,13 +15,11 @@ import game.obj.resource.fillable.WaterResource
 import game.skill.cooking.cookFood.MakeWineActionItem
 import game.skill.cooking.prepareFood.IncompleteFood
 import game.skill.cooking.prepareFood.PrepareFoodActionItem
-import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
@@ -72,6 +69,7 @@ class AssembleFoodBotScript(
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList(),
     val secondary: Int = food.otherIngredients.first()
 ) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     companion object {
         /** Validated two-input recipes whose outputs fit within their input inventory footprint. */
@@ -94,8 +92,6 @@ class AssembleFoodBotScript(
             IncompleteFood.PART_ADMIRAL_PIE_1, IncompleteFood.PART_ADMIRAL_PIE_2, IncompleteFood.RAW_ADMIRAL_PIE,
             IncompleteFood.PART_SUMMER_PIE_1, IncompleteFood.PART_SUMMER_PIE_2, IncompleteFood.RAW_SUMMER_PIE
         )
-        /** Maximum consecutive failed interactions or unresolved banking requests before stopping. */
-        private const val MAX_FAILURES = 3
 
         /**
          * Saved recipe and retry counters alongside the inherited duration and candidate zones.
@@ -103,30 +99,22 @@ class AssembleFoodBotScript(
          *
          * @author lare96
          */
-        class AssemblyData : ZonedBotScriptData() {
+        class AssemblyData : InventoryScriptData() {
             /** [IncompleteFood] enum name used to reconstruct the configured recipe. */
             var recipe = ""
             /** Selected alternate ingredient or filled water container. */
             var secondary = 0
-            /** Consecutive interactions that did not consume a base ingredient. */
-            var failures = 0
-            /** Banking requests since the last successfully verified withdrawal. */
-            var bankFailures = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
                 secondary = data.get("secondary")?.asInt ?: IncompleteFood.valueOf(recipe).otherIngredients.first()
-                failures = data.get("failures")?.asInt ?: 0
-                bankFailures = data.get("bankFailures")?.asInt ?: 0
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
                 data.addProperty("secondary", secondary)
-                data.addProperty("failures", failures)
-                data.addProperty("bankFailures", bankFailures)
             }
         }
     }
@@ -144,10 +132,6 @@ class AssembleFoodBotScript(
     private val materials = listOf(Item(food.baseIngredient), Item(secondary, secondaryAmount))
     /** Filled water ingredient, whether the recipe uses it as its base or secondary input. */
     private val waterIngredient = materials.firstOrNull { it.id in WaterResource.FILLED_IDS }?.id
-    /** Consecutive failed interactions, reset after an input is consumed. */
-    private var failures = 0
-    /** Unresolved banking requests, reset only after the entire batch is withdrawn. */
-    private var bankFailures = 0
 
     /**
      * Restores the recipe, session configuration, and retry budgets from a snapshot.
@@ -158,8 +142,7 @@ class AssembleFoodBotScript(
      */
     constructor(bot: Bot, data: AssemblyData) :
         this(bot, IncompleteFood.valueOf(data.recipe), data.duration, data.zones, data.secondary) {
-        failures = data.failures
-        bankFailures = data.bankFailures
+        restoreInventoryState(data)
     }
 
     /**
@@ -179,8 +162,7 @@ class AssembleFoodBotScript(
 
     /** Queues one bounded refill using owned containers, then returns selection to the activity coordinator. */
     private fun queueWaterPreparation(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0 || !canPrepareWater()) return false
+        if (!isInventoryActionSafe() || !canPrepareWater()) return false
         val water = waterIngredient ?: return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val ingredientStock = materials.filter { it.id != water }.minOf {
@@ -194,79 +176,21 @@ class AssembleFoodBotScript(
     /** Returns balanced bank inputs limited by stock and capacity, including three leaves per curry. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
-    override fun withdraw(): List<Item> {
-        if (failures >= MAX_FAILURES || bankFailures >= MAX_FAILURES ||
-            bot.skill(SKILL_COOKING).staticLevel < requiredLevel || bot.health < 1 || bot.isLocked ||
-            bot.combat.inCombat() || bot.actions.size(ActionType.STRONG) > 0) {
-            stop()
-            return emptyList()
-        }
-        if (!bot.ownsProductionSupplies(materials)) {
-            if (queueWaterPreparation()) return emptyList()
-            val missing = materials.filter {
-                bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-            }.map { it.id }
-            missing.forEach { bot.preferences.raiseWantedItemTarget(it, 1_000) }
-            stop()
-            return emptyList()
-        }
-        // InventoryBotScript validates these minimum supplies; the bank hook calculates the actual batch.
-        forceBanking = true
-        return materials
-    }
+    override fun withdraw(): List<Item> =
+        productionWithdraw(materials, levelEligible = bot.skill(SKILL_COOKING).staticLevel >= requiredLevel, prepareMissing = { queueWaterPreparation() })
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
         if (it.isEmpty() && !queueWaterPreparation()) stop()
     }
 
-    override suspend fun withdrawBankItems(items: List<Item>): Boolean {
-        val success = withTimeoutOrNull(15_000) {
-            handler.banking.clickBankingMode(false)
-            handler.banking.withdrawAll(items) && bot.inventory.containsAll(items)
-        } == true
-        if (success) {
-            bankFailures = 0
-            forceBanking = false
-        }
-        return success
-    }
-
-    override suspend fun onInventoryBankRequested(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return false
-        if (!forceBanking && hasMaterials()) return false
-        if (bankFailures >= MAX_FAILURES) {
-            stop()
-            return false
-        }
-        bankFailures++
-        return true
-    }
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
     /** Whether inventory contains enough of each ingredient for one operation of the configured recipe. */
     private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return true
-        if (bot.skill(SKILL_COOKING).level < requiredLevel) {
-            stop()
-            return true
-        }
-        if (!hasMaterials()) {
-            forceBanking = true
-            return true
-        }
-        val amount = bot.inventory.computeAmountForId(materials.first().id)
-        val started = withTimeoutOrNull(15_000) {
-            handler.widgets.clickCloseInterface() && startProduction()
-        } == true
-        val progressed = started && waitFor(10.seconds) {
-            bot.inventory.computeAmountForId(materials.first().id) < amount
-        }
-        if (progressed) failures = 0
-        else if (++failures >= MAX_FAILURES) stop()
-        bot.naturalDexterityDelay()
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_COOKING).level >= requiredLevel)) return true
+        attemptProduction(materials.first().id) { startProduction() }
         return true
     }
 
@@ -290,9 +214,6 @@ class AssembleFoodBotScript(
     override fun snapshot(): AssemblyData = AssemblyData().also {
         it.recipe = food.name
         it.secondary = secondary
-        it.duration = duration
-        it.zones = originalZones.toMutableList()
-        it.failures = failures
-        it.bankFailures = bankFailures
+        saveInventoryState(it)
     }
 }

@@ -1,10 +1,9 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
 import api.bot.script.StationaryInventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
@@ -13,13 +12,11 @@ import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.herblore.grindIngredient.GrindActionItem
 import game.skill.herblore.grindIngredient.Ingredient
-import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Grinds one configured ingredient with a retained pestle and mortar through the normal make-item dialogue.
@@ -50,37 +47,27 @@ class GrindIngredientBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     companion object {
-        /** Maximum consecutive failed interactions or unresolved banking requests before stopping. */
-        private const val MAX_FAILURES = 3
-
         /**
          * Saved recipe and retry counters alongside the inherited duration and candidate zones.
          * Restoring a session retains exhausted retry budgets instead of granting fresh attempts.
          *
          * @author lare96
          */
-        class IngredientData : ZonedBotScriptData() {
+        class IngredientData : InventoryScriptData() {
             /** [Ingredient] enum name used to reconstruct the configured recipe. */
             var recipe = ""
-            /** Consecutive interactions that did not consume an ingredient. */
-            var failures = 0
-            /** Banking requests since the last successfully verified withdrawal. */
-            var bankFailures = 0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 recipe = data.get("recipe")?.asString ?: ""
-                failures = data.get("failures")?.asInt ?: 0
-                bankFailures = data.get("bankFailures")?.asInt ?: 0
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("recipe", recipe)
-                data.addProperty("failures", failures)
-                data.addProperty("bankFailures", bankFailures)
             }
         }
     }
@@ -91,10 +78,6 @@ class GrindIngredientBotScript(
     private val materials = listOf(ingredient.oldItem)
     /** The reusable tool reserved in each batch and retained by the grinding action. */
     private val tools = setOf(Ingredient.PESTLE_AND_MORTAR)
-    /** Consecutive failed interactions, reset after an ingredient is consumed. */
-    private var failures = 0
-    /** Unresolved banking requests, reset after the entire batch is withdrawn. */
-    private var bankFailures = 0
 
     /**
      * Restores the recipe, session configuration, and retry budgets from a saved snapshot.
@@ -105,8 +88,7 @@ class GrindIngredientBotScript(
      */
     constructor(bot: Bot, data: IngredientData) :
         this(bot, Ingredient.valueOf(data.recipe), data.duration, data.zones) {
-        failures = data.failures
-        bankFailures = data.bankFailures
+        restoreInventoryState(data)
     }
 
     /** Checks permanent level eligibility and an owned ingredient plus pestle and mortar across inventory and bank. */
@@ -116,78 +98,21 @@ class GrindIngredientBotScript(
     /** Returns one mortar and up to twenty-seven banked ingredients, or an empty batch when either is missing. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials, tools)
 
-    override fun withdraw(): List<Item> {
-        if (failures >= MAX_FAILURES || bankFailures >= MAX_FAILURES ||
-            bot.skill(SKILL_HERBLORE).staticLevel < requiredLevel || bot.health < 1 || bot.isLocked ||
-            bot.combat.inCombat() || bot.actions.size(ActionType.STRONG) > 0) {
-            stop()
-            return emptyList()
-        }
-        if (!bot.ownsProductionSupplies(materials, tools)) {
-            val missing = materials.filter {
-                bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-            }.map { it.id } + tools.filter { !bot.ownsProductionSupplies(emptyList(), setOf(it)) }
-            missing.forEach { bot.preferences.raiseWantedItemTarget(it, if (it in tools) 3 else 1_000) }
-            stop()
-            return emptyList()
-        }
-        // InventoryBotScript validates these minimum supplies; the bank hook calculates the actual batch.
-        forceBanking = true
-        return tools.map { Item(it) } + materials
-    }
+    override fun withdraw(): List<Item> =
+        productionWithdraw(materials, tools, levelEligible = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel)
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
         if (it.isEmpty()) stop()
     }
 
-    override suspend fun withdrawBankItems(items: List<Item>): Boolean {
-        val success = withTimeoutOrNull(15_000) {
-            handler.banking.clickBankingMode(false)
-            handler.banking.withdrawAll(items) && bot.inventory.containsAll(items)
-        } == true
-        if (success) {
-            bankFailures = 0
-            forceBanking = false
-        }
-        return success
-    }
-
-    override suspend fun onInventoryBankRequested(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return false
-        if (!forceBanking && hasMaterials()) return false
-        if (bankFailures >= MAX_FAILURES) {
-            stop()
-            return false
-        }
-        bankFailures++
-        return true
-    }
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
     /** Whether inventory contains the reusable tool and at least one configured ingredient. */
     private fun hasMaterials() = bot.inventory.containsAll(materials) && tools.all { it in bot.inventory }
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return true
-        if (bot.skill(SKILL_HERBLORE).level < requiredLevel) {
-            stop()
-            return true
-        }
-        if (!hasMaterials()) {
-            forceBanking = true
-            return true
-        }
-        val amount = bot.inventory.computeAmountForId(materials.first().id)
-        val started = withTimeoutOrNull(15_000) {
-            handler.widgets.clickCloseInterface() && startProduction()
-        } == true
-        val progressed = started && waitFor(10.seconds) {
-            bot.inventory.computeAmountForId(materials.first().id) < amount
-        }
-        if (progressed) failures = 0
-        else if (++failures >= MAX_FAILURES) stop()
-        bot.naturalDexterityDelay()
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_HERBLORE).level >= requiredLevel)) return true
+        attemptProduction(materials.first().id) { startProduction() }
         return true
     }
 
@@ -206,9 +131,6 @@ class GrindIngredientBotScript(
 
     override fun snapshot(): IngredientData = IngredientData().also {
         it.recipe = ingredient.name
-        it.duration = duration
-        it.zones = originalZones.toMutableList()
-        it.failures = failures
-        it.bankFailures = bankFailures
+        saveInventoryState(it)
     }
 }

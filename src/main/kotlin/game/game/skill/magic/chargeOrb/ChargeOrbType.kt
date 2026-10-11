@@ -9,7 +9,21 @@ import game.skill.magic.SpellRequirement
 import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
 
 /**
- * An enum representing all the different charge orb spells.
+ * Existing charge-orb spells and their matching obelisks, outputs, and elemental rune costs.
+ *
+ * Each normal cast consumes one unpowered orb, thirty runes of its own element, and three cosmic runes.
+ * [game.skill.magic.Magic.checkRequirements] resolves equipped staffs and combination runes before
+ * [ChargeOrbAction] completes the conversion. Spell IDs, obelisks, levels, experience, and effects use
+ * the existing player interaction registrations.
+ *
+ * @property spellId Client spell widget used on the matching obelisk.
+ * @property level Current Magic level needed to cast the spell.
+ * @property xp Magic experience awarded for a successful conversion.
+ * @property objectId Obelisk accepted by the spell interaction.
+ * @property chargedOrb Product replacing the unpowered orb.
+ * @property graphic Graphic displayed when the delayed cast completes.
+ * @property sound Sound played when the cast starts.
+ * @property requirements Item and rune costs resolved by the shared Magic validation.
  *
  * @author lare96
  */
@@ -43,7 +57,7 @@ enum class ChargeOrbType(val spellId: Int,
           sound = Sound.CHARGE_EARTH_ORB,
           requirements = listOf(
               ItemRequirement(UNPOWERED_ORB),
-              RuneRequirement(Rune.WATER, 30),
+              RuneRequirement(Rune.EARTH, 30),
               RuneRequirement(Rune.COSMIC, 3)
           )
     ),
@@ -56,7 +70,7 @@ enum class ChargeOrbType(val spellId: Int,
          sound = Sound.CHARGE_FIRE_ORB,
          requirements = listOf(
              ItemRequirement(UNPOWERED_ORB),
-             RuneRequirement(Rune.WATER, 30),
+             RuneRequirement(Rune.FIRE, 30),
              RuneRequirement(Rune.COSMIC, 3)
          )
     ),
@@ -69,7 +83,7 @@ enum class ChargeOrbType(val spellId: Int,
         sound = Sound.CHARGE_AIR_ORB,
         requirements = listOf(
             ItemRequirement(UNPOWERED_ORB),
-            RuneRequirement(Rune.WATER, 30),
+            RuneRequirement(Rune.AIR, 30),
             RuneRequirement(Rune.COSMIC, 3)
         )
     );
