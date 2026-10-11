@@ -40,10 +40,11 @@ object BotGearSelector {
      * groups into one lookup table where each equipment slot maps to the known candidate items for that slot.
      *
      * Full set items are included so set pieces can participate in generic purpose-based selection. Slot-specific groups
-     * are then added for amulets, boots, capes, gloves, rings, shields, and weapons.
+     * are then added for amulets, boots, capes, gloves, rings, shields, and weapons. Repeated item IDs retain the
+     * union of their purposes and the highest declared priority, including the generic melee and PK fallback.
      */
     val ALL_GEAR = lazyVal {
-        val map = HashMultimap.create<Int, BotGearItem>()
+        val map = ArrayListMultimap.create<Int, BotGearItem>()
         EquipmentDefinition.ALL.forEach {
             map.put(it.index, BotGearItem(it.index, it.id(), setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING), 0))
         }
@@ -60,7 +61,15 @@ object BotGearSelector {
         RingBotGear.entries.forEach { map.putAll(RING, it.items()) }
         ShieldBotGear.entries.forEach { map.putAll(SHIELD, it.items()) }
         WeaponBotGear.entries.forEach { map.putAll(WEAPON, it.items()) }
-        map
+        // Repeated IDs describe additional purposes, rather than replacing the item's earlier metadata.
+        val combined = HashMultimap.create<Int, BotGearItem>()
+        map.asMap().forEach { (index, items) ->
+            items.groupBy { it.id }.forEach { (id, definitions) ->
+                combined.put(index, BotGearItem(index, id, definitions.flatMap { it.purposes }.toSet(),
+                    definitions.maxOf { it.priority }))
+            }
+        }
+        combined
     }
 
     /**

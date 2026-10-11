@@ -20,14 +20,14 @@ class NpcCombatEngagementTest {
         return script
     }
 
-    @Test fun selectingAttackOptionDoesNotStartCombatBeforeNavigation() = runBlocking {
+    @Test fun selectingAttackOptionDoesNotStartCombatBeforeNavigation() = runBlocking<Unit> {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         val target = mock(Npc::class.java)
         assertEquals(3, script(bot, target).interactionOption(target))
         verify(bot.combat, never()).attack(any())
     }
 
-    @Test fun pendingFirstAttackKeepsFocusEvenBeforeCombatTimerStarts() = runBlocking {
+    @Test fun pendingFirstAttackKeepsFocusEvenBeforeCombatTimerStarts() = runBlocking<Unit> {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         val target = mock(Npc::class.java)
         `when`(target.isAlive).thenReturn(true)
@@ -38,7 +38,7 @@ class NpcCombatEngagementTest {
         verify(bot.actionHandler.interactions, never()).interact(anyInt(), any())
     }
 
-    @Test fun failedReengagementRequestsAnotherTarget() = runBlocking {
+    @Test fun failedReengagementRequestsAnotherTarget() = runBlocking<Unit> {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         val target = mock(Npc::class.java)
         `when`(target.isAlive).thenReturn(true)
