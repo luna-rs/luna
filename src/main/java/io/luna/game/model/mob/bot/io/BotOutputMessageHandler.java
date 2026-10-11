@@ -25,6 +25,7 @@ import io.luna.net.msg.in.ItemOnNpcMessageReader;
 import io.luna.net.msg.in.ItemOnObjectMessageReader;
 import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.MagicOnItemMessageReader;
+import io.luna.net.msg.in.MagicOnObjectMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
 import io.luna.net.msg.in.NumberInputMessageReader;
 import io.luna.net.msg.in.ObjectClickMessageReader;
@@ -180,6 +181,30 @@ public final class BotOutputMessageHandler {
         msg.putShort(targetId, ValueType.ADD);
 
         client.queueSimulated(new GameMessage(36, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Queues the normal {@link MagicOnObjectMessageReader} packet for a visible object.
+     * <p>
+     * Uses opcode 210 and the spell/id/x/y encoding declared by Luna's incoming message table and reader.
+     * The normal interaction event handles approach and gameplay validation. Queuing does not confirm that
+     * a spell completed; callers must check the spell's outcome, costs, and retry limits separately.
+     *
+     * @param spellId The spell widget identifier.
+     * @param targetObject The visible object to cast on, or {@code null} when no target is available.
+     * @return {@code true} if queued, otherwise {@code false} for a missing or invisible object.
+     */
+    public boolean useSpellOnObject(int spellId, GameObject targetObject) {
+        if (targetObject == null || !targetObject.isVisibleTo(bot)) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(spellId);
+        msg.putShort(targetObject.getId(), ByteOrder.LITTLE);
+        msg.putShort(targetObject.getPosition().getX(), ValueType.ADD);
+        msg.putShort(targetObject.getPosition().getY(), ByteOrder.LITTLE);
+        client.queueSimulated(new GameMessage(210, MessageType.FIXED, msg));
         return true;
     }
 
