@@ -101,7 +101,7 @@ on(ButtonClickEvent::class)
     }
 
 // "Talk" option for tanner NPC.
-on(NpcFirstClickEvent::class).match(804, 2824).then {
+on(NpcFirstClickEvent::class).match(TanInterface.TANNER_IDS).then {
     plr.newDialogue()
         .npc(targetNpc.id, "Would you like me to tan some hides?")
         .options("Yes", { open(it) },
@@ -110,4 +110,4 @@ on(NpcFirstClickEvent::class).match(804, 2824).then {
 }
 
 // "Trade" option for tanner NPC.
-on(NpcSecondClickEvent::class).match(804, 2824).then { open(plr) }
+on(NpcSecondClickEvent::class).match(TanInterface.TANNER_IDS).then { open(plr) }

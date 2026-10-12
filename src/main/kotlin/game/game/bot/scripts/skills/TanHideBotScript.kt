@@ -70,7 +70,8 @@ class TanHideBotScript(
     /**
      * The cached tanner NPC used by this script.
      *
-     * This avoids scanning the zone every cycle once a tanner has been found.
+     * This avoids scanning the zone every cycle once a tanner has been found. A failed interaction
+     * invalidates the reference so the next bounded retry searches for an available tanner.
      */
     private var tannerNpc: Npc? = null
 
@@ -93,7 +94,7 @@ class TanHideBotScript(
         if (tannerNpc == null) {
             tannerNpc = world.locator
                 .findNpcs(zone.area.centerPosition, zone.area.tileRadius) {
-                    it.id == 804 || it.id == 2824 || it.id == 1041
+                    it.id in TanInterface.TANNER_IDS
                 }
                 .firstOrNull()
         }
@@ -112,7 +113,10 @@ class TanHideBotScript(
 
     /** Opens the normal tanning interface and selects its existing tan-all button; shared hooks verify progress. */
     private suspend fun startTanning(hide: Hide, tanner: Npc): Boolean {
-        if (!handler.interactions.interact(2, tanner)) return false
+        if (!handler.interactions.interact(2, tanner)) {
+            tannerNpc = null
+            return false
+        }
         if (!waitFor(3.seconds) { TanInterface::class in bot.overlays }) return false
         val button = TanInterface.hideToMakeAll[hide] ?: return false
         output.clickButton(button)
