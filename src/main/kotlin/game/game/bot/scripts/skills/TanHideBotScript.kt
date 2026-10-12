@@ -28,6 +28,8 @@ import kotlin.time.Duration
  * counts startup supplies across inventory and bank, then recalculates each withdrawal from bank stock after deposit.
  * It requests only missing hides or an unaffordable tanning fee, preserving existing wanted targets and metadata.
  * The script travels to a tanner, opens the tanning interface, and clicks the matching "tan all" button for the selected hide.
+ * Carried coins must cover every carried hide before tan-all is attempted; otherwise another bank visit balances
+ * the batch.
  *
  * @param bot The bot running this script.
  * @param duration How long this script should run before completing normally.
@@ -60,11 +62,20 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
     private var tannerNpc: Npc? = null
 
     override suspend fun onInventoryBankRequested(): Boolean {
-        val tanning = tanning ?: return false
-        return tanning.hide !in bot.inventory
+        if (tanning == null) return false
+        return forceBanking || !hasTanningSupplies()
+    }
+
+    /** The native tan-all handler requires coins for all carried hides, rather than just one conversion. */
+    private fun hasTanningSupplies(): Boolean {
+        val hide = tanning ?: return false
+        val amount = bot.inventory.computeAmountForId(hide.hide)
+        return amount > 0 && bot.inventory.computeAmountForId(995).toLong() >= hide.cost.toLong() * amount
     }
 
     override suspend fun onExecuteInZone(): Boolean {
+        if (tanning == null) { stop(); return true }
+        if (!productionReady(hasTanningSupplies())) return true
         val zone = activeZone!!
         if (tannerNpc == null) {
             tannerNpc = world.locator
@@ -81,10 +92,6 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
             tannerNpc = null
             stop()
             return false
-        }
-        if (!bot.inventory.contains(tanning!!.hide)) {
-            forceBanking = true
-            return true
         }
         if (!handler.interactions.interact(2, tanner)) {
             bot.log("Could not interact with tanner NPC. Trying again next cycle.")
