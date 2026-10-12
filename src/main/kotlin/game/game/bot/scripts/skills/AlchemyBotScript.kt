@@ -36,6 +36,9 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The script stops when no valid items remain. Missing rune supplies are added to the wanted-item system before stopping.
  * Noted target withdrawals always restore normal bank mode, including failed or cancelled withdrawals.
+ * Missing runes request total stock targets of at least 1,000, scaled to all owned eligible materials,
+ * preserving higher wanted targets and their metadata. Stock and rune arithmetic use Long before clamping
+ * targets to the supported Int range. Owned unnoted armour and bars are counted for initial bank preparation.
  *
  * @property type Whether this script casts low or high alchemy.
  * @author lare96
@@ -241,7 +244,7 @@ class AlchemyBotScript(
             return false
         }
 
-        if (remainingAlchableCount() == 0) {
+        if (remainingAlchableCount() == 0L) {
             bot.log("No alchable items available. Ending script.")
             return false
         }
@@ -583,10 +586,10 @@ class AlchemyBotScript(
      * Requests enough nature runes to alch the bot's remaining valid items.
      */
     private fun requestNatureRunes() {
-        val amount = (remainingAlchableCount() * natureRunesPerCast()).coerceAtLeast(natureRunesPerCast())
+        val amount = runeStockTarget(natureRunesPerCast())
 
         bot.log("Not enough nature runes. Adding $amount to wanted items.")
-        bot.preferences.addWantedItem(Rune.NATURE.id, amount)
+        bot.preferences.raiseWantedItemTarget(Rune.NATURE.id, amount)
     }
 
     /**
@@ -595,21 +598,26 @@ class AlchemyBotScript(
      * This is only used when no usable fire-providing staff is available.
      */
     private fun requestFireRunes() {
-        val amount = (remainingAlchableCount() * fireRunesPerCast()).coerceAtLeast(fireRunesPerCast())
+        val amount = runeStockTarget(fireRunesPerCast())
 
         bot.log("Not enough fire runes. Adding $amount to wanted items.")
-        bot.preferences.addWantedItem(Rune.FIRE.id, amount)
+        bot.preferences.raiseWantedItemTarget(Rune.FIRE.id, amount)
     }
 
-    private fun remainingAlchableCount(): Int {
+    /**
+     * Total rune stock needed for owned targets, with a useful bulk minimum and overflow-safe clamping.
+     */
+    private fun runeStockTarget(perCast: Int): Int =
+        (remainingAlchableCount() * perCast).coerceIn(1_000L, Int.MAX_VALUE.toLong()).toInt()
+
+    /**
+     * Counts banked items and carried noted/unnoted items, including materials that need banking first.
+     */
+    private fun remainingAlchableCount(): Long {
         return ALCHABLE_IDS.sumOf { baseId ->
             val noteId = notedId(baseId)
 
-            var count = bot.bank.computeAmountForId(baseId)
-
-            if (baseId in BOW_IDS) {
-                count += bot.inventory.computeAmountForId(baseId)
-            }
+            var count = bot.bank.computeAmountForId(baseId).toLong() + bot.inventory.computeAmountForId(baseId)
 
             if (noteId != null) {
                 count += bot.inventory.computeAmountForId(noteId)
