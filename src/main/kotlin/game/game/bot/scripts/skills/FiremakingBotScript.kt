@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Trains Firemaking by burning banked logs in straight lines at a [FiremakingSpot].
  *
- * The script withdraws a tinderbox and [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
+ * The script withdraws a tinderbox and up to [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
  * [FiremakingLane] beside the bank, and lights one log after another. Each fire steps the bot one tile west, so the
  * fires form a straight line. When the lane runs out or a fire is in the way, the bot picks another lane, and once its
  * logs are gone it banks for more. When the bank runs low, the script queues a Woodcutting script and stops.
@@ -33,11 +33,18 @@ import kotlin.time.Duration.Companion.seconds
  * Only one bot firemakes at each spot. A bot that finds its spot taken, or every lane there burning, rejects the zone
  * so another one can be tried.
  *
+ * Partial final batches are burned before gathering more logs. Startup counts inventory and bank supplies;
+ * each bank visit sizes its batch from deposited bank stock. Inherited withdrawal verification requires
+ * both unnoted logs and the tinderbox to reach the inventory.
+ *
  * @property log The type of log this script burns.
+ * @author lare96
  * @author TheLining
  */
 class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: MutableList<SubZone>) :
     InventoryBotScript(bot, duration, zones) {
+
+    override val verifiedProductionWithdrawals = true
 
     companion object {
 
@@ -216,13 +223,21 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      */
     private var lane: FiremakingLane? = null
 
-    override fun withdraw(): List<Item> {
+    override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
+
+    override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
+
+    /**
+     * Sizes a partial batch from owned startup supplies or deposited bank stock after banking.
+     */
+    private fun withdrawBatch(bankOnly: Boolean): List<Item> {
         if (bot.firemaking.staticLevel < log.level) {
             bot.log("I need Firemaking level ${log.level} to burn ${itemName(log.id)}.")
             stop()
             return emptyList()
         }
-        if (bot.itemTracker.count(log.id) < LOGS_PER_TRIP) {
+        val stock = if (bankOnly) bot.bank.computeAmountForId(log.id) else bot.itemTracker.count(log.id)
+        if (stock < 1) {
             bot.log("I don't have enough ${itemName(log.id)} to burn.")
             chopMoreLogs()
             return emptyList()
@@ -231,11 +246,11 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             // Emergency spawn tinderbox if needed.
             bot.bank.add(Item(TINDERBOX))
         }
-        return listOf(Item(TINDERBOX), Item(log.id, LOGS_PER_TRIP))
+        return listOf(Item(TINDERBOX), Item(log.id, minOf(stock, LOGS_PER_TRIP)))
     }
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < LOGS_PER_TRIP) {
+        if (log.id !in bot.inventory && bot.bank.computeAmountForId(log.id) < 1) {
             bot.log("I've burned all of my ${itemName(log.id)}.")
             chopMoreLogs()
             return true
@@ -273,7 +288,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     }
 
     override suspend fun onInventoryBankRequested(): Boolean {
-        // We start with a full inventory, so only bank once we run out of logs.
+        // Only bank once the carried batch runs out of logs.
         return forceBanking
     }
 
