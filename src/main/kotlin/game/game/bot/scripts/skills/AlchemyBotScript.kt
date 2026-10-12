@@ -35,6 +35,7 @@ import kotlin.time.Duration.Companion.seconds
  * Less intelligent bots are increasingly likely to pick a random valid item instead.
  *
  * The script stops when no valid items remain. Missing rune supplies are added to the wanted-item system before stopping.
+ * Noted target withdrawals always restore normal bank mode, including failed or cancelled withdrawals.
  *
  * @property type Whether this script casts low or high alchemy.
  * @author lare96
@@ -302,14 +303,16 @@ class AlchemyBotScript(
         }
 
         handler.banking.clickBankingMode(true)
-
-        if (!handler.banking.withdrawAll(baseId)) {
+        val withdrawn = try {
+            handler.banking.withdrawAll(baseId)
+        } finally {
+            handler.banking.clickBankingMode(false)
+        }
+        if (!withdrawn) {
             bot.log("Could not withdraw ${itemName(baseId)} for alchemy.")
             stop()
             return
         }
-
-        handler.banking.clickBankingMode(false)
 
         targetId = when {
             notedId in bot.inventory -> notedId
