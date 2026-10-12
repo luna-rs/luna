@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot;
 
+import api.bot.action.trading.BotTradeSpeechPool;
 import api.bot.script.BotScript;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager;
@@ -65,6 +66,7 @@ public final class BotManager {
     public void load() {
         personalityManager.load();
         generalSpeechPool.load();
+        BotTradeSpeechPool.INSTANCE.load();
         scheduleService.startAsync();
     }
 
