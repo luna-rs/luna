@@ -34,7 +34,8 @@ import kotlin.time.Duration
  * from available stock rather than acquiring a fixed recipe during restoration.
  *
  * This script supports normal bank-based cooking zones as well as Rogues' Den, which uses a custom cached banker NPC
- * instead of the default bank lookup.
+ * instead of the default bank lookup. The NPC is resolved again for each banking request; if it is absent,
+ * the inherited bank lookup and travel fallback can proceed.
  *
  * @author lare96
  */
@@ -76,18 +77,7 @@ class CookFoodBotScript(
         }
 
 
-        /**
-         * Cached Rogues' Den banker.
-         *
-         * Rogues' Den uses an NPC banker instead of a standard bank object, so the script manually assigns this NPC
-         * as the cached bank when running in the Rogues' Den zone.
-         */
-        private val ROGUES_DEN_BANK =
-            lazyVal {
-                world.locator
-                    .findViewableNpcs(SubZone.ROGUES_DEN.inside) { it.id == 2271 }
-                    .first()
-            }
+
     }
 
     /**
@@ -198,8 +188,7 @@ class CookFoodBotScript(
             return false
         }
         if (activeZone == SubZone.ROGUES_DEN) {
-            // Use banker NPC when at rogues' den.
-            cachedBank = ROGUES_DEN_BANK.value
+            cachedBank = world.locator.findViewableNpcs(SubZone.ROGUES_DEN.inside) { it.id == 2271 }.firstOrNull()
         }
         return true
     }
