@@ -4,7 +4,7 @@ import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
@@ -35,7 +35,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Partial final batches are burned before gathering more logs. Startup counts inventory and bank supplies;
  * each bank visit sizes its batch from deposited bank stock. Inherited withdrawal verification requires
- * both unnoted logs and the tinderbox to reach the inventory.
+ * both unnoted logs and the tinderbox to reach the inventory. Forced bank requests use the inherited
+ * bounded retry budget; verified withdrawals reset it, and snapshots retain it across resumes.
  *
  * @property log The type of log this script burns.
  * @author lare96
@@ -69,10 +70,12 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         /**
          * Serializable data used to save and restore a [FiremakingBotScript].
          *
-         * This extends [ZonedBotScriptData] with the [Log] type being burned, allowing the script to resume with the
-         * same logs, remaining duration, and candidate zones.
+         * This extends [InventoryScriptData] with the [Log] type being burned, allowing the script to resume with the
+         * same logs, remaining duration, candidate zones, and retry counters. Older snapshots default counters to zero.
+         *
+         * @author lare96
          */
-        class FiremakingData : ZonedBotScriptData() {
+        class FiremakingData : InventoryScriptData() {
 
             /**
              * The type of log the bot should burn.
@@ -216,7 +219,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      * @param bot The bot that owns this script.
      * @param data The previously saved firemaking script data.
      */
-    constructor(bot: Bot, data: FiremakingData) : this(bot, data.log, data.duration, data.zones)
+    constructor(bot: Bot, data: FiremakingData) : this(bot, data.log, data.duration, data.zones) {
+        restoreInventoryState(data)
+    }
 
     /**
      * The lane the bot is burning logs along, or `null` if it needs a new one.
@@ -231,6 +236,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      * Sizes a partial batch from owned startup supplies or deposited bank stock after banking.
      */
     private fun withdrawBatch(bankOnly: Boolean): List<Item> {
+        if (!bankOnly && productionRetriesExhausted()) { stop(); return emptyList() }
         if (bot.firemaking.staticLevel < log.level) {
             bot.log("I need Firemaking level ${log.level} to burn ${itemName(log.id)}.")
             stop()
@@ -289,7 +295,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
 
     override suspend fun onInventoryBankRequested(): Boolean {
         // Only bank once the carried batch runs out of logs.
-        return forceBanking
+        return forceBanking && requestProductionBank(canContinue = false)
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {
@@ -300,8 +306,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
 
     override fun snapshot(): BotScriptData {
         val data = FiremakingData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
+        saveInventoryState(data)
         data.log = log
         return data
     }
