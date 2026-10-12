@@ -29,7 +29,8 @@ import kotlin.time.Duration
  * It requests only missing hides or an unaffordable tanning fee, preserving existing wanted targets and metadata.
  * The script travels to a tanner, opens the tanning interface, and clicks the matching "tan all" button for the selected hide.
  * Carried coins must cover every carried hide before tan-all is attempted; otherwise another bank visit balances
- * the batch.
+ * the batch. Bank withdrawals use the inherited bounded, unnoted verification and must deliver
+ * both the selected hides and their full tanning fee before processing continues.
  *
  * @param bot The bot running this script.
  * @param duration How long this script should run before completing normally.
@@ -37,6 +38,7 @@ import kotlin.time.Duration
  */
 class TanHideBotScript(bot: Bot, duration: Duration) :
     InventoryBotScript(bot, duration, mutableListOf(SubZone.AL_KHARID_BANK)) {
+    override val verifiedProductionWithdrawals = true
     // todo canifis tannery, crafting guild
     /**
      * Recreates a hide-tanning script from saved zone and duration data.
