@@ -39,6 +39,8 @@ import kotlin.time.Duration.Companion.seconds
  * Missing runes request total stock targets of at least 1,000, scaled to all owned eligible materials,
  * preserving higher wanted targets and their metadata. Stock and rune arithmetic use Long before clamping
  * targets to the supported Int range. Owned unnoted armour and bars are counted for initial bank preparation.
+ * Fire-rune readiness also counts base and fire-providing combination stocks with Long, including stock
+ * split across inventory and bank, so large valid supplies cannot appear insufficient after overflow.
  *
  * @property type Whether this script casts low or high alchemy.
  * @author lare96
@@ -560,12 +562,12 @@ class AlchemyBotScript(
         return inventoryFireRunes() >= fireRunesPerCast()
     }
 
-    private fun inventoryFireRunes(): Int {
-        return FIRE_RUNE_IDS.sumOf { bot.inventory.computeAmountForId(it) }
+    private fun inventoryFireRunes(): Long {
+        return FIRE_RUNE_IDS.sumOf { bot.inventory.computeAmountForId(it).toLong() }
     }
 
-    private fun bankedFireRunes(): Int {
-        return FIRE_RUNE_IDS.sumOf { bot.bank.computeAmountForId(it) }
+    private fun bankedFireRunes(): Long {
+        return FIRE_RUNE_IDS.sumOf { bot.bank.computeAmountForId(it).toLong() }
     }
 
     private fun natureRunesPerCast(): Int {
