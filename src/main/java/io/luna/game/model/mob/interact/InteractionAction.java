@@ -158,6 +158,11 @@ public final class InteractionAction extends Action<Player> {
      */
     @Override
     public boolean run() {
+        if (listeners.isEmpty()) {
+            mob.sendMessage("Nothing interesting happens.");
+            return true;
+        }
+
         CollisionManager collisionManager = mob.getWorld().getCollisionManager();
 
         InteractionPolicy trigger = null;
@@ -194,11 +199,7 @@ public final class InteractionAction extends Action<Player> {
             }
             onStanding();
             return true;
-        } else if (listeners.isEmpty()) {
-            mob.sendMessage("Nothing interesting happens.");
-            return true;
-        }
-        return false;
+        } else return listeners.isEmpty();
     }
 
     /**
