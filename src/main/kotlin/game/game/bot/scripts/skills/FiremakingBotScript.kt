@@ -37,6 +37,7 @@ import kotlin.time.Duration.Companion.seconds
  * each bank visit sizes its batch from deposited bank stock. Inherited withdrawal verification requires
  * both unnoted logs and the tinderbox to reach the inventory. Forced bank requests use the inherited
  * bounded retry budget; verified withdrawals reset it, and snapshots retain it across resumes.
+ * Pausing, finishing, and changing zones release the claimed spot and discard the transient lane.
  *
  * @property log The type of log this script burns.
  * @author lare96
@@ -298,8 +299,16 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         return forceBanking && requestProductionBank(canContinue = false)
     }
 
-    override suspend fun onNewActiveZone(lastZone: SubZone?) {
-        // Our lane and spot belong to the zone we're leaving. This also runs when the script pauses.
+    override fun onPaused() = releaseSpot()
+
+    override suspend fun finish() = releaseSpot()
+
+    override suspend fun onNewActiveZone(lastZone: SubZone?) = releaseSpot()
+
+    /**
+     * Releases this session's spot claim and lane without changing another firemaker's claim.
+     */
+    private fun releaseSpot() {
         lane = null
         FiremakingSpot.leave(this)
     }
