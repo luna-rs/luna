@@ -404,10 +404,6 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @param noted `true` to withdraw items as notes, or `false` to withdraw them normally.
      */
     fun clickBankingMode(noted: Boolean) {
-        if (!bot.bank.isOpen) {
-            return
-        }
-
         bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, if (noted) 1 else 0)
     }
 
