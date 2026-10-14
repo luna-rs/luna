@@ -12,6 +12,8 @@ import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
+import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -50,6 +52,11 @@ class FishBotScript(
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing) {
 
     companion object {
+
+        /**
+         * How many times a bot clicks its fishing spot without starting to fish before it looks for another spot.
+         */
+        private const val SPOT_CLICK_ATTEMPTS = 3
 
         /**
          * Maps each fishing tool to the NPC fishing spots that use it as their first-click action.
@@ -124,6 +131,16 @@ class FishBotScript(
         ids
     }
 
+    /**
+     * The fishing spot that [spotClicks] counts clicks for.
+     */
+    private var clickedSpot: Npc? = null
+
+    /**
+     * How many times in a row the bot has clicked [clickedSpot] without starting to fish.
+     */
+    private var spotClicks = 0
+
     override fun requirements(): Boolean {
         return fishingSpotIds.value.isNotEmpty()
     }
@@ -175,6 +192,22 @@ class FishBotScript(
 
     override fun levelRequired(): Int {
         return selectedTool.level
+    }
+
+    override suspend fun refocus(): Boolean {
+        val spot = focus
+        if (spot !== clickedSpot || bot.actions.size(ActionType.WEAK) > 0) {
+            clickedSpot = spot
+            spotClicks = 0
+        } else if (spot?.state == EntityState.ACTIVE && ++spotClicks > SPOT_CLICK_ATTEMPTS) {
+            // TODO Remove once the web walker (#617) handles navigation. Walking to an NPC only tries the side of it
+            //  nearest the bot, which is often water once a fishing spot has moved, so the bot would keep clicking a
+            //  spot it can't reach until the spot moved again. Drop it and search for another spot instead.
+            bot.log("Couldn't start fishing at ${spot.position}, finding another spot.")
+            spotClicks = 0
+            return true
+        }
+        return super.refocus()
     }
 
     override fun snapshot(): BotScriptData {

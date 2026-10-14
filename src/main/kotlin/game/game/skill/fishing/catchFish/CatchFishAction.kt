@@ -53,6 +53,11 @@ class CatchFishAction(plr: Player,
     // TODO@0.5.0 Implement correct sounds: FISHING_CAST(377), FISH_SWIM(378), NET(379), CATCH(238), ?
 
     /**
+     * Where the fishing spot was when fishing started. Fishing stops if the spot moves.
+     */
+    private val spotPosition = target.position
+
+    /**
      * Ticks since fishing started.
      */
     private var ticks = 0
@@ -78,7 +83,7 @@ class CatchFishAction(plr: Player,
 
     override fun run(): Boolean {
         ticks++
-        if (!canFish()) {
+        if (target.position != spotPosition || !canFish()) {
             return true
         }
 
