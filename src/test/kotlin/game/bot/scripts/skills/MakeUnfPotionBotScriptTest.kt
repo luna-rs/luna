@@ -103,8 +103,8 @@ class MakeUnfPotionBotScriptTest {
 
     @Test fun supplyRequestsRaiseTotalTargetsAndPreserveLargerTargetsAndMetadata() = runBlocking {
         val bot = InventoryProductionFixtures.bot()
-        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_ALWAYS_TAGS)
-        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_ALWAYS_TAGS)
+        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
+        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
         val preferences = BotPreference(mutableMapOf(), mutableSetOf(),
             mutableMapOf(herb.id() to herb, water.id() to water), mutableSetOf(), mutableMapOf())
         `when`(bot.preferences).thenReturn(preferences)
