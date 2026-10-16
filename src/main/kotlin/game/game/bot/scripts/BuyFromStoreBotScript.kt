@@ -38,14 +38,14 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
          */
         private val COINS_ID = Currency.COINS.id
 
-        private val ORDINARY_BUDGET = 0.05..0.15
-        private val MERCHANT_BUDGET = 0.20..0.40
-        private val STRONG_MERCHANT_BUDGET = 0.40..0.70
+        private val ORDINARY_BUDGET = 0.01..0.04
+        private val MERCHANT_BUDGET = 0.07..0.10
+        private val STRONG_MERCHANT_BUDGET = 0.12..0.15
     }
 
     override suspend fun run(): Boolean {
         // Remote shop access is a home-only convenience. Never open a registered shop from somewhere else.
-        if (bot.subZone != SubZone.HOME && !handler.travelTo(SubZone.HOME)) {
+        if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) {
             bot.log("Could not travel home to shop.")
             return true
         }
@@ -65,8 +65,8 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             return true
         }
 
-        if(bot.inventory.isFull) {
-            if(handler.banking.travelToBankDepositAll()) {
+        if (bot.inventory.isFull) {
+            if (handler.banking.travelToBankDepositAll()) {
                 bot.log("Clearing full inventory and preparing.")
                 prepareInventory(budget)
                 return false
@@ -442,7 +442,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * merchant requirement or other custom bot-access predicate.
      */
     private fun openShop(shop: Shop): Boolean {
-        if (bot.subZone != SubZone.HOME) {
+        if (SubZone.HOME !in bot.subZones) {
             return false
         }
 

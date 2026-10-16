@@ -8,7 +8,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.SkillingScriptFactory
-import game.bot.scripts.skills.SpinFlaxBotScript
+import game.bot.scripts.skills.SpinTextileBotScript
 import game.obj.resource.harvestable.CabbageResource
 import game.obj.resource.harvestable.FlaxResource
 import game.obj.resource.harvestable.HarvestableResource
@@ -119,7 +119,7 @@ class HarvestBotScript(
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         if (harvestable == Harvestable.FLAX) {
-            SpinFlaxBotScript.leaveSeersWheel(bot)
+            SpinTextileBotScript.leaveSeersWheel(bot)
             if (!resumed) {
                 spinFlax = bot.crafting.staticLevel >= Textile.BOWSTRING.level && rand(bot.personality.intelligence)
             }
@@ -129,8 +129,8 @@ class HarvestBotScript(
 
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
         if (!initial && spinFlax && activeZone == SubZone.SOUTH_SEERS_VILLAGE_FLAX &&
-            SpinFlaxBotScript.FLAX in bot.inventory) {
-            spinFlax = SpinFlaxBotScript.spinAtSeers(bot)
+            SpinTextileBotScript.FLAX in bot.inventory) {
+            spinFlax = SpinTextileBotScript.spinAtSeers(bot)
         }
         return true
     }
@@ -154,7 +154,7 @@ class HarvestBotScript(
         // Chance to queue a flax spinning script, unless this bot spins its own flax.
         if (harvestable == Harvestable.FLAX && !spinFlax &&
             (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
-            val script = SpinFlaxBotScript(bot, SkillingScriptFactory.getDuration(bot))
+            val script = SpinTextileBotScript(bot, SkillingScriptFactory.getDuration(bot))
             bot.scriptStack.pushTail(script, 2)
         }
     }

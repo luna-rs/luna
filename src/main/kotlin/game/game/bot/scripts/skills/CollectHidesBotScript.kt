@@ -122,7 +122,7 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
         // A gated field shares its region with the parent zone, so travelling to the parent's bank wouldn't leave
         // through the gate first.
         val zone = activeZone
-        if (zone != null && bot.subZone == zone) {
+        if (zone != null && zone in bot.subZones) {
             zone.leave(bot, zone.parent(bot), zone.outside(bot))
         }
         return super.onBankRequestedTargeting(initial)

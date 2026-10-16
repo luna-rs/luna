@@ -1,0 +1,13 @@
+{
+  "waypoints": [
+    { "id": "al_kharid_near_gate", "pos": [3277, 3227, 0] },
+    { "id": "lumbridge_outside_castle", "pos": [3235, 3226, 0] },
+    { "id": "lumbridge_east_bridge", "pos": [3254, 3225, 0] },
+    { "id": "lumbridge_east_of_castle", "pos": [3235, 3218, 0] },
+    { "id": "lumbridge_mill", "pos": [3167, 3286, 0] },
+    { "id": "draynor_village_manor_path", "pos": [3110, 3294, 0] },
+    { "id": "lumbridge_draynor_road", "pos": [3129, 3295, 0] },
+    { "id": "falador_south_east", "pos": [3007, 3330, 0] },
+    { "id": "falador_south_of_east_bank", "pos": [3007, 3343, 0] }
+  ]
+}

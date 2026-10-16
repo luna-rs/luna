@@ -94,7 +94,7 @@ public final class BotScheduleService extends AbstractScheduledService {
     /**
      * The total base number of bots this service may try to log in during a single scheduler pass.
      */
-    private static final int BASE_LOGIN_COUNT = 15;
+    private static final Range<Integer> BASE_LOGIN_COUNT = Range.closed(30, 60);
 
     /**
      * The base range amount of new bots this service may try to log in during a single scheduler pass.
@@ -467,7 +467,7 @@ public final class BotScheduleService extends AbstractScheduledService {
          * - 100%+ target online  -> no automatic logins this cycle.
          */
         double goalPercent = 1.0 - Math.min(1.0, onlineCount / goalCount);
-        int goal = (int) Math.min((int) Math.floor(BASE_LOGIN_COUNT * goalPercent), goalCount);
+        int goal = (int) Math.min((int) Math.floor(RandomUtils.random(BASE_LOGIN_COUNT) * goalPercent), goalCount);
 
         // Ensure login goal does not exceed max player count.
         int remaining = world.getPlayers().capacity() - world.getPlayerMap().size(); // Thread-safe version.
