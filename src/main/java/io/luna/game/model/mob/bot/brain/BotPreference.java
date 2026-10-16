@@ -358,6 +358,7 @@ public final class BotPreference {
      * The bot associated with this preference profile, if one has been assigned.
      */
     private Bot bot;
+
     /**
      * The mutable activity preference weights, keyed by activity.
      */
@@ -740,6 +741,129 @@ public final class BotPreference {
      */
     public boolean hatesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) < 0.20;
+    }
+
+    /**
+     * Checks whether the associated bot uses a specific personality template.
+     *
+     * @param type The personality template to check.
+     * @return {@code true} if the bot has an assigned personality with the specified template.
+     */
+    private boolean hasPersonalityTemplate(PersonalityTemplateType type) {
+        return bot != null && bot.getPersonality() != null && bot.getPersonality().getType() == type;
+    }
+
+    /**
+     * Determines whether the bot is primarily interested in skilling.
+     *
+     * Matches the skiller template, a strong skill-training preference, or a combined preference
+     * for training and profitable skilling.
+     *
+     * @return {@code true} if the bot matches a skilling-focused playstyle.
+     */
+    public boolean isSkiller() {
+        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER) && !likesActivity(BotActivity.PKING);
+    }
+
+    /**
+     * Determines whether the bot is interested in player killing.
+     *
+     * Matches the PKer template or a strong preference for player killing.
+     *
+     * @return {@code true} if the bot matches a PKing-focused playstyle.
+     */
+    public boolean isPker() {
+        return hasPersonalityTemplate(PersonalityTemplateType.PKER) || lovesActivity(BotActivity.PKING) || likesActivity(BotActivity.PKING);
+    }
+
+    /**
+     * Determines whether the bot is interested in merchanting.
+     *
+     * Matches the merchant template or a strong preference for merchanting. Other templates may
+     * qualify when their activity preferences favor merchanting.
+     *
+     * @return {@code true} if the bot matches a merchanting-focused playstyle.
+     */
+    public boolean isMerchant() {
+        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT) || lovesActivity(BotActivity.MERCHANTING) || likesActivity(BotActivity.MERCHANTING);
+    }
+
+    /**
+     * Determines whether the bot prefers combat-oriented activities.
+     *
+     * Requires a strong combat-training preference or interest in both combat training and
+     * profitable combat. PKing preference is handled separately by {@link #isPker()}.
+     *
+     * @return {@code true} if the bot favors combat training or profitable combat.
+     */
+    public boolean isCombatant() {
+        return lovesActivity(BotActivity.TRAINING_COMBAT) ||
+                (likesActivity(BotActivity.TRAINING_COMBAT) && likesActivity(BotActivity.PROFIT_COMBAT));
+    }
+
+    /**
+     * Determines whether the bot favors social activity.
+     *
+     * Matches the hero template or a preference for socializing.
+     *
+     * @return {@code true} if the bot matches a social playstyle.
+     */
+    public boolean isSocializer() {
+        return hasPersonalityTemplate(PersonalityTemplateType.HERO) || likesActivity(BotActivity.SOCIALIZING);
+    }
+
+    /**
+     * Determines whether the bot enjoys participating in minigames.
+     *
+     * @return {@code true} if the bot likes the minigames activity.
+     */
+    public boolean isMinigamer() {
+        return likesActivity(BotActivity.MINIGAMES);
+    }
+
+    /**
+     * Determines whether the bot uses the no-life personality template.
+     *
+     * @return {@code true} if the bot uses the no-life template.
+     */
+    public boolean isNoLife() {
+        return hasPersonalityTemplate(PersonalityTemplateType.NO_LIFE);
+    }
+
+    /**
+     * Determines whether the bot uses the kid personality template.
+     *
+     * @return {@code true} if the bot uses the kid template.
+     */
+    public boolean isKid() {
+        return hasPersonalityTemplate(PersonalityTemplateType.KID);
+    }
+
+    /**
+     * Determines whether the bot uses the hero personality template.
+     *
+     * @return {@code true} if the bot uses the hero template.
+     */
+    public boolean isHero() {
+        return hasPersonalityTemplate(PersonalityTemplateType.HERO);
+    }
+
+    /**
+     * Determines whether the bot uses the scammer personality template.
+     *
+     * @return {@code true} if the bot uses the scammer template.
+     */
+    public boolean isScammer() {
+        return hasPersonalityTemplate(PersonalityTemplateType.SCAMMER);
+    }
+
+    /**
+     * Determines whether the bot uses the jack-of-all-trades personality template.
+     *
+     * @return {@code true} if the bot uses the jack-of-all-trades template.
+     */
+    public boolean isJackOfAllTrades() {
+        return hasPersonalityTemplate(PersonalityTemplateType.JACK_OF_ALL_TRADES);
     }
 
     /**
