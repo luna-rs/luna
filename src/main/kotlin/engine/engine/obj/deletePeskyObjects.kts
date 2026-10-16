@@ -48,7 +48,7 @@ on(ServerLaunchEvent::class) {
         Position(3336, 3896),
         Position(2948, 3904),
         Position(2947, 3904),
-
+      
         // Varrock range near bank.
         Position(3241, 3406),
         Position(3242, 3412),
