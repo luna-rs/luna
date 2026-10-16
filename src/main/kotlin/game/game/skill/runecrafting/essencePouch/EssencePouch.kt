@@ -240,6 +240,7 @@ enum class EssencePouch(val id: Int,
             plr.sendMessage("You do not have any free space in your inventory.")
             return
         }
+        // TODO use syntax-sugar attribute referencess
         inv.add(Item(plr.attributes()[essenceId], amount))
         if (amount == held) {
             discardContents(plr)
