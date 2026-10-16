@@ -72,9 +72,14 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
     public static final MapDefinitionRepository<WantedItemDefinition> DEFAULT = new MapDefinitionRepository<>();
 
     /**
-     * An immutable set of always-wanted tags when none are available in {@link #DEFAULT}.
+     * The default tags.
      */
-    public static final ImmutableSet<WantedItemTag> DEFAULT_ALWAYS_TAGS = ImmutableSet.of(WantedItemTag.MISCELLANEOUS);
+    public static final ImmutableSet<WantedItemTag> DEFAULT_TAG = ImmutableSet.of(WantedItemTag.MISCELLANEOUS);
+
+    /**
+     * The default priority.
+     */
+    public static final WantedItemPriority DEFAULT_PRIORITY = WantedItemPriority.STANDARD;
 
     /**
      * Creates an always-wanted {@link WantedItemDefinition} with {@code tags}.
@@ -83,7 +88,7 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
      * @param target The preferred amount the bot should try to acquire.
      */
     public WantedItemDefinition(int id, int target) {
-        this(id, -1, target, -1, -1, WantedItemPriority.HIGH, DEFAULT.get(id).map(it -> it.tags).orElse(DEFAULT_ALWAYS_TAGS));
+        this(id, -1, target, -1, -1, WantedItemPriority.HIGH, DEFAULT.get(id).map(it -> it.tags).orElse(DEFAULT_TAG));
     }
 
     @Override

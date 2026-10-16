@@ -19,6 +19,7 @@ import game.skill.crafting.glassMaking.GlassMaterial
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeSoftClayBotScript
+import game.bot.scripts.skills.WeaveTextileBotScript
 import game.bot.scripts.skills.SpinTextileBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
 import game.bot.scripts.skills.TanHideBotScript
@@ -49,6 +50,7 @@ import io.luna.util.RandomUtils.roll
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
  * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
  * Owned soft clay and unfired pottery enable all existing shaping/firing recipes in Barbarian Village.
+ * Owned wool, jute, and willow branches also enable existing loom recipes in Falador and Iorwerth camp.
  * Owned wool, flax, and magic roots enable the three existing spinning-wheel recipes on the established wheel routes.
  *
  * @author lare96
@@ -76,7 +78,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (rand(0.25)) {
             getProductionScript(bot, level, true)?.let { return it }
         }
-        // TODO Add loom recipes once an appropriate processing subzone is available.
 
         val hides = getUntannedHides(bot)
         val craftable = getActivities(level, { it.level }, HideArmor.ALL)
@@ -181,6 +182,9 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             }.filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(Textile.entries.filter { it.type == TextileType.SPINNING_WHEEL }
                 .map { SpinTextileBotScript(bot, duration, textile = it) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Textile.entries.filter { it.type == TextileType.LOOM }
+                .map { WeaveTextileBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
             if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)

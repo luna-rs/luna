@@ -12,7 +12,6 @@ import game.skill.herblore.makeUnfPotion.MakeUnfActionItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority
-import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.mob.bot.brain.BotPreference
 import io.luna.game.model.mob.bot.script.BotScriptManager
 import kotlinx.coroutines.runBlocking
@@ -105,10 +104,8 @@ class MakeUnfPotionBotScriptTest {
 
     @Test fun supplyRequestsRaiseTotalTargetsAndPreserveLargerTargetsAndMetadata() = runBlocking {
         val bot = InventoryProductionFixtures.bot()
-        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50,
-            WantedItemPriority.STANDARD, ImmutableSet.of(WantedItemTag.SKILLING_CONSUMABLE))
-        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75,
-            WantedItemPriority.STANDARD, ImmutableSet.of(WantedItemTag.SKILLING_CONSUMABLE))
+        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
+        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
         val preferences = BotPreference(mutableMapOf(), mutableSetOf(),
             mutableMapOf(herb.id() to herb, water.id() to water), mutableSetOf(), mutableMapOf())
         `when`(bot.preferences).thenReturn(preferences)
