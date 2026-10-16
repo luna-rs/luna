@@ -78,6 +78,8 @@ enum class EssencePouch(val id: Int,
             for (pouch in entries) {
                 var lost = false
                 for (id in pouch.ids) {
+                    // TODO Much faster to use inventory iterator.
+                    // Ie. val it = plr.inventory.iterator()
                     while (plr.inventory.remove(Item(id))) {
                         lost = true
                     }
