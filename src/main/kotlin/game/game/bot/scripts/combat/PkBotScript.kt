@@ -573,8 +573,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
-            bot.walking.isRunning = true
-            bot.navigator.navigate(anchor, true).await()
+            handler.webWalkTo(anchor)
 
             if (!bot.inWilderness()) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
