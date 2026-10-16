@@ -2,6 +2,7 @@ package api.combat.death.dsl
 
 import api.predef.*
 import api.predef.ext.*
+import engine.combat.status.StatusEffectType
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -28,6 +29,7 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
         if (victim is Player) {
             victim.animation(Animation.CANCEL)
             victim.skills.resetAll()
+            victim.status.remove(StatusEffectType.SKULLED)
             victim.skullIcon = SkullIcon.NONE
         } else if (victim is Npc) {
             world.npcs.remove(victim)
