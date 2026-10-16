@@ -1,21 +1,24 @@
 package api.bot.action
 
-import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
+import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
 import game.player.item.consume.food.Food
+import io.luna.game.model.Entity
 import io.luna.game.model.Position
+import io.luna.game.model.Region
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Handles banking actions performed by [bot].
@@ -399,65 +402,33 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @param noted `true` to withdraw items as notes, or `false` to withdraw them normally.
      */
     fun clickBankingMode(noted: Boolean) {
-        if (!bot.bank.isOpen) {
-            return
-        }
-
         bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, if (noted) 1 else 0)
     }
 
     /**
-     * Finds and travels to a usable bank.
+     * Finds and travels to an accessible bank.
      *
-     * Bots already in [SubZone.HOME] use the closest configured home bank. Otherwise, bank anchors for the current zone are
-     * attempted first, followed by viewable banking objects. If neither produces a usable bank, the bot attempts to travel
-     * home and use a configured home bank as a fallback.
+     * Bots already in [SubZone.HOME] use the closest configured home bank. Otherwise, the bot web-walks to the nearest bank,
+     * which is the one that the cheapest trip ends at. If that fails, the bot attempts to travel home and use a configured
+     * home bank as a fallback.
      *
-     * @return A usable bank object, or `null` if no bank can be found or reached.
+     * If no local bank is found or accepted, attempts to travel home and use a home bank.
+     *
+     * @return The selected bank entity, or `null` if no bank can be obtained.
      */
-    suspend fun travelToNearestBank(): GameObject? {
+    suspend fun travelToNearestBank(): Entity? {
         bot.log("Travelling to nearest bank.")
 
-        if (bot.subZone == SubZone.HOME) {
+        if (SubZone.HOME in bot.subZones) {
             // We're home, use closest home bank.
             return homeBanks.minByOrNull { it.position.computeLongestDistance(bot.position) }
         }
 
-        bot.log("Looking in current zone.")
-        val localBanks = bot.zone?.bankAnchors
-        if (!localBanks.isNullOrEmpty()) {
-            for (bank in localBanks) {
-                val bankObj = world.locator
-                    .findObjectsOnTile(bank) { it.id in Banking.bankingObjects }
-                    .firstOrNull()
-
-                if (bankObj != null &&
-                    (bot.navigator.navigate(bankObj, true).await() == NavigationResult.REACHED ||
-                            bankObj.isWithinDistance(bot, 2))
-                ) {
-                    return bankObj
-                }
-
-                bot.log("Bank $bankObj inaccessible.")
-                bot.naturalDecisionDelay()
-            }
-        }
-
-        bot.log("Looking nearby.")
-        val banks = world.locator.findViewableObjects(bot) { it.id in Banking.bankingObjects }
-        if (banks.isNotEmpty()) {
-            // Try to travel to nearby banks.
-            bot.log("Found ${banks.size}.")
-
-            for (it in banks) {
-                if (bot.navigator.navigate(it, true).await() != NavigationResult.NO_VALID_PATH) {
-                    return it
-                }
-
-                bot.log("Bank $it inaccessible.")
-                bot.naturalDecisionDelay()
-            }
-        }
+        bot.log("Web-walking to the nearest bank.")
+        val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS) // TODO Add support for NPC bankers as well
+        if (bank != null) {
+            return bank
+        }      
 
         // Travel home, then use home bank.
         bot.log("Trying to travel home for a bank.")
@@ -470,13 +441,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
-     * Travels to a bank and opens it.
+     * Travels to a bank and attempts to open it.
      *
-     * If the bank is already open, no action is performed. Otherwise, [travelToNearestBank] is used to locate a bank before
-     * the bot interacts with it. After the interaction delay, the bot's bank is opened directly if it has not already been
-     * marked open.
+     * Returns immediately if the bank is already open. Otherwise, uses [travelToNearestBank] to find a bank and
+     * interacts with it.
      *
-     * @return `true` if the bank is open after the operation.
+     * If the interaction succeeds but [waitFor] returns `false`, opens the bank directly.
+     *
+     * @return `true` if the bank was already open or the direct-open fallback was executed.
      */
     suspend fun travelToBankOpen(): Boolean {
         if (bot.bank.isOpen) {
@@ -487,11 +459,13 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (bank != null) {
             bot.naturalDelay()
             bot.log("Opening bank.")
-
-            if (handler.interactions.interact(2, bank)) {
-                bot.naturalDelay()
-
-                if (!bot.bank.isOpen) {
+            val option = when (bank) {
+                is GameObject -> 2
+                is Npc -> bank.def().actions.indexOfFirst { it == "Bank" } + 1
+                else -> throw IllegalStateException("Invalid bank entity type.")
+            }
+            if (handler.interactions.interact(option, bank)) {
+                if (!waitFor(3.seconds) { bot.bank.isOpen }) {
                     bot.bank.open()
                 }
                 return true

@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.gson.JsonArray;
@@ -8,46 +9,46 @@ import com.google.gson.JsonObject;
 import engine.bot.gear.BotGearSet;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.WantedItemDefinition;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemPriority;
+import io.luna.game.model.def.WantedItemDefinition.WantedItemTag;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplate;
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType;
+import io.luna.util.GsonUtils;
 import io.luna.util.RandomUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+import static io.luna.game.model.def.WantedItemDefinition.DEFAULT;
+import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_TAG;
 import static io.luna.util.RandomUtils.randomFrom;
 import static io.luna.util.RandomUtils.roll;
 
 /**
- * Represents a {@link Bot}s behavioral preferences.
+ * Stores a bot's activity, skill, wanted-item, equipment, and player preferences.
  * <p>
- * Preferences describe what a bot enjoys doing (activities), what it likes to train (skills), what items it values
- * (regardless of market value), and what equipment it tends to wear. These are influenced by the bot’s
- * {@link BotPersonality} and evolve dynamically at runtime through its {@link BotEmotion} states.
- * <p>
- * For example:
- * <ul>
- *   <li>A highly dexterous bot may enjoy skill-based activities like Crafting and Herblore.</li>
- *   <li>A confident and low-kindness bot might favor combat or PvP-related activities.</li>
- *   <li>Social bots tend to prefer group-oriented activities like minigames and trading.</li>
- * </ul>
+ * Activity and gear preferences may be generated from a {@link BotPersonality}. Wanted items and
+ * player feelings may be changed at runtime and serialized for persistence.
  *
  * @author lare96
  */
 public final class BotPreference {
 
     /**
-     * Builder for constructing {@link BotPreference} instances.
+     * Builds a {@link BotPreference} from explicit values or personality-based defaults.
      * <p>
-     * Builders can load personality data from predefined templates, apply variance for individuality, or generate
-     * completely random preferences for testing.
+     * Activity weights may be loaded from templates or generated randomly. Preferred skills and gear
+     * are generated from personality traits unless explicitly supplied.
      */
     public static final class Builder {
         private final BotPersonality personality;
@@ -64,6 +65,12 @@ public final class BotPreference {
         private final double social;
         private final double dexterity;
 
+        /**
+         * Creates a preference builder for a personality and its template manager.
+         *
+         * @param personalityManager The manager providing personality templates.
+         * @param personality The personality used to generate preferences.
+         */
         public Builder(BotPersonalityManager personalityManager, BotPersonality personality) {
             this.personalityManager = personalityManager;
             this.personality = personality;
@@ -76,13 +83,10 @@ public final class BotPreference {
         }
 
         /**
-         * Assigns a weight to a specific {@link BotActivity}.
-         * <p>
-         * This allows you to manually set how much the bot enjoys or prioritizes a given activity. The value should
-         * fall between {@code 0.0} (no interest) and {@code 1.0} (maximum interest).
+         * Adds or replaces an activity preference weight without normalizing its value.
          *
-         * @param activity The activity to assign a weight to.
-         * @param value The preference weight between {@code 0.0} and {@code 1.0}.
+         * @param activity The activity whose weight is being set.
+         * @param value The weight to store for the activity.
          * @return This builder for chaining.
          */
         public Builder setActivity(BotActivity activity, double value) {
@@ -91,11 +95,11 @@ public final class BotPreference {
         }
 
         /**
-         * Adds one or more skill identifiers to this bot’s preferred skill list.
+         * Adds preferred skill ids to this builder.
          * <p>
-         * This allows manual injection of skills that the bot will favor or regularly train.
+         * Duplicate ids are ignored by the backing set.
          *
-         * @param skillIds One or more skill IDs to add as preferences.
+         * @param skillIds The skill ids to add.
          * @return This builder for chaining.
          */
         public Builder addSkill(int... skillIds) {
@@ -106,12 +110,11 @@ public final class BotPreference {
         }
 
         /**
-         * Adds one or more {@link BotGearSet} values to this bot’s preferred equipment list.
+         * Adds preferred gear sets to this builder.
          * <p>
-         * This allows manual assignment of specific armor or outfit sets that the bot will attempt to equip or seek
-         * when generating loadouts.
+         * Duplicate sets are ignored by the backing set.
          *
-         * @param gearSets One or more gear set types to add as preferences.
+         * @param gearSets The gear sets to add.
          * @return This builder for chaining.
          */
         public Builder addGear(BotGearSet... gearSets) {
@@ -119,20 +122,35 @@ public final class BotPreference {
             return this;
         }
 
+        /**
+         * Adds or replaces a wanted-item definition using its item id as the key.
+         *
+         * @param item The wanted-item definition to add.
+         * @return This builder for chaining.
+         */
         public Builder addWantedItem(WantedItemDefinition item) {
             wantedItems.put(item.id(), item);
             return this;
         }
 
+        /**
+         * Sets the initial feeling toward a player, clamped to {@code 0.0..1.0}.
+         *
+         * @param username The player's username.
+         * @param feeling The feeling value to store.
+         * @return This builder for chaining.
+         */
         public Builder setFeelingsFor(String username, double feeling) {
             playerFeelings.put(username, Math.min(1.0, Math.max(feeling, 0.0)));
             return this;
         }
 
         /**
-         * Loads activity preferences from a predefined {@link PersonalityTemplateType} without variance.
+         * Copies activity weights from a predefined personality template.
+         * <p>
+         * Existing entries with matching activities are overwritten without adding variance.
          *
-         * @param from The template type to load from.
+         * @param from The template type to load.
          * @return This builder for chaining.
          */
         public Builder template(PersonalityTemplateType from) {
@@ -143,26 +161,27 @@ public final class BotPreference {
 
 
         /**
-         * Randomizes this bot’s personality using a random template type and a dynamic variance value.
+         * Randomizes activity weights using a randomly selected personality template.
          * <p>
-         * The variance is chosen randomly between {@code 0.05} and {@code 0.25}, introducing a natural spread of
-         * unique personalities without producing extreme outliers.
+         * A variance magnitude between {@code 0.05} and {@code 0.25} is chosen. Each template weight
+         * receives a random adjustment within that magnitude and is clamped to {@code 0.0..1.0}.
          *
-         * @return This builder instance for chaining.
+         * @return This builder for chaining.
          */
         public Builder randomizeSmart() {
             double variance = ThreadLocalRandom.current().nextDouble(0.05, 0.25);
             Supplier<Double> varianceSupplier = () -> ThreadLocalRandom.current().nextDouble(-variance, variance);
             PersonalityTemplate template = personalityManager.getTemplate(RandomUtils.random(PersonalityTemplateType.ALL_EXCEPT_NONE));
             for (var entry : template.activities.entrySet()) {
-                activities.put(entry.getKey(), entry.getValue() + varianceSupplier.get());
+                double weight = entry.getValue() + varianceSupplier.get();
+                activities.put(entry.getKey(), Math.clamp(weight, 0.0, 1.0));
             }
             return this;
         }
 
 
         /**
-         * Generates a completely random distribution of activity preferences.
+         * Assigns a random activity weight to every activity in {@link BotActivity#ALL}.
          *
          * @return This builder for chaining.
          */
@@ -174,12 +193,12 @@ public final class BotPreference {
         }
 
         /**
-         * Generates a set of skills this bot prefers to train.
+         * Generates preferred skill ids from the personality unless skills were supplied.
          * <p>
-         * The final list is influenced by the bot’s personality, favoring skills that align with its intelligence,
-         * confidence, social tendencies, and dexterity.
+         * Personality traits may select overlapping skills. If no trait selects a skill, two to four ids
+         * are drawn without replacement from the available skill ids.
          *
-         * @return A generated immutable set of preferred skill IDs.
+         * @return A mutable set containing the selected skill ids.
          */
         private Set<Integer> generateSkills() {
             Set<Integer> selected = new HashSet<>();
@@ -205,10 +224,13 @@ public final class BotPreference {
                     selected.add(Skill.PRAYER);
                 }
 
-                // Fallback: pick 2–6 random skills
+                // Fallback: pick 2–4 random skills
                 if (selected.isEmpty()) {
-                    for (int loops = 0; loops < RandomUtils.inclusive(2, 6); loops++) {
-                        Integer id = RandomUtils.random(Skill.IDS);
+                    int max = RandomUtils.inclusive(2, 4);
+                    List<Integer> skills = new ArrayList<>(Skill.IDS);
+                    Collections.shuffle(skills);
+                    while (max-- > 0) {
+                        Integer id = skills.removeFirst();
                         if (id != null) {
                             selected.add(id);
                         }
@@ -221,18 +243,12 @@ public final class BotPreference {
         }
 
         /**
-         * Generates a set of preferred gear archetypes based on the bot’s personality traits.
+         * Generates preferred gear sets from the personality unless gear was supplied.
          * <p>
-         * Gear preferences are chosen by interpreting the bot’s combat style tendencies and self-image.
-         * For example:
-         * <ul>
-         *   <li>Highly confident, low-kindness bots tend to favor offensive or high-status gear (e.g. {@code DRAGON_FULL}).</li>
-         *   <li>Intelligent bots prefer efficient or magically oriented sets (e.g. {@code MYSTIC_LIGHT}, {@code AHRIMS}).</li>
-         *   <li>Social bots often choose visually striking "show-off" sets.</li>
-         *   <li>Dexterous bots lean toward ranged or lightweight setups.</li>
-         * </ul>
+         * Confidence, kindness, intelligence, social tendency, and dexterity influence the chosen sets.
+         * If no trait selects gear, a fallback group is added.
          *
-         * @return A generated immutable set of {@link BotGearSet}s representing this bot’s favored loadouts.
+         * @return A mutable set containing the selected gear sets.
          */
         private Set<BotGearSet> generateGear() {
             Set<BotGearSet> selected = new HashSet<>();
@@ -322,10 +338,11 @@ public final class BotPreference {
         }
 
         /**
-         * Builds the resulting immutable {@link BotPreference} instance. Generates favorite skills, items, and gear
-         * from the bot's personality.
+         * Builds a preference profile from the currently configured builder state.
+         * <p>
+         * Preferred skills and gear are generated when their corresponding builder sets are empty.
          *
-         * @return The fully built preference profile.
+         * @return A new {@link BotPreference} instance.
          */
         public BotPreference build() {
             return new BotPreference(
@@ -337,58 +354,69 @@ public final class BotPreference {
         }
     }
 
-    private Bot bot;
     /**
-     * The immutable map of activity preference weights.
+     * The bot associated with this preference profile, if one has been assigned.
+     */
+    private Bot bot;
+
+    /**
+     * The mutable activity preference weights, keyed by activity.
      */
     private final Map<BotActivity, Double> activities;
 
     /**
-     * The immutable set of preferred skills.
+     * The mutable set of preferred skill ids.
      */
     private final Set<Integer> skills;
 
     /**
-     * The items this bot currently wants to obtain, keyed by unnoted item id.
+     * The mutable wanted-item definitions, keyed by item id.
      * <p>
-     * Each definition describes the desired amount and any skill or level restrictions associated with the item.
-     * Wanted items may be added or adjusted at runtime as the bot's needs change.
+     * Default definitions are supplied at construction when an entry is absent. Other definitions
+     * can be added or updated at runtime.
      */
     private final Map<Integer, WantedItemDefinition> wantedItems;
 
     /**
-     * The immutable set of preferred gear archetypes.
+     * The mutable set of preferred gear archetypes.
      */
     private final Set<BotGearSet> gear;
 
     /**
-     * Stores this bot's long-term feelings toward known players by username.
+     * The mutable feelings toward players, keyed by username.
      * <p>
-     * Values are stored on a {@code 0.0} to {@code 1.0} scale:
-     * <ul>
-     *   <li>{@code 0.0} means the bot strongly hates or distrusts the player.</li>
-     *   <li>{@code 0.5} means the bot is neutral or does not know the player.</li>
-     *   <li>{@code 1.0} means the bot strongly likes, trusts, or admires the player.</li>
-     * </ul>
+     * A value of {@code 0.0} represents strong dislike, {@code 0.5} neutrality, and {@code 1.0}
+     * strong approval. Unknown players are treated as neutral by {@link #getFeelingsToward(String)}.
      */
     private final Map<String, Double> playerFeelings;
 
     /**
-     * Creates a new immutable {@link BotPreference}.
+     * Creates a bot preference profile with supplied preference collections.
+     * <p>
+     * Adds the default general-activity weight and any missing default wanted items. Activity weights
+     * are copied; skill, wanted-item, gear, and player-feeling collections are retained by reference.
      *
-     * @param activities Activity preference weights.
-     * @param skills Preferred skill IDs.
-     * @param wantedItems Preferred item IDs.
-     * @param gear Preferred gear archetypes.
+     * @param activities The activity preference weights.
+     * @param skills The preferred skill ids.
+     * @param wantedItems The wanted-item definitions keyed by item id.
+     * @param gear The preferred gear sets.
+     * @param playerFeelings The player feeling values keyed by username.
      */
     public BotPreference(Map<BotActivity, Double> activities,
                          Set<Integer> skills,
                          Map<Integer, WantedItemDefinition> wantedItems,
                          Set<BotGearSet> gear,
                          Map<String, Double> playerFeelings) {
-        this.activities = new HashMap<>(activities);
+
         // New and legacy profiles participate in general activities unless an explicit weight is provided.
-        this.activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
+        activities.putIfAbsent(BotActivity.GENERAL_ACTIVITIES, 0.25);
+
+        // Load default wanted items.
+        for (WantedItemDefinition def : WantedItemDefinition.DEFAULT) {
+            wantedItems.putIfAbsent(def.id(), def);
+        }
+
+        this.activities = new HashMap<>(activities);
         this.skills = skills;
         this.wantedItems = wantedItems;
         this.gear = gear;
@@ -396,12 +424,12 @@ public final class BotPreference {
     }
 
     /**
-     * Serializes this preference profile into JSON.
+     * Serializes this preference profile into a JSON object.
      * <p>
-     * Saved data includes activity weights, preferred skills, preferred gear archetypes, and the bot's stored feelings
-     * toward known players.
+     * Includes activity weights, skill ids, wanted items with their metadata, gear sets, and player
+     * feelings. The associated {@link Bot} is not serialized here.
      *
-     * @return A JSON object containing this preference profile.
+     * @return The serialized preference profile.
      */
     public JsonObject save() {
         JsonObject preferences = new JsonObject();
@@ -430,6 +458,8 @@ public final class BotPreference {
             itemJson.addProperty("target", it.target());
             itemJson.addProperty("skill", it.skill());
             itemJson.addProperty("max_level", it.maxLevel());
+            itemJson.addProperty("priority", it.priority().name());
+            itemJson.add("tags", GsonUtils.toJsonTree(it.tags().stream().map(WantedItemTag::name).toList()));
             wantedItemsJson.add(itemJson);
         });
         preferences.add("wanted_items", wantedItemsJson);
@@ -452,12 +482,12 @@ public final class BotPreference {
     }
 
     /**
-     * Loads this preference profile from JSON.
+     * Loads saved preferences from a JSON object into the existing collections.
      * <p>
-     * Existing activity, skill, gear, and player-feeling collections are populated from the supplied object. The JSON
-     * object is expected to follow the same structure produced by {@link #save()}.
+     * Entries are added or overwritten without clearing the current collections. Wanted items lacking
+     * priority or tags use default metadata, and entries without a minimum field are skipped.
      *
-     * @param object The JSON object to load preference data from.
+     * @param object The JSON object containing preference data.
      */
     public void load(JsonObject object) {
         // Deserialize activities and their weightings.
@@ -479,7 +509,11 @@ public final class BotPreference {
                 int target = itemJson.get("target").getAsInt();
                 int skill = itemJson.get("skill").getAsInt();
                 int maxLevel = itemJson.get("max_level").getAsInt();
-                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel));
+                WantedItemPriority priority = !itemJson.has("priority") ? WantedItemPriority.STANDARD :
+                        WantedItemPriority.valueOf(itemJson.get("priority").getAsString());
+                ImmutableSet<WantedItemTag> tags = !itemJson.has("tags") ? DEFAULT_TAG :
+                        ImmutableSet.copyOf(GsonUtils.getAsType(itemJson.get("tags"), WantedItemTag[].class));
+                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags));
             }
         });
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
@@ -490,60 +524,62 @@ public final class BotPreference {
     }
 
     /**
-     * Adds or replaces an item in this bot's wanted-item list.
+     * Adds or replaces a wanted item, normalizing noted ids to unnoted ids.
      * <p>
-     * Noted item ids are normalized to their unnoted form so both versions of an item share the same definition.
+     * Sets the minimum to {@code -1}. Existing priorities and tags are retained when available;
+     * otherwise, the new entry uses high priority and default tags.
      *
-     * @param id The item id.
-     * @param target The desired amount.
-     * @param skill The associated skill id, or {@code -1} if unrestricted.
-     * @param maxLevel The maximum skill level this definition applies to, or {@code -1} if unrestricted.
+     * @param id The item id to add or replace.
+     * @param target The desired item quantity.
+     * @param skill The associated skill id, or {@code -1} for no skill restriction.
+     * @param maxLevel The maximum applicable level, or {@code -1} when unrestricted.
      */
     public void addWantedItem(int id, int target, int skill, int maxLevel) {
         int unnotedId = toUnnotedId(id);
-        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel));
+        WantedItemDefinition existing = wantedItems.get(unnotedId);
+        var tags = existing != null ? existing.tags() :
+                WantedItemDefinition.DEFAULT.get(unnotedId).map(WantedItemDefinition::tags).orElse(DEFAULT_TAG);
+        wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel, existing != null ? existing.priority() : WantedItemPriority.HIGH, tags));
     }
 
     /**
-     * Adds or replaces an unrestricted item in this bot's wanted-item list.
+     * Adds or replaces a wanted item without skill or level restrictions.
      *
-     * @param id The item id.
-     * @param target The desired amount.
+     * @param id The item id to add or replace.
+     * @param target The desired item quantity.
      */
     public void addWantedItem(int id, int target) {
         addWantedItem(id, target, -1, -1);
     }
 
     /**
-     * Returns this bot's wanted-item definition for the specified item.
-     * <p>
-     * Noted item ids are normalized to their unnoted form before lookup.
+     * Gets a wanted-item definition after normalizing the item id.
      *
-     * @param id The item id.
-     * @return The wanted-item definition, or {@code null} if the bot does not want the item.
+     * @param id The item id to look up.
+     * @return The wanted-item definition, or {@code null} if it does not exist.
      */
     public WantedItemDefinition getWantedItem(int id) {
         return wantedItems.get(toUnnotedId(id));
     }
 
     /**
-     * Determines whether this bot currently wants the specified item.
+     * Checks whether a wanted-item definition exists for an item id.
      *
-     * @param id The item id.
-     * @return {@code true} if a wanted-item definition exists.
+     * @param id The item id to check, normalized before lookup.
+     * @return {@code true} if a definition is present.
      */
     public boolean hasWantedItem(int id) {
         return wantedItems.containsKey(toUnnotedId(id));
     }
 
     /**
-     * Raises the desired total-ownership target for a wanted item.
+     * Raises a wanted item's target quantity without lowering an existing target.
      * <p>
-     * Existing metadata such as minimum amount, associated skill, and maximum level is preserved. The target is never
-     * lowered by this method.
+     * Creates an unrestricted wanted item if no definition exists. Otherwise, all metadata except
+     * its target quantity is preserved.
      *
-     * @param id The item id.
-     * @param target The new desired ownership target.
+     * @param id The item id, normalized before lookup.
+     * @param target The proposed target quantity.
      */
     public void raiseWantedItemTarget(int id, int target) {
         int unnotedId = toUnnotedId(id);
@@ -562,25 +598,33 @@ public final class BotPreference {
                     current.min(),
                     target,
                     current.skill(),
-                    current.maxLevel()));
+                    current.maxLevel(),
+                    current.priority(),
+                    current.tags()));
         }
     }
 
     /**
-     * Completely removes a wanted-item definition.
+     * Removes a wanted-item definition unless it belongs to the default definitions.
+     * <p>
+     * Default wanted items cannot be removed, including when their values have been overridden.
      *
-     * @param id The item id.
-     * @return {@code true} if a wanted-item definition was removed.
+     * @param id The item id, normalized before lookup.
+     * @return {@code true} if a nondefault definition was removed.
      */
     public boolean removeWantedItem(int id) {
-        return wantedItems.remove(toUnnotedId(id)) != null;
+        int unnotedId = toUnnotedId(id);
+        if (DEFAULT.get(unnotedId).isEmpty()) {
+            return wantedItems.remove(unnotedId) != null;
+        }
+        return false;
     }
 
     /**
-     * Converts a noted item id to its unnoted id, so noted and unnoted copies count as the same wanted item.
+     * Resolves a noted item id to its unnoted counterpart when available.
      *
-     * @param id The item id.
-     * @return The unnoted id, or {@code id} itself if it isn't a noted item.
+     * @param id The item id to normalize.
+     * @return The unnoted id, or the original id when no conversion is available.
      */
     private static int toUnnotedId(int id) {
         if (!ItemDefinition.isIdValid(id)) {
@@ -592,25 +636,22 @@ public final class BotPreference {
     }
 
     /**
-     * Gets this bot's current feeling value toward a player.
-     * <p>
-     * Unknown players default to {@code 0.5}, which represents neutral feelings.
+     * Gets the stored feeling toward a player, defaulting to {@code 0.5}.
      *
-     * @param username The username of the player to check.
-     * @return The bot's feeling value toward the player, from {@code 0.0} to {@code 1.0}.
+     * @param username The player's username.
+     * @return The stored feeling value, or {@code 0.5} if no entry exists.
      */
     public double getFeelingsToward(String username) {
         return playerFeelings.getOrDefault(username, 0.5);
     }
 
     /**
-     * Adjusts this bot's feeling value toward a player.
+     * Adjusts the feeling toward a player, clamping the result to {@code 0.0..1.0}.
      * <p>
-     * Positive amounts make the bot like or trust the player more, while negative amounts make the bot dislike or distrust
-     * the player more.
+     * Players without a stored feeling begin at {@code 0.5}.
      *
-     * @param username The username of the player to adjust feelings toward.
-     * @param amount The amount to add to the player's current feeling value.
+     * @param username The player's username.
+     * @param amount The amount to add to the existing feeling.
      */
     public void adjustFeelingsToward(String username, double amount) {
         playerFeelings.compute(username, (k, v) -> {
@@ -620,30 +661,30 @@ public final class BotPreference {
     }
 
     /**
-     * Determines if this bot strongly hates a player.
+     * Checks whether the bot's feeling toward a player is below {@code 0.20}.
      *
-     * @param username The username of the player to check.
-     * @return {@code true} if this bot's feeling value toward the player is below {@code 0.20}.
+     * @param username The player's username.
+     * @return {@code true} if the feeling is below {@code 0.20}.
      */
     public boolean hatesPlayer(String username) {
         return getFeelingsToward(username) < 0.20;
     }
 
     /**
-     * Determines if this bot dislikes a player.
+     * Checks whether the bot's feeling toward a player is below {@code 0.40}.
      *
-     * @param username The username of the player to check.
-     * @return {@code true} if this bot's feeling value toward the player is below {@code 0.40}.
+     * @param username The player's username.
+     * @return {@code true} if the feeling is below {@code 0.40}.
      */
     public boolean dislikesPlayer(String username) {
         return getFeelingsToward(username) < 0.40;
     }
 
     /**
-     * Determines if this bot feels neutral toward a player.
+     * Checks whether the bot's feeling is between {@code 0.40} and {@code 0.60}, inclusive.
      *
-     * @param username The username of the player to check.
-     * @return {@code true} if this bot's feeling value toward the player is between {@code 0.40} and {@code 0.60}.
+     * @param username The player's username.
+     * @return {@code true} if the feeling is within the neutral range.
      */
     public boolean isNeutralToPlayer(String username) {
         double feelings = getFeelingsToward(username);
@@ -651,97 +692,242 @@ public final class BotPreference {
     }
 
     /**
-     * Determines if this bot likes a player.
+     * Checks whether the bot's feeling toward a player exceeds {@code 0.60}.
      *
-     * @param username The username of the player to check.
-     * @return {@code true} if this bot's feeling value toward the player is above {@code 0.60}.
+     * @param username The player's username.
+     * @return {@code true} if the feeling is above {@code 0.60}.
      */
     public boolean likesPlayer(String username) {
         return getFeelingsToward(username) > 0.60;
     }
 
     /**
-     * Determines if this bot strongly likes or trusts a player.
+     * Checks whether the bot's feeling toward a player exceeds {@code 0.80}.
      *
-     * @param username The username of the player to check.
-     * @return {@code true} if this bot's feeling value toward the player is above {@code 0.80}.
+     * @param username The player's username.
+     * @return {@code true} if the feeling is above {@code 0.80}.
      */
     public boolean lovesPlayer(String username) {
         return getFeelingsToward(username) > 0.80;
     }
 
     /**
-     * Determines whether this bot strongly prefers the specified activity.
+     * Checks whether an activity weight exceeds {@code 0.75}.
      *
      * @param activity The activity to check.
-     * @return {@code true} if the activity's preference weight is greater than {@code 0.75}.
+     * @return {@code true} if the stored weight is above {@code 0.75}.
      */
     public boolean lovesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) > 0.75;
     }
 
     /**
-     * Determines whether this bot likes the specified activity.
+     * Checks whether an activity weight exceeds {@code 0.60}.
      *
      * @param activity The activity to check.
-     * @return {@code true} if the activity's preference weight is greater than {@code 0.60}.
+     * @return {@code true} if the stored weight is above {@code 0.60}.
      */
     public boolean likesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) > 0.60;
     }
 
     /**
-     * Determines whether this bot strongly dislikes the specified activity.
+     * Checks whether an activity weight is below {@code 0.20}.
+     * <p>
+     * Activities without a stored weight are treated as having weight {@code 0.0}.
      *
      * @param activity The activity to check.
-     * @return {@code true} if the activity's preference weight is less than {@code 0.20}.
+     * @return {@code true} if the stored or default weight is below {@code 0.20}.
      */
     public boolean hatesActivity(BotActivity activity) {
         return activities.getOrDefault(activity, 0.0) < 0.20;
     }
 
     /**
-     * @return The immutable map of activity preferences.
+     * Checks whether the associated bot uses a specific personality template.
+     *
+     * @param type The personality template to check.
+     * @return {@code true} if the bot has an assigned personality with the specified template.
+     */
+    private boolean hasPersonalityTemplate(PersonalityTemplateType type) {
+        return bot != null && bot.getPersonality() != null && bot.getPersonality().getType() == type;
+    }
+
+    /**
+     * Determines whether the bot is primarily interested in skilling.
+     *
+     * Matches the skiller template, a strong skill-training preference, or a combined preference
+     * for training and profitable skilling.
+     *
+     * @return {@code true} if the bot matches a skilling-focused playstyle.
+     */
+    public boolean isSkiller() {
+        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER) && !likesActivity(BotActivity.PKING);
+    }
+
+    /**
+     * Determines whether the bot is interested in player killing.
+     *
+     * Matches the PKer template or a strong preference for player killing.
+     *
+     * @return {@code true} if the bot matches a PKing-focused playstyle.
+     */
+    public boolean isPker() {
+        return hasPersonalityTemplate(PersonalityTemplateType.PKER) || lovesActivity(BotActivity.PKING) || likesActivity(BotActivity.PKING);
+    }
+
+    /**
+     * Determines whether the bot is interested in merchanting.
+     *
+     * Matches the merchant template or a strong preference for merchanting. Other templates may
+     * qualify when their activity preferences favor merchanting.
+     *
+     * @return {@code true} if the bot matches a merchanting-focused playstyle.
+     */
+    public boolean isMerchant() {
+        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT) || lovesActivity(BotActivity.MERCHANTING) || likesActivity(BotActivity.MERCHANTING);
+    }
+
+    /**
+     * Determines whether the bot prefers combat-oriented activities.
+     *
+     * Requires a strong combat-training preference or interest in both combat training and
+     * profitable combat. PKing preference is handled separately by {@link #isPker()}.
+     *
+     * @return {@code true} if the bot favors combat training or profitable combat.
+     */
+    public boolean isCombatant() {
+        return lovesActivity(BotActivity.TRAINING_COMBAT) ||
+                (likesActivity(BotActivity.TRAINING_COMBAT) && likesActivity(BotActivity.PROFIT_COMBAT));
+    }
+
+    /**
+     * Determines whether the bot favors social activity.
+     *
+     * Matches the hero template or a preference for socializing.
+     *
+     * @return {@code true} if the bot matches a social playstyle.
+     */
+    public boolean isSocializer() {
+        return hasPersonalityTemplate(PersonalityTemplateType.HERO) || likesActivity(BotActivity.SOCIALIZING);
+    }
+
+    /**
+     * Determines whether the bot enjoys participating in minigames.
+     *
+     * @return {@code true} if the bot likes the minigames activity.
+     */
+    public boolean isMinigamer() {
+        return likesActivity(BotActivity.MINIGAMES);
+    }
+
+    /**
+     * Determines whether the bot uses the no-life personality template.
+     *
+     * @return {@code true} if the bot uses the no-life template.
+     */
+    public boolean isNoLife() {
+        return hasPersonalityTemplate(PersonalityTemplateType.NO_LIFE);
+    }
+
+    /**
+     * Determines whether the bot uses the kid personality template.
+     *
+     * @return {@code true} if the bot uses the kid template.
+     */
+    public boolean isKid() {
+        return hasPersonalityTemplate(PersonalityTemplateType.KID);
+    }
+
+    /**
+     * Determines whether the bot uses the hero personality template.
+     *
+     * @return {@code true} if the bot uses the hero template.
+     */
+    public boolean isHero() {
+        return hasPersonalityTemplate(PersonalityTemplateType.HERO);
+    }
+
+    /**
+     * Determines whether the bot uses the scammer personality template.
+     *
+     * @return {@code true} if the bot uses the scammer template.
+     */
+    public boolean isScammer() {
+        return hasPersonalityTemplate(PersonalityTemplateType.SCAMMER);
+    }
+
+    /**
+     * Determines whether the bot uses the jack-of-all-trades personality template.
+     *
+     * @return {@code true} if the bot uses the jack-of-all-trades template.
+     */
+    public boolean isJackOfAllTrades() {
+        return hasPersonalityTemplate(PersonalityTemplateType.JACK_OF_ALL_TRADES);
+    }
+
+    /**
+     * Gets the mutable activity preference map.
+     *
+     * @return The activity weights keyed by activity.
      */
     public Map<BotActivity, Double> getActivities() {
         return activities;
     }
 
     /**
-     * @return The immutable set of skill preferences.
+     * Gets the mutable set of preferred skill ids.
+     *
+     * @return The preferred skill ids.
      */
     public Set<Integer> getSkills() {
         return skills;
     }
 
     /**
-     * Returns an iterator over this bot's current wanted-item definitions.
+     * Gets an unmodifiable iterator over the current wanted-item definitions.
+     * <p>
+     * The iterator is backed by the underlying mutable wanted-item map.
      *
-     * @return An unmodifiable iterator over the wanted items.
+     * @return An unmodifiable iterator over wanted-item definitions.
      */
     public UnmodifiableIterator<WantedItemDefinition> getWantedItems() {
         return Iterators.unmodifiableIterator(wantedItems.values().iterator());
     }
 
     /**
-     * @return The immutable set of gear preferences.
+     * Gets the mutable set of preferred gear sets.
+     *
+     * @return The preferred gear sets.
      */
     public Set<BotGearSet> getGear() {
         return gear;
     }
 
     /**
-     * @return The mutable map of player feeling values by username.
+     * Gets the mutable player-feeling map.
+     *
+     * @return The player feeling values keyed by username.
      */
     public Map<String, Double> getPlayerFeelings() {
         return playerFeelings;
     }
 
 
+    /**
+     * Gets the bot associated with this preference profile.
+     *
+     * @return The associated bot, or {@code null} if none has been assigned.
+     */
     public Bot getBot() {
         return bot;
     }
 
+    /**
+     * Sets the bot associated with this preference profile.
+     *
+     * @param bot The bot to associate with this profile.
+     */
     public void setBot(Bot bot) {
         this.bot = bot;
     }

@@ -8,5 +8,7 @@
   {"closed": 1557, "open": 1560, "side": "LEFT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
   {"closed": 1558, "open": 1561, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
   {"closed": 1596, "open": 1560, "side": "LEFT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
-  {"closed": 1597, "open": 1561, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"}
+  {"closed": 1597, "open": 1561, "side": "RIGHT", "open_sound": "GRATE_OPEN", "close_sound": "GRATE_CLOSE"},
+  {"closed": 11716, "open": 11722, "side": "LEFT"},
+  {"closed": 11721, "open": 11723, "side": "RIGHT"}
 ]

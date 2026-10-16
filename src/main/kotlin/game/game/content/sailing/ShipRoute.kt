@@ -27,5 +27,13 @@ enum class ShipRoute(val place: String, val destination: Position, val journey: 
     BRIMHAVEN_TO_ARDOUGNE(place = "Ardougne",
                           destination = Position(2683, 3268, 1),
                           journey = 8,
-                          ticks = 8)
+                          ticks = 8),
+    PORT_SARIM_TO_ENTRANA(place = "Entrana",
+                          destination = Position(2834, 3331, 1),
+                          journey = 1,
+                          ticks = 14),
+    ENTRANA_TO_PORT_SARIM(place = "Port Sarim",
+                          destination = Position(3048, 3231, 1),
+                          journey = 2,
+                          ticks = 15)
 }

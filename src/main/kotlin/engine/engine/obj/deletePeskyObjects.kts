@@ -48,15 +48,7 @@ on(ServerLaunchEvent::class) {
         Position(3336, 3896),
         Position(2948, 3904),
         Position(2947, 3904),
-
-        // Al-kharid palace
-        Position(3287, 3172),
-        Position(3287, 3171),
-        Position(3292, 3167),
-        Position(3293, 3167),
-        Position(3298, 3172),
-        Position(3298, 3171),
-
+      
         // Varrock range near bank.
         Position(3241, 3406),
         Position(3242, 3412),

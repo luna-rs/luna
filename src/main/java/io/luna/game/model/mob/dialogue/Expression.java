@@ -55,7 +55,32 @@ public enum Expression {
     /**
      * The angry laughing expression.
      */
-    ANGRY_LAUGHING(609);
+    ANGRY_LAUGHING(609),
+
+    /**
+     * The quizzical expressions.
+     */
+    QUIZZICAL(554, 555, 556, 557),
+
+    /**
+     * The happy expressions.
+     */
+    HAPPY(567, 568, 569, 570),
+
+    /**
+     * The confused expressions.
+     */
+    CONFUSED(575, 576, 577, 578),
+
+    /**
+     * The shifty expressions, the same animations as {@link #ANGRY}.
+     */
+    SHIFTY(592, 593, 594, 595),
+
+    /**
+     * The shocked expressions.
+     */
+    SHOCKED(571, 572, 573, 574);
 
     /**
      * The expression identifiers.
