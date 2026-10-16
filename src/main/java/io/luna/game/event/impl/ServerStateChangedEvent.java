@@ -30,6 +30,25 @@ public class ServerStateChangedEvent extends Event {
     }
 
     /**
+     * A specialized event type sent once every {@link ServerLaunchEvent} listener and its asynchronous tasks have finished, so the
+     * world is exactly as players will find it. All code is ran on the game thread. To load blocking resources, please use the
+     * provided {@link #taskPool}. The server will not go online until all asynchronous tasks complete.
+     *
+     * @author Hydrozoa
+     */
+    public static final class ServerReadyEvent extends ServerStateChangedEvent {
+
+        /**
+         * Creates a new {@link ServerReadyEvent}.
+         *
+         * @param taskPool The executor to handle tasks.
+         */
+        public ServerReadyEvent(ExecutorService taskPool) {
+            super(taskPool);
+        }
+    }
+
+    /**
      * A specialized event type sent when the server begins gracefully shutting down. Logic within these intercepted events
      * is executed on the game thread. The provided {@link ExecutorService} can be used for scripts that require
      * asynchronous shutdown logic. The game will not shutdown until the asynchronous tasks finish.
