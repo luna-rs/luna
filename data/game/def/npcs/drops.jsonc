@@ -24781,34 +24781,6 @@
         "table": 1
       },
       {
-        "id": 5509, // Small pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5510, // Medium pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5512, // Large pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5514, // Giant pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
         "id": 7936, // Pure essence
         "quantity": "1",
         "noted": true,

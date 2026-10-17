@@ -385,6 +385,7 @@ enum class Entrance(val id: Int,
     SKAVID_TUNNEL_TO_YANILLE(id = 2823, landing = tile(2585, 3108), message = "You enter the tunnel.",
                              arrival = "So that's how the skavids are getting into Yanille!"),
     OGRE_ENCLAVE_OUT(id = 2813, landing = tile(2540, 3054));
+    KELDAGRIM_CAVE_OUT(id = 5998, landing = tile(2778, 10161));
 
     companion object {
 

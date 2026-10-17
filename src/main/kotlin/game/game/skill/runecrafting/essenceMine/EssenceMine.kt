@@ -80,6 +80,16 @@ object EssenceMine {
     }
 
     /**
+     * Reads [plr]'s saved exit at login. Only attributes read during a session are saved again, so a session that
+     * never uses a portal would otherwise lose it.
+     *
+     * @param plr The player logging in.
+     */
+    fun login(plr: Player) {
+        plr.essenceMineExit
+    }
+
+    /**
      * Returns [plr] through a mine portal to the wizard who sent them.
      *
      * @param plr The player leaving the mine.

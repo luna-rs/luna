@@ -13,6 +13,8 @@ import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.time.Duration.Companion.milliseconds
@@ -67,6 +69,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     private var previousShield: Int? = null
 
     override suspend fun init(resumed: Boolean): Boolean {
+        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
+            // Skillers do not engage in combat.
+            handler.combat.fleeCombat()
+            return true
+        }
         when (initialState) {
             InitialState.ATTACK -> {
                 bot.combat.attack(focus)

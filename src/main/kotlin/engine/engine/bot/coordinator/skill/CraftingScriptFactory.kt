@@ -10,12 +10,17 @@ import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
+import game.bot.scripts.skills.MakePotteryBotScript
+import game.bot.scripts.skills.CraftJewelleryBotScript
+import game.bot.scripts.skills.MakeMoltenGlassBotScript
 import game.bot.scripts.skills.BlowGlassBotScript
+import game.skill.crafting.potteryCrafting.Unfired
 import game.skill.crafting.glassMaking.GlassMaterial
 import game.bot.scripts.skills.CutGemBotScript
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeSoftClayBotScript
-import game.bot.scripts.skills.SpinFlaxBotScript
+import game.bot.scripts.skills.WeaveTextileBotScript
+import game.bot.scripts.skills.SpinTextileBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
 import game.bot.scripts.skills.TanHideBotScript
 import game.skill.crafting.armorCrafting.HideArmor
@@ -23,6 +28,7 @@ import game.skill.crafting.battlestaffCrafting.Battlestaff
 import game.skill.crafting.gemCutting.Gem
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.textileCrafting.Textile
+import game.skill.crafting.textileCrafting.TextileType
 import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils.roll
@@ -41,6 +47,11 @@ import io.luna.util.RandomUtils.roll
  *
  * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
+ * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
+ * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
+ * Owned soft clay and unfired pottery enable all existing shaping/firing recipes in Barbarian Village.
+ * Owned wool, jute, and willow branches also enable existing loom recipes in Falador and Iorwerth camp.
+ * Owned wool, flax, and magic roots enable the three existing spinning-wheel recipes on the established wheel routes.
  *
  * @author lare96
  */
@@ -67,13 +78,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (rand(0.25)) {
             getProductionScript(bot, level, true)?.let { return it }
         }
-        // TODO
-        //  glass making
-        //  jewellery making
-        //  pottery crafting
-        //  textile crafting (wool/silk etc.)
-
-        // TODO pottery making as level 1 alternative when we don't have soft leather
 
         val hides = getUntannedHides(bot)
         val craftable = getActivities(level, { it.level }, HideArmor.ALL)
@@ -100,7 +104,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         }
         if (randBoolean() && level >= Textile.BOWSTRING.level) {
             zones += SubZone.FLAX_SPINNING_MAIN
-            return SpinFlaxBotScript(bot, getDuration(bot))
+            return SpinTextileBotScript(bot, getDuration(bot))
         }
         if (getUntannedHides(bot) >= CollectHidesBotScript.hideTarget(bot)) {
             return TanHideBotScript(bot, getDuration(bot))
@@ -145,7 +149,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @return The basic armour-crafting activity.
      */
     fun getBasicScript(bot: Bot): CraftArmorBotScript {
-        // todo chance of pottery crafting
         return CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot))
     }
 
@@ -172,6 +175,19 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(GlassMaterial.entries.map { BlowGlassBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(CraftJewelleryBotScript.RECIPES.keys.map { CraftJewelleryBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Unfired.entries.flatMap { material ->
+                MakePotteryBotScript.Companion.Stage.entries.map { MakePotteryBotScript(bot, material, it, duration) }
+            }.filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Textile.entries.filter { it.type == TextileType.SPINNING_WHEEL }
+                .map { SpinTextileBotScript(bot, duration, textile = it) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(Textile.entries.filter { it.type == TextileType.LOOM }
+                .map { WeaveTextileBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
+            if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
                     .filter { it.isEligible() || it.canPrepareWater() }.map { it.requiredLevel to it })
