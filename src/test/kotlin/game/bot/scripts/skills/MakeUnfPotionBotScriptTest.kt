@@ -3,7 +3,6 @@ package game.bot.scripts.skills
 import api.bot.script.InventoryProductionFixtures
 import api.bot.zone.SubZone
 import api.predef.*
-import com.google.common.collect.ImmutableSet
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.HerbloreScriptFactory
 import game.bot.scripts.skills.MakeUnfPotionBotScript.Companion.UnfPotionData
@@ -104,8 +103,8 @@ class MakeUnfPotionBotScriptTest {
 
     @Test fun supplyRequestsRaiseTotalTargetsAndPreserveLargerTargetsAndMetadata() = runBlocking {
         val bot = InventoryProductionFixtures.bot()
-        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
-        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAG)
+        val herb = WantedItemDefinition(UnfPotion.GUAM.herb, 100, 500, SKILL_HERBLORE, 50, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAGS)
+        val water = WantedItemDefinition(UnfPotion.VIAL_OF_WATER, 250, 2_000, SKILL_HERBLORE, 75, WantedItemPriority.STANDARD, WantedItemDefinition.DEFAULT_TAGS)
         val preferences = BotPreference(mutableMapOf(), mutableSetOf(),
             mutableMapOf(herb.id() to herb, water.id() to water), mutableSetOf(), mutableMapOf())
         `when`(bot.preferences).thenReturn(preferences)

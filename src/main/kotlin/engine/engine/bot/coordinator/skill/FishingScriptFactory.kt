@@ -24,6 +24,14 @@ import io.luna.game.model.mob.bot.Bot
  */
 object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
 
+    // TODO Add bot zone for KARAMBWANJI.
+
+    /**
+     * The tools bots fish with. The others are used at spots that no bot zone covers.
+     */
+    private val BOT_TOOLS =
+        Tool.entries - setOf(KARAMBWANJI_NET, SLIMY_EEL_FISHING_ROD, CAVE_EEL_FISHING_ROD, LAVA_EEL_FISHING_ROD)
+
     /**
      * A group of fishing zones that support one or more fishing tools.
      *
@@ -70,7 +78,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
          * Less capable bots use Lumbridge River, while better bots use Barbarian Village.
          */
         LURE_AND_BAIT(
-            tools = setOf(FLY_FISHING_ROD, FISHING_ROD),
+            tools = setOf(FLY_FISHING_ROD, PIKE_FISHING_ROD),
             zones = {
                 if (personality.isDumb || !personality.isDextrous) {
                     mutableListOf(SubZone.LUMBRIDGE_RIVER)
@@ -132,7 +140,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        val tool = getBestActivity(bot, level, { it.level }, Tool.entries) ?: SMALL_NET
+        val tool = getBestActivity(bot, level, { it.level }, BOT_TOOLS) ?: SMALL_NET
 
         return FishBotScript(
             bot,
@@ -166,12 +174,10 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         val zones = when (tool) {
             SMALL_NET -> listOf(FishingZone.SMALL_NET_AND_BAIT)
 
-            FISHING_ROD -> listOf(
-                FishingZone.SMALL_NET_AND_BAIT,
-                FishingZone.LURE_AND_BAIT
-            )
+            FISHING_ROD -> listOf(FishingZone.SMALL_NET_AND_BAIT)
 
-            FLY_FISHING_ROD -> listOf(FishingZone.LURE_AND_BAIT)
+            FLY_FISHING_ROD,
+            PIKE_FISHING_ROD -> listOf(FishingZone.LURE_AND_BAIT)
 
             BIG_NET,
             SHARK_HARPOON -> listOf(FishingZone.BIG_NET_AND_HARPOON)
@@ -188,6 +194,11 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             KARAMBWAN_VESSEL -> listOf(
                 FishingZone.SMALL_NET_AND_HARPOON
             ) // TODO Vessel fishing.
+
+            KARAMBWANJI_NET,
+            SLIMY_EEL_FISHING_ROD,
+            CAVE_EEL_FISHING_ROD,
+            LAVA_EEL_FISHING_ROD -> throw IllegalStateException("Bots don't fish with $tool.")
         }
 
         return zones.random().zones(bot)

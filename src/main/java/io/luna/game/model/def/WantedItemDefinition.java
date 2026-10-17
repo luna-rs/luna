@@ -1,3 +1,4 @@
+
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableSet;
@@ -5,61 +6,116 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 
 /**
- * Defines an item that bots are interested in acquiring.
+ * Defines an item that a bot wants to acquire or maintain in its ownership.
+ * <p>
+ * Each definition specifies an ownership target, optional minimum stock, level restrictions, acquisition
+ * priority, and tags describing the item's purpose.
+ * <p>
+ * Temporary requirements use {@code min == -1} and may be removed after their target is met.
+ * Persistent requirements retain a minimum stock value and remain available for replenishment.
  *
  * @param id The unnoted item id.
- * @param min The minimum amount the bot should try to keep. -1 Indicates that the bot should always try to keep some
- * of this item up to {@link #target}.
- * @param target The preferred amount the bot should try to acquire.
- * @param skill The skill associated with this wanted item, or {@code -1} if no skill applies.
- * @param maxLevel The maximum skill level where this item remains wanted, or {@code -1} if there is no limit.
- * @param priority The priority of this wanted item.
- * @param tags The tags denoting this wanted item's purpose.
+ * @param min The minimum stock to maintain, or {@code -1} for a temporary requirement.
+ * @param target The desired total ownership quantity.
+ * @param skill The associated skill id, or {@code -1} if no skill is specified.
+ * @param maxLevel The maximum applicable level, or {@code -1} if unrestricted.
+ * @param priority The acquisition priority of this item.
+ * @param tags The tags describing the item's purpose.
  * @author lare96
  */
 public record WantedItemDefinition(int id, int min, int target, int skill, int maxLevel,
                                    WantedItemPriority priority,
                                    ImmutableSet<WantedItemTag> tags) implements Definition {
 
-    // TODO Dynamic targets based on combat level/total level? A 126 player will want more runes than a level 3 player.
-
     /**
-     * Represents a tag assigned to a wanted item dictating its purpose.
+     * Categorizes wanted items according to their intended purpose.
+     * <p>
+     * Tags allow bot systems to distinguish skilling supplies, combat supplies, equipment,
+     * and miscellaneous items. A wanted item may have multiple tags.
      */
     public enum WantedItemTag {
+
+        /**
+         * Weapons used for combat.
+         */
         WEAPON,
-        EQUIPMENT,
+
+        /**
+         * Equipment worn primarily for appearance or cosmetic purposes.
+         */
+        COSMETIC_EQUIPMENT,
+
+        /**
+         * Equipment used for combat-related purposes.
+         */
+        COMBAT_EQUIPMENT,
+
+        /**
+         * Reusable tools used for skilling or other activities.
+         */
         TOOL,
+
+        /**
+         * Consumable items used for skilling activities.
+         */
         SKILLING_CONSUMABLE,
+
+        /**
+         * Consumable items used for combat activities.
+         */
         COMBAT_CONSUMABLE,
+
+        /**
+         * Items that do not belong to a more specific category.
+         */
         MISCELLANEOUS
     }
 
     /**
-     * Represents how badly the bot wants the item.
+     * Defines the acquisition priority of a wanted item.
+     * <p>
+     * Higher priority levels indicate items that should be considered before lower-priority items.
      */
     public enum WantedItemPriority {
+
+        /**
+         * The highest acquisition priority.
+         */
         URGENT(3),
+
+        /**
+         * A high acquisition priority.
+         */
         HIGH(2),
+
+        /**
+         * The standard acquisition priority.
+         */
         STANDARD(1),
+
+        /**
+         * The lowest acquisition priority.
+         */
         LOW(0);
 
         /**
-         * The priority level.
+         * The numeric priority level.
          */
         private final int level;
 
         /**
-         * Creates a new {@link WantedItemPriority}.
+         * Creates a wanted-item priority with the specified level.
          *
-         * @param level The priority level.
+         * @param level The numeric priority level.
          */
         WantedItemPriority(int level) {
             this.level = level;
         }
 
         /**
-         * @return The priority level.
+         * Returns the numeric priority level.
+         *
+         * @return The priority level, where higher values indicate greater priority.
          */
         public int getLevel() {
             return level;
@@ -72,25 +128,37 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
     public static final MapDefinitionRepository<WantedItemDefinition> DEFAULT = new MapDefinitionRepository<>();
 
     /**
-     * The default tags.
+     * The fallback tags assigned to wanted items without specified tags.
      */
-    public static final ImmutableSet<WantedItemTag> DEFAULT_TAG = ImmutableSet.of(WantedItemTag.MISCELLANEOUS);
+    public static final ImmutableSet<WantedItemTag> DEFAULT_TAGS = ImmutableSet.of(WantedItemTag.MISCELLANEOUS);
 
     /**
-     * The default priority.
+     * The default acquisition priority.
      */
     public static final WantedItemPriority DEFAULT_PRIORITY = WantedItemPriority.STANDARD;
 
     /**
-     * Creates an always-wanted {@link WantedItemDefinition} with {@code tags}.
+     * Creates a temporary wanted-item definition with a high acquisition priority.
+     * <p>
+     * Uses the tags from [the default definition] if one exists, otherwise {@link #DEFAULT_TAGS}.
+     * The minimum, skill, and maximum level are set to {@code -1}.
      *
      * @param id The unnoted item id.
-     * @param target The preferred amount the bot should try to acquire.
+     * @param target The desired total ownership quantity.
      */
     public WantedItemDefinition(int id, int target) {
-        this(id, -1, target, -1, -1, WantedItemPriority.HIGH, DEFAULT.get(id).map(it -> it.tags).orElse(DEFAULT_TAG));
+        this(id, -1, target, -1, -1, WantedItemPriority.HIGH, DEFAULT.get(id).map(it -> it.tags).orElse(DEFAULT_TAGS));
     }
 
+    /**
+     * Compares this wanted-item definition with another object using only the item id.
+     * <p>
+     * Definitions with the same id are considered equal regardless of their quantities,
+     * restrictions, priority, or tags.
+     *
+     * @param o The object to compare against.
+     * @return {@code true} if the object is a wanted-item definition with the same id.
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof WantedItemDefinition that)) {
@@ -99,6 +167,11 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
         return id == that.id;
     }
 
+    /**
+     * Computes the hash code using only the item id.
+     *
+     * @return The hash code of the item id.
+     */
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
@@ -106,9 +179,11 @@ public record WantedItemDefinition(int id, int min, int target, int skill, int m
 
     /**
      * Creates a copy of this wanted-item definition with a different item id.
+     * <p>
+     * Preserves the minimum, target, skill restrictions, priority, and tags.
      *
-     * @param newId The item id for the copied definition.
-     * @return A wanted-item definition with the new item id and the same requirement values.
+     * @param newId The item id assigned to the copied definition.
+     * @return A new wanted-item definition with the specified id and existing metadata.
      */
     public WantedItemDefinition copy(int newId) {
         return new WantedItemDefinition(newId, min, target, skill, maxLevel, priority, tags);

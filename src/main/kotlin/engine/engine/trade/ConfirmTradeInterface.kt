@@ -49,7 +49,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
     /**
      * If the trade has been completed.
      */
-    private var completed = false
+    var completed = false
+        private set
 
 
     override fun onOpen(plr: Player) {

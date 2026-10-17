@@ -485,7 +485,9 @@ enum class SubZone(val inside: Position,
      * - 2 bait fishing spots
      */
     LUMBRIDGE_RIVER(inside = Position(3249, 3228),
-                    area = SimpleBoxArea.of(3234, 3227, 3261, 3251),
+                    // Wide enough that the target search, a square around the centre, reaches the fishing spot
+                    // tiles at 3238,3254 and 3238,3255 without overlapping the cow pen.
+                    area = SimpleBoxArea.of(3234, 3227, 3265, 3251),
                     parent =
                     { LUMBRIDGE }),
 

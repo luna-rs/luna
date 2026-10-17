@@ -2,183 +2,96 @@ package engine.bot.coordinator
 
 import api.bot.zone.SubZone
 import api.predef.*
-import api.predef.ext.*
 import com.google.common.collect.HashMultimap
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.NpcCombatLoadout
 import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
-import io.luna.util.RandomUtils.roll
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Selects combat sessions for training or profit according to the bot's combat level and personality.
+ * Selects supply-ready combat disciplines and level-appropriate, explicitly named NPC camps.
+ * Candidate camps share the existing zone travel fallback; boss preparation is handled separately.
  *
- * Training and profit modes select NPC combat using their existing zone and session-duration rules.
- * Supply preparation and crystal-key activities are selected by [GeneralActivityCoordinator].
- *
- * @property training Whether to prioritize combat training instead of profit activities.
+ * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
  */
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
+    companion object {
+        /** A configured spawn group and the minimum combat readiness needed for deliberate attacks. */
+        internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>, val profit: Boolean = false)
 
-    // TODO Add and test behaviour for retrieving items after dying. Very relevant to combat.
-    // TODO Support for magic and ranged, along with safe-spotting.
-    // TODO When in profit mode, do not auto-bury bones after looting, bank them for profit.
-    // TODO Profit combat includes bosses along with dangerous locations and monsters. As well as monsters with notable
-    //  drops (KBD, chromatic dragons, lava dragons, lesser and greater demons, slayer tasks, hill giants, chaos druids).
-    // TODO In training mode, whenever 2 levels or more are gained, switch the current combat skill we're training.
-    // TODO Profit vs training.
-    // TODO if training in wild choose less good gear
-    // TODO Make cleaner
+        /** Existing subzones and exact names verified against the configured spawn list. */
+        internal val camps = listOf(
+            Camp(SubZone.LUMBRIDGE_CHICKEN_COOP, 3, setOf("Chicken")),
+            Camp(SubZone.LUMBRIDGE_COW_PEN, 3, setOf("Cow", "Cow calf")),
+            Camp(SubZone.GOBLIN_VILLAGE, 3, setOf("Goblin")),
+            Camp(SubZone.LUMBRIDGE_SWAMP, 3, setOf("Giant rat")),
+            Camp(SubZone.LUMBRIDGE_RIVER, 3, setOf("Goblin", "Giant spider")),
+            Camp(SubZone.ICE_MOUNTAIN, 10, setOf("Icefiend", "Dwarf")),
+            Camp(SubZone.EDGEVILLE_MONASTERY, 10, setOf("Monk")),
+            Camp(SubZone.ROCK_CRABS, 10, setOf("Rock Crab")),
+            Camp(SubZone.HAM_CULT, 15, setOf("H.A.M. Guard")),
+            Camp(SubZone.AL_KHARID_PALACE, 15, setOf("Al-Kharid warrior")),
+            Camp(SubZone.BARBARIAN_VILLAGE, 20, setOf("Barbarian")),
+            Camp(SubZone.CHAOS_DRUID_TOWER, 25, setOf("Chaos druid"), true),
+            Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
+            Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
+            Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak")),
+            Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
+            Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
+            Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
+            Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true)
+        )
+        // TODO Add Fire Giant and Blue Dragon camps when lare96 supplies subzone data.
+        // Camp(SubZone.FIRE_GIANT_CAMP, 65, setOf("Fire giant"), true)
+        // Camp(SubZone.BLUE_DRAGON_CAMP, 75, setOf("Blue dragon"), true)
+        // Bosses such as KBD need protection/supply rules before joining generic NPC dispatch.
+
+        /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
+        internal fun combatReadiness(bot: Bot, purpose: BotGearPurpose): Int {
+            val offensive = when (purpose) {
+                BotGearPurpose.RANGED -> bot.ranged.level
+                BotGearPurpose.MAGIC -> bot.magic.level
+                else -> minOf(bot.attack.level, bot.strength.level)
+            }
+            return minOf(bot.combatLevel, offensive * 2 + 3)
+        }
+
+        /** Restricts camps by offensive readiness, profit intent and dragon-shield compatibility. */
+        internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
+                                   hasDragonShield: Boolean): List<Camp> {
+            val eligible = camps.filter { it.minimum <= level &&
+                (it.zone != SubZone.GREEN_DRAGONS || (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
+            val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
+            // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
+            val threshold = (preferred.maxOfOrNull { it.minimum } ?: 3) - 25
+            return preferred.filter { it.minimum >= threshold || (training && it.zone == SubZone.ROCK_CRABS) }
+        }
+    }
 
     override fun accept(bot: Bot) {
-        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
-            // Skillers remain level 3 and do not train combat.
-            if(training) {
-                BotActivity.TRAINING_SKILLS.coordinator.accept(bot)
-            } else {
-                BotActivity.PROFIT_SKILLS.coordinator.accept(bot)
-            }
+        if (bot.personality.type == PersonalityTemplateType.SKILLER) {
+            (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
             return
         }
-        val duration =
-            if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
-                bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)
-            )
-                rand(100, 350).minutes else rand(45, 120).minutes
+        val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
+            .mapNotNull { purpose -> NpcCombatLoadout.find(bot, purpose)?.let { purpose to it } }
+        val (purpose, loadout) = ready.randomOrNull() ?: return
+        val level = combatReadiness(bot, purpose)
+        val selected = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
+            loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true).shuffled().take(4)
+        if (selected.isEmpty()) return
         val names = HashMultimap.create<SubZone, String>()
-        val zones = ArrayList<SubZone>()
-        bot.log("Selecting combat zones for bot combat level ${bot.combatLevel}.")
-        if (bot.combatLevel < 10) {
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-            }
-            if (randBoolean()) {
-                zones += SubZone.LUMBRIDGE_SWAMP
-                zones += SubZone.LUMBRIDGE_RIVER
-                zones += SubZone.GOBLIN_VILLAGE
-                zones += SubZone.LUMBRIDGE_COW_PEN
-                zones += SubZone.LUMBRIDGE_CHICKEN_COOP
-            } else {
-                zones += SubZone.LUMBRIDGE_SWAMP
-                zones += SubZone.LUMBRIDGE_RIVER
-                zones += SubZone.LUMBRIDGE_COW_PEN
-            }
-        } else if (bot.combatLevel < 20) {
-            // TODO chaos druids
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-                zones += SubZone.ICE_MOUNTAIN
-                zones += SubZone.HAM_CULT
-                zones += SubZone.VARROCK_DARK_WIZARDS
-                names.put(SubZone.ICE_MOUNTAIN, "Dwarf")
-            } else {
-                zones += SubZone.CHAOS_DRUID_TOWER
-                zones += SubZone.ROCK_CRABS
-                zones += SubZone.AL_KHARID_PALACE
-                zones += SubZone.EDGEVILLE_MONASTERY
-                zones += SubZone.BARBARIAN_VILLAGE
-                zones += SubZone.ICE_MOUNTAIN
-                names.put(SubZone.ICE_MOUNTAIN, "Icefiend")
-            }
-        } else if (bot.combatLevel < 30) {
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-                zones += SubZone.ICE_MOUNTAIN
-                zones += SubZone.HAM_CULT
-                zones += SubZone.DRAYNOR_SEWERS
-                names.put(SubZone.ICE_MOUNTAIN, "Dwarf")
-            } else {
-                zones += SubZone.HAM_CULT
-                zones += SubZone.AL_KHARID_MINE
-                zones += SubZone.ICE_MOUNTAIN
-                zones += SubZone.DRAYNOR_SEWERS
-                zones += SubZone.VARROCK_DARK_WIZARDS
-                names.put(SubZone.ICE_MOUNTAIN, "Icefiend")
-            }
-        } else if (bot.combatLevel < 40) {
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-                zones += SubZone.HAM_CULT
-            }
-            zones += SubZone.DRAYNOR_SEWERS
-            zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
-            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
-            if(bot.personality.isDumb) {
-                zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
-            }
-        } else if (bot.combatLevel < 50) {
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-                zones += SubZone.VARROCK_SEWERS
-            }
-            zones += SubZone.WHITE_KNIGHTS_CASTLE
-            zones += SubZone.DRAYNOR_SEWERS
-            zones += SubZone.HAM_CULT
-            zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
-            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
-            if(bot.personality.isDumb) {
-                zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
-            }
-        } else if (bot.combatLevel < 60) {
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.ROCK_CRABS
-            }
-            zones += SubZone.VARROCK_SEWERS
-            zones += SubZone.WHITE_KNIGHTS_CASTLE
-            zones += SubZone.DRAYNOR_SEWERS
-            zones += SubZone.HAM_CULT
-            zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
-            if(bot.personality.isDumb) {
-              zones+= SubZone.LVL_20_WILDERNESS_CHAOS_TEMPLE
-            }
-        } else if (bot.combatLevel < 80) {
-            // TODO ice giant, ice warrior, earth warrior, jogre, cyclops,
-            // zamorak wizard, infernal mage, mountain troll
-            if (bot.personality.isIntelligent || roll(1 of 4)) {
-                zones += SubZone.KARAMJA_DUNGEON
-            }
-            zones += SubZone.ROCK_CRABS
-            zones += SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS
-            zones += SubZone.VARROCK_SEWERS
-            zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
-
-            if (bot.combatLevel > 70 && !training) {
-                zones += SubZone.GREEN_DRAGONS
-            }
-        } else if (bot.combatLevel < 100) {
-            if (!training) {
-                zones += SubZone.GREEN_DRAGONS
-                zones += SubZone.KBD_LAIR
-
-            }
-            zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
-
-            // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
-            //Dust devil, Aberrant specter, Greater demon
-            zones += SubZone.KARAMJA_DUNGEON
-
-            names.put(SubZone.KARAMJA_DUNGEON, "Lesser demon")
-        } else {
-            if (!training) {
-                zones += SubZone.GREEN_DRAGONS
-                zones += SubZone.KBD_LAIR
-            }
-            zones += SubZone.KARAMJA_DUNGEON
-
-            names.put(SubZone.KARAMJA_DUNGEON, "Lesser demon")
-
-            // TODO Fire giant, Turoth, Lesser demon, Greater demon, Kalphite Soldier
-            // Kurask, Blue dragon, Saradomin/Zamorak Wizards
-            // Gargoyle, Nechryael, Abyssal demon, Ice troll, Blue dragon
-
-        }
-        if(zones.isEmpty()) {
-            zones += SubZone.ROCK_CRABS
-        }
-        bot.scriptStack.push(NpcCombatScript(bot, duration, zones, names))
+        selected.forEach { names.putAll(it.zone, it.names) }
+        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
+            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        bot.scriptStack.push(NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
+            names, purpose, loadout.spell?.spell))
     }
 }

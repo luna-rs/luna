@@ -1,9 +1,10 @@
-package game.bot.scripts
+package game.bot.scripts.trading
 
 import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import api.predef.ext.get
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.item.Item

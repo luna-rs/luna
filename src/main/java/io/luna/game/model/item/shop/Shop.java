@@ -341,7 +341,7 @@ public final class Shop {
             return false;
         }
 
-        int totalValue = computeSellValue(sellItem.getId(), sellAmount);
+        int totalValue = Math.max(1, computeSellValue(sellItem.getId(), sellAmount));
         Item currencyItem = new Item(currency.getId(), totalValue);
         if (!inventory.hasSpaceFor(currencyItem)) {
             inventory.onCapacityExceeded();
@@ -657,12 +657,10 @@ public final class Shop {
 
     /**
      * Retrieves the set of players currently viewing this shop.
-     * <p>
-     * Package-private to avoid exposing mutable internal state to outside packages.
      *
      * @return The viewing set.
      */
-    Set<Player> getViewing() {
+    public Set<Player> getViewing() {
         return viewing;
     }
 

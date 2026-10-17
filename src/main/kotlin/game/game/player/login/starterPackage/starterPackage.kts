@@ -54,7 +54,7 @@ val bankStarter = listOf(
     item("Chisel", 5),
     item("Knife", 5),
     item("Needle", 5),
-    item("Thread", 2_000_000_000),
+    item("Thread", 10_000),
     item("Iron pickaxe", 5),
     item("Iron axe", 5),
     item("Hammer", 5),

@@ -239,6 +239,7 @@ abstract class InventoryBotScript(
     abstract fun withdraw(): List<Item>
 
     /** Supplies for this banking cycle; fixed-recipe scripts retain the initial list by default. */
+    // TODO rename to setWithdraw or something else
     protected open fun bankWithdraw(): List<Item> = withdraw
 
     /**

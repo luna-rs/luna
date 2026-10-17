@@ -10,50 +10,48 @@ import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Handles the confirmation stage of a bot trade.
+ * Handles the final confirmation stage of a bot trade.
  *
- * This stage represents the second trade screen, where the bot reviews and confirms the final trade contents.
+ * Sends the confirmation click and waits for the confirmation interface to close. A trade is
+ * considered successful only if the original interface reports completion.
  *
  * @param bot The bot performing the trade.
  * @param other The player trading with the bot.
- * @param lastStage The stage that preceded this one.
+ * @property lastStage The preceding trade offer stage.
  * @author lare96
  */
 class BotTradeConfirmStage(
     bot: Bot,
     other: Player,
-    lastStage: BotTradeStage?
+    val lastStage: BotTradeOfferStage
 ) : BotTradeStage(bot, other) {
 
     /**
-     * Whether the bot has confirmed the trade.
+     * Whether the bot has sent its confirmation click.
      */
     var confirmed = false
         private set
 
     /**
-     * Confirms the trade and waits for it to finish.
+     * Confirms the trade and waits for the confirmation interface to close.
      *
-     * The confirmation click is only sent while [ConfirmTradeInterface] is open. After confirming, this method waits
-     * up to [CONFIRM_WAIT_SECONDS] for the trade interface to close or for the bot to no longer be trading with
-     * another player.
+     * Requires an active [ConfirmTradeInterface] before sending the confirmation click. Waits up
+     * to [CONFIRM_WAIT_SECONDS] for the original interface to be removed or replaced, then checks
+     * whether the trade completed successfully.
      *
-     * If the confirmation interface is not open, the trade is declined immediately.
-     *
-     * @return `true` if the trade finished before the timeout expired, otherwise `false`.
+     * @return `true` if the interface closes within the timeout and reports a completed trade.
      */
     suspend fun confirmAndAwait(): Boolean {
-        if (ConfirmTradeInterface::class in bot.overlays) {
-            bot.output.clickButton(3546)
-            confirmed = true
+        val confirm = bot.overlays[ConfirmTradeInterface::class]
+            ?: return false
+        if (confirm.offer.other !== other) return false
 
-            return waitFor(CONFIRM_WAIT_SECONDS.seconds) {
-                !bot.overlays.hasWindow() || bot.tradingWith == -1
-            }
+        bot.output.clickButton(3546)
+        confirmed = true
+
+        val closed = waitFor(CONFIRM_WAIT_SECONDS.seconds) {
+            bot.overlays[ConfirmTradeInterface::class] !== confirm
         }
-
-        bot.log("Confirm trade interface is not open.")
-        decline()
-        return false
+        return closed && confirm.completed
     }
 }

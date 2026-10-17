@@ -1,5 +1,11 @@
 package api.bot.action.trading
 
+import api.predef.*
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivity
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
+import kotlin.math.floor
+
 /**
  * Describes how aggressively a bot is willing to price trade offers.
  *
@@ -10,7 +16,7 @@ package api.bot.action.trading
  * For example, a [buy] value of `0.25` means the bot may offer 25% above guide price, while a [sell] value of `0.15`
  * means the bot may sell for 15% below guide price.
  */
-enum class TradePrice(
+enum class BotTradePrice(
 
     /**
      * The percentage range this bot may offer above guide price when buying.
@@ -75,11 +81,49 @@ enum class TradePrice(
         sell = 0.0..0.025
     );
 
-    fun getModifier(purpose: BotTradePurpose): ClosedFloatingPointRange<Double> {
-        return when(purpose) {
-            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> buy
-            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> sell
-            else -> throw IllegalStateException("Invalid purpose.")
+    companion object {
+
+        /**
+         * Chooses a pricing strategy according to merchanting preferences, personality, and emotions.
+         *
+         * Conditions are checked in order: loved merchanting takes precedence, then liked activity
+         * or intelligence, disliked activity or low intelligence, then greed.
+         */
+        fun computePriceStrategy(bot: Bot): BotTradePrice {
+            return when {
+                bot.preferences.lovesActivity(BotActivity.MERCHANTING) -> BotTradePrice.LOW
+                bot.preferences.likesActivity(BotActivity.MERCHANTING) ||
+                        bot.personality.isIntelligent -> BotTradePrice.AVERAGE
+
+                bot.preferences.hatesActivity(BotActivity.MERCHANTING) || bot.personality.isDumb -> BotTradePrice.DESPERATE
+                bot.emotions.isFeeling(EmotionType.GREEDY) -> BotTradePrice.DESPERATE
+                else -> BotTradePrice.HIGH
+            }
         }
     }
+
+    /**
+     * Calculates a selling price by applying a random discount to the guide price.
+     *
+     * The discount is selected from [sell] and rounded down to the nearest whole coin.
+     *
+     * @param value The original guide price, in coins.
+     * @return The adjusted selling price, in coins.
+     */
+    fun applySell(value: Long): Long {
+        return value - floor(value * rand(sell)).toLong()
+    }
+
+    /**
+     * Calculates a buying price by applying a random premium to the guide price.
+     *
+     * The premium is selected from [buy] and rounded down to the nearest whole coin.
+     *
+     * @param value The original guide price, in coins.
+     * @return The adjusted buying price, in coins.
+     */
+    fun applyBuy(value: Long): Long {
+        return value + floor(value * rand(buy)).toLong()
+    }
+
 }
