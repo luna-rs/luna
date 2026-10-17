@@ -10,7 +10,10 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
+import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
@@ -51,29 +54,34 @@ class FishBotScript(
     companion object {
 
         /**
+         * How many times a bot clicks its fishing spot without starting to fish before it looks for another spot.
+         */
+        private const val SPOT_CLICK_ATTEMPTS = 3
+
+        /**
          * Maps each fishing tool to the NPC fishing spots that use it as their first-click action.
-         */ // todo finish, go up from 334 (start at 335)
-        val FIRST_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> =
-            ImmutableSetMultimap.builder<Tool, Int>()
-                .putAll(Tool.FISHING_ROD, 233, 234, 235, 236)
-                .putAll(Tool.FLY_FISHING_ROD, 309, 310, 311, 314, 315, 317, 318, 328, 329, 331)
-                .putAll(Tool.LOBSTER_POT, 312, 321, 324, 333)
-                .putAll(Tool.BIG_NET, 313, 322, 334)
-                .putAll(Tool.SMALL_NET, 316, 319, 320, 330, 327, 323, 325, 326, 332)
-                .putAll(Tool.MONKFISH_NET, 1174)
-                .build()
+         */
+        val FIRST_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> = buildSpots { it.firstOption }
 
         /**
          * Maps each fishing tool to the NPC fishing spots that use it as their second-click action.
          */
-        val SECOND_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> =
-            ImmutableSetMultimap.builder<Tool, Int>()
-                .putAll(
-                    Tool.FISHING_ROD, 309, 310, 311, 314, 315, 316, 331,
-                    317, 318, 319, 320, 330, 327, 323, 325, 326, 328, 329, 332, )
-                .putAll(Tool.HARPOON, 312, 321, 32, 324, 333)
-                .putAll(Tool.SHARK_HARPOON, 313, 322, 334)
-                .build()
+        val SECOND_CLICK_SPOTS: ImmutableSetMultimap<Tool, Int> = buildSpots { it.secondOption }
+
+        /**
+         * Maps each tool returned by [option] to the NPC fishing spots that use it. Bots don't fish in Miscellania,
+         * where the catch goes to Fisherman Frodi.
+         */
+        private fun buildSpots(option: (FishingSpot) -> Tool?): ImmutableSetMultimap<Tool, Int> {
+            val spots = ImmutableSetMultimap.builder<Tool, Int>()
+            for (spot in FishingSpot.entries) {
+                val tool = option(spot)
+                if (tool != null && spot != FishingSpot.MISCELLANIA) {
+                    spots.putAll(tool, spot.npcs)
+                }
+            }
+            return spots.build()
+        }
 
         /**
          * Serializable data for restoring a Fishing script.
@@ -122,6 +130,16 @@ class FishBotScript(
 
         ids
     }
+
+    /**
+     * The fishing spot that [spotClicks] counts clicks for.
+     */
+    private var clickedSpot: Npc? = null
+
+    /**
+     * How many times in a row the bot has clicked [clickedSpot] without starting to fish.
+     */
+    private var spotClicks = 0
 
     override fun requirements(): Boolean {
         return fishingSpotIds.value.isNotEmpty()
@@ -174,6 +192,22 @@ class FishBotScript(
 
     override fun levelRequired(): Int {
         return selectedTool.level
+    }
+
+    override suspend fun refocus(): Boolean {
+        val spot = focus
+        if (spot !== clickedSpot || bot.actions.size(ActionType.WEAK) > 0) {
+            clickedSpot = spot
+            spotClicks = 0
+        } else if (spot?.state == EntityState.ACTIVE && ++spotClicks > SPOT_CLICK_ATTEMPTS) {
+            // TODO Remove once the web walker (#617) handles navigation. Walking to an NPC only tries the side of it
+            //  nearest the bot, which is often water once a fishing spot has moved, so the bot would keep clicking a
+            //  spot it can't reach until the spot moved again. Drop it and search for another spot instead.
+            bot.log("Couldn't start fishing at ${spot.position}, finding another spot.")
+            spotClicks = 0
+            return true
+        }
+        return super.refocus()
     }
 
     override fun snapshot(): BotScriptData {
