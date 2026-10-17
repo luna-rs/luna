@@ -380,7 +380,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
             bot.log("Trying candidate zone. zone=$newZone, remainingCandidates=${zones.size}")
 
-            if (bot.subZone == newZone) {
+            if (newZone in bot.subZones) {
                 val lastZone = activeZone
                 activeZone = newZone
                 onNewActiveZone(lastZone)

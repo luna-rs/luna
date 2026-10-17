@@ -3,7 +3,9 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
-import api.bot.script.BotScriptData
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
+import api.bot.script.ownsProductionSupplies
+import api.bot.script.productionBatch
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
@@ -16,10 +18,13 @@ import engine.bot.gear.BotGearLocator
 import game.bot.scripts.HarvestBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.skill.crafting.textileCrafting.Textile
+import game.skill.crafting.textileCrafting.TextileType
+import game.skill.crafting.textileCrafting.MakeTextileActionItem
+import com.google.gson.JsonObject
+import kotlinx.coroutines.withTimeoutOrNull
 import io.luna.game.action.ActionType
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
-import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
@@ -30,23 +35,60 @@ import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Spins flax into bow strings at a spinning wheel.
+ * Spins wool, flax, or magic roots using the existing player textile recipes and spinning-wheel dialogue.
  *
- * This script keeps the bot supplied with flax, travels to a flax-spinning zone, uses flax on a nearby spinning wheel,
- * and selects the first make-item dialogue option to process a full inventory. Clever bots in Seers' Village spin at the
- * wheel upstairs in the house south of the bank, and every other bot spins in Varrock.
+ * Owned inputs are withdrawn in partial or full batches and converted by [MakeTextileActionItem]. Current
+ * Crafting level is checked before each interaction. [InventoryBotScript] supplies verified unnoted banking,
+ * safety checks, progress detection, and persistent retry budgets. Missing wool or roots request total stock
+ * targets of 1,000; missing flax retains the existing flax-harvesting prerequisite.
  *
- * @param bot The bot running this script.
- * @param duration How long this script should run before completing normally.
- * @param zones The candidate zones containing usable spinning wheels.
+ * Existing Varrock and Seers' Village wheels remain available. Seers sessions climb before interacting and
+ * descend before banking or finishing. Harvesting can still use [spinAtSeers] to process flax between harvests.
+ * Saved sessions retain their recipe, duration, zones, and budgets; legacy flax snapshots restore as bowstrings.
+ *
+ * @param bot The bot spinning textiles.
+ * @param duration Session duration managed by the inherited zone lifecycle.
+ * @param zones Candidate spinning-wheel zones.
+ * @param textile An existing spinning-wheel recipe; loom recipes are not supported by this script.
  * @author lare96
  * @author TheLining
  */
-class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone> = mutableListOf(spinningZone(bot))) :
-    InventoryBotScript(bot, duration, zones) {
+class SpinTextileBotScript(
+    bot: Bot,
+    duration: Duration,
+    zones: MutableList<SubZone> = mutableListOf(spinningZone(bot)),
+    val textile: Textile = Textile.BOWSTRING
+) : InventoryBotScript(bot, duration, zones) {
+    init {
+        require(textile.type == TextileType.SPINNING_WHEEL) { "A spinning-wheel recipe is required." }
+    }
+
+    override val verifiedProductionWithdrawals = true
+
     companion object {
+
+        /**
+         * Recipe and common inventory lifecycle state for a saved spinning session.
+         *
+         * @author lare96
+         */
+        class TextileData : InventoryScriptData() {
+            /** The source recipe; snapshots without this field retain legacy bowstring behavior. */
+            var textile = Textile.BOWSTRING
+
+            override fun load(data: JsonObject) {
+                super.load(data)
+                textile = data.get("textile")?.asString?.let(Textile::valueOf) ?: Textile.BOWSTRING
+            }
+
+            override fun save(data: JsonObject) {
+                super.save(data)
+                data.addProperty("textile", textile.name)
+            }
+        }
 
         /**
          * The item id for flax.
@@ -54,12 +96,9 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone
         const val FLAX = 1779
 
         /**
-         * The object ids for every loaded object definition named "Spinning wheel".
+         * The spinning-wheel object IDs supported by the player textile handler.
          */
-        val SPINNING_WHEELS = GameObjectDefinition.ALL
-            .filter { it.name == "Spinning wheel" }
-            .map { it.id() }
-            .toSet()
+        val SPINNING_WHEELS = TextileType.SPINNING_WHEEL.objectIds
 
         /**
          * The spinning wheel upstairs in the house south of the Seers' Village bank.
@@ -90,23 +129,24 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone
             else SubZone.FLAX_SPINNING_MAIN
 
         /**
-         * Uses flax on [wheel] and selects the first make-item dialogue option to spin the whole inventory.
+         * Uses the recipe input on [wheel] and selects its single make-item option for the carried batch.
          *
          * @return `true` if the make-item interface opened and an amount was entered.
          */
-        private suspend fun spin(bot: Bot, wheel: GameObject): Boolean {
-            if (!bot.actionHandler.inventory.useItem(FLAX).onObject(wheel)) {
+        private suspend fun spin(bot: Bot, wheel: GameObject, textile: Textile = Textile.BOWSTRING): Boolean {
+            if (!bot.actionHandler.inventory.useItem(textile.rawItem.id).onObject(wheel)) {
                 bot.log("Could not interact with spinning wheel. Trying again next cycle.")
                 return false
             }
             bot.log("Waiting for make item interface to open.")
-            if (!waitFor { MakeItemDialogue::class in bot.overlays }) {
+            if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) {
                 bot.log("Make item interface was not opened. Trying again next cycle.")
                 return false
             }
-            bot.log("Clicking flax make item option. make_item_open?=${MakeItemDialogue::class in bot.overlays}.")
-            bot.actionHandler.widgets.clickMakeItem(0, Int.MAX_VALUE)
-            bot.naturalDecisionDelay()
+            bot.log("Clicking textile make item option. make_item_open?=${MakeItemDialogue::class in bot.overlays}.")
+            val amount = bot.inventory.computeAmountForId(textile.rawItem.id) / textile.rawItem.amount
+            if (amount < 1) return false
+            bot.actionHandler.widgets.clickMakeItem(0, amount)
             return true
         }
 
@@ -127,6 +167,7 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone
             while (FLAX in bot.inventory && failures < 3) {
                 val flax = bot.inventory.computeAmountForId(FLAX)
                 if (spin(bot, wheel)) {
+                    bot.naturalDecisionDelay()
                     waitFor(1.minutes) { bot.actions.size(ActionType.WEAK) == 0 }
                     bot.naturalMicroDelay()
                 }
@@ -181,90 +222,86 @@ class SpinFlaxBotScript(bot: Bot, duration: Duration, zones: MutableList<SubZone
         }
     }
 
-    /**
-     * Recreates a flax spinning bot script from saved script data.
-     *
-     * @param bot The bot that owns this script.
-     * @param data The previously saved script data.
-     */
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
+    /** Restores recipe-aware data or an older flax snapshot, retaining any saved retry counters. */
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
+        (data as? TextileData)?.textile ?: Textile.BOWSTRING) {
+        if (data is InventoryScriptData) restoreInventoryState(data)
+    }
 
-    /**
-     * The cached spinning wheel object used by this script.
-     *
-     * This avoids scanning the zone every cycle once a usable spinning wheel has been found.
-     */
-    private var spinningWheelObj: GameObject? = null
+    /** Permanent Crafting level required for selection and initialization. */
+    val requiredLevel = textile.level
+    /** Non-stackable input consumed by one player action. */
+    private val materials = listOf(textile.rawItem)
+
+    /** Checks permanent level and one complete owned recipe across inventory and bank. */
+    fun isEligible(): Boolean = bot.crafting.staticLevel >= requiredLevel && bot.ownsProductionSupplies(materials)
+
+    /** Returns up to twenty-eight inputs from bank stock, including a partially stocked bank. */
+    fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
     override suspend fun equipment(): BotGearLocator? {
-        // onInit is final, and this is the only hook before the first bank trip.
-        leaveSeersWheel(bot)
+        withTimeoutOrNull(15_000) { leaveSeersWheel(bot) }
         return super.equipment()
     }
 
-    override fun onPaused() {
-        forceBanking = false
-    }
-
     override suspend fun onInventoryBankRequested(): Boolean {
-        return FLAX !in bot.inventory
-    }
-
-    override suspend fun onExecuteInZone(): Boolean {
-        if (FLAX !in bot.inventory) {
-            bot.log("No flax left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
+        if (!requestProductionBank(bot.inventory.containsAll(materials))) return false
+        if (bot.z == 1 && bot in SEERS_HOUSE) {
+            return withTimeoutOrNull(15_000) { climb(bot, 0) } == true
         }
-
-        val zone = activeZone!!
-        if (zone == SubZone.SEERS_VILLAGE_MAIN) {
-            return spinAtSeers(bot)
-        }
-        if (spinningWheelObj == null) {
-            spinningWheelObj = world.locator
-                .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in SPINNING_WHEELS }
-                .firstOrNull()
-        }
-        bot.log("Attempting to interact with spinning wheel.")
-        val spinningWheel = spinningWheelObj
-        if (spinningWheel == null) {
-            bot.log("No spinning wheel object found in zone area.")
-            spinningWheelObj = null
-            return false
-        }
-        spin(bot, spinningWheel)
         return true
     }
 
-    override fun withdraw(): List<Item> {
-        if (!handler.has(Item(FLAX, 28))) {
-            bot.log("Don't have flax, queuing flax picking script.")
-            stop()
-            val flaxScript =
-                HarvestBotScript(bot, Harvestable.FLAX, duration, mutableListOf(SubZone.SOUTH_SEERS_VILLAGE_FLAX))
-            bot.scriptStack.push(flaxScript)
-            return listOf()
-        }
-        if (bot.crafting.staticLevel < Textile.BOWSTRING.level) {
-            bot.log("Not high enough level, queuing basic crafting script.")
-            bot.scriptStack.push(CraftingScriptFactory.getBasicScript(bot))
-            stop()
-            return listOf()
-        }
-        return listOf(Item(FLAX, 28))
+    override suspend fun onExecuteInZone(): Boolean {
+        if (!productionReady(bot.inventory.containsAll(materials), bot.crafting.level >= requiredLevel)) return true
+        attemptProduction(textile.rawItem.id, outputId = textile.processedItem.id) { startProduction() }
+        return true
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = ZonedBotScriptData()
-        data.duration = duration
-        data.zones = zones
-        return data
+    /** Resolves a live wheel and opens the recipe's single-option player dialogue. */
+    private suspend fun startProduction(): Boolean {
+        val zone = activeZone ?: return false
+        val wheel = if (zone == SubZone.SEERS_VILLAGE_MAIN) {
+            world.locator.findObjectsOnTile(SEERS_WHEEL) { it.id in SPINNING_WHEELS }.firstOrNull()
+        } else {
+            world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {
+                it.position in zone.area && it.id in SPINNING_WHEELS
+            }.firstOrNull()
+        } ?: return false
+        if (zone == SubZone.SEERS_VILLAGE_MAIN && !climb(bot, 1)) return false
+        return spin(bot, wheel, textile)
+    }
+
+    override fun withdraw(): List<Item> {
+        if (textile == Textile.BOWSTRING && bot.crafting.staticLevel < requiredLevel) {
+            bot.scriptStack.push(CraftingScriptFactory.getBasicScript(bot))
+        }
+        return productionWithdraw(materials, levelEligible = bot.crafting.staticLevel >= requiredLevel,
+            prepareMissing = {
+                if (textile != Textile.BOWSTRING) false else {
+                    stop()
+                    bot.scriptStack.push(HarvestBotScript(bot, Harvestable.FLAX, duration,
+                        mutableListOf(SubZone.SOUTH_SEERS_VILLAGE_FLAX)))
+                    true
+                }
+            })
+    }
+
+    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
+
+    override fun snapshot(): TextileData = TextileData().also {
+        it.textile = textile
+        saveInventoryState(it)
+    }
+
+    override suspend fun finish() {
+        bot.actions.first(MakeTextileActionItem::class.java)?.interrupt()
+        withTimeoutOrNull(15_000) { leaveSeersWheel(bot) }
     }
 
     override suspend fun completed() {
         // Chance to queue a fletching script.
-        if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
+        if (textile == Textile.BOWSTRING && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script =
                 FletchingScriptFactory.getScript(bot, bot.fletching.staticLevel, mutableListOf(), randBoolean())
             bot.scriptStack.pushTail(script, 2)

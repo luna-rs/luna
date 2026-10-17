@@ -31,6 +31,7 @@ import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
@@ -113,6 +114,12 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
+            // Skillers do not engage in combat.
+            handler.combat.fleeCombat()
+            return true
+        }
+
         bot.reflex.isDisableCombatReflex = true
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 

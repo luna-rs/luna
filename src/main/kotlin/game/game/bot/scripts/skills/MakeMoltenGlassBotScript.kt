@@ -1,9 +1,8 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
@@ -11,13 +10,11 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.crafting.glassMaking.MakeMoltenGlassActionItem
-import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Smelts owned soda ash and buckets of sand through the normal furnace make-item dialogue.
@@ -43,11 +40,9 @@ class MakeMoltenGlassBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     companion object {
-        /** Maximum consecutive failed interactions or unresolved banking requests before stopping. */
-        private const val MAX_FAILURES = 3
-
         /** Banked furnace routes already used by the existing ore-smelting factory. */
         val DEFAULT_ZONES = listOf(SubZone.AL_KHARID_BANK, SubZone.FALADOR_WEST_BANK)
         /** Soda ash consumed by the player action. */
@@ -61,22 +56,14 @@ class MakeMoltenGlassBotScript(
          *
          * @author lare96
          */
-        class MoltenGlassData : ZonedBotScriptData() {
-            /** Consecutive interactions that did not consume soda ash. */
-            var failures = 0
-            /** Banking requests since the last successfully verified withdrawal. */
-            var bankFailures = 0
+        class MoltenGlassData : InventoryScriptData() {
 
             override fun load(data: JsonObject) {
                 super.load(data)
-                failures = data.get("failures")?.asInt ?: 0
-                bankFailures = data.get("bankFailures")?.asInt ?: 0
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
-                data.addProperty("failures", failures)
-                data.addProperty("bankFailures", bankFailures)
             }
         }
     }
@@ -85,10 +72,6 @@ class MakeMoltenGlassBotScript(
     val requiredLevel = 1
     /** Minimum supplies for one conversion; both inputs are non-stackable. */
     private val materials = listOf(Item(SODA_ASH), Item(BUCKET_OF_SAND))
-    /** Consecutive failed interactions, reset after an input is consumed. */
-    private var failures = 0
-    /** Unresolved banking requests, reset only after the entire batch is withdrawn. */
-    private var bankFailures = 0
 
     /**
      * Restores the session configuration, and retry budgets from a snapshot.
@@ -99,8 +82,7 @@ class MakeMoltenGlassBotScript(
      */
     constructor(bot: Bot, data: MoltenGlassData) :
         this(bot, data.duration, data.zones) {
-        failures = data.failures
-        bankFailures = data.bankFailures
+        restoreInventoryState(data)
     }
 
     /**
@@ -113,78 +95,20 @@ class MakeMoltenGlassBotScript(
     /** Returns up to fourteen balanced input pairs from bank stock, or an empty batch if either input is absent. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
-    override fun withdraw(): List<Item> {
-        if (failures >= MAX_FAILURES || bankFailures >= MAX_FAILURES ||
-            bot.skill(SKILL_CRAFTING).staticLevel < requiredLevel || bot.health < 1 || bot.isLocked ||
-            bot.combat.inCombat() || bot.actions.size(ActionType.STRONG) > 0) {
-            stop()
-            return emptyList()
-        }
-        if (!bot.ownsProductionSupplies(materials)) {
-            val missing = materials.filter {
-                bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-            }.map { it.id }
-            missing.forEach { bot.preferences.raiseWantedItemTarget(it, 1_000) }
-            stop()
-            return emptyList()
-        }
-        // InventoryBotScript validates these minimum supplies; the bank hook calculates the actual batch.
-        forceBanking = true
-        return materials
-    }
+    override fun withdraw(): List<Item> = productionWithdraw(materials, levelEligible = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel)
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
         if (it.isEmpty()) stop()
     }
 
-    override suspend fun withdrawBankItems(items: List<Item>): Boolean {
-        val success = withTimeoutOrNull(15_000) {
-            handler.banking.clickBankingMode(false)
-            handler.banking.withdrawAll(items) && bot.inventory.containsAll(items)
-        } == true
-        if (success) {
-            bankFailures = 0
-            forceBanking = false
-        }
-        return success
-    }
-
-    override suspend fun onInventoryBankRequested(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return false
-        if (!forceBanking && hasMaterials()) return false
-        if (bankFailures >= MAX_FAILURES) {
-            stop()
-            return false
-        }
-        bankFailures++
-        return true
-    }
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
     /** Whether inventory contains at least one complete pair of the configured recipe's inputs. */
     private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (bot.health < 1 || bot.isLocked || bot.combat.inCombat() ||
-            bot.actions.size(ActionType.STRONG) > 0) return true
-        if (bot.skill(SKILL_CRAFTING).level < requiredLevel) {
-            stop()
-            return true
-        }
-        if (!hasMaterials()) {
-            forceBanking = true
-            return true
-        }
-        val amount = bot.inventory.computeAmountForId(materials.first().id)
-        val started = withTimeoutOrNull(15_000) {
-            handler.widgets.clickCloseInterface() && startProduction()
-        } == true
-        val progressed = started && waitFor(10.seconds) {
-            bot.inventory.computeAmountForId(materials.first().id) < amount
-        }
-        if (progressed) failures = 0
-        else if (++failures >= MAX_FAILURES) stop()
-        bot.naturalDexterityDelay()
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_CRAFTING).level >= requiredLevel)) return true
+        attemptProduction(materials.first().id) { startProduction() }
         return true
     }
 
@@ -207,9 +131,6 @@ class MakeMoltenGlassBotScript(
     }
 
     override fun snapshot(): MoltenGlassData = MoltenGlassData().also {
-        it.duration = duration
-        it.zones = originalZones.toMutableList()
-        it.failures = failures
-        it.bankFailures = bankFailures
+        saveInventoryState(it)
     }
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
+import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -27,6 +28,7 @@ class TargetSearchRecoveryTest {
         var scanSeconds = 0L
         val target = mock(Npc::class.java).also {
             `when`(it.state).thenReturn(EntityState.ACTIVE)
+            `when`(it.isAlive).thenReturn(true)
             `when`(it.position).thenReturn(Position(3248, 3244))
         }
 
@@ -53,7 +55,9 @@ class TargetSearchRecoveryTest {
         override fun snapshot(): BotScriptData? = null
     }
 
-    private fun bot() = mock(Bot::class.java, RETURNS_DEEP_STUBS)
+    private fun bot() = mock(Bot::class.java, RETURNS_DEEP_STUBS).also {
+        `when`(it.position).thenReturn(Position(3248, 3243))
+    }
 
     @Test
     fun rejectsQuietZoneWithinFirstScanEvenWhenItIsTheOnlyZone() = runBlocking {
@@ -66,7 +70,8 @@ class TargetSearchRecoveryTest {
     @Test
     fun zonedLifecycleRemovesRejectedZoneAndStopsWhenNoneRemain() = runBlocking {
         val bot = bot()
-        `when`(bot.subZone).thenReturn(SubZone.LUMBRIDGE_RIVER)
+        doReturn(EnumSet.of(SubZone.LUMBRIDGE_RIVER))
+            .`when`(bot).subZones
         val script = SearchScript(bot)
         assertFalse(script.init(true))
         assertTrue(script.run())

@@ -27116,9 +27116,9 @@
       "frequency": "NORMAL"
     }
   },
-  // Captain Errdo (id 3811)
+  // Gnome pilot (id 170)
   {
-    "id": 3811,
+    "id": 170,
     "position": {
       "x": 2464,
       "y": 3501,
@@ -76802,9 +76802,9 @@
       "frequency": "NORMAL"
     }
   },
-  // Captain Bleemadge (id 3810)
+  // Gnome pilot (id 170)
   {
-    "id": 3810,
+    "id": 170,
     "position": {
       "x": 2847,
       "y": 3499,
@@ -83034,9 +83034,9 @@
       "frequency": "NORMAL"
     }
   },
-  // Captain Errdo (id 3811)
+  // Gnome pilot (id 170)
   {
-    "id": 3811,
+    "id": 170,
     "position": {
       "x": 2918,
       "y": 3057,
@@ -89831,9 +89831,9 @@
       "frequency": "NORMAL"
     }
   },
-  // Captain Klemfoodle (id 3812)
+  // Gnome pilot (id 170)
   {
-    "id": 3812,
+    "id": 170,
     "position": {
       "x": 2970,
       "y": 2973,
@@ -125630,9 +125630,9 @@
       "z": 0
     }
   },
-  // Captain Dalbur (id 3809)
+  // Gnome pilot (id 170)
   {
-    "id": 3809,
+    "id": 170,
     "position": {
       "x": 3284,
       "y": 3212,
