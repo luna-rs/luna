@@ -25,7 +25,9 @@ import kotlin.time.Duration
  * Tans hides by interacting with a tanner NPC.
  *
  * This script searches the bot's bank for an untanned hide, withdraws enough coins and hides for one inventory cycle,
- * travels to a tanner, opens the tanning interface, and clicks the matching "tan all" button for the selected hide.
+ * counts startup supplies across inventory and bank, then recalculates each withdrawal from bank stock after deposit.
+ * It requests only missing hides or an unaffordable tanning fee, preserving existing wanted targets and metadata.
+ * The script travels to a tanner, opens the tanning interface, and clicks the matching "tan all" button for the selected hide.
  *
  * @param bot The bot running this script.
  * @param duration How long this script should run before completing normally.
@@ -45,7 +47,7 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
     /**
      * The hide type selected for the current tanning cycle.
      *
-     * This is resolved from the bot's bank in [withdraw] and reused by the execution loop to choose the correct tanning
+     * This is resolved from owned startup supplies or deposited bank stock in [withdrawBatch] and reused by the execution loop to choose the correct tanning
      * interface button.
      */
     private var tanning: Hide? = null
@@ -107,33 +109,46 @@ class TanHideBotScript(bot: Bot, duration: Duration) :
         return true
     }
 
-    override fun bankWithdraw(): List<Item> = withdraw()
+    override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
 
-    override fun withdraw(): List<Item> {
-        for (item in bot.bank) {
-            if (item == null) {
-                continue
-            }
-            var hide = Hide.HIDE_TO_HIDE[item.id]
-            if (hide != null) {
-                if (hide == Hide.HARD_LEATHER) {
-                    // One roll covers the whole run, so a bot that can't craft hard leather would lose every hide to it.
-                    val canCraftHard = bot.crafting.staticLevel >= HideArmor.HARD_LEATHER_BODY.level
-                    hide = if (canCraftHard && roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
-                }
+    override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
+
+    /**
+     * Counts owned startup supplies, or bank-only supplies after deposit, and chooses an affordable partial batch.
+     * Cowhide defaults to soft leather; hard leather is considered only when its level and fee are available.
+     */
+    private fun withdrawBatch(bankOnly: Boolean): List<Item> {
+        fun amount(id: Int) = if (bankOnly) bot.bank.computeAmountForId(id) else bot.itemTracker.count(id)
+        val coins = amount(995)
+        for ((id, configured) in Hide.HIDE_TO_HIDE) {
+            val stock = amount(id)
+            if (stock < 1) continue
+            val hide = if (configured == Hide.HARD_LEATHER) {
+                val canCraftHard = bot.crafting.staticLevel >= HideArmor.HARD_LEATHER_BODY.level
+                if (canCraftHard && coins >= Hide.HARD_LEATHER.cost && roll(1 of 4)) Hide.HARD_LEATHER else Hide.SOFT_LEATHER
+            } else configured
+            val batch = minOf(stock, 27, coins / hide.cost)
+            if (batch > 0) {
                 tanning = hide
-                val amount = minOf(item.amount, 27, bot.itemTracker.count(995) / hide.cost)
-                if (amount > 0) {
-                    return listOf(Item(995, hide.cost * amount), Item(hide.hide, amount))
-                }
+                return listOf(Item(995, hide.cost * batch), Item(hide.hide, batch))
             }
         }
-
         stop()
-        Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.addWantedItem(it, 500) }
-        bot.preferences.addWantedItem(995, 100_000)
-        bot.log("No affordable untanned hide batch in bank, ending script.")
-        return listOf()
+        requestMissingSupplies()
+        bot.log("No affordable untanned hide batch, ending script.")
+        return emptyList()
+    }
+
+    /**
+     * Requests untanned hides only when none are owned, and coins only when even the cheapest owned recipe
+     * is unaffordable. Cowhide's soft-leather fee is included when computing that minimum. Targets represent
+     * total stock and never lower existing demand or replace its skill, level, priority, and purpose metadata.
+     */
+    private fun requestMissingSupplies() {
+        val ownedHides = Hide.entries.filter { bot.itemTracker.count(it.hide) > 0 }
+        if (ownedHides.isEmpty()) Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.raiseWantedItemTarget(it, 500) }
+        val minimumFee = ownedHides.minOfOrNull { it.cost } ?: Hide.SOFT_LEATHER.cost
+        if (bot.itemTracker.count(995) < minimumFee) bot.preferences.raiseWantedItemTarget(995, 100_000)
     }
 
     override fun snapshot(): BotScriptData {
