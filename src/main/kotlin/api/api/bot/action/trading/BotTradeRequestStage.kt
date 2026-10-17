@@ -32,7 +32,7 @@ class BotTradeRequestStage(
      * timeout, otherwise `null`.
      */
     suspend fun sendAndAwait(): BotTradeOfferStage? {
-        return if (bot.actionHandler.interactions.interact(3, other)) {
+        return if (bot.actionHandler.interactions.interact(4, other)) {
             if (waitFor(REQUEST_WAIT_SECONDS.seconds) { OfferTradeInterface::class in bot.overlays })
                 BotTradeOfferStage(bot, other, this)
             else null
