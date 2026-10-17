@@ -138,7 +138,7 @@ fun BotPreference.wantedItemsToAcquire(): List<WantedItemDefinition> {
  * activities.
  *
  * Only items exceeding their surplus threshold and having an economy price are included. Each result contains the
- * wanted-item definition and the quantity available above retention, ordered by descending economy unit price.
+ * wanted-item definition and the quantity available above retention, ordered by descending total surplus economy value.
  *
  * @return Pairs containing eligible wanted items and their surplus quantities.
  */
@@ -175,7 +175,7 @@ fun BotPreference.wantedItemsToTrim(): List<Pair<WantedItemDefinition, Int>> {
             candidates += item to surplus.toInt()
         }
     }
-    return candidates.sortedByDescending { (item, _) -> world.economy.getRealPrice(item.id) }
+    return candidates.sortedByDescending { (item, surplus) -> world.economy.getRealPrice(item.id) * surplus.toDouble() }
 }
 
 /**

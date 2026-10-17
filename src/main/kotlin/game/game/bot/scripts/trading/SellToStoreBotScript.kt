@@ -32,7 +32,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     /**
      * Attempts to sell surplus wanted items through registered shops.
      *
-     * Travels home before selecting a snapshot of surplus items in descending economy unit price order.
+     * Travels home before selecting a snapshot of surplus items in descending total surplus economy value order.
      * Each item is processed independently, with failed shops excluded from subsequent attempts.
      *
      * Before each withdrawal, the bot deposits its inventory, switches to unnoted withdrawal mode,
