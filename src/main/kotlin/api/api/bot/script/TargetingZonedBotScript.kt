@@ -13,6 +13,7 @@ import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationRequest
 import io.luna.game.model.mob.movement.PathfinderType
@@ -276,7 +277,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val destination = target.position
         val pending = bot.navigator.submit(NavigationRequest.builder(bot)
             .async(true)
-            .continuous(false)
+            .continuous(target is Npc)
             .policy(InteractionPolicy.STANDARD_SIZE)
             .pathfinder(PathfinderType.BOT)
             .target(destination)
@@ -284,8 +285,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
         try {
             waitFor(timeout) {
                 pending.isDone || bot.navigator.currentPending !== pending || forceBanking ||
-                    !target.isAlive || target.state != EntityState.ACTIVE || target.position != destination ||
-                    bot.position.isViewable(target.position) ||
+                    !target.isAlive || target.state != EntityState.ACTIVE || (target !is Npc && target.position != destination)
+                        || bot.position.isViewable(target.position) ||
                     (searchStartedAt != null &&
                         (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds >= targetSearchTimeout)
             }
@@ -293,8 +294,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
             val current = bot.navigator.currentPending
             val available = current === pending || (current == null && pending.isDone)
             return available && !pending.isCancelled && !forceBanking &&
-                target.isAlive && target.state == EntityState.ACTIVE && target.position == destination &&
-                bot.position.isViewable(target.position) &&
+                target.isAlive && target.state == EntityState.ACTIVE && (target.position == destination || target is Npc)
+                    && bot.position.isViewable(target.position) &&
                 (searchStartedAt == null ||
                     (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds < targetSearchTimeout)
         } finally {
