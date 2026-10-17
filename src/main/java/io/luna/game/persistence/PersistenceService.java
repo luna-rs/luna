@@ -11,6 +11,8 @@ import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -215,41 +217,80 @@ public final class PersistenceService extends AbstractIdleService {
      * Temporary bots are skipped. Players already being handled by {@link LogoutService} are also skipped because logout
      * owns their save operation.
      * <p>
-     * During normal runtime, save snapshots are created on the game thread and serialized on the persistence worker.
-     * During shutdown, this method runs synchronously and creates snapshots directly to avoid scheduling more async work.
+     * During normal runtime, save snapshots of every player are created together in a single game thread pass and then
+     * serialized on the persistence worker. During shutdown, this method runs synchronously and creates snapshots
+     * directly to avoid scheduling more async work.
      *
      * @param shutdown {@code true} if this mass save is being performed during server shutdown.
      *
      * @return A future that completes when the mass save finishes.
      */
     public CompletableFuture<Void> saveAll(boolean shutdown) {
-        Runnable r = () -> {
-            // Send all requests to a worker.
-            var timer = Stopwatch.createStarted();
-            for (Player player : world.getPlayerMap().values()) {
-                if (player.isBot() && player.asBot().isTemporary()) {
-                    continue;
-                }
-                String username = player.getUsername();
-                if (world.getLogoutService().hasRequest(username)) {
-                    // The LogoutService will handle the saving.
-                    continue;
-                }
-                try {
-                    PlayerData data = shutdown ? player.createSaveData() : context.getGame().sync(player::createSaveData).join();
-                    world.getSerializerManager().getSerializer().savePlayer(world, username, data);
-                } catch (Exception e) {
-                    logger.error("Issue saving {}'s data during mass save.", username, e);
-                }
-            }
-            logger.info("Mass save complete (took {}ms).", box(timer.elapsed().toMillis()));
-        };
+        var timer = Stopwatch.createStarted();
         if (shutdown) {
-            r.run();
+            writeAll(snapshotAll(), timer);
             return CompletableFuture.completedFuture(null);
         } else {
-            return CompletableFuture.runAsync(r, worker);
+            // One game thread hop for every snapshot, instead of waiting a full tick per player.
+            return context.getGame().sync(this::snapshotAll).
+                    thenAcceptAsync(snapshots -> writeAll(snapshots, timer), worker);
         }
+    }
+
+    /**
+     * Creates save snapshots of all online non-temporary players. Must be called on the game thread.
+     * <p>
+     * Temporary bots and players already being handled by {@link LogoutService} are skipped.
+     *
+     * @return The snapshots that were created.
+     */
+    private List<PlayerData> snapshotAll() {
+        List<PlayerData> snapshots = new ArrayList<>(world.getPlayerMap().size());
+        for (Player player : world.getPlayerMap().values()) {
+            if (player.isBot() && player.asBot().isTemporary()) {
+                continue;
+            }
+            String username = player.getUsername();
+            if (world.getLogoutService().hasRequest(username)) {
+                // The LogoutService will handle the saving.
+                continue;
+            }
+            try {
+                PlayerData data = player.createSaveData();
+                if (data != null) {
+                    snapshots.add(data);
+                }
+            } catch (Exception e) {
+                logger.error("Issue creating {}'s save data during mass save.", username, e);
+            }
+        }
+        return snapshots;
+    }
+
+    /**
+     * Serializes the snapshots created by {@link #snapshotAll()}.
+     * <p>
+     * A snapshot is skipped if its player started logging out after it was created, because the logout save holds
+     * newer data and owns the save operation.
+     *
+     * @param snapshots The snapshots to serialize.
+     * @param timer The timer started when the mass save began.
+     */
+    private void writeAll(List<PlayerData> snapshots, Stopwatch timer) {
+        GameSerializer serializer = world.getSerializerManager().getSerializer();
+        for (PlayerData data : snapshots) {
+            String username = data.getUsername();
+            if (world.getLogoutService().isSavePending(username)) {
+                // The LogoutService will handle the saving.
+                continue;
+            }
+            try {
+                serializer.savePlayer(world, username, data);
+            } catch (Exception e) {
+                logger.error("Issue saving {}'s data during mass save.", username, e);
+            }
+        }
+        logger.info("Mass save complete (took {}ms).", box(timer.elapsed().toMillis()));
     }
 
     /**
