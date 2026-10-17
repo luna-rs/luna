@@ -5,6 +5,7 @@ data/archives
 /data/game/bots/saved_bots
 /data/game/bots/login_requests.json
 /data/game/bots/webwalk/banks.jsonc
+/data/game/bots/webwalk/ships.jsonc
 /data/game/bots/webwalk/climbs.jsonc
 /data/game/bots/webwalk/crossings.jsonc
 /data/game/bots/webwalk/obstacles.jsonc
