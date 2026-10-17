@@ -1,9 +1,11 @@
 package engine.trade
 
+import api.bot.action.trading.BotTradeManager.tradeRequests
 import api.predef.*
 import game.player.Messages
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * Request to trade with another [Player].
@@ -16,6 +18,7 @@ on(PlayerFourthClickEvent::class)
             plr.overlays.hasWindow() -> plr.sendMessage(Messages.busy())
             else -> {
                 plr.sendMessage("Sending trade offer...")
+                (targetPlr as? Bot)?.tradeRequests?.addRequest(plr)
                 if (plr.index == targetPlr.tradingWith) {
                     // They've both requested each other, open offer screen.
                     plr.walking.clear()

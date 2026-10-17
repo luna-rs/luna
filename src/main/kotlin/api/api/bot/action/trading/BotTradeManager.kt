@@ -111,7 +111,8 @@ object BotTradeManager {
                 val price = NumberUtils.formatPrice(tradeItem.price)
                 val header = BotTradeSpeechPool.take(bot, speechContext)
                 val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.PER_ITEM)
-                "$header ${StringUtils.capitalize(itemName(tradeItem.item.id))}(x)${tradeItem.item.amount} $price $suffix"
+                val name =  StringUtils.capitalize(itemName(tradeItem.item.id))
+                "$header ${if(tradeItem.item.amount > 0) StringUtils.addPlural(name) else name} $price $suffix"
             } else {
                 throw IllegalStateException(
                     "If <saleItem> is <null> then <purpose> must be <MERCHANT_BUY> or <MERCHANT_SELL>."
