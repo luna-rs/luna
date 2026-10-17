@@ -19,7 +19,8 @@ data class ItemRequirement(val id: Int, val amount: Int = 1)
  * @property skills The minimum skill levels, keyed by skill id (see [io.luna.game.model.mob.Skill]).
  * @property items The items that must be carried (inventory or equipment, never the bank).
  * @property coins The coins that must be carried.
- * @property flags Names of unlocks the bot must have, such as `fairy_rings`.
+ * @property flags Names of unlocks the bot must have, such as `fairy_rings`, or of conditions it must meet, such as
+ * `ship_search_entrana` (see [api.bot.webwalk.plan.BotConditions]).
  * @property maxWilderness The deepest wilderness level the bot may be at to use this, or `null` for no limit.
  *
  * @author Hydrozoa

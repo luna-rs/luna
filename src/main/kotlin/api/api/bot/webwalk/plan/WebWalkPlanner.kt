@@ -33,6 +33,11 @@ import java.util.SplittableRandom
  *   taken from any ring to any other, if the bot has the [CapabilitySnapshot.FAIRY_RINGS] unlock.
  * - The search is Dijkstra's algorithm. A* would need a heuristic that teleports can't break, and the graph is small enough
  *   not to need one.
+ * - A trip spends what it pays with: the coins of fares and tolls, the runes and items of teleport spells, and the charges of
+ *   teleport jewellery (see [CapabilitySnapshot.teleportSpends]). What is left is carried along the search, and a step that
+ *   the bot can no longer pay for is not taken, so a bot with 40 coins is never sent on two fares of 30. Each node keeps
+ *   the ways of arriving at it that are cheaper or leave more to spend than the others, up to [PlannerCosts.maxLabels].
+ *   What a bot has plenty of isn't counted, see [PlannerCosts.abundantUses].
  * - Bots can vary their route. The best trip is found first. A bot that is less than fully intelligent then tries other
  *   trips with the cost of every edge changed a little, and picks at random between the best trip and those of them that
  *   cost no more than a tolerance more, which gets smaller the more intelligent the bot is.
@@ -60,11 +65,6 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
          * The width and length of the squares that nodes are sorted into, so that the ones nearby can be found quickly.
          */
         private const val CELL_SIZE = 32
-
-        /**
-         * The cost of what can't be reached.
-         */
-        private const val UNREACHED = Double.MAX_VALUE
     }
 
     /**
@@ -88,6 +88,49 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     private class IndexedTeleport(val teleport: TeleportDefinition, val to: Int)
 
     /**
+     * Something that a trip can spend and that runs out: an item, such as coins or a rune, or the charges of teleport
+     * jewellery.
+     */
+    private sealed class Resource {
+
+        /**
+         * An item, by id.
+         */
+        data class Item(val id: Int) : Resource()
+
+        /**
+         * The charges of teleport jewellery, by the name of the jewellery.
+         */
+        data class Charge(val name: String) : Resource()
+    }
+
+    /**
+     * What a trip can spend, as amounts of the [Resource]s that are counted, in the same order everywhere.
+     *
+     * @property initial What the bot has of each.
+     * @property coinIndex Where coins are, or `-1` if they are not counted.
+     * @property teleportSpends What each teleport spends of them, keyed by teleport id, for the ones that spend any.
+     */
+    private class Budget(val initial: IntArray, val coinIndex: Int, val teleportSpends: Map<String, IntArray>)
+
+    /**
+     * A way of arriving at a node of the search, with what is left to spend.
+     *
+     * @property node The number of the node.
+     * @property cost The cost of the trip so far.
+     * @property left What is left of each counted [Resource].
+     * @property parent The label that this one was arrived at from, or `null` at the start.
+     * @property leg The leg from the [parent], or `null` at the start.
+     */
+    private class Label(val node: Int, val cost: Double, val left: IntArray, val parent: Label?, val leg: PlanLeg?) {
+
+        /**
+         * If a better label replaced this one, so that it is skipped when it comes out of the queue.
+         */
+        var dead = false
+    }
+
+    /**
      * What the planner needs to know about one trip before it starts searching.
      */
     private class Request(val start: Position,
@@ -95,7 +138,8 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                           val startLinks: List<Link>,
                           val endLinks: Map<Int, List<EndLink>>,
                           val direct: List<EndLink>,
-                          val teleports: List<IndexedTeleport>)
+                          val teleports: List<IndexedTeleport>,
+                          val budget: Budget)
 
     /**
      * A trip that was found.
@@ -124,6 +168,11 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     private val outgoing: Array<List<IndexedEdge>> = Array(nodes.size) { index ->
         graph.edgesFrom(nodes[index].id).mapNotNull { edge -> indexById[edge.to]?.let { IndexedEdge(edge, it) } }
     }
+
+    /**
+     * The most coins that one edge of the graph costs, such as the fare of a ship or a toll, or `0` if none costs any.
+     */
+    private val largestFare: Int = graph.edges.maxOfOrNull { it.requirements.coins } ?: 0
 
     /**
      * The fairy rings, with the number of their nodes.
@@ -339,7 +388,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         }
         val teleports = graph.teleports.filter { it.id in snapshot.usableTeleports }
             .mapNotNull { teleport -> indexById[teleport.nodeId]?.let { IndexedTeleport(teleport, it) } }
-        return Request(start, snapshot, startLinks, endLinks, direct, teleports)
+        return Request(start, snapshot, startLinks, endLinks, direct, teleports, budget(snapshot, teleports))
     }
 
     /**
@@ -379,16 +428,56 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     }
 
     /**
-     * Finds the cheapest trip of a request. With a seed, the cost of every edge is changed a little to find another trip,
-     * but the cost of the trip that is found is still its real one.
+     * Finds what a trip can spend: the coins, runes, items and jewellery charges that it has to count, because the bot has
+     * too few of them to pay for everything the web might ask. The ones that it has plenty of (see
+     * [PlannerCosts.abundantUses]) are left out, and with none to count the search is the same as one without spending.
+     */
+    private fun budget(snapshot: CapabilitySnapshot, teleports: List<IndexedTeleport>): Budget {
+        val largest = HashMap<Resource, Int>()
+        if (largestFare > 0) {
+            largest[Resource.Item(CapabilitySnapshot.COINS)] = largestFare
+        }
+        for (indexed in teleports) {
+            val spend = snapshot.teleportSpends[indexed.teleport.id] ?: continue
+            spend.items.forEach { (id, amount) -> largest.merge(Resource.Item(id), amount, ::maxOf) }
+            spend.charges.forEach { (name, amount) -> largest.merge(Resource.Charge(name), amount, ::maxOf) }
+        }
+        fun held(resource: Resource) = when (resource) {
+            is Resource.Item -> snapshot.items[resource.id] ?: 0
+            is Resource.Charge -> snapshot.charges[resource.name] ?: 0
+        }
+        val counted = largest.filter { (resource, most) -> held(resource).toLong() < costs.abundantUses.toLong() * most }
+            .keys.toList()
+        val index = counted.withIndex().associate { it.value to it.index }
+
+        fun vector(spend: Spend): IntArray? {
+            val amounts = IntArray(counted.size)
+            spend.items.forEach { (id, amount) -> index[Resource.Item(id)]?.let { amounts[it] += amount } }
+            spend.charges.forEach { (name, amount) -> index[Resource.Charge(name)]?.let { amounts[it] += amount } }
+            return if (amounts.any { it > 0 }) amounts else null
+        }
+        val teleportSpends = HashMap<String, IntArray>()
+        for (indexed in teleports) {
+            snapshot.teleportSpends[indexed.teleport.id]?.let(::vector)?.let { teleportSpends[indexed.teleport.id] = it }
+        }
+        return Budget(IntArray(counted.size) { held(counted[it]) }, index[Resource.Item(CapabilitySnapshot.COINS)] ?: -1,
+                      teleportSpends)
+    }
+
+    /**
+     * Finds the cheapest trip of a request that the bot can pay for. With a seed, the cost of every edge is changed a
+     * little to find another trip, but the cost of the trip that is found is still its real one.
+     *
+     * Each way of arriving at a node is a [Label], with what is left to spend. A label is only kept if no other at its node
+     * is as cheap with as much left, so that a cheap way that spends everything doesn't hide a dearer one that can still
+     * pay for what comes after. Without anything to count, every node keeps only its cheapest label.
      */
     private fun search(request: Request, seed: Long?): Found? {
         val start = nodes.size
         val end = nodes.size + 1
-        val dist = DoubleArray(nodes.size + 2) { UNREACHED }
-        val arrivals = arrayOfNulls<PlanLeg>(nodes.size + 2)
-        val previous = IntArray(nodes.size + 2) { -1 }
-        val queue = PriorityQueue<Pair<Double, Int>>(compareBy { it.first })
+        val budget = request.budget
+        val labels = Array(nodes.size + 2) { ArrayList<Label>(1) }
+        val queue = PriorityQueue<Label>(compareBy { it.cost })
 
         // The end is not a place, because a trip may end at one of several: the legs that arrive at it say which.
         fun position(index: Int) = if (index == start) request.start else nodes[index].position
@@ -396,46 +485,73 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         fun level(index: Int) = if (index < nodes.size) nodes[index].wildernessLevel else
             WebWalkNode.wildernessLevelOf(position(index))
 
-        fun relax(from: Int, to: Int, leg: PlanLeg, key: Int) {
+        fun relax(from: Label, to: Int, leg: PlanLeg, key: Int, spend: IntArray?, coins: Int) {
+            var left = from.left
+            if (spend != null || (coins > 0 && budget.coinIndex >= 0)) {
+                left = left.copyOf()
+                spend?.forEachIndexed { index, amount -> left[index] -= amount }
+                if (coins > 0 && budget.coinIndex >= 0) {
+                    left[budget.coinIndex] -= coins
+                }
+                if (left.any { it < 0 }) {
+                    return
+                }
+            }
             val jitter = if (seed == null) 1.0 else
                 1.0 + costs.jitter * SplittableRandom(seed + key * -0x61c8864680b583ebL).nextDouble()
-            val total = dist[from] + leg.cost * jitter + costs.legPenalty
-            if (total < dist[to]) {
-                dist[to] = total
-                previous[to] = from
-                arrivals[to] = leg
-                queue.add(Pair(total, to))
+            val total = from.cost + leg.cost * jitter + costs.legPenalty
+            val here = labels[to]
+            if (here.any { it.cost <= total && covers(it.left, left) }) {
+                return
             }
+            here.removeAll { other -> (total <= other.cost && covers(left, other.left)).also { if (it) other.dead = true } }
+            if (here.size >= costs.maxLabels) {
+                val worst = here.maxBy { it.cost }
+                if (worst.cost <= total) {
+                    return
+                }
+                worst.dead = true
+                here.remove(worst)
+            }
+            val label = Label(to, total, left, from, leg)
+            here += label
+            queue.add(label)
         }
 
-        // Takes a step of a number of ticks, with what that adds to the cost. A step to the end says where it ends.
-        fun step(from: Int, to: Int, type: EdgeType, ticks: Double, extra: Double, action: EdgeAction? = null,
+        // Takes a step of a number of ticks, with what that adds to the cost and what it spends. A step to the end says
+        // where it ends.
+        fun step(from: Label, to: Int, type: EdgeType, ticks: Double, extra: Double, action: EdgeAction? = null,
                  teleport: TeleportDefinition? = null, ring: FairyRing? = null, exposed: Boolean = true,
-                 requirements: Requirements = Requirements.NONE, target: Position? = null) {
+                 requirements: Requirements = Requirements.NONE, target: Position? = null, spend: IntArray? = null) {
             val exposure = if (exposed) ticks else 0.0
             val arrival = target ?: position(to)
             val arrivalLevel = if (target != null) WebWalkNode.wildernessLevelOf(target) else level(to)
-            val cost = ticks + extra + wildernessPenalty(level(from), arrivalLevel, exposure)
-            val key = (from * 31 + to) * 31 + type.ordinal + (teleport?.id?.hashCode() ?: 0) + (target?.hashCode() ?: 0)
-            relax(from, to, PlanLeg(type, position(from), arrival, cost, action, teleport, ring, requirements), key)
+            val cost = ticks + extra + wildernessPenalty(level(from.node), arrivalLevel, exposure)
+            val key = (from.node * 31 + to) * 31 + type.ordinal + (teleport?.id?.hashCode() ?: 0) + (target?.hashCode() ?: 0)
+            relax(from, to, PlanLeg(type, position(from.node), arrival, cost, action, teleport, ring, requirements), key,
+                  spend, requirements.coins)
         }
 
-        dist[start] = 0.0
-        queue.add(Pair(0.0, start))
+        val first = Label(start, 0.0, budget.initial, null, null)
+        labels[start] += first
+        queue.add(first)
+        var found: Label? = null
         while (queue.isNotEmpty()) {
-            val (cost, node) = queue.poll()
-            if (cost > dist[node]) {
+            val label = queue.poll()
+            if (label.dead) {
                 continue
             }
+            val node = label.node
             if (node == end) {
+                found = label
                 break
             }
             val here = level(node)
 
             if (node == start) {
-                request.startLinks.forEach { step(start, it.node, EdgeType.WALK, it.ticks.toDouble(), 0.0) }
+                request.startLinks.forEach { step(label, it.node, EdgeType.WALK, it.ticks.toDouble(), 0.0) }
                 for (link in request.direct) {
-                    step(start, end, EdgeType.WALK, link.ticks.toDouble(), 0.0, target = link.destination)
+                    step(label, end, EdgeType.WALK, link.ticks.toDouble(), 0.0, target = link.destination)
                 }
             } else {
                 for (indexed in outgoing[node]) {
@@ -444,15 +560,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                         continue
                     }
                     val ticks = baseTicks(edge, node, indexed.to)
-                    step(node, indexed.to, edge.type, ticks, edge.requirements.coins * costs.coinWeight, edge.action,
+                    step(label, indexed.to, edge.type, ticks, edge.requirements.coins * costs.coinWeight, edge.action,
                          requirements = edge.requirements)
                 }
-                request.endLinks[node]?.forEach { step(node, end, EdgeType.WALK, it.ticks.toDouble(), 0.0, target = it.destination) }
+                request.endLinks[node]?.forEach { step(label, end, EdgeType.WALK, it.ticks.toDouble(), 0.0, target = it.destination) }
                 ringByNode[node]?.let { ring ->
                     if (CapabilitySnapshot.FAIRY_RINGS in request.snapshot.flags && request.snapshot.meets(ring.requirements, here)) {
                         for ((other, target) in rings) {
                             if (other != node && request.snapshot.meets(target.requirements, level(other))) {
-                                step(node, other, EdgeType.FAIRY_RING, costs.fairyRingTicks, 0.0, ring = target)
+                                step(label, other, EdgeType.FAIRY_RING, costs.fairyRingTicks, 0.0, ring = target)
                             }
                         }
                     }
@@ -467,23 +583,32 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                         TeleportKind.JEWELLERY -> costs.chargePenalty
                         TeleportKind.HOME -> 0.0
                     }
-                    step(node, indexed.to, EdgeType.TELEPORT, teleport.cost.toDouble(), penalty, teleport = teleport,
-                         exposed = false)
+                    step(label, indexed.to, EdgeType.TELEPORT, teleport.cost.toDouble(), penalty, teleport = teleport,
+                         exposed = false, spend = budget.teleportSpends[teleport.id])
                 }
             }
         }
 
-        if (dist[end] == UNREACHED) {
-            return null
-        }
         val legs = ArrayList<PlanLeg>()
-        var node = end
-        while (node != start) {
-            legs += arrivals[node]!!
-            node = previous[node]
+        var label = found ?: return null
+        while (true) {
+            legs += label.leg ?: break
+            label = label.parent ?: break
         }
         legs.reverse()
         return Found(legs, legs.sumOf { it.cost })
+    }
+
+    /**
+     * Determines if one amount left to spend is at least another, in everything that is counted.
+     */
+    private fun covers(left: IntArray, other: IntArray): Boolean {
+        for (index in left.indices) {
+            if (left[index] < other[index]) {
+                return false
+            }
+        }
+        return true
     }
 
     /**
