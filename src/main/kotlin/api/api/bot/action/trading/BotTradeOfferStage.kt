@@ -37,7 +37,7 @@ class BotTradeOfferStage(
      * Whether the bot has clicked the accept button during this stage.
      *
      * This flag is set after sending the click and does not confirm that both participants accepted.
-     * It is not reset if the trade subsequently times out or is declined.
+     * Observing a changed offer clears this flag so negotiation may accept the revised basket again.
      */
     var offered = false
         private set
@@ -49,12 +49,13 @@ class BotTradeOfferStage(
      * When the interface exists, sends the accept click and sets [offered] to `true`, then waits up
      * to [OFFER_WAIT_SECONDS] seconds for [ConfirmTradeInterface] to appear in the bot's overlays.
      *
-     * Calls [decline] if the offer interface is missing or the confirmation screen does not appear
-     * before the timeout. Reaching the confirmation screen does not complete the trade itself.
+     * Revalidates after the reaction delay and stops waiting when the accepted basket changes. A changed offer
+     * returns control to negotiation without declining. Missing interfaces and timeouts decline the attempt.
      *
-     * @return The confirmation stage if its interface opens in time, or `null` if the trade is declined.
+     * @param validate Checks that both participants' offers still match the accepted basket.
+     * @return The confirmation stage, or `null` when the offer changed, closed, or timed out.
      */
-    suspend fun offerAndAwait(): BotTradeConfirmStage? {
+    suspend fun offerAndAwait(validate: () -> Boolean = { true }): BotTradeConfirmStage? {
         bot.log("Added items to offer screen.")
         if (randBoolean()) {
             bot.naturalDecisionDelay()
@@ -65,14 +66,24 @@ class BotTradeOfferStage(
         }
 
         val offerInterface = bot.overlays[OfferTradeInterface::class]
-        if (offerInterface != null) {
+        if (offerInterface != null && offerInterface.other === other) {
+            if (!validate()) return null
             bot.output.clickButton(3420)
             bot.log("Clicked accept button on offer interface, waiting for ${other.username}...")
             offered = true
 
-            return if (waitFor(OFFER_WAIT_SECONDS.seconds) { ConfirmTradeInterface::class in bot.overlays }) {
+            val changed = waitFor(OFFER_WAIT_SECONDS.seconds) {
+                ConfirmTradeInterface::class in bot.overlays ||
+                        bot.overlays[OfferTradeInterface::class] !== offerInterface || !validate()
+            }
+            val confirm = bot.overlays[ConfirmTradeInterface::class]
+            return if (changed && confirm?.offer === offerInterface) {
                 bot.log("${other.username} accepted, now on confirm screen.")
                 BotTradeConfirmStage(bot, other, this)
+            } else if (changed) {
+                // A mutation resets first-screen acceptance. Let the script prepare a new target and accept again.
+                offered = false
+                null
             } else {
                 bot.log("${other.username} took too long to accept.")
                 decline()
@@ -99,10 +110,11 @@ class BotTradeOfferStage(
      * @return `true` if the inventory quantity decreases, otherwise `false`.
      */
     suspend fun offer(item: Item): Boolean {
+        if (item.amount < 1 || item.isDynamic) return false
         bot.log("Offering ${name(item)}.")
 
         val offer = bot.overlays[OfferTradeInterface::class]
-        if (offer == null) {
+        if (offer == null || offer.other !== other) {
             bot.log("Trade offer screen isn't open.")
             return false
         }
@@ -200,10 +212,11 @@ class BotTradeOfferStage(
      * @return `true` if the offered quantity decreases, otherwise `false`.
      */
     suspend fun remove(item: Item): Boolean {
+        if (item.amount < 1) return false
         bot.log("Removing ${name(item)}.")
 
         val offer = bot.overlays[OfferTradeInterface::class]
-        if (offer == null) {
+        if (offer == null || offer.other !== other) {
             bot.log("Trade offer screen isn't open.")
             return false
         }
@@ -266,6 +279,7 @@ class BotTradeOfferStage(
      */
     fun getOtherTradeItems(): List<Item> {
         val overlay = other.overlays[OfferTradeInterface::class] ?: return emptyList()
+        if (overlay.other !== bot) return emptyList()
         return overlay.items.stream().filter { it != null }.toList()
     }
 
@@ -279,6 +293,7 @@ class BotTradeOfferStage(
      */
     fun getTradeItems(): List<Item> {
         val overlay = bot.overlays[OfferTradeInterface::class] ?: return emptyList()
+        if (overlay.other !== other) return emptyList()
         return overlay.items.stream().filter { it != null }.toList()
     }
 

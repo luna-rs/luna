@@ -44,6 +44,7 @@ class BotTradeConfirmStage(
     suspend fun confirmAndAwait(): Boolean {
         val confirm = bot.overlays[ConfirmTradeInterface::class]
             ?: return false
+        if (confirm.offer.other !== other) return false
 
         bot.output.clickButton(3546)
         confirmed = true

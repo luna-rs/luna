@@ -17,7 +17,6 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param bot The bot initiating the trade.
  * @param other The player receiving the trade request.
- * @param purpose The purpose of the trade.
  * @author lare96
  */
 class BotTradeRequestStage(
@@ -32,8 +31,12 @@ class BotTradeRequestStage(
      * timeout, otherwise `null`.
      */
     suspend fun sendAndAwait(): BotTradeOfferStage? {
+        val existing = bot.overlays[OfferTradeInterface::class]
+        if (existing?.other === other) return BotTradeOfferStage(bot, other, this)
         return if (bot.actionHandler.interactions.interact(4, other)) {
-            if (waitFor(REQUEST_WAIT_SECONDS.seconds) { OfferTradeInterface::class in bot.overlays })
+            if (waitFor(REQUEST_WAIT_SECONDS.seconds) {
+                    bot.overlays[OfferTradeInterface::class]?.other === other
+                })
                 BotTradeOfferStage(bot, other, this)
             else null
         } else {

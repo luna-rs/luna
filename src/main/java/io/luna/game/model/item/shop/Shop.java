@@ -657,12 +657,10 @@ public final class Shop {
 
     /**
      * Retrieves the set of players currently viewing this shop.
-     * <p>
-     * Package-private to avoid exposing mutable internal state to outside packages.
      *
      * @return The viewing set.
      */
-    Set<Player> getViewing() {
+    public Set<Player> getViewing() {
         return viewing;
     }
 

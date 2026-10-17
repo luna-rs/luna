@@ -24,8 +24,8 @@ import io.luna.util.StringUtils
  * Builds trade data for buying, selling, and merchanting without performing the exchange.
  * Callers must validate available items, quantities, and payment when executing the trade.
  *
- * Merchant offers use [Int.MAX_VALUE] as an unrestricted quantity marker rather than an actual holding.
- * Trade execution must limit these requests to quantities that can be exchanged.
+ * Merchant buying uses [Int.MAX_VALUE] as an unrestricted demand marker. Sale offers contain only surplus stock
+ * available in the bank or inventory; equipped and dynamic items are excluded from transferable quantities.
  *
  * @author lare96
  */
@@ -112,7 +112,7 @@ object BotTradeManager {
                 val header = BotTradeSpeechPool.take(bot, speechContext)
                 val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.PER_ITEM)
                 val name =  StringUtils.capitalize(itemName(tradeItem.item.id))
-                "$header ${if(tradeItem.item.amount > 0) StringUtils.addPlural(name) else name} $price $suffix"
+                "$header ${tradeItem.item.amount} ${if(tradeItem.item.amount > 1) StringUtils.addPlural(name) else name} $price $suffix"
             } else {
                 throw IllegalStateException(
                     "If <saleItem> is <null> then <purpose> must be <MERCHANT_BUY> or <MERCHANT_SELL>."
@@ -126,7 +126,7 @@ object BotTradeManager {
     /**
      * Finds candidate items that the bot may contribute to a trade.
      *
-     * For buying purposes, the result contains owned coins and any eligible ordinary sale items.
+     * For buying purposes, the result contains transferable coins and eligible surplus items used as payment.
      * For selling purposes, candidates are selected using the normal or merchant selling rules.
      * The returned items are not reserved, and their actual transferable amounts must be checked later.
      *
@@ -138,8 +138,8 @@ object BotTradeManager {
     fun computeOfferItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
         return when (purpose) {
             BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> {
-                // Buyers offer gold and sellable items.
-                val totalGold = bot.itemTracker.count(995)
+                // Buyers may pay with coins and eligible surplus stock, never retained equipment or supplies.
+                val totalGold = transferableAmount(bot, 995)
                 val goldItem = if (totalGold == 0) {
                     emptyList()
                 } else {
@@ -196,8 +196,8 @@ object BotTradeManager {
      * reaches [SURPLUS_SELL_RATIO] times the wanted target. The proposed amount comes from the
      * wanted-item surplus calculation, which can include ownership beyond the unnoted stock.
      *
-     * Merchant selling selects all eligible wanted items whose economy prices have increased and
-     * uses [Int.MAX_VALUE] as a sell-quantity marker. Actual tradeable amounts are not reserved here.
+     * Merchant selling selects eligible wanted items whose economy prices have increased, capped to transferable
+     * ownership above the retained target and minimum. Actual tradeable amounts are not reserved here.
      *
      * @param bot The bot selecting items to sell.
      * @param priceStrategy The strategy used to calculate sale prices.
@@ -217,10 +217,12 @@ object BotTradeManager {
                 }
                 val price = world.economy.prices[item.id]
                 if (price != null) {
-                    val count = bot.itemTracker.count(item.id)
+                    val retained = maxOf(0, item.target, item.min)
+                    val count = minOf(transferableAmount(bot, item.id),
+                        (bot.totalItemAmount(item.id).toLong() - retained).coerceIn(0, Int.MAX_VALUE.toLong()).toInt())
                     if (price.price > price.lastPrice && !isSellRestricted(bot, item) && count > 0) {
-                        candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
-                                                   priceStrategy.applySell(price.price.toLong()),
+                        candidates += BotTradeItem(Item(item.id, count),
+                                                   priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
                                                    purpose,
                                                    bot)
                     }
@@ -237,8 +239,10 @@ object BotTradeManager {
                 if (amount >= item.target * SURPLUS_SELL_RATIO) {
                     val price = world.economy.prices[item.id]
                     if (price != null) {
-                        candidates += BotTradeItem(Item(item.id, surplus),
-                                                   priceStrategy.applySell(price.price.toLong()),
+                        val available = minOf(surplus, transferableAmount(bot, item.id))
+                        if (available < 1) continue
+                        candidates += BotTradeItem(Item(item.id, available),
+                                                   priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
                                                    purpose,
                                                    bot)
                         break
@@ -253,8 +257,8 @@ object BotTradeManager {
     /**
      * Builds candidate wanted items for normal or merchant buying.
      *
-     * Normal buying rebalances wanted items and selects at most one priced item, using its full target
-     * quantity rather than the remaining amount needed. Merchant buying selects all wanted items with
+     * Normal buying rebalances wanted items and selects at most one priced item, using the remaining amount
+     * needed to reach its target. Merchant buying selects all wanted items with
      * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
      *
      * Neither path reserves payment or checks whether the other participant can supply the quantity.
@@ -279,7 +283,7 @@ object BotTradeManager {
                 if (price != null) {
                     if (price.price < price.lastPrice) {
                         candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
-                                                   priceStrategy.applyBuy(price.price.toLong()),
+                                                   priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
                                                    purpose,
                                                    bot)
                     }
@@ -295,7 +299,7 @@ object BotTradeManager {
             // Bot has nothing they want to buy.
             return listOf()
         } else {
-            // Bot has items they want to acquire, add full targets ignoring overflow.
+            // Ownership targets describe total holdings, so buy only the current deficit.
             val candidates = ArrayList<BotTradeItem>()
             for (item in wantedItems) {
                 if (item.id == 995) {
@@ -303,8 +307,11 @@ object BotTradeManager {
                 }
                 val price = world.economy.prices[item.id]
                 if (price != null) {
-                    candidates += BotTradeItem(Item(item.id, item.target),
-                                               priceStrategy.applyBuy(price.price.toLong()),
+                    val deficit = (item.target.toLong() - bot.totalItemAmount(item.id))
+                        .coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
+                    if (deficit < 1 || !itemDef(item.id).isTradeable) continue
+                    candidates += BotTradeItem(Item(item.id, deficit),
+                                               priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
                                                purpose,
                                                bot)
                     break
@@ -312,6 +319,19 @@ object BotTradeManager {
             }
             return candidates
         }
+    }
+
+    /**
+     * Counts transferable bank and inventory stock, combining noted and unnoted ids and excluding dynamic items.
+     *
+     * @param bot The bot whose available stock is counted.
+     * @param id The normalized item id to count.
+     * @return The available quantity, capped to the maximum item amount.
+     */
+    private fun transferableAmount(bot: Bot, id: Int): Int {
+        return (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
+            .filter { !it.isDynamic && itemDef(it.id).unnotedId.orElse(it.id) == id }
+            .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
     }
 
     /**
