@@ -1,102 +1,336 @@
 package api.bot.action.trading
 
 import api.attr.Attr
-import api.predef.rand
-import api.predef.world
+import api.bot.action.trading.BotTradeManager.SURPLUS_SELL_RATIO
+import api.bot.action.trading.BotTradeSpeechPool.BotTradeSpeech
+import api.predef.*
+import api.predef.ext.*
+import com.google.common.math.IntMath
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import io.luna.game.model.def.WantedItemDefinition
+import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotActivity
-import io.luna.game.model.mob.bot.brain.BotEmotion
-import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
-import kotlin.math.floor
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType.PKER
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType.SKILLER
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect
+import io.luna.util.NumberUtils
+import io.luna.util.StringUtils
 
+/**
+ * Prepares trade advertisements, candidate offers, and expected trade returns for bots.
+ *
+ * Builds trade data for buying, selling, and merchanting without performing the exchange.
+ * Callers must validate available items, quantities, and payment when executing the trade.
+ *
+ * Merchant offers use [Int.MAX_VALUE] as an unrestricted quantity marker rather than an actual holding.
+ * Trade execution must limit these requests to quantities that can be exchanged.
+ *
+ * @author lare96
+ */
 object BotTradeManager {
-    // todo move into trading speech files under enums
 
-    private val CHAT_EFFECTS = listOf(BotOutputMessageHandler.ChatEffect.WAVE_2,
-                                      BotOutputMessageHandler.ChatEffect.SHAKE,
-                                      BotOutputMessageHandler.ChatEffect.SLIDE,
-                                      BotOutputMessageHandler.ChatEffect.WAVE,
-                                      BotOutputMessageHandler.ChatEffect.NONE)
-    val BUYING_HEADERS = listOf(
-        "BUYING:", "Buying", "BUYING", "Buyingg", "buying", "!! BUYING !!", "[BUYING]:", "NEED:",
-        "NEEDING:", "WANTED:", "[BUY]:", "BUY:", "B:", "WTB:", "WANT TO BUY:", "LOOKING FOR:",
-        "LOOKING 4:", "LF:", "LFB:", "NEED ASAP:", "BUYING ASAP:", "BUYING NOW:", "BUYING ALL:",
-        "BUYING ANY:", "BUYING LOTS:", "PAYING FOR:", "PAYING:", "CAN PAY:", "I BUY:", "I'M BUYING:",
-        "IM BUYING:", "buy:", "b:", "wtb:", "need:", "lf:",
-        "buying -", "buying >", "buying ~",
-    )
+    /** The configured minimum trade-offer value, in coins. */
+    internal const val MINIMUM_OFFER_VALUE = 100L
 
-    val SELLING_HEADERS = listOf(
-        "SELLING:", "Selling", "SELLING", "Sellingg", "selling", "!! SELLING !!", "[SELLING]:",
-        "NEED GONE:", "[SALE]:", "SALE:", "SELL:", "S:", "WTS:", "FOR SALE:", "FS:", "OFFERING:",
-        "SELLING ASAP:", "SELLING NOW:", "SELLING ALL:", "SELLING ANY:", "SELLING LOTS:",
-        "CLEARING:", "CLEAROUT:", "CHEAP:", "CHEAP SALE:", "QUICK SALE:", "QS:", "TAKE:",
-        "TAKE ALL:", "MUST GO:", "NEED SOLD:", "GETTING RID OF:", "I SELL:", "I'M SELLING:",
-        "IM SELLING:", "sell:", "s:", "wts:", "fs:", "sale:", "selling -", "selling >",
-        "selling ~"
-    )
+    /** The configured wait duration for trade requests, in seconds. */
+    internal const val REQUEST_WAIT_SECONDS = 30
 
-    val PER_ITEM_FOOTERS = listOf(
-        "ea", "each", "for each", "for each one", "each one", "ea 1", "each 1", "each item",
-        "ea item", "per item", "per", "per one", "per piece", "per unit", "a piece", "apiece",
-        "a pop", "each pop", "for 1", "for one", "for every one", "every one", "every item",
-        "every piece", "single", "single item", "single one", "one each", "one item", "1 item",
-        "1 each", "1 ea", "1x", "x1", "/ea", "/each", "/item", "/1", "ea.", "each.", "per."
-    )
+    /** The configured wait duration for the trade-offer stage, in seconds. */
+    internal const val OFFER_WAIT_SECONDS = 60
 
-    val SELL_BUNDLE_COINS_ONLY = listOf(
-        "Fire sale! Trade me, coins only", "Trade me, selling all for gp", "Selling all, cash only",
-        "Selling the lot, gp only", "Selling this pile, coins only", "Trade me, quick cash sale",
-        "Selling all, no swaps", "Selling all, no item trades", "Cash only, trade me",
-        "Coins only, trade me", "Selling bundle, gp only", "Selling bundle, cash only",
-        "Selling the lot for coins", "Selling everything for gp", "Quick sale, coins only",
-        "Need cash, selling all", "Need gp, selling all", "Selling cheap, coins only",
-        "Selling cheap for gp", "Trade me, no swaps please", "Trade me, cash offers only",
-        "Trade me, coin offers only", "Selling all, gp offers only", "Selling lot, gp offers",
-        "Selling all, cash buyer needed", "Selling lot, cash buyer needed",
-        "Selling bundle, no junk trades", "Selling all, no random items", "Selling all, pure gp",
-        "Pure cash sale, trade me", "Straight gp trade, trade me", "Simple cash trade, trade me",
-        "All for coins, trade me", "All for gp, trade me", "Take all for gp",
-        "Take the lot, gp only", "Clearing items, coins only", "Clearing bank, gp only",
-        "Need it gone, gp only", "Need coins fast, trade me", "Fast sale, cash only",
-        "Fast sale, coins only", "Cheap lot, coins only", "Cheap bundle, gp only",
-        "Selling my spare loot, gp only", "Selling extra items, cash only",
-        "Selling all spares, coins only", "Trade me, paying in gp only"
-    )
+    /** The configured wait duration for trade confirmation, in seconds. */
+    internal const val CONFIRM_WAIT_SECONDS = 60
 
-    val SELL_BUNDLE_EQUIV_VALUE = listOf(
-        "Fire sale! Trade me, gp or swaps", "Trade me, selling all for value",
-        "Selling all, gp or items", "Selling the lot, fair swaps ok",
-        "Selling this pile, swaps ok", "Trade me, fair offers",
-        "Selling all, taking offers", "Selling all, taking fair value",
-        "Selling bundle, gp or items", "Selling bundle, swaps accepted",
-        "Selling the lot, items accepted", "Selling everything, fair trade",
-        "Quick sale, gp or swaps", "Taking gp or fair items", "Trade me, useful items ok",
-        "Trade me, fair items ok", "Trade me, equal value ok", "Trade me, value offers ok",
-        "Selling all, equal value ok", "Selling lot, equal value ok",
-        "Selling bundle, equal value", "Selling all, fair swaps only",
-        "Selling lot, fair swaps only", "Selling all, no junk swaps",
-        "Selling lot, no junk swaps", "Selling all, good items ok",
-        "Selling lot, useful items ok", "Selling bundle, useful swaps ok",
-        "Selling all, gear or gp ok", "Selling all, supplies or gp ok",
-        "Selling all, runes/gear/gp ok", "Selling lot, gear swaps ok",
-        "Selling lot, supply swaps ok", "Trading all for fair value",
-        "Trading bundle for value", "Swapping or selling all",
-        "Buy or swap, trade me", "Swap or buy, trade me",
-        "Selling all, best fair offer", "Selling lot, best fair offer",
-        "Fair value gets it", "Best fair offer gets it",
-        "Open to swaps, trade me", "Open to item trades",
-        "Taking offers, trade me", "Taking decent offers",
-        "Selling spare loot, gp/items", "Selling extra items, gp/items",
-        "Selling all spares, fair value", "Trade me, gp or useful items"
-    )
+    /** The expected-value multiplier used by normal scrutiny when validating sale returns. */
+    internal const val NORMAL_SELLING_ATTENTION = 0.75
 
-    const val REQUEST_WAIT_SECONDS = 30
-    const val OFFER_WAIT_SECONDS = 60
-    const val CONFIRM_WAIT_SECONDS = 60
+    /** The expected-value multiplier used by trustworthy scrutiny when validating sale returns. */
+    internal const val TRUSTWORTHY_SELLING_ATTENTION = 0.55
 
-    val Bot.tradeStage by Attr.nullableObj(BotTradeStage::class)
+    /** The owned-to-target ratio required before normal selling considers an item eligible. */
+    private const val SURPLUS_SELL_RATIO = 2.50
+
+    /** The chat colors available for generated trade advertisements. */
+    private val VALID_CHAT_COLORS = ChatColor.entries.toList()
+
+    /** The chat effects available for generated trade advertisements. */
+    private val VALID_CHAT_EFFECTS =
+        listOf(ChatEffect.WAVE_2, ChatEffect.SHAKE, ChatEffect.SLIDE, ChatEffect.WAVE, ChatEffect.NONE)
+
+    /** The configured advertisement cooldown range for bots that dislike merchanting. */
+    internal val HATE_COOLDOWN = 6..8
+
+    /** The configured advertisement cooldown range for ordinary bots. */
+    internal val REGULAR_COOLDOWN = 4..6
+
+    /** The configured advertisement cooldown range for bots that like merchanting. */
+    internal val MERCHANT_COOLDOWN = 2..4
+
+    /** The configured advertisement cooldown range for bots that love merchanting. */
+    internal val STRONG_MERCHANT_COOLDOWN = 1..2
+
+    /** The trade-request handler associated with each bot. */
+    val Bot.tradeRequests by Attr.obj { BotTradeRequestHandler() }
+
+    /**
+     * Creates a chat advertisement for the specified trade purpose.
+     *
+     * Merchant advertisements use generic buying or selling messages. Ordinary advertisements
+     * include the item name, quantity, and unit price, followed by a randomized chat color and effect.
+     * This method only constructs the message; it does not send it or enforce a cooldown.
+     *
+     * @param bot The bot whose advertisement is being generated.
+     * @param tradeItem The advertised item for ordinary buying or selling, or `null` for merchant messages.
+     * @param purpose The buying or selling purpose of the advertisement.
+     * @return The generated trade message and its chat formatting.
+     * @throws IllegalStateException If an ordinary trade purpose is provided without an item.
+     */
+    fun advertiseTrade(bot: Bot, tradeItem: BotTradeItem?, purpose: BotTradePurpose): BotTradeMessage {
+        val message =
+            if (purpose == BotTradePurpose.MERCHANT_BUY) {
+                // Buy headers + merchant buy suffix.
+                val header = BotTradeSpeechPool.take(bot, BotTradeSpeech.BUYING)
+                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.MERCHANT_BUYING)
+                "$header $suffix"
+            } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
+                // Sell headers + merchant sell suffix.
+                val header = BotTradeSpeechPool.take(bot, BotTradeSpeech.SELLING)
+                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.MERCHANT_SELLING)
+                "$header $suffix"
+            } else if (tradeItem != null) {
+                // Buying/selling a single item.
+                val speechContext = when (purpose) {
+                    BotTradePurpose.BUY -> BotTradeSpeech.BUYING
+                    BotTradePurpose.SELL -> BotTradeSpeech.SELLING
+                    else -> throw IllegalStateException(
+                        "If <saleItem> is not <null> then <purpose> must be <BUY> or <SELL>."
+                    )
+                }
+                val price = NumberUtils.formatPrice(tradeItem.price)
+                val header = BotTradeSpeechPool.take(bot, speechContext)
+                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.PER_ITEM)
+                "$header ${StringUtils.capitalize(itemName(tradeItem.item.id))}(x)${tradeItem.item.amount} $price $suffix"
+            } else {
+                throw IllegalStateException(
+                    "If <saleItem> is <null> then <purpose> must be <MERCHANT_BUY> or <MERCHANT_SELL>."
+                )
+            }
+        val color = VALID_CHAT_COLORS.random()
+        val effect = VALID_CHAT_EFFECTS.random()
+        return BotTradeMessage(StringUtils.capitalize(message), color, effect)
+    }
+
+    /**
+     * Finds candidate items that the bot may contribute to a trade.
+     *
+     * For buying purposes, the result contains owned coins and any eligible ordinary sale items.
+     * For selling purposes, candidates are selected using the normal or merchant selling rules.
+     * The returned items are not reserved, and their actual transferable amounts must be checked later.
+     *
+     * @param bot The bot preparing the offer.
+     * @param priceStrategy The pricing strategy used for non-coin items.
+     * @param purpose The buying or selling purpose of the trade.
+     * @return Candidate items for the bot's side of the trade.
+     */
+    fun computeOfferItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
+        return when (purpose) {
+            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> {
+                // Buyers offer gold and sellable items.
+                val totalGold = bot.itemTracker.count(995)
+                val goldItem = if (totalGold == 0) {
+                    emptyList()
+                } else {
+                    listOf(BotTradeItem(Item(995, totalGold), 1, purpose, bot))
+                }
+                goldItem + computeSellItems(bot, priceStrategy, BotTradePurpose.SELL)
+            }
+
+            // Sellers offer whatever they're selling.
+            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> computeSellItems(bot, priceStrategy, purpose)
+        }
+    }
+
+    /**
+     * Determines what the bot expects to receive in exchange for its offer.
+     *
+     * Buying purposes select candidate wanted items. Selling purposes convert the offered item values
+     * into a synthetic coin entry representing the expected total trade value, rather than a demand for
+     * coins specifically. Per-item values and the running total saturate at the 32-bit integer limits.
+     *
+     * @param bot The bot calculating its expected return.
+     * @param priceStrategy The strategy used to price wanted items when buying.
+     * @param purpose The buying or selling purpose of the trade.
+     * @param offering The proposed items used to calculate the expected value when selling.
+     * @return Candidate wanted items for buying, or a synthetic coin-value entry for selling.
+     */
+    fun computeExpected(bot: Bot,
+                        priceStrategy: BotTradePrice,
+                        purpose: BotTradePurpose,
+                        offering: List<BotTradeItem>): List<BotTradeItem> {
+        return when (purpose) {
+            // Buyers expect whatever they're buying.
+            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> computeBuyItems(bot, priceStrategy, purpose)
+            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> {
+                // Sellers only expect gold value equivalent to what they're offering.
+                // This will later be interpreted as "general value" when trading.
+                var totalValue = 0
+                for (item in offering) {
+                    totalValue = IntMath.saturatedAdd(totalValue, item.totalPrice())
+                }
+                if (totalValue > 0) {
+                    listOf(BotTradeItem(Item(995, totalValue), 1, purpose, bot))
+                } else {
+                    listOf()
+                }
+            }
+        }
+    }
+
+    /**
+     * Builds candidate sale items for normal or merchant selling.
+     *
+     * Normal selling selects at most one priced, unrestricted surplus item when its unnoted stock
+     * reaches [SURPLUS_SELL_RATIO] times the wanted target. The proposed amount comes from the
+     * wanted-item surplus calculation, which can include ownership beyond the unnoted stock.
+     *
+     * Merchant selling selects all eligible wanted items whose economy prices have increased and
+     * uses [Int.MAX_VALUE] as a sell-quantity marker. Actual tradeable amounts are not reserved here.
+     *
+     * @param bot The bot selecting items to sell.
+     * @param priceStrategy The strategy used to calculate sale prices.
+     * @param purpose The selling purpose, either [BotTradePurpose.SELL] or [BotTradePurpose.MERCHANT_SELL].
+     * @return Candidate items to sell, with at most one item for ordinary selling.
+     * @throws IllegalStateException If a buying purpose is supplied.
+     */
+    private fun computeSellItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
+        if (purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.MERCHANT_BUY) {
+            throw IllegalStateException("Must be a valid SELL based purpose.")
+        } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
+            // Merchant sellers sell as much as possible of wanted items that have recently increased in value.
+            val candidates = ArrayList<BotTradeItem>()
+            for (item in bot.preferences.wantedItems) {
+                if (item.id == 995) {
+                    continue
+                }
+                val price = world.economy.prices[item.id]
+                if (price != null) {
+                    val count = bot.itemTracker.count(item.id)
+                    if (price.price > price.lastPrice && !isSellRestricted(bot, item) && count > 0) {
+                        candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
+                                                   priceStrategy.applySell(price.price.toLong()),
+                                                   purpose,
+                                                   bot)
+                    }
+                }
+            }
+            return candidates
+        }
+
+        // Otherwise, sell any surplus of wanted items we can.
+        val candidates = ArrayList<BotTradeItem>()
+        for ((item, surplus) in bot.preferences.wantedItemsToTrim()) {
+            if (!isSellRestricted(bot, item)) {
+                val amount = bot.itemTracker.count(item.id)
+                if (amount >= item.target * SURPLUS_SELL_RATIO) {
+                    val price = world.economy.prices[item.id]
+                    if (price != null) {
+                        candidates += BotTradeItem(Item(item.id, surplus),
+                                                   priceStrategy.applySell(price.price.toLong()),
+                                                   purpose,
+                                                   bot)
+                        break
+                    }
+                }
+            }
+        }
+        return candidates
+    }
 
 
+    /**
+     * Builds candidate wanted items for normal or merchant buying.
+     *
+     * Normal buying rebalances wanted items and selects at most one priced item, using its full target
+     * quantity rather than the remaining amount needed. Merchant buying selects all wanted items with
+     * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
+     *
+     * Neither path reserves payment or checks whether the other participant can supply the quantity.
+     *
+     * @param bot The bot selecting items to buy.
+     * @param priceStrategy The strategy used to calculate purchase prices.
+     * @param purpose The buying purpose, either [BotTradePurpose.BUY] or [BotTradePurpose.MERCHANT_BUY].
+     * @return Candidate items to buy, with at most one item for ordinary buying.
+     * @throws IllegalStateException If a selling purpose is supplied.
+     */
+    private fun computeBuyItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
+        if (purpose == BotTradePurpose.SELL || purpose == BotTradePurpose.MERCHANT_SELL) {
+            throw IllegalStateException("Must be a valid BUY based purpose.")
+        } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
+            // Merchant buyers seek wanted items whose prices have recently decreased.
+            val candidates = ArrayList<BotTradeItem>()
+            for (item in bot.preferences.wantedItems) {
+                if (item.id == 995) {
+                    continue
+                }
+                val price = world.economy.prices[item.id]
+                if (price != null) {
+                    if (price.price < price.lastPrice) {
+                        candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
+                                                   priceStrategy.applyBuy(price.price.toLong()),
+                                                   purpose,
+                                                   bot)
+                    }
+                }
+            }
+            return candidates
+        }
 
+        // Otherwise, buy any wanted items we need to acquire.
+        bot.preferences.rebalanceWantedItems()
+        val wantedItems = bot.preferences.wantedItemsToAcquire()
+        if (wantedItems.isEmpty()) {
+            // Bot has nothing they want to buy.
+            return listOf()
+        } else {
+            // Bot has items they want to acquire, add full targets ignoring overflow.
+            val candidates = ArrayList<BotTradeItem>()
+            for (item in wantedItems) {
+                if (item.id == 995) {
+                    continue
+                }
+                val price = world.economy.prices[item.id]
+                if (price != null) {
+                    candidates += BotTradeItem(Item(item.id, item.target),
+                                               priceStrategy.applyBuy(price.price.toLong()),
+                                               purpose,
+                                               bot)
+                    break
+                }
+            }
+            return candidates
+        }
+    }
+
+    /**
+     * Checks whether a wanted item is excluded from selling for the specified bot.
+     *
+     * Coins and untradeable items are always restricted. Additional checks protect low-stock items,
+     * training consumables for skiller-template bots, and combat consumables for PKer-template bots.
+     * When no skill is associated with the item, it is also restricted while the bot's combat level
+     * is below the specified maximum level.
+     *
+     * @param bot The bot whose stock and personality determine the restriction.
+     * @param item The wanted-item definition to check.
+     * @return `true` if the item must not be included in a sale candidate.
+     */
+    private fun isSellRestricted(bot: Bot, item: WantedItemDefinition): Boolean {
+        return item.id == 995 || !itemDef(item.id).isTradeable ||
+                (item.target == 1 && bot.itemTracker.count(item.id) < 3) ||
+                (item.target > 1 && bot.itemTracker.count(item.id) < item.target * SURPLUS_SELL_RATIO) ||
+                (bot.preferences.isSkiller && item.tags.contains(WantedItemTag.SKILLING_CONSUMABLE)) ||
+                (item.skill == -1 && bot.combatLevel < item.maxLevel) ||
+                (bot.preferences.isPker && item.tags.contains(WantedItemTag.COMBAT_CONSUMABLE))
+    }
 }
