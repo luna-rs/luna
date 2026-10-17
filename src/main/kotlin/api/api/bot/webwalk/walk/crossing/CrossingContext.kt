@@ -5,6 +5,7 @@ import api.bot.action.BotActionHandler
 import api.bot.webwalk.plan.PlanLeg
 import api.predef.*
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
@@ -53,6 +54,12 @@ class CrossingContext(val bot: Bot, val handler: BotActionHandler) {
      */
     fun find(position: Position, vararg ids: Int): GameObject? =
         world.objects.findAll(position).filter { it.id in ids }.findFirst().orElse(null)
+
+    /**
+     * Finds the nearest NPC to a position with one of some ids, within a number of tiles, or `null` if there is none.
+     */
+    fun findNpc(near: Position, ids: Set<Int>, radius: Int): Npc? =
+        world.locator.findNpcs(near, radius, true) { it.id in ids }.firstOrNull()
 
     /**
      * Walks to a position.

@@ -4,6 +4,8 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.net.msg.out.WidgetVisibilityMessageWriter;
 
+import java.util.List;
+
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which displays a series of options.
  *
@@ -79,6 +81,13 @@ public class OptionDialogue extends DialogueInterface {
      */
     public void fifth(Player player) {
 
+    }
+
+    /**
+     * @return The options, in the order they are shown.
+     */
+    public List<String> getOptions() {
+        return List.of(options);
     }
 
     /**
