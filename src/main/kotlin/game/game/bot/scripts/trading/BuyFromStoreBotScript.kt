@@ -90,9 +90,12 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         // purchased because every accessible shop is empty, too expensive, or inaccessible, block it for this trip.
         val blockedWantedItems = HashSet<Int>()
 
+        // Shop access depends only on the bot, so resolve it once per trip instead of once per wanted item.
+        val shops = accessibleShops()
+
         while (remainingBudget > 0) {
-            val wanted = nextWantedItem(blockedWantedItems) ?: break
-            val spent = buyWantedItem(wanted, remainingBudget)
+            val wanted = nextWantedItem(shops, blockedWantedItems) ?: break
+            val spent = buyWantedItem(shops, wanted, remainingBudget)
 
             if (spent < 1) {
                 // Avoid selecting an impossible wanted item forever during this shopping trip.
@@ -111,7 +114,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
 
         // Only start random shopping once no currently-purchasable wanted item remains.
         if (remainingBudget > 0) {
-            spendSpeculatively(remainingBudget)
+            spendSpeculatively(shops, remainingBudget)
         }
 
         bot.preferences.rebalanceWantedItems()
@@ -174,17 +177,17 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     /**
      * Returns the next wanted item that still needs ownership and is stocked by an accessible shop.
      */
-    private fun nextWantedItem(blocked: Set<Int>): WantedItemDefinition? {
+    private fun nextWantedItem(shops: List<Shop>, blocked: Set<Int>): WantedItemDefinition? {
         return bot.preferences.wantedItemsToAcquire()
             .asSequence()
             .filterNot { it.id in blocked }
-            .firstOrNull { shopsFor(it.id).isNotEmpty() }
+            .firstOrNull { shopsFor(shops, it.id).isNotEmpty() }
     }
 
     /**
      * Attempts to complete one wanted-item target before moving to another wanted item.
      */
-    private suspend fun buyWantedItem(wanted: WantedItemDefinition, budget: Int): Int {
+    private suspend fun buyWantedItem(shops: List<Shop>, wanted: WantedItemDefinition, budget: Int): Int {
         var spent = 0
         val failedShops = HashSet<Shop>()
 
@@ -197,7 +200,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             }
 
             // Stock is mutable, so re-resolve matching shops each pass rather than caching the result for the trip.
-            val shop = shopsFor(wanted.id)
+            val shop = shopsFor(shops, wanted.id)
                 .filterNot { it in failedShops }
                 .randomOrNull() ?: break
 
@@ -235,10 +238,10 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * - Average bots may buy one or several items.
      * - Intelligent bots deliberately spread their money across several different items.
      */
-    private suspend fun spendSpeculatively(budget: Int): Int {
+    private suspend fun spendSpeculatively(shops: List<Shop>, budget: Int): Int {
         val merchant = bot.preferences.likesActivity(BotActivity.MERCHANTING)
 
-        val shop = accessibleShops()
+        val shop = shops
             .filter { it.isMerchantOnly == merchant }
             .filter { candidate ->
                 candidate.items.any { item ->
@@ -429,11 +432,10 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     }
 
     /**
-     * Returns accessible shops that currently contain positive stock for [id].
+     * Returns the shops in [shops] that currently contain positive stock for [id].
      */
-    private fun shopsFor(id: Int): List<Shop> {
-        return accessibleShops()
-            .filter { it.stockAmount(id) > 0 }
+    private fun shopsFor(shops: List<Shop>, id: Int): List<Shop> {
+        return shops.filter { it.stockAmount(id) > 0 }
     }
 
     /**

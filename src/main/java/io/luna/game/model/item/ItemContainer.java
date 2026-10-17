@@ -1097,7 +1097,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The item at that slot, or null if empty.
      */
     public final Item get(int index) {
-        checkArgument(index >= 0 && index < capacity, "Index " + index + " out of bounds!");
+        checkArgument(index >= 0 && index < capacity, "Index %s out of bounds!", index);
         return items[index];
     }
 
