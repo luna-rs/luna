@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 import static io.luna.game.model.def.WantedItemDefinition.DEFAULT;
-import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_TAG;
+import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_TAGS;
 import static io.luna.util.RandomUtils.randomFrom;
 import static io.luna.util.RandomUtils.roll;
 
@@ -508,7 +508,7 @@ public final class BotPreference {
                 int maxLevel = itemJson.get("max_level").getAsInt();
                 WantedItemPriority priority = !itemJson.has("priority") ? WantedItemPriority.STANDARD :
                         WantedItemPriority.valueOf(itemJson.get("priority").getAsString());
-                ImmutableSet<WantedItemTag> tags = !itemJson.has("tags") ? DEFAULT_TAG :
+                ImmutableSet<WantedItemTag> tags = !itemJson.has("tags") ? DEFAULT_TAGS :
                         ImmutableSet.copyOf(GsonUtils.getAsType(itemJson.get("tags"), WantedItemTag[].class));
                 wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags));
             }
@@ -535,7 +535,7 @@ public final class BotPreference {
         int unnotedId = toUnnotedId(id);
         WantedItemDefinition existing = wantedItems.get(unnotedId);
         var tags = existing != null ? existing.tags() :
-                WantedItemDefinition.DEFAULT.get(unnotedId).map(WantedItemDefinition::tags).orElse(DEFAULT_TAG);
+                WantedItemDefinition.DEFAULT.get(unnotedId).map(WantedItemDefinition::tags).orElse(DEFAULT_TAGS);
         wantedItems.put(unnotedId, new WantedItemDefinition(unnotedId, -1, target, skill, maxLevel, existing != null ? existing.priority() : WantedItemPriority.HIGH, tags));
     }
 
