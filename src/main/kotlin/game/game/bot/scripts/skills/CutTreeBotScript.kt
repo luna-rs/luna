@@ -20,6 +20,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import java.util.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A [SkillingBotScript] that trains Woodcutting by chopping configured tree types inside selected zones.
@@ -39,6 +40,9 @@ import kotlin.time.Duration
  */
 class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting) {
+
+    /** Rotate away from a zone after three minutes without selecting an interactable tree. */
+    override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
 

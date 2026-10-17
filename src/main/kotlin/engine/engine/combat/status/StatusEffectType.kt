@@ -2,6 +2,7 @@ package engine.combat.status
 
 import com.google.common.collect.ImmutableList
 import engine.combat.status.hooks.PoisonStatusEffect
+import engine.combat.status.hooks.SkullStatusEffect
 import engine.combat.status.hooks.TeleBlockStatusEffect
 import game.combat.specialAttacks.DragonScimitar
 import io.luna.game.model.mob.Mob
@@ -53,7 +54,12 @@ enum class StatusEffectType(val loadFunction: (Player) -> StatusEffect<out Mob>?
     /**
      * Marks the player as prayer-disabled from a dragon scimitar special attack.
      */
-    DRAGON_SCIMITAR({ DragonScimitar.DragonScimitarStatusEffect(it) });
+    DRAGON_SCIMITAR({ DragonScimitar.DragonScimitarStatusEffect(it) }),
+
+    /**
+     * Shows the white skull above the player for a fixed duration.
+     */
+    SKULLED({ SkullStatusEffect(it) });
 
     companion object {
 

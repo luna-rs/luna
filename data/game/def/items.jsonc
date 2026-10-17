@@ -7907,37 +7907,37 @@
   {
     "id": 5509, // Small pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5510, // Medium pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5511, // Medium pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5512, // Large pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5513, // Large pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5514, // Giant pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5515, // Giant pouch
     "weight": 1.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 5518, // Scrying orb
