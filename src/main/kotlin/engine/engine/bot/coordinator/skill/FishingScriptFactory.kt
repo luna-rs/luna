@@ -38,6 +38,12 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         Tool.entries - setOf(KARAMBWANJI_NET, SLIMY_EEL_FISHING_ROD, CAVE_EEL_FISHING_ROD, LAVA_EEL_FISHING_ROD)
 
     /**
+     * The tools bots fish with. The others are used at spots that no bot zone covers.
+     */
+    private val BOT_TOOLS =
+        Tool.entries - setOf(KARAMBWANJI_NET, SLIMY_EEL_FISHING_ROD, CAVE_EEL_FISHING_ROD, LAVA_EEL_FISHING_ROD)
+
+    /**
      * A group of fishing zones that support one or more fishing tools.
      *
      * Each group defines:
