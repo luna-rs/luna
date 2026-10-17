@@ -187,6 +187,15 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return true
         }
 
+        // A failed banking attempt keeps forceBanking set. Retry it from here instead of travelling
+        // back to the work zone without the supplies that sent us to the bank.
+        if (forceBanking && activeZone != null) {
+            bankIfNeeded()
+            bot.naturalMicroDelay()
+            return false
+        }
+
+
         if (!ensureActiveZone()) {
             bot.log("No active zone could be selected. Stopping script. remainingCandidates=${zones.size}")
             return true
