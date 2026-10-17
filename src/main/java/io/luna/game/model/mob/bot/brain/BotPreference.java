@@ -35,20 +35,20 @@ import static io.luna.util.RandomUtils.randomFrom;
 import static io.luna.util.RandomUtils.roll;
 
 /**
- * Stores a bot's activity, skill, wanted-item, equipment, and player preferences.
+ * Stores a bot's activity preferences, preferred skills and gear, wanted items, and player feelings.
  * <p>
- * Activity and gear preferences may be generated from a {@link BotPersonality}. Wanted items and
- * player feelings may be changed at runtime and serialized for persistence.
+ * Activities, skills, and gear may be generated from personality traits. Wanted items and
+ * player feelings can change at runtime and are included in the saved preference profile.
  *
  * @author lare96
  */
 public final class BotPreference {
 
     /**
-     * Builds a {@link BotPreference} from explicit values or personality-based defaults.
+     * Builds a {@link BotPreference} using explicit preferences or personality-based generation.
      * <p>
-     * Activity weights may be loaded from templates or generated randomly. Preferred skills and gear
-     * are generated from personality traits unless explicitly supplied.
+     * Activity weights can be copied from templates or randomized. Skills and gear are generated
+     * from the supplied personality when not explicitly configured.
      */
     public static final class Builder {
         private final BotPersonality personality;
@@ -66,10 +66,10 @@ public final class BotPreference {
         private final double dexterity;
 
         /**
-         * Creates a preference builder for a personality and its template manager.
+         * Creates a preference builder using a personality and template manager.
          *
-         * @param personalityManager The manager providing personality templates.
-         * @param personality The personality used to generate preferences.
+         * @param personalityManager The manager used to retrieve activity templates.
+         * @param personality The personality used to generate skills and gear.
          */
         public Builder(BotPersonalityManager personalityManager, BotPersonality personality) {
             this.personalityManager = personalityManager;
@@ -83,9 +83,9 @@ public final class BotPreference {
         }
 
         /**
-         * Adds or replaces an activity preference weight without normalizing its value.
+         * Sets an activity preference without clamping the supplied weight.
          *
-         * @param activity The activity whose weight is being set.
+         * @param activity The activity to configure.
          * @param value The weight to store for the activity.
          * @return This builder for chaining.
          */
@@ -95,11 +95,9 @@ public final class BotPreference {
         }
 
         /**
-         * Adds preferred skill ids to this builder.
-         * <p>
-         * Duplicate ids are ignored by the backing set.
+         * Adds preferred skill IDs, ignoring duplicates.
          *
-         * @param skillIds The skill ids to add.
+         * @param skillIds The skill IDs to add.
          * @return This builder for chaining.
          */
         public Builder addSkill(int... skillIds) {
@@ -110,9 +108,7 @@ public final class BotPreference {
         }
 
         /**
-         * Adds preferred gear sets to this builder.
-         * <p>
-         * Duplicate sets are ignored by the backing set.
+         * Adds preferred gear sets, ignoring duplicates.
          *
          * @param gearSets The gear sets to add.
          * @return This builder for chaining.
@@ -123,9 +119,9 @@ public final class BotPreference {
         }
 
         /**
-         * Adds or replaces a wanted-item definition using its item id as the key.
+         * Adds or replaces a wanted-item definition keyed by its item ID.
          *
-         * @param item The wanted-item definition to add.
+         * @param item The definition to add or replace.
          * @return This builder for chaining.
          */
         public Builder addWantedItem(WantedItemDefinition item) {
@@ -134,7 +130,7 @@ public final class BotPreference {
         }
 
         /**
-         * Sets the initial feeling toward a player, clamped to {@code 0.0..1.0}.
+         * Sets a player's initial feeling, clamped to {@code 0.0..1.0}.
          *
          * @param username The player's username.
          * @param feeling The feeling value to store.
@@ -148,9 +144,9 @@ public final class BotPreference {
         /**
          * Copies activity weights from a predefined personality template.
          * <p>
-         * Existing entries with matching activities are overwritten without adding variance.
+         * Existing weights for matching activities are overwritten without random variance.
          *
-         * @param from The template type to load.
+         * @param from The template to load.
          * @return This builder for chaining.
          */
         public Builder template(PersonalityTemplateType from) {
@@ -161,10 +157,10 @@ public final class BotPreference {
 
 
         /**
-         * Randomizes activity weights using a randomly selected personality template.
+         * Randomizes activity weights around a randomly chosen personality template.
          * <p>
-         * A variance magnitude between {@code 0.05} and {@code 0.25} is chosen. Each template weight
-         * receives a random adjustment within that magnitude and is clamped to {@code 0.0..1.0}.
+         * Chooses a variance magnitude from {@code 0.05..0.25}, applies an independent adjustment
+         * to each template weight, and clamps the result to {@code 0.0..1.0}.
          *
          * @return This builder for chaining.
          */
@@ -181,7 +177,7 @@ public final class BotPreference {
 
 
         /**
-         * Assigns a random activity weight to every activity in {@link BotActivity#ALL}.
+         * Assigns a random weight to each activity in {@link BotActivity#ALL}.
          *
          * @return This builder for chaining.
          */
@@ -193,12 +189,12 @@ public final class BotPreference {
         }
 
         /**
-         * Generates preferred skill ids from the personality unless skills were supplied.
+         * Generates preferred skills from the personality unless explicit skills were added.
          * <p>
-         * Personality traits may select overlapping skills. If no trait selects a skill, two to four ids
-         * are drawn without replacement from the available skill ids.
+         * Personality traits may select overlapping skill IDs. If none are selected, two to four
+         * IDs are drawn without replacement from {@link Skill#IDS}.
          *
-         * @return A mutable set containing the selected skill ids.
+         * @return A mutable set of preferred skill IDs.
          */
         private Set<Integer> generateSkills() {
             Set<Integer> selected = new HashSet<>();
@@ -243,12 +239,13 @@ public final class BotPreference {
         }
 
         /**
-         * Generates preferred gear sets from the personality unless gear was supplied.
+         * Generates preferred gear from personality traits unless explicit gear was added.
          * <p>
-         * Confidence, kindness, intelligence, social tendency, and dexterity influence the chosen sets.
-         * If no trait selects gear, a fallback group is added.
+         * Confidence and kindness influence combat gear, intelligence favors magical gear,
+         * sociability favors decorative sets, and dexterity favors light or ranged equipment.
+         * A fallback set is selected if none of these traits produces gear.
          *
-         * @return A mutable set containing the selected gear sets.
+         * @return A mutable set of preferred gear sets.
          */
         private Set<BotGearSet> generateGear() {
             Set<BotGearSet> selected = new HashSet<>();
@@ -338,9 +335,9 @@ public final class BotPreference {
         }
 
         /**
-         * Builds a preference profile from the currently configured builder state.
+         * Builds a preference profile from the current builder state.
          * <p>
-         * Preferred skills and gear are generated when their corresponding builder sets are empty.
+         * Preferred skills and gear are generated only when their builder sets are empty.
          *
          * @return A new {@link BotPreference} instance.
          */
@@ -370,10 +367,10 @@ public final class BotPreference {
     private final Set<Integer> skills;
 
     /**
-     * The mutable wanted-item definitions, keyed by item id.
+     * The mutable wanted-item definitions, keyed by item ID.
      * <p>
-     * Default definitions are supplied at construction when an entry is absent. Other definitions
-     * can be added or updated at runtime.
+     * Missing default definitions are inserted during construction. Definitions can also be
+     * added, replaced, or have their targets increased at runtime.
      */
     private final Map<Integer, WantedItemDefinition> wantedItems;
 
@@ -391,16 +388,16 @@ public final class BotPreference {
     private final Map<String, Double> playerFeelings;
 
     /**
-     * Creates a bot preference profile with supplied preference collections.
+     * Creates a preference profile from the supplied collections.
      * <p>
-     * Adds the default general-activity weight and any missing default wanted items. Activity weights
-     * are copied; skill, wanted-item, gear, and player-feeling collections are retained by reference.
+     * Inserts the default general-activity weight and missing default wanted items into the
+     * supplied maps. Activity weights are copied; the other collections are retained by reference.
      *
-     * @param activities The activity preference weights.
-     * @param skills The preferred skill ids.
-     * @param wantedItems The wanted-item definitions keyed by item id.
+     * @param activities The activity weights, keyed by activity.
+     * @param skills The preferred skill IDs.
+     * @param wantedItems The wanted-item definitions, keyed by item ID.
      * @param gear The preferred gear sets.
-     * @param playerFeelings The player feeling values keyed by username.
+     * @param playerFeelings The player feelings, keyed by username.
      */
     public BotPreference(Map<BotActivity, Double> activities,
                          Set<Integer> skills,
@@ -424,12 +421,12 @@ public final class BotPreference {
     }
 
     /**
-     * Serializes this preference profile into a JSON object.
+     * Serializes this preference profile into JSON.
      * <p>
-     * Includes activity weights, skill ids, wanted items with their metadata, gear sets, and player
-     * feelings. The associated {@link Bot} is not serialized here.
+     * Saves activity weights, preferred skills and gear, wanted-item definitions with their
+     * priority and tags, and player feelings. The associated bot is not serialized.
      *
-     * @return The serialized preference profile.
+     * @return The JSON representation of this preference profile.
      */
     public JsonObject save() {
         JsonObject preferences = new JsonObject();
@@ -482,12 +479,12 @@ public final class BotPreference {
     }
 
     /**
-     * Loads saved preferences from a JSON object into the existing collections.
+     * Loads saved preferences into the existing collections.
      * <p>
-     * Entries are added or overwritten without clearing the current collections. Wanted items lacking
-     * priority or tags use default metadata, and entries without a minimum field are skipped.
+     * Saved entries are merged without clearing current values. Wanted items lacking a minimum
+     * field are skipped; missing priority or tags use their respective default values.
      *
-     * @param object The JSON object containing preference data.
+     * @param object The JSON object containing saved preferences.
      */
     public void load(JsonObject object) {
         // Deserialize activities and their weightings.
@@ -524,15 +521,15 @@ public final class BotPreference {
     }
 
     /**
-     * Adds or replaces a wanted item, normalizing noted ids to unnoted ids.
+     * Adds or replaces a wanted item after normalizing its ID to the unnoted form.
      * <p>
-     * Sets the minimum to {@code -1}. Existing priorities and tags are retained when available;
-     * otherwise, the new entry uses high priority and default tags.
+     * Sets its minimum to {@code -1}. Preserves an existing priority and tags; otherwise uses
+     * high priority and tags from the default definition, or the default tag set if absent.
      *
-     * @param id The item id to add or replace.
-     * @param target The desired item quantity.
-     * @param skill The associated skill id, or {@code -1} for no skill restriction.
-     * @param maxLevel The maximum applicable level, or {@code -1} when unrestricted.
+     * @param id The item ID to add or replace.
+     * @param target The desired total ownership quantity.
+     * @param skill The associated skill ID, or {@code -1} if unrestricted.
+     * @param maxLevel The maximum relevant skill level, or {@code -1} if unrestricted.
      */
     public void addWantedItem(int id, int target, int skill, int maxLevel) {
         int unnotedId = toUnnotedId(id);
@@ -573,13 +570,13 @@ public final class BotPreference {
     }
 
     /**
-     * Raises a wanted item's target quantity without lowering an existing target.
+     * Raises a wanted-item target without decreasing an existing target.
      * <p>
-     * Creates an unrestricted wanted item if no definition exists. Otherwise, all metadata except
-     * its target quantity is preserved.
+     * Creates an unrestricted wanted item if none exists. Otherwise, preserves all existing
+     * definition metadata apart from the target quantity.
      *
-     * @param id The item id, normalized before lookup.
-     * @param target The proposed target quantity.
+     * @param id The item ID, normalized before lookup.
+     * @param target The proposed total ownership target.
      */
     public void raiseWantedItemTarget(int id, int target) {
         int unnotedId = toUnnotedId(id);
@@ -605,11 +602,11 @@ public final class BotPreference {
     }
 
     /**
-     * Removes a wanted-item definition unless it belongs to the default definitions.
+     * Removes a wanted-item definition unless its ID belongs to the default definitions.
      * <p>
-     * Default wanted items cannot be removed, including when their values have been overridden.
+     * A default item cannot be removed even if its definition has been replaced or modified.
      *
-     * @param id The item id, normalized before lookup.
+     * @param id The item ID, normalized before lookup.
      * @return {@code true} if a nondefault definition was removed.
      */
     public boolean removeWantedItem(int id) {
@@ -744,57 +741,57 @@ public final class BotPreference {
     }
 
     /**
-     * Checks whether the associated bot uses a specific personality template.
+     * Checks whether the associated bot has the specified personality template.
      *
-     * @param type The personality template to check.
-     * @return {@code true} if the bot has an assigned personality with the specified template.
+     * @param type The template type to check.
+     * @return {@code true} if an associated bot has a matching personality template.
      */
     private boolean hasPersonalityTemplate(PersonalityTemplateType type) {
         return bot != null && bot.getPersonality() != null && bot.getPersonality().getType() == type;
     }
 
     /**
-     * Determines whether the bot is primarily interested in skilling.
+     * Determines whether the bot qualifies as a skiller.
+     * <p>
+     * Requires the {@link PersonalityTemplateType#SKILLER} template and a PKing preference
+     * no higher than {@code 0.60}. Activity preferences alone do not qualify a bot as a skiller.
      *
-     * Matches the skiller template, a strong skill-training preference, or a combined preference
-     * for training and profitable skilling.
-     *
-     * @return {@code true} if the bot matches a skilling-focused playstyle.
+     * @return {@code true} if the bot has the skiller template and does not like PKing.
      */
     public boolean isSkiller() {
-        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER) && !likesActivity(BotActivity.PKING);
+        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER) && !likesActivity(BotActivity.PKING) && !isCombatant();
     }
 
     /**
-     * Determines whether the bot is interested in player killing.
+     * Determines whether the bot uses the PKer personality template.
+     * <p>
+     * PKing activity preferences alone do not qualify a bot as a PKer.
      *
-     * Matches the PKer template or a strong preference for player killing.
-     *
-     * @return {@code true} if the bot matches a PKing-focused playstyle.
+     * @return {@code true} if the bot uses the {@link PersonalityTemplateType#PKER} template.
      */
     public boolean isPker() {
-        return hasPersonalityTemplate(PersonalityTemplateType.PKER) || lovesActivity(BotActivity.PKING) || likesActivity(BotActivity.PKING);
+        return hasPersonalityTemplate(PersonalityTemplateType.PKER);
     }
 
     /**
-     * Determines whether the bot is interested in merchanting.
+     * Determines whether the bot qualifies as a merchant.
+     * <p>
+     * Matches the {@link PersonalityTemplateType#MERCHANT} template or a merchanting activity
+     * weight above {@code 0.60}. Bots with other templates may also qualify.
      *
-     * Matches the merchant template or a strong preference for merchanting. Other templates may
-     * qualify when their activity preferences favor merchanting.
-     *
-     * @return {@code true} if the bot matches a merchanting-focused playstyle.
+     * @return {@code true} if the bot has the merchant template or likes merchanting.
      */
     public boolean isMerchant() {
-        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT) || lovesActivity(BotActivity.MERCHANTING) || likesActivity(BotActivity.MERCHANTING);
+        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT) || lovesActivity(BotActivity.MERCHANTING);
     }
 
     /**
-     * Determines whether the bot prefers combat-oriented activities.
+     * Determines whether the bot favors combat training or profitable combat.
+     * <p>
+     * Requires combat-training weight above {@code 0.75}, or both combat-training and profitable
+     * combat weights above {@code 0.60}. PKing is classified separately by {@link #isPker()}.
      *
-     * Requires a strong combat-training preference or interest in both combat training and
-     * profitable combat. PKing preference is handled separately by {@link #isPker()}.
-     *
-     * @return {@code true} if the bot favors combat training or profitable combat.
+     * @return {@code true} if the bot meets either combat preference condition.
      */
     public boolean isCombatant() {
         return lovesActivity(BotActivity.TRAINING_COMBAT) ||
@@ -802,65 +799,66 @@ public final class BotPreference {
     }
 
     /**
-     * Determines whether the bot favors social activity.
+     * Determines whether the bot qualifies as a socializer.
+     * <p>
+     * Matches the {@link PersonalityTemplateType#HERO} template or a socializing activity
+     * weight above {@code 0.60}.
      *
-     * Matches the hero template or a preference for socializing.
-     *
-     * @return {@code true} if the bot matches a social playstyle.
+     * @return {@code true} if the bot has the hero template or likes socializing.
      */
     public boolean isSocializer() {
         return hasPersonalityTemplate(PersonalityTemplateType.HERO) || likesActivity(BotActivity.SOCIALIZING);
     }
 
     /**
-     * Determines whether the bot enjoys participating in minigames.
+     * Determines whether the bot likes participating in minigames.
      *
-     * @return {@code true} if the bot likes the minigames activity.
+     * @return {@code true} if the minigames activity weight exceeds {@code 0.60}.
      */
     public boolean isMinigamer() {
         return likesActivity(BotActivity.MINIGAMES);
     }
 
     /**
-     * Determines whether the bot uses the no-life personality template.
+     * Checks whether the bot uses the no-life personality template.
      *
-     * @return {@code true} if the bot uses the no-life template.
+     * @return {@code true} if the bot uses {@link PersonalityTemplateType#NO_LIFE}.
      */
     public boolean isNoLife() {
         return hasPersonalityTemplate(PersonalityTemplateType.NO_LIFE);
     }
 
     /**
-     * Determines whether the bot uses the kid personality template.
+     * Checks whether the bot uses the kid personality template.
      *
-     * @return {@code true} if the bot uses the kid template.
+     * @return {@code true} if the bot uses {@link PersonalityTemplateType#KID}.
      */
     public boolean isKid() {
         return hasPersonalityTemplate(PersonalityTemplateType.KID);
     }
 
     /**
-     * Determines whether the bot uses the hero personality template.
+     * Checks whether the bot uses the hero personality template.
      *
-     * @return {@code true} if the bot uses the hero template.
+     * @return {@code true} if the bot uses {@link PersonalityTemplateType#HERO}.
      */
     public boolean isHero() {
         return hasPersonalityTemplate(PersonalityTemplateType.HERO);
     }
 
     /**
-     * Determines whether the bot uses the scammer personality template.
+     * Checks whether the bot uses the scammer personality template.
      *
-     * @return {@code true} if the bot uses the scammer template.
+     * @return {@code true} if the bot uses {@link PersonalityTemplateType#SCAMMER}.
      */
     public boolean isScammer() {
         return hasPersonalityTemplate(PersonalityTemplateType.SCAMMER);
     }
 
     /**
-     * Determines whether the bot uses the jack-of-all-trades personality template.
+     * Checks whether the bot uses the jack-of-all-trades personality template.
      *
-     * @return {@code true} if the bot uses the jack-of-all-trades template.
+     * @return {@code true} if the bot uses {@link PersonalityTemplateType#JACK_OF_ALL_TRADES}.
      */
     public boolean isJackOfAllTrades() {
         return hasPersonalityTemplate(PersonalityTemplateType.JACK_OF_ALL_TRADES);
@@ -931,5 +929,4 @@ public final class BotPreference {
     public void setBot(Bot bot) {
         this.bot = bot;
     }
-
 }
