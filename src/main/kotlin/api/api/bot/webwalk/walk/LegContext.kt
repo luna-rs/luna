@@ -95,6 +95,18 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
     fun arrived(leg: PlanLeg, slack: Int = LANDING_SLACK): Boolean = near(leg.to, slack)
 
     /**
+     * Finds how far, in tiles, from where a leg leads the bot may land, which is [LANDING_SLACK] unless the leg stays on
+     * one plane and is shorter than that. A bot that is still where the leg starts is then never counted as having
+     * arrived, which matters for entrances that only move it a few tiles.
+     */
+    fun landingSlack(leg: PlanLeg): Int {
+        if (leg.from.z != leg.to.z) {
+            return LANDING_SLACK
+        }
+        return minOf(LANDING_SLACK, maxOf(0, leg.from.computeLongestDistance(leg.to) - 1))
+    }
+
+    /**
      * Waits until the bot has landed where a leg leads and is free to move again. A climb locks the bot until it is
      * done, and a walk that starts while it is locked is dropped, which is why being in place is not enough.
      *

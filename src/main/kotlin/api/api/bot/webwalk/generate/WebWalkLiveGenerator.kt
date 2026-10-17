@@ -16,6 +16,7 @@ import api.predef.*
 import game.content.sailing.ShipGangplanks
 import game.content.sailing.ShipRoute
 import game.item.degradable.jewellery.TeleportJewellery
+import game.obj.entrances.Entrance
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
@@ -45,8 +46,8 @@ import java.util.concurrent.Executor
  *   cache.
  * - The crossings of `crossings.jsonc` are the objects of the [SpecialCrossings] that the cache's map data places, such as the
  *   leaves of the Al Kharid toll gate, made by [WebWalkCrossingGenerator].
- * - The ladders, stairs and trapdoors of `climbs.jsonc` land where [LadderDestination], [StairDestination] and
- *   [Trapdoor] say that they do, which is what players get.
+ * - The ladders, stairs, trapdoors and entrances of `climbs.jsonc` land where [LadderDestination], [StairDestination],
+ *   [Trapdoor] and [Entrance] say that they do, which is what players get.
  * - The teleports of `teleports.jsonc` are the teleport spells, the destinations of the teleport jewellery, and the home
  *   teleport, so that they are never written out by hand.
  * - The ships of `ships.jsonc` are the [ShipRoute]s, each boarded where its crew stands and left by its gangplank, with
@@ -129,6 +130,12 @@ object WebWalkLiveGenerator {
     private const val HOME_TICKS = 7
 
     /**
+     * The time to use a cave or dungeon entrance, in ticks, on top of the delay of the [Entrance]: a tick to click it, and
+     * one to be moved.
+     */
+    private const val ENTRANCE_TICKS = 2
+
+    /**
      * How far, in tiles, from the departure of a ship its crew may stand.
      */
     private const val CREW_RADIUS = 8
@@ -166,7 +173,7 @@ object WebWalkLiveGenerator {
     /**
      * What [gather] found.
      *
-     * @property climbs The ladders, stairs and trapdoors.
+     * @property climbs The ladders, stairs, trapdoors and entrances.
      * @property waypoints The waypoints.
      * @property teleports The teleports.
      * @property banks The bank booths, whose tiles to stand on are chosen by [finish].
@@ -198,7 +205,7 @@ object WebWalkLiveGenerator {
      * Reads the world. Must be called on the game thread.
      *
      * @param directory The directory of the other files, which is `data/game/bots/webwalk`.
-     * @return The ladders, stairs, trapdoors and waypoints.
+     * @return The ladders, stairs, trapdoors, entrances and waypoints.
      */
     fun gather(directory: Path): Gathered {
         val report = GenerationReport()
@@ -213,6 +220,8 @@ object WebWalkLiveGenerator {
         for (obj in world.objects.staticIterator()) {
             val def = obj.def() ?: continue
             when {
+                // Entrances come first, because they are what the game does with their ids, whatever they are called.
+                obj.id in Entrance.BY_ID -> entrance(obj, climbs, report)
                 def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER -> ladder(obj, climbs, report)
                 def.name in StairDestination.NAMES -> stairs(obj, climbs, report)
                 obj.id in trapdoors -> trapdoor(obj, trapdoors.getValue(obj.id), climbs, report)
@@ -220,6 +229,7 @@ object WebWalkLiveGenerator {
             }
         }
         report.count("climbs", climbs.size)
+        report.count("entrances", climbs.count { it.type == EdgeType.ENTRANCE })
         val waypoints = waypoints(report)
         return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report),
                         bankSeeds(report), ships(leavingPlanks, report), report)
@@ -378,6 +388,73 @@ object WebWalkLiveGenerator {
             }
         }
         report.skipped += "trapdoor ${obj.id} at ${DoorObstacles.describe(obj.position)}: nowhere to land"
+    }
+
+    /**
+     * Makes the obstacles of a cave or dungeon entrance, one for each way through it. Entrances that land somewhere different
+     * from each tile that they are used from, such as the ones that move players a set distance, would otherwise make one
+     * for every tile, so the tiles that land the same way are made into one: the one that moves the farthest, which for
+     * entrances that cross to the other side of a line is the tile on the far side.
+     */
+    private fun entrance(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val what = "entrance ${obj.id} at ${DoorObstacles.describe(obj.position)}"
+        val entrance = Entrance.forObject(obj.id, obj.position)
+        if (entrance == null) {
+            report.skipped += "$what: no entrance here"
+            return
+        }
+        // Entrances are all used with their first option, see dungeonEntrances.kts.
+        val option = obj.def().actions.getOrNull(0)
+        if (option == null) {
+            report.skipped += "$what: no option to use it with"
+            return
+        }
+
+        val crossings = ArrayList<Pair<Position, Position>>()
+        var unstandable: Position? = null
+        for (from in climbingTiles(obj)) {
+            val to = entrance.landing.from(from)
+            if (to == from) {
+                continue
+            }
+            if (LadderDestination.canLand(to)) {
+                crossings += Pair(from, to)
+            } else if (unstandable == null) {
+                unstandable = to
+            }
+        }
+        val ways = ArrayList<Pair<Position, Position>>()
+        val farthestFirst = compareByDescending<Pair<Position, Position>> { it.first.computeLongestDistance(it.second) }
+            .thenComparing({ it.first }, LANDING_ORDER)
+        for (crossing in crossings.sortedWith(farthestFirst)) {
+            if (ways.none { sameWay(it, crossing) }) {
+                ways += crossing
+            }
+        }
+        if (ways.isEmpty()) {
+            val landing = unstandable?.let { ", ${DoorObstacles.describe(it)} can't be stood on" } ?: ""
+            report.skipped += "$what: nowhere to land$landing"
+            return
+        }
+        val cost = ENTRANCE_TICKS + entrance.delay + if (entrance.arriveDelay) 1 else 0
+        for ((from, to) in ways) {
+            climbs += GeneratedObstacle(EdgeType.ENTRANCE, obj.id, obj.position, from, to, option, cost = cost)
+        }
+    }
+
+    /**
+     * Determines if two crossings of an entrance go the same way: between the same planes, in directions that are no
+     * more than a right angle apart.
+     */
+    private fun sameWay(first: Pair<Position, Position>, second: Pair<Position, Position>): Boolean {
+        val (firstFrom, firstTo) = first
+        val (secondFrom, secondTo) = second
+        if (firstFrom.z != secondFrom.z || firstTo.z != secondTo.z) {
+            return false
+        }
+        val dot = (firstTo.x - firstFrom.x) * (secondTo.x - secondFrom.x) +
+                (firstTo.y - firstFrom.y) * (secondTo.y - secondFrom.y)
+        return dot >= 0
     }
 
     /**
