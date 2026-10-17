@@ -86,9 +86,10 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     CROSSING(true),
 
     /**
-     * A ship between two ports.
+     * A ship from one port to another, which is boarded by talking to its crew and left by its gangplank. The
+     * [EdgeAction.key] of the edge names its [game.content.sailing.ShipRoute]. A ship back is a route of its own.
      */
-    SHIP(true),
+    SHIP(false),
 
     /**
      * A teleport. Never loaded from data: the planner makes these from the bot's [TeleportDefinition]s.
@@ -146,17 +147,19 @@ data class WebWalkNode(val id: String,
 /**
  * What the executor does to cross an edge, beyond walking to its start.
  *
- * @property objectId The id of the object to use, for doors, ladders and the like.
+ * @property objectId The id of the object to use, for doors, ladders and the like, and the gangplank that a ship is left by.
  * @property objectPosition The position of that object.
  * @property option The name of the menu option to use on the object, or `null` to choose by the object's type.
  * @property handler The name of the crossing handler that crosses the edge, for [EdgeType.CROSSING].
+ * @property key The name of the [game.content.sailing.ShipRoute] of the edge, for [EdgeType.SHIP].
  *
  * @author Hydrozoa
  */
 data class EdgeAction(val objectId: Int? = null,
                       val objectPosition: Position? = null,
                       val option: String? = null,
-                      val handler: String? = null)
+                      val handler: String? = null,
+                      val key: String? = null)
 
 /**
  * A directed connection between two nodes. Data that is travelled both ways is loaded as two edges.
