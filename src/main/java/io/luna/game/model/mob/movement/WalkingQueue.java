@@ -101,7 +101,8 @@ public final class WalkingQueue {
             // Bots now close windows when moving.
             Bot bot = mob.asPlr().asBot();
             if(!current.isEmpty()) {
-                bot.getOverlays().closeWindows();
+                // Without interrupting actions, or the navigation that is moving the bot would be stopped.
+                bot.getOverlays().closeWindows(false);
             }
         }
 
