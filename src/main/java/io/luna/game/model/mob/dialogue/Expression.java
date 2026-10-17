@@ -20,7 +20,7 @@ public enum Expression {
     /**
      * The angry expressions.
      */
-    ANGRY(592, 593, 594, 595),
+    ANGRY(614, 615, 616, 617),
 
     /**
      * The worried expressions.

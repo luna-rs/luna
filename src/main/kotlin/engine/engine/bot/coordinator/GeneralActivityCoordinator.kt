@@ -2,6 +2,8 @@ package engine.bot.coordinator
 
 import api.bot.script.BotScript
 import api.predef.*
+import game.bot.scripts.UseLampBotScript
+import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
@@ -19,7 +21,7 @@ import kotlin.time.Duration.Companion.minutes
  *
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
  * are filled toward their wanted-stock target. Owned unsearched bird nests can also be opened and their contents
- * banked. These tasks do not depend on a Crafting or combat preference.
+ * banked. Owned experience lamps are redeemed in a preferred supported skill. These tasks do not depend on a Crafting or combat preference.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
  * @author lare96
@@ -50,6 +52,11 @@ object GeneralActivityCoordinator : BotCoordinator {
     internal fun getScript(bot: Bot): BotScript? {
         val duration = if (bot.preferences.likesActivity(BotActivity.GENERAL_ACTIVITIES))
             rand(100, 350).minutes else rand(45, 120).minutes
+        if (owned(bot, UseLampBotScript.LAMP) > 0) {
+            val preferred = InterfaceSkill.values().filter { it.skill in bot.preferences.skills }
+            val skill = preferred.randomOrNull() ?: InterfaceSkill.values().random()
+            return UseLampBotScript(bot, skill, duration)
+        }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
                 return OpenCrystalChestBotScript(bot, it, duration)
