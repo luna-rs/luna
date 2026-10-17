@@ -1,6 +1,7 @@
 package api.bot.webwalk.walk.crossing
 
 import api.bot.webwalk.plan.PlanLeg
+import api.bot.webwalk.walk.LegContext
 
 /**
  * Crosses the edges of the web that are more than a click on a door, ladder or the like, such as a gate that charges a toll.
@@ -18,7 +19,7 @@ fun interface CrossingHandler {
      * @param leg The leg to cross.
      * @return `null` if the bot crossed, or why it didn't.
      */
-    suspend fun cross(context: CrossingContext, leg: PlanLeg): String?
+    suspend fun cross(context: LegContext, leg: PlanLeg): String?
 }
 
 /**
