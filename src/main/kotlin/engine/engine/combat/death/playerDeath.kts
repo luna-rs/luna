@@ -8,6 +8,7 @@ import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import game.player.Animations
 import game.player.Jingles
+import game.skill.runecrafting.essencePouch.EssencePouch
 import io.luna.Luna
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.DeathGroundItem
@@ -39,6 +40,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
             return@death
         }
 
+        EssencePouch.loseOnDeath(victim)
         val removedItems = removeAll()
         if (removedItems.isNotEmpty()) {
             var keepAmount = 3

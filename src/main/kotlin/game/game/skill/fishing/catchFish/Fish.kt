@@ -1,5 +1,8 @@
 package game.skill.fishing.catchFish
 
+import api.predef.*
+import io.luna.game.model.item.Item
+
 /**
  * An enum representing a fish (or other catch) that can be caught using a [Tool].
  *

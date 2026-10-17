@@ -1,42 +1,14 @@
 package game.skill.prayer.buryBone
 
-import api.attr.Attr
 import api.predef.*
-import game.player.Sound
 import game.skill.prayer.Bone
-import io.luna.game.action.impl.ThrottledAction
-import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 
 /**
- * Throttles bone burying.
+ * Registers the existing first inventory option for every supported bone type.
+ * The player action owns cooldown validation, consumption, effects, and Prayer experience.
+ *
+ * @author lare96
  */
-val Player.lastBury by Attr.timeSource()
-
-/**
- * The bone burying animation.
- */
-val buryAnimation = Animation(827)
-
-/**
- * Buries [bone] for [plr] and awards XP.
- */
-fun bury(plr: Player, bone: Bone) {
-    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastBury, 3) {
-        override fun execute() {
-            mob.animation(buryAnimation)
-
-            mob.prayer.addExperience(bone.exp)
-            mob.inventory.remove(bone.boneItem)
-            mob.playSound(Sound.BONES_DOWN)
-
-            mob.sendMessage("You dig a hole in the ground...")
-            mob.sendMessage("You bury the bones.")
-        }
-    })
-}
-
-// Initialize bone burying event listeners here.
-Bone.ID_TO_BONE.entries.forEach { (id, bone) ->
-    item1(id) { bury(plr, bone) }
+Bone.ID_TO_BONE.forEach { (id, bone) ->
+    item1(id) { plr.submitAction(BuryBoneAction(plr, bone)) }
 }

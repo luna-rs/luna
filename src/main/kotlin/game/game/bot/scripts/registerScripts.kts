@@ -2,7 +2,12 @@ package game.bot.scripts
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
+import game.bot.scripts.skills.WeaveTextileBotScript
+import game.bot.scripts.skills.WeaveTextileBotScript.Companion.TextileData
+import game.bot.scripts.UseLampBotScript.Companion.LampData
 import game.bot.scripts.HarvestBotScript.Companion.HarvestData
+import game.bot.scripts.skills.BuryBoneBotScript
+import game.bot.scripts.skills.BuryBoneBotScript.Companion.BoneData
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript.Companion.SuperheatItemData
 import game.bot.scripts.skills.EnchantJewelleryBotScript
@@ -66,7 +71,7 @@ import game.bot.scripts.skills.MakeCannonballBotScript
 import game.bot.scripts.skills.MakeCannonballBotScript.Companion.CannonballData
 import game.bot.scripts.skills.SmeltOreBotScript
 import game.bot.scripts.skills.SmithBarBotScript
-import game.bot.scripts.skills.SpinFlaxBotScript
+import game.bot.scripts.skills.SpinTextileBotScript
 import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
@@ -95,6 +100,8 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
+    scriptManager.addScript<LampData>(UseLampBotScript::class) { bot, data -> UseLampBotScript(bot, data) }
     scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }
     scriptManager.addScript<MineData>(MineBotScript::class) { bot, data -> MineBotScript(bot, data) }
     scriptManager.addScript<PickpocketData>(PickpocketBotScript::class) { bot, data -> PickpocketBotScript(bot, data) }
@@ -105,7 +112,10 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<SearchData>(SearchBotScript::class) { bot, data -> SearchBotScript(bot, data) }
     scriptManager.addScript<CannonballData>(MakeCannonballBotScript::class) { bot, data -> MakeCannonballBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmeltOreBotScript::class) { bot, data -> SmeltOreBotScript(bot, data) }
-    scriptManager.addScript<ZonedBotScriptData>(SpinFlaxBotScript::class) { bot, data -> SpinFlaxBotScript(bot, data) }
+    scriptManager.addScript<ZonedBotScriptData>(SpinTextileBotScript::class) { bot, data -> SpinTextileBotScript(bot, data) }
+    // Older flax snapshots keep their original class name but restore through the generalized constructor.
+    scriptManager.scriptMap["game.bot.scripts.skills.SpinFlaxBotScript"] =
+        scriptManager.scriptMap.getValue(SpinTextileBotScript::class.qualifiedName!!)
     scriptManager.addScript<CraftArmorData>(CraftArmorBotScript::class) { bot, data -> CraftArmorBotScript(bot, data) }
     scriptManager.addScript<PotteryData>(MakePotteryBotScript::class) { bot, data -> MakePotteryBotScript(bot, data) }
     scriptManager.addScript<CraftJewelleryData>(CraftJewelleryBotScript::class) { bot, data -> CraftJewelleryBotScript(bot, data) }
@@ -135,6 +145,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CraftRuneData>(CraftRuneBotScript::class) { bot, data -> CraftRuneBotScript(bot, data) }
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
+    scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }

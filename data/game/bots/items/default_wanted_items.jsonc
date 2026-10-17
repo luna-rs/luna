@@ -1,4 +1,4 @@
-C:\Users/*
+/*
 * Default wanted-item definitions used by bots to determine which items they should try to keep stocked or acquire.
 *
 * Each entry defines an item id, the minimum quantity that triggers demand, the quantity the bot should try to
@@ -10322,4 +10322,3 @@ C:\Users/*
 "tags": ["SKILLING_CONSUMABLE"]
 }
 ]
-\cj\AppData\Local\Temp\codex-file-preview-VDaxSY\default_wanted_items_prioritized.jsonc

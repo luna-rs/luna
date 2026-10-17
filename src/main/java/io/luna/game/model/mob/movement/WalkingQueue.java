@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.ArrayDeque;
@@ -95,6 +96,13 @@ public final class WalkingQueue {
             mob.setRunningDirection(Direction.NONE);
             incrementRunEnergy();
             return;
+        }
+        if(mob instanceof Bot) {
+            // Bots now close windows when moving.
+            Bot bot = mob.asPlr().asBot();
+            if(!current.isEmpty()) {
+                bot.getOverlays().closeWindows();
+            }
         }
 
         Position currentStep = mob.getPosition();

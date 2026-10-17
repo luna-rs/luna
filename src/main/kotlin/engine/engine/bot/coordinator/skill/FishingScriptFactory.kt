@@ -24,6 +24,13 @@ import io.luna.game.model.mob.bot.Bot
  */
 object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
 
+    // TODO Add bot zone for KARAMBWANJI
+
+    /**
+     * The tools bots fish with. Karambwanji spots aren't in any bot zone.
+     */
+    private val BOT_TOOLS = Tool.entries - KARAMBWANJI_NET
+
     /**
      * The tools bots fish with. The others are used at spots that no bot zone covers.
      */

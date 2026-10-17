@@ -147,8 +147,18 @@ enum class SubZone(val inside: Position,
                      parent = { AL_KHARID }),
 
     /**
-     * The Edgeville monastery. Used for low-level -> mid-level combat training.
+     * Iorwerth camp and its loom in Tirannwn.
      */
+    IORWERTH_CAMP(inside = Position(2204, 3253),
+                   area = SimpleBoxArea.ofRadius(2184, 3239, 30, 27),
+                   parent = { TIRANNWN }),
+
+    /** The loom south of Falador, reached through the existing zone travel fallback. */
+    SOUTH_FALADOR_LOOM(inside = Position(3039, 3288),
+                        area = SimpleBoxArea.ofRadius(3038, 3285, 3, 4),
+                        parent = { FALADOR }),
+
+    /** The Edgeville monastery, used for low-level to mid-level combat training. */
     EDGEVILLE_MONASTERY(inside = Position(3051, 3482),
                         area = SimpleBoxArea.of(3041, 3480, 3062, 3509),
                         parent = { EDGEVILLE }),
@@ -364,8 +374,10 @@ enum class SubZone(val inside: Position,
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             if (bot.actionHandler.travelTo(BURTHORPE)) {
-                // Navigate to the trapdoor that leads us into the dungeon.
-                bot.navigator.navigate(selectedOutside, true).await()
+                // Walk to the trapdoor that leads us into the dungeon.
+                if (selectedOutside != null) {
+                    bot.actionHandler.webWalkTo(selectedOutside)
+                }
                 if (selectedOutside?.isViewableFrom(bot) == false) {
                     return false
                 }
@@ -406,8 +418,10 @@ enum class SubZone(val inside: Position,
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             if (bot.isViewableFrom(selectedOutside) || bot.actionHandler.travelTo(VARROCK)) {
 
-                // Navigate to the ladder that leads us into the dungeon.
-                bot.navigator.navigate(selectedOutside, true).await()
+                // Walk to the ladder that leads us into the dungeon.
+                if (selectedOutside != null) {
+                    bot.actionHandler.webWalkTo(selectedOutside)
+                }
                 if (selectedOutside?.isViewableFrom(bot) == false) {
                     return false
                 }

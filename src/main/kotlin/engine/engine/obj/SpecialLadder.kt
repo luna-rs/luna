@@ -114,6 +114,15 @@ enum class SpecialLadder(val ladder: Position, val destination: Position) {
     MOURNER_HEADQUARTERS_UP(ladder = Position(2044, 4650), destination = Position(2542, 3327)),
     PHASMATYS_BREWERY_UP(ladder = Position(3682, 9962), destination = Position(3681, 3498)),
 
+    // Waterbirth Island Dungeon, up from the second sublevel to the iron ladder's room.
+    WATERBIRTH_SUBLEVEL_UP(ladder = Position(1798, 4406, 3), destination = Position(2545, 10143)),
+
+    // Shadow Dungeon, back up to the desert (Desert Treasure).
+    SHADOW_DUNGEON_UP(ladder = Position(2629, 5072), destination = Position(2547, 3422)),
+
+    // Paterdomus, up from the library to the temple's basement (In Aid of the Myreque).
+    PATERDOMUS_LIBRARY_UP(ladder = Position(3414, 9868, 2), destination = Position(3440, 9899)),
+
     // Rat pits, out to the manhole above.
     PORT_SARIM_RAT_PIT_UP(ladder = Position(2962, 9651), destination = Position(3018, 3233)),
     VARROCK_RAT_PIT_UP(ladder = Position(2895, 5097), destination = Position(3267, 3400));

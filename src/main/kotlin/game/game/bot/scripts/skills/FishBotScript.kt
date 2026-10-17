@@ -64,6 +64,7 @@ class FishBotScript(
         /**
          * Maps each tool returned by [option] to the NPC fishing spots that use it. Bots don't fish in Miscellania,
          * where the catch goes to Fisherman Frodi.
+         * Maps each tool returned by [option] to the NPC fishing spots that use it.
          */
         private fun buildSpots(option: (FishingSpot) -> Tool?): ImmutableSetMultimap<Tool, Int> {
             val spots = ImmutableSetMultimap.builder<Tool, Int>()
