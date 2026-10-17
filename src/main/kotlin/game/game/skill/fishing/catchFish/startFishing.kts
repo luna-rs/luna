@@ -1,57 +1,36 @@
 package game.skill.fishing.catchFish
 
 import api.predef.*
-import io.luna.game.event.impl.NpcClickEvent
-import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
-import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
+import io.luna.game.model.Entity
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.Expression
 
 /**
  * Submits a [CatchFishAction] to start fishing.
  */
-fun fish(msg: NpcClickEvent, tool: Tool) {
-    msg.plr.submitAction(CatchFishAction(msg, tool))
+fun fish(plr: Player, target: Entity, tool: Tool) {
+    plr.submitAction(CatchFishAction(plr, target, tool))
 }
 
-// First click fishing spots.
-on(NpcFirstClickEvent::class)
-    .match(233, 234, 235, 236)
-    .then { fish(this, Tool.FISHING_ROD) }
-
-on(NpcFirstClickEvent::class)
-    .match(309, 310, 311, 314, 315, 317, 318, 328, 329, 331)
-    .then { fish(this, Tool.FLY_FISHING_ROD) }
-
-on(NpcFirstClickEvent::class)
-    .match(312, 321, 324, 333)
-    .then { fish(this, Tool.LOBSTER_POT) }
-
-on(NpcFirstClickEvent::class)
-    .match(313, 322, 334)
-    .then { fish(this, Tool.BIG_NET) }
-
-on(NpcFirstClickEvent::class)
-    .match(316, 319, 320, 323, 325, 326, 327, 330, 332)
-    .then { fish(this, Tool.SMALL_NET) }
-
-npc1(1174) {
-    fish(this, Tool.MONKFISH_NET)
+// Fishing spot options.
+for (spot in FishingSpot.entries) {
+    val secondOption = spot.secondOption
+    for (id in spot.npcs) {
+        npc1(id, false) { fish(plr, targetNpc, spot.firstOption) }
+        if (secondOption != null) {
+            npc2(id, false) { fish(plr, targetNpc, secondOption) }
+        }
+    }
 }
 
-npc1(3848) {
-    fish(this, Tool.HARPOON)
+// The Hemenster spots are only for the Fishing Contest.
+for (id in 233..236) {
+    npc1(id, false) {
+        // TODO Fishing Contest: competitors fish here, and Bonzo assigns them a spot.
+        if (world.locator.findNpcs(plr, 12) { it.id == 225 }.isNotEmpty()) {
+            plr.newDialogue().npc(225, Expression.HAPPY, "Hey, you need to pay to enter the competition first!",
+                                  "Only 5 gp entrance fee!").open()
+            plr.sendMessage("Talk to Bonzo to pay the entrance fee.")
+        }
+    }
 }
-
-// Second click fishing spots.
-on(NpcSecondClickEvent::class)
-    .match(309, 310, 311, 314, 315, 316, 317, 318, 319, 320, 323, 325, 326, 327, 328, 329, 330, 331, 332)
-    .then { fish(this, Tool.FISHING_ROD) }
-
-on(NpcSecondClickEvent::class)
-    .match(32, 312, 321, 324, 333)
-    .then { fish(this, Tool.HARPOON) }
-
-on(NpcSecondClickEvent::class)
-    .match(313, 322, 334)
-    .then { fish(this, Tool.SHARK_HARPOON) }
-
-npc2(3848) { fish(this, Tool.MONKFISH_NET) }
