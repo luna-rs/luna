@@ -20,7 +20,7 @@ public enum Expression {
     /**
      * The angry expressions.
      */
-    ANGRY(592, 593, 594, 595),
+    ANGRY(614, 615, 616, 617),
 
     /**
      * The worried expressions.
@@ -75,7 +75,12 @@ public enum Expression {
     /**
      * The shifty expressions, the same animations as {@link #ANGRY}.
      */
-    SHIFTY(592, 593, 594, 595);
+    SHIFTY(592, 593, 594, 595),
+
+    /**
+     * The shocked expressions.
+     */
+    SHOCKED(571, 572, 573, 574);
 
     /**
      * The expression identifiers.

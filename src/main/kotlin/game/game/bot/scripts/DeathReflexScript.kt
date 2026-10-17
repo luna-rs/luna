@@ -7,6 +7,7 @@ import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import io.luna.game.model.Position
 import kotlinx.coroutines.future.await
+import java.util.EnumSet
 
 /**
  * A [ReflexBotScript] that sends a bot back toward the location where it died.
@@ -28,7 +29,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
      * detected. The zone/subzone are used first because they may contain custom travel logic for caves, dungeons,
      * ladders, gates, or other special transitions.
      */
-    private var deathLocation: Triple<Position, Zone?, SubZone?>? = null
+    private var deathLocation: Triple<Position, Zone?, EnumSet<SubZone>>? = null
 
     /**
      * When the bot reaches zero health, this captures the current position and zone context before the death process
@@ -38,7 +39,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
      */
     override fun shouldReact(): Boolean {
         if (bot.health < 1) {
-            deathLocation = Triple(bot.position, bot.zone, bot.subZone)
+            deathLocation = Triple(bot.position, bot.zone, bot.subZones)
             return true
         }
         return false
@@ -67,10 +68,12 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
         }
 
         // Try our best to navigate back to where we died.
-        val (position, zone, subZone) = deathLocation!!
-        if (subZone != null) {
-            bot.log("Starting movement back to death location in $subZone.")
-            handler.travelTo(subZone)
+        val (position, zone, subZones) = deathLocation!!
+        if (subZones.isNotEmpty()) {
+            // TODO Navigate to subzone we were closest to.
+            val moveZone = subZones.first()
+            bot.log("Starting movement back to death location in $moveZone.")
+            handler.travelTo(moveZone)
         } else if (zone != null) {
             bot.log("Starting movement back to death location in $zone.")
             handler.travelTo(zone)
