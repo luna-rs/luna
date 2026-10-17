@@ -34,6 +34,9 @@ package api.bot.webwalk.plan
  * @property toleranceMinimum The least ticks that a bot may take more than the best trip, at the lowest intelligence.
  * @property legPenalty A tiny cost for each leg that is only used to choose between trips that cost the same, so that the one
  * with fewer legs wins. It is not part of the cost that a trip is reported to have.
+ * @property abundantUses How many times a bot must be able to pay the largest spend of a coin, rune, item or jewellery charge
+ * for the planner to stop counting what is left of it on a trip. A trip never spends that much, and counting less is faster.
+ * @property maxLabels How many ways of arriving at a node, with different amounts left to spend, the planner keeps at most.
  *
  * @author Hydrozoa
  */
@@ -58,4 +61,6 @@ data class PlannerCosts(val doorTicks: Double = 3.0,
                         val jitter: Double = 0.3,
                         val toleranceFraction: Double = 0.2,
                         val toleranceMinimum: Double = 8.0,
-                        val legPenalty: Double = 0.01)
+                        val legPenalty: Double = 0.01,
+                        val abundantUses: Int = 10,
+                        val maxLabels: Int = 6)
