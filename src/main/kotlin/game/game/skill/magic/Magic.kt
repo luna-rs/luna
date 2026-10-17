@@ -321,7 +321,7 @@ object Magic {
      */
     fun Player.teleport(destination: Position,
                         style: TeleportSequence? = null,
-                        maxWildernessLevel: Int = 20,
+                        maxWildernessLevel: Int = TeleportAction.MAX_WILDERNESS_LEVEL,
                         onLand: () -> Unit = {},
                         onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style =
