@@ -4,13 +4,19 @@ import api.bot.webwalk.data.WebWalkDataException
 import api.bot.webwalk.data.WebWalkLoader
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.NodeKind
+import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.model.TeleportKind
+import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.plan.DoorCrossings
 import api.bot.webwalk.plan.PathfinderWalkEstimator
+import api.bot.webwalk.walk.ship.ShipBoarding
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.predef.*
+import game.content.sailing.ShipGangplanks
+import game.content.sailing.ShipRoute
 import game.item.degradable.jewellery.TeleportJewellery
+import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
 import engine.bank.Banking
@@ -31,7 +37,7 @@ import java.util.concurrent.Executor
 
 /**
  * Makes the generated files of the web-walker: `obstacles.jsonc`, `climbs.jsonc`, `crossings.jsonc`, `teleports.jsonc`,
- * `banks.jsonc` and `walk_graph.jsonc`.
+ * `banks.jsonc`, `walk_graph.jsonc` and `ships.jsonc`.
  * Everything is made in a single run of the server, because most of it needs a running world. The `generateWebWalk` Gradle task
  * makes it on demand, and the server makes it itself when it starts without the files, see [WebWalkGenerationRunner]. The files start with a comment that says they are generated and when, see [WebWalkWriter.header].
  *
@@ -43,6 +49,9 @@ import java.util.concurrent.Executor
  *   [Trapdoor] say that they do, which is what players get.
  * - The teleports of `teleports.jsonc` are the teleport spells, the destinations of the teleport jewellery, and the home
  *   teleport, so that they are never written out by hand.
+ * - The ships of `ships.jsonc` are the [ShipRoute]s, each boarded where its crew stands and left by its gangplank, with
+ *   their fares and searches as requirements, so that they are never written out by hand either. Their ports are nodes
+ *   that the walk edges link like the others.
  * - The banks of `banks.jsonc` are the bank booths at the bank anchors of the zones, each with the tile in front of it, on the
  *   side of the counter that customers use. They are not waypoints, because nothing is walked through them: they are where a
  *   trip to the nearest bank ends. Each is linked to the nodes nearest to it, which is where a trip walks the last stretch
@@ -120,9 +129,29 @@ object WebWalkLiveGenerator {
     private const val HOME_TICKS = 7
 
     /**
-     * The deepest wilderness level that teleports can be used from. The game does not allow them above level 20.
+     * How far, in tiles, from the departure of a ship its crew may stand.
      */
-    private const val TELEPORT_MAX_WILDERNESS = 20
+    private const val CREW_RADIUS = 8
+
+    /**
+     * How far, in tiles, from where a ship lands a player on its deck the gangplank that leaves it may be.
+     */
+    private const val PLANK_RADIUS = 8
+
+    /**
+     * The time to talk to the crew of a ship, in ticks, before the first option is shown.
+     */
+    private const val TALK_TICKS = 3
+
+    /**
+     * The time of each option of the boarding dialogue of a ship, in ticks, with the lines that come before it.
+     */
+    private const val BOARDING_OPTION_TICKS = 3
+
+    /**
+     * The time to walk to the gangplank of a ship and cross it, in ticks.
+     */
+    private const val PLANK_TICKS = 4
 
     /**
      * How many times a climb is made to find the lowest tile it arrives at, enough to find every tile of a small area.
@@ -141,12 +170,14 @@ object WebWalkLiveGenerator {
      * @property waypoints The waypoints.
      * @property teleports The teleports.
      * @property banks The bank booths, whose tiles to stand on are chosen by [finish].
+     * @property ships The ships.
      * @property report What was made and what was left out.
      */
     class Gathered(val climbs: List<GeneratedObstacle>,
                    val waypoints: List<GeneratedWaypoint>,
                    val teleports: List<GeneratedTeleport>,
                    val banks: List<BankSeed>,
+                   val ships: List<GeneratedShip>,
                    val report: GenerationReport)
 
     /**
@@ -158,9 +189,10 @@ object WebWalkLiveGenerator {
      * @property teleports The text of `teleports.jsonc`.
      * @property banks The text of `banks.jsonc`.
      * @property walkGraph The text of `walk_graph.jsonc`.
+     * @property ships The text of `ships.jsonc`.
      */
     class Output(val obstacles: String, val climbs: String, val crossings: String, val teleports: String,
-                 val banks: String, val walkGraph: String)
+                 val banks: String, val walkGraph: String, val ships: String)
 
     /**
      * Reads the world. Must be called on the game thread.
@@ -171,6 +203,7 @@ object WebWalkLiveGenerator {
     fun gather(directory: Path): Gathered {
         val report = GenerationReport()
         val climbs = ArrayList<GeneratedObstacle>()
+        val leavingPlanks = ArrayList<GameObject>()
         val trapdoors = HashMap<Int, Trapdoor>()
         for (trapdoor in Trapdoor.entries) {
             trapdoor.closed?.let { trapdoors[it] = trapdoor }
@@ -183,12 +216,62 @@ object WebWalkLiveGenerator {
                 def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER -> ladder(obj, climbs, report)
                 def.name in StairDestination.NAMES -> stairs(obj, climbs, report)
                 obj.id in trapdoors -> trapdoor(obj, trapdoors.getValue(obj.id), climbs, report)
+                obj.id in ShipGangplanks.LEAVING_PLANKS -> leavingPlanks += obj
             }
         }
         report.count("climbs", climbs.size)
         val waypoints = waypoints(report)
         return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report),
-                        bankSeeds(report), report)
+                        bankSeeds(report), ships(leavingPlanks, report), report)
+    }
+
+    /**
+     * Makes a ship of each [ShipRoute]. It is boarded at the tile to stand on nearest the route's departure, which its crew
+     * has to be near, and left by the gangplank nearest where it lands a player on its deck, at the foot of that gangplank.
+     * Routes where one of those can't be found, or that have no [ShipBoarding], are left out and reported. Must be called on
+     * the game thread.
+     *
+     * @param leavingPlanks The gangplanks of the map that lead ashore.
+     */
+    private fun ships(leavingPlanks: List<GameObject>, report: GenerationReport): List<GeneratedShip> {
+        val ships = ArrayList<GeneratedShip>()
+        for (route in ShipRoute.entries) {
+            val what = "ship ${route.name}"
+            val boarding = ShipBoarding.of(route)
+            if (boarding == null) {
+                report.skipped += "$what: no ShipBoarding says how to board it"
+                continue
+            }
+            val departure = standableNear(route.departure)
+            if (departure == null) {
+                report.skipped += "$what from ${DoorObstacles.describe(route.departure)}: no tile to stand on nearby"
+                continue
+            }
+            if (world.locator.findNpcs(departure, CREW_RADIUS) { it.id in route.crew }.isEmpty()) {
+                report.skipped += "$what from ${DoorObstacles.describe(departure)}: none of its crew ${route.crew} is " +
+                        "within $CREW_RADIUS tiles"
+                continue
+            }
+            val deck = route.destination
+            val plank = leavingPlanks.filter { it.position.computeLongestDistance(deck) <= PLANK_RADIUS }
+                .minWithOrNull(compareBy({ it.position.computeLongestDistance(deck) }, { it.position.x }, { it.position.y }))
+            if (plank == null) {
+                report.skipped += "$what to ${DoorObstacles.describe(deck)}: no gangplank ashore within $PLANK_RADIUS tiles"
+                continue
+            }
+            val landing = ShipGangplanks.landing(plank, deck.z, false)
+            val arrival = if (LadderDestination.canLand(landing)) landing else standableNear(landing)
+            if (arrival == null) {
+                report.skipped += "$what: nothing to stand on at the foot of its gangplank, ${DoorObstacles.describe(landing)}"
+                continue
+            }
+            val cost = TALK_TICKS + BOARDING_OPTION_TICKS * boarding.options.size + route.ticks + PLANK_TICKS
+            val requirements = Requirements(coins = route.fare,
+                                            flags = setOfNotNull(BotConditions.shipSearchFlag(route.search)))
+            ships += GeneratedShip(route.name, departure, arrival, plank.id, plank.position, cost, requirements)
+        }
+        report.count("ships", ships.size)
+        return ships
     }
 
     /**
@@ -223,18 +306,21 @@ object WebWalkLiveGenerator {
 
     /**
      * Makes the teleports: a spell for each of the teleport spells, an option for each destination of the teleport
-     * jewellery, and the home teleport. Each lands on the nearest tile that can be stood on to its destination, and none can
-     * be used from deep in the wilderness. Must be called on the game thread.
+     * jewellery, and the home teleport. Each lands on the nearest tile that can be stood on to its destination, and can be
+     * used from as deep in the wilderness as the game allows: [TeleportJewellery.maxWildernessLevel] for jewellery, and
+     * [TeleportAction.MAX_WILDERNESS_LEVEL] for the spells and the home teleport, which don't say otherwise. Must be called on
+     * the game thread.
      */
     private fun teleports(report: GenerationReport): List<GeneratedTeleport> {
         val teleports = ArrayList<GeneratedTeleport>()
-        fun add(id: String, kind: TeleportKind, key: String?, option: Int?, destination: Position, cost: Int) {
+        fun add(id: String, kind: TeleportKind, key: String?, option: Int?, destination: Position, cost: Int,
+                maxWilderness: Int = TeleportAction.MAX_WILDERNESS_LEVEL) {
             val dest = standableNear(destination)
             if (dest == null) {
                 report.skipped += "teleport $id to ${DoorObstacles.describe(destination)}: no tile to stand on nearby"
                 return
             }
-            teleports += GeneratedTeleport(id, kind, key, option, dest, cost, TELEPORT_MAX_WILDERNESS)
+            teleports += GeneratedTeleport(id, kind, key, option, dest, cost, maxWilderness)
         }
         for (spell in TeleportSpell.entries) {
             add("spell_${spell.name.lowercase()}", TeleportKind.SPELL, spell.name, null, spell.destination, SPELL_TICKS)
@@ -242,7 +328,7 @@ object WebWalkLiveGenerator {
         for (jewellery in TeleportJewellery.entries) {
             jewellery.destinations.forEachIndexed { index, destination ->
                 add("jewellery_${jewellery.name.lowercase()}_${index + 1}", TeleportKind.JEWELLERY, jewellery.name,
-                    index + 1, destination.centre, JEWELLERY_TICKS)
+                    index + 1, destination.centre, JEWELLERY_TICKS, jewellery.maxWildernessLevel)
             }
         }
         add("home", TeleportKind.HOME, null, null, Luna.settings().game().startingPosition(), HOME_TICKS)
@@ -452,6 +538,9 @@ object WebWalkLiveGenerator {
         sources[WebWalkLoader.CROSSINGS] = crossings.text
         val teleportsText = WebWalkWriter.teleports(gathered.teleports)
         sources[WebWalkLoader.TELEPORTS] = teleportsText
+        // The ports are nodes like any other, so they are linked to the walk graph below.
+        val shipsText = WebWalkWriter.ships(gathered.ships)
+        sources[WebWalkLoader.SHIPS] = shipsText
         // The banks are chosen further down, from how the nodes are linked, so the ones of an earlier run are left out.
         sources.remove(WebWalkLoader.BANKS)
         sources[WebWalkLoader.WALK_GRAPH] = WebWalkWriter.walkGraph(gathered.waypoints, emptyList())
@@ -531,14 +620,15 @@ object WebWalkLiveGenerator {
         WebWalkLoader.fromSources(sources - WebWalkLoader.WAYPOINTS_MANUAL +
                                           mapOf(WebWalkLoader.BANKS to banksText, WebWalkLoader.WALK_GRAPH to walkGraphText))
 
-        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText, walkGraphText)
+        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText, walkGraphText, shipsText)
     }
 
     /**
      * The names of the generated files, which are all written by [write] and which [missingFiles] looks for.
      */
     val GENERATED_FILES = listOf(WebWalkLoader.OBSTACLES, WebWalkLoader.CLIMBS, WebWalkLoader.CROSSINGS,
-                                 WebWalkLoader.TELEPORTS, WebWalkLoader.BANKS, WebWalkLoader.WALK_GRAPH)
+                                 WebWalkLoader.TELEPORTS, WebWalkLoader.BANKS, WebWalkLoader.WALK_GRAPH,
+                                 WebWalkLoader.SHIPS)
 
     /**
      * Finds the generated files that don't exist. The files depend on each other (the banks are linked to nodes of the walk
@@ -557,7 +647,8 @@ object WebWalkLiveGenerator {
                                               WebWalkLoader.CROSSINGS to output.crossings,
                                               WebWalkLoader.TELEPORTS to output.teleports,
                                               WebWalkLoader.BANKS to output.banks,
-                                              WebWalkLoader.WALK_GRAPH to output.walkGraph)
+                                              WebWalkLoader.WALK_GRAPH to output.walkGraph,
+                                              WebWalkLoader.SHIPS to output.ships)
 
     /**
      * Writes the generated files, each with a [WebWalkWriter.header] that says it is generated and when. Every file is written

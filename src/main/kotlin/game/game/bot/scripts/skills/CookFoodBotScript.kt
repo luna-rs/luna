@@ -3,12 +3,12 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import io.luna.game.model.mob.bot.Bot
-import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
@@ -30,6 +30,8 @@ import kotlin.time.Duration
  *
  * A specific [selectedFood] can be provided when the factory already knows what the bot should cook. If no food is
  * selected, the script searches the bot's bank for the first raw food entry it can cook from [Food.entries].
+ * Explicit choices survive save/restoration. Legacy snapshots and automatic selections continue choosing food
+ * from available stock rather than acquiring a fixed recipe during restoration.
  *
  * This script supports normal bank-based cooking zones as well as Rogues' Den, which uses a custom cached banker NPC
  * instead of the default bank lookup.
@@ -53,6 +55,28 @@ class CookFoodBotScript(
     companion object {
 
         /**
+         * Saved optional factory-selected food alongside the inherited duration and candidate zones.
+         * An absent food field retains the automatic selection used by legacy snapshots.
+         *
+         * @author lare96
+         */
+        class CookFoodData : ZonedBotScriptData() {
+            /** Explicit configured recipe, or null when available stock determines the recipe. */
+            var food: Food? = null
+
+            override fun load(data: JsonObject) {
+                super.load(data)
+                food = data.get("food")?.takeUnless { it.isJsonNull }?.asString?.let { Food.valueOf(it) }
+            }
+
+            override fun save(data: JsonObject) {
+                super.save(data)
+                if (food != null) data.addProperty("food", food!!.name) else data.remove("food")
+            }
+        }
+
+
+        /**
          * Cached Rogues' Den banker.
          *
          * Rogues' Den uses an NPC banker instead of a standard bank object, so the script manually assigns this NPC
@@ -67,12 +91,11 @@ class CookFoodBotScript(
     }
 
     /**
-     * Restores this script from saved zoned script data.
-     *
-     * The selected food is not currently stored in the snapshot, so restored scripts will auto-select food from the
-     * bank again.
+     * Restores an explicit recipe from new snapshots, or automatic selection from older zoned data.
+     * Keeping the zoned-data constructor lets the existing central registration accept both data classes.
      */
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, null, data.duration, data.zones)
+    constructor(bot: Bot, data: ZonedBotScriptData) :
+        this(bot, (data as? CookFoodData)?.food, data.duration, data.zones)
 
     /**
      * Cached cooking object for the active zone.
@@ -181,11 +204,10 @@ class CookFoodBotScript(
         return true
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = ZonedBotScriptData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        return data
+    override fun snapshot(): CookFoodData = CookFoodData().also {
+        it.duration = duration
+        it.zones = originalZones.toMutableList()
+        it.food = selectedFood
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {

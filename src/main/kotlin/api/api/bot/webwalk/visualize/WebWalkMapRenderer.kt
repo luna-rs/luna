@@ -3,7 +3,9 @@ package api.bot.webwalk.visualize
 import api.bot.webwalk.data.WebWalkLoader
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.NodeKind
+import api.bot.webwalk.model.WebWalkEdge
 import api.bot.webwalk.model.WebWalkGraph
+import api.bot.webwalk.plan.BotConditions
 import io.luna.game.cache.Cache
 import io.luna.game.cache.codec.MapDecoder
 import io.luna.game.cache.codec.ObjectDefinitionDecoder
@@ -33,6 +35,7 @@ import kotlin.math.sin
  * drawn as dots and edges as lines, with a colour for each [EdgeType] and [NodeKind], and a legend in the corner. Banks are
  * squares on the tile in front of their booth, with a line to the booth. An edge
  * that has only one end on the drawn plane, like a ladder, is drawn as a ring on that end. One-way edges get an arrowhead.
+ * Ships are dashed, as they are sailed and not walked, and labelled with their route and what they need to board.
  *
  * The `renderWebWalkMap` Gradle task runs this, see its properties in `build.gradle.kts`.
  *
@@ -65,6 +68,17 @@ object WebWalkMapRenderer {
          */
         fun contains(position: Position) = position.x in minX..maxX && position.y in minY..maxY
     }
+
+    /**
+     * The label of a ship edge that is drawn.
+     *
+     * @property x The x of the middle of its line, in pixels.
+     * @property y The y of the middle of its line, in pixels.
+     * @property dx How far its line goes along x, in pixels, from where it sails from to where it sails to.
+     * @property dy How far its line goes along y, in pixels.
+     * @property text The label.
+     */
+    private class ShipLabel(val x: Double, val y: Double, val dx: Double, val dy: Double, val text: String)
 
     /**
      * The tiles of the surface of the world, which is what is drawn unless told otherwise.
@@ -104,6 +118,11 @@ object WebWalkMapRenderer {
      * The size of a node, in pixels, whatever the scale is. The arrowheads and the rings of edges that leave the plane follow it.
      */
     private const val DOT_SIZE = 4.8
+
+    /**
+     * The size of the font of the labels of ship edges, in pixels, whatever the scale is.
+     */
+    private const val LABEL_SIZE = 12
 
     /**
      * The colour of banks.
@@ -201,6 +220,9 @@ object WebWalkMapRenderer {
         val lineWidth = LINE_WIDTH
         val dot = DOT_SIZE
 
+        // The ship edges that are drawn, to be labelled over the nodes: the middle of the line, which way it goes, and the label.
+        val shipLabels = ArrayList<ShipLabel>()
+
         // The walks go under the rest, so that the doors and ladders on them can be seen.
         for (edge in graph.edges.sortedBy { if (it.type == EdgeType.WALK) 0 else 1 }) {
             val a = graph.node(edge.from) ?: continue
@@ -217,11 +239,15 @@ object WebWalkMapRenderer {
             counts.merge(edge.type, 1, Int::plus)
             g.color = EDGE_COLORS.getValue(edge.type)
             if (aShown && bShown) {
-                g.stroke = BasicStroke(lineWidth)
+                g.stroke = if (edge.type == EdgeType.SHIP) dashed(lineWidth) else BasicStroke(lineWidth)
                 g.drawLine(px(a.position).roundToInt(), py(a.position).roundToInt(),
                            px(b.position).roundToInt(), py(b.position).roundToInt())
                 if ((edge.to to edge.from) !in oneWay) {
                     arrowhead(g, px(a.position), py(a.position), px(b.position), py(b.position), dot)
+                }
+                if (edge.type == EdgeType.SHIP) {
+                    shipLabels += ShipLabel((px(a.position) + px(b.position)) / 2, (py(a.position) + py(b.position)) / 2,
+                                            px(b.position) - px(a.position), py(b.position) - py(a.position), shipLabel(edge))
                 }
             } else {
                 val end = if (aShown) a.position else b.position
@@ -243,6 +269,20 @@ object WebWalkMapRenderer {
             g.fillOval((x - dot / 2 - 1).roundToInt(), (y - dot / 2 - 1).roundToInt(), (dot + 2).roundToInt(), (dot + 2).roundToInt())
             g.color = NODE_COLORS.getValue(node.kind)
             g.fillOval((x - dot / 2).roundToInt(), (y - dot / 2).roundToInt(), dot.roundToInt(), dot.roundToInt())
+        }
+
+        // Below the arrowhead, so that both can be read.
+        g.font = Font(Font.SANS_SERIF, Font.BOLD, LABEL_SIZE)
+        // Each label goes to the right of the way its ship sails, so that the labels of a ship there and one back don't overlap.
+        for (label in shipLabels) {
+            val length = max(1.0, Math.hypot(label.dx, label.dy))
+            val nx = -label.dy / length
+            val ny = label.dx / length
+            val width = g.fontMetrics.stringWidth(label.text)
+            val gap = dot + LABEL_SIZE / 2.0
+            val x = label.x + nx * gap - width / 2.0 + nx * width / 2.0
+            val y = label.y + ny * gap + LABEL_SIZE / 3.0 + ny * LABEL_SIZE / 2.0
+            outlined(g, label.text, x.roundToInt(), y.roundToInt(), EDGE_COLORS.getValue(EdgeType.SHIP))
         }
 
         // Banks are not nodes, so they are drawn after them: a square on the tile in front of the booth, with a line to the booth
@@ -381,6 +421,44 @@ object WebWalkMapRenderer {
     }
 
     /**
+     * A dashed stroke, for the edges that are not walked.
+     */
+    private fun dashed(width: Float) =
+        BasicStroke(max(1f, width), BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10f, floatArrayOf(6f, 4f), 0f)
+
+    /**
+     * The label of a ship edge: its route, and what it needs, such as `ARDOUGNE_TO_BRIMHAVEN · 30 coins` or
+     * `PORT_SARIM_TO_ENTRANA · search: entrana`.
+     */
+    private fun shipLabel(edge: WebWalkEdge): String {
+        val needs = ArrayList<String>()
+        if (edge.requirements.coins > 0) {
+            needs += "${edge.requirements.coins} coins"
+        }
+        for (flag in edge.requirements.flags.sorted()) {
+            val prefix = BotConditions.SHIP_SEARCH_PREFIX
+            needs += if (flag.startsWith(prefix)) "search: ${flag.removePrefix(prefix)}" else flag
+        }
+        return (listOf(edge.action?.key ?: "SHIP") + needs).joinToString(" · ")
+    }
+
+    /**
+     * Draws text with a black outline, so that it can be read over the terrain.
+     */
+    private fun outlined(g: java.awt.Graphics2D, text: String, x: Int, y: Int, color: Color) {
+        g.color = Color.BLACK
+        for (dx in -1..1) {
+            for (dy in -1..1) {
+                if (dx != 0 || dy != 0) {
+                    g.drawString(text, x + dx, y + dy)
+                }
+            }
+        }
+        g.color = color
+        g.drawString(text, x, y)
+    }
+
+    /**
      * Draws an arrowhead on the middle of the line from a to b.
      */
     private fun arrowhead(g: java.awt.Graphics2D, ax: Double, ay: Double, bx: Double, by: Double, size: Double) {
@@ -420,7 +498,13 @@ object WebWalkMapRenderer {
         for ((index, row) in rows.withIndex()) {
             val y = 12 + 8 + line * (index + 1) + 18
             g.color = row.first
-            g.fillRect(24, y - 12, 22, 12)
+            if (row.second == "${EdgeType.SHIP.name} edges") {
+                // Ships are dashed on the map too.
+                g.stroke = dashed(3f)
+                g.drawLine(24, y - 6, 46, y - 6)
+            } else {
+                g.fillRect(24, y - 12, 22, 12)
+            }
             g.color = Color.WHITE
             g.drawString("${row.second}: ${row.third}", 56, y)
         }

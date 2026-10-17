@@ -1,44 +1,32 @@
 package game.content.sailing
 
 import api.predef.*
+import game.content.sailing.Sailing.CAN_I_JOURNEY
+import game.content.sailing.Sailing.CAPTAIN_BARNABY
+import game.content.sailing.Sailing.CUSTOMS_OFFICER
+import game.content.sailing.Sailing.KARAMJAN_RUM
+import game.content.sailing.Sailing.OK
+import game.content.sailing.Sailing.PORT_SARIM_SAILORS
+import game.content.sailing.Sailing.SEARCH_AWAY
+import game.content.sailing.Sailing.YES_PLEASE
 import game.content.sailing.Sailing.payFare
 import game.content.sailing.Sailing.sail
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
- * Captain Tobias, Seaman Lorris and Seaman Thresnor, who sail from Port Sarim to Karamja.
- */
-val PORT_SARIM_SAILORS = listOf(376, 377, 378)
-
-/**
- * Captain Barnaby, who sails from Ardougne to Brimhaven.
- */
-val CAPTAIN_BARNABY = 381
-
-/**
- * The customs officers at Musa Point and Brimhaven.
- */
-val CUSTOMS_OFFICER = 380
-
-/**
- * Karamjan rum, which customs officers confiscate.
- */
-val KARAMJAN_RUM = 431
-
-/**
- * Offers [plr] a trip along [route] for 30 coins.
+ * Offers [plr] a trip along [route] for its fare.
  */
 fun offerTrip(plr: Player, npc: Int, route: ShipRoute) {
     // TODO During Dragon Slayer, after Oziach, add "I'd rather go to Crandor Isle." first. The sailor answers "No I
     //  need to stay alive, I have a wife and family to support."
     plr.newDialogue()
         .npc(npc, "Do you want to go on a trip to ${route.place}?")
-        .npc(npc, "The trip will cost you 30 coins.")
-        .options("Yes please.", {
-            it.newDialogue().player("Yes please.").then {
-                if (payFare(it)) {
-                    it.sendMessage("You pay the 30 coins...")
+        .npc(npc, "The trip will cost you ${route.fare} coins.")
+        .options(YES_PLEASE, {
+            it.newDialogue().player(YES_PLEASE).then {
+                if (payFare(it, route)) {
+                    it.sendMessage("You pay the ${route.fare} coins...")
                     sail(it, route, "and board the ship.")
                 }
             }.open()
@@ -67,13 +55,13 @@ fun confiscateRum(plr: Player): Boolean {
 }
 
 /**
- * Asks [plr] for the 30 coin boarding charge, then sails them along [route].
+ * Asks [plr] for the boarding charge of [route], then sails them along it.
  */
 fun boardingCharge(plr: Player, route: ShipRoute) {
-    plr.newDialogue().options("Ok.", {
-        it.newDialogue().player("Ok.").then {
-            if (payFare(it)) {
-                sail(it, route, "You pay 30 coins and board the ship.")
+    plr.newDialogue().options(OK, {
+        it.newDialogue().player(OK).then {
+            if (payFare(it, route)) {
+                sail(it, route, "You pay ${route.fare} coins and board the ship.")
             }
         }.open()
     }, "Oh, I'll not bother then.", {
@@ -85,8 +73,8 @@ fun boardingCharge(plr: Player, route: ShipRoute) {
  * Searches [plr] for rum before they can board.
  */
 fun search(plr: Player, npc: Int, route: ShipRoute) {
-    plr.newDialogue().player("Search away, I have nothing to hide.").then {
-        if (it.inventory.computeAmountForId(KARAMJAN_RUM) > 0) {
+    plr.newDialogue().player(SEARCH_AWAY).then {
+        if (route.search.turnsAway(it)) {
             it.newDialogue()
                 .npc(npc, "Aha, trying to smuggle rum are we?")
                 .player("Umm... it's for personal use?")
@@ -99,7 +87,7 @@ fun search(plr: Player, npc: Int, route: ShipRoute) {
             // Said even when the player's inventory is empty.
             it.newDialogue()
                 .npc(npc, "Well you've got some odd stuff, but it's all legal. Now",
-                     "you need to pay a boarding charge of 30 coins.")
+                     "you need to pay a boarding charge of ${route.fare} coins.")
                 .then { boardingCharge(it, route) }
                 .open()
         }
@@ -126,16 +114,16 @@ fun askToBoard(plr: Player, npc: Int, route: ShipRoute) {
     //  plantation." and "I don't think you'll try smuggling anything, you just need to pay a boarding charge of 30
     //  coins.", then asks for the boarding charge without a search.
     plr.newDialogue()
-        .player("Can I journey on this ship?")
+        .player(CAN_I_JOURNEY)
         .npc(npc, "You need to be searched before you can board.")
         .options("Why?", {
             it.newDialogue()
                 .player("Why?")
                 .npc(npc, "Because Asgarnia has banned the import of intoxicating", "spirits.")
-                .options("Search away, I have nothing to hide.", { search(it, npc, route) },
+                .options(SEARCH_AWAY, { search(it, npc, route) },
                          "You're not putting your hands on my things!", { refuseSearch(it, npc) })
                 .open()
-        }, "Search away, I have nothing to hide.", {
+        }, SEARCH_AWAY, {
             search(it, npc, route)
         }, "You're not putting your hands on my things!", {
             refuseSearch(it, npc)
@@ -145,10 +133,10 @@ fun askToBoard(plr: Player, npc: Int, route: ShipRoute) {
 npc1(CUSTOMS_OFFICER) {
     val npc = targetNpc.id
     // One officer stands at Musa Point, the rest at Brimhaven.
-    val route = if (targetNpc.position.x < 2815) ShipRoute.BRIMHAVEN_TO_ARDOUGNE else ShipRoute.KARAMJA_TO_PORT_SARIM
+    val route = ShipRoute.departingNear(targetNpc) ?: return@npc1
     plr.newDialogue()
         .npc(npc, "Can I help you?")
-        .options("Can I journey on this ship?", {
+        .options(CAN_I_JOURNEY, {
             askToBoard(it, npc, route)
         }, "Does Karamja have unusual customs then?", {
             it.newDialogue()

@@ -12,6 +12,7 @@ import api.bot.webwalk.plan.WebWalkPlanner
 import api.bot.webwalk.walk.crossing.CrossingHandlers
 import api.bot.Suspendable.delay
 import api.predef.*
+import game.content.sailing.ShipRoute
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
@@ -46,7 +47,7 @@ object WebWalker {
      */
     private val graph: WebWalkGraph by lazy {
         missingData()?.let { throw WebWalkDataException(listOf(it)) }
-        checkHandlers(WebWalkLoader.load(DIRECTORY))
+        WebWalkLoader.load(DIRECTORY).also(::checkHandlers)
     }
 
     /**
@@ -83,21 +84,23 @@ object WebWalker {
     private const val PLANNER_THREADS = 2
 
     /**
-     * Checks that every crossing of a web has a handler to cross it, so that a typo in the data fails when the web is loaded
-     * instead of in the middle of a trip.
+     * Checks that every crossing of a web has a handler to cross it, and that every ship is of a [ShipRoute], so that a typo
+     * in the data or a route that was renamed fails when the web is loaded instead of in the middle of a trip.
      *
      * @param graph The web.
-     * @return The same web.
-     * @throws WebWalkDataException If a crossing names a handler that doesn't exist.
+     * @throws WebWalkDataException If a crossing names a handler, or a ship a route, that doesn't exist.
      */
-    fun checkHandlers(graph: WebWalkGraph): WebWalkGraph {
+    fun checkHandlers(graph: WebWalkGraph) {
+        val routes = ShipRoute.entries.map { it.name }.toSet()
         val problems = graph.edges.filter { it.type == EdgeType.CROSSING }
             .mapNotNull { it.action?.handler }.distinct().filter { CrossingHandlers.forId(it) == null }
-            .map { "crossing handler '$it' does not exist, the handlers are ${CrossingHandlers.ids}" }
+            .map { "crossing handler '$it' does not exist, the handlers are ${CrossingHandlers.ids}" } +
+                graph.edges.filter { it.type == EdgeType.SHIP }
+                    .mapNotNull { it.action?.key }.distinct().filter { it !in routes }
+                    .map { "ship route '$it' does not exist, the routes are $routes" }
         if (problems.isNotEmpty()) {
             throw WebWalkDataException(problems)
         }
-        return graph
     }
 
     /**

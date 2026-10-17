@@ -193,5 +193,10 @@ enum class TeleportSpell(val level: Int,
          * An immutable copy of [values].
          */
         val VALUES = ImmutableList.copyOf(values())
+
+        /**
+         * @return The spell with [name], or `null` if there is none.
+         */
+        fun named(name: String?): TeleportSpell? = entries.firstOrNull { it.name == name }
     }
 }
