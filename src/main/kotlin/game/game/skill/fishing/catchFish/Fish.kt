@@ -84,6 +84,11 @@ enum class Fish(val id: Int,
          exp = 60.0,
          chance = 16 to 96,
          message = "You catch a pike."),
+    SLIMY_EEL(id = 3379,
+              level = 28,
+              exp = 65.0,
+              chance = 10 to 80,
+              message = "You catch a slimy swamp eel."),
     SALMON(id = 331,
            level = 30,
            exp = 70.0,
@@ -94,6 +99,11 @@ enum class Fish(val id: Int,
          exp = 80.0,
          chance = 8 to 64,
          message = "You catch a tuna."),
+    CAVE_EEL(id = 5001,
+             level = 38,
+             exp = 80.0,
+             chance = 10 to 80,
+             message = "You catch a cave eel."),
     LOBSTER(id = 377,
             level = 40,
             exp = 90.0,
@@ -109,6 +119,11 @@ enum class Fish(val id: Int,
               exp = 100.0,
               chance = 4 to 48,
               message = "You catch a swordfish."),
+    LAVA_EEL(id = 2148,
+             level = 53,
+             exp = 60.0,
+             chance = 16 to 96,
+             message = "You catch a lava eel."),
     MONKFISH(id = 7944,
              level = 62,
              exp = 120.0,
@@ -118,30 +133,10 @@ enum class Fish(val id: Int,
               level = 65,
               exp = 105.0,
               chance = 5 to 160,
-              message = "You catch a Karambwan!") {
-        override fun toItem(action: CatchFishAction): Item? {
-            return if (rand(3) == 0) {
-                // 3 in 1 chance to lose bait.
-                action.messages += "A Karambwan deftly snatches the Karambwanji from your vessel!"
-                null
-            } else {
-                Item(id, 1)
-            }
-        }
-    },
+              message = "You catch a Karambwan!"),
     SHARK(id = 383,
           level = 76,
           exp = 110.0,
           chance = 3 to 40,
-          message = "You catch a shark!");
-
-    /**
-     * The formatted name.
-     */
-    val formattedName = itemName(id).replace("Raw ", "").lowercase().trim()
-
-    /**
-     * Retrieves the item instance from this fish.
-     */
-    open fun toItem(action: CatchFishAction): Item? = Item(id)
+          message = "You catch a shark!")
 }

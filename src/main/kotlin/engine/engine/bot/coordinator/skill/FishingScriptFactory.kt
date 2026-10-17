@@ -32,6 +32,12 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
     private val BOT_TOOLS = Tool.entries - KARAMBWANJI_NET
 
     /**
+     * The tools bots fish with. The others are used at spots that no bot zone covers.
+     */
+    private val BOT_TOOLS =
+        Tool.entries - setOf(KARAMBWANJI_NET, SLIMY_EEL_FISHING_ROD, CAVE_EEL_FISHING_ROD, LAVA_EEL_FISHING_ROD)
+
+    /**
      * A group of fishing zones that support one or more fishing tools.
      *
      * Each group defines:
@@ -194,7 +200,10 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
                 FishingZone.SMALL_NET_AND_HARPOON
             ) // TODO Vessel fishing.
 
-            KARAMBWANJI_NET -> throw IllegalStateException("Bots don't fish with $tool.")
+            KARAMBWANJI_NET,
+            SLIMY_EEL_FISHING_ROD,
+            CAVE_EEL_FISHING_ROD,
+            LAVA_EEL_FISHING_ROD -> throw IllegalStateException("Bots don't fish with $tool.")
         }
 
         return zones.random().zones(bot)

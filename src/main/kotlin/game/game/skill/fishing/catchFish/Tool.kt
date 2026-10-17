@@ -90,6 +90,28 @@ enum class Tool(val id: Int,
                      levelMessage = "You need at least 25 Fishing to bait these fish.",
                      toolMessage = "You need a Fishing Rod to bait these fish.",
                      checkSpaceOnCast = false),
+    SLIMY_EEL_FISHING_ROD(id = 307,
+                          level = 28,
+                          bait = 313,
+                          fish = listOf(SLIMY_EEL),
+                          firstRoll = 5,
+                          delay = 5,
+                          animation = 623,
+                          castAnimation = 622,
+                          castMessages = listOf("You cast out your line...", "You attempt to catch a fish."),
+                          levelMessage = "You need at least 28 Fishing to catch these fish.",
+                          toolMessage = "You need a Fishing Rod to bait these fish."),
+    CAVE_EEL_FISHING_ROD(id = 307,
+                         level = 28,
+                         bait = 313,
+                         fish = listOf(CAVE_EEL, SLIMY_EEL),
+                         firstRoll = 5,
+                         delay = 5,
+                         animation = 623,
+                         castAnimation = 622,
+                         castMessages = listOf("You cast out your line...", "You attempt to catch a fish."),
+                         levelMessage = "You need at least 28 Fishing to catch these fish.",
+                         toolMessage = "You need a Fishing Rod to bait these fish."),
     HARPOON(id = 311,
             level = 35,
             fish = listOf(SWORDFISH, TUNA),
@@ -109,6 +131,18 @@ enum class Tool(val id: Int,
                 levelMessage = "You need at least 40 Fishing to catch Lobsters.",
                 toolMessage = "You need a lobster pot to catch lobsters.",
                 fullMessage = "You can't carry any more lobsters."),
+    LAVA_EEL_FISHING_ROD(id = 1585,
+                         level = 53,
+                         bait = 313,
+                         fish = listOf(LAVA_EEL),
+                         firstRoll = 5,
+                         delay = 5,
+                         animation = 623,
+                         castAnimation = 622,
+                         castMessages = listOf("You cast out your line...", "You attempt to catch an eel."),
+                         levelMessage = "You need to be at least level 53 Fishing to bait these eels.",
+                         toolMessage = "You need a flame-proof fishing rod to bait these fish.",
+                         fullMessage = "You can't carry any more eels."),
     MONKFISH_NET(id = 303,
                  level = 62,
                  fish = listOf(MONKFISH),
@@ -121,14 +155,13 @@ enum class Tool(val id: Int,
                  toolMessage = "You need a net to catch these fish."),
 
     /**
-     * Karambwan spots aren't handled yet, so nothing uses this.
+     * A Karambwan vessel loaded with a karambwanji. Lowering it uses up the karambwanji.
      */
-    KARAMBWAN_VESSEL(id = 3157,
+    KARAMBWAN_VESSEL(id = 3159,
                      level = 65,
-                     bait = 3150,
                      fish = listOf(KARAMBWAN),
-                     firstRoll = 5,
-                     delay = 5,
+                     firstRoll = 6,
+                     delay = 6,
                      animation = 1193,
                      castMessages = listOf("You lower the Karambwan vessel."),
                      levelMessage = "You need to be at least level 65 Fishing to catch Karambwan.",
@@ -155,6 +188,15 @@ enum class Tool(val id: Int,
 
     companion object {
 
-        val ALL_IDS: Set<Int> = entries.map { it.id }.toSet()
+        /**
+         * An empty Karambwan vessel. Using a raw karambwanji on it loads it.
+         */
+        const val EMPTY_KARAMBWAN_VESSEL = 3157
+
+        /**
+         * The tool items bots start with. Bots don't fish lava eels, and start with an empty Karambwan vessel.
+         */
+        val ALL_IDS: Set<Int> = (entries - LAVA_EEL_FISHING_ROD - KARAMBWAN_VESSEL).map { it.id }.toSet() +
+                EMPTY_KARAMBWAN_VESSEL
     }
 }
