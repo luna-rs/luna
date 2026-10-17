@@ -1,4 +1,4 @@
-package api.bot.webwalk.walk.crossing
+package api.bot.webwalk.walk.ship
 
 import game.content.sailing.Sailing
 import game.content.sailing.ShipRoute
