@@ -1,4 +1,3 @@
-
 package engine.bot.coordinator
 
 import api.bot.action.trading.BotTradePurpose
@@ -54,11 +53,9 @@ object MerchantingCoordinator : BotCoordinator {
                 } else {
                     BotTradePurpose.SELL
                 }
-            val generalStore = world.shops.get("General Store")
-            val spaceLeft = generalStore?.items?.let { it.capacity() - it.size() } ?: 0
             val isDumbOrGreedy = bot.personality.isDumb || (bot.personality.isIntelligent && bot.emotions.isFeeling(
                 EmotionType.GREEDY))
-            if (generalStore != null && spaceLeft > 0 && randBoolean() && isDumbOrGreedy) {
+            if (randBoolean() && isDumbOrGreedy) {
                 bot.scriptStack.push(SellToStoreBotScript(bot))
             } else {
                 bot.scriptStack.push(TradeBotScript(bot, purpose))
@@ -71,7 +68,13 @@ object MerchantingCoordinator : BotCoordinator {
                 } else {
                     BotTradePurpose.BUY
                 }
-            bot.scriptStack.push(TradeBotScript(bot, purpose))
+            val isShopper = bot.personality.isIntelligent && !bot.preferences.hatesActivity(BotActivity.MERCHANTING) ||
+                    bot.preferences.isMerchant
+            if (rand(3) == 0 || isShopper && randBoolean()) {
+                bot.scriptStack.push(BuyFromStoreBotScript(bot))
+            } else {
+                bot.scriptStack.push(TradeBotScript(bot, purpose))
+            }
         } else {
             // Otherwise make generic purchases from registered shops.
             bot.scriptStack.push(BuyFromStoreBotScript(bot))
