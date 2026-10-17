@@ -54,7 +54,7 @@ fun teleport(plr: Player, destination: JewelleryDestination, event: ItemClickEve
     if (!holdsRubbedItem(plr, event, index, jewellery)) {
         return
     }
-    val chargesLeft = jewellery.items.size - index - 1
+    val chargesLeft = jewellery.charges(jewellery.items[index]) - 1
     val landing = findLandingTile(destination.centre, destination.radius)
     plr.teleport(landing, TeleportStyle.REGULAR, jewellery.maxWildernessLevel, onLand = {
         useCharge(plr, event, index, jewellery)

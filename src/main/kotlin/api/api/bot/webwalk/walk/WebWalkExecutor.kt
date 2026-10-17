@@ -9,8 +9,8 @@ import api.bot.webwalk.plan.CapabilitySnapshot
 import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.plan.TeleportAvailability
 import api.bot.webwalk.plan.WebWalkPlan
-import api.bot.webwalk.walk.crossing.CrossingContext
 import api.bot.webwalk.walk.crossing.CrossingHandlers
+import api.bot.webwalk.walk.ship.ShipVoyage
 import api.predef.*
 import api.predef.ext.*
 import engine.obj.Trapdoor
@@ -32,8 +32,10 @@ import io.luna.game.model.`object`.GameObject
  * - Ladders and stairs are climbed with the option that the plan says, and when that is "Climb" the bot also chooses up or
  *   down in the dialogue that asks.
  * - Trapdoors are opened if they are closed, then climbed down.
- * - Teleports are cast, rubbed or typed as a player would. Ships and fairy rings are not supported yet, so a plan with one
- *   of those fails when it gets to it.
+ * - Teleports are cast, rubbed or typed as a player would. Fairy rings are not supported yet, so a plan with one fails
+ *   when it gets to it.
+ * - Ships are boarded by talking to their crew and left by their gangplank, see
+ *   [api.bot.webwalk.walk.ship.ShipVoyage].
  * - Crossings, such as the Al Kharid toll gate, are left to the [api.bot.webwalk.walk.crossing.CrossingHandler] that the
  *   data names.
  *
@@ -60,7 +62,7 @@ class WebWalkExecutor(private val bot: Bot,
         /**
          * How long to wait for a door to open, a ladder to be climbed, or a dialogue to show.
          */
-        private val ACTION_TIMEOUT = CrossingContext.ACTION_TIMEOUT
+        private val ACTION_TIMEOUT = LegContext.ACTION_TIMEOUT
 
         /**
          * How many times a door is tried before giving up on it.
@@ -101,7 +103,7 @@ class WebWalkExecutor(private val bot: Bot,
     /**
      * What the bot is moved about with, which the crossing handlers use too.
      */
-    private val context = CrossingContext(bot, handler)
+    private val context = LegContext(bot, handler)
 
     /**
      * Takes the bot along a plan.
@@ -122,6 +124,7 @@ class WebWalkExecutor(private val bot: Bot,
                 EdgeType.LADDER, EdgeType.STAIR -> climb(leg)
                 EdgeType.TRAPDOOR -> climbTrapdoor(leg)
                 EdgeType.TELEPORT -> teleport(leg)
+                EdgeType.SHIP -> ShipVoyage.sail(context, leg)
                 else -> "${leg.type} legs are not supported yet"
             }
             if (failure != null) {
@@ -296,7 +299,7 @@ class WebWalkExecutor(private val bot: Bot,
         val teleport = leg.teleport ?: return "the leg has no teleport"
         when (teleport.kind) {
             TeleportKind.SPELL -> {
-                val spell = TeleportSpell.entries.firstOrNull { it.name == teleport.key }
+                val spell = TeleportSpell.named(teleport.key)
                     ?: return "there is no spell '${teleport.key}'"
                 bot.output.clickButton(spell.button)
             }
@@ -321,9 +324,9 @@ class WebWalkExecutor(private val bot: Bot,
      * @return `null` if the destination was chosen, or why it wasn't.
      */
     private suspend fun useJewellery(key: String?, option: Int?): String? {
-        val jewellery = TeleportJewellery.entries.firstOrNull { it.name == key } ?: return "there is no jewellery '$key'"
+        val jewellery = TeleportJewellery.named(key) ?: return "there is no jewellery '$key'"
         val choice = option ?: return "the teleport has no destination option"
-        val item = handler.retrieveAny(TeleportAvailability.chargedIds(jewellery).map { Item(it) })
+        val item = handler.retrieveAny(jewellery.items.map { Item(it) })
             ?: return "the bot has no ${jewellery.name.lowercase()} with a charge"
         if (!handler.inventory.clickItem(4, item.id)) {
             return "could not rub ${item.name}"

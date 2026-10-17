@@ -96,6 +96,41 @@ data class GeneratedTeleport(val id: String,
                              val maxWilderness: Int? = null)
 
 /**
+ * A ship of `ships.jsonc` made by the generator, from a [game.content.sailing.ShipRoute]. It is written as a route between
+ * two ports of its own, [departureId] and [arrivalId].
+ *
+ * @property key The name of the route.
+ * @property departure The tile on the dock where the crew is talked to.
+ * @property arrival The tile on the dock below the gangplank that the ship is left by.
+ * @property plankId The id of that gangplank.
+ * @property plankPos The position of that gangplank.
+ * @property cost The time from talking to the crew to stepping off the gangplank, in game ticks.
+ * @property requirements What a bot needs to board.
+ *
+ * @author Hydrozoa
+ */
+data class GeneratedShip(val key: String,
+                         val departure: Position,
+                         val arrival: Position,
+                         val plankId: Int,
+                         val plankPos: Position,
+                         val cost: Int,
+                         val requirements: Requirements = Requirements.NONE) {
+
+    /**
+     * The id of the port that the ship is boarded at.
+     */
+    val departureId: String
+        get() = "ship_${key.lowercase()}_departure"
+
+    /**
+     * The id of the port that the ship is left at.
+     */
+    val arrivalId: String
+        get() = "ship_${key.lowercase()}_arrival"
+}
+
+/**
  * A bank booth that the generator found, before the tile to stand on in front of it has been chosen.
  *
  * @property id The id of the bank.
@@ -468,6 +503,23 @@ object WebWalkWriter {
             "{ \"id\": ${quote(bank.id)}, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)}, " +
                     "\"links\": [$links] }"
         }, "[", "]")
+    }
+
+    /**
+     * Writes `ships.jsonc`: the two ports of each ship, then the ship from one to the other.
+     */
+    fun ships(ships: Collection<GeneratedShip>): String {
+        val sorted = ships.sortedBy { it.key }
+        val portLines = sorted.flatMap { ship ->
+            listOf("{ \"id\": ${quote(ship.departureId)}, \"pos\": ${position(ship.departure)} }",
+                   "{ \"id\": ${quote(ship.arrivalId)}, \"pos\": ${position(ship.arrival)} }")
+        }
+        val routeLines = sorted.map { ship ->
+            val requirements = if (ship.requirements.isEmpty) "" else ", \"requirements\": ${requirements(ship.requirements)}"
+            "{ \"key\": ${quote(ship.key)}, \"from\": ${quote(ship.departureId)}, \"to\": ${quote(ship.arrivalId)}, " +
+                    "\"object\": ${ship.plankId}, \"objectPos\": ${position(ship.plankPos)}, \"cost\": ${ship.cost}$requirements }"
+        }
+        return "{\n  \"ports\": ${lines(portLines, "[", "]", "  ")},\n  \"routes\": ${lines(routeLines, "[", "]", "  ")}\n}\n"
     }
 
     /**

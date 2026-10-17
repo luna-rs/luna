@@ -45,7 +45,10 @@ import java.nio.file.Path
  *   [api.bot.webwalk.plan.WebWalkPlanner.planToNearestBank]. A bank also has `links`, which are the walks to its `pos` from
  *   the nodes nearest to it (`node`, the id of a node on the same plane, and `cost`, the time of the walk in game ticks).
  *   At least one is needed to arrive at the bank.
- * - `ships.json`: an object with `ports` (`id`, `pos`) and `routes` (`from`, `to`, `cost`), or an empty array.
+ * - `ships.jsonc` (generated): an object with `ports` (`id`, `pos`) and `routes`, or an empty array. A route has the `key`
+ *   of its [game.content.sailing.ShipRoute], `from` (the port it is boarded at) and `to` (the port on the dock below the
+ *   gangplank it is left by), the `object` and `objectPos` of that gangplank, a `cost`, and optional `requirements` and
+ *   `bidirectional`. Routes are one way unless they say otherwise.
  * - `fairy_rings.json`: fairy rings, each with an `id`, `code` and `pos`.
  *
  * Positions are written as `[x, y]` or `[x, y, z]`. Requirements are written as an object with any of `skills` (skill name
@@ -106,9 +109,9 @@ object WebWalkLoader {
     const val BANKS = "banks.jsonc"
 
     /**
-     * The ships.
+     * The generated ships, with the ports they sail between.
      */
-    const val SHIPS = "ships.json"
+    const val SHIPS = "ships.jsonc"
 
     /**
      * The fairy rings.
@@ -651,16 +654,18 @@ object WebWalkLoader {
                 }
             }
             for (route in root.objects("routes")) {
+                val key = route.string("key")
                 val from = route.string("from")
                 val to = route.string("to")
                 val cost = route.int("cost", min = 0)
                 val bidirectional = route.bool("bidirectional") ?: EdgeType.SHIP.bidirectionalByDefault
-                val option = route.string("option", required = false)
+                val objectId = route.int("object", min = 0)
+                val objectPos = route.position("objectPos")
                 val requirements = readRequirements(route)
                 route.finish()
-                if (from != null && to != null && cost != null) {
+                if (key != null && from != null && to != null && cost != null && objectId != null && objectPos != null) {
                     pending += PendingEdge(route.where, from, to, EdgeType.SHIP, cost, bidirectional, requirements,
-                                           EdgeAction(option = option))
+                                           EdgeAction(objectId, objectPos, key = key))
                 }
             }
             root.finish()

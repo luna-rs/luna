@@ -100,6 +100,23 @@ enum class TeleportJewellery(val items: ImmutableList<Int>,
     open fun landMessage(chargesLeft: Int): String? = null
 
     /**
+     * The charges of the piece with [id]: one for itself and one for each piece after it in [items], or `0` if [id] isn't a
+     * charged piece of this jewellery.
+     */
+    fun charges(id: Int): Int {
+        val index = items.indexOf(id)
+        return if (index == -1) 0 else items.size - index
+    }
+
+    companion object {
+
+        /**
+         * @return The jewellery with [name], or `null` if there is none.
+         */
+        fun named(name: String?): TeleportJewellery? = entries.firstOrNull { it.name == name }
+    }
+
+    /**
      * Builds the charge message sent after a ring or necklace teleport.
      */
     protected fun usesLeft(name: String, chargesLeft: Int) =

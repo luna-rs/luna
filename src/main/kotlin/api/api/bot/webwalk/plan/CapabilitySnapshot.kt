@@ -10,10 +10,14 @@ import api.bot.webwalk.model.Requirements
  * @property skillLevels The level of each skill that the bot has, keyed by skill id. A skill that is missing is level 1.
  * @property items The amount of each item that the bot carries, in its inventory and equipment but not in its bank, keyed
  * by item id.
- * @property flags The unlocks that the bot has, such as [FAIRY_RINGS].
+ * @property flags The unlocks that the bot has, such as [FAIRY_RINGS], and the [BotConditions] that it meets.
  * @property wildernessLevel The wilderness level where the bot is, or `0`.
  * @property usableTeleports The ids of the teleports (see `teleports.jsonc`) that the bot can use right now, because it has
  * the level, the runes or charges, and nothing is stopping it.
+ * @property charges The charges of teleport jewellery that the bot carries, keyed by the name of the jewellery.
+ * @property teleportSpends What each of the [usableTeleports] uses up, keyed by teleport id, which the planner counts
+ * against [items] and [charges] so that a trip doesn't use more of them than the bot has. A teleport that isn't here uses up
+ * nothing.
  *
  * @author Hydrozoa
  */
@@ -21,7 +25,9 @@ class CapabilitySnapshot(val skillLevels: Map<Int, Int> = emptyMap(),
                          val items: Map<Int, Int> = emptyMap(),
                          val flags: Set<String> = emptySet(),
                          val wildernessLevel: Int = 0,
-                         val usableTeleports: Set<String> = emptySet()) {
+                         val usableTeleports: Set<String> = emptySet(),
+                         val charges: Map<String, Int> = emptyMap(),
+                         val teleportSpends: Map<String, Spend> = emptyMap()) {
 
     companion object {
 

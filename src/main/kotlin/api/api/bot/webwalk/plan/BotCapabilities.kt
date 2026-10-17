@@ -20,6 +20,9 @@ object BotCapabilities {
      * a bot has to go and get first.
      *
      * @param bot The bot.
+     * The flags are the unlocks that are given, and the [BotConditions] that the bot meets. The charges of its teleport
+     * jewellery, and what each teleport that it can use would use up, are counted too, see [TeleportAvailability].
+     *
      * @param teleports The teleports that the web has, to find which of them the bot can use right now.
      * @param flags The unlocks of the bot.
      * @return The snapshot.
@@ -30,7 +33,11 @@ object BotCapabilities {
         val items = HashMap<Int, Int>()
         count(bot.inventory, items)
         count(bot.equipment, items)
-        return CapabilitySnapshot(skills, items, flags, bot.wildernessLevel, TeleportAvailability.usable(bot, teleports))
+        val usable = TeleportAvailability.usable(bot, teleports)
+        val spends = teleports.filter { it.id in usable }.associate { it.id to TeleportAvailability.spend(bot, it) }
+            .filterValues { !it.isEmpty }
+        return CapabilitySnapshot(skills, items, flags + BotConditions.met(bot), bot.wildernessLevel, usable,
+                                  TeleportAvailability.charges(bot), spends)
     }
 
     /**

@@ -29,9 +29,74 @@ object Sailing {
     const val JOURNEY_VARP = 75
 
     /**
-     * The fare most ships charge.
+     * The id of coins, which fares are paid in.
      */
-    val FARE = Item(995, 30)
+    const val COINS = 995
+
+    /**
+     * The fare most ships charge, in coins.
+     */
+    const val FARE = 30
+
+    /**
+     * Captain Tobias, Seaman Lorris and Seaman Thresnor, who sail from Port Sarim to Karamja.
+     */
+    val PORT_SARIM_SAILORS = setOf(376, 377, 378)
+
+    /**
+     * Captain Barnaby, who sails from Ardougne to Brimhaven.
+     */
+    const val CAPTAIN_BARNABY = 381
+
+    /**
+     * The customs officers at Musa Point and Brimhaven.
+     */
+    const val CUSTOMS_OFFICER = 380
+
+    /**
+     * The Monks of Entrana at Port Sarim, who sail to Entrana.
+     */
+    val PORT_SARIM_MONKS = setOf(657, 2728, 2729)
+
+    /**
+     * The Monks of Entrana on Entrana, who sail back to Port Sarim.
+     */
+    val ENTRANA_MONKS = setOf(658, 2730, 2731)
+
+    /**
+     * Karamjan rum, which customs officers confiscate.
+     */
+    const val KARAMJAN_RUM = 431
+
+    /**
+     * The option that accepts a sailor's offer of a trip.
+     */
+    const val YES_PLEASE = "Yes please."
+
+    /**
+     * The option that asks a customs officer to board.
+     */
+    const val CAN_I_JOURNEY = "Can I journey on this ship?"
+
+    /**
+     * The option that lets a customs officer search the player.
+     */
+    const val SEARCH_AWAY = "Search away, I have nothing to hide."
+
+    /**
+     * The option that pays a customs officer's boarding charge.
+     */
+    const val OK = "Ok."
+
+    /**
+     * The option that accepts the passage to Entrana.
+     */
+    const val READY_TO_GO = "Yes, okay, I'm ready to go."
+
+    /**
+     * The option that accepts the passage back from Entrana.
+     */
+    const val READY_TO_LEAVE = "Yes, I'm ready to go."
 
     /**
      * The tabs hidden during a journey. Only the friends and ignore lists stay.
@@ -41,14 +106,18 @@ object Sailing {
                              TabIndex.SETTINGS, TabIndex.EMOTE, TabIndex.MUSIC)
 
     /**
-     * Takes the 30 coin fare from [plr], or says they can't afford it. Returns `true` if they paid.
+     * Takes the fare of [route] from [plr], or says they can't afford it. Returns `true` if they paid, or if the route
+     * is free.
      */
-    fun payFare(plr: Player): Boolean {
-        if (plr.inventory.computeAmountForId(FARE.id) < FARE.amount) {
+    fun payFare(plr: Player, route: ShipRoute): Boolean {
+        if (route.fare == 0) {
+            return true
+        }
+        if (plr.inventory.computeAmountForId(COINS) < route.fare) {
             plr.newDialogue().player(Expression.SAD, "Oh dear, I don't actually seem to have enough money.").open()
             return false
         }
-        return plr.inventory.remove(FARE)
+        return plr.inventory.remove(Item(COINS, route.fare))
     }
 
     /**

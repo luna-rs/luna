@@ -137,6 +137,24 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
+     * Clicks the option with some text on the currently open [OptionDialogue].
+     *
+     * @param text The text of the option, with any case.
+     *
+     * @return `true` if a supported dialogue interface was open with the option on it and a click was attempted, or
+     * `false` if not.
+     */
+    fun clickDialogueOption(text: String): Boolean {
+        val activeInterface = bot.overlays[OptionDialogue::class] ?: return false
+        val index = activeInterface.options.indexOfFirst { it.equals(text, ignoreCase = true) }
+        if (index == -1) {
+            bot.log("No dialogue option '$text' in ${activeInterface.options}.")
+            return false
+        }
+        return clickDialogueOption(index + 1)
+    }
+
+    /**
      * Closes the currently open interface window.
      *
      * If no window is open, this returns `true` immediately. Otherwise, it sends the close-interface action and waits

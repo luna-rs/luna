@@ -1,10 +1,11 @@
-package api.bot.webwalk.walk.crossing
+package api.bot.webwalk.walk
 
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
 import api.bot.webwalk.plan.PlanLeg
 import api.predef.*
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
@@ -14,15 +15,17 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * What a [CrossingHandler] and the [api.bot.webwalk.walk.WebWalkExecutor] need to move a bot about and find things in the
- * world. The executor uses the same code as the handlers, so it is only written once.
+ * What is needed to take a bot along one leg of a plan: to move it about, find things in the world, and wait for it to
+ * land. The [WebWalkExecutor] uses it for every leg, and hands it to the code that takes the legs it doesn't take itself,
+ * such as the [api.bot.webwalk.walk.crossing.CrossingHandler]s and [api.bot.webwalk.walk.ship.ShipVoyage], so that it is
+ * only written once.
  *
  * @property bot The bot.
  * @property handler The actions of the bot.
  *
  * @author Hydrozoa
  */
-class CrossingContext(val bot: Bot, val handler: BotActionHandler) {
+class LegContext(val bot: Bot, val handler: BotActionHandler) {
 
     companion object {
 
@@ -53,6 +56,12 @@ class CrossingContext(val bot: Bot, val handler: BotActionHandler) {
      */
     fun find(position: Position, vararg ids: Int): GameObject? =
         world.objects.findAll(position).filter { it.id in ids }.findFirst().orElse(null)
+
+    /**
+     * Finds the nearest NPC to a position with one of some ids, within a number of tiles, or `null` if there is none.
+     */
+    fun findNpc(near: Position, ids: Set<Int>, radius: Int): Npc? =
+        world.locator.findNpcs(near, radius, true) { it.id in ids }.firstOrNull()
 
     /**
      * Walks to a position.

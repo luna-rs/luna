@@ -3,6 +3,7 @@ package api.bot.webwalk.walk.crossing
 import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.CapabilitySnapshot
 import api.bot.webwalk.plan.PlanLeg
+import api.bot.webwalk.walk.LegContext
 import api.predef.ext.*
 import game.npc.spawn.alKharid.BorderGate
 import io.luna.game.model.mob.dialogue.OptionDialogue
@@ -45,7 +46,7 @@ object BorderGateCrossing : CrossingHandler {
      */
     private val CROSS_TIMEOUT = 25.seconds
 
-    override suspend fun cross(context: CrossingContext, leg: PlanLeg): String? {
+    override suspend fun cross(context: LegContext, leg: PlanLeg): String? {
         val action = leg.action ?: return "the leg has no object"
         val closedId = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
@@ -76,7 +77,7 @@ object BorderGateCrossing : CrossingHandler {
                 lastProblem = "could not reach the gate $closedId at $position"
                 return@repeat
             }
-            if (!waitFor(CrossingContext.ACTION_TIMEOUT) { OptionDialogue::class in bot.overlays }) {
+            if (!waitFor(LegContext.ACTION_TIMEOUT) { OptionDialogue::class in bot.overlays }) {
                 lastProblem = "the guard did not offer the toll"
                 return@repeat
             }
