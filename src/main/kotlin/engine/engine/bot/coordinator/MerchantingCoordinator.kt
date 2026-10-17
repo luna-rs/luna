@@ -1,11 +1,10 @@
+
 package engine.bot.coordinator
 
 import api.bot.action.trading.BotTradePurpose
-import api.bot.action.trading.TradeBotScript
 import api.predef.*
 import api.predef.ext.*
-import game.bot.scripts.BuyFromStoreBotScript
-import game.bot.scripts.trading.SellToGeneralStoreBotScript
+import game.bot.scripts.trading.BuyFromStoreBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -13,18 +12,34 @@ import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.util.RandomUtils
 
 /**
- * Coordinates merchanting-related activities for bots.
+ * Coordinates merchanting activities for bots.
  *
- * This coordinator is responsible for assigning scripts that allow a bot to participate in the server economy through
- * activities such as purchasing items from shops and, eventually, trading with other players or bots.
+ * Selects economy-related scripts based on the bot's wanted-item stock, merchanting preferences,
+ * personality, and emotions. Bots prioritize selling surplus items before acquiring wanted items,
+ * falling back to general shop purchases when neither activity is available.
  *
- * Merchanting behavior itself is implemented by the individual scripts pushed onto the bot's script stack. This keeps
- * the coordinator lightweight and allows merchanting activities to be expanded without coupling their logic together.
+ * Trading and shop interactions are performed by the scripts pushed onto the bot's script stack.
+ * This coordinator only determines which activity the bot should attempt.
  *
  * @author lare96
  */
 object MerchantingCoordinator : BotCoordinator {
 
+    /**
+     * Selects and schedules a merchanting activity for the specified bot.
+     *
+     * Bots with surplus wanted items attempt to sell them through player trading or a General Store.
+     * General Store selling requires available shop space, a random chance, and either a dumb personality
+     * or an intelligent personality currently feeling greedy.
+     *
+     * When no surplus exists, bots with wanted items to acquire attempt player trading. If neither
+     * surplus nor acquisition candidates exist, the bot attempts generic purchases from shops.
+     *
+     * Player trading uses merchant-specific purposes more frequently when the bot likes or loves
+     * merchanting. The selected script is pushed onto the bot's script stack for execution.
+     *
+     * @param bot The bot receiving the merchanting activity.
+     */
     override fun accept(bot: Bot) {
         val likesMerchanting = bot.preferences.likesActivity(BotActivity.MERCHANTING)
         val lovesMerchanting = bot.preferences.lovesActivity(BotActivity.MERCHANTING)
@@ -39,7 +54,7 @@ object MerchantingCoordinator : BotCoordinator {
                 }
             val generalStore = world.shops.get("General Store")
             val spaceLeft = generalStore?.items?.let { it.capacity() - it.size() } ?: 0
-            val isDumbOrGreedy = bot.personality.isDumb || (bot.personality.isIntelligent&& bot.emotions.isFeeling(
+            val isDumbOrGreedy = bot.personality.isDumb || (bot.personality.isIntelligent && bot.emotions.isFeeling(
                 EmotionType.GREEDY))
             if (generalStore != null && spaceLeft > 0 && randBoolean() && isDumbOrGreedy) {
                 bot.scriptStack.push(SellToGeneralStoreBotScript(bot))
