@@ -5,6 +5,8 @@ import api.bot.action.trading.BotTradePurpose
 import api.predef.*
 import api.predef.ext.*
 import game.bot.scripts.trading.BuyFromStoreBotScript
+import game.bot.scripts.trading.SellToStoreBotScript
+import game.bot.scripts.trading.TradeBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -57,7 +59,7 @@ object MerchantingCoordinator : BotCoordinator {
             val isDumbOrGreedy = bot.personality.isDumb || (bot.personality.isIntelligent && bot.emotions.isFeeling(
                 EmotionType.GREEDY))
             if (generalStore != null && spaceLeft > 0 && randBoolean() && isDumbOrGreedy) {
-                bot.scriptStack.push(SellToGeneralStoreBotScript(bot))
+                bot.scriptStack.push(SellToStoreBotScript(bot))
             } else {
                 bot.scriptStack.push(TradeBotScript(bot, purpose))
             }

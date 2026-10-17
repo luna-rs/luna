@@ -57,7 +57,6 @@ cmd("commands") {
         for (name in commandMap[rights]) {
             questJournal.addLine("::$name")
         }
-        questJournal.newLine()
     }
 
     // And finally, open the quest journal!
