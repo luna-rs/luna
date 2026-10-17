@@ -32,7 +32,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     /**
      * Attempts to sell surplus wanted items through registered shops.
      *
-     * Travels home before selecting a shuffled snapshot of surplus items and their sale quantities.
+     * Travels home before selecting a snapshot of surplus items in descending economy unit price order.
      * Each item is processed independently, with failed shops excluded from subsequent attempts.
      *
      * Before each withdrawal, the bot deposits its inventory, switches to unnoted withdrawal mode,
@@ -52,7 +52,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         }
 
         // Snapshot the trip's quantities so changing ownership cannot expand an ongoing sale.
-        val surplus = bot.preferences.wantedItemsToTrim().shuffled()
+        val surplus = bot.preferences.wantedItemsToTrim()
         for ((wanted, quantity) in surplus) {
             val id = wanted.id
             var remaining = quantity
