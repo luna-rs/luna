@@ -117,6 +117,11 @@ public final class GameSettings {
     private final boolean mergeStackableGroundItems;
 
     /**
+     * How frequent the auto-save script should run. <= 0 means it will not run.
+     */
+    private final int autosaveMinutes;
+
+    /**
      * Returns the TCP port that the server will bind on.
      */
     public int port() {
@@ -219,11 +224,18 @@ public final class GameSettings {
     }
 
     /**
+     * Returns how frequent the auto-save script should run. <= 0 means it will not run.
+     */
+    public int autosaveMinutes() {
+        return autosaveMinutes;
+    }
+
+    /**
      * Private constructor for JSON deserialization.
      */
     private GameSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
                          double experienceMultiplier, String serializer, PasswordStrength passwordStrength,
-                         boolean mergeStackableGroundItems) {
+                         boolean mergeStackableGroundItems, int autosaveMinutes) {
         // Will never be called directly.
         this.runtimeMode = runtimeMode;
         this.port = port;
@@ -233,5 +245,6 @@ public final class GameSettings {
         this.serializer = serializer;
         this.passwordStrength = passwordStrength;
         this.mergeStackableGroundItems = mergeStackableGroundItems;
+        this.autosaveMinutes = autosaveMinutes;
     }
 }
