@@ -143,29 +143,36 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return true
         }
 
+        if (!awaitActionSafety()) return true
         if (!onInit(resumed)) {
             bot.log("Initialization hook returned false. Stopping script.")
             return true
         }
 
+        if (!awaitActionSafety()) return true
         timestamp = System.currentTimeMillis()
 
         if (!resumed) {
             bot.log("Initial setup complete. Equipping required gear. candidateZones=${zones.size}")
             val equipmentLocator = equipment()
+            if (!awaitActionSafety()) return true
             if (equipmentLocator != null && !equipmentLocator.locateAndEquip()) {
+                if (!awaitActionSafety()) return true
                 bot.log("Gear required for this script could not be equipped.")
                 onEquipmentFailed(equipmentLocator)
                 bot.naturalDelay()
             }
+            if (!awaitActionSafety()) return true
             bot.log("Starting initial banking.")
             if (onBankRequested(true)) {
+                if (!awaitActionSafety()) return true
                 if (!handler.banking.travelToBankDepositAll()) {
                     bot.log("Initial banking failed. Could not travel to bank and deposit inventory.")
                     return true
                 }
 
                 bot.log("Initial bank deposit complete. Running initial banking hook.")
+                if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return true
                 onBankOpen(true)
                 bot.log("Initial banking hook complete.")
             } else {
@@ -180,6 +187,10 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     final override suspend fun run(): Boolean {
+        if (!isActionSafe()) {
+            bot.naturalMicroDelay()
+            return false
+        }
         if (bot.runEnergy >= 50 && !bot.walking.isRunning) {
             bot.walking.isRunning = true
             bot.log("Enabled running. runEnergy=${bot.runEnergy}")
@@ -203,6 +214,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return true
         }
 
+        if (!awaitActionSafety()) return true
         val zone = activeZone
         if (!forceBanking && zone != null && zone.isWithinDistance(bot, 64)) {
             val marketplace = BotMarketplace.forZone(zone)
@@ -211,7 +223,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 bot.naturalMicroDelay()
                 return false
             }
-            if (!prepareMarketplace(marketplace) || !executeInZone()) {
+            val prepared = prepareMarketplace(marketplace)
+            if (!isActionSafe()) return !awaitActionSafety()
+            val accepted = prepared && executeInZone()
+            if (!isActionSafe()) return !awaitActionSafety()
+            if (!accepted) {
                 val removed = zones.remove(zone)
                 bot.log(
                     "Execution rejected active zone. zone=$zone, removed=$removed, " +
@@ -227,6 +243,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
         }
 
+        if (!awaitActionSafety()) return true
         bankIfNeeded()
         bot.naturalMicroDelay()
         return false
@@ -371,7 +388,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * runtime candidate list. If all candidates fail once, the original candidate list is restored for one final retry
      * pass before the script gives up.
      *
-     * @return `true` if an active zone exists or travel toward one has started, otherwise `false`.
+     * An interrupted travel result defers selection without rejecting its candidate. A later cycle retries it.
+     *
+     * @return `true` if selection can continue, or `false` if no zone can be selected or the bot became inactive.
      */
     private suspend fun ensureActiveZone(): Boolean {
         activeZone?.let { zone ->
@@ -380,7 +399,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
 
             bot.log("Bot wandered too far from active zone. Returning. activeZone=$zone")
-            if (handler.travelTo(zone)) {
+            val returned = handler.travelTo(zone)
+            if (!isActionSafe()) return awaitActionSafety()
+            if (returned) {
                 bot.log("Return travel started for active zone. activeZone=$zone")
                 return true
             }
@@ -417,7 +438,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return true
             }
 
-            if (handler.travelTo(newZone)) {
+            val arrived = handler.travelTo(newZone)
+            if (!isActionSafe()) return awaitActionSafety()
+            if (arrived) {
                 val lastZone = activeZone
                 activeZone = newZone
                 onNewActiveZone(lastZone)
@@ -461,6 +484,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * bank when needed, deposits the inventory, runs [onBankOpen], then travels back to the active zone.
      */
     private suspend fun bankIfNeeded() {
+        if (!awaitActionSafety()) return
         val activeZone = activeZone ?: return
         if (!bot.inventory.isFull && !forceBanking) {
             if (!activeZone.isWithinDistance(bot, 64) && bot.walking.isEmpty) {
@@ -483,6 +507,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     "activeZone=$activeZone"
         )
 
+        forceBanking = true
+        if (!awaitActionSafety()) return
         val parent = activeZone.parent(bot)
 
         val bank = cachedBank
@@ -490,6 +516,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val origin = bot.position
             val targetPosition = bank.position
             val reachable = bot.navigator.canReachForInteraction(bank).await()
+            if (!awaitActionSafety()) return
             // An async result belongs to its original positions. Retry rather than route on a stale result.
             if (bot.position != origin || bank.position != targetPosition) {
                 forceBanking = true
@@ -513,6 +540,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     }
 
                 for (bank in sortedBanks) {
+                    if (!bankActionReady()) return
                     val option: Int = bank.def().actions.filter { it != "null" }.size
                     if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
@@ -528,6 +556,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 val npc = world.locator.findNpcs(activeZone.inside, activeZone.area.tileRadius)
                 { it.def().actions.contains("Bank") }.firstOrNull()
                 if (npc != null) {
+                    if (!bankActionReady()) return
                     bot.log("Banking NPC ${npc.id} found!")
                     val option: Int = npc.def().actions.filter { it != "null" }.size
                     if (handler.interactions.interact(option, npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
@@ -552,6 +581,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return
         }
 
+        if (!bankActionReady()) return
         bot.log("Preparing to interact with bank. cachedBank=$cachedBank, bankOpen=${bot.bank.isOpen}")
         if (!bot.bank.isOpen) {
             if (!handler.interactions.interact(2, cachedBank)) {
@@ -570,16 +600,30 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
         }
 
+        if (!bankActionReady()) return
         if (depositInventoryWhenBanking && !handler.banking.depositInventory()) {
             bot.log("Auto-inventory deposit failed. Will retry banking next cycle. activeZone=$activeZone")
             forceBanking = true
             return
         }
+        if (!bankActionReady()) return
         bot.log("Running banking hook. initial=false")
         onBankOpen(false)
         bot.log("Banking hook complete. Returning to active zone. activeZone=$activeZone")
+        if (!bankActionReady()) return
         forceBanking = false
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
         if (BotMarketplace.forZone(activeZone) == null) handler.travelTo(activeZone)
+    }
+
+    /**
+     * Defers a bank interaction after travel, reachability checks or interface waits become unsafe.
+     * Combat scripts may travel away from an attacker, but bank clicks and hooks require peace.
+     * The outstanding banking request remains set until the whole cycle can finish safely.
+     */
+    private fun bankActionReady(): Boolean {
+        if (isActionSafe(ActionSafety.NON_COMBAT)) return true
+        forceBanking = true
+        return false
     }
 }

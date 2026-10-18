@@ -7,6 +7,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.plugin.PluginBootstrap
 import kotlinx.coroutines.awaitCancellation
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,6 +35,13 @@ class ScriptPauseResumeTest {
     @BeforeEach
     fun useQueuedGameExecutor() {
         `when`(gameService.gameExecutor).thenReturn(Executor { queue.addLast(it) })
+        doAnswer { queue.addLast(it.getArgument<Runnable>(0)); null }
+            .`when`(gameService).yield(any(Runnable::class.java))
+    }
+
+    @AfterEach
+    fun restoreYield() {
+        doNothing().`when`(gameService).yield(any(Runnable::class.java))
     }
 
     private class FixtureScript(bot: Bot, val mode: String) : BotScript(bot) {
@@ -61,6 +69,7 @@ class ScriptPauseResumeTest {
     private fun fixture(mode: String): FixtureScript {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         `when`(bot.state).thenReturn(EntityState.ACTIVE)
+        `when`(bot.health).thenReturn(99)
         return FixtureScript(bot, mode)
     }
 

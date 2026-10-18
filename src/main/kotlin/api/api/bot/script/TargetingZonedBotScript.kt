@@ -135,6 +135,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * [ZonedBotScript] to choose another one.
      */
     final override suspend fun executeInZone(): Boolean {
+        if (!targetActionReady()) return true
         if (searchZone != activeZone) {
             clearTargetCache("active zone changed")
             searchZone = activeZone
@@ -142,6 +143,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val currentFocus = focus
         val invalidReason = getInvalidFocusReason(currentFocus)
         val refocus = refocus()
+        if (!targetActionReady()) return true
         val zone = activeZone!!
         if(forceBanking) {
             // Don't proceed if we need to bank.
@@ -155,13 +157,15 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 return false
             }
             onExecuteInZone(true)
+            if (!targetActionReady()) return true
             focus = null
             bot.log("Searching for a new target in $zone because ${invalidReason ?: "refocus was requested"}.")
 
             if (lastOptions.isEmpty()) {
-                searchTimes++
                 val searchRadius = zone.area.tileRadius
                 lastOptions = find(zone.area.centerPosition, searchRadius).toMutableList()
+                if (!targetActionReady()) return true
+                searchTimes++
                 bot.log("Found ${lastOptions.size} target option(s) in $zone using search radius $searchRadius.")
             }
 
@@ -189,25 +193,32 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 if (abandonExpiredSearch()) {
                     return false
                 }
+                if (!targetActionReady()) return true
                 val target = iterator.next()
                 iterator.remove()
 
-                if (target.state != EntityState.ACTIVE || !onAssignFocus(target)) {
-                    continue
-                }
+                val accepted = target.state == EntityState.ACTIVE && onAssignFocus(target)
+                if (!targetActionReady(target)) return true
+                if (!accepted) continue
                 val needsApproach = target is Mob && !bot.position.isViewable(target.position)
-                if (!approachTarget(target)) {
-                    continue
-                }
+                val approached = approachTarget(target)
+                if (!targetActionReady(target)) return true
+                if (!approached) continue
                 // Eligibility can change during travel (combat restrictions, inventory, etc.).
-                if (needsApproach && !onAssignFocus(target)) {
-                    continue
+                if (needsApproach) {
+                    val stillAccepted = onAssignFocus(target)
+                    if (!targetActionReady(target)) return true
+                    if (!stillAccepted) continue
                 }
                 if (forceBanking) {
                     return true
                 }
-                val option = interactionOption(target) ?: continue
-                if (!handler.interactions.interact(option, target)) {
+                val option = interactionOption(target)
+                if (!targetActionReady(target)) return true
+                if (option == null) continue
+                val interacted = handler.interactions.interact(option, target)
+                if (!targetActionReady(target)) return true
+                if (!interacted) {
                     bot.log("Failed to interact with target ${describeTarget(target)} using option $option.")
                     continue
                 }
@@ -223,6 +234,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 return false
             }
             bot.naturalDecisionDelay()
+            if (!targetActionReady()) return true
 
             if (searchTimes >= 10) {
                 val visiblePlayers =
@@ -258,11 +270,24 @@ abstract class TargetingZonedBotScript<E : Entity>(
     }
 
     /**
+     * Preserves the current zone and unattempted candidate when another activity interrupts targeting.
+     * Recovery time is not treated as a failed search or included in its abandonment timeout.
+     */
+    private fun targetActionReady(candidate: E? = null): Boolean {
+        if (isActionSafe()) return true
+        searchStartedAt = null
+        searchTimes = 0
+        if (candidate != null) lastOptions.add(candidate)
+        return false
+    }
+
+    /**
      * Approaches a newly discovered Mob's fixed location until it becomes visible, then leaves normal Mob
      * navigation to the interaction handler. Objects retain their existing interaction path. This does not
      * weaken NavigationAction's dead/out-of-view Mob guard or continuously chase an unseen moving target.
      */
     protected suspend fun approachTarget(target: E): Boolean {
+        if (!isActionSafe()) return false
         if (target.state != EntityState.ACTIVE) return false
         if (target !is Mob) return true
         if (!target.isAlive) return false
@@ -284,7 +309,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
             .build())
         try {
             waitFor(timeout) {
-                pending.isDone || bot.navigator.currentPending !== pending || forceBanking ||
+                !isActionSafe() || pending.isDone || bot.navigator.currentPending !== pending || forceBanking ||
                     !target.isAlive || target.state != EntityState.ACTIVE || (target !is Npc && target.position != destination)
                         || bot.position.isViewable(target.position) ||
                     (searchStartedAt != null &&
@@ -293,7 +318,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
             // Completed requests disappear from currentPending; a finished approach can still reveal the target.
             val current = bot.navigator.currentPending
             val available = current === pending || (current == null && pending.isDone)
-            return available && !pending.isCancelled && !forceBanking &&
+            return isActionSafe() && available && !pending.isCancelled && !forceBanking &&
                 target.isAlive && target.state == EntityState.ACTIVE && (target.position == destination || target is Npc)
                     && bot.position.isViewable(target.position) &&
                 (searchStartedAt == null ||
@@ -349,8 +374,9 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * @return `true` if this script should search for another target, or `false` if no forced refocus is required.
      */
     open suspend fun refocus(): Boolean {
-        if (focus?.state == EntityState.ACTIVE && bot.actions.size(ActionType.WEAK) == 0) {
+        if (isActionSafe() && focus?.state == EntityState.ACTIVE && bot.actions.size(ActionType.WEAK) == 0) {
             val option = interactionOption(focus!!) ?: return true
+            if (!isActionSafe()) return false
             handler.interactions.interact(option, focus)
 
             if (rand(bot.personality.dexterity)) {
