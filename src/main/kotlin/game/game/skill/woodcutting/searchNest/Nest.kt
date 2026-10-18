@@ -1,5 +1,6 @@
 package game.skill.woodcutting.searchNest
 
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**
@@ -7,17 +8,29 @@ import io.luna.game.model.item.Item
  *
  * @author lare96
  */
-enum class Nest(val id: Int, val items: List<Int>) {
+enum class Nest(val id: Int, val weight: Int, private val weightedItems: List<Pair<Int, Int>>) {
     RED_EGG_NEST(id = 5070,
-                 items = listOf(5076)),
+                 weight = 1,
+                 weightedItems = listOf(5076 to 1)),
     GREEN_EGG_NEST(id = 5071,
-                   items = listOf(5078)),
+                   weight = 1,
+                   weightedItems = listOf(5078 to 1)),
     BLUE_EGG_NEST(id = 5072,
-                  items = listOf(5077)),
+                  weight = 1,
+                  weightedItems = listOf(5077 to 1)),
     SEEDS_NEST(id = 5073,
-               items = listOf(5312, 5283, 5284, 5285, 5286, 5313, 5314, 5288, 5287, 5315, 5289, 5316, 5290, 5317)),
+               weight = 65,
+               weightedItems = listOf(5312 to 222, 5283 to 170, 5313 to 135, 5284 to 108, 5285 to 85, 5286 to 68,
+                                      5314 to 54, 5287 to 42, 5288 to 34, 5315 to 27, 5289 to 22, 5290 to 17,
+                                      5317 to 11, 5316 to 5)),
     RINGS_NEST(id = 5074,
-               items = listOf(1635, 1637, 1639, 1641, 1643));
+               weight = 32,
+               weightedItems = listOf(1637 to 40, 1635 to 35, 1639 to 15, 1641 to 9, 1643 to 1));
+
+    /**
+     * The items this nest can hold.
+     */
+    val items: List<Int> = weightedItems.map { it.first }
 
     companion object {
 
@@ -37,11 +50,26 @@ enum class Nest(val id: Int, val items: List<Int>) {
          * @param id The id of the item to check.
          */
         fun isNest(id: Int) = NEST_MAP.containsKey(id)
+
+        /**
+         * Picks the nest that falls out of a tree, by [weight].
+         */
+        fun roll(): Nest = weighted(VALUES.map { it to it.weight })
+
+        private fun <T> weighted(entries: List<Pair<T, Int>>): T {
+            var roll = rand().nextInt(entries.sumOf { it.second })
+            for ((value, weight) in entries) {
+                roll -= weight
+                if (roll < 0) {
+                    return value
+                }
+            }
+            throw IllegalStateException("Weights must be positive.")
+        }
     }
 
     /**
-     * Picks a random item from this nest.
+     * Picks a random item from this nest, by weight.
      */
-    fun pickItem() = Item(items.random())
-
+    fun pickItem() = Item(weighted(weightedItems))
 }
