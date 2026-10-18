@@ -1,6 +1,7 @@
 package game.skill.woodcutting
 
 import api.attr.Attr
+import api.predef.*
 import game.skill.Skills
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
@@ -68,8 +69,13 @@ object Woodcutting {
     /**
      * A function that determines if a log was successfully cut from a tree.
      */
-    fun success(level: Int, tree: Tree, axe: Axe): Boolean {
+    fun success(level: Int, tree: Tree, axe: Axe): Boolean = successRate(level, tree, axe) > rand().nextDouble()
+
+    /**
+     * The chance of cutting a log from [tree] with [axe] at [level]. Boosts count, but only up to level 99.
+     */
+    fun successRate(level: Int, tree: Tree, axe: Axe): Double {
         val (low, high) = axe.chances[tree]!!
-        return Skills.success(low, high, level)
+        return Skills.successRate(low, high, minOf(level, 99))
     }
 }
