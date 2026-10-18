@@ -7,7 +7,6 @@ package game.skill
  */
 class SkillsSettings(
     private val woodcuttingSpeed: Int = 4,
-    private val use317TreeStumps: Boolean = false,
     private val slayerEquipmentNeeded: Boolean = false,
     private val maxFiremakingLightTicks: Int = 10,
     private val teleOtherThrottleSeconds: Int = 30,
@@ -20,15 +19,6 @@ class SkillsSettings(
      * timing behavior in both 317 and OSRS.
      */
     fun woodcuttingSpeed() = woodcuttingSpeed
-
-    /**
-     * Determines which method to use for handling tree stump behavior: 2006 RuneScape or 317-style.
-     *
-     * If `true`, uses the 317 method: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
-     * If `false`, normal trees fall after one log and every other tree has a 1-in-8 chance to fall each time it gives
-     * a log.
-     */
-    fun use317TreeStumps() = use317TreeStumps
 
     /**
      * When enabled, players must wear the appropriate Slayer gear (e.g., masks, helmets, protective items) in order

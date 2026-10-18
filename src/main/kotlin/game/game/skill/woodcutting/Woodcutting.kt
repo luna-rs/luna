@@ -64,7 +64,7 @@ object Woodcutting {
      * time they give a log, or every tree does if `use_317_tree_stumps` is set.
      */
     fun fallsAfterLog(tree: Tree): Boolean =
-        (tree == Tree.NORMAL && !Luna.settings().skills().use317TreeStumps()) || rand().nextInt(8) == 0
+        tree == Tree.NORMAL || rand().nextInt(8) == 0
 
     /**
      * A function that determines if a log was successfully cut from a tree.
