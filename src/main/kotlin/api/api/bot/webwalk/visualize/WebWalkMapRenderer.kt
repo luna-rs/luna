@@ -95,6 +95,7 @@ object WebWalkMapRenderer {
                             EdgeType.LADDER to Color(0, 229, 255),
                             EdgeType.STAIR to Color(255, 255, 255),
                             EdgeType.TRAPDOOR to Color(124, 77, 255),
+                            EdgeType.ENTRANCE to Color(141, 110, 99),
                             EdgeType.CROSSING to Color(255, 64, 129),
                             EdgeType.SHIP to Color(41, 121, 255),
                             EdgeType.TELEPORT to Color(118, 255, 3),

@@ -399,7 +399,6 @@ public final class GameService extends AbstractScheduledService {
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
         runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
 
-
         // Save all players and wait for it to complete.
         world.getPersistenceService().saveAll(true).join();
 

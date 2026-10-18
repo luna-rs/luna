@@ -2,6 +2,8 @@ package game.bot.scripts
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
+import game.bot.scripts.skills.AgilityBotScript
+import game.bot.scripts.skills.AgilityBotScript.Companion.AgilityData
 import game.bot.scripts.skills.WeaveTextileBotScript
 import game.bot.scripts.skills.WeaveTextileBotScript.Companion.TextileData
 import game.bot.scripts.UseLampBotScript.Companion.LampData
@@ -100,6 +102,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
     scriptManager.addScript<LampData>(UseLampBotScript::class) { bot, data -> UseLampBotScript(bot, data) }
     scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }

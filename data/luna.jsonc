@@ -87,12 +87,6 @@
   "skills": {
     // The interval (in game ticks) between each attempt to cut a log while woodcutting.
     "woodcutting_speed": 4,
-    /**
-     * 317 style: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
-     *
-     * OSRS style: each tree has a health value that scales with its level, determining when it becomes a stump.
-     */
-    "use_317_tree_stumps": false,
     // Whether Slayer tasks should enforce required equipment checks.
     "slayer_equipment_needed": true,
     // The maximum number of ticks a player may spend trying to light a fire.

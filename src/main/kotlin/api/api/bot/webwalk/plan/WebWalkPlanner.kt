@@ -675,7 +675,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         return when (edge.type) {
             EdgeType.WALK -> ticksForTiles(nodes[from].position.computeLongestDistance(nodes[to].position)).toDouble()
             EdgeType.DOOR, EdgeType.GATE, EdgeType.CURTAIN -> costs.doorTicks
-            EdgeType.LADDER, EdgeType.STAIR -> costs.ladderTicks
+            EdgeType.LADDER, EdgeType.STAIR, EdgeType.ENTRANCE -> costs.ladderTicks
             EdgeType.TRAPDOOR -> costs.trapdoorTicks
             EdgeType.CROSSING -> costs.crossingTicks
             EdgeType.SHIP -> costs.shipTicks

@@ -11,7 +11,7 @@ import io.luna.game.model.item.ItemContainer
 on(ArrangeItemEvent::class, EventPriority.HIGH) {
     val mode = (insertionMode == 1) // 0 = swap, 1 = insert
     val itemContainer: ItemContainer? = when (widgetId) {
-        3214 -> plr.inventory
+        3214, 5064, 7423 -> plr.inventory
         5382 -> plr.bank
         else -> null
     }

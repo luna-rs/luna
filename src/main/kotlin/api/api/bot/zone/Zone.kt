@@ -44,6 +44,14 @@ enum class Zone(val price: Int,
                 val bankAnchors: List<Position> = emptyList(),
                 val travel: List<TravelStrategy> = emptyList(),
                 val safe: Boolean = true) {
+    /**
+     * Gnome Stronghold travel destination and western bank anchors.
+     */
+    GNOME_STRONGHOLD(price = 1500,
+                     anchor = Position(2459, 3397),
+                     regions = setOf(9781, 9525, 9782, 9526, 9783, 9527),
+                     bankAnchors = listOf(Position(2447, 3424), Position(2447, 3427),
+                                          Position(2444, 3424), Position(2444, 3425))),
     DRAYNOR(price = 500,
             anchor = Position(3093, 3244),
             regions = setOf(12338, 12339, 12340),

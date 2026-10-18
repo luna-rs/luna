@@ -7,7 +7,7 @@ package api.bot.webwalk.plan
  * that they would rather not do, are penalties.
  *
  * @property doorTicks The time to open a door, gate or curtain and step through, if the edge doesn't say.
- * @property ladderTicks The time to climb a ladder or staircase, if the edge doesn't say.
+ * @property ladderTicks The time to climb a ladder or staircase, or to use an entrance, if the edge doesn't say.
  * @property trapdoorTicks The time to open a trapdoor and climb down, if the edge doesn't say.
  * @property crossingTicks The time of a crossing that has a handler, such as a toll gate, if the edge doesn't say.
  * @property shipTicks The time of a ship trip, if the edge doesn't say.
