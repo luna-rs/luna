@@ -7,7 +7,6 @@ import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
@@ -124,12 +123,12 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns whether this queue currently contains an action whose concrete class is exactly {@code type}.
+     * Returns whether this queue currently contains an action assignable to {@code type}.
      * <p>
-     * This checks both the processing set and the per-cycle execution queue.
+     * This checks both the processing set and the per-cycle execution queue. Finished actions are ignored.
      *
-     * @param type The exact action class to check for.
-     * @return {@code true} if an instance of {@code type} exists in the queue.
+     * @param type The action class to check for.
+     * @return {@code true} if an unfinished instance of {@code type} exists in the queue.
      */
     @Deprecated
     public <T extends Action<?>> boolean contains(Class<T> type) {
@@ -137,19 +136,21 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns all processing and executing actions assignable to {@code type}.
+     * Returns the first processing or executing action assignable to {@code type}.
+     * <p>
+     * Finished actions stay queued until the next cycle, so they are skipped here.
      *
      * @param type The action base type.
-     * @return All matching actions.
+     * @return The first matching action, or {@code null} if there is none.
      */
     public <T extends Action<?>> T first(Class<T> type) {
         for (Action<?> action : processing.values()) {
-            if (type.isAssignableFrom(action.getClass())) {
+            if (action.getState() == ActionState.PROCESSING && type.isAssignableFrom(action.getClass())) {
                 return (T) action;
             }
         }
         for (Action<?> action : executing) {
-            if (type.isAssignableFrom(action.getClass())) {
+            if (action.getState() == ActionState.PROCESSING && type.isAssignableFrom(action.getClass())) {
                 return (T) action;
             }
         }
@@ -158,6 +159,8 @@ public final class ActionQueue {
 
     /**
      * Returns all processing and executing actions assignable to {@code type}.
+     * <p>
+     * Finished actions stay queued until the next cycle, so they are skipped here.
      *
      * @param type The action base type.
      * @return All matching actions.
@@ -165,12 +168,12 @@ public final class ActionQueue {
     public <T extends Action<?>> List<T> getAll(Class<T> type) {
         List<T> filtered = new ArrayList<>();
         for (Action<?> action : processing.values()) {
-            if (type.isAssignableFrom(action.getClass())) {
+            if (action.getState() == ActionState.PROCESSING && type.isAssignableFrom(action.getClass())) {
                 filtered.add((T) action);
             }
         }
         for (Action<?> action : executing) {
-            if (type.isAssignableFrom(action.getClass())) {
+            if (action.getState() == ActionState.PROCESSING && type.isAssignableFrom(action.getClass())) {
                 filtered.add((T) action);
             }
         }
@@ -178,15 +181,22 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns all processing and executing actions assignable to {@code type}.
+     * Returns all processing and executing actions with the {@link ActionType} {@code type}.
+     * <p>
+     * Finished actions stay queued until the next cycle, so they are skipped here.
      *
-     * @param type The action base type.
+     * @param type The action type.
      * @return All matching actions.
      */
     public <T extends Action<?>> List<T> getAll(ActionType type) {
-        List<T> filtered = new ArrayList<>((Collection<? extends T>) processing.get(type));
+        List<T> filtered = new ArrayList<>();
+        for (Action<?> action : processing.get(type)) {
+            if (action.getState() == ActionState.PROCESSING) {
+                filtered.add((T) action);
+            }
+        }
         for (Action<?> action : executing) {
-            if (action.getActionType() == type) {
+            if (action.getState() == ActionState.PROCESSING && action.getActionType() == type) {
                 filtered.add((T) action);
             }
         }
@@ -302,14 +312,35 @@ public final class ActionQueue {
     }
     //todo docs, testing
 
+    /**
+     * Returns the number of unfinished actions with the {@link ActionType} {@code type}.
+     *
+     * @param type The action type.
+     * @return The active action count for {@code type}.
+     */
     public int size(ActionType type) {
-        return processing.get(type).size();
+        int count = 0;
+        for (Action<?> action : processing.get(type)) {
+            if (action.getState() == ActionState.PROCESSING) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
+     * Returns the number of unfinished actions. Finished actions stay queued until the next cycle, so they are not
+     * counted.
+     *
      * @return The active action count.
      */
     public int size() {
-        return processing.size();
+        int count = 0;
+        for (Action<?> action : processing.values()) {
+            if (action.getState() == ActionState.PROCESSING) {
+                count++;
+            }
+        }
+        return count;
     }
 }

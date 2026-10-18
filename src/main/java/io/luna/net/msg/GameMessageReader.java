@@ -140,10 +140,7 @@ public abstract class GameMessageReader<E extends Event> {
      */
     private void handleInteractableEvent(Player player, E event) {
 
-        // Finished actions stay queued until the next cycle, so they must be skipped here or this interaction is lost.
-        List<InteractionAction> active = player.getActions().getAll(InteractionAction.class);
-        active.removeIf(InteractionAction::isFinished);
-        Iterator<InteractionAction> actions = active.iterator();
+        Iterator<InteractionAction> actions = player.getActions().getAll(InteractionAction.class).iterator();
         Entity target = ((InteractableEvent) event).target();
         List<InteractionActionListener> listeners = player.getPlugins().getPipelines().
                 get((Class<E>) event.getClass()).getInteractionListeners(player, target, event);
