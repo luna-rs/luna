@@ -15,7 +15,7 @@ enum class NodeKind {
     WAYPOINT,
 
     /**
-     * A tile on either side of a door, gate, curtain, ladder, stair or trapdoor.
+     * A tile on either side of a door, gate, curtain, ladder, stair, trapdoor or entrance.
      */
     OBSTACLE,
 
@@ -80,6 +80,12 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     TRAPDOOR(false),
 
     /**
+     * A cave or dungeon entrance, or the way back out, used with the option of the edge. See
+     * [game.obj.entrances.Entrance].
+     */
+    ENTRANCE(false),
+
+    /**
      * A crossing between two nearby tiles that needs more than a click on an object, such as a gate that charges a toll. The
      * [EdgeAction.handler] of the edge says how it is crossed.
      */
@@ -111,7 +117,7 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
      * @return `true` if this type is made from an entry of `obstacles.jsonc`.
      */
     val isObstacle: Boolean
-        get() = isDoorLike || this == LADDER || this == STAIR || this == TRAPDOOR
+        get() = isDoorLike || this == LADDER || this == STAIR || this == TRAPDOOR || this == ENTRANCE
 }
 
 /**

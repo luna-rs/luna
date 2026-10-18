@@ -31,8 +31,8 @@ import java.nio.file.Path
  * - `waypoints_manual.json` (maintained by hand, only read by the generator): an object with only `waypoints`, which have no
  *   edges as the generator links them with the others. The ids of the two waypoint files share one namespace, so a manual
  *   waypoint can't silently replace a generated one.
- * - `obstacles.jsonc` (generated): closed doors, gates and curtains. `climbs.jsonc` (generated): ladders, stairs and
- *   trapdoors. `crossings.jsonc` (generated): crossings that a handler in code crosses, such as the Al Kharid toll gate.
+ * - `obstacles.jsonc` (generated): closed doors, gates and curtains. `climbs.jsonc` (generated): ladders, stairs,
+ *   trapdoors and entrances. `crossings.jsonc` (generated): crossings that a handler in code crosses, such as the Al Kharid toll gate.
  *   All three have entries with a `type`, `object`, `pos`, `from` and `to`, and an optional `cost`, `bidirectional`,
  *   `option`, `requirements` and `reverseRequirements`. A `CROSSING` also has a `handler`, which no other type may have.
  * - `obstacle_overrides.json` (maintained by hand): patches for obstacles, found by `pos` (and optionally `object`), that
@@ -84,7 +84,7 @@ object WebWalkLoader {
     const val OBSTACLES = "obstacles.jsonc"
 
     /**
-     * The generated ladders, stairs and trapdoors, which are obstacles too.
+     * The generated ladders, stairs, trapdoors and entrances, which are obstacles too.
      */
     const val CLIMBS = "climbs.jsonc"
 
