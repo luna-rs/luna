@@ -3,7 +3,6 @@ package io.luna.game.model.mob.bot.schedule;
 import api.bot.script.BotScript;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
-import com.google.common.primitives.Chars;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.gson.reflect.TypeToken;
@@ -32,8 +31,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -145,9 +142,9 @@ public final class BotScheduleService extends AbstractScheduledService {
     private int loginGoal;
 
     /**
-     * The Markov chain used to generate usernames for newly created bots.
+     * Generates usernames for newly created bots.
      */
-    private MarkovChain<Character> usernameChain;
+    private BotUsernameGenerator usernameGenerator;
 
     /**
      * Creates a new bot schedule service for [world].
@@ -180,11 +177,11 @@ public final class BotScheduleService extends AbstractScheduledService {
         }
 
         // Create our Markov chain that will generate usernames for new bots.
-        usernameChain = new MarkovChain.Builder<Character>()
+        usernameGenerator = new BotUsernameGenerator(new MarkovChain.Builder<Character>()
                 .setName("username")
                 .setOrder(12)
                 .train("username", new TypeToken<>() {
-                }).build();
+                }).build());
 
         logger.info("Bot scheduler is now running!");
     }
@@ -355,17 +352,12 @@ public final class BotScheduleService extends AbstractScheduledService {
                     personalityBuilder.setIntelligence(ThreadLocalRandom.current().nextDouble(0.0, 0.15));
                 }
 
-                // Generate a username and attempt to log the bot in. The username quality scales with intelligence.
-                int quality = Math.max(1, (int) Math.floor(15 * intelligence));
-                List<Character> generatedUsername = usernameChain.generate(quality);
+                // Generate a username and attempt to log the bot in.
+                Optional<String> generatedUsername = usernameGenerator.generate(name -> !world.getBots().exists(name));
                 if (generatedUsername.isEmpty()) {
                     continue;
                 }
-                String username = new String(Chars.toArray(generatedUsername));
-                username = username.trim().toLowerCase(Locale.CANADA).replace(' ', '_'); // No spaces.
-                if (username.length() > 12) {// Max 1-12 characters.
-                    username = username.substring(0, 12);
-                }
+                String username = generatedUsername.get();
 
                 BotPersonality personality = personalityBuilder.build();
                 BotPreference.Builder preferences = new BotPreference.Builder(
@@ -377,9 +369,7 @@ public final class BotScheduleService extends AbstractScheduledService {
                     }
                 }
 
-                if (!world.getBots().exists(username)) {
-                    login(username, personality, preferences.build());
-                }
+                login(username, personality, preferences.build());
             }
         }
     }
