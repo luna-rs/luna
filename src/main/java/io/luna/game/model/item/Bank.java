@@ -246,7 +246,11 @@ public final class Bank extends ItemContainer {
         /*
          * Remove what the player actually has (original id).
          */
-        item = item.withAmount(amount);
+        if (item instanceof DynamicItem) {
+            item = item.withAmount(1);
+        } else {
+            item = item.withAmount(amount);
+        }
 
         /*
          * Convert to unnoted id for bank storage.
