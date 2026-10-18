@@ -65,7 +65,7 @@ object Magic {
                           level: Int,
                           requirements: List<SpellRequirement>,
                           autocast: Boolean = false): List<Item>? {
-        if (Luna.settings().game().betaMode() || plr.rights >= PlayerRights.ADMINISTRATOR) {
+        if (!plr.isBot && (Luna.settings().game().betaMode() || plr.rights >= PlayerRights.ADMINISTRATOR)) {
             return emptyList()
         }
         return when (val cost = spellCost(plr, level, requirements)) {
