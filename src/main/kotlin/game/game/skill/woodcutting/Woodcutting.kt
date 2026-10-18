@@ -60,11 +60,11 @@ object Woodcutting {
     }
 
     /**
-     * Determines if a tree falls after giving a log. Normal trees give one log. Other trees have a 1 in 8 chance each
-     * time they give a log, or every tree does if `use_317_tree_stumps` is set.
+     * Determines if a tree falls after giving a log. Normal and achey trees give one log. Other trees have a 1 in 8
+     * chance each time they give a log.
      */
     fun fallsAfterLog(tree: Tree): Boolean =
-        tree == Tree.NORMAL || rand().nextInt(8) == 0
+        tree == Tree.NORMAL || tree == Tree.ACHEY || rand().nextInt(8) == 0
 
     /**
      * A function that determines if a log was successfully cut from a tree.

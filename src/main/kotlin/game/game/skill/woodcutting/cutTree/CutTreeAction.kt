@@ -108,8 +108,8 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         if (!Woodcutting.success(mob.woodcutting.level, tree, axe)) {
             return emptyList()
         }
-        // Normal trees never give nests; on other trees a nest takes the place of the log.
-        nest = if (tree != Tree.NORMAL && rand().nextInt(256) == 0) Nest.roll() else null
+        // Normal and achey trees never give nests; on other trees a nest takes the place of the log.
+        nest = if (tree != Tree.NORMAL && tree != Tree.ACHEY && rand().nextInt(256) == 0) Nest.roll() else null
         return if (nest == null) listOf(Item(tree.logId)) else emptyList()
     }
 
