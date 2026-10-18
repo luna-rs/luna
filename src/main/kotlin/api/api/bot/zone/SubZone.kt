@@ -42,6 +42,13 @@ enum class SubZone(val inside: Position,
                    val outside: Bot.() -> Position? = { null },
                    val area: SimpleBoxArea,
                    val parent: Bot.() -> Zone) {
+    /**
+     * Full Gnome course footprint, including the upper platforms used by native obstacles.
+     */
+    GNOME_STRONGHOLD_AGILITY(inside = Position(2474, 3437),
+                             area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
+                             parent = { GNOME_STRONGHOLD }),
+
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(inside = Position(2844, 3425),
                    area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
