@@ -87,11 +87,11 @@ public final class InteractionAction extends Action<Player> {
     }
 
     /**
-     * The interaction event that created this action.
+     * The most recent interaction event for this action.
      * <p>
      * This provides the interaction context and the backing target reference for this action.
      */
-    private final InteractableEvent event;
+    private InteractableEvent event;
 
     /**
      * The current entity being interacted with.
@@ -328,12 +328,22 @@ public final class InteractionAction extends Action<Player> {
     }
 
     /**
-     * Sets the current interaction target.
+     * Sets the backing interaction event.
+     *
+     * @param event The new interaction event.
+     */
+    public void setEvent(InteractableEvent event) {
+        this.event = event;
+    }
+
+    /**
+     * Sets the current interaction target. This begins a new reach attempt, so the standing retry is reset.
      *
      * @param target The new interaction target.
      */
     public void setTarget(Entity target) {
         this.target = target;
+        retry = false;
     }
 
     /**

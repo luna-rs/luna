@@ -133,14 +133,17 @@ public abstract class GameMessageReader<E extends Event> {
      * <p>
      * Matching interaction listeners are resolved from the appropriate event pipeline. If the player does not already
      * have an active {@link InteractionAction}, a new one is submitted. Otherwise, the existing interaction action is
-     * updated with the new listener set and target, and any duplicate interaction actions are removed.
+     * updated with the new listener set, target, and event, and any duplicate interaction actions are removed.
      *
      * @param player The player that triggered the interaction.
      * @param event The interactable event to route.
      */
     private void handleInteractableEvent(Player player, E event) {
 
-        Iterator<InteractionAction> actions = player.getActions().getAll(InteractionAction.class).iterator();
+        // Finished actions stay queued until the next cycle, so they must be skipped here or this interaction is lost.
+        List<InteractionAction> active = player.getActions().getAll(InteractionAction.class);
+        active.removeIf(InteractionAction::isFinished);
+        Iterator<InteractionAction> actions = active.iterator();
         Entity target = ((InteractableEvent) event).target();
         List<InteractionActionListener> listeners = player.getPlugins().getPipelines().
                 get((Class<E>) event.getClass()).getInteractionListeners(player, target, event);
@@ -152,9 +155,10 @@ public abstract class GameMessageReader<E extends Event> {
             // We have an interaction action, we need to update it.
             InteractionAction first = actions.next();
 
-            // Change listeners and target within active interaction action.
+            // Change listeners, target, and event within active interaction action.
             first.setListeners(listeners);
             first.setTarget(target);
+            first.setEvent((InteractableEvent) event);
 
             // Remove any potential duplicate actions (shouldn't happen, but just in case).
             while (actions.hasNext()) {
