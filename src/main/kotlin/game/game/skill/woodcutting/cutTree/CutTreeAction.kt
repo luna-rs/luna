@@ -7,7 +7,7 @@ import game.skill.woodcutting.Woodcutting
 import game.skill.woodcutting.Woodcutting.treeHealth
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.Luna
-import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -15,15 +15,34 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 
 /**
- * An [InventoryAction] that will enable the cutting of trees.
+ * An [InventoryAction] that will enable the cutting of trees. The swing comes on the tick after the click, the first
+ * attempt two ticks after the swing, then one attempt every `woodcutting_speed` ticks, each restarting the animation.
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, Luna.settings().skills().woodcuttingSpeed(), 6, Int.MAX_VALUE) {
+    InventoryAction(plr, false, FIRST_ATTEMPT_DELAY, Int.MAX_VALUE) {
+
+    companion object {
+
+        /**
+         * The number of ticks between the click and the first attempt to cut a log.
+         */
+        const val FIRST_ATTEMPT_DELAY = 3
+    }
 
     /**
      * Sound delay for woodcutting.
      */
     private var soundDelay = -1
+
+    /**
+     * If the last free inventory slot was just filled, so that chopping stops on the next tick.
+     */
+    private var stopFull = false
+
+    /**
+     * If the swing at the start has happened.
+     */
+    private var swung = false
 
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
@@ -48,9 +67,9 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         }
 
         else -> {
-            if (start) {
-                mob.playSound(Sound.CUT_TREE_1, 40)
-                mob.sendMessage("You swing your axe at the tree.")
+            if (!start) {
+                delay = Luna.settings().skills().woodcuttingSpeed()
+                swing(true)
             }
             true
         }
@@ -68,7 +87,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                 mob.woodcutting.addExperience(tree.exp)
 
                 if (mob.inventory.isFull) {
-                    complete()
+                    stopFull = true
                 }
             }
             if (Luna.settings().skills().use317TreeStumps()) {
@@ -89,12 +108,6 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         }
     }
 
-    override fun animation(): Animation {
-        mob.playSound(Sound.CUT_TREE_2)
-        soundDelay = 2
-        return axe.animation
-    }
-
     override fun add(): List<Item> =
         if (Woodcutting.success(mob.woodcutting.level, tree, axe)) listOf(Item(tree.logId)) else emptyList()
 
@@ -102,9 +115,34 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         mob.animation(Animation.CANCEL)
     }
 
-    override fun onProcessAnimation() {
+    override fun onInventoryFull() = "Your inventory is too full to hold any more logs."
+
+    override fun onProcess() {
+        if (stopFull) {
+            mob.sendMessage(onInventoryFull())
+            complete()
+            return
+        }
+        if (!swung) {
+            swung = true
+            mob.playSound(Sound.CUT_TREE_1)
+            mob.sendMessage("You swing your axe at the tree.")
+            swing(false)
+        }
         if (soundDelay-- == 0) {
             mob.playSound(Sound.CUT_TREE_2)
+        }
+    }
+
+    /**
+     * Faces the tree and starts the chopping animation, with the chopping sound if [sound] is true.
+     */
+    private fun swing(sound: Boolean) {
+        mob.interactingWith?.let { mob.interact(it) }
+        mob.animation(axe.animation)
+        if (sound) {
+            mob.playSound(Sound.CUT_TREE_2)
+            soundDelay = 2
         }
     }
 
