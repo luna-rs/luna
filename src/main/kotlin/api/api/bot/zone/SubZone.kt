@@ -27,8 +27,8 @@ import kotlin.time.Duration.Companion.seconds
  * The parent zone is still used for long-distance routing, banking fallback, and general area selection, while the
  * subzone is used for local activity decisions such as fishing, mining, woodcutting, thieving, or combat training.
  *
- * Subzone [area] values should not overlap. Overlaps can make [updateSubZone] assign whichever matching subzone appears
- * first in enum order, which may cause bots to pick the wrong script target or local anchor.
+ * A bot can belong to several overlapping subzones. Marketplace overlays share the surrounding bank and
+ * resource footprints; [updateSubZone] retains every matching subzone rather than replacing those activities.
  *
  * Each subzone has:
  * - [inside], the preferred local anchor used after the bot is inside or near the subzone.
@@ -42,6 +42,19 @@ enum class SubZone(val inside: Position,
                    val outside: Bot.() -> Position? = { null },
                    val area: SimpleBoxArea,
                    val parent: Bot.() -> Zone) {
+    /**
+     * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
+     * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
+     */
+    VARROCK_MARKETPLACE(inside = VARROCK.anchor,
+                        area = SimpleBoxArea.of(3173, 3427, 3197, 3454), parent = { VARROCK }),
+    EDGEVILLE_MARKETPLACE(inside = EDGEVILLE.anchor,
+                          area = SimpleBoxArea.of(3086, 3485, 3098, 3501), parent = { EDGEVILLE }),
+    SEERS_VILLAGE_MARKETPLACE(inside = SEERS_VILLAGE.anchor,
+                              area = SimpleBoxArea.of(2720, 3484, 2729, 3493), parent = { SEERS_VILLAGE }),
+    AL_KHARID_MARKETPLACE(inside = AL_KHARID.anchor,
+                          area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
+
     /**
      * Full Gnome course footprint, including the upper platforms used by native obstacles.
      */

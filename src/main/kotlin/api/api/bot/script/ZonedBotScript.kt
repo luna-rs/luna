@@ -3,12 +3,14 @@ package api.bot.script
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
+import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
+import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.bot.Bot
@@ -203,7 +205,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         val zone = activeZone
         if (!forceBanking && zone != null && zone.isWithinDistance(bot, 64)) {
-            if (!executeInZone()) {
+            val marketplace = BotMarketplace.forZone(zone)
+            if (marketplace != null && !marketplace.contains(bot.position) &&
+                (bot.isLocked || bot.actions.size(ActionType.STRONG) > 0 || bot.actions.size(ActionType.WEAK) > 0)) {
+                bot.naturalMicroDelay()
+                return false
+            }
+            if (!prepareMarketplace(marketplace) || !executeInZone()) {
                 val removed = zones.remove(zone)
                 bot.log(
                     "Execution rejected active zone. zone=$zone, removed=$removed, " +
@@ -245,6 +253,17 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * @return `true` if {@code zone} is still usable, or `false` to reject it.
      */
     abstract suspend fun executeInZone(): Boolean
+
+    /**
+     * Rejoins a precise marketplace work tile after initial travel, banking or displacement.
+     * A failed or unavailable work area is rejected through the normal zoned retry lifecycle.
+     * Ordinary resource/facility destinations bypass this check. Existing webwalking owns navigation.
+     */
+    private suspend fun prepareMarketplace(marketplace: BotMarketplace?): Boolean {
+        if (marketplace == null || marketplace.contains(bot.position)) return true
+        val tile = marketplace.positions.randomOrNull() ?: return false
+        return handler.webWalkTo(tile) && bot.position == tile && marketplace.contains(bot.position)
+    }
 
     /**
      * Builds the equipment request used by this script.
@@ -560,6 +579,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         onBankOpen(false)
         bot.log("Banking hook complete. Returning to active zone. activeZone=$activeZone")
         forceBanking = false
-        handler.travelTo(activeZone)
+        // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
+        if (BotMarketplace.forZone(activeZone) == null) handler.travelTo(activeZone)
     }
 }
