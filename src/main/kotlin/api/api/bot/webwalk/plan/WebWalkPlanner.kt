@@ -29,7 +29,10 @@ import java.util.SplittableRandom
  *   see [BankDefinition.links].
  * - Edges can be taken from any node: walks, doors, ladders and the like, ships, and teleports. Teleports are not stored
  *   in the graph for each bot. Instead the ones that the snapshot allows are taken from wherever a bot is, as long as it
- *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). Fairy rings can be
+ *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). The cost of a
+ *   teleport doesn't depend on where it is cast from, except for one thing: one that lands in the wilderness costs
+ *   [PlannerCosts.wildernessEntry] more when cast from outside it. So each teleport is only tried from the cheapest place
+ *   outside the wilderness and the cheapest place inside it that it can be used from, see [search]. Fairy rings can be
  *   taken from any ring to any other, if the bot has the [CapabilitySnapshot.FAIRY_RINGS] unlock.
  * - The search is Dijkstra's algorithm. A* would need a heuristic that teleports can't break, and the graph is small enough
  *   not to need one.
@@ -532,6 +535,16 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                   spend, requirements.coins)
         }
 
+        // A teleport doesn't cost the same from everywhere: one that lands in the wilderness costs the wilderness entry penalty
+        // more when it is cast from outside it, and nothing more from inside it. Apart from that its cost doesn't depend on
+        // where it is cast from. So the first label taken off the queue that can cast it from outside the wilderness, and the
+        // first from inside it, are the cheapest places to cast it from, and it isn't tried from any other. That is
+        // only so for a label that hasn't spent anything that is counted: one that has may not be able to pay for what
+        // comes after, so the teleport is still tried from the labels after it.
+        val triedOutside = BooleanArray(request.teleports.size)
+        val triedInside = BooleanArray(request.teleports.size)
+        var untried = request.teleports.size
+
         val first = Label(start, 0.0, budget.initial, null, null)
         labels[start] += first
         queue.add(first)
@@ -575,7 +588,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                 }
             }
 
-            for (indexed in request.teleports) {
+            if (untried == 0) {
+                continue
+            }
+            val wild = here > 0
+            val unspent = label.left.contentEquals(budget.initial)
+            for ((index, indexed) in request.teleports.withIndex()) {
+                if (if (wild) triedInside[index] else triedOutside[index]) {
+                    continue
+                }
                 val teleport = indexed.teleport
                 if (indexed.to != node && request.snapshot.meets(teleport.requirements, here)) {
                     val penalty = when (teleport.kind) {
@@ -585,6 +606,19 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                     }
                     step(label, indexed.to, EdgeType.TELEPORT, teleport.cost.toDouble(), penalty, teleport = teleport,
                          exposed = false, spend = budget.teleportSpends[teleport.id])
+                    if (unspent) {
+                        // Landing outside the wilderness costs the same from inside it as from outside it.
+                        val anywhere = level(indexed.to) == 0
+                        if (wild || anywhere) {
+                            triedInside[index] = true
+                        }
+                        if (!wild || anywhere) {
+                            triedOutside[index] = true
+                        }
+                        if (triedInside[index] && triedOutside[index]) {
+                            untried--
+                        }
+                    }
                 }
             }
         }
