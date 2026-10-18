@@ -4,7 +4,6 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
 import game.skill.woodcutting.Woodcutting
-import game.skill.woodcutting.Woodcutting.treeHealth
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.Luna
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
@@ -90,20 +89,9 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     stopFull = true
                 }
             }
-            if (Luna.settings().skills().use317TreeStumps()) {
-                if (rand().nextInt(8) == 0) {
-                    deleteAndRespawnTree()
-                    complete()
-                }
-            } else {
-                if (treeObj.treeHealth == -1) {
-                    // Initialize health for trees that haven't been cut.
-                    treeObj.treeHealth = tree.maxHealth.random()
-                }
-                if (--treeObj.treeHealth <= 0) {
-                    deleteAndRespawnTree()
-                    complete()
-                }
+            if (Woodcutting.fallsAfterLog(tree)) {
+                deleteAndRespawnTree()
+                complete()
             }
         }
     }
@@ -160,13 +148,12 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     treeObj.objectType,
                     treeObj.direction)
             }
-            world.scheduleOnce(tree.respawnTicks) {
-                val newTreeObj = world.addObject(
+            world.scheduleOnce(tree.respawnTicks.random()) {
+                world.addObject(
                     treeObj.id,
                     treeObj.position,
                     treeObj.objectType,
                     treeObj.direction)
-                newTreeObj.treeHealth = tree.maxHealth.random()
             }
         }
     }

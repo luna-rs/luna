@@ -22,11 +22,11 @@ class SkillsSettings(
     fun woodcuttingSpeed() = woodcuttingSpeed
 
     /**
-     * Determines which method to use for handling tree stump behavior: OSRS-style or 317-style.
+     * Determines which method to use for handling tree stump behavior: 2006 RuneScape or 317-style.
      *
      * If `true`, uses the 317 method: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
-     * If `false`, uses the OSRS method: each tree has a [treeHealth] value that scales with its level, determining
-     * when it becomes a stump.
+     * If `false`, normal trees fall after one log and every other tree has a 1-in-8 chance to fall each time it gives
+     * a log.
      */
     fun use317TreeStumps() = use317TreeStumps
 

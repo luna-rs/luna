@@ -90,7 +90,8 @@
     /**
      * 317 style: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
      *
-     * OSRS style: each tree has a health value that scales with its level, determining when it becomes a stump.
+     * Otherwise (2006 RuneScape): normal trees fall after one log, and every other tree has a 1-in-8 chance to fall
+     * each time it gives a log.
      */
     "use_317_tree_stumps": false,
     // Whether Slayer tasks should enforce required equipment checks.
