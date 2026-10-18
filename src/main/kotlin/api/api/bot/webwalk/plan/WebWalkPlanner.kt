@@ -57,7 +57,7 @@ import java.util.SplittableRandom
  */
 class WebWalkPlanner(private val graph: WebWalkGraph,
                      private val estimator: WalkEstimator,
-                     private val costs: PlannerCosts = PlannerCosts()) {
+                     val costs: PlannerCosts = PlannerCosts()) {
 
     companion object {
 
