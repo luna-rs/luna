@@ -1,12 +1,10 @@
 package game.skill.woodcutting
 
-import api.attr.Attr
 import api.predef.*
 import game.skill.Skills
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
 import io.luna.Luna
-import io.luna.game.model.`object`.GameObject
 
 /**
  * Contains utility functions related to the woodcutting skill.
@@ -14,11 +12,6 @@ import io.luna.game.model.`object`.GameObject
  * @author lare96
  */
 object Woodcutting {
-
-    /**
-     * An attribute representing how many logs are left in a tree.
-     */
-    var GameObject.treeHealth: Int by Attr.int { -1 }
 
     /**
      * Simulate the result of woodcutting for [attempts] tries, and print the result.
@@ -65,6 +58,13 @@ object Woodcutting {
             }
         }
     }
+
+    /**
+     * Determines if a tree falls after giving a log. Normal trees give one log. Other trees have a 1 in 8 chance each
+     * time they give a log, or every tree does if `use_317_tree_stumps` is set.
+     */
+    fun fallsAfterLog(tree: Tree): Boolean =
+        (tree == Tree.NORMAL && !Luna.settings().skills().use317TreeStumps()) || rand().nextInt(8) == 0
 
     /**
      * A function that determines if a log was successfully cut from a tree.
