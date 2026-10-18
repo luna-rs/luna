@@ -10,7 +10,7 @@ import io.luna.game.model.`object`.GameObject
 fun cutTree(plr: Player, tree: Tree, treeObj: GameObject) {
     val currentAxe = Axe.computeAxeType(plr)
     if (currentAxe == null) {
-        plr.sendMessage("You do not have an axe which you have the required level to use.")
+        Axe.sendNoAxeMessages(plr)
         return
     }
     plr.submitAction(CutTreeAction(plr, currentAxe, tree, treeObj))
