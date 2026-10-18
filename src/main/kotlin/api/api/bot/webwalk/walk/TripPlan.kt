@@ -27,12 +27,14 @@ sealed interface TripPlan {
      *
      * @property access How much of the bank the trip from it counts.
      * @property bank The bank.
-     * @property toBank The trip to the bank, with what the bot carries.
-     * @property fromBank The trip from the stand of the bank to the destination, as planned before the bot set off. It is
-     * planned again at the bank.
+     * @property toBank The trip to the bank, with what the bot carries, refined to be walked.
+     * @property fromBank The trip from the stand of the bank to the destination, as planned before the bot set off and not
+     * refined. It is planned again at the bank.
      * @property withdrawal What would be withdrawn for [fromBank], which is nothing if it needs nothing from the bank.
-     * @property cost What the whole trip costs: both trips and [api.bot.webwalk.plan.PlannerCosts.bankTicks].
-     * @property comparedWith The trip with what the bot carries that this was compared with, or `null` if there is none.
+     * @property cost What the whole trip costs: both trips as the search found them, and
+     * [api.bot.webwalk.plan.PlannerCosts.bankTicks]. This is what was compared with [comparedWith].
+     * @property comparedWith The trip with what the bot carries that this was compared with, as the search found it, or `null`
+     * if there is none.
      */
     data class ViaBank(val access: BankAccess,
                        val bank: BankDefinition,

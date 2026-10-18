@@ -212,14 +212,17 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param snapshot What the bot can do.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip (see [refine]). A trip that is only planned to be compared with
+     * another, and may not be walked, is left as it is, and refined later if it is chosen.
      * @return The trip, or `null` if the destination can't be reached. A trip from a position to itself has no legs.
      */
     fun plan(start: Position,
              destination: Position,
              snapshot: CapabilitySnapshot,
              intelligence: Double = 1.0,
-             random: Random = Random()): WebWalkPlan? =
-        planToNearest(start, listOf(destination), snapshot, intelligence, random)
+             random: Random = Random(),
+             refine: Boolean = true): WebWalkPlan? =
+        planToNearest(start, listOf(destination), snapshot, intelligence, random, refine)
 
     /**
      * Plans a trip to the nearest bank, which is the one that the cheapest trip ends at. The last leg of the trip ends at the
@@ -230,13 +233,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip, and
      * others may take a trip to another bank that is not much worse.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip, see [plan].
      * @return The trip, or `null` if there are no banks or none can be reached. A trip from a bank to itself has no legs.
      */
     fun planToNearestBank(start: Position,
                           snapshot: CapabilitySnapshot,
                           intelligence: Double = 1.0,
-                          random: Random = Random()): WebWalkPlan? =
-        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random)
+                          random: Random = Random(),
+                          refine: Boolean = true): WebWalkPlan? =
+        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random, refine)
 
     /**
      * Plans a trip to the nearest of some destinations, which is the one that the cheapest trip ends at.
@@ -246,13 +251,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param snapshot What the bot can do.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip, see [plan].
      * @return The trip, or `null` if none of the destinations can be reached. A trip from a destination to itself has no legs.
      */
     fun planToNearest(start: Position,
                       destinations: Collection<Position>,
                       snapshot: CapabilitySnapshot,
                       intelligence: Double = 1.0,
-                      random: Random = Random()): WebWalkPlan? {
+                      random: Random = Random(),
+                      refine: Boolean = true): WebWalkPlan? {
         if (start in destinations) {
             return WebWalkPlan(emptyList(), 0.0)
         }
@@ -273,7 +280,22 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             }
             chosen = options.values.toList()[random.nextInt(options.size)]
         }
-        val legs = scatter(shorten(chosen.legs), random)
+        val plan = WebWalkPlan(chosen.legs, chosen.legs.sumOf { it.cost })
+        return if (refine) refine(plan, random) else plan
+    }
+
+    /**
+     * Makes a trip look less like a web, before it is walked: walks in a row skip the nodes that they don't need to pass
+     * through, and the waypoints between walks are moved a little (see the class documentation). Both ask the [WalkEstimator]
+     * again and again, which can cost more than finding the trip, so a trip that is only compared with others is refined only
+     * if it is the one that is walked.
+     *
+     * @param plan The trip, as the search found it.
+     * @param random Where the variation of the waypoints comes from.
+     * @return The refined trip, with the cost of its new legs.
+     */
+    fun refine(plan: WebWalkPlan, random: Random = Random()): WebWalkPlan {
+        val legs = scatter(shorten(plan.legs), random)
         return WebWalkPlan(legs, legs.sumOf { it.cost })
     }
 

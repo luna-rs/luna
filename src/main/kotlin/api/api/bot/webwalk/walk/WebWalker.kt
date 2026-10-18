@@ -428,12 +428,11 @@ object WebWalker {
     }
 
     /**
-     * Describes how a trip by the bank compares with the trip without it, for the log.
+     * Describes how a trip by the bank compares with the trip without it, for the log, with the costs that were compared.
      */
     private fun compare(trip: TripPlan.ViaBank): String {
         val direct = trip.comparedWith?.let { "%.1f".format(it.cost) } ?: "none"
-        return "by the bank ${"%.1f".format(trip.toBank.cost)} + ${planner.costs.bankTicks} + " +
-                "${"%.1f".format(trip.fromBank.cost)} vs direct $direct"
+        return "by the bank ${"%.1f".format(trip.cost)} (with ${planner.costs.bankTicks} at the bank) vs direct $direct"
     }
 
     /**

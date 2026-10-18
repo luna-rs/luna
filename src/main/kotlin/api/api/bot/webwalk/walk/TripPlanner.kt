@@ -26,7 +26,12 @@ import java.util.Random
  *   the nearest bank and the walk there is short, and the question is whether the trip from Varrock is cheaper.
  *
  * The costs that are compared vary a little with the intelligence of the bot, which may be given a trip that is not the best
- * (see [WebWalkPlanner]), so a less intelligent bot's choice is a little noisy.
+ * (see [WebWalkPlanner]), so a less intelligent bot's choice is a little noisy. They are the costs of the trips as the search
+ * found them: only the trip that is walked is refined (see [WebWalkPlanner.refine]), because refining costs more than the
+ * search.
+ *
+ * If nothing from the bank could fit in the inventory, the trip is planned with what the bot carries only, and nothing else
+ * is planned, even to say what the bank would have given.
  *
  * @param planner The planner.
  * @param banks The banks of the web.
@@ -61,23 +66,23 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
         val top = usable.values.firstOrNull()
         if (top == null) {
             planner.plan(start, destination, carried, intelligence, random)?.let { return TripPlan.Direct(it) }
-            // Say what the bank would have had to give, if a trip with it exists.
-            val wanted = tiers.values.firstOrNull()?.let { snapshot ->
-                planner.plan(start, destination, snapshot, intelligence, random)?.let { TripNeeds.of(it, snapshot).withdrawal(carried) }
-            }
-            return TripPlan.NoTrip(wanted?.let {
-                "$route with what the bot carries, and ${describe(it.required)} from the bank doesn't fit in the inventory."
-            } ?: "$route.")
+            // The bank was left out because nothing from it could fit, which is the reason enough. Planning with the bank
+            // only to say what it would have given costs as much as the trip itself.
+            return TripPlan.NoTrip(if (tiers.isEmpty()) "$route." else
+                "$route with what the bot carries, and the inventory has no free slot for anything from the bank.")
         }
-        val first = planner.plan(start, destination, top, intelligence, random) ?: return TripPlan.NoTrip("$route.")
+
+        // The trips that are compared are only refined (shortened and scattered) if they are the one that is walked.
+        val first = planner.plan(start, destination, top, intelligence, random, refine = false)
+            ?: return TripPlan.NoTrip("$route.")
         if (TripNeeds.of(first, top).withdrawal(carried) == null) {
-            return TripPlan.Direct(first)
+            return TripPlan.Direct(planner.refine(first, random))
         }
 
-        val direct = planner.plan(start, destination, carried, intelligence, random)
-        fun direct(why: String): TripPlan = direct?.let { TripPlan.Direct(it) } ?: TripPlan.NoTrip("$route $why.")
+        val direct = planner.plan(start, destination, carried, intelligence, random, refine = false)
+        fun direct(why: String): TripPlan = direct?.let { TripPlan.Direct(planner.refine(it, random)) } ?: TripPlan.NoTrip("$route $why.")
 
-        val toBank = planner.planToNearestBank(start, carried, intelligence, random)
+        val toBank = planner.planToNearestBank(start, carried, intelligence, random, refine = false)
             ?: return direct("with what the bot carries, and no bank to reach")
         val stand = toBank.destination ?: start
         val bank = banks.firstOrNull { it.stand == stand } ?: return direct("with what the bot carries")
@@ -85,7 +90,7 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
         var candidate: TripPlan.ViaBank? = null
         var tooBig: Spend? = null
         for ((access, snapshot) in usable) {
-            val fromBank = fromBank(stand, destination, snapshot, carried, view, intelligence, random) ?: continue
+            val fromBank = fromBank(stand, destination, snapshot, carried, view, intelligence, random, refine = false) ?: continue
             val items = if (fromBank.withdrawal == null) emptyList() else fromBank.items
             if (items == null) {
                 if (tooBig == null) {
@@ -106,9 +111,10 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
                               ?: "with what the bot carries")
         }
         if (direct != null && candidate.cost >= direct.cost) {
-            return TripPlan.Direct(direct, candidate)
+            return TripPlan.Direct(planner.refine(direct, random), candidate)
         }
-        return candidate
+        // The trip from the bank is planned again at the bank, and refined then.
+        return candidate.copy(toBank = planner.refine(candidate.toBank, random))
     }
 
     /**
@@ -121,6 +127,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
      * @param view What the bot has in its inventory and bank.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`.
      * @param random Where the variation of the route comes from.
+     * @param refine Whether to shorten and scatter the trip, which is only worth it for a trip that is walked: the one
+     * planned at the bank, not the one planned before setting off to compare with the direct trip.
      * @return The trip and what it would withdraw, or `null` if there is no trip from the bank.
      */
     fun fromBank(stand: Position,
@@ -129,8 +137,9 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
                  carried: CapabilitySnapshot,
                  view: BankView,
                  intelligence: Double = 1.0,
-                 random: Random = Random()): BankStandPlan? {
-        val plan = planner.plan(stand, destination, snapshot, intelligence, random) ?: return null
+                 random: Random = Random(),
+                 refine: Boolean = true): BankStandPlan? {
+        val plan = planner.plan(stand, destination, snapshot, intelligence, random, refine) ?: return null
         val needs = TripNeeds.of(plan, snapshot)
         val withdrawal = needs.withdrawal(carried) ?: return BankStandPlan(plan, needs, null, null)
         // Worn jewellery is taken off into the inventory to be rubbed, so a slot is kept for it.
