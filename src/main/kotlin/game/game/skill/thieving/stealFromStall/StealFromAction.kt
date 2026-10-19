@@ -63,6 +63,10 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
      * Start searching the stall for something to steal. At this stage, nearby guards can be alerted by your actions.
      */
     private fun searchStall(): Boolean {
+        if (mob.combat.inCombat()) {
+            mob.sendMessage("You can't steal from the market stall during combat!")
+            return true
+        }
         val rolls = if (Thieving.isDoubleLoot(mob)) 2 else 1
         repeat(rolls) {
             loot += thievable.drops.roll(mob, obj)
@@ -72,8 +76,12 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
             return true
         }
         mob.interact(obj)
+        thievable.attempt?.let { mob.sendMessage(it) }
         mob.animation(Animations.PICKPOCKET)
-        alertGuards()
+        if (alertOwner() || alertGuards()) {
+            // Seen: the theft doesn't happen.
+            return true
+        }
         state = State.LOOTING
         return false
     }
@@ -84,7 +92,8 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
     private fun stealLoot(): Boolean {
         if (mob.state != EntityState.INACTIVE && obj.state != EntityState.INACTIVE) {
             replaceStall()
-            mob.sendMessage("You steal from the ${obj.def().name}.")
+            val stolen = loot.firstOrNull()?.let { thievable.stolen[it.itemDef.name] }
+            mob.sendMessage(if (stolen != null) "You steal $stolen." else "You steal from the ${obj.def().name}.")
             mob.thieving.addExperience(thievable.xp)
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
@@ -98,9 +107,27 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
     }
 
     /**
-     * Determines if nearby guards will be alerted by you stealing and if so, alerts them.
+     * Determines if the stall's owner can see you stealing and if so, has them shout.
+     *
+     * @return `true` if the owner saw you.
      */
-    private fun alertGuards() {
+    private fun alertOwner(): Boolean {
+        val owners = world.locator.findViewableNpcs(mob) { thievable.owners.contains(it.def().name) }
+        for (owner in owners) {
+            if (world.collisionManager.raycast(owner.position, mob.position) && owner.inViewCone(mob)) {
+                owner.speak("Hey! Get your hands off there!")
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Determines if nearby guards will be alerted by you stealing and if so, alerts them.
+     *
+     * @return `true` if a guard saw you.
+     */
+    private fun alertGuards(): Boolean {
         val nearbyGuards = world.locator.findViewableNpcs(mob) {
             !it.combat.inCombat() && GUARD_NAMES.contains(it.def().name) && it.combat.isAttackable
         }
@@ -109,9 +136,10 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
                 // The guard can see the player.
                 guard.speak("Hey! Get your hands off there!")
                 guard.combat.attack(mob)
-                break
+                return true
             }
         }
+        return false
     }
 
     /**
