@@ -75,6 +75,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
         }
         mob.interact(obj)
         mob.animation(Animations.PICKPOCKET)
+        mob.sendMessage("You search the chest for traps.")
         state = State.LOOTING
         return false
     }
@@ -85,7 +86,10 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
     private fun lootChest(): Boolean {
         if (obj.state != EntityState.INACTIVE) {
             replaceChest()
-            mob.sendMessage("You unlock the chest.")
+            mob.sendMessage("You find a trap on the chest,")
+            mob.sendMessage("You disable the trap.")
+            mob.sendMessage("You open the chest.")
+            mob.sendMessage("You find treasure inside!")
             mob.thieving.addExperience(thievable.xp)
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
