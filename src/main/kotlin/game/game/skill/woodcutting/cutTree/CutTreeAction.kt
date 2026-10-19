@@ -7,7 +7,10 @@ import game.skill.woodcutting.Woodcutting
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.Luna
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
+import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -43,6 +46,11 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
      */
     private var swung = false
 
+    /**
+     * The bird's nest that falls instead of the log on this attempt, if any.
+     */
+    private var nest: Nest? = null
+
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
             // No inventory space.
@@ -75,29 +83,36 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     override fun execute() {
-        if (currentAdd.isNotEmpty()) {
-            if (rand(256) == 0) {
-                val nest = Nest.VALUES.random()
-                mob.sendMessage("A bird's nest drops to the floor!")
-                world.addItem(nest.id, 1, mob.position, mob)
-            } else {
-                val name = itemName(tree.logId)
-                mob.sendMessage("You get some ${name.lowercase()}.")
-                mob.woodcutting.addExperience(tree.exp)
+        val droppedNest = nest
+        if (droppedNest != null) {
+            nest = null
+            mob.sendMessage("A bird's nest falls out of the tree.")
+            world.addItem(droppedNest.id, 1, nestTile(), mob)
+        } else if (currentAdd.isNotEmpty()) {
+            val name = itemName(tree.logId)
+            mob.sendMessage("You get some ${name.lowercase()}.")
+            mob.woodcutting.addExperience(tree.exp)
 
-                if (mob.inventory.isFull) {
-                    stopFull = true
-                }
+            if (mob.inventory.isFull) {
+                stopFull = true
             }
-            if (Woodcutting.fallsAfterLog(tree)) {
-                deleteAndRespawnTree()
-                complete()
-            }
+        } else {
+            return
+        }
+        if (Woodcutting.fallsAfterLog(tree)) {
+            deleteAndRespawnTree()
+            complete()
         }
     }
 
-    override fun add(): List<Item> =
-        if (Woodcutting.success(mob.woodcutting.level, tree, axe)) listOf(Item(tree.logId)) else emptyList()
+    override fun add(): List<Item> {
+        if (!Woodcutting.success(mob.woodcutting.level, tree, axe)) {
+            return emptyList()
+        }
+        // Normal trees never give nests; on other trees a nest takes the place of the log.
+        nest = if (tree != Tree.NORMAL && rand().nextInt(256) == 0) Nest.roll() else null
+        return if (nest == null) listOf(Item(tree.logId)) else emptyList()
+    }
 
     override fun onFinished() {
         mob.animation(Animation.CANCEL)
@@ -133,6 +148,15 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             soundDelay = 2
         }
     }
+
+    /**
+     * Picks a random tile next to the player that they could step onto, for a bird's nest to land on, or the player's
+     * own tile if there is none. Jagex describes a bias to the west but not its size, so every direction is equally
+     * likely.
+     */
+    private fun nestTile(): Position =
+        Direction.ALL_EXCEPT_NONE.filter { world.collisionManager.traversable(mob.position, EntityType.PLAYER, it) }
+            .randomOrNull()?.let { mob.position.translate(1, it) } ?: mob.position
 
     /**
      * Replaces [treeObj] with a stump and respawns it at a later time.
