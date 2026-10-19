@@ -99,7 +99,7 @@ class MakeSoftClayBotScript(
 
     /** Queues one bounded refill only when both clay and matching empties remain; no acquisition loop is created. */
     private fun queueWaterPreparation(): Boolean {
-        if (!isInventoryActionSafe()) return false
+        if (!isActionSafe()) return false
         if (!canPrepareWater()) return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val clayStock = bot.bank.computeAmountForId(CLAY).toLong() + bot.inventory.computeAmountForId(CLAY)

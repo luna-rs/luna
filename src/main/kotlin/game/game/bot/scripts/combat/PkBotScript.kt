@@ -3,6 +3,7 @@ package game.bot.scripts.combat
 import api.bot.Suspendable.delay
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -37,6 +38,9 @@ import kotlin.time.DurationUnit
  * @author lare96
  */
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
+
+    override val actionSafety = ActionSafety.COMBAT
+
     // TODO Load in registerscripts
     // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
     //  distance. Then it should cache that bank and use that as the home bank for PKing activities.
@@ -573,7 +577,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
-            handler.webWalkTo(anchor)
+            handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
             if (!bot.inWilderness()) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
