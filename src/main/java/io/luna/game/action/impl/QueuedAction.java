@@ -88,7 +88,7 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
      * Also marks the time source as waiting so a single extra trigger can be buffered.
      */
     private void runAndWait() {
-        source.reset();
+        source.reset().start();
         execute();
         source.setWaiting(true);
     }
