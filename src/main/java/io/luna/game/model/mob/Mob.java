@@ -905,6 +905,15 @@ public abstract class Mob extends Entity {
     }
 
     /**
+     * Returns whether this mob is currently action-locked. Unlike {@link #isLocked()}, a stun alone doesn't count.
+     *
+     * @return {@code true} if locked, otherwise {@code false}.
+     */
+    public boolean isActionLocked() {
+        return locked;
+    }
+
+    /**
      * Returns this mob's plane ({@code z}) coordinate.
      *
      * @return The z-level.
