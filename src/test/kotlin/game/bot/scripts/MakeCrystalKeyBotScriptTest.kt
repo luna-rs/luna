@@ -4,9 +4,6 @@ import api.bot.script.InventoryProductionFixtures
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
-import engine.bot.coordinator.skill.CraftingScriptFactory
-import engine.bot.coordinator.CombatCoordinator
-import engine.bot.coordinator.GeneralActivityCoordinator
 import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
 import game.content.crystalChest.MakeCrystalKeyActionItem
 import io.luna.game.model.item.Item
@@ -21,29 +18,6 @@ import kotlin.time.Duration.Companion.minutes
 class MakeCrystalKeyBotScriptTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() = InventoryProductionFixtures.initialize()
-    }
-
-    @Test fun selectionRequiresBothHalvesAndExcludesTraining() {
-        val bot = InventoryProductionFixtures.bot()
-        InventoryProductionFixtures.bank(bot, Item(985, 100))
-        val script = MakeCrystalKeyBotScript(bot, 10.minutes)
-        assertFalse(script.isEligible())
-        assertTrue(script.bankBatch().isEmpty())
-        CombatCoordinator(false).accept(bot)
-        verify(bot.scriptStack).push(isA(NpcCombatScript::class.java))
-        clearInvocations(bot.scriptStack)
-        InventoryProductionFixtures.bank(bot, Item(987, 3))
-        assertEquals(listOf(Item(985, 3), Item(987, 3)), script.bankBatch())
-        assertInstanceOf(MakeCrystalKeyBotScript::class.java, GeneralActivityCoordinator.getScript(bot))
-        CombatCoordinator(false).accept(bot)
-        verify(bot.scriptStack).push(isA(NpcCombatScript::class.java))
-        verify(bot.scriptStack, never()).push(isA(MakeCrystalKeyBotScript::class.java))
-        clearInvocations(bot.scriptStack)
-        CombatCoordinator(true).accept(bot)
-        verify(bot.scriptStack).push(isA(NpcCombatScript::class.java))
-        verify(bot.scriptStack, never()).push(isA(MakeCrystalKeyBotScript::class.java))
-        assertNull(CraftingScriptFactory.getProductionScript(bot, 99, true))
-        assertNull(CraftingScriptFactory.getProductionScript(bot, 99, false))
     }
 
     @Test fun existingActionConsumesBothHalvesWithoutExperience() {

@@ -9,6 +9,11 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.withTimeout
+import api.predef.world
+import io.luna.game.task.Task
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
@@ -71,5 +76,71 @@ class BankActionSafetyTest {
         doReturn(mock(GameObject::class.java)).`when`(banking).travelToNearestBank()
         assertFalse(banking.travelToBankOpen())
         verifyNoInteractions(interactions)
+    }
+
+    @Test fun logoutDuringReactionDelayPreventsTheBankClick() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        val handler = bot.actionHandler
+        val pending = async(start = CoroutineStart.UNDISPATCHED) {
+            BotBankingActionHandler(bot, handler).open(mock(GameObject::class.java))
+        }
+        `when`(bot.state).thenReturn(EntityState.INACTIVE)
+        assertFalse(withTimeout(5_000) { pending.await() })
+        verifyNoInteractions(handler.interactions)
+    }
+
+    @Test fun interruptionDuringInteractionPreventsWaitingAndFallback() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        val bank = mock(GameObject::class.java)
+        val handler = bot.actionHandler
+        `when`(handler.interactions.interact(eq(2), same(bank) ?: bank)).thenAnswer {
+            `when`(bot.state).thenReturn(EntityState.INACTIVE)
+            `when`(bot.combat.inCombat()).thenReturn(true)
+            true
+        }
+        assertFalse(withTimeout(5_000) { BotBankingActionHandler(bot, handler).open(bank) })
+        assertFalse(bot.bank.isOpen)
+    }
+
+    @Test fun logoutDuringInterfaceWaitPreventsDirectOpenFallback() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        val bank = mock(GameObject::class.java)
+        val handler = bot.actionHandler
+        `when`(handler.interactions.interact(eq(2), same(bank) ?: bank)).thenReturn(true)
+        val run = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
+        doAnswer {
+            `when`(bot.state).thenReturn(EntityState.INACTIVE)
+            val task = it.getArgument<Task>(0)
+            repeat(10) { run.invoke(task) }
+            null
+        }.`when`(world).schedule(any(Task::class.java))
+        try {
+            assertFalse(withTimeout(5_000) { BotBankingActionHandler(bot, handler).open(bank) })
+            assertFalse(bot.bank.isOpen)
+        } finally {
+            doNothing().`when`(world).schedule(any(Task::class.java))
+        }
+    }
+
+    @Test fun safeInterfaceTimeoutRetainsTheExistingOpenFallback() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        val bank = spy(bot.bank)
+        `when`(bot.bank).thenReturn(bank)
+        doNothing().`when`(bank).open()
+        val target = mock(GameObject::class.java)
+        val handler = bot.actionHandler
+        `when`(handler.interactions.interact(eq(2), same(target) ?: target)).thenReturn(true)
+        val run = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
+        doAnswer {
+            val task = it.getArgument<Task>(0)
+            repeat(10) { run.invoke(task) }
+            null
+        }.`when`(world).schedule(any(Task::class.java))
+        try {
+            assertTrue(withTimeout(5_000) { BotBankingActionHandler(bot, handler).open(target) })
+            verify(bank).open()
+        } finally {
+            doNothing().`when`(world).schedule(any(Task::class.java))
+        }
     }
 }
