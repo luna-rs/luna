@@ -3,6 +3,7 @@ package game.bot.scripts.combat
 import api.bot.Suspendable.delay
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -576,7 +577,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
-            handler.webWalkTo(anchor)
+            handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
             if (!bot.inWilderness()) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")

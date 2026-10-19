@@ -3,6 +3,7 @@ package api.bot.script
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
+import api.bot.webwalk.plan.BankAccess
 import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
 import api.predef.*
@@ -489,7 +490,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!bot.inventory.isFull && !forceBanking) {
             if (!activeZone.isWithinDistance(bot, 64) && bot.walking.isEmpty) {
                 bot.log("Bot is outside active zone after activity cycle. Returning. activeZone=$activeZone")
-                handler.travelTo(activeZone)
+                handler.travelTo(activeZone, BankAccess.COINS)
             }
             return
         }
@@ -531,7 +532,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
-            if (parent.banks.isNotEmpty() && handler.travelTo(parent)) {
+            if (parent.banks.isNotEmpty() && handler.travelTo(parent, BankAccess.COINS)) {
                 val sortedBanks =
                     if (bot.personality.isDextrous || bot.personality.isIntelligent || rand(bot.personality.dexterity)) {
                         parent.banks.sortedWith(LocatableDistanceComparator(bot))
@@ -565,7 +566,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 }
                 if (cachedBank == null) {
                     bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                    if (handler.travelTo(SubZone.HOME)) {
+                    if (handler.travelTo(SubZone.HOME, BankAccess.COINS)) {
                         cachedBank = handler.banking.homeBank()
                         bot.log("Home bank fallback result. cachedBank=$cachedBank")
                     } else {
@@ -612,8 +613,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         bot.log("Banking hook complete. Returning to active zone. activeZone=$activeZone")
         if (!bankActionReady()) return
         forceBanking = false
+        
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
-        if (BotMarketplace.forZone(activeZone) == null) handler.travelTo(activeZone)
+        if (BotMarketplace.forZone(activeZone) == null) handler.travelTo(activeZone, BankAccess.COINS)
     }
 
     /**
