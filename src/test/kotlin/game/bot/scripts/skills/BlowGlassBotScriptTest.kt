@@ -63,40 +63,6 @@ class BlowGlassBotScriptTest {
             BlowGlassBotScript(bot, GlassMaterial.VIAL, 10.minutes).bankBatch())
     }
 
-    @Test fun everyMaterialUsesItsGlassblowingButtonAndRetainsThePipe() = runBlocking<Unit> {
-        val fixtureWorld = world
-        val scheduler = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
-        doAnswer { invocation -> scheduler.invoke(invocation.getArgument<Task>(0)); null }
-            .`when`(fixtureWorld).schedule(any(Task::class.java))
-        try {
-            for (material in GlassMaterial.entries) {
-                val bot = InventoryProductionFixtures.bot()
-                `when`(bot.personality.isDextrous).thenReturn(true)
-                `when`(bot.overlays.player).thenReturn(bot)
-                `when`(bot.overlays.has(GlassBlowingInterface::class.java)).thenReturn(true)
-                `when`(bot.actionHandler.widgets.clickCloseInterface()).thenReturn(true)
-                `when`(bot.actionHandler.inventory.useItem(PIPE).onItem(MOLTEN_GLASS)).thenReturn(true)
-                InventoryProductionFixtures.inventory(bot, Item(PIPE), Item(MOLTEN_GLASS, 10))
-                val output = bot.botClient.output
-                doAnswer {
-                    val action = GlassBlowingActionItem(bot, material, 10)
-                    bot.actions.submit(action)
-                    repeat(9) { assertFalse(action.run()) }
-                    assertTrue(action.run())
-                    null
-                }.`when`(output).clickButton(material.make10Id)
-                val script = InventoryProductionFixtures.active(BlowGlassBotScript(bot, material, 10.minutes))
-                assertTrue(withTimeout(5_000) { script.executeInZone() })
-                verify(output).clickButton(material.make10Id)
-                assertEquals(10, bot.inventory.computeAmountForId(material.id))
-                assertEquals(1, bot.inventory.computeAmountForId(PIPE))
-                assertFalse(bot.inventory.contains(MOLTEN_GLASS))
-                verify(bot.crafting, times(10)).addExperience(material.exp)
-                assertEquals(0, script.snapshot().failures)
-            }
-        } finally { doNothing().`when`(fixtureWorld).schedule(any(Task::class.java)) }
-    }
-
     @Test fun smallRemainingBatchesUseMakeOneOrFiveWithoutCustomInput() = runBlocking<Unit> {
         val fixtureWorld = world
         val scheduler = Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }

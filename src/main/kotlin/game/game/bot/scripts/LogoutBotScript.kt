@@ -11,6 +11,8 @@ import api.bot.script.DynamicBotScript
  */
 class LogoutBotScript(bot: Bot) : DynamicBotScript(bot) {
 
+    override val actionSafety = ActionSafety.NONE
+
     override suspend fun run(): Boolean {
         bot.logout(false)
         bot.naturalDecisionDelay()

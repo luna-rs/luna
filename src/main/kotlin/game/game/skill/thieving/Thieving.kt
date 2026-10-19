@@ -23,11 +23,11 @@ object Thieving {
      * The rogue equipment drop table.
      */
     private val ROGUE_EQUIPMENT_TABLE = DropTableHandler.create {
-        "Rogue mask" x 1 chance (1 of 2500)
-        "Rogue top" x 1 chance (1 of 2500)
-        "Rogue gloves" x 1 chance (1 of 2500)
-        "Rogue trousers" x 1 chance (1 of 2500)
-        "Rogue boots" x 1 chance (1 of 2500)
+        "Rogue mask" x 1 chance (1 of 25_000)
+        "Rogue top" x 1 chance (1 of 25_000)
+        "Rogue gloves" x 1 chance (1 of 25_000)
+        "Rogue trousers" x 1 chance (1 of 25_000)
+        "Rogue boots" x 1 chance (1 of 25_000)
     }.table {
         object : DropTable() {
             // Remove from drop list if we already own a set.
@@ -43,15 +43,12 @@ object Thieving {
      */
     private val ROGUE_EQUIPMENT_ITEMS = setOf(Item(5553), Item(5554), Item(5555), Item(5556), Item(5557))
 
-
     /**
      * If a pickpocketing action will be successful or not.
      */
     fun canPickpocket(plr: Player, thievable: ThievingNpcType): Boolean {
-        val level = plr.thieving.level
-        if (level >= thievable.master) {
-            return true
-        }
+        // Boosts above 99 don't help.
+        val level = plr.thieving.level.coerceAtMost(99)
         val (low, high) = thievable.chance
         return Skills.success(low, high, level)
     }

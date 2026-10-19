@@ -29,7 +29,10 @@ import java.util.SplittableRandom
  *   see [BankDefinition.links].
  * - Edges can be taken from any node: walks, doors, ladders and the like, ships, and teleports. Teleports are not stored
  *   in the graph for each bot. Instead the ones that the snapshot allows are taken from wherever a bot is, as long as it
- *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). Fairy rings can be
+ *   meets their requirements there (which is how a bot deep in the wilderness has to walk out first). The cost of a
+ *   teleport doesn't depend on where it is cast from, except for one thing: one that lands in the wilderness costs
+ *   [PlannerCosts.wildernessEntry] more when cast from outside it. So each teleport is only tried from the cheapest place
+ *   outside the wilderness and the cheapest place inside it that it can be used from, see [search]. Fairy rings can be
  *   taken from any ring to any other, if the bot has the [CapabilitySnapshot.FAIRY_RINGS] unlock.
  * - The search is Dijkstra's algorithm. A* would need a heuristic that teleports can't break, and the graph is small enough
  *   not to need one.
@@ -57,7 +60,7 @@ import java.util.SplittableRandom
  */
 class WebWalkPlanner(private val graph: WebWalkGraph,
                      private val estimator: WalkEstimator,
-                     private val costs: PlannerCosts = PlannerCosts()) {
+                     val costs: PlannerCosts = PlannerCosts()) {
 
     companion object {
 
@@ -209,14 +212,17 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param snapshot What the bot can do.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip (see [refine]). A trip that is only planned to be compared with
+     * another, and may not be walked, is left as it is, and refined later if it is chosen.
      * @return The trip, or `null` if the destination can't be reached. A trip from a position to itself has no legs.
      */
     fun plan(start: Position,
              destination: Position,
              snapshot: CapabilitySnapshot,
              intelligence: Double = 1.0,
-             random: Random = Random()): WebWalkPlan? =
-        planToNearest(start, listOf(destination), snapshot, intelligence, random)
+             random: Random = Random(),
+             refine: Boolean = true): WebWalkPlan? =
+        planToNearest(start, listOf(destination), snapshot, intelligence, random, refine)
 
     /**
      * Plans a trip to the nearest bank, which is the one that the cheapest trip ends at. The last leg of the trip ends at the
@@ -227,13 +233,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip, and
      * others may take a trip to another bank that is not much worse.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip, see [plan].
      * @return The trip, or `null` if there are no banks or none can be reached. A trip from a bank to itself has no legs.
      */
     fun planToNearestBank(start: Position,
                           snapshot: CapabilitySnapshot,
                           intelligence: Double = 1.0,
-                          random: Random = Random()): WebWalkPlan? =
-        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random)
+                          random: Random = Random(),
+                          refine: Boolean = true): WebWalkPlan? =
+        planToNearest(start, graph.banks.map { it.stand }, snapshot, intelligence, random, refine)
 
     /**
      * Plans a trip to the nearest of some destinations, which is the one that the cheapest trip ends at.
@@ -243,13 +251,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
      * @param snapshot What the bot can do.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`. A bot of `1.0` always takes the best trip.
      * @param random Where the variation of the trips of other bots comes from.
+     * @param refine Whether to shorten and scatter the trip, see [plan].
      * @return The trip, or `null` if none of the destinations can be reached. A trip from a destination to itself has no legs.
      */
     fun planToNearest(start: Position,
                       destinations: Collection<Position>,
                       snapshot: CapabilitySnapshot,
                       intelligence: Double = 1.0,
-                      random: Random = Random()): WebWalkPlan? {
+                      random: Random = Random(),
+                      refine: Boolean = true): WebWalkPlan? {
         if (start in destinations) {
             return WebWalkPlan(emptyList(), 0.0)
         }
@@ -270,7 +280,22 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             }
             chosen = options.values.toList()[random.nextInt(options.size)]
         }
-        val legs = scatter(shorten(chosen.legs), random)
+        val plan = WebWalkPlan(chosen.legs, chosen.legs.sumOf { it.cost })
+        return if (refine) refine(plan, random) else plan
+    }
+
+    /**
+     * Makes a trip look less like a web, before it is walked: walks in a row skip the nodes that they don't need to pass
+     * through, and the waypoints between walks are moved a little (see the class documentation). Both ask the [WalkEstimator]
+     * again and again, which can cost more than finding the trip, so a trip that is only compared with others is refined only
+     * if it is the one that is walked.
+     *
+     * @param plan The trip, as the search found it.
+     * @param random Where the variation of the waypoints comes from.
+     * @return The refined trip, with the cost of its new legs.
+     */
+    fun refine(plan: WebWalkPlan, random: Random = Random()): WebWalkPlan {
+        val legs = scatter(shorten(plan.legs), random)
         return WebWalkPlan(legs, legs.sumOf { it.cost })
     }
 
@@ -532,6 +557,16 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                   spend, requirements.coins)
         }
 
+        // A teleport doesn't cost the same from everywhere: one that lands in the wilderness costs the wilderness entry penalty
+        // more when it is cast from outside it, and nothing more from inside it. Apart from that its cost doesn't depend on
+        // where it is cast from. So the first label taken off the queue that can cast it from outside the wilderness, and the
+        // first from inside it, are the cheapest places to cast it from, and it isn't tried from any other. That is
+        // only so for a label that hasn't spent anything that is counted: one that has may not be able to pay for what
+        // comes after, so the teleport is still tried from the labels after it.
+        val triedOutside = BooleanArray(request.teleports.size)
+        val triedInside = BooleanArray(request.teleports.size)
+        var untried = request.teleports.size
+
         val first = Label(start, 0.0, budget.initial, null, null)
         labels[start] += first
         queue.add(first)
@@ -575,7 +610,15 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                 }
             }
 
-            for (indexed in request.teleports) {
+            if (untried == 0) {
+                continue
+            }
+            val wild = here > 0
+            val unspent = label.left.contentEquals(budget.initial)
+            for ((index, indexed) in request.teleports.withIndex()) {
+                if (if (wild) triedInside[index] else triedOutside[index]) {
+                    continue
+                }
                 val teleport = indexed.teleport
                 if (indexed.to != node && request.snapshot.meets(teleport.requirements, here)) {
                     val penalty = when (teleport.kind) {
@@ -585,6 +628,19 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                     }
                     step(label, indexed.to, EdgeType.TELEPORT, teleport.cost.toDouble(), penalty, teleport = teleport,
                          exposed = false, spend = budget.teleportSpends[teleport.id])
+                    if (unspent) {
+                        // Landing outside the wilderness costs the same from inside it as from outside it.
+                        val anywhere = level(indexed.to) == 0
+                        if (wild || anywhere) {
+                            triedInside[index] = true
+                        }
+                        if (!wild || anywhere) {
+                            triedOutside[index] = true
+                        }
+                        if (triedInside[index] && triedOutside[index]) {
+                            untried--
+                        }
+                    }
                 }
             }
         }
