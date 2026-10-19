@@ -5,18 +5,17 @@ import game.skill.magic.CombinationRune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
 import game.skill.magic.Staff
-import io.luna.Luna
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Whether the normal Magic validator waives spell costs for this bot.
+ * Bots always pay normal spell costs, including in beta mode and with administrator rights.
+ * Keep production selection and withdrawal planning consistent with Magic.checkRequirements.
  * Activity scripts still validate their own input items, spellbook, and levels.
  *
  * @author lare96
  */
-fun Bot.bypassesSpellCosts(): Boolean = Luna.settings().game().betaMode() || rights >= PlayerRights.ADMINISTRATOR
+fun Bot.bypassesSpellCosts(): Boolean = false
 
 /**
  * Plans one cast's rune stacks from owned stock, without changing inventory or equipment.
@@ -30,7 +29,7 @@ fun Bot.bypassesSpellCosts(): Boolean = Luna.settings().game().betaMode() || rig
  *
  * @param requirements Existing spell requirements, supplying only their rune portions to this plan.
  * @param bankedOnly Whether only bank stock may satisfy the planned withdrawal.
- * @return Distinct rune stacks needed for one cast, or no costs when gameplay waives them.
+ * @return Distinct rune stacks needed for one cast, excluding elements supplied by an equipped staff.
  * @author lare96
  */
 fun Bot.productionRuneCosts(requirements: List<SpellRequirement>, bankedOnly: Boolean = false): List<Item> {
