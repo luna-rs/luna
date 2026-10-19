@@ -9,6 +9,9 @@ import com.google.common.collect.ImmutableMap
  * Represents a stall that can be stolen from. The [globalRefresh] property determines if stalls become empty for all
  * players, or just the player stealing.
  *
+ * @param owners The names of the NPCs who stop a theft they can see.
+ * @param attempt The message sent when a theft starts, if the stall has one.
+ * @param stolen The words for each item in "You steal ...", by item name.
  * @author lare96
  */
 enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
@@ -16,6 +19,9 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
                              val xp: Double,
                              val respawnTicks: Int,
                              val drops: DropTable,
+                             val owners: Set<String> = emptySet(),
+                             val attempt: String? = null,
+                             val stolen: Map<String, String> = emptyMap(),
                              val globalRefresh: Boolean = true) {
     VEGETABLE(stalls = setOf(4706 to 4276,
                              4708 to 4276),
@@ -28,7 +34,8 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
                   "Onion" x 1 chance (1 of 5)
                   "Tomato" x 1 chance (1 of 5)
                   "Garlic" x 1 chance (1 of 10)
-              }),
+              },
+              owners = setOf("Greengrocer")),
     BAKERY(stalls = setOf(2561 to 634,
                           6163 to 6984),
            level = 5,
@@ -38,13 +45,18 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
                "Cake" x 1 chance (13 of 20)
                "Bread" x 1 chance (1 of 4)
                "Chocolate slice" x 1 chance (1 of 10)
-           }),
+           },
+           owners = setOf("Baker"),
+           stolen = mapOf("Cake" to "a cake", "Bread" to "some bread", "Chocolate slice" to "a chocolate slice")),
     TEA(stalls = setOf(635 to 634,
                        6574 to 6573),
         level = 5,
         xp = 16.0,
         respawnTicks = 8,
-        drops = DropTableHandler.createSingleton { "Cup of tea" x 1 }),
+        drops = DropTableHandler.createSingleton { "Cup of tea" x 1 },
+        owners = setOf("Tea seller"),
+        attempt = "You attempt to steal a cup of tea...",
+        stolen = mapOf("Cup of tea" to "a cup of tea")),
     CRAFTING(stalls = setOf(4874 to -1,
                             6166 to 6984),
              level = 5,
@@ -59,7 +71,10 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
          level = 20,
          xp = 24.0,
          respawnTicks = 8,
-         drops = DropTableHandler.createSingleton { "Silk" x 1 }),
+         drops = DropTableHandler.createSingleton { "Silk" x 1 },
+         owners = setOf("Silk merchant"),
+         attempt = "You attempt to steal some silk from the silk stall.",
+         stolen = mapOf("Silk" to "a piece of silk")),
     WINE(stalls = setOf(14011 to 634),
          level = 22,
          xp = 27.0,
@@ -70,7 +85,8 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
              "Grapes" x 1 chance (17 of 100)
              "Jug of wine" x 1 chance (13 of 100)
              "Bottle of wine" x 1 chance (11 of 100)
-         }),
+         },
+         owners = setOf("Fortunato")),
     SEED(stalls = setOf(7053 to 634),
          level = 27,
          xp = 10.0,
@@ -93,14 +109,19 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
              "Strawberry seed" x 1 chance (18 of 1000)
              "Wildblood seed" x 1 chance (12 of 1000)
              "Watermelon seed" x 1 chance (9 of 1000)
-         }
+         },
+         owners = setOf("Olivia"),
+         attempt = "You attempt to steal some seeds from the seed merchant's stall."
     ),
     FUR(stalls = setOf(2563 to 634,
                        4278 to 4276),
         level = 35,
         xp = 36.0,
         respawnTicks = 16,
-        drops = DropTableHandler.createSingleton { "Grey wolf fur" x 1 }),
+        drops = DropTableHandler.createSingleton { "Grey wolf fur" x 1 },
+        owners = setOf("Fur trader"),
+        attempt = "You attempt to steal some fur from the fur stall.",
+        stolen = mapOf("Grey wolf fur" to "a piece of fur")),
     FISH(stalls = setOf(4277 to 4276,
                         4705 to 4276,
                         4707 to 4276),
@@ -111,18 +132,23 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
              "Raw salmon" x 1 chance (7 of 10)
              "Raw tuna" x 1 chance (1 of 4)
              "Raw lobster" x 1 chance (1 of 20)
-         }),
+         },
+         owners = setOf("Fish monger", "Fishmonger"),
+         attempt = "You attempt to steal some fish from the fish stall.",
+         stolen = mapOf("Raw salmon" to "a salmon", "Raw tuna" to "a tuna", "Raw lobster" to "a lobster")),
     SILVER(stalls = setOf(2565 to 634,
                           6164 to 6984),
            level = 50,
            xp = 54.0,
            respawnTicks = 32,
-           drops = DropTableHandler.createSingleton { "Silver ore" x 1 }),
+           drops = DropTableHandler.createSingleton { "Silver ore" x 1 },
+           owners = setOf("Silver merchant")),
     SPICE(stalls = setOf(2564 to 634),
           level = 65,
           xp = 81.0,
           respawnTicks = 64,
-          drops = DropTableHandler.createSingleton { "Spice" x 1 }),
+          drops = DropTableHandler.createSingleton { "Spice" x 1 },
+          owners = setOf("Spice seller")),
     MAGIC(stalls = setOf(4877 to -1),
           level = 65,
           xp = 100.0,
@@ -150,7 +176,8 @@ enum class ThievingStallType(val stalls: Set<Pair<Int, Int>>,
             "Uncut emerald" x 1 chance (17 of 128)
             "Uncut ruby" x 1 chance (5 of 128)
             "Uncut diamond" x 1 chance (1 of 128)
-        });
+        },
+        owners = setOf("Gem merchant"));
 
     companion object {
 
