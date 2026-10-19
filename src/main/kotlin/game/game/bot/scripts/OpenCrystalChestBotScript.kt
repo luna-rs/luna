@@ -83,28 +83,24 @@ class OpenCrystalChestBotScript(
     /** Total key ownership across inventory and bank. */
     private fun keys() = bot.inventory.computeAmountForId(KEY).toLong() + bot.bank.computeAmountForId(KEY)
 
-    /** Safety required before initiating a new opening or banking interaction. */
-    private fun safe() = bot.health > 0 && !bot.isLocked && !bot.combat.inCombat() &&
-        bot.actions.size(ActionType.STRONG) == 0
-
     override suspend fun run(): Boolean {
         if (failures >= MAX_FAILURES || started.elapsedNow() >= duration || keys() == 0L) return true
-        if (!safe() || bot.actions.size(ActionType.WEAK) > 0) return false
+        if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) return false
         val success = withTimeoutOrNull(300_000) {
             val banking = bot.actionHandler.banking
-            if (!banking.travelToBankDepositAll() || !safe()) return@withTimeoutOrNull false
+            if (!banking.travelToBankDepositAll() || !isActionSafe()) return@withTimeoutOrNull false
             banking.clickBankingMode(false)
-            if (!banking.withdrawAll(listOf(Item(KEY))) || !bot.inventory.contains(KEY)) return@withTimeoutOrNull false
-            if (!bot.actionHandler.widgets.clickCloseInterface() || !safe()) return@withTimeoutOrNull false
+            if (!isActionSafe() || !banking.withdrawAll(listOf(Item(KEY))) || !bot.inventory.contains(KEY)) return@withTimeoutOrNull false
+            if (!bot.actionHandler.widgets.clickCloseInterface() || !isActionSafe()) return@withTimeoutOrNull false
             val chest = world.locator.findObjectsOnTile(chestPosition) { it.id == CHEST }.firstOrNull()
                 ?: return@withTimeoutOrNull false
             if (!bot.actionHandler.inventory.useItem(KEY).onObject(chest)) return@withTimeoutOrNull false
             if (!waitFor(15.seconds) {
                 KEY !in bot.inventory && !bot.isLocked && bot.actions.first(OpenCrystalChestAction::class.java) == null
             }) return@withTimeoutOrNull false
-            safe() && banking.travelToBankDepositAll()
+            isActionSafe() && banking.travelToBankDepositAll()
         } == true
-        if (success) failures = 0 else failures++
+        if (success) failures = 0 else if (isActionSafe()) failures++
         return failures >= MAX_FAILURES || (success && keys() == 0L)
     }
 

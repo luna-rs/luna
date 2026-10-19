@@ -37,6 +37,9 @@ import kotlin.time.DurationUnit
  * @author lare96
  */
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
+
+    override val actionSafety = ActionSafety.COMBAT
+
     // TODO Load in registerscripts
     // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
     //  distance. Then it should cache that bank and use that as the home bank for PKing activities.

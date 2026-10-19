@@ -110,7 +110,7 @@ class MakeDoughBotScript(
 
     /** Queues one bounded refill only when both flour and matching empties remain; no acquisition loop is created. */
     private fun queueWaterPreparation(): Boolean {
-        if (!isInventoryActionSafe()) return false
+        if (!isActionSafe()) return false
         if (!canPrepareWater()) return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val flourStock = bot.bank.computeAmountForId(FLOUR).toLong() + bot.inventory.computeAmountForId(FLOUR)
