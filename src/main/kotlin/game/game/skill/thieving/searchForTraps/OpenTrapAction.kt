@@ -31,6 +31,7 @@ class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievingCh
         }
         mob.interact(obj)
         mob.animation(Animations.PICKPOCKET)
+        mob.sendMessage("You have activated a trap on the chest.")
         mob.damage(computeDamage())
     }
 
