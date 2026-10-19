@@ -58,6 +58,8 @@ open class NpcCombatScript(bot: Bot,
                            private var spell: CombatSpell? = null) :
     TargetingZonedBotScript<Npc>(bot, duration, zones) {
 
+    override val actionSafety = ActionSafety.COMBAT
+
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
 

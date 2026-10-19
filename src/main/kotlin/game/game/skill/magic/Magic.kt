@@ -108,8 +108,33 @@ object Magic {
      * @param requirements The spell requirements.
      * @return What casting takes, or the first requirement that isn't met.
      */
-    fun spellCost(plr: Player, level: Int, requirements: List<SpellRequirement>): SpellCost {
-        if (plr.magic.level < level) {
+    fun spellCost(plr: Player, level: Int, requirements: List<SpellRequirement>): SpellCost =
+        spellCost(plr.magic.level, plr.inventory, { plr.equipment.contains(it) }, plr.equipment.weapon?.id, level,
+                  requirements)
+
+    /**
+     * Works out what casting a spell would take from some items, or why it can't be cast, by the same rules as the
+     * [spellCost] of a player, but without a player. This is how a bot works out what a spell would take if the runes in
+     * its bank were in its inventory.
+     *
+     * The items stand in for the inventory: an item requirement is met by their summed amount, and combination runes and
+     * regular runes are taken from them in order, so the items that come first are used first.
+     *
+     * @param magicLevel The Magic level of the caster.
+     * @param items The items to cast with, such as an inventory, or an inventory followed by a bank.
+     * @param equipped Determines if an item, by id, is equipped.
+     * @param weaponId The id of the equipped weapon, which may be a staff, or `null` if there is none.
+     * @param level The minimum Magic level required.
+     * @param requirements The spell requirements.
+     * @return What casting takes, or the first requirement that isn't met.
+     */
+    fun spellCost(magicLevel: Int,
+                  items: Iterable<Item?>,
+                  equipped: (Int) -> Boolean,
+                  weaponId: Int?,
+                  level: Int,
+                  requirements: List<SpellRequirement>): SpellCost {
+        if (magicLevel < level) {
             return SpellCost.LowLevel
         }
 
@@ -120,20 +145,19 @@ object Magic {
             if (req is RuneRequirement) { // Store runes required.
                 runesNeeded.add(req.rune, req.amount)
             } else if (req is ItemRequirement) { // Determine if we have the correct items.
-                val item = Item(req.id, req.amount)
-                if (!plr.inventory.contains(item)) {
+                val amount = items.sumOf { if (it?.id == req.id) it.amount.toLong() else 0L }
+                if (amount < req.amount) {
                     return SpellCost.MissingItem(req.id)
                 }
-                removeItems += item
+                removeItems += Item(req.id, req.amount)
             } else if (req is EquipmentRequirement) {
-                if (!plr.equipment.contains(req.id)) {
+                if (!equipped(req.id)) {
                     return SpellCost.MissingEquipment(req.id)
                 }
             }
         }
 
         // Determine which runes need to be removed. First check for staves.
-        val weaponId = plr.equipment.weapon?.id
         if (weaponId != null && runesNeeded.isNotEmpty()) {
             val equippedStaff = Staff.ID_TO_STAFF[weaponId]
             if (equippedStaff != null) {
@@ -145,7 +169,7 @@ object Magic {
         }
 
         // Then check for combination runes.
-        for (item in plr.inventory) {
+        for (item in items) {
             if (runesNeeded.isEmpty()) {
                 break
             }
@@ -166,7 +190,7 @@ object Magic {
         }
 
         // Then check for regular runes.
-        for (item in plr.inventory) {
+        for (item in items) {
             if (runesNeeded.isEmpty()) {
                 break
             }

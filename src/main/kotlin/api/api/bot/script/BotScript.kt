@@ -1,16 +1,20 @@
 package api.bot.script
 
 import api.bot.GameCoroutineScope
+import api.bot.Suspendable.naturalMicroDelay
 import api.predef.*
+import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.coroutines.coroutineContext
 
 /**
  * A coroutine-driven base class for bot behavior scripts.
@@ -39,6 +43,60 @@ import kotlin.coroutines.cancellation.CancellationException
 abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
 
     /**
+     * Shared entry conditions for ordinary work, combat work, and lifecycle-only scripts.
+     * Combat permits fighting and escape decisions, but still respects death, locks and strong actions.
+     * NONE is reserved for scripts such as logout whose underlying operation owns these checks.
+     * Reflex scripts use their independent lifecycle and are unaffected by these conditions.
+     *
+     * @author lare96
+     */
+    enum class ActionSafety {
+        NON_COMBAT,
+        COMBAT,
+        NONE;
+
+        /**
+         * Evaluates live state for this policy without suspending or changing native actions.
+         */
+        fun allows(bot: Bot): Boolean = this == NONE || (bot.health > 0 && !bot.isLocked &&
+            bot.actions.size(ActionType.STRONG) == 0 && (this == COMBAT || !bot.combat.inCombat()))
+
+        /**
+         * Waits cooperatively for this policy, aborting if the bot leaves the active world.
+         * Reusable by action handlers that must recheck after their own suspensions.
+         */
+        suspend fun await(bot: Bot): Boolean {
+            coroutineContext.ensureActive()
+            while (bot.state == EntityState.ACTIVE) {
+                if (allows(bot)) return true
+                bot.naturalMicroDelay()
+                coroutineContext.ensureActive()
+            }
+            return false
+        }
+    }
+
+    /**
+     * Conditions required before initialization, resumption and each execution cycle.
+     * Subclasses that deliberately fight must explicitly opt into COMBAT.
+     */
+    protected open val actionSafety = ActionSafety.NON_COMBAT
+
+    /**
+     * Checks current state immediately before starting an action. Weak actions are left to the
+     * activity: they may represent ongoing production or the combat action this script maintains.
+     * A successful check does not remain valid across a coroutine suspension.
+     */
+    protected fun isActionSafe(safety: ActionSafety = actionSafety): Boolean = safety.allows(bot)
+
+    /**
+     * Defers an entry point until native actions and recovery have settled, without consuming
+     * an activity's retry budget. Cancellation remains cooperative and never blocks cleanup.
+     * Shared suspendable pipelines recheck this after travel and before invoking activity hooks.
+     */
+    protected suspend fun awaitActionSafety(safety: ActionSafety = actionSafety): Boolean = safety.await(bot)
+
+    /**
      * Whether this script has been permanently terminated.
      *
      * Paused scripts may be started again by [start]. Terminated scripts cannot be restarted, even if
@@ -59,7 +117,7 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
      * Returning `false` allows normal script execution to continue.
      *
      * @param resumed `true` if this script is being restarted after a pause, otherwise `false`.
-     * @return `true` to enter the main [run] loop, or `false` to finish during initialization.
+     * @return `true` to finish during initialization, or `false` to enter the main [run] loop.
      */
     open suspend fun init(resumed: Boolean): Boolean = false // todo invert this.. confusing
 
@@ -142,11 +200,12 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
              */
             val job = GameCoroutineScope.launch(start = CoroutineStart.LAZY) {
                 try {
-                    if (init(wasPaused)) {
+                    if (bot.state != EntityState.ACTIVE || !awaitActionSafety() || init(wasPaused)) {
                         return@launch
                     }
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
+                        if (bot.state != EntityState.ACTIVE || !awaitActionSafety()) break
                         val completed = run()
                         if (completed) {
                             terminated = true
