@@ -3,6 +3,7 @@ package api.bot.script
 import api.bot.action.trading.BotMarketplace
 import api.bot.script.BotScript.ActionSafety
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import engine.bot.gear.BotGearLocator
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -98,7 +99,7 @@ class ZonedActionSafetyTest {
         setZone(script)
         val handler = bot.actionHandler
         var firstWalk = true
-        `when`(handler.webWalkTo(any(Position::class.java) ?: Position(0, 0), eq(0), eq(1))).thenAnswer {
+        `when`(handler.webWalkTo(any(Position::class.java) ?: Position(0, 0), eq(0), eq(1), eq(BankAccess.ALL) ?: BankAccess.ALL)).thenAnswer {
             if (firstWalk) {
                 firstWalk = false
                 if (travelSucceeded) position = it.getArgument(0)
