@@ -101,7 +101,7 @@ class FillWaterBotScript(
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(empty in bot.inventory)
 
     override suspend fun onExecuteInZone(): Boolean {
-        if (!isInventoryActionSafe()) return true
+        if (!isActionSafe()) return true
         if (remaining() == 0) { stop(); return true }
         if (empty !in bot.inventory) { forceBanking = true; return true }
         val zone = activeZone

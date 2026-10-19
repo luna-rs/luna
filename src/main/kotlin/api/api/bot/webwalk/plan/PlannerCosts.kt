@@ -37,6 +37,8 @@ package api.bot.webwalk.plan
  * @property abundantUses How many times a bot must be able to pay the largest spend of a coin, rune, item or jewellery charge
  * for the planner to stop counting what is left of it on a trip. A trip never spends that much, and counting less is faster.
  * @property maxLabels How many ways of arriving at a node, with different amounts left to spend, the planner keeps at most.
+ * @property bankTicks The time to open a bank and withdraw what a trip needs, which is added to a trip by the bank when it is
+ * compared with one without it (see [api.bot.webwalk.walk.WebWalker.planTrip]).
  *
  * @author Hydrozoa
  */
@@ -63,4 +65,5 @@ data class PlannerCosts(val doorTicks: Double = 3.0,
                         val toleranceMinimum: Double = 8.0,
                         val legPenalty: Double = 0.01,
                         val abundantUses: Int = 10,
-                        val maxLabels: Int = 6)
+                        val maxLabels: Int = 6,
+                        val bankTicks: Double = 10.0)

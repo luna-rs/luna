@@ -3,7 +3,9 @@ package api.bot.action
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
+import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
+import api.bot.script.BotScript.ActionSafety
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
@@ -25,7 +27,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Provides higher-level operations for depositing and withdrawing items, locating banks, opening the bank interface, and
  * configuring the bot's withdrawal mode. Banking interactions that use the client interface suspend until the expected
- * inventory, bank, or overlay state changes.
+ * inventory, bank, or overlay state changes. Item inputs and bank opening recheck the shared non-combat
+ * safety policy after suspension; travel can still carry a combat script away from an attacker.
  *
  * @param bot The bot performing the banking actions.
  * @param handler The parent action handler used for travel, interactions, and supply management.
@@ -99,6 +102,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return `true` if the deposit completed or a stale zero-amount slot was cleared.
      */
     suspend fun deposit(item: Item): Boolean {
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Depositing ${name(item)}.")
 
         if (!bot.bank.isOpen) {
@@ -155,6 +159,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
+            if (!ActionSafety.NON_COMBAT.await(bot) || !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
             bot.log("Entering amount (${depositItem.amount}).")
             bot.output.enterAmount(depositItem.amount)
             return depositCond.submit().await()
@@ -213,6 +218,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return `true` if the withdrawal succeeds.
      */
     suspend fun withdraw(item: Item): Boolean {
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Withdrawing ${name(item)}.")
 
         if (!bot.bank.isOpen) {
@@ -263,6 +269,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
+            if (!ActionSafety.NON_COMBAT.await(bot) || !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
             bot.log("Entering amount (${withdrawItem.amount}).")
             bot.output.enterAmount(withdrawItem.amount)
             return withdrawCond.submit().await()
@@ -417,6 +424,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return The selected bank entity, or `null` if no bank can be obtained.
      */
     suspend fun travelToNearestBank(): Entity? {
+        if (!ActionSafety.COMBAT.await(bot)) return null
         bot.log("Travelling to nearest bank.")
 
         if (SubZone.HOME in bot.subZones) {
@@ -426,13 +434,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         bot.log("Web-walking to the nearest bank.")
         val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS) // TODO Add support for NPC bankers as well
+        if (!ActionSafety.COMBAT.await(bot)) return null
         if (bank != null) {
             return bank
         }      
 
-        // Travel home, then use home bank.
+        // Travel home, then use home bank. A walk to a bank doesn't stop at a bank for what the walk needs.
         bot.log("Trying to travel home for a bank.")
-        if (handler.travelTo(SubZone.HOME)) {
+        if (handler.travelTo(SubZone.HOME, BankAccess.NONE)) {
             return homeBank()
         }
 
@@ -443,37 +452,46 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Travels to a bank and attempts to open it.
      *
-     * Returns immediately if the bank is already open. Otherwise, uses [travelToNearestBank] to find a bank and
-     * interacts with it.
-     *
-     * If the interaction succeeds but [waitFor] returns `false`, opens the bank directly.
+     * Returns immediately if the bank is already open. Otherwise, uses [travelToNearestBank] to find a bank and opens it
+     * with [open].
      *
      * @return `true` if the bank was already open or the direct-open fallback was executed.
      */
     suspend fun travelToBankOpen(): Boolean {
         if (bot.bank.isOpen) {
+            return ActionSafety.NON_COMBAT.await(bot) && bot.bank.isOpen
+        }
+        val bank = travelToNearestBank()
+        return bank != null && open(bank)
+    }
+
+    /**
+     * Opens a bank that the bot is at, a booth or a banker, by interacting with it.
+     *
+     * Returns immediately if the bank is already open. If the interaction succeeds but [waitFor] returns `false`, opens
+     * the bank directly.
+     *
+     * @param bank The booth or banker.
+     * @return `true` if the bank was already open or the direct-open fallback was executed.
+     */
+    suspend fun open(bank: Entity): Boolean {
+        if (bot.bank.isOpen) {
             return true
         }
-
-        val bank = travelToNearestBank()
-        if (bank != null) {
-            bot.naturalDelay()
-            bot.log("Opening bank.")
-            val option = when (bank) {
-                is GameObject -> 2
-                is Npc -> bank.def().actions.indexOfFirst { it == "Bank" } + 1
-                else -> throw IllegalStateException("Invalid bank entity type.")
-            }
-            if (handler.interactions.interact(option, bank)) {
-                if (!waitFor(3.seconds) { bot.bank.isOpen }) {
-                    bot.bank.open()
-                }
-                return true
-            } else {
-                bot.log("Could not interact with $bank.")
-                return false
-            }
+        bot.naturalDelay()
+        bot.log("Opening bank.")
+        val option = when (bank) {
+            is GameObject -> 2
+            is Npc -> bank.def().actions.indexOfFirst { it == "Bank" } + 1
+            else -> throw IllegalStateException("Invalid bank entity type.")
         }
+        if (handler.interactions.interact(option, bank)) {
+            if (!waitFor(3.seconds) { bot.bank.isOpen }) {
+                bot.bank.open()
+            }
+            return true
+        }
+        bot.log("Could not interact with $bank.")
         return false
     }
 

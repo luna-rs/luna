@@ -43,7 +43,7 @@ import kotlin.time.Duration
  */
 class EnchantJewelleryBotScript(
     bot: Bot, val type: EnchantJewelleryType, val inputId: Int, duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
 

@@ -2,6 +2,7 @@ package engine.bot.coordinator
 
 import api.bot.action.trading.BotTradePurpose
 import api.predef.*
+import api.bot.action.trading.BotMarketplace
 import api.predef.ext.*
 import game.bot.scripts.trading.BuyFromStoreBotScript
 import game.bot.scripts.trading.SellToStoreBotScript
@@ -58,7 +59,7 @@ object MerchantingCoordinator : BotCoordinator {
             if (randBoolean() && isDumbOrGreedy) {
                 bot.scriptStack.push(SellToStoreBotScript(bot))
             } else {
-                bot.scriptStack.push(TradeBotScript(bot, purpose))
+                bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
             }
         } else if (bot.preferences.wantedItemsToAcquire().isNotEmpty()) {
             // Start trading script, or buy items from store.
@@ -73,7 +74,7 @@ object MerchantingCoordinator : BotCoordinator {
             if (rand(3) == 0 || isShopper && randBoolean()) {
                 bot.scriptStack.push(BuyFromStoreBotScript(bot))
             } else {
-                bot.scriptStack.push(TradeBotScript(bot, purpose))
+                bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
             }
         } else {
             // Otherwise make generic purchases from registered shops.

@@ -56,6 +56,8 @@ class TargetSearchRecoveryTest {
     }
 
     private fun bot() = mock(Bot::class.java, RETURNS_DEEP_STUBS).also {
+        `when`(it.health).thenReturn(99)
+        `when`(it.state).thenReturn(EntityState.ACTIVE)
         `when`(it.position).thenReturn(Position(3248, 3243))
     }
 

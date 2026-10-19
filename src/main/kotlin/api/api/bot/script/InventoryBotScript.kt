@@ -91,10 +91,6 @@ abstract class InventoryBotScript(
         data.bankFailures = bankFailures
     }
 
-    /** Current safety required before initiating a production or banking interaction. */
-    protected fun isInventoryActionSafe(): Boolean = bot.health > 0 && !bot.isLocked &&
-        !bot.combat.inCombat() && bot.actions.size(ActionType.STRONG) == 0
-
     /** Whether either independent production retry budget has already been exhausted. */
     protected fun productionRetriesExhausted(): Boolean = failures >= maxFailures || bankFailures >= maxFailures
 
@@ -108,7 +104,7 @@ abstract class InventoryBotScript(
         materials: List<Item>, tools: Set<Int> = emptySet(), levelEligible: Boolean = true,
         requestMissing: Boolean = true, prepareMissing: () -> Boolean = { false }
     ): List<Item> {
-        if (productionRetriesExhausted() || !isInventoryActionSafe() || !levelEligible) {
+        if (productionRetriesExhausted() || !isActionSafe() || !levelEligible) {
             stop()
             return emptyList()
         }
@@ -133,7 +129,7 @@ abstract class InventoryBotScript(
      * existing lifecycle behavior and do not charge this budget.
      */
     protected fun requestProductionBank(canContinue: Boolean): Boolean {
-        if (!isInventoryActionSafe() || (!forceBanking && canContinue)) return false
+        if (!isActionSafe() || (!forceBanking && canContinue)) return false
         if (bankFailures >= maxFailures) { stop(); return false }
         bankFailures++
         return true
@@ -144,7 +140,7 @@ abstract class InventoryBotScript(
      * Temporary unsafe states defer work; level loss ends the session; missing capacity or inputs force banking.
      */
     protected fun productionReady(canContinue: Boolean, levelEligible: Boolean = true): Boolean {
-        if (!isInventoryActionSafe()) return false
+        if (!isActionSafe()) return false
         if (!levelEligible) { stop(); return false }
         if (!canContinue) { forceBanking = true; return false }
         return true
@@ -161,16 +157,17 @@ abstract class InventoryBotScript(
         inputId: Int, dexterityDelay: Boolean = true, available: Boolean = true, outputId: Int? = null,
         start: suspend (amount: Int) -> Boolean
     ) {
+        if (!isActionSafe()) return
         val before = bot.inventory.computeAmountForId(inputId)
         val outputBefore = outputId?.let { bot.inventory.computeAmountForId(it) } ?: 0
         val started = available && withTimeoutOrNull(15_000) {
-            handler.widgets.clickCloseInterface() && start(before)
+            handler.widgets.clickCloseInterface() && isActionSafe() && start(before)
         } == true
         val progressed = started && waitFor(10.seconds) {
             bot.inventory.computeAmountForId(inputId) < before ||
                 (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore)
         }
-        if (progressed) failures = 0 else if (++failures >= maxFailures) stop()
+        if (progressed) failures = 0 else if (isActionSafe() && ++failures >= maxFailures) stop()
         if (dexterityDelay) bot.naturalDexterityDelay()
     }
 
@@ -207,7 +204,7 @@ abstract class InventoryBotScript(
     }
 
     final override suspend fun executeInZone(): Boolean {
-        if (bot.actions.size(ActionType.WEAK) > 0) {
+        if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true
         }
@@ -222,7 +219,10 @@ abstract class InventoryBotScript(
             stop()
             return
         }
-        if (!withdrawBankItems(withdraw)) {
+        if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return
+        val withdrawn = withdrawBankItems(withdraw)
+        if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return
+        if (!withdrawn) {
             bot.log("Could not withdraw required inventory items. Stopping script.")
             stop()
         } else {
@@ -251,7 +251,7 @@ abstract class InventoryBotScript(
         if (!verifiedProductionWithdrawals) return handler.banking.withdrawAll(items)
         return withTimeoutOrNull(15_000) {
             handler.banking.clickBankingMode(false)
-            handler.banking.withdrawAll(items) && bot.inventory.containsAll(items)
+            isActionSafe(ActionSafety.NON_COMBAT) && handler.banking.withdrawAll(items) && bot.inventory.containsAll(items)
         } == true
     }
 

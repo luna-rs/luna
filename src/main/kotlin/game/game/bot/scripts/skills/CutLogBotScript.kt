@@ -43,7 +43,7 @@ class CutLogBotScript(
     val log: Log,
     val index: Int,
     duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_FLETCHING)
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
 

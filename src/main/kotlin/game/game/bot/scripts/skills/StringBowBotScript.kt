@@ -38,7 +38,7 @@ class StringBowBotScript(
     bot: Bot,
     val bow: Bow,
     duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_FLETCHING)
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
 

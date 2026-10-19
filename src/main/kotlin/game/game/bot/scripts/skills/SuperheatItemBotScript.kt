@@ -42,7 +42,7 @@ import kotlin.time.Duration
  */
 class SuperheatItemBotScript(
     bot: Bot, val barType: BarType, duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
 

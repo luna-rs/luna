@@ -66,7 +66,7 @@ class AssembleFoodBotScript(
     bot: Bot,
     val food: IncompleteFood,
     duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList(),
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_COOKING),
     val secondary: Int = food.otherIngredients.first()
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
@@ -162,7 +162,7 @@ class AssembleFoodBotScript(
 
     /** Queues one bounded refill using owned containers, then returns selection to the activity coordinator. */
     private fun queueWaterPreparation(): Boolean {
-        if (!isInventoryActionSafe() || !canPrepareWater()) return false
+        if (!isActionSafe() || !canPrepareWater()) return false
         val water = waterIngredient ?: return false
         val empty = WaterResource.FILLABLES.inverse().getValue(water)
         val ingredientStock = materials.filter { it.id != water }.minOf {
