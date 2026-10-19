@@ -175,6 +175,16 @@ public abstract class Mob extends Entity {
     private Task lockTask;
 
     /**
+     * The ticks left on the timed action-lock, counted down by {@link #lockTask}.
+     */
+    private int lockTicks;
+
+    /**
+     * The callbacks to run when the timed action-lock expires.
+     */
+    private Runnable unlockCallback;
+
+    /**
      * If this mob is currently wandering.
      */
     private boolean wandering;
@@ -454,35 +464,42 @@ public abstract class Mob extends Entity {
      * Lock semantics:
      * </p>
      * <ul>
-     *     <li>If the mob is already {@link #locked}, this call attempts to extend the existing timed lock if the new
-     *     {@code ticks} duration exceeds the remaining time on {@link #lockTask}.</li>
+     *     <li>If a timed lock is already running on {@link #lockTask}, this call extends it if the new {@code ticks}
+     *     duration exceeds the remaining time. {@code onUnlock} runs after the earlier callbacks when it expires.</li>
      *     <li>If no lock task is running, a new {@link Task} is scheduled to unlock the mob after {@code ticks}.</li>
-     *     <li>This timed lock is distinct from a "hard" lock created via {@link #lock()}.</li>
+     *     <li>This timed lock is distinct from a "hard" lock created via {@link #lock()}, and does nothing while
+     *     one is active.</li>
      * </ul>
      *
      * @param ticks The number of ticks to remain locked.
      * @param onUnlock A callback executed when the lock naturally expires.
+     * @throws IllegalArgumentException If {@code ticks <= 0}.
      */
     public final void lock(int ticks, Runnable onUnlock) {
-        if (!locked) {
-            if (lockTask != null && lockTask.getState() == TaskState.RUNNING) {
-                int elapsed = lockTask.getExecutionCounter();
-                int remaining = lockTask.getDelay() - elapsed;
-                if (ticks > remaining) {
-                    lockTask.setDelay(ticks - elapsed);
-                }
-            } else {
-                locked = true;
-                lockTask = new Task(ticks) {
-                    @Override
-                    protected void execute() {
-                        locked = false;
-                        onUnlock.run();
+        checkArgument(ticks > 0, "Ticks must be positive.");
+        if (lockTask != null && lockTask.getState() == TaskState.RUNNING) {
+            lockTicks = Math.max(lockTicks, ticks);
+            Runnable earlier = unlockCallback;
+            unlockCallback = () -> {
+                earlier.run();
+                onUnlock.run();
+            };
+        } else if (!locked) {
+            locked = true;
+            lockTicks = ticks;
+            unlockCallback = onUnlock;
+            lockTask = new Task(1) {
+                @Override
+                protected void execute() {
+                    if (--lockTicks == 0) {
+                        // Cancelled first, so a callback that locks again starts a new lock.
                         cancel();
+                        locked = false;
+                        unlockCallback.run();
                     }
-                };
-                world.schedule(lockTask);
-            }
+                }
+            };
+            world.schedule(lockTask);
         }
     }
 
