@@ -48,10 +48,8 @@ object Thieving {
      * If a pickpocketing action will be successful or not.
      */
     fun canPickpocket(plr: Player, thievable: ThievingNpcType): Boolean {
-        val level = plr.thieving.level
-        if (level >= thievable.master) {
-            return true
-        }
+        // Boosts above 99 don't help.
+        val level = plr.thieving.level.coerceAtMost(99)
         val (low, high) = thievable.chance
         return Skills.success(low, high, level)
     }
