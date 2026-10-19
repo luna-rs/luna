@@ -92,7 +92,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
         mob.interact(target)
         mob.sendMessage("You attempt to pick the $pocket's pocket.")
 
-        world.scheduleOnce(1) { // TODO@0.5.0 This should be an action? Also only calculate drop on success.
+        world.scheduleOnce(1) {
             if (mob.state != EntityState.INACTIVE && target.state != EntityState.INACTIVE) {
                 if (Thieving.canPickpocket(mob, thievable)) {
                     mob.sendMessage("You pick the $pocket's pocket.")
