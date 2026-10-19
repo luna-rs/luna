@@ -19,9 +19,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.varp.PersistentVarp
-import kotlinx.coroutines.future.await
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -55,7 +53,7 @@ class TradeBotScript(bot: Bot,
                      private val purpose: BotTradePurpose,
                      private val marketplace: BotMarketplace = BotMarketplace.VARROCK,
                      duration: Duration = getPreferenceBasedDuration(bot),
-                     zone: MutableList<SubZone> = mutableListOf(SubZone.HOME)) :
+                     zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone)) :
     ZonedBotScript(bot, duration, zone) {
 
     companion object {
@@ -172,8 +170,10 @@ class TradeBotScript(bot: Bot,
             return
         }
         bot.overlays.closeWindows()
-        prepared = bot.navigator.navigate(marketplace.randomPosition(), true).await() == NavigationResult.REACHED
-        if (!prepared) endSession("Could not return to the marketplace.")
+        val tile = marketplace.positions.randomOrNull()
+        prepared = tile != null && handler.travelTo(marketplace.parent) &&
+                handler.webWalkTo(tile) && bot.position == tile
+        if (!prepared) endSession("Could not return to an available marketplace tile.")
     }
 
     override suspend fun finish() {

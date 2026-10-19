@@ -1,23 +1,36 @@
 package game.skill.woodcutting.searchNest
 
 import io.luna.game.model.item.Item
+import io.luna.util.RandomUtils
 
 /**
  * An enumerated type representing all nests that can be searched.
  *
  * @author lare96
  */
-enum class Nest(val id: Int, val items: List<Int>) {
+enum class Nest(val id: Int, val weight: Double, private val weightedItems: Map<Int, Double>) {
     RED_EGG_NEST(id = 5070,
-                 items = listOf(5076)),
+                 weight = 1.0,
+                 weightedItems = mapOf(5076 to 1.0)),
     GREEN_EGG_NEST(id = 5071,
-                   items = listOf(5078)),
+                   weight = 1.0,
+                   weightedItems = mapOf(5078 to 1.0)),
     BLUE_EGG_NEST(id = 5072,
-                  items = listOf(5077)),
+                  weight = 1.0,
+                  weightedItems = mapOf(5077 to 1.0)),
     SEEDS_NEST(id = 5073,
-               items = listOf(5312, 5283, 5284, 5285, 5286, 5313, 5314, 5288, 5287, 5315, 5289, 5316, 5290, 5317)),
+               weight = 65.0,
+               weightedItems = mapOf(5312 to 222.0, 5283 to 170.0, 5313 to 135.0, 5284 to 108.0, 5285 to 85.0,
+                                     5286 to 68.0, 5314 to 54.0, 5287 to 42.0, 5288 to 34.0, 5315 to 27.0,
+                                     5289 to 22.0, 5290 to 17.0, 5317 to 11.0, 5316 to 5.0)),
     RINGS_NEST(id = 5074,
-               items = listOf(1635, 1637, 1639, 1641, 1643));
+               weight = 32.0,
+               weightedItems = mapOf(1637 to 40.0, 1635 to 35.0, 1639 to 15.0, 1641 to 9.0, 1643 to 1.0));
+
+    /**
+     * The items this nest can hold.
+     */
+    val items: List<Int> = weightedItems.keys.toList()
 
     companion object {
 
@@ -37,11 +50,15 @@ enum class Nest(val id: Int, val items: List<Int>) {
          * @param id The id of the item to check.
          */
         fun isNest(id: Int) = NEST_MAP.containsKey(id)
+
+        /**
+         * Picks the nest that falls out of a tree, by [weight].
+         */
+        fun roll(): Nest = RandomUtils.weightedRoll(VALUES.associateWith { it.weight })
     }
 
     /**
-     * Picks a random item from this nest.
+     * Picks a random item from this nest, by weight.
      */
-    fun pickItem() = Item(items.random())
-
+    fun pickItem() = Item(RandomUtils.weightedRoll(weightedItems))
 }

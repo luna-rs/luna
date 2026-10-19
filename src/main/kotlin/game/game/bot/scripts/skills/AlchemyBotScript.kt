@@ -49,7 +49,7 @@ class AlchemyBotScript(
     bot: Bot,
     val type: AlchemyType,
     duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
 ) : ZonedBotScript(bot, duration, zones) {
 
     companion object {

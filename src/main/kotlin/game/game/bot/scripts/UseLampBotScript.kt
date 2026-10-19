@@ -100,11 +100,11 @@ class UseLampBotScript(
     private suspend fun startRedemption(): Boolean {
         if (!handler.inventory.clickItem(1, LAMP)) return false
         if (!waitFor(3.seconds) { ExperienceLampInterface::class in bot.overlays }) return false
-        if (!isInventoryActionSafe() || !bot.output.clickButton(skill.button)) return false
+        if (!isActionSafe() || !bot.output.clickButton(skill.button)) return false
         if (!waitFor(3.seconds) {
                 bot.varpManager.getValue(PersistentVarp.XP_LAMP) == skill.varpValue
             }) return false
-        return isInventoryActionSafe() && ExperienceLampInterface::class in bot.overlays &&
+        return isActionSafe() && ExperienceLampInterface::class in bot.overlays &&
             bot.output.clickButton(CONFIRM_BUTTON)
     }
 

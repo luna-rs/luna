@@ -5,6 +5,7 @@ import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
+import api.bot.script.BotScript.ActionSafety
 import api.predef.*
 import api.predef.ext.*
 import engine.bank.Banking
@@ -26,7 +27,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Provides higher-level operations for depositing and withdrawing items, locating banks, opening the bank interface, and
  * configuring the bot's withdrawal mode. Banking interactions that use the client interface suspend until the expected
- * inventory, bank, or overlay state changes.
+ * inventory, bank, or overlay state changes. Item inputs and bank opening recheck the shared non-combat
+ * safety policy after suspension; travel can still carry a combat script away from an attacker.
  *
  * @param bot The bot performing the banking actions.
  * @param handler The parent action handler used for travel, interactions, and supply management.
@@ -100,6 +102,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return `true` if the deposit completed or a stale zero-amount slot was cleared.
      */
     suspend fun deposit(item: Item): Boolean {
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Depositing ${name(item)}.")
 
         if (!bot.bank.isOpen) {
@@ -156,6 +159,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
+            if (!ActionSafety.NON_COMBAT.await(bot) || !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
             bot.log("Entering amount (${depositItem.amount}).")
             bot.output.enterAmount(depositItem.amount)
             return depositCond.submit().await()
@@ -214,6 +218,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return `true` if the withdrawal succeeds.
      */
     suspend fun withdraw(item: Item): Boolean {
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Withdrawing ${name(item)}.")
 
         if (!bot.bank.isOpen) {
@@ -264,6 +269,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
+            if (!ActionSafety.NON_COMBAT.await(bot) || !bot.bank.isOpen || NumberInput::class !in bot.overlays) return false
             bot.log("Entering amount (${withdrawItem.amount}).")
             bot.output.enterAmount(withdrawItem.amount)
             return withdrawCond.submit().await()
@@ -418,6 +424,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return The selected bank entity, or `null` if no bank can be obtained.
      */
     suspend fun travelToNearestBank(): Entity? {
+        if (!ActionSafety.COMBAT.await(bot)) return null
         bot.log("Travelling to nearest bank.")
 
         if (SubZone.HOME in bot.subZones) {
@@ -427,6 +434,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         bot.log("Web-walking to the nearest bank.")
         val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS) // TODO Add support for NPC bankers as well
+        if (!ActionSafety.COMBAT.await(bot)) return null
         if (bank != null) {
             return bank
         }      
@@ -451,9 +459,8 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      */
     suspend fun travelToBankOpen(): Boolean {
         if (bot.bank.isOpen) {
-            return true
+            return ActionSafety.NON_COMBAT.await(bot) && bot.bank.isOpen
         }
-
         val bank = travelToNearestBank()
         return bank != null && open(bank)
     }
