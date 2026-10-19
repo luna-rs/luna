@@ -60,7 +60,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
         mob.woodcutting.level < tree.level -> {
             // Check if we have required level.
-            mob.sendMessage("You need a Woodcutting level of ${tree.level} to cut this.")
+            mob.sendMessage("You need a Woodcutting level of ${tree.level} to chop down this tree.")
             false
         }
 
@@ -68,8 +68,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         treeObj.state == EntityState.INACTIVE -> false
 
         !Axe.hasAxe(mob, axe) -> {
-            mob.sendMessage("You need an axe to chop this tree.")
-            mob.sendMessage("You do not have an axe that you have the woodcutting level to use.")
+            Axe.sendNoAxeMessages(mob)
             false
         }
 

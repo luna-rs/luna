@@ -158,6 +158,14 @@ enum class Axe(val id: Int,
         }
 
         /**
+         * Tells [plr] that they have no axe they can use.
+         */
+        fun sendNoAxeMessages(plr: Player) {
+            plr.sendMessage("You need an axe to chop down this tree.")
+            plr.sendMessage("You do not have an axe which you have the woodcutting level to use.")
+        }
+
+        /**
          * Determines if the player has an axe.
          */
         fun hasAxe(plr: Player, axe: Axe) =
