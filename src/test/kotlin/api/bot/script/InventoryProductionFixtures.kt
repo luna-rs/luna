@@ -7,6 +7,7 @@ import io.luna.game.action.Action
 import io.luna.game.action.ActionQueue
 import io.luna.game.event.EventListener
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import io.luna.game.model.EntityState
 import io.luna.game.model.item.Bank
 import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
@@ -43,6 +44,7 @@ object InventoryProductionFixtures {
         `when`(bot.attributes()).thenReturn(AttributeMap())
         `when`(bot.world).thenReturn(fixtureWorld)
         `when`(bot.health).thenReturn(99)
+        `when`(bot.state).thenReturn(EntityState.ACTIVE)
         for (id in listOf(SKILL_CRAFTING, SKILL_HERBLORE)) {
             `when`(bot.skill(id).staticLevel).thenReturn(99)
             `when`(bot.skill(id).level).thenReturn(99)

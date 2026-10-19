@@ -4,7 +4,10 @@ import api.bot.webwalk.data.WebWalkDataException
 import api.bot.webwalk.data.WebWalkLoader
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.WebWalkGraph
+import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.plan.BankItems
 import api.bot.webwalk.plan.BotCapabilities
+import api.bot.webwalk.plan.CapabilitySnapshot
 import api.bot.webwalk.plan.DoorCrossings
 import api.bot.webwalk.plan.PathfinderWalkEstimator
 import api.bot.webwalk.plan.WebWalkPlan
@@ -66,6 +69,11 @@ object WebWalker {
     private val planner: WebWalkPlanner by lazy {
         WebWalkPlanner(graph, PathfinderWalkEstimator(world.collisionManager, doors = DoorCrossings.of(graph)))
     }
+
+    /**
+     * Chooses between trips straight to a destination and trips by the bank, with the [planner].
+     */
+    private val tripPlanner: TripPlanner by lazy { TripPlanner(planner, graph.banks) }
 
     /**
      * The pool that plans run on. It is small and its own, so that plans don't wait for the path searches of the navigators
@@ -148,6 +156,59 @@ object WebWalker {
     }
 
     /**
+     * Chooses a trip for a bot, without taking it, on the pool of the planner: straight to the destination with what it
+     * carries, or by its nearest bank to withdraw what the rest of the trip spends, whichever costs less (see
+     * [TripPlanner]). Must be called on the game thread, because the bot and its bank are read as they are now.
+     *
+     * @param bot The bot.
+     * @param destination Where it is going.
+     * @param bank The most of the bank that the trip may use. [BankAccess.NONE] plans with what the bot carries only.
+     * @param random Where the variation of the route comes from.
+     * @return A future of the trip. It is completed on a thread of the pool, so code that has to run on the game thread
+     * should continue on [io.luna.game.GameService.gameExecutor].
+     */
+    fun planTrip(bot: Bot, destination: Position, bank: BankAccess = BankAccess.ALL,
+                 random: Random = Random()): CompletableFuture<TripPlan> {
+        val trips = tripPlanner
+        val start = bot.position
+        // The bank is copied once, for the view and every snapshot.
+        val banked = if (bank == BankAccess.NONE) BankItems.EMPTY else BankItems.of(bot)
+        val view = if (bank == BankAccess.NONE) BankView() else BankWithdrawal.view(bot, banked)
+        val carried = BotCapabilities.snapshot(bot, graph.teleports)
+        val tiers = LinkedHashMap<BankAccess, CapabilitySnapshot>()
+        for (access in listOf(BankAccess.ALL, BankAccess.COINS)) {
+            if (access <= bank) {
+                tiers[access] = BotCapabilities.snapshot(bot, graph.teleports, bank = access, banked = banked)
+            }
+        }
+        val intelligence = bot.personality.intelligence
+        return CompletableFuture.supplyAsync({ trips.plan(start, destination, carried, tiers, view, intelligence, random) },
+                                             planPool)
+    }
+
+    /**
+     * Plans the trip from the bank that a bot is at, and works out what it would withdraw, on the pool of the planner. Must
+     * be called on the game thread, because the bot and its bank are read as they are now.
+     *
+     * @param bot The bot, at the stand of the bank.
+     * @param destination Where it is going.
+     * @param access How much of the bank the trip counts.
+     * @return A future of the trip from the bank, or of `null` if there is none.
+     */
+    private fun planFromBankAsync(bot: Bot, destination: Position, access: BankAccess): CompletableFuture<BankStandPlan?> {
+        val trips = tripPlanner
+        val stand = bot.position
+        // The bank is copied again, as it is now, once for the view and the snapshot.
+        val banked = BankItems.of(bot)
+        val view = BankWithdrawal.view(bot, banked)
+        val carried = BotCapabilities.snapshot(bot, graph.teleports)
+        val snapshot = BotCapabilities.snapshot(bot, graph.teleports, bank = access, banked = banked)
+        val intelligence = bot.personality.intelligence
+        return CompletableFuture.supplyAsync({ trips.fromBank(stand, destination, snapshot, carried, view, intelligence) },
+                                             planPool)
+    }
+
+    /**
      * Plans a trip for a bot to the nearest bank, without taking it, on the pool of the planner. Must be called on the game
      * thread, because the bot is read as it is now, and the search is done on the position and the capabilities that it has now.
      *
@@ -192,19 +253,25 @@ object WebWalker {
      * If a walk fails and there are attempts left, the bot plans again from wherever it has got to, because it may have
      * been held up on the way, such as at a door that somebody else was using.
      *
+     * The trip may go by the nearest bank first, to withdraw the coins, runes or teleport jewellery that the rest of it
+     * spends, when that costs less than the trip with what the bot carries (see [planTrip]). At the bank, the trip is planned
+     * again before anything is withdrawn, and the bank is only opened if that trip needs something from it.
+     *
      * @param bot The bot.
      * @param destination Where it is going.
      * @param radius How close to the destination, in tiles on the same plane, is close enough.
      * @param attempts How many times to try, which is at least 1. The default is to fail fast and leave it to the script.
+     * @param bank The most of the bank that the trip may withdraw. [BankAccess.NONE] never goes to the bank.
      * @return How it went, which is that of the last attempt.
      */
-    suspend fun webWalk(bot: Bot, destination: Position, radius: Int = 0, attempts: Int = 1): WebWalkResult {
+    suspend fun webWalk(bot: Bot, destination: Position, radius: Int = 0, attempts: Int = 1,
+                        bank: BankAccess = BankAccess.ALL): WebWalkResult {
         require(attempts >= 1) { "attempts must be at least 1, was $attempts" }
         if (isWithin(bot.position, destination, radius)) {
             return WebWalkResult(true, "Already at the destination.")
         }
         missingData()?.let { return WebWalkResult(false, it) }
-        return withAttempts(bot, attempts) { walkOnce(bot, destination, radius) }
+        return withAttempts(bot, attempts) { walkOnce(bot, destination, radius, bank) }
     }
 
     /**
@@ -213,7 +280,7 @@ object WebWalker {
      * Returns at once if the bot is within the radius of a bank already.
      *
      * The bot ends up on the [api.bot.webwalk.model.BankDefinition.stand] tile of the bank, which is in front of the booth
-     * and not behind the counter.
+     * and not behind the counter. The trip is planned with what the bot carries, and never makes a bank detour itself.
      *
      * @param bot The bot.
      * @param radius How close to the tile in front of a booth, in tiles on the same plane, is close enough.
@@ -257,14 +324,98 @@ object WebWalker {
     }
 
     /**
-     * Plans a trip and takes the bot along it once, with the combat reflex already disabled by the caller.
+     * Chooses a trip and takes the bot along it once, with the combat reflex already disabled by the caller.
      *
      * @param bot The bot.
      * @param destination Where it is going.
      * @param radius How close to the destination, in tiles on the same plane, is close enough.
+     * @param bank The most of the bank that the trip may withdraw.
      * @return How it went.
      */
-    private suspend fun walkOnce(bot: Bot, destination: Position, radius: Int): WebWalkResult {
+    private suspend fun walkOnce(bot: Bot, destination: Position, radius: Int, bank: BankAccess): WebWalkResult {
+        val trip = try {
+            planTrip(bot, destination, bank).await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("Could not plan a web walk for ${bot.username}!", e)
+            return WebWalkResult(false, "Could not plan the trip: $e")
+        }
+        return when (trip) {
+            is TripPlan.NoTrip -> WebWalkResult(false, trip.reason)
+            is TripPlan.Direct -> {
+                trip.turnedDown?.let { bot.log("WebWalk: not going by the bank, ${compare(it)}.") }
+                follow(bot, trip.plan, destination, radius)
+            }
+            is TripPlan.ViaBank -> walkByBank(bot, trip, destination, radius)
+        }
+    }
+
+    /**
+     * Takes the bot along a trip by its bank: to the bank, then plans the trip from there again, withdraws what it needs if
+     * it needs anything, and takes it. If something goes wrong on the way to the bank or at it, the bot takes the trip with
+     * what it carries instead.
+     *
+     * @param bot The bot.
+     * @param trip The trip by the bank.
+     * @param destination Where it is going.
+     * @param radius How close to the destination, in tiles on the same plane, is close enough.
+     * @return How it went.
+     */
+    private suspend fun walkByBank(bot: Bot, trip: TripPlan.ViaBank, destination: Position, radius: Int): WebWalkResult {
+        bot.log("WebWalk: going by the bank ${trip.bank.id} (${trip.access}), ${compare(trip)}.")
+        val toBank = follow(bot, trip.toBank, trip.bank.stand, 0)
+        if (!toBank.success) {
+            return walkCarried(bot, destination, radius, "could not get to the bank: ${toBank.message}")
+        }
+
+        // The trip from the bank is planned again, with the bot and its bank as they are now, before anything is withdrawn.
+        val fromBank = try {
+            planFromBankAsync(bot, destination, trip.access).await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("Could not plan a web walk from a bank for ${bot.username}!", e)
+            return WebWalkResult(false, "Could not plan the trip from the bank: $e")
+        } ?: return walkCarried(bot, destination, radius, "there is no trip from the bank")
+        bot.log("WebWalk: from the bank: ${fromBank.plan}")
+
+        val withdrawal = fromBank.withdrawal
+        if (withdrawal == null) {
+            bot.log("WebWalk: the trip from the bank needs nothing from it, so the bank isn't opened.")
+            return follow(bot, fromBank.plan, destination, radius)
+        }
+        val items = fromBank.items ?: return walkCarried(bot, destination, radius,
+            "${TripPlanner.describe(withdrawal.required)} from the bank doesn't fit in the inventory")
+
+        val handler = bot.actionHandler
+        if (!BankWithdrawal.openBank(bot, handler, trip.bank)) {
+            return walkCarried(bot, destination, radius, "could not open the bank")
+        }
+        val withdrawn = BankWithdrawal.withdraw(bot, handler, items)
+        handler.widgets.clickCloseInterface()
+        bot.log("WebWalk: withdrew ${withdrawn.joinToString { "${it.amount} x ${itemName(it.id)}" }}.")
+
+        // The withdrawal only moved items from the bank to the inventory, so the trip from the bank still holds.
+        val short = fromBank.needs.withdrawal(BotCapabilities.snapshot(bot, graph.teleports))
+        if (short != null) {
+            return walkCarried(bot, destination, radius,
+                               "still short of ${TripPlanner.describe(short.required)} after the bank").copy(withdrawn = withdrawn)
+        }
+        return follow(bot, fromBank.plan, destination, radius).copy(withdrawn = withdrawn)
+    }
+
+    /**
+     * Plans the trip with what the bot carries, after a trip by the bank didn't work out, and takes it.
+     *
+     * @param bot The bot.
+     * @param destination Where it is going.
+     * @param radius How close to the destination, in tiles on the same plane, is close enough.
+     * @param why Why the trip by the bank didn't work out.
+     * @return How it went.
+     */
+    private suspend fun walkCarried(bot: Bot, destination: Position, radius: Int, why: String): WebWalkResult {
+        bot.log("WebWalk: $why, so the trip is made with what the bot carries.")
         val plan = try {
             planAsync(bot, destination).await()
         } catch (e: CancellationException) {
@@ -272,9 +423,16 @@ object WebWalker {
         } catch (e: Exception) {
             logger.error("Could not plan a web walk for ${bot.username}!", e)
             return WebWalkResult(false, "Could not plan the trip: $e")
-        } ?: return WebWalkResult(false, "No trip from ${bot.position} to $destination.")
-
+        } ?: return WebWalkResult(false, "No trip from ${bot.position} to $destination with what the bot carries: $why.")
         return follow(bot, plan, destination, radius)
+    }
+
+    /**
+     * Describes how a trip by the bank compares with the trip without it, for the log, with the costs that were compared.
+     */
+    private fun compare(trip: TripPlan.ViaBank): String {
+        val direct = trip.comparedWith?.let { "%.1f".format(it.cost) } ?: "none"
+        return "by the bank ${"%.1f".format(trip.cost)} (with ${planner.costs.bankTicks} at the bank) vs direct $direct"
     }
 
     /**

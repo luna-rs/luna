@@ -161,7 +161,8 @@ class WebWalkExecutor(private val bot: Bot,
 
     /**
      * Checks that the bot still meets the requirements of a leg, because it may have spent or dropped what it needed since
-     * the trip was planned.
+     * the trip was planned. Only what the bot carries counts, never its bank: a trip that was planned with the bank has
+     * withdrawn what it needs by now.
      *
      * @return `null` if it does, or why it doesn't.
      */

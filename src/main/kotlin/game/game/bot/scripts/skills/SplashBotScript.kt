@@ -30,6 +30,8 @@ class SplashBotScript(
     duration: Duration
 ) : ZonedBotScript(bot, duration, SPLASH_ZONES) {
 
+    override val actionSafety = ActionSafety.COMBAT
+
     private data class RuneSetup(
         val spell: CombatSpellDefinition,
         val staffId: Int

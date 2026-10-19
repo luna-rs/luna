@@ -21,6 +21,7 @@ enum class Axe(val id: Int,
            animation = Animation(879),
            chances = mapOf(
                NORMAL to (64 to 200),
+               ACHEY to (64 to 200),
                OAK to (32 to 100),
                WILLOW to (16 to 50),
                TEAK to (15 to 46),
@@ -34,6 +35,7 @@ enum class Axe(val id: Int,
          animation = Animation(877),
          chances = mapOf(
              NORMAL to (96 to 300),
+             ACHEY to (96 to 300),
              OAK to (48 to 150),
              WILLOW to (24 to 75),
              TEAK to (23 to 70),
@@ -47,6 +49,7 @@ enum class Axe(val id: Int,
           animation = Animation(875),
           chances = mapOf(
               NORMAL to (128 to 400),
+              ACHEY to (128 to 400),
               OAK to (64 to 200),
               WILLOW to (32 to 100),
               TEAK to (31 to 93),
@@ -60,6 +63,7 @@ enum class Axe(val id: Int,
           animation = Animation(873),
           chances = mapOf(
               NORMAL to (144 to 450),
+              ACHEY to (144 to 450),
               OAK to (72 to 225),
               WILLOW to (36 to 112),
               TEAK to (35 to 102),
@@ -73,6 +77,7 @@ enum class Axe(val id: Int,
             animation = Animation(871),
             chances = mapOf(
                 NORMAL to (160 to 500),
+                ACHEY to (160 to 500),
                 OAK to (80 to 250),
                 WILLOW to (40 to 125),
                 TEAK to (39 to 117),
@@ -86,6 +91,7 @@ enum class Axe(val id: Int,
             animation = Animation(869),
             chances = mapOf(
                 NORMAL to (192 to 600),
+                ACHEY to (192 to 600),
                 OAK to (96 to 300),
                 WILLOW to (48 to 150),
                 TEAK to (47 to 140),
@@ -99,6 +105,7 @@ enum class Axe(val id: Int,
          animation = Animation(867),
          chances = mapOf(
              NORMAL to (224 to 700),
+             ACHEY to (224 to 700),
              OAK to (112 to 350),
              WILLOW to (56 to 175),
              TEAK to (55 to 164),
@@ -113,6 +120,7 @@ enum class Axe(val id: Int,
            animation = Animation(2846),
            chances = mapOf(
                NORMAL to (224 to 700),
+               ACHEY to (224 to 700),
                OAK to (112 to 350),
                WILLOW to (56 to 175),
                TEAK to (55 to 164),
@@ -155,6 +163,14 @@ enum class Axe(val id: Int,
                 }
             }
             return axe
+        }
+
+        /**
+         * Tells [plr] that they have no axe they can use.
+         */
+        fun sendNoAxeMessages(plr: Player) {
+            plr.sendMessage("You need an axe to chop down this tree.")
+            plr.sendMessage("You do not have an axe which you have the woodcutting level to use.")
         }
 
         /**

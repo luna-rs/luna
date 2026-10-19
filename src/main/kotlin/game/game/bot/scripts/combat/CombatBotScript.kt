@@ -35,6 +35,8 @@ import kotlin.time.Duration.Companion.seconds
 class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
     DynamicBotScript(bot) {
 
+    override val actionSafety = ActionSafety.COMBAT
+
     /**
      * An enumerated type representing the initial action this bot should perform.
      */

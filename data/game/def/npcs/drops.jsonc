@@ -25471,7 +25471,8 @@
   {
     "ids": [
       1195, // Grizzly bear
-      106 // Bear
+      106, // Bear
+      105 // Bear
     ],
     "rare": null,
     "drops": [
@@ -25491,13 +25492,6 @@
       },
       {
         "id": 2136, // Raw bear meat
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
-        "table": 1
-      },
-      {
-        "id": 7815, // Bear ribs
         "quantity": "1",
         "noted": false,
         "rarity": 1.0,

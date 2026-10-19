@@ -25,6 +25,10 @@ import io.luna.game.model.mob.bot.Bot
  * Nothing can be used while teleblocked. Where a teleport can be used from, such as not deep in the wilderness, is the
  * requirements of its definition, which the planner checks.
  *
+ * The runes and jewellery in the bank of a bot only count when its [BankItems] are given, as if they were carried, after
+ * what is carried. A bot has to withdraw them before it can use them, which the web-walker does on a trip that needs them
+ * (see [api.bot.webwalk.walk.WebWalker.planTrip]).
+ *
  * @author Hydrozoa
  */
 object TeleportAvailability {
@@ -34,17 +38,18 @@ object TeleportAvailability {
      *
      * @param bot The bot.
      * @param teleports The teleports to choose from.
+     * @param bank The runes and jewellery in the bank of the bot, which count too, or `null` for what it carries only.
      * @return The ids of the ones the bot can use.
      */
-    fun usable(bot: Bot, teleports: List<TeleportDefinition>): Set<String> {
+    fun usable(bot: Bot, teleports: List<TeleportDefinition>, bank: BankItems? = null): Set<String> {
         if (teleports.isEmpty() || bot.status.isTeleBlocked()) {
             return emptySet()
         }
-        val charges = charges(bot)
+        val charges = charges(bot, bank)
         val usable = HashSet<String>()
         for (teleport in teleports) {
             val can = when (teleport.kind) {
-                TeleportKind.SPELL -> canCast(bot, teleport.key)
+                TeleportKind.SPELL -> canCast(bot, teleport.key, bank)
                 TeleportKind.JEWELLERY -> (charges[teleport.key] ?: 0) > 0
                 TeleportKind.HOME -> true
             }
@@ -58,16 +63,23 @@ object TeleportAvailability {
     /**
      * Determines if a bot can cast a teleport spell.
      */
-    private fun canCast(bot: Bot, key: String?): Boolean {
+    private fun canCast(bot: Bot, key: String?, bank: BankItems?): Boolean {
         val spell = TeleportSpell.named(key) ?: return false
-        return bot.spellbook == spell.style.spellbook && cost(bot, spell) is SpellCost.Castable
+        return bot.spellbook == spell.style.spellbook && cost(bot, spell, bank) is SpellCost.Castable
     }
 
     /**
      * Works out what casting a teleport spell takes from a bot, with the game's own rules but without telling it anything
-     * and without the free casting of beta mode.
+     * and without the free casting of beta mode. With the items of its [bank], they are used after the inventory, as if
+     * they had been withdrawn.
      */
-    private fun cost(bot: Bot, spell: TeleportSpell): SpellCost = Magic.spellCost(bot, spell.level, spell.requirements)
+    private fun cost(bot: Bot, spell: TeleportSpell, bank: BankItems?): SpellCost =
+        if (bank != null) {
+            Magic.spellCost(bot.magic.level, bot.inventory + bank.items, { bot.equipment.contains(it) },
+                            bot.equipment.weapon?.id, spell.level, spell.requirements)
+        } else {
+            Magic.spellCost(bot, spell.level, spell.requirements)
+        }
 
     /**
      * Finds what using a teleport uses up for a bot. Must be called on the game thread, because it reads the bot as it is.
@@ -78,12 +90,14 @@ object TeleportAvailability {
      *
      * @param bot The bot.
      * @param teleport The teleport.
+     * @param bank The runes in the bank of the bot, which count too after those in its inventory, or `null` for what it
+     * carries only.
      * @return What it uses up, which is nothing for a spell that the bot can't cast.
      */
-    fun spend(bot: Bot, teleport: TeleportDefinition): Spend = when (teleport.kind) {
+    fun spend(bot: Bot, teleport: TeleportDefinition, bank: BankItems? = null): Spend = when (teleport.kind) {
         TeleportKind.SPELL -> {
             val spell = TeleportSpell.named(teleport.key)
-            val cost = spell?.let { cost(bot, it) } as? SpellCost.Castable
+            val cost = spell?.let { cost(bot, it, bank) } as? SpellCost.Castable
             if (cost == null) Spend.NONE else {
                 val items = HashMap<Int, Int>()
                 cost.items.forEach { items.merge(it.id, it.amount, Int::plus) }
@@ -101,14 +115,17 @@ object TeleportAvailability {
      * the bot as it is.
      *
      * @param bot The bot.
+     * @param bank The jewellery in the bank of the bot, which counts too, or `null` for what it carries only.
      * @return The charges, keyed by the name of the jewellery, for the jewellery that has any.
      */
-    fun charges(bot: Bot): Map<String, Int> {
+    fun charges(bot: Bot, bank: BankItems? = null): Map<String, Int> {
         val charges = HashMap<String, Int>()
         for (jewellery in TeleportJewellery.entries) {
+            // Counted as a long, because a bank may hold enough pieces to overflow an int.
             val total = jewellery.items.sumOf { id ->
-                (bot.inventory.computeAmountForId(id) + bot.equipment.computeAmountForId(id)) * jewellery.charges(id)
-            }
+                val banked = bank?.amount(id)?.toLong() ?: 0L
+                (bot.inventory.computeAmountForId(id) + bot.equipment.computeAmountForId(id) + banked) * jewellery.charges(id)
+            }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
             if (total > 0) {
                 charges[jewellery.name] = total
             }

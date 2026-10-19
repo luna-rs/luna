@@ -3,6 +3,8 @@ package api.bot.action
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
 import io.luna.game.model.mob.bot.Bot
+import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.walk.BankWithdrawal
 import api.bot.webwalk.walk.WebWalkResult
 import api.bot.webwalk.walk.WebWalker
 import api.bot.zone.HomeTravelStrategy
@@ -10,7 +12,6 @@ import api.bot.zone.SubZone
 import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import api.predef.*
-import engine.bank.Banking
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.skill.magic.Magic.teleport
 import io.luna.Luna
@@ -302,9 +303,10 @@ class BotActionHandler(val bot: Bot) {
      * the web-walker can't get the bot there.
      *
      * @param zone The zone to travel to.
+     * @param bank The most of the bank that the web-walker may withdraw for the trip, see [webWalkTo].
      * @return `true` if the bot reached or was already inside [zone], otherwise `false`.
      */
-    suspend fun travelTo(zone: Zone): Boolean {
+    suspend fun travelTo(zone: Zone, bank: BankAccess = BankAccess.ALL): Boolean {
         val stateBefore = bot.reflex.isDisableCombatReflex
         try {
             bot.reflex.isDisableCombatReflex = true
@@ -339,7 +341,7 @@ class BotActionHandler(val bot: Bot) {
             }
             val dest = zone.anchor
             // Let the web-walker plan the cheapest trip first, which covers walking, doors, ladders and teleports.
-            if (webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || bot.isViewableFrom(dest)) {
+            if (webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS, bank = bank) || bot.isViewableFrom(dest)) {
                 return true
             }
             for (strategy in zone.travel) {
@@ -386,9 +388,10 @@ class BotActionHandler(val bot: Bot) {
      * the inside anchor and succeeds if it gets there or the bot's sub-zone updates during movement.
      *
      * @param zone The sub-zone to travel into.
+     * @param bank The most of the bank that the web-walker may withdraw for the trip, see [webWalkTo].
      * @return `true` if the bot successfully reaches or enters [zone], otherwise `false`.
      */
-    suspend fun travelTo(zone: SubZone): Boolean {
+    suspend fun travelTo(zone: SubZone, bank: BankAccess = BankAccess.ALL): Boolean {
         suspend fun defaultTravelTo(): Boolean {
             val stateBefore = bot.reflex.isDisableCombatReflex
             try {
@@ -419,14 +422,14 @@ class BotActionHandler(val bot: Bot) {
                 }
 
                 // Then, try and travel to the parent zone.
-                if (bot.zone != parent && !travelTo(parent)) {
+                if (bot.zone != parent && !travelTo(parent, bank)) {
                     bot.log("Could not travel to parent {$parent} of $zone.")
                     return false
                 }
 
                 // Travel to the outside anchor from the parent zone, if available.
                 if (outside != null) {
-                    if (!webWalkTo(outside, attempts = WEB_WALK_ATTEMPTS)) {
+                    if (!webWalkTo(outside, attempts = WEB_WALK_ATTEMPTS, bank = bank)) {
                         bot.log("Could not travel to $zone outside anchor.")
                         return false
                     }
@@ -439,12 +442,12 @@ class BotActionHandler(val bot: Bot) {
 
                     // Try and path to the inside anchor if the transition did not update sub-zone state immediately.
                     if (zone !in bot.subZones) {
-                        webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS)
+                        webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS, bank = bank)
                     }
                     return zone in bot.subZones
                 }
                 // Sub-zone has no transitions, walk directly to the inside anchor.
-                return webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS) || zone in bot.subZones
+                return webWalkTo(zone, attempts = WEB_WALK_ATTEMPTS, bank = bank) || zone in bot.subZones
             } finally {
                 bot.reflex.isDisableCombatReflex = stateBefore
             }
@@ -466,18 +469,21 @@ class BotActionHandler(val bot: Bot) {
      * ```
      *
      * The web-walker plans the cheapest trip for what the bot carries and can do right now, and takes it through doors,
-     * gates, up and down ladders and stairs, and by teleport. [travelTo] walks with it too, but it also leaves the wilderness
-     * first and falls back to paying for a zone teleport, which this never does. Use [webWalk] to learn why a walk failed,
-     * which is also in the log of the bot.
+     * gates, up and down ladders and stairs, and by teleport. The coins, runes and teleport jewellery in its bank count too:
+     * the bot may stop at the nearest bank first to withdraw them, when that makes the trip cheaper (see
+     * [WebWalker.planTrip]). [travelTo] walks with it too, but it also leaves the wilderness first and falls back to paying
+     * for a zone teleport, which this never does. Use [webWalk] to learn why a walk failed, which is also in the log of the
+     * bot.
      *
      * @param dest Where to go.
      * @param radius How close to [dest], in tiles on the same plane, is close enough. The default is the exact tile, which
      * fails if the tile can't be stood on.
      * @param attempts How many times to try, planning again each time. The default is to fail fast.
+     * @param bank The most of the bank that the trip may withdraw. [BankAccess.NONE] never goes to the bank.
      * @return `true` if the bot is within [radius] of [dest].
      */
-    suspend fun webWalkTo(dest: Position, radius: Int = 0, attempts: Int = 1): Boolean =
-        webWalk(dest, radius, attempts).success
+    suspend fun webWalkTo(dest: Position, radius: Int = 0, attempts: Int = 1, bank: BankAccess = BankAccess.ALL): Boolean =
+        webWalk(dest, radius, attempts, bank).success
 
     /**
      * Walks this bot to the anchor of a zone with the web-walker. See [webWalkTo].
@@ -486,10 +492,12 @@ class BotActionHandler(val bot: Bot) {
      * @param radius How close to the anchor, in tiles, is close enough. The default is [WEB_WALK_AREA_RADIUS], because the
      * anchor of a zone is a place in it and not a tile that has to be stood on.
      * @param attempts How many times to try, planning again each time.
+     * @param bank The most of the bank that the trip may withdraw.
      * @return `true` if the bot is within [radius] of the anchor.
      */
-    suspend fun webWalkTo(zone: Zone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1): Boolean =
-        webWalkTo(zone.anchor, radius, attempts)
+    suspend fun webWalkTo(zone: Zone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1,
+                          bank: BankAccess = BankAccess.ALL): Boolean =
+        webWalkTo(zone.anchor, radius, attempts, bank)
 
     /**
      * Walks this bot to the inside anchor of a sub-zone with the web-walker. See [webWalkTo].
@@ -500,10 +508,12 @@ class BotActionHandler(val bot: Bot) {
      * @param zone The sub-zone to go to.
      * @param radius How close to the inside anchor, in tiles, is close enough. The default is [WEB_WALK_AREA_RADIUS].
      * @param attempts How many times to try, planning again each time.
+     * @param bank The most of the bank that the trip may withdraw.
      * @return `true` if the bot is within [radius] of the inside anchor.
      */
-    suspend fun webWalkTo(zone: SubZone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1): Boolean =
-        webWalkTo(zone.inside, radius, attempts)
+    suspend fun webWalkTo(zone: SubZone, radius: Int = WEB_WALK_AREA_RADIUS, attempts: Int = 1,
+                          bank: BankAccess = BankAccess.ALL): Boolean =
+        webWalkTo(zone.inside, radius, attempts, bank)
 
     /**
      * Walks this bot to a position with the web-walker, like [webWalkTo], but returns how it went and not only whether it
@@ -512,10 +522,11 @@ class BotActionHandler(val bot: Bot) {
      * @param dest Where to go.
      * @param radius How close to [dest], in tiles on the same plane, is close enough.
      * @param attempts How many times to try, planning again each time.
-     * @return The result, with the trip that was planned, how far it got, and why it stopped.
+     * @param bank The most of the bank that the trip may withdraw.
+     * @return The result, with the trip that was planned, how far it got, why it stopped, and what it withdrew.
      */
-    suspend fun webWalk(dest: Position, radius: Int = 0, attempts: Int = 1): WebWalkResult =
-        WebWalker.webWalk(bot, dest, radius, attempts)
+    suspend fun webWalk(dest: Position, radius: Int = 0, attempts: Int = 1, bank: BankAccess = BankAccess.ALL): WebWalkResult =
+        WebWalker.webWalk(bot, dest, radius, attempts, bank)
 
     /**
      * Walks this bot to the nearest bank with the web-walker, in one call from a script:
@@ -534,7 +545,7 @@ class BotActionHandler(val bot: Bot) {
      */
     suspend fun webWalkToNearestBank(radius: Int = 0, attempts: Int = 1): GameObject? {
         val bank = WebWalker.webWalkToNearestBank(bot, radius, attempts).takeIf { it.success }?.bank ?: return null
-        return world.locator.findObjectsOnTile(bank.booth) { it.id in Banking.bankingObjects }.firstOrNull()
+        return BankWithdrawal.booth(bank)
     }
 
     companion object {
