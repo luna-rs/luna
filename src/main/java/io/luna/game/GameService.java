@@ -399,6 +399,15 @@ public final class GameService extends AbstractScheduledService {
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
         runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
 
+        // Close windows before the save, so items held in them (trade offers) are back in the inventory.
+        for (Player player : world.getPlayers()) {
+            try {
+                player.getOverlays().closeWindows();
+            } catch (Exception e) {
+                logger.error("Issue closing {}'s windows during shutdown.", player.getUsername(), e);
+            }
+        }
+
         // Save all players and wait for it to complete.
         world.getPersistenceService().saveAll(true).join();
 
