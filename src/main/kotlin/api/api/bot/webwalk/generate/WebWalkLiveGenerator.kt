@@ -828,7 +828,8 @@ object WebWalkGenerationRunner {
     fun run(check: Boolean) {
         val gathered = gather()
         if (gathered == null) {
-            System.exit(1)
+            // Not on the game thread, which the shutdown hook needs for the graceful shutdown.
+            Thread({ System.exit(1) }, "WebWalkGeneratorThread").start()
             return
         }
         Thread({ System.exit(if (finish(gathered, check)) 0 else 1) }, "WebWalkGeneratorThread").start()

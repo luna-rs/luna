@@ -60,6 +60,8 @@ public final class Luna {
             // Configure Log4j2 before obtaining the logger instance.
             System.setProperty("log4j2.configurationFactory", "io.luna.util.logging.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
+            // LunaServer's shutdown hook stops Log4j after saving; Log4j's own hook would stop logging too early.
+            System.setProperty("log4j2.shutdownHookEnabled", "false");
             System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
 
@@ -79,6 +81,7 @@ public final class Luna {
             context.getServer().init();
         } catch (Exception e) {
             logger.fatal("Luna could not be started.", e);
+            LogManager.shutdown();
             System.exit(1);
         }
     }
