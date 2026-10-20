@@ -1,21 +1,28 @@
 package engine.obj
 
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
 import engine.obj.TrapdoorLanding.Companion.BELOW
 import engine.obj.TrapdoorLanding.Companion.byTrapdoor
 import engine.obj.TrapdoorLanding.Companion.floorsDown
 import engine.obj.TrapdoorLanding.Companion.tile
+import game.obj.doors.DoorType
 import game.player.Sound
+import game.skill.Skills
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Direction
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.overlay.WalkableInterface
+import io.luna.game.model.mob.varp.Varbit
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
@@ -73,6 +80,56 @@ val FADE_IN = 1378
 val RAT_PITS = byTrapdoor(BELOW, Position(3018, 3232) to tile(2962, 9650), Position(3267, 3400) to tile(2894, 5097))
 
 /**
+ * The H.A.M. Hideout trapdoor. It shows each player closed (5490) or open (5491) by [HAM_TRAPDOOR_VARBIT].
+ */
+val HAM_TRAPDOOR = 5492
+
+/**
+ * The varbit that shows [HAM_TRAPDOOR] open.
+ */
+val HAM_TRAPDOOR_VARBIT = 235
+
+/**
+ * Where [HAM_TRAPDOOR] leads: the tile the ladder back up is climbed from.
+ */
+val HAM_HIDEOUT = Position(3148, 9653)
+
+/**
+ * A lockpick, which makes picking [HAM_TRAPDOOR]'s lock more likely to work.
+ */
+val LOCKPICK = 1523
+
+/**
+ * Picking a lock.
+ */
+val PICK_LOCK_ANIMATION = Animation(537)
+
+/**
+ * The chance of picking [HAM_TRAPDOOR]'s lock by hand, 4% at level 1 and 98% at level 99.
+ */
+val HAM_TRAPDOOR_CHANCE = 10 to 250
+
+/**
+ * The chance of picking [HAM_TRAPDOOR]'s lock with a [LOCKPICK], 24% at level 1 and 99% at level 99.
+ */
+val HAM_TRAPDOOR_LOCKPICK_CHANCE = 61 to 253
+
+/**
+ * The Thieving experience for picking [HAM_TRAPDOOR]'s lock.
+ */
+val HAM_TRAPDOOR_XP = 3.8
+
+/**
+ * The Thieving experience a failed attempt at [HAM_TRAPDOOR]'s lock sometimes gives.
+ */
+val HAM_TRAPDOOR_FAIL_XP = 1.0
+
+/**
+ * The chance of a failed attempt at [HAM_TRAPDOOR]'s lock giving [HAM_TRAPDOOR_FAIL_XP].
+ */
+val HAM_TRAPDOOR_FAIL_XP_CHANCE = 1 of 3
+
+/**
  * The objects [change] replaced, by position and type, or `null` where there wasn't one.
  */
 val replaced = HashMap<Pair<Position, ObjectType>, GameObject?>()
@@ -81,6 +138,16 @@ val replaced = HashMap<Pair<Position, ObjectType>, GameObject?>()
  * How many times [change] has changed each position and type.
  */
 val changes = HashMap<Pair<Position, ObjectType>, Int>()
+
+/**
+ * Whether the player has [HAM_TRAPDOOR] open.
+ */
+var Player.hamTrapdoorOpen by Attr.boolean()
+
+/**
+ * How many times the player has opened [HAM_TRAPDOOR], so a timer can tell if it has been opened again since.
+ */
+var Player.hamTrapdoorOpenings by Attr.int()
 
 /**
  * Puts [id] on [position] for [ticks], or removes the [type] of object there if [id] is `null`. After that, the object
@@ -219,6 +286,50 @@ fun close(plr: Player, trapdoor: GameObject, closed: Int) {
     plr.sendMessage("You close the trapdoor.")
     plr.playSound(Sound.DOOR_CLOSE)
     change(trapdoor, closed, TRAPDOOR_TICKS)
+}
+
+/**
+ * Shows [plr] [HAM_TRAPDOOR] open or closed. Like a door, an opened one closes again by itself after
+ * [DoorType.DEFAULT_DURATION] ticks, unless it has been closed or opened again since.
+ */
+fun showHamTrapdoor(plr: Player, open: Boolean) {
+    plr.hamTrapdoorOpen = open
+    plr.sendVarbit(Varbit(HAM_TRAPDOOR_VARBIT, if (open) 1 else 0))
+    if (open) {
+        val opening = ++plr.hamTrapdoorOpenings
+        world.scheduleOnce(DoorType.DEFAULT_DURATION) {
+            if (plr.state == EntityState.ACTIVE && plr.hamTrapdoorOpen && plr.hamTrapdoorOpenings == opening) {
+                showHamTrapdoor(plr, false)
+            }
+        }
+    }
+}
+
+/**
+ * Has [plr] try to pick [HAM_TRAPDOOR]'s lock, which opens it for them if they manage to.
+ */
+fun pickHamTrapdoor(plr: Player) {
+    delayed(plr, 2, {
+        plr.sendMessage("You attempt to pick the lock on the trapdoor.")
+        plr.animation(PICK_LOCK_ANIMATION)
+        plr.playSound(Sound.LOCKED)
+    }) {
+        val chance = if (plr.inventory.contains(LOCKPICK)) HAM_TRAPDOOR_LOCKPICK_CHANCE else HAM_TRAPDOOR_CHANCE
+        if (Skills.success(chance, plr.thieving.level.coerceAtMost(99))) {
+            plr.sendMessage("You manage to pick the lock.")
+            plr.playSound(Sound.PICK_LOCK)
+            plr.thieving.addExperience(HAM_TRAPDOOR_XP)
+            plr.sendMessage("The trapdoor opens...")
+            showHamTrapdoor(plr, true)
+        } else {
+            plr.sendMessage("You fail to pick the lock.")
+            plr.sendMessage("Your fingers go numb from fumbling with the lock.")
+            plr.thieving.level = maxOf(1, plr.thieving.level - 1)
+            if (rand(HAM_TRAPDOOR_FAIL_XP_CHANCE)) {
+                plr.thieving.addExperience(HAM_TRAPDOOR_FAIL_XP)
+            }
+        }
+    }
 }
 
 on(ServerLaunchEvent::class) {
@@ -360,4 +471,26 @@ object1(2444) {
     plr.playSound(Sound.DOOR_OPEN)
     change(gameObject, 2445, 5)
     climbDown(plr, Position(2491, 9864), message = null, bend = false, delay = 2)
+}
+
+// Lumbridge, the H.A.M. Hideout. Its lock has to be picked, and it only opens for whoever picked it.
+object1(HAM_TRAPDOOR) {
+    if (plr.hamTrapdoorOpen) {
+        climbDown(plr, HAM_HIDEOUT)
+    } else {
+        plr.sendMessage("This trapdoor is locked.")
+        plr.playSound(Sound.LOCKED)
+    }
+}
+object2(HAM_TRAPDOOR) {
+    if (plr.hamTrapdoorOpen) {
+        plr.sendMessage("You close the trapdoor.")
+        plr.playSound(Sound.DOOR_CLOSE)
+        showHamTrapdoor(plr, false)
+    }
+}
+object5(HAM_TRAPDOOR) {
+    if (!plr.hamTrapdoorOpen) {
+        pickHamTrapdoor(plr)
+    }
 }

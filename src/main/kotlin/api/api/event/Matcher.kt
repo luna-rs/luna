@@ -94,7 +94,9 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
                          ItemMatcher(ItemFifthClickEvent::class),
                          ObjectMatcher(ObjectFirstClickEvent::class),
                          ObjectMatcher(ObjectSecondClickEvent::class),
-                         ObjectMatcher(ObjectThirdClickEvent::class))
+                         ObjectMatcher(ObjectThirdClickEvent::class),
+                         ObjectMatcher(ObjectFourthClickEvent::class),
+                         ObjectMatcher(ObjectFifthClickEvent::class))
                 .associateBy { it.eventType }
 
             // Add all the matcher's listeners.
