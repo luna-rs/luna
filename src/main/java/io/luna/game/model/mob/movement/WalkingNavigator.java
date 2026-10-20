@@ -8,7 +8,6 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -570,16 +569,14 @@ public class WalkingNavigator {
     }
 
     /**
-     * Selects the default pathfinder for this mob: {@link PathfinderType#BOT} for bots, {@link PathfinderType#PLAYER}
-     * for other players and {@link PathfinderType#NPC} for NPCs.
+     * Selects the default pathfinder for this mob: {@link PathfinderType#PLAYER} for players and bots, and
+     * {@link PathfinderType#NPC} for NPCs.
      *
      * @return The default pathfinder for this mob.
      */
     GamePathfinder<Position> getDefaultPathfinder() {
         PathfinderType type;
-        if (mob instanceof Bot) {
-            type = PathfinderType.BOT;
-        } else if (mob instanceof Player) {
+        if (mob instanceof Player) {
             type = PathfinderType.PLAYER;
         } else {
             type = PathfinderType.NPC;

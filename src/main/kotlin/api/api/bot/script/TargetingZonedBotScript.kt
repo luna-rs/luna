@@ -16,7 +16,6 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationRequest
-import io.luna.game.model.mob.movement.PathfinderType
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -304,7 +303,6 @@ abstract class TargetingZonedBotScript<E : Entity>(
             .async(true)
             .continuous(target is Npc)
             .policy(InteractionPolicy.STANDARD_SIZE)
-            .pathfinder(PathfinderType.BOT)
             .target(destination)
             .build())
         try {

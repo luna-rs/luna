@@ -9,7 +9,6 @@ import io.luna.game.model.path.PathResultType;
 import io.luna.game.model.path.Pathfinders;
 
 import java.util.ArrayDeque;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A pathfinder for mobs of any size that finds routes with a {@link RouteFinder}.
@@ -59,12 +58,6 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
     private final RouteStrategy strategy;
 
     /**
-     * The chance, from {@code 0.0} to {@code 1.0}, that a search takes the route of the game, which is the
-     * {@link RouteStyle#STANDARD} one. The rest of the time the route is of a different shape.
-     */
-    private final double standardChance;
-
-    /**
      * Creates a new {@link RoutePathfinder} that always takes the routes of the game.
      *
      * @param collisionManager The collision manager.
@@ -73,26 +66,10 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
      * @param strategy The rule for moving onto a tile.
      */
     public RoutePathfinder(CollisionManager collisionManager, int size, int extraFlag, RouteStrategy strategy) {
-        this(collisionManager, size, extraFlag, strategy, 1.0);
-    }
-
-    /**
-     * Creates a new {@link RoutePathfinder}.
-     *
-     * @param collisionManager The collision manager.
-     * @param size The width and length of the mob, in tiles.
-     * @param extraFlag The flags that also stop a step, such as {@link CollisionFlag#BLOCK_NPCS}.
-     * @param strategy The rule for moving onto a tile.
-     * @param standardChance The chance, from {@code 0.0} to {@code 1.0}, that a search takes the route of the game
-     * instead of one of a different shape.
-     */
-    public RoutePathfinder(CollisionManager collisionManager, int size, int extraFlag, RouteStrategy strategy,
-                           double standardChance) {
         super(collisionManager);
         this.size = size;
         this.extraFlag = extraFlag;
         this.strategy = strategy;
-        this.standardChance = standardChance;
     }
 
     @Override
@@ -114,7 +91,7 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
         }
 
         Route route = FINDERS.get().find(collisionManager.view(true), origin.getZ(), origin.getX(), origin.getY(),
-                target.getX(), target.getY(), size, extraFlag, strategy, true, MAX_WAYPOINTS, chooseStyle());
+                target.getX(), target.getY(), size, extraFlag, strategy, true, MAX_WAYPOINTS);
         if (!route.isSuccess() || route.getWaypoints().isEmpty()) {
             // Either nothing was found, or the closest tile that could be reached is the one the mob is on.
             return failed();
@@ -122,21 +99,6 @@ public final class RoutePathfinder extends GamePathfinder<Position> {
 
         PathResultType type = route.isAlternative() ? PathResultType.PARTIAL : PathResultType.COMPLETE;
         return new PathResult<>(type, new ArrayDeque<>(route.getWaypoints()));
-    }
-
-    /**
-     * Picks the shape of the route for a search: the route of the game with the chance of {@link #standardChance}, and
-     * otherwise either a route that turns early or a random one.
-     */
-    private RouteStyle chooseStyle() {
-        if (standardChance >= 1.0) {
-            return RouteStyle.STANDARD;
-        }
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        if (random.nextDouble() < standardChance) {
-            return RouteStyle.STANDARD;
-        }
-        return random.nextBoolean() ? RouteStyle.DIAGONAL_FIRST : RouteStyle.RANDOM;
     }
 
     /**
