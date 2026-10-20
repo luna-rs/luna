@@ -6,10 +6,11 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
-import com.google.common.math.IntMath
+import com.google.common.math.LongMath
 import com.google.common.primitives.Ints
 import game.content.partyRoom.PartyRoom
 import game.content.partyRoom.PartyRoomOption
+import engine.bot.coordinator.MinigameCoordinator
 import game.skill.cooking.cookFood.Food
 import io.luna.Luna
 import io.luna.game.model.EntityState
@@ -19,6 +20,7 @@ import io.luna.game.model.area.Area
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -39,13 +41,16 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
     /**
      * Handles the countdown.
+     *
+     * @author lare96
      */
-    class DropPartyCountdown(val balloonItems: MutableList<Item>) : Task(true, 2) {
-        private val secondsNeeded = Ints.saturatedCast(computeCountdownTime().toSeconds())
+    class DropPartyCountdown(val balloonItems: MutableList<Item>, val countdown: Duration) : Task(false, 1) {
+        private val ticksNeeded = Ints.saturatedCast((countdown.toMillis() + 599) / 600)
 
         override fun execute() {
-            secondsLeft = secondsNeeded - executionCounter;
-            if (executionCounter >= secondsNeeded) {
+            val ticksLeft = (ticksNeeded - executionCounter - 1).coerceAtLeast(0)
+            secondsLeft = (ticksLeft * 600 + 999) / 1000
+            if (ticksLeft == 0) {
                 secondsLeft = 0
                 world.schedule(DropPartyTask(balloonItems))
                 cancel()
@@ -55,6 +60,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
     /**
      * Handles the dropping of balloons.
+     *
+     * @author lare96
      */
     class DropPartyTask(val balloonItems: MutableList<Item>) : Task(true, BALLOON_DROP_FREQUENCY.toTicks()) {
 
@@ -125,6 +132,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
     /**
      * Represents the chest in the party room.
+     *
+     * @author lare96
      */
     class DropPartyChest {
 
@@ -142,8 +151,10 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
     /**
      * A data class representing a balloon object.
+     *
+     * @author lare96
      */
-    data class BalloonObject(private val pos: Position, val item: Item) :
+    data class BalloonObject(private val pos: Position, val item: Item, val partyId: Long = currentPartyId) :
         GameObject(ctx,
                    BALLOON_IDS.random(),
                    pos,
@@ -151,10 +162,21 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                    ObjectDirection.SOUTH,
                    ChunkUpdatableView.globalView(),
                    true) {
+        /**
+         * The exact native reward created for the claimant, including its ownership view.
+         */
+        var reward: GroundItem? = null
+            private set
+
         var stompedBy: Player? = null
 
         override fun onActive() {
+            activeBalloons.add(this)
             startDespawnTask()
+        }
+
+        override fun onInactive() {
+            activeBalloons.remove(this)
         }
 
         fun stomp(plr: Player) {
@@ -165,7 +187,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 world.scheduleOnce(1) {
                     LocalGraphic(ctx, 92, 0, 0, position, ChunkUpdatableView.globalView()).display()
                     if (world.removeObject(this)) {
-                        world.addItem(item, position, plr)
+                        reward = spawnReward(item, position, plr)
                     }
                 }
             } else {
@@ -183,6 +205,19 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 }
             }
         }
+    }
+
+    /**
+     * Resolves the exact ground entity produced by the native drop, including a replacement stack created by merging.
+     * Existing same-tile drops and other players' ownership views cannot be mistaken for a new reward.
+     */
+    internal fun spawnReward(item: Item, position: Position, plr: Player): GroundItem? {
+        val previous = world.locator.findItems(position, 0) { true }
+        val spawned = world.addItem(item, position, plr)
+        if (spawned.state == EntityState.ACTIVE) return spawned
+        return world.locator.findItems(position, 0) {
+            it.id == item.id && it.view == spawned.view && it !in previous
+        }.singleOrNull()
     }
 
     /**
@@ -239,6 +274,75 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      */
     val chest = DropPartyChest()
 
+    private val activeBalloons = mutableSetOf<BalloonObject>()
+
+    /**
+     * Identifies the current runtime party; restored attendance cannot accidentally join a different party.
+     */
+    var currentPartyId = 0L
+        private set
+    /**
+     * Funded value captured before the chest is cleared, used to determine the native countdown.
+     */
+    var currentPartyValue = 0L
+        private set
+    /**
+     * Maximum runtime lifetime including countdown, balloon spawning patience and final balloon expiry.
+     */
+    var currentPartyDeadline = 0L
+        private set
+
+    /**
+     * Includes balloons remaining on the floor after the lever becomes available again.
+     */
+    fun isCurrentParty(id: Long): Boolean = id != 0L && id == currentPartyId &&
+        System.currentTimeMillis() < currentPartyDeadline &&
+        (PartyRoom.option === this || activeBalloons.any { it.partyId == id })
+
+    /**
+     * Returns only visible, unclaimed world objects belonging to this runtime party.
+     */
+    fun availableBalloons(id: Long): List<BalloonObject> = activeBalloons.filter {
+        it.partyId == id && it.state == EntityState.ACTIVE && it.stompedBy == null
+    }
+
+    /**
+     * Stages a donation through the same checked inventory transfer used by the chest interface.
+     */
+    fun stageDeposit(plr: Player, id: Int, index: Int, amount: Int): Boolean {
+        if (!plr.overlays.has(DropPartyInterface::class.java) || amount <= 0 ||
+            chest.locked && plr.rights < RIGHTS_ADMIN) return false
+        if (index !in 0 until plr.inventory.capacity()) return false
+        val held = plr.inventory[index] ?: return false
+        if (held.id != id || !held.itemDef.isTradeable) return false
+        val count = minOf(amount, plr.inventory.computeAmountForId(id),
+            if (held.itemDef.isStackable) Int.MAX_VALUE else 8)
+        val transfer = held.withAmount(count)
+        if (!plr.depositItems.hasSpaceFor(transfer) || !plr.inventory.remove(transfer)) return false
+        if (!plr.depositItems.add(transfer)) {
+            check(plr.inventory.add(transfer)) { "Could not restore rejected party deposit." }
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Transfers only accepted staged items; a full or locked chest leaves the remaining items with the player.
+     */
+    fun confirmDeposit(plr: Player): Boolean {
+        if (!plr.overlays.has(DropPartyInterface::class.java) ||
+            chest.locked && plr.rights < RIGHTS_ADMIN) return false
+        var moved = false
+        for (item in plr.depositItems.filterNotNull().toList()) {
+            if (!item.itemDef.isTradeable || !chest.items.hasSpaceFor(item)) continue
+            if (chest.items.add(item)) {
+                check(plr.depositItems.remove(item)) { "Staged party deposit changed during confirmation." }
+                moved = true
+            }
+        }
+        return moved
+    }
+
     /**
      * How many seconds are left in the countdown.
      */
@@ -264,6 +368,18 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     }
 
     override fun execute(plr: Player) {
+        startParty()
+    }
+
+    /**
+     * Starts the same party lifecycle for a player lever pull or an automatic server start.
+     */
+    fun startParty() {
+        currentPartyValue = computeTotalCost()
+        val countdown = computeCountdownTime(currentPartyValue)
+        currentPartyId = maxOf(System.currentTimeMillis(), currentPartyId + 1)
+        currentPartyDeadline = System.currentTimeMillis() + countdown.toMillis() +
+            PATIENCE_THRESHOLD.plusMinutes(10).toMillis()
         // Add all user-placed items.
         val balloonItems = mutableListOf<Item>()
         balloonItems.addAll(chest.items.filterNotNull())
@@ -274,19 +390,30 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
         // Start countdown, clear chest.
         chest.items.clear()
-        world.schedule(DropPartyCountdown(balloonItems))
+        secondsLeft = Ints.saturatedCast(countdown.seconds)
+        world.schedule(DropPartyCountdown(balloonItems, countdown))
+        val attendingParty = currentPartyId
+        world.schedule(object : Task(true, 5) {
+            override fun execute() {
+                if (!isCurrentParty(attendingParty)) {
+                    cancel()
+                    return
+                }
+                MinigameCoordinator.onPartyStarted()
+            }
+        })
     }
 
     /**
      * Compute the total cost of all items in the chest.
      */
-    private fun computeTotalCost(): Int {
-        var totalCost = 0
+    internal fun computeTotalCost(): Long {
+        var totalCost = 0L
         for (item in chest.items) {
             if (item == null) {
                 continue
             }
-            totalCost = IntMath.saturatedAdd(totalCost, item.itemDef.value * item.amount)
+            totalCost = LongMath.saturatedAdd(totalCost, item.itemDef.value.toLong().coerceAtLeast(0) * item.amount)
         }
         return totalCost
     }
@@ -294,12 +421,11 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Computes the total countdown time based on the cost.
      */
-    private fun computeCountdownTime(): Duration {
+    internal fun computeCountdownTime(totalCost: Long): Duration {
         val isBetaMode = Luna.settings().game().betaMode()
         if (isBetaMode) {
             return Duration.ofSeconds(10)
         }
-        var totalCost = computeTotalCost()
         return when {
             totalCost > 1_000_000_000 -> Duration.ofMinutes(60)
             totalCost > 500_000_000 -> Duration.ofMinutes(30)

@@ -1,0 +1,71 @@
+package engine.bot.coordinator
+
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
+import api.bot.script.BotScript
+import api.bot.script.DynamicBotScript
+import api.bot.Suspendable.delay
+import api.bot.zone.SubZone
+import api.predef.*
+import engine.controllers.Controllers.inWilderness
+import game.bot.scripts.DepositPartyRoomItemBotScript
+import game.bot.scripts.DropPartyBotScript
+import game.bot.scripts.PartyRoomDonations
+import game.bot.scripts.LogoutBotScript
+import game.bot.scripts.trading.TradeBotScript
+import game.content.partyRoom.dropParty.DropPartyOption
+import io.luna.game.model.EntityState
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivity
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Considers a donation before a bounded Party Room visit. Native parties invite every eligible bot, regardless of
+ * the host, personality or prize value; unsafe bots are reconsidered while that party remains active.
+ *
+ * @author lare96
+ */
+object MinigameCoordinator : ProgressiveCoordinator() {
+    private var Bot.attendedParty by Attr.long()
+    override val activity get() = BotActivity.MINIGAMES
+    override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot)
+    override fun nextScript(bot: Bot): BotScript {
+        val id = DropPartyOption.currentPartyId
+        if (DropPartyOption.isCurrentParty(id) && !bot.inventory.isFull) {
+            bot.attendedParty = id
+            return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
+        }
+        return object : DynamicBotScript(bot) {
+            override suspend fun run(): Boolean {
+                if (handler.travelTo(SubZone.PARTY_ROOM)) delay(30.seconds)
+                return true
+            }
+        }
+    }
+
+    /**
+     * Attendance never interrupts combat, trade windows, reflexes, death or a donation already in progress.
+     */
+    internal fun safeToAttend(bot: Bot): Boolean = bot.state == EntityState.ACTIVE &&
+        BotScript.ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness() &&
+        !bot.emotions.isNervousAboutHp && bot.reflex.activeReflex == null &&
+        !bot.overlays.hasWindow() && bot.dialogues == null && !bot.inventory.isFull &&
+        bot.scriptStack.current() !is DepositPartyRoomItemBotScript &&
+        bot.scriptStack.current() !is LogoutBotScript &&
+        bot.scriptStack.current() !is TradeBotScript
+
+    /**
+     * Invites bots once per runtime party, retrying those that are currently ineligible on later party ticks.
+     */
+    fun onPartyStarted() {
+        val id = DropPartyOption.currentPartyId
+        if (!DropPartyOption.isCurrentParty(id)) return
+        for (player in world.players) {
+            if (player !is Bot || player.attendedParty == id || !safeToAttend(player)) continue
+            if (player.scriptStack.current() is DropPartyBotScript) continue
+            player.attendedParty = id
+            player.scriptStack.pushHead(DropPartyBotScript(player, id, DropPartyOption.currentPartyDeadline))
+        }
+    }
+}

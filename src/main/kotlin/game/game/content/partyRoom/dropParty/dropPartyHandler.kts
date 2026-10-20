@@ -16,33 +16,10 @@ import io.luna.game.model.mob.overlay.NumberInput
  * Deposits an item into the party chest.
  */
 fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
-    if (DropPartyOption.chest.locked && plr.rights < RIGHTS_ADMIN) {
-        plr.sendMessage("Only staff members can deposit items right now.")
-        return
-    }
-    val def = itemDef(event.itemId)
-    var newAmount = amount
-    if (amount > 8 && !def.isStackable) {
-        newAmount = 8
-    }
-
-    if (!def.isTradeable) {
-        plr.sendMessage("Untradeable items cannot be deposited here.")
-        return
-    }
-    val invItem = plr.inventory[event.index] ?: return
-    val invAmt = plr.inventory.computeAmountForId(event.itemId)
-
-    val removeItem = invItem.withAmount(if (newAmount > invAmt) invAmt else newAmount)
-    if (!plr.depositItems.hasSpaceFor(removeItem)) {
-        plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
-        return
-    }
-    if (plr.inventory.remove(removeItem)) {
-        plr.depositItems.add(removeItem)
+    if (!DropPartyOption.stageDeposit(plr, event.itemId, event.index, amount)) {
+        plr.sendMessage("The selected items cannot be deposited into the party chest.")
     }
 }
-
 /**
  * Withdraws an item from the party chest.
  */
@@ -75,8 +52,7 @@ button(2246) {
         if (plr.depositItems.size() == 0) {
             plr.sendMessage("You do not have any items to deposit.")
         } else {
-            DropPartyOption.chest.items.addAll(plr.depositItems)
-            plr.depositItems.clear()
+            DropPartyOption.confirmDeposit(plr)
             for (otherPlr in world.players) {
                 if (DropPartyInterface::class in otherPlr.overlays) {
                     DropPartyOption.chest.items.updatePrimaryWidget(otherPlr)

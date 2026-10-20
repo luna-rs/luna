@@ -10,6 +10,14 @@ import io.luna.game.model.mob.overlay.InventoryOverlayInterface
  * @author lare96
  */
 class DropPartyInterface : InventoryOverlayInterface(2156, 5063) {
+    override fun onClose(plr: Player) {
+        for (item in plr.depositItems.filterNotNull().toList()) {
+            if (plr.inventory.hasSpaceFor(item) && plr.inventory.add(item)) {
+                check(plr.depositItems.remove(item)) { "Staged party items changed during return." }
+            }
+        }
+    }
+
     override fun onOpen(plr: Player) {
         plr.inventory.setSecondaryWidget(5064)
         plr.inventory.updateSecondaryWidget(plr)

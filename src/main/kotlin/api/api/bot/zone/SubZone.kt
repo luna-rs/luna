@@ -56,6 +56,12 @@ enum class SubZone(val inside: Position,
                           area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
 
     /**
+     * Native Party Room floor and balloon footprint, using Seers Village travel and banking fallback.
+     */
+    PARTY_ROOM(inside = Position(2736, 3475),
+                 area = SimpleBoxArea.of(2730, 3463, 2744, 3476), parent = { SEERS_VILLAGE }),
+
+    /**
      * Full Gnome course footprint, including the upper platforms used by native obstacles.
      */
     GNOME_STRONGHOLD_AGILITY(inside = Position(2474, 3437),
