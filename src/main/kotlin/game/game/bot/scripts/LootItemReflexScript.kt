@@ -20,7 +20,7 @@ import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
  *
  * This script is intentionally conservative. Bots only react to items that are personally wanted, valuable enough
  * compared to their current loot threshold, or part of their own death pile. If the bot has no free inventory space,
- * it may drop low-priority junk items to make room before attempting to loot.
+ * it may drop low-priority junk items to make room for loot that is not junk itself.
  *
  * The loot threshold is affected by combat level, personality, and emotions. Lower-level bots are more willing to
  * loot cheap items, intelligent bots are slightly more selective, dumb bots are slightly less selective, and greedy
@@ -77,7 +77,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     }
 
     override suspend fun run(): Boolean {
-        val spaceNeeded = valuableItems.size - bot.inventory.computeRemainingSize()
+        val spaceNeeded = valuableItems.count { it.id !in JUNK_ITEMS } - bot.inventory.computeRemainingSize()
         if (spaceNeeded > 0) {
             dropJunk(spaceNeeded)
             droppedJunk = true
@@ -138,8 +138,15 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             minimumLootValue *= rand().nextDouble(0.50, 0.75)
         }
 
+        // A full bot could only loot junk by dropping other junk. Junk is often wanted loot itself (bots want bones
+        // until 30 Prayer), so the dropped junk would be looted again on the next pass, forever.
+        val ignoreJunk = bot.inventory.isFull
+
         var found = false
         for (groundItem in bot.viewableItems) {
+            if (ignoreJunk && groundItem.id in JUNK_ITEMS) {
+                continue
+            }
             val item = groundItem.toItem()
 
             if (item.id == 995) {
