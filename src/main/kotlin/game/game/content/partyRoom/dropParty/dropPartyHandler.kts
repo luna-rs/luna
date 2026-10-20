@@ -21,20 +21,24 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
         plr.sendMessage("Only staff members can deposit items right now.")
         return
     }
-    val def = itemDef(event.itemId)
-    var newAmount = amount
-    if (amount > 8 && !def.isStackable) {
-        newAmount = 8
-    }
 
+    // Deposit-X runs once the amount is entered, and the slot can change before then.
+    val invItem = plr.inventory[event.index] ?: return
+    if (invItem.id != event.itemId || amount < 1) {
+        return
+    }
+    val def = invItem.itemDef
     if (!def.isTradeable) {
         plr.sendMessage("Untradeable items cannot be deposited here.")
         return
     }
-    val invItem = plr.inventory[event.index] ?: return
-    val invAmt = plr.inventory.computeAmountForId(event.itemId)
 
-    val removeItem = invItem.withAmount(if (newAmount > invAmt) invAmt else newAmount)
+    // remove() reports success even when it takes less than asked, so never ask for more than the inventory holds.
+    var newAmount = minOf(amount, plr.inventory.computeAmountForId(invItem.id))
+    if (newAmount > 8 && !def.isStackable) {
+        newAmount = 8
+    }
+    val removeItem = if (invItem.isDynamic) invItem else invItem.withAmount(newAmount)
     if (!plr.depositItems.hasSpaceFor(removeItem)) {
         plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
         return
