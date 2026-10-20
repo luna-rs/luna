@@ -9,6 +9,7 @@ import engine.obj.TrapdoorLanding.Companion.tile
 import game.player.Sound
 import game.skill.Skills
 import io.luna.game.action.impl.LockedAction
+import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
@@ -417,3 +418,5 @@ object5(HamTrapdoor.ID) {
         pickHamTrapdoor(plr)
     }
 }
+// The client keeps its varps across a relog, so one that logged out with the trapdoor open would still show it open.
+on(LoginEvent::class) { HamTrapdoor.show(plr, false) }
