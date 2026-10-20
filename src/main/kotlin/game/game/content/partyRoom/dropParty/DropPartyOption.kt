@@ -278,6 +278,19 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     }
 
     /**
+     * Moves the items [plr] offered but didn't accept back to their inventory. Items that don't fit stay offered.
+     */
+    fun returnOffers(plr: Player) {
+        val offered = plr.depositItems
+        for (index in 0 until offered.capacity()) {
+            val item = offered[index] ?: continue
+            if (plr.inventory.hasSpaceFor(item) && plr.inventory.add(item)) {
+                offered[index] = null
+            }
+        }
+    }
+
+    /**
      * Compute the total cost of all items in the chest.
      */
     private fun computeTotalCost(): Int {
