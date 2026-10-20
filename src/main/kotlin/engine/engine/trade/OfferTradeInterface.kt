@@ -115,8 +115,10 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     /**
      * Transfers items from the player's inventory into their trade offer.
      *
-     * Rejects untradeable items and limits the transfer to the available
-     * quantity. A successful transfer resets both players' acceptance states.
+     * Rejects untradeable items, including dynamic items such as a Barrows
+     * piece that has been worn in combat, and limits the transfer to the
+     * available quantity. A successful transfer resets both players'
+     * acceptance states.
      *
      * @param plr The player offering the items.
      * @param index The inventory slot containing the item.
@@ -126,13 +128,13 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         val inv = plr.inventory
         val item = inv.get(index) ?: return
 
-        if (!itemDef(item.id).isTradeable) {
+        if (item.isDynamic || !itemDef(item.id).isTradeable) {
             plr.sendMessage("This item cannot be traded.")
             return
         }
 
-        val addItem = reduceAmount(item, amount, inv)
-        if (inv.remove(index, addItem)) {
+        val addItem = reduceAmount(item, amount, inv) ?: return
+        if (inv.removeFromIndex(index, addItem)) {
             items.add(addItem)
             otherOffer.sendTradingWith(other)
             resetAccept(plr)
@@ -153,8 +155,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     fun remove(plr: Player, index: Int, amount: Int) {
         val item = items.get(index) ?: return
 
-        val removeItem = reduceAmount(item, amount, items)
-        if (items.remove(index, removeItem)) {
+        val removeItem = reduceAmount(item, amount, items) ?: return
+        if (items.removeFromIndex(index, removeItem)) {
             plr.inventory.add(removeItem)
             otherOffer.sendTradingWith(other)
             resetAccept(plr)
@@ -202,19 +204,23 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      *
      * For non-stackable items, the available quantity is calculated across
      * the container. A requested amount of `-1` selects all available items.
+     * Dynamic copies aren't counted, since [ItemContainer.removeFromIndex]
+     * never takes one for a plain item.
      *
      * @param item The item whose quantity is being adjusted.
      * @param reqAmt The requested quantity, or `-1` for all available.
      * @param container The container used to determine availability.
-     * @return An item with the adjusted quantity.
+     * @return An item with the adjusted quantity, or `null` if [reqAmt] is
+     * below 1 and not `-1`.
      */
-    private fun reduceAmount(item: Item, reqAmt: Int, container: ItemContainer): Item {
+    private fun reduceAmount(item: Item, reqAmt: Int, container: ItemContainer): Item? {
         val id = item.id
         val amount = item.amount
-        val hasAmount = if (itemDef(id).isStackable) amount else container.computeAmountForId(id)
+        val hasAmount = if (itemDef(id).isStackable) amount else container.computeNonDynamicAmountForId(id)
         return when {
             // Modify amount if there's less in than requested.
             reqAmt == -1 || reqAmt > hasAmount -> item.withAmount(hasAmount)
+            reqAmt < 1 -> null
             else -> item.withAmount(reqAmt)
         }
     }
