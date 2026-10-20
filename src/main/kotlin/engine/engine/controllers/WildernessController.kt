@@ -50,9 +50,7 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun move() {
-        val position = plr.position
-        var newLevel = if (position.y > 6400) position.y - 6400 else position.y
-        newLevel = ((newLevel - 3520) / 8) + 1
+        val newLevel = WildernessLocatableController.levelAt(plr.position)
         if (plr.wildernessLevel != newLevel) {
             plr.wildernessLevel = newLevel
             plr.sendText("@yel@Level: $newLevel", 199)

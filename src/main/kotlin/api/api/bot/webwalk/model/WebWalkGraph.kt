@@ -1,5 +1,6 @@
 package api.bot.webwalk.model
 
+import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
 
 /**
@@ -135,20 +136,7 @@ data class WebWalkNode(val id: String,
                        val position: Position,
                        val kind: NodeKind,
                        val tags: Set<String> = emptySet(),
-                       val wildernessLevel: Int = wildernessLevelOf(position)) {
-
-    companion object {
-
-        /**
-         * The wilderness level at a position, which is `0` outside the wilderness. This mirrors the area and the formula
-         * of `WildernessController`.
-         */
-        fun wildernessLevelOf(position: Position): Int {
-            val inWilderness = position.x in 2944..3392 && position.y in 3519..3966
-            return if (inWilderness) ((position.y - 3520) / 8) + 1 else 0
-        }
-    }
-}
+                       val wildernessLevel: Int = WildernessLocatableController.levelAt(position))
 
 /**
  * What the executor does to cross an edge, beyond walking to its start.
