@@ -444,6 +444,55 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Removes {@code item} starting at {@code index}, the slot a player picked.
+     * <p>
+     * Unlike {@link #remove(int, Item)}, this never removes a {@link DynamicItem} other than the one at {@code index}:
+     * <ul>
+     *   <li>If {@code item} or the item at {@code index} is dynamic, the slot is cleared only if it holds {@code item}
+     *       itself.</li>
+     *   <li>Otherwise the amount is taken from {@code index} first, then from the other non-dynamic slots with the same
+     *       id, in slot order after {@code index} and wrapping around to the start.</li>
+     * </ul>
+     * For a non-dynamic item, clamp the amount to {@link #computeNonDynamicAmountForId(int)} first.
+     *
+     * @param index The slot to remove from first.
+     * @param item The item to remove. Its id must match the item at {@code index}.
+     * @return {@code true} if any removal occurred, {@code false} if the slot doesn't match {@code item}.
+     */
+    public boolean removeFromIndex(int index, Item item) {
+        Item current = get(index);
+        if (current == null || current.getId() != item.getId() || item.getAmount() < 1) {
+            return false;
+        }
+        if (current.isDynamic() || item.isDynamic()) {
+            // By reference: a plain Item equals a DynamicItem with the same id and amount.
+            if (current != item) {
+                return false;
+            }
+            set(index, null);
+            return true;
+        }
+
+        int remaining = item.getAmount();
+        startBulkUpdate();
+        try {
+            for (int offset = 0; offset < capacity && remaining > 0; offset++) {
+                int nextIndex = (index + offset) % capacity;
+                Item next = get(nextIndex);
+                if (next == null || next.getId() != item.getId() || next.isDynamic()) {
+                    continue;
+                }
+                int removeAmount = Math.min(remaining, next.getAmount());
+                set(nextIndex, removeAmount == next.getAmount() ? null : next.addAmount(-removeAmount));
+                remaining -= removeAmount;
+            }
+        } finally {
+            finishBulkUpdate();
+        }
+        return true;
+    }
+
+    /**
      * Attempts to remove all items in {@code items}.
      * <p>
      * Null entries are skipped. Operation is wrapped in a bulk update for reduced event spam.
@@ -639,6 +688,24 @@ public class ItemContainer implements Iterable<Item> {
             }
         }
         return currentAmount;
+    }
+
+    /**
+     * Computes the total quantity of {@code id} held in slots that aren't {@link DynamicItem}s. This is the most
+     * {@link #removeFromIndex(int, Item)} can remove when it starts at a non-dynamic slot of {@code id}.
+     *
+     * @param id The item id to sum.
+     * @return The total non-dynamic quantity present, capped at {@link Integer#MAX_VALUE}.
+     */
+    public final int computeNonDynamicAmountForId(int id) {
+        long amount = 0;
+        for (int index = 0; index < capacity; index++) {
+            Item item = get(index);
+            if (item != null && item.getId() == id && !item.isDynamic()) {
+                amount += item.getAmount();
+            }
+        }
+        return (int) Math.min(amount, Integer.MAX_VALUE);
     }
 
     /**
