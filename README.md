@@ -28,7 +28,7 @@ To get started, you'll need:
 
 - **Java:** 21
 - **Client and cache:** [here](https://github.com/luna-rs/luna-client)
-- **Setup instructions:** Visit the [wiki](https://github.com/luna-rs/luna/wiki) for a streamlined guide to building, configuring, and running Luna
+- **Setup instructions:** visit the [wiki](https://github.com/luna-rs/luna/wiki) for a streamlined guide to building, configuring, and running Luna
 
 # Useful links
 
