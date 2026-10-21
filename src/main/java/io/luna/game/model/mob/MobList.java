@@ -28,6 +28,10 @@ import static com.google.common.base.Preconditions.checkState;
  * Indexes are internally pooled, meaning insertions are O(1) and do not require scanning for free slots. Null slots
  * are automatically skipped during iteration.
  * </p>
+ * <p>
+ * An NPC that respawns stays in the list while it is dead ({@link EntityState#INACTIVE}), so its index is stable.
+ * Callers that need live NPCs check the state.
+ * </p>
  *
  * <p>
  * <strong>Important:</strong> This list should never be used directly to remove players. Use {@link Player#logout()}
@@ -208,10 +212,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param mob The mob to register.
      * @return {@code true} if the mob was successfully added.
      * @throws IllegalStateException If the list is full.
-     * @throws IllegalArgumentException If the mob is already ACTIVE.
+     * @throws IllegalArgumentException If the mob is already ACTIVE or already has a slot.
      */
     public boolean add(E mob) {
         checkArgument(mob.getState() != EntityState.ACTIVE, "Mob is already ACTIVE.");
+        checkArgument(mob.getIndex() == -1, "Mob already has a slot.");
 
         Integer index = indexPool.poll();
         if (index == null) {
@@ -236,10 +241,15 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * <p><strong>Warning:</strong> Never use this for players. Use {@link Player#logout()} or
      * {@link Player#forceLogout()}.</p>
      *
+     * <p>An NPC that is dead and waiting to respawn (see {@link Npc#despawn()}) can be removed too: it frees its slot
+     * and does not respawn.</p>
+     *
      * @param mob The mob to remove.
      */
     public void remove(E mob) {
-        mob.setState(EntityState.INACTIVE);
+        if (mob.getState() != EntityState.INACTIVE) {
+            mob.setState(EntityState.INACTIVE);
+        }
         if (mob.getType() == EntityType.PLAYER) {
             world.removePlayer(mob.asPlr());
         }
