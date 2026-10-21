@@ -238,9 +238,10 @@ public final class Bank extends ItemContainer {
         }
 
         /*
-         * Clamp to the actual amount present in inventory (by the inventory item id).
+         * Clamp to the actual amount present in inventory (by the inventory item id). Dynamic copies aren't counted:
+         * one is only deposited when its own slot is picked, and then alone.
          */
-        int existingAmount = inventory.computeAmountForId(item.getId());
+        int existingAmount = inventory.computeNonDynamicAmountForId(item.getId());
         amount = Math.min(amount, existingAmount);
 
         /*
@@ -263,7 +264,7 @@ public final class Bank extends ItemContainer {
             return false;
         }
 
-        if (inventory.remove(item)) {
+        if (inventory.removeFromIndex(inventoryIndex, item)) {
             return add(unnotedItem);
         }
         return false;

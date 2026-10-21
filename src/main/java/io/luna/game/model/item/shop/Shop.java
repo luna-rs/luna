@@ -330,7 +330,7 @@ public final class Shop {
             return false;
         }
 
-        int inventoryAmount = inventory.computeAmountForId(inventoryItem.getId());
+        int inventoryAmount = inventory.computeNonDynamicAmountForId(inventoryItem.getId());
         if (sellAmount > inventoryAmount) {
             sellAmount = inventoryAmount;
         }
@@ -348,7 +348,7 @@ public final class Shop {
             return false;
         }
 
-        if (inventory.remove(sellItem) && inventory.add(currencyItem)) {
+        if (inventory.removeFromIndex(index, sellItem) && inventory.add(currencyItem)) {
             return items.add(sellItem);
         }
         return false;
