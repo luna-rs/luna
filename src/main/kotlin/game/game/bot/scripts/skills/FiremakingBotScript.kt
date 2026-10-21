@@ -48,6 +48,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
 
     override val verifiedProductionWithdrawals = true
 
+    // Lighting a log drops it on the bot's tile first.
+    override val ignoredLoot = setOf(log.id)
+
     companion object {
 
         /**

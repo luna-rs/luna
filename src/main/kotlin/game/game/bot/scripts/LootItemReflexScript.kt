@@ -141,10 +141,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
         // A full bot could only loot junk by dropping other junk. Junk is often wanted loot itself (bots want bones
         // until 30 Prayer), so the dropped junk would be looted again on the next pass, forever.
         val ignoreJunk = bot.inventory.isFull
+        val ignored = bot.scriptStack.current()?.takeIf { it.isRunning() }?.ignoredLoot ?: emptySet()
 
         var found = false
         for (groundItem in bot.viewableItems) {
-            if (ignoreJunk && groundItem.id in JUNK_ITEMS) {
+            if ((ignoreJunk && groundItem.id in JUNK_ITEMS) || groundItem.id in ignored) {
                 continue
             }
             val item = groundItem.toItem()

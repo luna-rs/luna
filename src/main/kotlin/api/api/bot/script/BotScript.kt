@@ -97,6 +97,13 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     protected suspend fun awaitActionSafety(safety: ActionSafety = actionSafety): Boolean = safety.await(bot)
 
     /**
+     * Item ids that [game.bot.scripts.LootItemReflexScript] leaves on the ground while this script runs. A script whose
+     * work puts its own supplies on the ground, like lighting a log, lists them here so the bot doesn't stop to pick
+     * them back up.
+     */
+    open val ignoredLoot: Set<Int> = emptySet()
+
+    /**
      * Whether this script has been permanently terminated.
      *
      * Paused scripts may be started again by [start]. Terminated scripts cannot be restarted, even if
