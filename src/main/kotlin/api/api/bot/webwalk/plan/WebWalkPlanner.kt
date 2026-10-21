@@ -10,6 +10,7 @@ import api.bot.webwalk.model.TeleportKind
 import api.bot.webwalk.model.WebWalkEdge
 import api.bot.webwalk.model.WebWalkGraph
 import api.bot.webwalk.model.WebWalkNode
+import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
 import java.util.PriorityQueue
 import java.util.Random
@@ -314,7 +315,8 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             return null
         }
         val ticks = estimator.ticks(from, to)?.toDouble() ?: return null
-        val penalty = wildernessPenalty(WebWalkNode.wildernessLevelOf(from), WebWalkNode.wildernessLevelOf(to), ticks)
+        val penalty = wildernessPenalty(WildernessLocatableController.levelAt(from),
+                                        WildernessLocatableController.levelAt(to), ticks)
         return PlanLeg(EdgeType.WALK, from, to, ticks + penalty)
     }
 
@@ -508,7 +510,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
         fun position(index: Int) = if (index == start) request.start else nodes[index].position
 
         fun level(index: Int) = if (index < nodes.size) nodes[index].wildernessLevel else
-            WebWalkNode.wildernessLevelOf(position(index))
+            WildernessLocatableController.levelAt(position(index))
 
         fun relax(from: Label, to: Int, leg: PlanLeg, key: Int, spend: IntArray?, coins: Int) {
             var left = from.left
@@ -550,7 +552,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
                  requirements: Requirements = Requirements.NONE, target: Position? = null, spend: IntArray? = null) {
             val exposure = if (exposed) ticks else 0.0
             val arrival = target ?: position(to)
-            val arrivalLevel = if (target != null) WebWalkNode.wildernessLevelOf(target) else level(to)
+            val arrivalLevel = if (target != null) WildernessLocatableController.levelAt(target) else level(to)
             val cost = ticks + extra + wildernessPenalty(level(from.node), arrivalLevel, exposure)
             val key = (from.node * 31 + to) * 31 + type.ordinal + (teleport?.id?.hashCode() ?: 0) + (target?.hashCode() ?: 0)
             relax(from, to, PlanLeg(type, position(from.node), arrival, cost, action, teleport, ring, requirements), key,
