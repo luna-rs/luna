@@ -31,6 +31,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Represents a non-player-controlled mob in the world.
+ * <p>
+ * An NPC equals only itself. Its index is {@code -1} before it is added to the world and after it is removed, so it
+ * could not identify the NPC in a hash-based collection.
  *
  * @author lare96
  */
@@ -123,28 +126,6 @@ public class Npc extends Mob {
 
         // Set position.
         setPosition(position);
-    }
-
-    /**
-     * Uses identity-based hashing.
-     * <p>
-     * An NPC's index is {@code -1} before it is added to the world, set while it is in the world, and {@code -1} again
-     * once it is removed, so a hash based on the index would change while the NPC is stored in a hash-based
-     * collection, and it could no longer be found or removed.
-     */
-    @Override
-    public final int hashCode() {
-        return System.identityHashCode(this);
-    }
-
-    /**
-     * Uses identity-based equality.
-     *
-     * @see #hashCode()
-     */
-    @Override
-    public final boolean equals(Object obj) {
-        return this == obj;
     }
 
     @Override
