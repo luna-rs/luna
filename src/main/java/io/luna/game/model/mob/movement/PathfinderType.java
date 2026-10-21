@@ -10,24 +10,18 @@ import java.util.function.Function;
 /**
  * Represents the pathfinder strategy used by a {@link Mob}.
  * <p>
- * Each type creates a pathfinder, from {@link Pathfinders}, for the supplied mob, which is sized for it. There is a type for each kind
- * of mob that walks, because they differ in how they treat other mobs and in how much their routes vary.
+ * Each type creates a pathfinder, from {@link Pathfinders}, for the supplied mob, which is sized for it. Players and
+ * NPCs have a type each, because they differ in how they treat other mobs. Bots use the player type.
  *
  * @author lare96
  */
 public enum PathfinderType {
 
     /**
-     * The routes of the game, for players. Players walk through NPCs and through other players, so their routes do too.
+     * The routes of the game, for players and bots. Players walk through NPCs and through other players, so their
+     * routes do too.
      */
     PLAYER(Pathfinders::forPlayer),
-
-    /**
-     * Routes that vary from bot to bot, for bots. A bot takes the route of the game with a chance equal to its
-     * intelligence, and otherwise takes a route of a different shape, so that bots do not all walk in identical lines.
-     * Like players, bots walk through other mobs.
-     */
-    BOT(Pathfinders::forBot),
 
     /**
      * The routes of the game, for NPCs. NPCs are stopped by other NPCs and by players, so their routes go around them.

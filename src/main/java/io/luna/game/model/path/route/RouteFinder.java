@@ -148,30 +148,6 @@ public final class RouteFinder {
      */
     public Route find(CollisionView view, int level, int startX, int startY, int destX, int destY, int size,
                       int extraFlag, RouteStrategy strategy, boolean moveNear, int maxWaypoints) {
-        return find(view, level, startX, startY, destX, destY, size, extraFlag, strategy, moveNear, maxWaypoints,
-                RouteStyle.STANDARD);
-    }
-
-    /**
-     * Searches for a route from one tile to another, with a {@link RouteStyle} that decides which of the routes of the
-     * shortest length is picked.
-     *
-     * @param view The collision flags to search through.
-     * @param level The height level of both tiles.
-     * @param startX The absolute x coordinate of the south west tile the mob covers.
-     * @param startY The absolute y coordinate of the south west tile the mob covers.
-     * @param destX The absolute x coordinate of the destination.
-     * @param destY The absolute y coordinate of the destination.
-     * @param size The width and length of the mob, in tiles.
-     * @param extraFlag Flags that also stop a step, such as {@code BLOCK_NPCS}.
-     * @param strategy The rule for moving onto a tile.
-     * @param moveNear {@code true} to settle for the closest tile that can be reached when the destination can't be.
-     * @param maxWaypoints The most waypoints to return. The ones at the end of a longer route are dropped.
-     * @param style The shape of the route.
-     * @return The route, which has no waypoints if the mob is already at the destination.
-     */
-    public Route find(CollisionView view, int level, int startX, int startY, int destX, int destY, int size,
-                      int extraFlag, RouteStrategy strategy, boolean moveNear, int maxWaypoints, RouteStyle style) {
         reset();
         int baseX = startX - SEARCH_SIZE / 2;
         int baseY = startY - SEARCH_SIZE / 2;
@@ -181,8 +157,7 @@ public final class RouteFinder {
         int localDestY = destY - baseY;
         add(localStartX, localStartY, START_DIRECTION, 0);
 
-        boolean found = search(view, level, baseX, baseY, localDestX, localDestY, size, extraFlag, strategy,
-                style.order());
+        boolean found = search(view, level, baseX, baseY, localDestX, localDestY, size, extraFlag, strategy);
         if (!found) {
             if (!moveNear || !findClosestTile(localDestX, localDestY)) {
                 return Route.FAILED;
@@ -222,12 +197,11 @@ public final class RouteFinder {
     /**
      * Spreads out from the start tile until the destination is reached or there is nowhere left to go.
      *
-     * @param order The order to try the directions out of a tile in, as indices of {@link #STEP_X}.
      * @return {@code true} if the destination was reached, in which case {@link #currentX} and {@link #currentY} are
      * the destination.
      */
     private boolean search(CollisionView view, int level, int baseX, int baseY, int destX, int destY, int size,
-                           int extraFlag, RouteStrategy strategy, int[] order) {
+                           int extraFlag, RouteStrategy strategy) {
         // A large mob must fit inside the search area, so it stops short of the far edges by its size.
         int last = SEARCH_SIZE - size;
         while (writer != reader) {
@@ -245,7 +219,7 @@ public final class RouteFinder {
             int absX = baseX + x;
             int absY = baseY + y;
 
-            for (int direction : order) {
+            for (int direction = 0; direction < STEP_X.length; direction++) {
                 int stepX = STEP_X[direction];
                 int stepY = STEP_Y[direction];
                 int nextX = x + stepX;

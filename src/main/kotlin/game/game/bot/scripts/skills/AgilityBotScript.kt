@@ -195,7 +195,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
      */
     private suspend fun walkTo(tile: Position): Boolean {
         if (bot.position == tile) return true
-        val path = bot.navigator.findPath(bot.position, tile, Pathfinders.forBot(bot), true).await()
+        val path = bot.navigator.findPath(bot.position, tile, Pathfinders.forPlayer(bot), true).await()
         if (path?.peekLast() != tile) return false
         bot.walking.replacePath(path)
         return waitFor(30.seconds) { bot.position == tile && bot.walking.isEmpty }

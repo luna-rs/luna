@@ -30,7 +30,6 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationRequest
-import io.luna.game.model.mob.movement.PathfinderType
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
@@ -202,13 +201,11 @@ class SpinTextileBotScript(
             if (plane == 1) {
                 // Any action still running would cancel the walk.
                 waitFor { bot.actions.size(ActionType.WEAK) == 0 && bot.actions.size(ActionType.STRONG) == 0 }
-                // The bot pathfinder can miss the one-tile doorway. The player one can't.
                 val walk = NavigationRequest.builder(bot)
                     .async(true)
                     .continuous(false)
                     .policy(InteractionPolicy.EQUAL_POSITION)
                     .target(SEERS_HOUSE_INSIDE)
-                    .pathfinder(PathfinderType.BOT)
                 bot.navigator.submit(walk.build()).await()
                 if (bot !in SEERS_HOUSE) {
                     bot.log("Could not walk into the Seers' Village house. position=${bot.position}")

@@ -11,7 +11,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationRequest
 import io.luna.game.model.mob.movement.NavigationResult
-import io.luna.game.model.mob.movement.PathfinderType
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.GroundItemClickMessageReader
 import io.luna.net.msg.`in`.NpcClickMessageReader
@@ -85,7 +84,6 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             .continuous(false)
             .policy(policy)
             .target(target)
-            .pathfinder(PathfinderType.BOT)
         if (bot.navigator.submit(request.build()).await() != NavigationResult.REACHED) {
             bot.log("Interaction failed: navigation did not reach the target.")
             return false
