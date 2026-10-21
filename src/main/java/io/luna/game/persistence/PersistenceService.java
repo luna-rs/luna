@@ -215,7 +215,7 @@ public final class PersistenceService extends AbstractIdleService {
      * Saves all online non-temporary players.
      * <p>
      * Temporary bots are skipped. Players already being handled by {@link LogoutService} are also skipped because logout
-     * owns their save operation.
+     * owns their save operation, except during shutdown, when the logout service stops without finishing them.
      * <p>
      * During normal runtime, save snapshots of every player are created together in a single game thread pass and then
      * serialized on the persistence worker. During shutdown, this method runs synchronously and creates snapshots
@@ -228,31 +228,33 @@ public final class PersistenceService extends AbstractIdleService {
     public CompletableFuture<Void> saveAll(boolean shutdown) {
         var timer = Stopwatch.createStarted();
         if (shutdown) {
-            writeAll(snapshotAll(), timer);
+            writeAll(snapshotAll(true), timer, true);
             return CompletableFuture.completedFuture(null);
         } else {
             // One game thread hop for every snapshot, instead of waiting a full tick per player.
-            return context.getGame().sync(this::snapshotAll).
-                    thenAcceptAsync(snapshots -> writeAll(snapshots, timer), worker);
+            return context.getGame().sync(() -> snapshotAll(false)).
+                    thenAcceptAsync(snapshots -> writeAll(snapshots, timer, false), worker);
         }
     }
 
     /**
      * Creates save snapshots of all online non-temporary players. Must be called on the game thread.
      * <p>
-     * Temporary bots and players already being handled by {@link LogoutService} are skipped.
+     * Temporary bots are skipped. Players already being handled by {@link LogoutService} are skipped too, unless the
+     * server is shutting down.
      *
+     * @param shutdown {@code true} if this mass save is being performed during server shutdown.
      * @return The snapshots that were created.
      */
-    private List<PlayerData> snapshotAll() {
+    private List<PlayerData> snapshotAll(boolean shutdown) {
         List<PlayerData> snapshots = new ArrayList<>(world.getPlayerMap().size());
         for (Player player : world.getPlayerMap().values()) {
             if (player.isBot() && player.asBot().isTemporary()) {
                 continue;
             }
             String username = player.getUsername();
-            if (world.getLogoutService().hasRequest(username)) {
-                // The LogoutService will handle the saving.
+            if (!shutdown && world.getLogoutService().hasRequest(username)) {
+                // The LogoutService will handle the saving. At shutdown it stops without finishing its requests.
                 continue;
             }
             try {
@@ -268,19 +270,20 @@ public final class PersistenceService extends AbstractIdleService {
     }
 
     /**
-     * Serializes the snapshots created by {@link #snapshotAll()}.
+     * Serializes the snapshots created by {@link #snapshotAll(boolean)}.
      * <p>
-     * A snapshot is skipped if its player started logging out after it was created, because the logout save holds
-     * newer data and owns the save operation.
+     * Outside of shutdown, a snapshot is skipped if its player started logging out after it was created, because the
+     * logout save holds newer data and owns the save operation.
      *
      * @param snapshots The snapshots to serialize.
      * @param timer The timer started when the mass save began.
+     * @param shutdown {@code true} if this mass save is being performed during server shutdown.
      */
-    private void writeAll(List<PlayerData> snapshots, Stopwatch timer) {
+    private void writeAll(List<PlayerData> snapshots, Stopwatch timer, boolean shutdown) {
         GameSerializer serializer = world.getSerializerManager().getSerializer();
         for (PlayerData data : snapshots) {
             String username = data.getUsername();
-            if (world.getLogoutService().isSavePending(username)) {
+            if (!shutdown && world.getLogoutService().isSavePending(username)) {
                 // The LogoutService will handle the saving.
                 continue;
             }
