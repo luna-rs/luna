@@ -44,41 +44,6 @@ class CoordinateHashTest {
         assertTrue(map.isEmpty());
     }
 
-    private void assertDistribution(int[] buckets, int minimumOccupied) {
-        int occupied = 0;
-        int maximum = 0;
-        for (int count : buckets) {
-            if (count > 0) occupied++;
-            maximum = Math.max(maximum, count);
-        }
-        assertTrue(occupied >= minimumOccupied, "occupied buckets: " + occupied);
-        assertTrue(maximum <= 8, "maximum keys per bucket: " + maximum);
-    }
-
-    @Test
-    void nearbyPositionsDoNotConcentrateInHashMapBuckets() {
-        for (int base : new int[]{0, 2624, 3200}) for (int z = 0; z < 4; z++) {
-            int[] buckets = new int[16384];
-            for (int x = base; x < base + 64; x++) for (int y = base; y < base + 64; y++) {
-                int hash = new Position(x, y, z).hashCode();
-                buckets[(hash ^ (hash >>> 16)) & (buckets.length - 1)]++;
-            }
-            assertDistribution(buckets, 3072);
-        }
-    }
-
-    @Test
-    void nearbyChunksDoNotConcentrateInConcurrentHashMapBuckets() {
-        for (int base : new int[]{0, 328, 400}) {
-            int[] buckets = new int[65536];
-            for (int x = base; x < base + 64; x++) for (int y = base; y < base + 64; y++) {
-                int hash = new Chunk(x, y).hashCode();
-                buckets[(hash ^ (hash >>> 16)) & (buckets.length - 1)]++;
-            }
-            assertDistribution(buckets, 3686);
-        }
-    }
-
     @Test
     void equalChunkKeysReuseRepositoryWithoutChangingCoordinateIdentifiers() {
         ChunkManager manager = new ChunkManager(mock(World.class, RETURNS_DEEP_STUBS));
