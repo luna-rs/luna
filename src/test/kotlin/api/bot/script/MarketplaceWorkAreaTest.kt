@@ -2,6 +2,7 @@ package api.bot.script
 
 import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import engine.bot.gear.BotGearLocator
 import io.luna.game.action.Action
@@ -78,7 +79,7 @@ class MarketplaceWorkAreaTest {
 
     private suspend fun walk(success: Boolean = true, exact: Boolean = true) {
         val handler = bot.actionHandler
-        `when`(handler.webWalkTo(anyPosition(), eq(0), eq(1))).thenAnswer {
+        `when`(handler.webWalkTo(anyPosition(), eq(0), eq(1), eq(BankAccess.ALL) ?: BankAccess.ALL)).thenAnswer {
             val target = it.getArgument<Position>(0)
             if (success) position = if (exact) target else target.translate(0, 0, 1)
             success
@@ -97,7 +98,7 @@ class MarketplaceWorkAreaTest {
         assertFalse(script.run())
         assertTrue(market.contains(position))
         assertEquals(2, script.executions)
-        verify(bot.actionHandler, times(2)).webWalkTo(anyPosition(), eq(0), eq(1))
+        verify(bot.actionHandler, times(2)).webWalkTo(anyPosition(), eq(0), eq(1), eq(BankAccess.ALL) ?: BankAccess.ALL)
     }
 
     @Test fun alreadyInsideAnExactRectangleDoesNotMoveOrInterruptProduction() = runBlocking<Unit> {
@@ -105,7 +106,7 @@ class MarketplaceWorkAreaTest {
         val script = script()
         assertFalse(script.run())
         assertEquals(1, script.executions)
-        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt())
+        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt(), any(BankAccess::class.java) ?: BankAccess.ALL)
     }
 
     @Test fun broadBoundingBoxGapStillRequiresARealWorkTile() = runBlocking<Unit> {
@@ -140,7 +141,7 @@ class MarketplaceWorkAreaTest {
         doReturn(true).`when`(collision).isBlocked(any(Position::class.java), eq(false))
         assertTrue(script.run())
         assertEquals(0, script.executions)
-        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt())
+        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt(), any(BankAccess::class.java) ?: BankAccess.ALL)
     }
 
     @Test fun nativeActionOutsideMarketDefersWalkingAndProductionWithoutDroppingTheZone() = runBlocking<Unit> {
@@ -149,7 +150,7 @@ class MarketplaceWorkAreaTest {
         assertFalse(script.run())
         assertEquals(0, script.executions)
         assertEquals(listOf(SubZone.SEERS_VILLAGE_MARKETPLACE), script.zones)
-        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt())
+        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt(), any(BankAccess::class.java) ?: BankAccess.ALL)
     }
 
     @Test fun weakProductionActionOutsideMarketIsAllowedToFinishBeforeRelocating() = runBlocking<Unit> {
@@ -159,7 +160,7 @@ class MarketplaceWorkAreaTest {
         })
         assertFalse(script.run())
         assertEquals(0, script.executions)
-        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt())
+        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt(), any(BankAccess::class.java) ?: BankAccess.ALL)
     }
 
     @Test fun alKharidParentArrivalOutsideMarketStillReachesAnExactWorkingRectangle() = runBlocking<Unit> {
@@ -184,7 +185,7 @@ class MarketplaceWorkAreaTest {
         assertFalse(script.run())
         assertEquals(1, script.bankVisits)
         assertEquals(0, script.executions)
-        verify(bot.actionHandler, never()).travelTo(any(SubZone::class.java) ?: SubZone.HOME)
+        verify(bot.actionHandler, never()).travelTo(any(SubZone::class.java) ?: SubZone.HOME, any(BankAccess::class.java) ?: BankAccess.ALL)
         walk()
         assertFalse(script.run())
         assertTrue(BotMarketplace.SEERS_VILLAGE.contains(position))
@@ -197,6 +198,6 @@ class MarketplaceWorkAreaTest {
         val script = script(SubZone.AL_KHARID_BANK)
         assertFalse(script.run())
         assertEquals(1, script.executions)
-        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt())
+        verify(bot.actionHandler, never()).webWalkTo(anyPosition(), anyInt(), anyInt(), any(BankAccess::class.java) ?: BankAccess.ALL)
     }
 }

@@ -5,6 +5,7 @@ import api.predef.ext.*
 import game.content.partyRoom.dropParty.DropPartyOption.BalloonObject
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import game.player.Messages
+import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.EntityState
@@ -88,6 +89,9 @@ button(2246) {
 
 // Open the drop party chest interface.
 object1(2417) { plr.overlays.open(DropPartyInterface()) }
+
+// Return offers that a logout left in the chest.
+on(LoginEvent::class) { DropPartyOption.returnOffers(plr) }
 
 // Deposit
 on(WidgetItemFirstClickEvent::class)

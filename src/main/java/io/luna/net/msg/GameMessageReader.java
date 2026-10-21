@@ -4,6 +4,7 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.VoidEvent;
+import io.luna.game.event.impl.WalkingEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionAction;
@@ -106,7 +107,7 @@ public abstract class GameMessageReader<E extends Event> {
             E event = decode(player, msg);
 
             // Validate the event with the decoder and the current controller if needed.
-            if (event != VoidEvent.INSTANCE && validate(player, event) && !player.isLocked()) {
+            if (event != VoidEvent.INSTANCE && validate(player, event) && !isLocked(player, event)) {
                 if (event instanceof ControllableEvent) {
                     if (!player.getControllers().checkEvent((ControllableEvent) event)) {
                         return;
@@ -129,11 +130,30 @@ public abstract class GameMessageReader<E extends Event> {
     }
 
     /**
+     * Determines if {@code player} is locked out of {@code event}. A stun only stops moving and interacting, so a
+     * stunned player can still eat, drink, and use their inventory and interfaces.
+     *
+     * @param player The player that sent the message.
+     * @param event The decoded event.
+     * @return {@code true} if the event should be dropped.
+     */
+    private boolean isLocked(Player player, E event) {
+        if (player.isActionLocked()) {
+            return true;
+        }
+        if (player.getStatus().isStunned() && (event instanceof WalkingEvent || event instanceof InteractableEvent)) {
+            player.sendMessage("You're stunned!");
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Routes an {@link InteractableEvent} through the interaction system.
      * <p>
      * Matching interaction listeners are resolved from the appropriate event pipeline. If the player does not already
      * have an active {@link InteractionAction}, a new one is submitted. Otherwise, the existing interaction action is
-     * updated with the new listener set and target, and any duplicate interaction actions are removed.
+     * updated with the new listener set, target, and event, and any duplicate interaction actions are removed.
      *
      * @param player The player that triggered the interaction.
      * @param event The interactable event to route.
@@ -152,9 +172,10 @@ public abstract class GameMessageReader<E extends Event> {
             // We have an interaction action, we need to update it.
             InteractionAction first = actions.next();
 
-            // Change listeners and target within active interaction action.
+            // Change listeners, target, and event within active interaction action.
             first.setListeners(listeners);
             first.setTarget(target);
+            first.setEvent((InteractableEvent) event);
 
             // Remove any potential duplicate actions (shouldn't happen, but just in case).
             while (actions.hasNext()) {

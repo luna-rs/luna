@@ -475,18 +475,24 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * @return `true` if the bank was already open or the direct-open fallback was executed.
      */
     suspend fun open(bank: Entity): Boolean {
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         if (bot.bank.isOpen) {
             return true
         }
         bot.naturalDelay()
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
         bot.log("Opening bank.")
         val option = when (bank) {
             is GameObject -> 2
             is Npc -> bank.def().actions.indexOfFirst { it == "Bank" } + 1
             else -> throw IllegalStateException("Invalid bank entity type.")
         }
-        if (handler.interactions.interact(option, bank)) {
-            if (!waitFor(3.seconds) { bot.bank.isOpen }) {
+        val interacted = handler.interactions.interact(option, bank)
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
+        if (interacted) {
+            val opened = waitFor(3.seconds) { bot.bank.isOpen }
+            if (!ActionSafety.NON_COMBAT.await(bot)) return false
+            if (!opened) {
                 bot.bank.open()
             }
             return true

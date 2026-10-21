@@ -18,7 +18,7 @@ enum class ThievingChest(val id: Int,
 
     TEN_COIN(id = 2566,
              level = 13,
-             xp = 7.8,
+             xp = 7.5,
              respawnTicks = 6,
              drops = DropTableHandler.createSingleton { "Coins" x 10 }),
     NATURE_RUNE(id = 2567,

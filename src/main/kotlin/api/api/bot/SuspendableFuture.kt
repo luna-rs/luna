@@ -4,7 +4,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.Future
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -68,7 +67,7 @@ open class SuspendableFuture(internal val channel: Channel<Boolean>) {
         }
 
         // Cancel scheduled task when coroutine is cancelled.
-        coroutineContext[Job]?.invokeOnCompletion {
+        val completionHandle = coroutineContext[Job]?.invokeOnCompletion {
             if (!channel.isClosedForSend && !channel.isClosedForReceive) {
                 channel.close()
             }
@@ -77,11 +76,11 @@ open class SuspendableFuture(internal val channel: Channel<Boolean>) {
         // Await signal, handle potentially errors.
         return try {
             val result = channel.receive()
-            channel.close()
             result
-        } catch (e: CancellationException) {
+        } finally {
+            // A completed wait must not remain captured by a long-lived script job.
+            completionHandle?.dispose()
             channel.close()
-            throw e
         }
     }
 }

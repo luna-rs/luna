@@ -186,6 +186,8 @@ public class PlayerData {
         } else {
             isBot = false;
         }
+        // Write live status effects into their attribute before copying the attributes.
+        player.getStatus().save();
         attributes = player.getAttributes().save();
         return this;
     }
