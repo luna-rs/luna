@@ -140,7 +140,7 @@ public class PlayerData {
         if (hashedPw == null) {
             // No hashed password, we need to generate one.
             PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
-            if (passwordStrength != PasswordStrength.NONE) {
+            if (passwordStrength != PasswordStrength.NONE && !player.isBot()) {
                 String salt = BCrypt.gensalt(passwordStrength.getRounds());
                 password = BCrypt.hashpw(plainTextPw, salt);
             } else {

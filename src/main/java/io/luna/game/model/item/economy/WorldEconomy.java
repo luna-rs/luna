@@ -237,11 +237,16 @@ public final class WorldEconomy extends AbstractScheduledService {
      * @return The active price data for the item, or {@code null} if the item should not be tracked.
      */
     public ItemPriceData resolvePriceData(int id) {
-        if (id == 995 || !ItemDefinition.ALL.retrieve(id).isTradeable()) {
+        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+        if (id == 995 || !def.isTradeable()) {
             return null;
         }
+        if (def.isNoted()) {
+            id = def.getUnnotedId().orElseThrow(() -> new IllegalStateException("Noted item [" + def.id() + "] doesn't have unnoted ID."));
+        }
+        int lookupId = id;
         return prices.computeIfAbsent(id, key -> {
-            ItemPriceData newData = new ItemPriceData(id);
+            ItemPriceData newData = new ItemPriceData(lookupId);
             priceUpdates.put(newData.id, newData);
             historyUpdates.add(newData);
             return newData;

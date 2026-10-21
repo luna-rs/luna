@@ -242,55 +242,6 @@ final class RouteFinderTest {
     }
 
     @Test
-    void testStandardStyleIsTheDefault() {
-        map.fill(105, 95, 1, 11, LOC);
-        Route byDefault = find(100, 100, 112, 104);
-        Route standard = finder.find(map.view(), 0, 100, 100, 112, 104, 1, 0, RouteStrategy.NORMAL, true, 255,
-                RouteStyle.STANDARD);
-        assertEquals(byDefault.getWaypoints(), standard.getWaypoints());
-    }
-
-    @Test
-    void testEveryStyleFindsAShortestRoute() {
-        map.fill(105, 95, 1, 11, LOC);
-        int shortest = walk(find(100, 100, 112, 104), 100, 100, 1, 0, RouteStrategy.NORMAL);
-
-        for (RouteStyle style : RouteStyle.values()) {
-            for (int i = 0; i < 25; i++) {
-                Route route = finder.find(map.view(), 0, 100, 100, 112, 104, 1, 0, RouteStrategy.NORMAL, true, 255,
-                        style);
-                assertTrue(route.isSuccess());
-                assertFalse(route.isAlternative());
-                assertEquals(shortest, walk(route, 100, 100, 1, 0, RouteStrategy.NORMAL), style.toString());
-            }
-        }
-    }
-
-    @Test
-    void testStylesGiveRoutesOfDifferentShapes() {
-        java.util.Set<List<Position>> shapes = new java.util.HashSet<>();
-        for (RouteStyle style : RouteStyle.values()) {
-            for (int i = 0; i < 50; i++) {
-                shapes.add(finder.find(map.view(), 0, 100, 100, 110, 103, 1, 0, RouteStrategy.NORMAL, true, 255, style)
-                        .getWaypoints());
-            }
-        }
-        assertTrue(shapes.size() > 1, "every route had the same shape");
-    }
-
-    @Test
-    void testStylesStillRespectObstaclesAndLargeMobs() {
-        map.fill(105, 30, 1, 70, LOC);
-        map.fill(105, 102, 1, 70, LOC);
-        for (RouteStyle style : RouteStyle.values()) {
-            // A gap that is two tiles wide at y = 100 and y = 101.
-            Route route = finder.find(map.view(), 0, 100, 100, 110, 100, 2, 0, RouteStrategy.NORMAL, true, 255, style);
-            assertFalse(route.isAlternative(), style.toString());
-            assertEquals(10, walk(route, 100, 100, 2, 0, RouteStrategy.NORMAL), style.toString());
-        }
-    }
-
-    @Test
     void testFinderCanBeReused() {
         Route first = find(100, 100, 106, 100);
         Route second = find(100, 100, 100, 106);

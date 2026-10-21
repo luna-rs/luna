@@ -11,16 +11,26 @@ import io.luna.game.model.mob.overlay.AbstractOverlay
 import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
 import io.luna.net.msg.out.WidgetItemsMessageWriter
+import io.luna.util.NumberUtils
 
 /**
- * An [InventoryOverlayInterface] implementation representing the offer trading screen.
+ * An [InventoryOverlayInterface] representing the initial trading screen.
  *
+ * Manages a player's offered items, synchronizes both trading interfaces,
+ * and handles acceptance before advancing to the confirmation screen.
+ *
+ * @property other The player on the opposite side of the trade.
  * @author lare96
  */
 class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3321) {
 
     /**
-     * A [RefreshListener] that listens for items on the offer screen.
+     * A [RefreshListener] that synchronizes offer updates between both players.
+     *
+     * Updates the owning player's offer panel and the corresponding panel
+     * displayed to the other player.
+     *
+     * @property plr The player whose offer container is being observed.
      */
     inner class OfferListener(private val plr: Player) : RefreshListener() {
 
@@ -33,31 +43,36 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     /**
-     * The items being offered.
+     * The container holding items offered by this player.
      */
     val items = ItemContainer(28, ItemContainer.StackPolicy.STANDARD, 3415)
 
     /**
-     * The trading player's offer instance (load lazily so its not initialized in the constructor).
+     * The opposing player's [OfferTradeInterface], resolved lazily.
      */
     val otherOffer by lazyVal {
         other.overlays[OfferTradeInterface::class]!!
     }
 
     /**
-     * If the "Accept" button has been clicked.
+     * Whether this player has accepted the current offer.
      */
     var accepted = false
 
     /**
-     * If ready to advance to the [ConfirmTradeInterface].
+     * Whether the offer stage has successfully advanced to confirmation.
      */
     var completed = false
 
+    /**
+     * Initializes the trading interface, inventory overlay, and offer panels.
+     */
     override fun onOpen(plr: Player) {
         sendTradingWith(plr)
+        updateTotalValue(plr)
         plr.sendText("", 3431)
         plr.sendText("Are you sure you want to make this trade?", 3535)
+
         // Refresh inventory to trade inventory.
         plr.inventory.setSecondaryWidget(3322)
         plr.inventory.updateSecondaryWidget(plr)
@@ -71,8 +86,12 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         items.setListeners(OfferListener(plr))
     }
 
+    /**
+     * Cancels an incomplete trade, returning offered items to the player
+     * and closing the opposing player's trading interface.
+     */
     override fun onClose(plr: Player) {
-        if(!completed) {
+        if (!completed) {
             plr.tradingWith = -1
 
             plr.inventory.clearSecondaryWidget()
@@ -83,15 +102,25 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         }
     }
 
+    /**
+     * Marks the trade as incomplete if this interface is replaced by
+     * anything other than a [ConfirmTradeInterface].
+     */
     override fun onReplace(plr: Player, replace: AbstractOverlay) {
-        // If replacing interface isn't the confirm screen, decline.
         if (replace::class != ConfirmTradeInterface::class) {
             completed = false
         }
     }
 
     /**
-     * Adds [amount] item from inventory slot [index] to the offer screen.
+     * Transfers items from the player's inventory into their trade offer.
+     *
+     * Rejects untradeable items and limits the transfer to the available
+     * quantity. A successful transfer resets both players' acceptance states.
+     *
+     * @param plr The player offering the items.
+     * @param index The inventory slot containing the item.
+     * @param amount The quantity to offer, or `-1` for all available.
      */
     fun add(plr: Player, index: Int, amount: Int) {
         val inv = plr.inventory
@@ -107,11 +136,19 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             items.add(addItem)
             otherOffer.sendTradingWith(other)
             resetAccept(plr)
+            updateTotalValue(plr)
         }
     }
 
     /**
-     * Removes [amount] item from trade screen slot [index] to the inventory.
+     * Withdraws items from the player's trade offer back into their inventory.
+     *
+     * Limits the withdrawal to the available quantity and resets both
+     * players' acceptance states after a successful removal.
+     *
+     * @param plr The player withdrawing the items.
+     * @param index The offer slot containing the item.
+     * @param amount The quantity to withdraw, or `-1` for all available.
      */
     fun remove(plr: Player, index: Int, amount: Int) {
         val item = items.get(index) ?: return
@@ -121,11 +158,19 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             plr.inventory.add(removeItem)
             otherOffer.sendTradingWith(other)
             resetAccept(plr)
+            updateTotalValue(plr)
         }
     }
 
     /**
-     * Invoked when [plr] clicks the "Accept" button on the offer screen.
+     * Accepts the current trade offer if the opposing player has sufficient
+     * inventory space to receive the offered items.
+     *
+     * If the opposing player has already accepted, both players advance
+     * to the [ConfirmTradeInterface]. Otherwise, this player is marked
+     * as accepted and waits for the opposing player's acceptance.
+     *
+     * @param plr The player accepting the offer.
      */
     fun accept(plr: Player) {
         if (accepted) {
@@ -152,8 +197,16 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     /**
-     * Returns an new amount instance of [item] with [reqAmt] reduced to the amount currently contained
-     * within [container].
+     * Returns a copy of [item] with its quantity limited to the amount
+     * available in [container].
+     *
+     * For non-stackable items, the available quantity is calculated across
+     * the container. A requested amount of `-1` selects all available items.
+     *
+     * @param item The item whose quantity is being adjusted.
+     * @param reqAmt The requested quantity, or `-1` for all available.
+     * @param container The container used to determine availability.
+     * @return An item with the adjusted quantity.
      */
     private fun reduceAmount(item: Item, reqAmt: Int, container: ItemContainer): Item {
         val id = item.id
@@ -167,7 +220,10 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     /**
-     * Displays the trading Player's name and remaining free space for [plr].
+     * Updates the trading partner's name, rank icon, and remaining inventory
+     * space displayed on the player's trading interface.
+     *
+     * @param plr The player receiving the interface update.
      */
     private fun sendTradingWith(plr: Player) {
         val username = other.username
@@ -184,7 +240,25 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     /**
-     * Resets the accept button click for [plr] and the trading Player.
+     * Calculates the total value of this player's offered items and updates
+     * the corresponding value labels on both trading interfaces.
+     *
+     * @param plr The player whose offer value is being calculated.
+     */
+    private fun updateTotalValue(plr: Player) {
+        val text = if (items.size() == 0) "Current value ~ 0" else {
+            val value = items.filterNotNull().sumOf { world.economy.getTotalPrice(it) }
+            "Current value ~ ${NumberUtils.formatPrice(value)}"
+        }
+        plr.sendText(text, 3419)
+        other.sendText(text, 3418)
+    }
+
+    /**
+     * Resets both players' acceptance states and clears their acceptance
+     * messages after an offer modification.
+     *
+     * @param plr The player whose offer was modified.
      */
     private fun resetAccept(plr: Player) {
         accepted = false

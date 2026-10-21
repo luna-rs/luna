@@ -211,10 +211,10 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
     @Override
     protected boolean onUnregister(GroundItem item) {
-        if (item.def().isStackable() && Luna.settings().game().mergeStackableGroundItems()) {
-            return removeOrUnmerge(item);
-        }
-        return remove(item);
+        /*
+         * Remove this exact entity, never another one on the tile with the same id and view.
+         */
+        return removeFromSet(item);
     }
 
     @Override
@@ -274,40 +274,6 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     }
 
     /**
-     * Removes a stackable ground item, decrementing an existing stack if present.
-     * <p>
-     * If the resulting amount is {@code <= 0}, the stack is fully removed. If no matching stack exists, this method
-     * is treated as a successful no-op (mirrors typical "remove-if-present" semantics).
-     *
-     * @param item The item to remove (the amount represents how much to remove).
-     * @return {@code true} if the removal/decrement succeeded (or the stack was not present).
-     */
-    private boolean removeOrUnmerge(GroundItem item) {
-        int removeAmount = item.getAmount();
-        Position position = item.getPosition();
-        GroundItem existing = findExisting(item);
-
-        if (existing != null) {
-            int newAmount = existing.getAmount() - removeAmount;
-            if (newAmount <= 0) {
-                return removeFromSet(existing);
-            }
-
-            if (removeFromSet(existing)) {
-                GroundItem replace = new GroundItem(item.getContext(), item.getId(), newAmount, position, item.getView());
-                replace.setExpireTicks(existing.getExpireTicks());
-                addToSet(replace);
-                return true;
-            }
-        }
-
-        /*
-         * Treat "not found" as success.
-         */
-        return true;
-    }
-
-    /**
      * Adds a ground item without stack merging.
      * <p>
      * For non-stackable definitions, {@link GroundItem#getAmount()} represents how many separate ground-item entities
@@ -329,38 +295,6 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
             failed = false;
         }
         return !failed;
-    }
-
-    /**
-     * Removes a ground item without stack merging.
-     * <p>
-     * For stackable definitions, this removes at most one matching entity (same tile + same id + same view). For
-     * non-stackable definitions, this removes up to {@link GroundItem#getAmount()} entities (1 per unit).
-     *
-     * @param item The item to remove.
-     * @return {@code true} if at least one entity was removed.
-     */
-    private boolean remove(GroundItem item) {
-        int loops = item.def().isStackable() ? 1 : item.getAmount();
-        Position position = item.getPosition();
-        Iterator<GroundItem> it = active.get(position).iterator();
-
-        boolean changed = false;
-        while (it.hasNext()) {
-            GroundItem existing = it.next();
-            if (existing.getId() == item.getId()
-                    && existing.getView().equals(item.getView())) {
-                existing.hide();
-                existing.setState(EntityState.INACTIVE);
-
-                it.remove();
-                changed = true;
-                if (--loops <= 0) {
-                    break;
-                }
-            }
-        }
-        return changed;
     }
 
     /**
@@ -406,13 +340,8 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     }
 
     /**
-     * Finds the first active ground item on the same tile that matches {@code item}'s id and view.
-     * <p>
-     * Used for:
-     * <ul>
-     *     <li>stack merging</li>
-     *     <li>stack decrement/removal</li>
-     * </ul>
+     * Finds the first active ground item on the same tile that matches {@code item}'s id and view. Used for stack
+     * merging.
      *
      * @param item The item to find a match for.
      * @return The matching ground item, or {@code null} if not found.

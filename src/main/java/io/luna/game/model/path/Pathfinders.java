@@ -3,7 +3,6 @@ package io.luna.game.model.path;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionFlag;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.path.astar.LongRangePathfinder;
 import io.luna.game.model.path.route.RoutePathfinder;
 import io.luna.game.model.path.route.RouteStrategy;
@@ -19,15 +18,15 @@ import io.luna.game.model.path.route.RouteStrategy;
 public final class Pathfinders {
 
     /**
-     * Creates a pathfinder for a player. Players are never stopped by NPCs or by other players, so the routes lead
-     * straight through them.
+     * Creates a pathfinder for a player or bot. Players are never stopped by NPCs or by other players, so the routes
+     * lead straight through them.
      *
-     * @param mob The player that will walk the routes.
+     * @param mob The player or bot that will walk the routes.
      * @return The new pathfinder.
      */
     public static GamePathfinder<Position> forPlayer(Mob mob) {
         return withFallback(new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0,
-                RouteStrategy.NORMAL, 1.0));
+                RouteStrategy.NORMAL));
     }
 
     /**
@@ -43,29 +42,8 @@ public final class Pathfinders {
      */
     public static GamePathfinder<Position> forNpc(Mob mob) {
         RoutePathfinder routes = new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(),
-                CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS, mob.getRouteStrategy(), 1.0);
+                CollisionFlag.BLOCK_NPCS | CollisionFlag.BLOCK_PLAYERS, mob.getRouteStrategy());
         return mob.getRouteStrategy() == RouteStrategy.NORMAL ? withFallback(routes) : routes;
-    }
-
-    /**
-     * Creates a pathfinder for a bot, which does not always take the same route that a player would.
-     * <p>
-     * There is usually more than one route of the shortest length between two tiles. A player's pathfinder always
-     * takes the same one, and a bot would too, so that bots going the same way would walk in identical lines. Instead
-     * a bot takes the player's route with a chance equal to its intelligence, and otherwise takes a route of a
-     * different shape. Like players, bots are never stopped by other mobs. A mob that is not a bot always takes the
-     * player's route.
-     *
-     * @param mob The bot that will walk the routes.
-     * @return The new pathfinder.
-     */
-    public static GamePathfinder<Position> forBot(Mob mob) {
-        double standardChance = 1.0;
-        if (mob instanceof Bot) {
-            standardChance = ((Bot) mob).getPersonality().getIntelligence();
-        }
-        return withFallback(new RoutePathfinder(mob.getWorld().getCollisionManager(), mob.size(), 0,
-                RouteStrategy.NORMAL, standardChance));
     }
 
     /**

@@ -294,7 +294,7 @@ public final class Shop {
 
         if (inventory.remove(currencyItem) && inventory.add(buyItem)) {
             if (amountMap[index].isEmpty()) {
-                return items.remove(buyItem);
+                return items.remove(index, buyItem);
             } else {
                 items.set(index, shopItem.addAmount(-buyAmount));
                 return true;
@@ -546,12 +546,15 @@ public final class Shop {
 
     /**
      * Determines whether a given {@link Item} can be sold to this shop.
+     * <p>
+     * Dynamic items are never accepted: each would take a slot of its own beside the shop's stack of that id, and sell
+     * prices are worked out from the first slot holding the id.
      *
      * @param item The item being checked.
      * @return {@code true} if the item can be sold to this shop.
      */
     public boolean computeCanSell(Item item) {
-        return computeCanSell(item.getId());
+        return !item.isDynamic() && computeCanSell(item.getId());
     }
 
     /**

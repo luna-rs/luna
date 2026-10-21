@@ -318,7 +318,7 @@ public final class Bank extends ItemContainer {
         }
 
         item = item.withAmount(amount);
-        if (remove(item)) {
+        if (remove(bankIndex, item)) {
             return inventory.add(depositItem);
         }
         return false;
