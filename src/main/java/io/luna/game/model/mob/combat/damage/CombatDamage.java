@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.combat.damage;
 
+import io.luna.game.event.impl.CombatDamageReceivedEvent;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 
 import java.util.OptionalInt;
@@ -69,8 +71,8 @@ public final class CombatDamage {
      * Applies this resolved combat hit to the victim.
      * <p>
      * If this hit is a splash, no numeric damage is dealt. If the amount is {@code -1}, the hit represents a special
-     * non-damaging combat effect and exits without applying damage or pushing to the damage stack. Otherwise, the
-     * numeric damage is applied and this hit is pushed onto the victim's damage stack.
+     * non-damaging combat effect and exits without applying damage or pushing to the damage stack. Otherwise, this hit
+     * is pushed onto the victim's damage stack and then the numeric damage is applied.
      */
     public void apply(CombatAttack<?> source) { // todo redo docs
         if (amount.isPresent()) {
@@ -79,10 +81,14 @@ public final class CombatDamage {
                 // Normal spellbook curse spell like weaken, etc.
                 return;
             }
+            // Pushed before the damage, so the hit that kills the victim counts toward who killed it.
+            victim.getCombat().getDamageStack().push(this);
             victim.damage(rawAmount);
         }
         // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync
-        victim.getCombat().getDamageStack().push(this);
+        if (victim instanceof Player && victim != attacker) {
+            victim.getPlugins().post(new CombatDamageReceivedEvent((Player) victim, this));
+        }
         source.onDamageApplied(this);
         attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
