@@ -163,6 +163,7 @@ public final class GameService extends AbstractScheduledService {
                         box(pluginCount), box(scriptCount));
             } catch (Exception e) {
                 logger.fatal("Error loading plugins!", e);
+                LogManager.shutdown();
                 System.exit(1);
             }
         }
