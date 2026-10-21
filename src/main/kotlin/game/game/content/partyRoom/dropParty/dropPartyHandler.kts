@@ -9,7 +9,6 @@ import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.EntityState
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
 
@@ -21,20 +20,24 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
         plr.sendMessage("Only staff members can deposit items right now.")
         return
     }
-    val def = itemDef(event.itemId)
-    var newAmount = amount
-    if (amount > 8 && !def.isStackable) {
-        newAmount = 8
-    }
 
+    // Deposit-X runs once the amount is entered, and the slot can change before then.
+    val invItem = plr.inventory[event.index] ?: return
+    if (invItem.id != event.itemId || amount < 1) {
+        return
+    }
+    val def = invItem.itemDef
     if (!def.isTradeable) {
         plr.sendMessage("Untradeable items cannot be deposited here.")
         return
     }
-    val invItem = plr.inventory[event.index] ?: return
-    val invAmt = plr.inventory.computeAmountForId(event.itemId)
 
-    val removeItem = invItem.withAmount(if (newAmount > invAmt) invAmt else newAmount)
+    // remove() reports success even when it takes less than asked, so never ask for more than the inventory holds.
+    var newAmount = minOf(amount, plr.inventory.computeAmountForId(invItem.id))
+    if (newAmount > 8 && !def.isStackable) {
+        newAmount = 8
+    }
+    val removeItem = if (invItem.isDynamic) invItem else invItem.withAmount(newAmount)
     if (!plr.depositItems.hasSpaceFor(removeItem)) {
         plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
         return
@@ -48,14 +51,20 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
  * Withdraws an item from the party chest.
  */
 fun withdraw(plr: Player, event: WidgetItemClickEvent, amount: Int) {
-    val chestAmt = plr.depositItems.computeAmountForId(event.itemId)
-    val finalAmt = if (amount > chestAmt) chestAmt else amount
-    val removeItem = Item(event.itemId, finalAmt)
+    // Withdraw-X runs once the amount is entered, and the slot can change before then.
+    val offered = plr.depositItems
+    val offerItem = if (event.index < offered.capacity()) offered[event.index] else null
+    if (offerItem == null || offerItem.id != event.itemId || amount < 1) {
+        return
+    }
+
+    val newAmount = minOf(amount, offered.computeAmountForId(offerItem.id))
+    val removeItem = if (offerItem.isDynamic) offerItem else offerItem.withAmount(newAmount)
     if (!plr.inventory.hasSpaceFor(removeItem)) {
         plr.sendMessage(Messages.inventoryFull())
         return
     }
-    if (plr.depositItems.remove(removeItem)) {
+    if (offered.remove(removeItem)) {
         plr.inventory.add(removeItem)
     }
 }
