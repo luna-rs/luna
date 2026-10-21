@@ -125,21 +125,26 @@ public class Npc extends Mob {
         setPosition(position);
     }
 
+    /**
+     * Uses identity-based hashing.
+     * <p>
+     * An NPC's index is {@code -1} before it is added to the world, set while it is in the world, and {@code -1} again
+     * once it is removed, so a hash based on the index would change while the NPC is stored in a hash-based
+     * collection, and it could no longer be found or removed.
+     */
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof Npc) {
-            Npc other = (Npc) obj;
-            return getIndex() == other.getIndex();
-        }
-        return false;
+    public final int hashCode() {
+        return System.identityHashCode(this);
     }
 
+    /**
+     * Uses identity-based equality.
+     *
+     * @see #hashCode()
+     */
     @Override
-    public int hashCode() {
-        return Objects.hash(getIndex());
+    public final boolean equals(Object obj) {
+        return this == obj;
     }
 
     @Override
