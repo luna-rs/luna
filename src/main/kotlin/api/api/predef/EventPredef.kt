@@ -272,6 +272,26 @@ fun object3(id: Int,
             action: EventAction<ObjectThirdClickEvent>) =
     object3(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
 
+/** The [ObjectFourthClickEvent] matcher function. */
+fun object4(id: Int,
+            interaction: InteractionPolicySupplier,
+            action: EventAction<ObjectFourthClickEvent>) =
+    Matcher.get<ObjectFourthClickEvent, Int>().set(id, action, interaction)
+
+fun object4(id: Int,
+            action: EventAction<ObjectFourthClickEvent>) =
+    object4(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
+
+/** The [ObjectFifthClickEvent] matcher function. */
+fun object5(id: Int,
+            interaction: InteractionPolicySupplier,
+            action: EventAction<ObjectFifthClickEvent>) =
+    Matcher.get<ObjectFifthClickEvent, Int>().set(id, action, interaction)
+
+fun object5(id: Int,
+            action: EventAction<ObjectFifthClickEvent>) =
+    object5(id, InteractionPolicy.STANDARD_SIZE_BIF, action)
+
 /**
  * The [CommandEvent] matcher function.
  */

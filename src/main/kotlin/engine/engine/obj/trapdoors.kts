@@ -7,7 +7,9 @@ import engine.obj.TrapdoorLanding.Companion.byTrapdoor
 import engine.obj.TrapdoorLanding.Companion.floorsDown
 import engine.obj.TrapdoorLanding.Companion.tile
 import game.player.Sound
+import game.skill.Skills
 import io.luna.game.action.impl.LockedAction
+import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
@@ -71,6 +73,11 @@ val FADE_IN = 1378
  * Where the rat pit manholes lead.
  */
 val RAT_PITS = byTrapdoor(BELOW, Position(3018, 3232) to tile(2962, 9650), Position(3267, 3400) to tile(2894, 5097))
+
+/**
+ * Picking a lock.
+ */
+val PICK_LOCK_ANIMATION = Animation(537)
 
 /**
  * The objects [change] replaced, by position and type, or `null` where there wasn't one.
@@ -221,6 +228,34 @@ fun close(plr: Player, trapdoor: GameObject, closed: Int) {
     change(trapdoor, closed, TRAPDOOR_TICKS)
 }
 
+/**
+ * Has [plr] try to pick [HamTrapdoor]'s lock, which opens it for them if they manage to.
+ */
+fun pickHamTrapdoor(plr: Player) {
+    delayed(plr, 2, {
+        plr.sendMessage("You attempt to pick the lock on the trapdoor.")
+        plr.animation(PICK_LOCK_ANIMATION)
+        plr.playSound(Sound.LOCKED)
+    }) {
+        val lockpick = plr.inventory.contains(HamTrapdoor.LOCKPICK)
+        val chance = if (lockpick) HamTrapdoor.LOCKPICK_CHANCE else HamTrapdoor.CHANCE
+        if (Skills.success(chance, plr.thieving.level.coerceAtMost(99))) {
+            plr.sendMessage("You manage to pick the lock.")
+            plr.playSound(Sound.PICK_LOCK)
+            plr.thieving.addExperience(HamTrapdoor.XP)
+            plr.sendMessage("The trapdoor opens...")
+            HamTrapdoor.show(plr, true)
+        } else {
+            plr.sendMessage("You fail to pick the lock.")
+            plr.sendMessage("Your fingers go numb from fumbling with the lock.")
+            plr.thieving.level = maxOf(1, plr.thieving.level - 1)
+            if (rand(HamTrapdoor.FAIL_XP_CHANCE)) {
+                plr.thieving.addExperience(HamTrapdoor.FAIL_XP)
+            }
+        }
+    }
+}
+
 on(ServerLaunchEvent::class) {
     for (trapdoor in Trapdoor.values()) {
         val closed = trapdoor.closed
@@ -361,3 +396,27 @@ object1(2444) {
     change(gameObject, 2445, 5)
     climbDown(plr, Position(2491, 9864), message = null, bend = false, delay = 2)
 }
+
+// Lumbridge, the H.A.M. Hideout. Its lock has to be picked, and it only opens for whoever picked it.
+object1(HamTrapdoor.ID) {
+    if (HamTrapdoor.isOpen(plr)) {
+        climbDown(plr, HamTrapdoor.HIDEOUT)
+    } else {
+        plr.sendMessage("This trapdoor is locked.")
+        plr.playSound(Sound.LOCKED)
+    }
+}
+object2(HamTrapdoor.ID) {
+    if (HamTrapdoor.isOpen(plr)) {
+        plr.sendMessage("You close the trapdoor.")
+        plr.playSound(Sound.DOOR_CLOSE)
+        HamTrapdoor.show(plr, false)
+    }
+}
+object5(HamTrapdoor.ID) {
+    if (!HamTrapdoor.isOpen(plr)) {
+        pickHamTrapdoor(plr)
+    }
+}
+// The client keeps its varps across a relog, so one that logged out with the trapdoor open would still show it open.
+on(LoginEvent::class) { HamTrapdoor.show(plr, false) }

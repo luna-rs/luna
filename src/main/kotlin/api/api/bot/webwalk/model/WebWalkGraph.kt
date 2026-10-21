@@ -87,8 +87,9 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     ENTRANCE(false),
 
     /**
-     * A crossing between two nearby tiles that needs more than a click on an object, such as a gate that charges a toll. The
-     * [EdgeAction.handler] of the edge says how it is crossed.
+     * A crossing that needs more than a click on an object, either between two nearby tiles, such as a gate that charges a
+     * toll, or into another place, such as a trapdoor whose lock is picked. The [EdgeAction.handler] of the edge says how it
+     * is crossed.
      */
     CROSSING(true),
 
@@ -109,7 +110,8 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     FAIRY_RING(false);
 
     /**
-     * @return `true` if this is a door, gate, curtain or crossing, which are steps between two nearby tiles on one plane.
+     * @return `true` if this is a door, gate, curtain or crossing, which a walk must not pass through as if it were open.
+     * Doors, gates and curtains are steps between two nearby tiles on one plane, and so are most crossings.
      */
     val isDoorLike: Boolean
         get() = this == DOOR || this == GATE || this == CURTAIN || this == CROSSING

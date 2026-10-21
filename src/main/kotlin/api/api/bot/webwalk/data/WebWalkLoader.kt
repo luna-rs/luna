@@ -35,6 +35,7 @@ import java.nio.file.Path
  *   trapdoors and entrances. `crossings.jsonc` (generated): crossings that a handler in code crosses, such as the Al Kharid toll gate.
  *   All three have entries with a `type`, `object`, `pos`, `from` and `to`, and an optional `cost`, `bidirectional`,
  *   `option`, `requirements` and `reverseRequirements`. A `CROSSING` also has a `handler`, which no other type may have.
+ *   The `from` and `to` of a door, gate or curtain are next to each other on one plane, but a crossing may lead anywhere.
  * - `obstacle_overrides.json` (maintained by hand): patches for obstacles, found by `pos` (and optionally `object`), that
  *   set `requirements`, `reverseRequirements` or `cost`, or turn the obstacle off with `disabled`. An override that finds
  *   no obstacle is a problem, so overrides can't quietly rot after the obstacles are generated again.
@@ -459,7 +460,8 @@ object WebWalkLoader {
                 entry.reject("to", "must differ from 'from'")
                 return null
             }
-            if (type.isDoorLike && (from.z != to.z || from.computeLongestDistance(to) != 1)) {
+            // A crossing's handler may take it anywhere, such as down a trapdoor.
+            if (type.isDoorLike && type != EdgeType.CROSSING && (from.z != to.z || from.computeLongestDistance(to) != 1)) {
                 entry.reject("to", "must be the tile next to 'from' on the same plane for a ${type.name}")
                 return null
             }

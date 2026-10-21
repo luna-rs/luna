@@ -547,7 +547,7 @@ public final class BotOutputMessageHandler {
             bot.log("Cannot interact with null object.");
             return false;
         }
-        if (option < 1 || option > 3) {
+        if (option < 1 || option > 5) {
             bot.log("Invalid object interaction option: " + option);
             return false;
         }
@@ -575,6 +575,18 @@ public final class BotOutputMessageHandler {
                 msg.putShort(id, ByteOrder.LITTLE);
                 msg.putShort(x, ByteOrder.LITTLE, ValueType.ADD);
                 opcode = 50;
+                break;
+            case 4:
+                msg.putShort(x);
+                msg.putShort(y, ByteOrder.LITTLE);
+                msg.putShort(id);
+                opcode = 136;
+                break;
+            case 5:
+                msg.putShort(id, ByteOrder.LITTLE);
+                msg.putShort(y, ByteOrder.LITTLE);
+                msg.putShort(x);
+                opcode = 55;
                 break;
         }
         client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));

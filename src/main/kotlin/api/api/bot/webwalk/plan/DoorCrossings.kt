@@ -19,12 +19,13 @@ class DoorCrossings(steps: Iterable<Pair<Position, Position>>) {
     companion object {
 
         /**
-         * Finds the crossings of the doors, gates and curtains of a graph.
+         * Finds the crossings of the doors, gates and curtains of a graph, and of the crossings between tiles next to each
+         * other. A crossing that leads farther, such as down a trapdoor, is no step of a walk, so it is left out.
          */
         fun of(graph: WebWalkGraph): DoorCrossings = DoorCrossings(graph.edges.filter { it.type.isDoorLike }.mapNotNull { edge ->
             val from = graph.node(edge.from)?.position
             val to = graph.node(edge.to)?.position
-            if (from == null || to == null) null else Pair(from, to)
+            if (from == null || to == null || from.z != to.z || from.computeLongestDistance(to) != 1) null else Pair(from, to)
         })
     }
 

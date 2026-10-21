@@ -45,7 +45,8 @@ import java.util.concurrent.Executor
  * - The closed doors, gates and curtains of `obstacles.jsonc` are made by [WebWalkDoorGenerator] from the map data of the
  *   cache.
  * - The crossings of `crossings.jsonc` are the objects of the [SpecialCrossings] that the cache's map data places, such as the
- *   leaves of the Al Kharid toll gate, made by [WebWalkCrossingGenerator].
+ *   leaves of the Al Kharid toll gate, or the fixed tiles of their placements, such as the H.A.M. Hideout trapdoor, made by
+ *   [WebWalkCrossingGenerator].
  * - The ladders, stairs, trapdoors and entrances of `climbs.jsonc` land where [LadderDestination], [StairDestination],
  *   [Trapdoor] and [Entrance] say that they do, which is what players get.
  * - The teleports of `teleports.jsonc` are the teleport spells, the destinations of the teleport jewellery, and the home

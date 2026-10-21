@@ -27,6 +27,9 @@ enum class SpecialLadder(val ladder: Position, val destination: Position) {
     // Phoenix Gang hideout, Varrock.
     PHOENIX_GANG_UP(ladder = Position(3244, 9783), destination = Position(3244, 3382)),
 
+    // Lumbridge, the ladder out of the H.A.M. Hideout, back up beside its trapdoor.
+    HAM_HIDEOUT_UP(ladder = Position(3149, 9653), destination = Position(3166, 3252)),
+
     // Lava maze and King Black Dragon lair entrance (the two ladders cross over).
     KBD_ENTRANCE_DOWN(ladder = Position(3017, 3849), destination = Position(3069, 10255)),
     KBD_ENTRANCE_UP(ladder = Position(3069, 10256), destination = Position(3016, 3849)),
