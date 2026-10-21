@@ -236,7 +236,7 @@ public class ItemContainer implements Iterable<Item> {
      * Index selection rules:
      * <ul>
      *   <li>If the item will stack (per policy/definition) and is NOT dynamic, it will be placed on the existing
-     *       stack slot for that id if present.</li>
+     *       stack slot for that id if present. Dynamic slots with the same id are never stacked onto.</li>
      *   <li>If {@code preferredIndex != -1} and the slot is free, it may be used for non-stackable items.</li>
      *   <li>Otherwise the next free slot is chosen.</li>
      * </ul>
@@ -258,7 +258,7 @@ public class ItemContainer implements Iterable<Item> {
         boolean stackable = stackable(item) && !item.isDynamic();
         int addIndex = preferredIndex;
         if (stackable) {
-            addIndex = computeIndexForId(item.getId());
+            addIndex = computeStackIndexForId(item.getId());
         } else if (addIndex != -1) {
             addIndex = occupied(addIndex) ? -1 : addIndex;
         }
@@ -600,6 +600,23 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Finds the first index holding a stack of {@code id} that a non-dynamic item can be added to. Slots holding a
+     * {@link DynamicItem} are skipped, since they always keep an amount of 1.
+     *
+     * @param id The item id to search for.
+     * @return The first matching index, or -1 if not found.
+     */
+    private int computeStackIndexForId(int id) {
+        for (int index = 0; index < capacity; index++) {
+            Item item = get(index);
+            if (item != null && item.getId() == id && !item.isDynamic()) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Computes the total quantity of {@code id} present in this container.
      * <p>
      * For stackable ids, this returns the amount stored in the single stack slot. For non-stackable ids, this sums
@@ -878,7 +895,7 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final int computeSpaceFor(Item item) {
         if (stackable(item) && !item.isDynamic()) {
-            int index = computeIndexForId(item.getId());
+            int index = computeStackIndexForId(item.getId());
             if (index == -1) {
                 return 1;
             } else if (get(index).getAmount() + item.getAmount() < 0) {
