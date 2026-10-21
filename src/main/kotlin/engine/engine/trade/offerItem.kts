@@ -23,17 +23,15 @@ object Add : Mod()
 object Remove : Mod()
 
 /**
- * Either adds or removes an item from the trade screen.
+ * Either adds or removes an item from the trade screen. An [amount] of -1 moves all of the clicked item.
  */
 fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
     val inter = plr.overlays[OfferTradeInterface::class]
     if (inter != null) {
-        val container = if(mod == Add) plr.inventory else if(mod == Remove) inter.items else throw IllegalArgumentException("Invalid mod value.")
-        val newAmount = if (amount == -1) container.computeAmountForId(msg.itemId) else amount
         when (mod) {
-            Add -> inter.add(plr, msg.index, newAmount)
-            Remove -> inter.remove(plr, msg.index, newAmount)
+            Add -> inter.add(plr, msg.index, amount)
+            Remove -> inter.remove(plr, msg.index, amount)
         }
     }
 }
