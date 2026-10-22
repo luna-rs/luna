@@ -14,6 +14,7 @@ import io.luna.game.model.mob.bot.Bot
  * Selection reuses CombatLoadout; equipment uses normal click handlers and spells use native autocast checks.
  * No supplies are created or withdrawn. The combat script remains the only owner of attack initiation.
  *
+ * @property acceptsTarget Owning-session policy rechecked after every suspension, including patrol boundaries.
  * @property nanoTime Monotonic clock used for decision deadlines rather than wall-clock time.
  * @author lare96
  */

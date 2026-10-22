@@ -58,6 +58,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private suspend fun prepareAttack(): Boolean {
         if (focus is Player && pkSession?.allowsPursuit(focus as Player) == false) {
             bot.combat.target = null
+            if (bot.navigator.currentTarget === focus) bot.navigator.cancel()
             bot.walking.clear()
             stop()
             return false

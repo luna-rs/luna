@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.ReflexBotScript;
+import api.bot.action.BotCombatActionHandler;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
@@ -63,6 +64,7 @@ public final class BotReflex {
      * took over this tick.
      */
     public boolean process(Bot bot) {
+        BotCombatActionHandler.observePvpMovement(bot);
         if (activeReflex != null) {
             if (activeReflex.isRunning()) {
                 // Reflex script is still running; skip all other processing.

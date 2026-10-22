@@ -210,6 +210,7 @@ class PkTargetSelectionTest {
     }
 
     @Test fun patrolRejectsAPlayerThatCannotBeAttackedAtBothWildernessDepths() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
         `when`(world.locator.findViewablePlayers(bot)).thenReturn(setOf(target))
         `when`(target.combatLevel).thenReturn(60)
         assertFalse(PkBotScript(bot, 5.minutes).searchAndAttack())

@@ -2,6 +2,7 @@ package game.bot.scripts.combat
 
 import api.bot.Suspendable.delay
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.PkCombatObservations
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
@@ -16,6 +17,7 @@ import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
 import kotlinx.coroutines.future.await
@@ -31,8 +33,8 @@ import kotlin.time.DurationUnit
  * targets, and reacts to combat encounters. Once the configured [duration] expires, the bot attempts to flee the
  * Wilderness and finish safely.
  *
- * Movement is currently based on manually verified anchor points. Future versions should move more of this into the
- * zone/area system so bots can recognize caves, gates, one-way routes, high-risk paths, and special escape cases.
+ * Movement reuses verified anchors and existing travel helpers. Recreational SKILL sessions stay in low Edgeville;
+ * their geographic restriction belongs to this session rather than the account's ordinary combat activities.
  *
  * @param bot The bot controlled by this script.
  * @param duration The maximum amount of time this script should actively PK before fleeing.
@@ -46,23 +48,11 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Shared native eligibility checks, also used by the combat child's equipment-switch loop.
      */
     private val combatPolicy = BotCombatActionHandler(bot, handler)
+    private val observations = PkCombatObservations(bot)
 
-    // TODO Load in registerscripts
-    // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
-    //  distance. Then it should cache that bank and use that as the home bank for PKing activities.
-    // TODO@0.5.0 Anchor points for entering the wild from those banks (or use LOW_LEVEL_ANCHOR_POINTS sorted by distance?).
-    // TODO@1.0 dynamic "clans", bots will advertise at edgeville they're looking to start or join and then they wil pk together
-    // TODO do not attack liked players when searching, UNLESS we're greedy and unkind. then we attack everyone
-    // TODO PKers who are kind only attack other pkers (you can check which script they have!). Unkind PKers go for everyone.
-    // TODO Pking groups with liked bots? Pking groups are persisted and permanent, each bot clan is assigned to a team cape.
-    // TODO each bot clan has a leader which determines who can/can't join their clan (must be liked/neutral/etc. by leader)
-    //  bots will not attack anyone wearing their team cape.
-    // TODO there's currently 50 team capes meaning 50 possible clans for bots to join. chatgpt needs to generate:
-    //  clan name, description, favorite wilderness subzones (complete
-    // TODO bots will automatically be placed in a clan when PKing for the first time. bots will not attack other bots
-    //  wearing the same team cape. team capes are auto-spawn equipped on bots during loadout selection. bots can only be
-    //  placed once. once the bot decides either to join a clan or go solo for the first time the choice is persisted and
-    // can't be changed (only in file)
+    // TODO Prepare owned supplies using personality risk budgets before enabling coordinator dispatch/registration.
+    // TODO Define clan membership and non-kind GENERIC initiation policies.
+    // TODO Add local NPC avoidance that preserves an actively followed travel path.
 
     /**
      * Shared PK bot constants.
@@ -387,10 +377,59 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     /**
      * Keeps both ends of an owned pursuit inside the hunting area, including after equipment suspensions.
+     * Kind GENERIC fights also require a skull or a continuing defensive reason.
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
     internal fun allowsPursuit(target: Player): Boolean = allowsHuntingAt(bot.position) &&
-        allowsHuntingAt(target.position)
+        allowsHuntingAt(target.position) && (!isKindGenericSession() || target.skullIcon != SkullIcon.NONE ||
+        observations.canProtectAgainst(target) || target.combat.target === bot)
+
+    /**
+     * Uses the established kindness threshold; saved PK purpose remains separate from the personality template.
+     */
+    internal fun isKindGenericSession(): Boolean = bot.preferences.pk?.purpose() == Purpose.GENERIC &&
+        bot.personality.isKind && !bot.preferences.isSkiller
+
+    /**
+     * Applies purpose-specific initiation. Kind GENERIC bots may challenge idle skulled players or protect a
+     * witnessed victim, including against an unskulled aggressor. Unknown ongoing fights are left alone.
+     * Clan membership and non-kind GENERIC initiation remain disabled until those policies are defined.
+     */
+    internal fun wantsToAttack(target: Player): Boolean = when (bot.preferences.pk?.purpose()) {
+        Purpose.SKILL -> BotCombatActionHandler.isPker(target)
+        Purpose.VALUE -> true
+        Purpose.GENERIC -> isKindGenericSession() && (observations.canProtectAgainst(target) ||
+            (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null))
+        else -> false
+    }
+
+    /**
+     * Records only attack starts visible during this session; a later damage impact supplies no new evidence.
+     */
+    internal fun observeAttack(attacker: Player, victim: Player) {
+        if (isKindGenericSession()) observations.attackStarted(attacker, victim)
+    }
+
+    /**
+     * Maintains consecutive visible movement samples while this session or a combat child is active.
+     */
+    internal fun observeMovement(players: Collection<Player>) {
+        if (isKindGenericSession()) observations.observe(players)
+    }
+
+    /**
+     * Prioritizes a known aggressor over ordinary patrol travel, without interrupting another active fight.
+     * Native single-combat rules may prevent intervention even when the bot witnessed an attack.
+     */
+    internal fun protectObservedPlayer(): Boolean {
+        if (!isKindGenericSession() || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
+            System.currentTimeMillis() >= expireAt) return false
+        val attacker = world.locator.findViewablePlayers(bot).firstOrNull {
+            observations.canProtectAgainst(it) && allowsPursuit(it) && combatPolicy.canAttackWildernessPlayer(it)
+        } ?: return false
+        bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
+        return true
+    }
 
     /**
      * Reuses verified low-level Edgeville anchors for SKILL; other purposes retain the existing area selection.
@@ -406,7 +445,12 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     override fun paused() {
-        // todo@0.5.0 Return to ::home or last bank.
+        bot.navigator.cancel()
+        bot.walking.clear()
+    }
+
+    override suspend fun finish() {
+        if (!isPaused()) observations.clear()
     }
 
     override suspend fun run(): Boolean {
@@ -523,7 +567,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
          * Checks whether [other] is a valid target candidate for this bot.
          */
         fun check(other: Player): Boolean {
-            return allowsPursuit(other) && (!isSkillSession || BotCombatActionHandler.isPker(other)) &&
+            return allowsPursuit(other) && wantsToAttack(other) &&
                 combatPolicy.canAttackWildernessPlayer(other)
         }
 
@@ -558,7 +602,9 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             }
         }
 
-        for (other in targets) {
+        // Protect witnessed victims before considering ordinary skull-based challenges.
+        val ordered = if (isKindGenericSession()) targets.sortedByDescending { observations.canProtectAgainst(it) } else targets
+        for (other in ordered) {
             if (check(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
                 // The child owns the first attack, after its reaction delay and carried-supply checks.

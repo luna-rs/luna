@@ -22,6 +22,7 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -112,6 +113,34 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             !player.preferences.isSkiller && (player.personality.type == PersonalityTemplateType.PKER ||
                 player.scriptStack.containsActive(PkBotScript::class.java))
         } else player.skullIcon != SkullIcon.NONE
+
+        /**
+         * Delivers a fresh native PvP attack to nearby kind GENERIC session observers before combat timers reset.
+         * Existing PvP cannot establish who started a fight. Prior NPC combat does not hide a new player aggressor;
+         * NPC attacks themselves do not call this hook.
+         */
+        @JvmStatic
+        fun observePvpAttack(attacker: Player, victim: Player) {
+            if (attacker === victim ||
+                (attacker.combat.inCombat() && attacker.combat.lastCombatWith !is Npc) ||
+                (victim.combat.inCombat() && victim.combat.lastCombatWith !is Npc)) return
+            for (player in attacker.world.locator.findViewablePlayers(attacker)) {
+                val observer = player as? Bot ?: continue
+                observer.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.observeAttack(attacker, victim)
+            }
+        }
+
+        /**
+         * Samples active kind GENERIC sessions each game cycle, including while patrol travel is suspended.
+         * Evidence may interrupt that session to protect a visible player, subject to ordinary combat legality.
+         */
+        @JvmStatic
+        fun observePvpMovement(bot: Bot) {
+            val session = bot.scriptStack.findActive(PkBotScript::class.java).orElse(null) ?: return
+            if (!session.isKindGenericSession()) return
+            session.observeMovement(bot.world.locator.findViewablePlayers(bot))
+            session.protectObservedPlayer()
+        }
     }
 
     /**

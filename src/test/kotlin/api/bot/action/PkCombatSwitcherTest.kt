@@ -316,10 +316,12 @@ class PkCombatSwitcherTest {
         val defensive = InventoryProductionFixtures.active(CombatBotScript(bot, enemy))
         assertFalse(defensive.init(false))
         assertFalse(defensive.isTerminated())
+        `when`(bot.navigator.currentTarget).thenReturn(enemy)
         val owned = InventoryProductionFixtures.active(CombatBotScript(bot, enemy, pkSession = session))
         assertTrue(owned.init(false))
         assertTrue(owned.isTerminated())
         verify(bot.walking).clear()
+        verify(bot.navigator).cancel()
         verify(bot.combat, never()).attack(any())
     }
 
