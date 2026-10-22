@@ -14,6 +14,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
+import java.util.WeakHashMap
 
 /**
  * An [InventoryAction] that will enable the mining of rocks. The swing comes on the tick after the click and the first
@@ -24,6 +25,19 @@ import io.luna.game.model.`object`.GameObject
  */
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
     InventoryAction(plr, false, pick.speed - 1, Int.MAX_VALUE) {
+
+    companion object {
+
+        /**
+         * Rock -> the tick of the roll that emptied it. Players who succeed on the same tick all get ore.
+         */
+        private val emptiedOn = WeakHashMap<GameObject, Long>()
+    }
+
+    /**
+     * The tick of this action's last successful roll.
+     */
+    private var successTick = -1L
 
     /**
      * If the swing at the start has happened.
@@ -64,8 +78,8 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             mob.sendMessage("You need a pickaxe to mine ores.")
             false
         }
-        // Check if rock isn't already mined .
-        rockObj.state == EntityState.INACTIVE -> false
+        // Check if rock isn't already mined, unless this player found ore on the same tick as the one who emptied it.
+        rockObj.state == EntityState.INACTIVE && !oreDue && emptiedOn[rockObj] != world.currentTick -> false
         else -> {
             if (!start && !oreDue) {
                 delay = pick.speed
@@ -136,7 +150,8 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
                 listOf(Item(PURE_ESSENCE.item)) else listOf(Item(RUNE_ESSENCE.item))
 
-            Skills.success(low, high, mob.mining.level) ->
+            Skills.success(low, high, mob.mining.level) -> {
+                successTick = world.currentTick
                 if (ore == Ore.IRON) {
                     listOf(Item(ore.item))
                 } else {
@@ -145,6 +160,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                     delay = 1
                     emptyList()
                 }
+            }
 
             else -> emptyList()
         }
@@ -167,6 +183,11 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      * Deletes and respawns an [Ore] rock object.
      */
     private fun deleteAndRespawnRock() {
+        if (rockObj.state == EntityState.INACTIVE) {
+            // Another player emptied it on the same tick.
+            return
+        }
+        emptiedOn[rockObj] = successTick
         val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
         if (emptyId != null && emptyId != -1) {
             world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
