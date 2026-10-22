@@ -3,6 +3,7 @@ package io.luna.game.model.mob.block;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.netty.buffer.ByteBuf;
 
@@ -30,9 +31,11 @@ import io.netty.buffer.ByteBuf;
 public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
 
     @Override
-    public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
+    public void addBlockSet(Player player, ByteMessage msg, UpdateState state, Player viewer) {
+        boolean cacheable = state == UpdateState.UPDATE_LOCAL &&
+                !player.getFlagData().contains(UpdateFlag.EXACT_MOVEMENT);
         // The block has already been encoded for someone this cycle; reuse it.
-        if (state == UpdateState.UPDATE_LOCAL) {
+        if (cacheable) {
             ByteBuf cachedBlock = player.acquireCachedBlock();
             if (cachedBlock != null) {
                 try {
@@ -46,11 +49,11 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
 
         ByteMessage blockMsg = ByteMessage.raw();
         try {
-            encodeBlockSet(player, blockMsg, state);
+            encodeBlockSet(player, blockMsg, state, viewer);
             msg.putBytes(blockMsg);
 
             // Cache the encoded block for someone else to reuse within this cycle.
-            if (state == UpdateState.UPDATE_LOCAL) {
+            if (cacheable) {
                 player.cacheBlockIfAbsent(blockMsg);
             }
         } finally {
@@ -60,8 +63,8 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
     }
 
     @Override
-    public void encodeBlock(Player player, UpdateBlock block, ByteMessage blockMsg) {
-        block.encodeForPlayer(blockMsg, player.getBlockData());
+    public void encodeBlock(Player player, UpdateBlock block, ByteMessage blockMsg, Player viewer) {
+        block.encodeForPlayer(blockMsg, player.getBlockData(), viewer);
     }
 
     @Override

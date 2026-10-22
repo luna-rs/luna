@@ -88,7 +88,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
             // Encode movement and update blocks for the local player itself.
             handleMovement(player, msg, true);
-            blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
+            blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF, player);
 
             // Write the amount of players that are currently in the player's update view.
             msg.putBits(8, localMobs.updatingPlayersCount());
@@ -97,7 +97,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             localMobs.forUpdatingPlayers(other -> {
                 if (other.isViewableFrom(player) && !other.isPendingPlacement()) {
                     handleMovement(other, msg, false);
-                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL, player);
                     return false;
                 } else {
                     // No longer viewable or being placed; remove from local view.
@@ -121,7 +121,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                 if (other.getPosition().isViewable(player.getPosition()) && localMobs.add(other)) {
                     added++;
                     addPlayer(msg, player, other);
-                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL, player);
                 }
             }
 
