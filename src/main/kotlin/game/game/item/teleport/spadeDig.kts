@@ -35,6 +35,7 @@ fun Player.digWithSpade(spot: SpadeDigSpot?) {
     world.scheduleOnce(SPADE_FALL_DELAY) {
         unlock()
         if (isAlive) {
+            sendMessage("You've broken into a crypt!")
             move(spot.landing)
         }
     }
