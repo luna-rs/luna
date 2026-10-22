@@ -58,6 +58,11 @@ enum class Arrow(val level: Int,
         /**
          * An immutable copy of [values].
          */
-        val VALUES = ImmutableList.copyOf(values())
+        val VALUES = ImmutableList.copyOf(Arrow.entries)
+
+        /**
+         * An immutable copy of all item identifiers from [values].
+         */
+        val IDS = ImmutableList.copyOf(Arrow.entries).map { it.id }.toSet()
     }
 }
