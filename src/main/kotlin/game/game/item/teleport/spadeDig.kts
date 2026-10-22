@@ -4,6 +4,8 @@ import api.predef.*
 import api.predef.ext.*
 import game.content.treasureTrails.TreasureTrails
 import game.skill.firemaking.lightSource.LightSource
+import game.content.barrows.BarrowsBrother
+import game.content.barrows.BarrowsRun
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
@@ -42,7 +44,10 @@ fun Player.digWithSpade(spot: SpadeDigSpot?) {
     world.scheduleOnce(SPADE_FALL_DELAY) {
         unlock()
         if (isAlive) {
-            sendMessage("You've broken into a crypt!")
+            if (BarrowsBrother.entries.any { it.digSpot == spot }) {
+                BarrowsRun.enterCrypt(this)
+                sendMessage("You've broken into a crypt!")
+            }
             move(spot.landing)
             spot.arrival?.let { sendMessage(it) }
         }
