@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+import static api.predef.ext.BotPreferenceExtKt.totalItemAmount;
 import static io.luna.game.model.def.WantedItemDefinition.DEFAULT;
 import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_TAGS;
 import static io.luna.util.RandomUtils.randomFrom;
@@ -567,6 +568,19 @@ public final class BotPreference {
      */
     public boolean hasWantedItem(int id) {
         return wantedItems.containsKey(toUnnotedId(id));
+    }
+
+    /**
+     * Checks whether a wanted item exists and the bot owns less than its target.
+     *
+     * @param id The item id to check, normalized before lookup.
+     * @return {@code true} if the bot still needs more of the wanted item.
+     */
+    public boolean needsWantedItem(int id) {
+        WantedItemDefinition wanted = getWantedItem(id);
+        return bot != null
+                && wanted != null
+                && totalItemAmount(bot, wanted.id()) < wanted.target();
     }
 
     /**
