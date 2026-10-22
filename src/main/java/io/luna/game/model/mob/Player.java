@@ -164,6 +164,11 @@ public class Player extends Mob {
     private GameClient client;
 
     /**
+     * The memory mode reported for this connection; it is not a saved character setting.
+     */
+    private boolean lowMemory;
+
+    /**
      * The last region position used for region-change detection.
      */
     private Position lastRegion;
@@ -1023,6 +1028,14 @@ public class Player extends Mob {
      */
     public GameClient getClient() {
         return client;
+    }
+
+    public boolean isLowMemory() {
+        return lowMemory;
+    }
+
+    public void setLowMemory(boolean lowMemory) {
+        this.lowMemory = lowMemory;
     }
 
     /**

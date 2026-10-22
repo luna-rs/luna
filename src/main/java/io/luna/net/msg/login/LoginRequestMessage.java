@@ -35,6 +35,8 @@ public final class LoginRequestMessage {
      */
     private final ChannelPipeline pipeline;
 
+    private final boolean lowMemory;
+
     /**
      * Creates a new {@link LoginRequestMessage}.
      *
@@ -46,11 +48,24 @@ public final class LoginRequestMessage {
      */
     public LoginRequestMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
                                ChannelPipeline pipeline) {
+        this(username, password, encryptor, decryptor, pipeline, false);
+    }
+
+    /**
+     * Creates a login request retaining the client's memory mode for optional visual effects.
+     */
+    public LoginRequestMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
+                               ChannelPipeline pipeline, boolean lowMemory) {
         this.username = username;
         this.password = password;
         this.encryptor = encryptor;
         this.decryptor = decryptor;
         this.pipeline = pipeline;
+        this.lowMemory = lowMemory;
+    }
+
+    public boolean isLowMemory() {
+        return lowMemory;
     }
 
     /**
