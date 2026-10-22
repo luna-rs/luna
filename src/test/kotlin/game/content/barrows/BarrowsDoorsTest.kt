@@ -10,6 +10,7 @@ import io.luna.game.model.chunk.ChunkUpdatableRequest
 import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.model.mob.overlay.AbstractOverlaySet
 import io.luna.game.model.mob.varp.PersistentVarp
@@ -64,6 +65,8 @@ class BarrowsDoorsTest {
             .`when`(repository).queueUpdate(any(ChunkUpdatableRequest::class.java))
         doAnswer { tasks += it.getArgument<Task>(0); null }.`when`(world).schedule(any(Task::class.java))
         val locator = world.locator
+        `when`(locator.findNpcs(any(Locatable::class.java), eq(5), any()))
+            .thenReturn((0..11).map { mock(Npc::class.java) }.toSet())
         doAnswer { call ->
             val position = call.getArgument<Locatable>(0).abs()
             val predicate = call.getArgument<Predicate<GameObject>>(1)
