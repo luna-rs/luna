@@ -1,7 +1,6 @@
-package game.bot.scripts
+package api.bot.action
 
 import api.predef.*
-import api.bot.action.BotCombatActionHandler
 
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
@@ -17,23 +16,29 @@ import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.Weapon
 
 /**
- * An owned combat outfit and its consumables, selected before an NPC session starts.
+ * An owned combat outfit and its consumables, shared by NPC preparation and carried PK switches.
  * Ordinary elemental spells use base runes and staff substitution; special spells require separate preparation.
  *
  * @property gear Equipment slots to pass to the existing gear locator.
  * @property spell Optional standard elemental autocast spell.
  * @author lare96
  */
-internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpellDefinition? = null) {
-    /** Rune cost per cast after applying the selected staff's unlimited runes. */
+internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellDefinition? = null) {
+    /**
+     * Rune cost per cast after applying the selected staff's unlimited runes.
+     */
     val runes: Map<Int, Int> get() = runeCosts(spell, gear[Equipment.WEAPON])
 
     companion object {
-        /** Weapon types that consume their equipped stack instead of separate ammunition. */
+        /**
+         * Weapon types that consume their equipped stack instead of separate ammunition.
+         */
         val thrown = setOf(Weapon.KNIFE, Weapon.DART, Weapon.JAVELIN, Weapon.THROWN_AXE)
         private val bows = setOf(Weapon.SHORTBOW, Weapon.LONGBOW, Weapon.CROSSBOW)
 
-        /** Returns base-rune costs for supported spells, omitting runes represented by the actual staff. */
+        /**
+         * Returns base-rune costs for supported spells, omitting runes represented by the actual staff.
+         */
         fun runeCosts(spell: CombatSpellDefinition?, weapon: Int?): Map<Int, Int> {
             val represented = Staff.ID_TO_STAFF[weapon]?.represents.orEmpty()
             return spell?.required.orEmpty().filterIsInstance<RuneRequirement>()
@@ -41,15 +46,27 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
                 .mapValues { (_, requirements) -> requirements.sumOf { it.amount } }
         }
 
-        /** Finds the strongest compatible, owned and equippable ammunition for a weapon. */
-        fun ammunition(bot: Bot, weapon: Int): Int? = AmmoDefinition.ALL.values
+        /**
+         * Finds the strongest compatible, owned and equippable ammunition for a weapon.
+         */
+        fun ammunition(bot: Bot, weapon: Int, carriedOnly: Boolean = false): Int? = AmmoDefinition.ALL.values
             .filter { weapon in it.weapons }.sortedByDescending { it.strength }
             .flatMap { it.ammo.toList() }.firstOrNull {
-                bot.itemTracker.contains(it) && api.predef.equipDef(it).meetsAllRequirements(bot)
+                (if (carriedOnly) carried(bot, it) > 0 else bot.itemTracker.contains(it)) &&
+                    api.predef.equipDef(it).meetsAllRequirements(bot)
             }
 
-        /** Selects usable owned gear without creating supplies or silently changing combat purpose. */
-        fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null): NpcCombatLoadout? {
+        /**
+         * Counts physical equipment and inventory stock, excluding all banked supplies.
+         */
+        fun carried(bot: Bot, id: Int): Int = bot.inventory.computeAmountForId(id) + bot.equipment.computeAmountForId(id)
+
+        /**
+         * Selects usable owned gear without creating supplies or silently changing combat purpose.
+         * Carried selection bypasses the locator's bank-oriented fill and free-ammunition fallback.
+         */
+        fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null,
+                 carriedOnly: Boolean = false): CombatLoadout? {
             if (purpose !in setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) return null
             if (bot.preferences.isSkiller) return null
             if (purpose == BotGearPurpose.MAGIC && !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return null
@@ -60,17 +77,19 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
                         definition.spell.name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE") &&
                         (requested == null || definition.spell == requested) &&
                         definition.required.all { it is RuneRequirement } &&
-                        runeCosts(definition, weapon).all { (id, amount) -> bot.itemTracker.count(id) >= amount }
+                        runeCosts(definition, weapon).all { (id, amount) ->
+                            (if (carriedOnly) bot.inventory.computeAmountForId(id) else bot.itemTracker.count(id)) >= amount
+                        }
                 }.maxByOrNull { it.maxHit }
             val selected = BotGearSelector.find(bot, setOf(purpose)) reject@{ item ->
-                if (item.index != Equipment.WEAPON) false else {
+                if (carriedOnly && carried(bot, item.id) == 0) true else if (item.index != Equipment.WEAPON) false else {
                     val definition = WeaponDefinition.ALL.get(item.id).orElse(null) ?: return@reject true
                     if (purpose != BotGearPurpose.MAGIC &&
                         BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isEmpty()) return@reject true
                     val type = definition.type
                     when (purpose) {
                         BotGearPurpose.RANGED -> if (type in thrown) item.id !in AmmoDefinition.NO_AMMO_WEAPONS
-                            else type !in bows || ammunition(bot, item.id) == null
+                            else type !in bows || ammunition(bot, item.id, carriedOnly) == null
                         BotGearPurpose.MAGIC -> type != Weapon.STAFF || spellFor(item.id) == null
                         else -> type in bows || type in thrown
                     }
@@ -82,11 +101,12 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
                 BotCombatActionHandler.allowedStyles(bot, WeaponDefinition.getUnarmed().typeDef.styles).isEmpty()) return null
             if (purpose == BotGearPurpose.RANGED && weapon != null &&
                 WeaponDefinition.ALL.get(weapon).orElse(null)?.type in bows) {
-                selected.equipment[Equipment.AMMUNITION] = ammunition(bot, weapon) ?: return null
+                selected.equipment[Equipment.AMMUNITION] = ammunition(bot, weapon, carriedOnly) ?: return null
             }
             val spell = if (purpose == BotGearPurpose.MAGIC) spellFor(weapon!!) ?: return null else null
             // Compatible ammo is already selected, so buildLocator cannot enter its legacy free-ammo fallback.
-            return NpcCombatLoadout(selected.buildLocator().equipment, spell)
+            if (carriedOnly && weapon != null && equipDef(weapon).isTwoHanded) selected.equipment[Equipment.SHIELD] = null
+            return CombatLoadout(if (carriedOnly) selected.equipment else selected.buildLocator().equipment, spell)
         }
     }
 }

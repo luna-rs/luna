@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
@@ -133,7 +134,7 @@ open class NpcCombatScript(bot: Bot,
                                                            (data as? NpcCombatData)?.spell)
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
-    private var loadout: NpcCombatLoadout? = null
+    private var loadout: CombatLoadout? = null
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
@@ -153,7 +154,7 @@ open class NpcCombatScript(bot: Bot,
         bot.reflex.isDisableCombatReflex = true
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
-        loadout = NpcCombatLoadout.find(bot, purpose, spell) ?: return false
+        loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
         spell = loadout!!.spell?.spell
         if (resumed && !prepareCombat()) forceBanking = true
         return true

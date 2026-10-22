@@ -164,13 +164,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Proposed decision cadence: one to five native 600-ms ticks, scaled by intelligence and dexterity.
+     * Proposed decision cadence: one to six native 600-ms ticks, scaled by intelligence and dexterity.
      * The session controller must retain the current choice until this reaction delay has elapsed.
      */
     fun pkSwitchDelay(): Duration {
         val competence = (bot.personality.intelligence.coerceIn(0.0, 1.0) +
                 bot.personality.dexterity.coerceIn(0.0, 1.0)) / 2.0
-        return ((1 + ((1.0 - competence) * 4).roundToInt()) * 600).milliseconds
+        return ((1 + ((1.0 - competence) * 5).roundToInt()) * 600).milliseconds
     }
 
     /**

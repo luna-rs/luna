@@ -5,7 +5,7 @@ import api.predef.*
 import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.bot.scripts.NpcCombatLoadout
+import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
@@ -81,7 +81,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
-            .mapNotNull { purpose -> NpcCombatLoadout.find(bot, purpose)?.let { purpose to it } }
+            .mapNotNull { purpose -> CombatLoadout.find(bot, purpose)?.let { purpose to it } }
         val (purpose, loadout) = ready.randomOrNull() ?: return
         val level = combatReadiness(bot, purpose)
         val selected = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&

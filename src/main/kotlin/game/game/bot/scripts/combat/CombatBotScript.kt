@@ -1,10 +1,11 @@
 package game.bot.scripts.combat
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.PkCombatSwitcher
+import api.combat.specialAttack.SpecialAttackHandler
 import api.bot.Suspendable.delay
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.DynamicBotScript
-import api.combat.specialAttack.SpecialAttackHandler
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
@@ -37,6 +38,38 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     DynamicBotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    /**
+     * One fight-owned switch controller retains decision timing across repeated attack and eating checks.
+     */
+    private val pkSwitcher = PkCombatSwitcher(bot, handler)
+    private val combatPolicy = BotCombatActionHandler(bot, handler)
+
+    /**
+     * Only player fights with a saved PK identity use carried mixed-style switching.
+     */
+    private val usesPkSwitching: Boolean get() = focus is Player && bot.preferences.pk != null
+
+    /**
+     * Keeps waiting during reaction windows, and abandons fights with no usable permitted discipline.
+     */
+    private suspend fun prepareAttack(): Boolean {
+        if (usesPkSwitching) {
+            return when (pkSwitcher.prepare(focus as Player)) {
+                PkCombatSwitcher.Result.READY -> true
+                PkCombatSwitcher.Result.WAITING -> false
+                PkCombatSwitcher.Result.UNAVAILABLE -> {
+                    handler.combat.fleeCombat()
+                    stop()
+                    false
+                }
+            }
+        }
+        if (combatPolicy.prepareTrainingStyle()) return true
+        bot.combat.target = null
+        stop()
+        return false
+    }
 
     /**
      * An enumerated type representing the initial action this bot should perform.
@@ -79,12 +112,9 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
         }
         when (initialState) {
             InitialState.ATTACK -> {
-                if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
-                    bot.combat.target = null
-                    return true
-                }
-                bot.combat.attack(focus)
                 bot.speechStack.setDisableGeneral(true)
+                if (!prepareAttack()) return isTerminated()
+                bot.combat.attack(focus)
                 delay(600.milliseconds)
 
                 // Twice as likely to say something when starting combat.
@@ -107,7 +137,20 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun run(): Boolean {
-        if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+        if (usesPkSwitching) {
+            if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
+            targetEnemy()
+            if (isTerminated() || !focus.isAlive) return true
+            talk()
+            eatFood()
+            if (isTerminated()) return true
+            drinkPotion()
+            activatePrayer()
+            useSpecialAttack()
+            delay(600.milliseconds)
+            return isTerminated()
+        }
+        if (!combatPolicy.prepareTrainingStyle()) {
             bot.combat.target = null
             handler.combat.fleeCombat()
             return true
@@ -132,6 +175,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     override suspend fun finish() {
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
+        if (usesPkSwitching && !isPaused()) {
+            if (bot.combat.target === focus) bot.combat.target = null
+            pkSwitcher.clear()
+        }
     }
 
     override suspend fun completed() {
@@ -146,7 +193,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      */
     private suspend fun targetEnemy() {
         if (focus.isAlive && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
-            if (focus is Player && rand(1 of 5)) {
+            if (focus is Player && !usesPkSwitching && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
                     bot.combat.checkMultiCombat(it) &&
                             it.healthPercent < 25 &&
@@ -158,13 +205,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
                 }
             }
 
-            if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
-                bot.combat.target = null
-                stop()
-                return
-            }
+            if (!prepareAttack()) return
+            // Equipping can suspend; do not initiate against a dead, vanished or newly contested target.
+            if (!focus.isAlive || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus)) return
             bot.combat.attack(focus)
-            delay(1200.milliseconds, 3.seconds)
+            if (!usesPkSwitching) delay(1200.milliseconds, 3.seconds)
             return
         }
 
@@ -196,6 +241,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
                 // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
                 //  Wilderness depth, and available escape options.
                 handler.combat.fleeCombat()
+                if (usesPkSwitching) stop()
                 return
             }
 
@@ -258,6 +304,13 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      */
     private suspend fun useSpecialAttack() {
         val weaponId = bot.equipment.weapon?.id
+        if (usesPkSwitching) {
+            // Tactical special-weapon swaps are deferred; never override a chosen ranged or Magic phase.
+            if (!bot.combat.magic.isAutocasting && weaponId in SpecialAttackHandler.getAllWeaponIds() &&
+                bot.combat.specialBar.energy >= SpecialAttackHandler.getDrain(weaponId!!) &&
+                combatPolicy.prepareTrainingStyle()) bot.combat.specialBar.toggleOn()
+            return
+        }
 
         if (specialWeapon == null) {
             specialWeapon = -1
@@ -304,7 +357,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             }
         }
 
-        if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+        if (!combatPolicy.prepareTrainingStyle()) {
             bot.combat.target = null
             stop()
             return

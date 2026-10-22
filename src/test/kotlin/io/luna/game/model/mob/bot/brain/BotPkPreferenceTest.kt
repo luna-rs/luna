@@ -271,12 +271,12 @@ class BotPkPreferenceTest {
         }
     }
 
-    @Test fun reactionDelayScalesWithinOneToFiveGameTicks() {
+    @Test fun reactionDelayScalesWithinOneToSixGameTicks() {
         val account = bot()
         val policy = BotCombatActionHandler(account, account.actionHandler)
         `when`(account.personality.intelligence).thenReturn(0.0)
         `when`(account.personality.dexterity).thenReturn(0.0)
-        assertEquals(3000, policy.pkSwitchDelay().inWholeMilliseconds)
+        assertEquals(3600, policy.pkSwitchDelay().inWholeMilliseconds)
         `when`(account.personality.intelligence).thenReturn(1.0)
         `when`(account.personality.dexterity).thenReturn(1.0)
         assertEquals(600, policy.pkSwitchDelay().inWholeMilliseconds)
