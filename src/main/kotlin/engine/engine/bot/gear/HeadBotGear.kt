@@ -3,10 +3,10 @@ package engine.bot.gear
 /**
  * Defines head-slot gear groups that bots can use when selecting equipment.
  *
- * These groups are the holiday rares. Their priority stays at `0` because [BotGearSelector.ALL_GEAR] gives an item id
- * its highest declared priority for every purpose, so a higher value would also rank these hats above real helmets in
- * combat layouts. [BotGearSelector.find] puts them on the head in show-off layouts instead, and a bot that owns several
- * wears the first one in declaration order.
+ * These groups include holiday rares, decorative hats, and combat headgear. Their priority stays at `0` because
+ * [BotGearSelector.ALL_GEAR] gives an item id its highest declared priority for every purpose, so a higher value would
+ * also promote decorative hats in combat layouts. [BotGearSelector.find] prefers the first eligible owned item in
+ * declaration order for show-off layouts, keeping holiday rares ahead of the other hats.
  *
  * @param priority The relative priority of this group.
  * @param ids The item ids that belong to this group.
@@ -48,6 +48,160 @@ enum class HeadBotGear(private val priority: Int,
             1050 // Santa hat
         ),
         BotGearPurpose.SHOW_OFF
+    ),
+
+    ROBIN_HOOD_HAT(
+        0,
+        setOf(
+            2581 // Robin hood hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING,
+        BotGearPurpose.RANGED,
+        BotGearPurpose.PKING
+    ),
+
+    CAVALIER(
+        0,
+        setOf(
+            2639, // Tan cavalier
+            2641, // Dark cavalier
+            2643  // Black cavalier
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BERET(
+        0,
+        setOf(
+            2633, // Blue beret
+            2635, // Black beret
+            2637  // White beret
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BOATER(
+        0,
+        setOf(
+            7319, // Red boater
+            7321, // Orange boater
+            7323, // Green boater
+            7325, // Blue boater
+            7327  // Black boater
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    PIRATE_HAT(
+        0,
+        setOf(
+            2651 // Pirate's hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    HEADBAND(
+        0,
+        setOf(
+            2645, // Red headband
+            2647, // Black headband
+            2649  // Brown headband
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    TRIBAL_MASK(
+        0,
+        setOf(
+            6335, // Tribal mask
+            6337, // Tribal mask
+            6339  // Tribal mask
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    VILLAGER_HAT(
+        0,
+        setOf(
+            6345, // Villager hat
+            6355, // Villager hat
+            6365, // Villager hat
+            6375  // Villager hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    FEZ(
+        0,
+        setOf(
+            6382 // Fez
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    LEDERHOSEN_HAT(
+        0,
+        setOf(
+            6182 // Lederhosen hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    FROG_MASK(
+        0,
+        setOf(
+            6188 // Frog mask
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    GNOME_HAT(
+        0,
+        setOf(
+            656, // Hat
+            658, // Hat
+            660, // Hat
+            662, // Hat
+            664  // Hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    WIZARD_HAT(
+        0,
+        setOf(
+            7394, // Wizard hat (g)
+            7396, // Wizard hat (t)
+            579,  // Wizard hat
+            1017  // Wizard hat
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING,
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.PKING
+    ),
+
+    INITIATE_HELM(
+        0,
+        setOf(
+            5574 // Initiate helm
+        ),
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING,
+        BotGearPurpose.MELEE,
+        BotGearPurpose.PKING
     );
 
     /**
