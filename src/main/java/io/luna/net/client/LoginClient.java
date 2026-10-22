@@ -72,6 +72,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
         } else {
             // Passed initial check, submit login request.
             var player = new Player(context, new PlayerCredentials(username, password));
+            player.setLowMemory(msg.isLowMemory());
             loginService.submit(username, new LoginRequest(player, this, msg));
         }
     }

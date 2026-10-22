@@ -236,7 +236,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             int clientVersion = in.readUnsignedShort();
             checkState(clientVersion == 377, "clientVersion != 377");
 
-            @SuppressWarnings("unused") int memoryVersion = in.readUnsignedByte();
+            int memoryVersion = in.readUnsignedByte();
 
             for (int i = 0; i < 9; i++) {
                 in.readInt();
@@ -275,7 +275,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 String password = msg.getString().toLowerCase().trim();
 
                 return new LoginRequestMessage(username,
-                        password, encryptor, decryptor, ctx.channel().pipeline());
+                        password, encryptor, decryptor, ctx.channel().pipeline(), memoryVersion == 1);
             } finally {
                 rsaBuffer.release();
             }
