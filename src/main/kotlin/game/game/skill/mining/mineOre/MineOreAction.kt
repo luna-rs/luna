@@ -40,8 +40,19 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      */
     private var oreDue = false
 
+    /**
+     * If the last free inventory slot was just filled, so that mining stops on the next tick.
+     */
+    private var stopFull = false
+
         // TODO@0.5.0 Implement correct sounds: MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5.
     override fun executeIf(start: Boolean) = when {
+        mob.inventory.isFull -> {
+            // No inventory space.
+            mob.sendMessage(onInventoryFull())
+            false
+        }
+
         mob.mining.level < ore.level -> {
             // Check if we have required level.
             mob.sendMessage("You need a Mining level of ${ore.level} to mine this.")
@@ -65,6 +76,11 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun onProcess() {
+        if (stopFull) {
+            mob.sendMessage(onInventoryFull())
+            complete()
+            return
+        }
         if (!swung) {
             swung = true
             mob.sendMessage("You swing your pick at the rock.")
@@ -82,6 +98,14 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             }
         }
         if (currentAdd.isNotEmpty()) {
+            if (ore == RUNE_ESSENCE) {
+                // The essence rock never runs out and sends no message per essence: mine until the inventory is full.
+                mob.mining.addExperience(ore.exp)
+                if (mob.inventory.isFull) {
+                    stopFull = true
+                }
+                return
+            }
             // Ore roll was successful.
             mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
             mob.mining.addExperience(ore.exp)
@@ -119,6 +143,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun onFinished() = mob.animation(Animation.CANCEL)
+
+    override fun onInventoryFull() =
+        "Your inventory is too full to hold any more ${if (ore == RUNE_ESSENCE) "rune stones" else ore.typeName.lowercase()}."
 
     /**
      * Faces the rock and starts the mining animation.
