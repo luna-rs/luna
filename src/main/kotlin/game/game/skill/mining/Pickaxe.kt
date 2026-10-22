@@ -22,19 +22,19 @@ enum class Pickaxe(val level: Int,
          id = 1267,
          animation = Animation(626),
          speed = 7),
-    STEEL(level = 5,
+    STEEL(level = 6,
           id = 1269,
           animation = Animation(627),
           speed = 6),
-    MITHRIL(level = 20,
+    MITHRIL(level = 21,
             id = 1273,
             animation = Animation(629),
             speed = 5),
-    ADAMANT(level = 30,
+    ADAMANT(level = 31,
             id = 1271,
             animation = Animation(628),
             speed = 4),
-    RUNE(level = 40,
+    RUNE(level = 41,
          id = 1275,
          animation = Animation(624),
          speed = 3);
@@ -67,7 +67,7 @@ enum class Pickaxe(val level: Int,
                 val newPick = ID_TO_PICKAXE[item.id]
                 if (newPick != null &&
                     plr.mining.level >= newPick.level &&
-                    (pick == null || newPick.level > pick.level)) {
+                    (pick == null || newPick.speed < pick.speed)) {
                     pick = newPick
                 }
             }
