@@ -32,9 +32,11 @@ import kotlin.time.Duration.Companion.seconds
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
  * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
+ * @param pkSession Optional patrol owner whose hunting boundary applies to this fight, including reflex children.
  * @author lare96
  */
-class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
+class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob,
+    private val initialState: InitialState = InitialState.ATTACK, private val pkSession: PkBotScript? = null) :
     DynamicBotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
@@ -42,7 +44,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     /**
      * One fight-owned switch controller retains decision timing across repeated attack and eating checks.
      */
-    private val pkSwitcher = PkCombatSwitcher(bot, handler)
+    private val pkSwitcher = PkCombatSwitcher(bot, handler, acceptsTarget = { pkSession?.allowsPursuit(it) != false })
     private val combatPolicy = BotCombatActionHandler(bot, handler)
 
     /**
@@ -54,6 +56,12 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      * Keeps waiting during reaction windows, and abandons fights with no usable permitted discipline.
      */
     private suspend fun prepareAttack(): Boolean {
+        if (focus is Player && pkSession?.allowsPursuit(focus as Player) == false) {
+            bot.combat.target = null
+            bot.walking.clear()
+            stop()
+            return false
+        }
         if (usesPkSwitching) {
             return when (pkSwitcher.prepare(focus as Player)) {
                 PkCombatSwitcher.Result.READY -> true

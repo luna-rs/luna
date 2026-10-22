@@ -3,7 +3,9 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.ReflexBotScript;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
+import game.bot.scripts.combat.PkBotScript;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.dialogue.NpcDialogue;
@@ -104,7 +106,9 @@ public final class BotReflex {
             }
             if (focus != null) {
                 InitialState response = bot.getEmotions().getCombatResponse(focus);
-                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response));
+                PkBotScript pkSession = focus instanceof Player ?
+                        bot.getScriptStack().findActive(PkBotScript.class).orElse(null) : null;
+                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, pkSession));
                 bot.log("Reflex [responding to combat] triggered.");
                 return false;
             }

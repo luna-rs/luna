@@ -18,6 +18,7 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotActionHandler,
+                              private val acceptsTarget: (Player) -> Boolean = { true },
                               private val nanoTime: () -> Long = System::nanoTime) {
     /**
      * Whether the caller can attack, should wait for its reaction window, or must abandon an unusable fight.
@@ -84,7 +85,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     /**
      * Rechecks target legality after suspensions and actual weapon, ammunition, levels and rune stock before use.
      */
-    private fun validTarget(target: Player): Boolean = combat.canAttackPlayer(target)
+    private fun validTarget(target: Player): Boolean = acceptsTarget(target) && combat.canAttackPlayer(target)
 
     /**
      * Checks the actual selected weapon and consumables, without trusting tracked bank ownership.

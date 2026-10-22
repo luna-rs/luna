@@ -7,6 +7,7 @@ import engine.bot.gear.BotGearSet
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker
 import game.bot.scripts.combat.CombatBotScript
+import game.bot.scripts.combat.PkBotScript
 import game.skill.magic.Rune
 import io.luna.Luna
 import io.luna.LunaSettings
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.MockedStatic
 import org.mockito.Mockito.*
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Uses native equipment/inventory movement with mocked click completion and a monotonic fixture clock.
@@ -139,10 +141,10 @@ class PkCombatSwitcherTest {
         }
     }
 
-    private fun profile(styles: Styles) {
+    private fun profile(styles: Styles, purpose: Purpose = Purpose.GENERIC) {
         val preferences = BotPreference.Builder(mock(BotPersonalityManager::class.java), bot.personality)
             .addSkill(Skill.STRENGTH).addGear(BotGearSet.values().first())
-            .setPk(BotPkPreference(Purpose.GENERIC, styles, Build.MAIN)).build()
+            .setPk(BotPkPreference(purpose, styles, Build.MAIN)).build()
         `when`(bot.preferences).thenReturn(preferences)
         preferences.setBot(bot)
     }
@@ -285,6 +287,39 @@ class PkCombatSwitcherTest {
         now = 600_000_000
         assertEquals(PkCombatSwitcher.Result.WAITING, switching.prepare(enemy))
         assertFalse(bot.combat.magic.isAutocasting)
+        verify(bot.combat, never()).attack(any())
+    }
+
+    @Test fun ownedSkillFightCannotFollowATargetOutOfEdgevilleDuringEquipmentChanges() = runBlocking<Unit> {
+        profile(Styles.MAGIC, Purpose.SKILL)
+        carry(Item(1381), Item(Rune.MIND.id, 50))
+        doReturn(Position(3135, 3540)).`when`(bot).position
+        doReturn(Position(3135, 3541)).`when`(enemy).position
+        val session = PkBotScript(bot, 5.minutes)
+        val switching = PkCombatSwitcher(bot, bot.actionHandler, acceptsTarget = session::allowsPursuit) { now }
+        afterEquip = { doReturn(Position(3136, 3541)).`when`(enemy).position }
+        switching.prepare(enemy)
+        now = 600_000_000
+        assertEquals(PkCombatSwitcher.Result.WAITING, switching.prepare(enemy))
+        assertTrue(BotCombatActionHandler(bot, bot.actionHandler).canAttackPlayer(enemy))
+        assertFalse(bot.combat.magic.isAutocasting)
+        verify(bot.combat, never()).attack(any())
+    }
+
+    @Test fun skillBuildCanDefendElsewhereWhenTheFightHasNoPkPatrolOwner() = runBlocking<Unit> {
+        profile(Styles.RANGED, Purpose.SKILL)
+        carry(Item(806, 50))
+        doReturn(Position(3141, 3690)).`when`(bot).position
+        doReturn(Position(3142, 3690)).`when`(enemy).position
+        val session = PkBotScript(bot, 5.minutes)
+        assertFalse(session.allowsPursuit(enemy))
+        val defensive = InventoryProductionFixtures.active(CombatBotScript(bot, enemy))
+        assertFalse(defensive.init(false))
+        assertFalse(defensive.isTerminated())
+        val owned = InventoryProductionFixtures.active(CombatBotScript(bot, enemy, pkSession = session))
+        assertTrue(owned.init(false))
+        assertTrue(owned.isTerminated())
+        verify(bot.walking).clear()
         verify(bot.combat, never()).attack(any())
     }
 

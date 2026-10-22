@@ -1,7 +1,9 @@
 package api.bot.action
 
 import api.bot.script.InventoryProductionFixtures
+import api.bot.webwalk.plan.BankAccess
 import api.predef.world
+import engine.controllers.WildernessLocatableController.levelAt
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.CombatBotScript
 import game.bot.scripts.combat.PkBotScript
@@ -14,6 +16,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.bot.brain.BotPkPreference
 import io.luna.game.model.mob.bot.brain.BotPkPreference.*
+import io.luna.game.model.mob.bot.brain.BotReflex
 import io.luna.game.model.mob.bot.script.BotScriptManager
 import io.luna.game.model.mob.bot.script.BotScriptStack
 import org.junit.jupiter.api.Assertions.*
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
+import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -223,5 +227,108 @@ class PkTargetSelectionTest {
         assertEquals(data.get("duration").asLong.milliseconds, restored.duration)
         session.expireAt = System.currentTimeMillis() - 1
         assertEquals(0L, session.snapshot().duration.inWholeMilliseconds)
+    }
+
+    private fun skillProfile() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.SKILL, Styles.TRIBRID, Build.MAIN))
+    }
+
+    @Test fun skillPatrolUsesExistingLowEdgevilleAnchorsOnly() {
+        skillProfile()
+        val session = PkBotScript(bot, 5.minutes)
+        val anchors = session.patrolAnchors()
+        assertTrue(anchors.isNotEmpty())
+        assertTrue(anchors.all { it in PkBotScript.PkArea.LOW_LEVEL.anchors })
+        assertTrue(anchors.all { it.regionId == 12343 && it.z == 0 && levelAt(it) in 1..8 })
+        assertFalse(session.allowsHuntingAt(Position(3141, 3690)))
+        assertFalse(session.allowsHuntingAt(Position(3100, 9940)))
+        assertFalse(session.allowsHuntingAt(Position(3100, 3540, 1)))
+    }
+
+    @Test fun skillTargetsUseNormalWildernessRangeRatherThanAnAdditionalFiveLevelCap() {
+        skillProfile()
+        `when`(bot.position).thenReturn(Position(3100, 3583))
+        `when`(target.position).thenReturn(Position(3101, 3583))
+        `when`(target.combatLevel).thenReturn(58)
+        `when`(target.skullIcon).thenReturn(SkullIcon.WHITE)
+        `when`(world.locator.findViewablePlayers(bot)).thenReturn(setOf(target))
+        assertTrue(PkBotScript(bot, 5.minutes).searchAndAttack())
+        assertTrue(bot.scriptStack.current() is CombatBotScript)
+        verify(bot.combat, never()).attack(target)
+    }
+
+    @Test fun skillPatrolOnlyInitiatesAgainstRecognizedPkersInsideEdgeville() {
+        skillProfile()
+        `when`(world.locator.findViewablePlayers(bot)).thenReturn(setOf(target))
+        val session = PkBotScript(bot, 5.minutes)
+        assertFalse(session.searchAndAttack())
+        `when`(target.skullIcon).thenReturn(SkullIcon.WHITE)
+        `when`(bot.position).thenReturn(Position(3135, 3540))
+        `when`(target.position).thenReturn(Position(3136, 3540))
+        assertTrue(policy.canAttackWildernessPlayer(target))
+        assertFalse(session.searchAndAttack())
+        `when`(bot.position).thenReturn(Position(3141, 3690))
+        `when`(target.position).thenReturn(Position(3142, 3690))
+        assertFalse(session.searchAndAttack())
+        assertTrue(policy.canAttackWildernessPlayer(target))
+        assertEquals(0, bot.scriptStack.size())
+    }
+
+    @Test fun skillSessionReturnsToEdgevilleBeforeHuntingWhenStartedElsewhereInWilderness() = runBlocking<Unit> {
+        skillProfile()
+        `when`(bot.position).thenReturn(Position(3141, 3690))
+        bot.wildernessLevel = 22
+        val destinations = mutableListOf<Position>()
+        val fallback = Position(0, 0)
+        val handler = bot.actionHandler
+        doAnswer { call ->
+            val destination = call.getArgument<Position>(0)
+            destinations += destination
+            doReturn(destination).`when`(bot).position
+            bot.wildernessLevel = levelAt(destination)
+            true
+        }.`when`(handler).webWalkTo(any(Position::class.java) ?: fallback, eq(0), eq(1),
+            eq(BankAccess.NONE) ?: BankAccess.NONE)
+        val session = PkBotScript(bot, 5.minutes)
+        assertTrue(session.enterWild())
+        assertEquals(1, destinations.size)
+        assertTrue(session.allowsHuntingAt(destinations.single()))
+        assertTrue(session.enterWild())
+        assertEquals(1, destinations.size)
+    }
+
+    @Test fun failedReturnToEdgevilleCannotAuthorizeHuntingAtTheOldLocation() = runBlocking<Unit> {
+        skillProfile()
+        `when`(bot.position).thenReturn(Position(3141, 3690))
+        bot.wildernessLevel = 22
+        val session = PkBotScript(bot, 5.minutes)
+        assertFalse(session.enterWild())
+        assertFalse(session.allowsPursuit(target))
+    }
+
+    @Test fun nonSkillPurposesKeepTheirExistingPatrolDestinations() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
+        val session = PkBotScript(bot, 5.minutes)
+        assertTrue(session.allowsHuntingAt(Position(3141, 3690)))
+        assertTrue(session.allowsHuntingAt(Position(3100, 9992)))
+        assertTrue(session.patrolAnchors().all { anchor -> PkBotScript.PkArea.ALL.any { anchor in it.anchors } })
+    }
+
+    @Test fun combatReflexRetainsTheSkillPatrolBoundary() = runBlocking<Unit> {
+        skillProfile()
+        `when`(bot.position).thenReturn(Position(3141, 3690))
+        `when`(target.position).thenReturn(Position(3142, 3690))
+        val session = InventoryProductionFixtures.active(PkBotScript(bot, 5.minutes))
+        bot.scriptStack.pushTail(session)
+        `when`(bot.combat.inCombat()).thenReturn(true)
+        `when`(bot.combat.target).thenReturn(target)
+        `when`(bot.emotions.getCombatResponse(target)).thenReturn(CombatBotScript.InitialState.ATTACK)
+        assertFalse(BotReflex().process(bot))
+        assertSame(session, bot.scriptStack.findActive(PkBotScript::class.java).get())
+        val child = bot.scriptStack.current() as CombatBotScript
+        InventoryProductionFixtures.active(child)
+        assertTrue(child.init(false))
+        assertTrue(child.isTerminated())
+        verify(bot.combat, never()).attack(target)
     }
 }

@@ -11,11 +11,13 @@ import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
+import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -66,6 +68,12 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Shared PK bot constants.
      */
     companion object {
+
+        /**
+         * The surface region immediately north of Edgeville, covering native Wilderness levels 1 through 8.
+         * Existing LOW_LEVEL patrol anchors in this region supply entry and wandering destinations.
+         */
+        private const val EDGEVILLE_PK_REGION = 12343
 
         /**
          * Low-level Wilderness anchor points used for entering, escaping, and returning toward safer Wilderness levels.
@@ -365,6 +373,32 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      */
     var expireAt: Long = System.currentTimeMillis() + duration.toLong(DurationUnit.MILLISECONDS)
 
+    /**
+     * Restricts recreational PK trips, without changing this account's NPC training or other coordinators.
+     */
+    private val isSkillSession: Boolean get() = bot.preferences.pk?.purpose() == Purpose.SKILL
+
+    /**
+     * Checks the session's hunting boundary. SKILL sessions stay on the surface north of Edgeville;
+     * their combat-level matchups still use the ordinary two-sided Wilderness range.
+     */
+    internal fun allowsHuntingAt(position: Position): Boolean = !isSkillSession ||
+        (position.z == 0 && position.regionId == EDGEVILLE_PK_REGION && levelAt(position) > 0)
+
+    /**
+     * Keeps both ends of an owned pursuit inside the hunting area, including after equipment suspensions.
+     * Defensive combat started by another coordinator does not inherit this session boundary.
+     */
+    internal fun allowsPursuit(target: Player): Boolean = allowsHuntingAt(bot.position) &&
+        allowsHuntingAt(target.position)
+
+    /**
+     * Reuses verified low-level Edgeville anchors for SKILL; other purposes retain the existing area selection.
+     */
+    internal fun patrolAnchors(): List<Position> = if (isSkillSession) {
+        PkArea.LOW_LEVEL.anchors.filter { allowsHuntingAt(it) }
+    } else PkArea.ALL.random().anchors
+
     override suspend fun init(resumed: Boolean): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
         // todo@0.5.0 Make sure we go to the bank first and prepare items (resetItem())
@@ -466,7 +500,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
                 return true
             } else if (attacker is Player) {
                 bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
-                bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
+                bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
                 return true
             }
         }
@@ -489,7 +523,8 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
          * Checks whether [other] is a valid target candidate for this bot.
          */
         fun check(other: Player): Boolean {
-            return combatPolicy.canAttackWildernessPlayer(other)
+            return allowsPursuit(other) && (!isSkillSession || BotCombatActionHandler.isPker(other)) &&
+                combatPolicy.canAttackWildernessPlayer(other)
         }
 
         if (bot.combat.inCombat()) {
@@ -527,7 +562,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             if (check(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
                 // The child owns the first attack, after its reaction delay and carried-supply checks.
-                bot.scriptStack.pushHead(CombatBotScript(bot, other))
+                bot.scriptStack.pushHead(CombatBotScript(bot, other, pkSession = this))
                 return true
             }
         }
@@ -548,10 +583,9 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             !bot.navigator.isActive &&
             bot.tolerance.duration.toMinutes() > 10
         ) {
-            val area = PkArea.ALL.random()
-            val anchor = area.anchors.random()
+            val anchor = patrolAnchors().random()
 
-            bot.log("Travelling to new area ${area.name}, anchor=$anchor")
+            bot.log("Travelling to PK patrol anchor=$anchor")
             bot.navigator.navigate(anchor, true).await()
         }
     }
@@ -573,19 +607,19 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     /**
      * Ensures the bot is inside the Wilderness before searching for targets.
      *
-     * If the bot is outside the Wilderness, it navigates to a random low-level Wilderness anchor and verifies that the
-     * destination actually placed it inside the Wilderness.
+     * A SKILL session starting elsewhere in the Wilderness also returns to low Edgeville before hunting.
+     * The existing walking helper owns travel; reaching a destination must satisfy the live hunting boundary.
      *
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
      */
-    private suspend fun enterWild(): Boolean {
-        if (!bot.inWilderness()) {
-            val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
+    internal suspend fun enterWild(): Boolean {
+        if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
+            val anchor = if (isSkillSession) patrolAnchors().random() else LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
             handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
-            if (!bot.inWilderness()) {
+            if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
                 return false
             }
