@@ -8,7 +8,7 @@ import game.skill.mining.Ore
 import game.skill.mining.Ore.PURE_ESSENCE
 import game.skill.mining.Ore.RUNE_ESSENCE
 import game.skill.mining.Pickaxe
-import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -16,12 +16,29 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 
 /**
- * An [AnimatedInventoryAction] that will enable the mining of rocks.
+ * An [InventoryAction] that will enable the mining of rocks. The swing comes on the tick after the click and the first
+ * roll two ticks before one [Pickaxe.speed] has passed, then one roll every [Pickaxe.speed] ticks, each restarting the
+ * animation. Every ore but iron arrives one tick after the roll that finds it.
  *
  * @author lare96
  */
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
-    AnimatedInventoryAction(plr, 1, 4, Int.MAX_VALUE) {
+    InventoryAction(plr, false, pick.speed - 1, Int.MAX_VALUE) {
+
+    /**
+     * If the swing at the start has happened.
+     */
+    private var swung = false
+
+    /**
+     * If this execution rolled for ore, rather than handing over ore found on the previous tick.
+     */
+    private var rolled = false
+
+    /**
+     * If the last roll found ore that arrives on this execution.
+     */
+    private var oreDue = false
 
         // TODO@0.5.0 Implement correct sounds: MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5.
     override fun executeIf(start: Boolean) = when {
@@ -38,52 +55,78 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
         // Check if rock isn't already mined .
         rockObj.state == EntityState.INACTIVE -> false
-        else -> true
+        else -> {
+            if (!start && !oreDue) {
+                delay = pick.speed
+                swing()
+            }
+            true
+        }
+    }
+
+    override fun onProcess() {
+        if (!swung) {
+            swung = true
+            mob.sendMessage("You swing your pick at the rock.")
+            swing()
+        }
     }
 
     override fun execute() {
-        if (executions == 0) {
-            mob.sendMessage("You swing your pick at the rock.")
-            mob.interact(rockObj)
-            delay = pick.speed
-        } else {
+        if (rolled) {
             val gemItems = Mining.MINING_GEM_DROP_TABLE.roll(mob, rockObj)
             if (!mob.inventory.isFull && gemItems.isNotEmpty()) {
                 // Gem rolls happen independently of ore rolls.
                 mob.inventory.add(gemItems.removeFirst())
                 mob.sendMessage("You find a gem in the rock.")
             }
-            if (currentAdd.isNotEmpty()) {
-                // Ore roll was successful.
-                mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
-                mob.mining.addExperience(ore.exp)
-              //  mob.playSound(Sound.MINING_COMPLETED)
-                deleteAndRespawnRock()
-                complete()
-            }
+        }
+        if (currentAdd.isNotEmpty()) {
+            // Ore roll was successful.
+            mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
+            mob.mining.addExperience(ore.exp)
+          //  mob.playSound(Sound.MINING_COMPLETED)
+            deleteAndRespawnRock()
+            complete()
         }
     }
 
-    override fun animation(): Animation {
-       // mob.playSound(Sound.MINE_ROCK)
-        return pick.animation
-    }
-
     override fun add(): List<Item> {
+        if (oreDue) {
+            oreDue = false
+            rolled = false
+            delay = pick.speed
+            return listOf(Item(ore.item))
+        }
+        rolled = true
         val (low, high) = ore.chance
         return when {
-            executions == 0 -> emptyList()
-
             ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
                 listOf(Item(PURE_ESSENCE.item)) else listOf(Item(RUNE_ESSENCE.item))
 
-            Skills.success(low, high, mob.mining.level) -> listOf(Item(ore.item))
+            Skills.success(low, high, mob.mining.level) ->
+                if (ore == Ore.IRON) {
+                    listOf(Item(ore.item))
+                } else {
+                    // Every ore but iron arrives on the next tick.
+                    oreDue = true
+                    delay = 1
+                    emptyList()
+                }
 
             else -> emptyList()
         }
     }
 
     override fun onFinished() = mob.animation(Animation.CANCEL)
+
+    /**
+     * Faces the rock and starts the mining animation.
+     */
+    private fun swing() {
+        mob.interact(rockObj)
+        mob.animation(pick.animation)
+    }
 
     /**
      * Deletes and respawns an [Ore] rock object.
