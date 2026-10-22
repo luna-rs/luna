@@ -2,6 +2,7 @@ package game.item.teleport
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.barrows.BarrowsRun
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
@@ -35,6 +36,7 @@ fun Player.digWithSpade(spot: SpadeDigSpot?) {
     world.scheduleOnce(SPADE_FALL_DELAY) {
         unlock()
         if (isAlive) {
+            BarrowsRun.enterCrypt(this)
             sendMessage("You've broken into a crypt!")
             move(spot.landing)
         }

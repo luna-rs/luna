@@ -21,6 +21,7 @@ public enum PersistentVarp {
     XP_LAMP(261),
     SPLIT_PRIVATE_CHAT(287),
     ACCEPT_AID(427),
+    BARROWS(452),
     BARROWS_KILLS(453);
 
     /**
