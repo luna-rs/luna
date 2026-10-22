@@ -68,6 +68,8 @@ fun handleAction(name: String): EventAction<ObjectClickEvent>? =
 
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
+        // Barrows' four tunnel ladders return to the run's chosen crypt, not a fixed upstairs tile.
+        if (def.id() in 6709..6712) continue
         if (def.name !in StairDestination.NAMES) {
             continue
         }
