@@ -3,6 +3,7 @@ package game.bot.scripts
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import com.google.gson.JsonObject
 import game.content.crystalChest.OpenCrystalChestAction
@@ -92,6 +93,8 @@ class OpenCrystalChestBotScript(
             banking.clickBankingMode(false)
             if (!isActionSafe() || !banking.withdrawAll(listOf(Item(KEY))) || !bot.inventory.contains(KEY)) return@withTimeoutOrNull false
             if (!bot.actionHandler.widgets.clickCloseInterface() || !isActionSafe()) return@withTimeoutOrNull false
+            if (!handler.webWalkTo(chestPosition.translate(0, -1), bank = BankAccess.NONE) ||
+                !isActionSafe()) return@withTimeoutOrNull false
             val chest = world.locator.findObjectsOnTile(chestPosition) { it.id == CHEST }.firstOrNull()
                 ?: return@withTimeoutOrNull false
             if (!bot.actionHandler.inventory.useItem(KEY).onObject(chest)) return@withTimeoutOrNull false
