@@ -32,7 +32,7 @@ public final class VarpMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player, ByteBuf buffer) {
-        boolean isLargeVarp = varp.getValue() > Byte.MAX_VALUE;
+        boolean isLargeVarp = varp.getValue() < Byte.MIN_VALUE || varp.getValue() > Byte.MAX_VALUE;
         ByteMessage msg;
         if(isLargeVarp) {
             msg = ByteMessage.message(115, buffer);
