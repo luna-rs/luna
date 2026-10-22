@@ -10,6 +10,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.CombatFormula;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
@@ -227,7 +228,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public final void onProjectileReached() {
-        if (!victim.isAlive()) {
+        if (!victim.isAlive() || !CombatRestriction.permits(attacker, victim)) {
             return;
         }
         List<CombatDamage> secondaryHits = CombatSpellHandler.INSTANCE.secondaryHits(this);
@@ -236,7 +237,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         }
         victim.submitAction(new CombatDamageAction(nextDamage, this, true));
         for (CombatDamage hit : secondaryHits) {
-            if (!hit.getVictim().isAlive()) {
+            if (!hit.getVictim().isAlive() || !CombatRestriction.permits(attacker, hit.getVictim())) {
                 continue;
             }
             hit.getVictim().getCombat().markAttackedBy(attacker);

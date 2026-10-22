@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.CombatRestriction
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat
@@ -162,6 +163,7 @@ object CombatSpellHandler {
         return viewable.asSequence().filter {
             it !== attacker && it !== victim && it.isAlive && area.contains(it) && it.inMultiArea() &&
                     it.combat.isAttackable && attacker.combat.checkMultiCombat(it) &&
+                    CombatRestriction.permits(attacker, it) &&
                     (attacker !is Player || attacker.controllers.checkCombat(it))
         }.take(8).map { attack.calculateDamage(it) }.toList()
     }

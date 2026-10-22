@@ -229,6 +229,10 @@ public abstract class CombatContext<T extends Mob> {
                 !npc.getCombat().isWithinLeash(enemy))) {
             return;
         }
+        if (!CombatRestriction.permits(mob, enemy)) {
+            mob.ifPlayer(player -> player.sendMessage("Someone else is fighting that."));
+            return;
+        }
         if (mob instanceof Player) {
             Player player = (Player) mob;
             if (!player.getControllers().checkCombat(enemy)) {

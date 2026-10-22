@@ -5,6 +5,7 @@ import api.combat.npc.NpcCombatHandler;
 import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.status.hooks.PoisonStatusEffect;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -145,6 +146,10 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
+        if (!CombatRestriction.permits(attacker, victim)) {
+            attacker.getCombat().setTarget(null);
+            return;
+        }
         Sound attackSound = getAttackSound();
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
