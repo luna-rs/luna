@@ -8,6 +8,8 @@ import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
 import game.skill.magic.Staff
+import io.luna.game.model.mob.Skill
+import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Spellbook
@@ -24,6 +26,78 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 class BotCombatActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /**
+     * Shared account-build policy for combat and incidental experience choices.
+     *
+     * @author lare96
+     */
+    companion object {
+        /**
+         * Determines whether training [skill] still advances this bot's permanent account build.
+         * Non-combat skills are unrestricted; skiller templates reject every combat skill.
+         * Static levels avoid temporary boosts or drains changing the decision.
+         */
+        @JvmStatic
+        fun wantsToTrain(bot: Bot, skill: Int): Boolean {
+            if (!Skill.isCombatSkill(skill)) return true
+            if (bot.preferences.isSkiller) return false
+            val target = bot.preferences.pk?.build()?.targetLevel(skill) ?: 99
+            return bot.skill(skill).staticLevel < target
+        }
+
+        /**
+         * Returns the combat skills still below their desired training levels.
+         */
+        @JvmStatic
+        fun wantedCombatSkills(bot: Bot): Set<Int> = (0..6).filter { wantsToTrain(bot, it) }.toSet()
+
+        /**
+         * Allows incidental experience in unrestricted skills, including skills already at 99.
+         * A deliberately capped skill must still be below its target. This selects actions;
+         * it never removes native experience or resets levels.
+         */
+        @JvmStatic
+        fun mayGainExperience(bot: Bot, skill: Int): Boolean {
+            if (!Skill.isCombatSkill(skill)) return true
+            if (bot.preferences.isSkiller) return false
+            val target = bot.preferences.pk?.build()?.targetLevel(skill) ?: 99
+            return target == 99 || bot.skill(skill).staticLevel < target
+        }
+
+        /**
+         * Filters every XP-bearing skill, so controlled and defensive ranged modes cannot train a capped Defence.
+         */
+        @JvmStatic
+        fun allowedStyles(bot: Bot, styles: Iterable<CombatStyleDefinition>): List<CombatStyleDefinition> =
+            styles.filter { style -> style.exp.isNotEmpty() && style.exp.all { mayGainExperience(bot, it) } }
+    }
+
+    /**
+     * Returns this bot's desired combat training skills for coordinators and content scripts.
+     */
+    fun wantedCombatSkills(): Set<Int> = wantedCombatSkills(bot)
+
+    /**
+     * Checks a training choice against the saved account build and skiller restriction.
+     */
+    fun wantsToTrain(skill: Int): Boolean = wantsToTrain(bot, skill)
+
+    /**
+     * Revalidates the equipped weapon after swaps or level changes, keeping a safe current style when possible.
+     * Returns false when no style can respect the build; callers must stop attacking in that case.
+     */
+    fun prepareTrainingStyle(): Boolean {
+        if (bot.preferences.pk == null && !bot.preferences.isSkiller) return true
+        if (bot.combat.magic.isAutocasting || bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE) {
+            return mayGainExperience(bot, Skill.MAGIC)
+        }
+        val styles = allowedStyles(bot, bot.combat.weapon.typeDef.styles)
+        if (styles.isEmpty()) return false
+        val selected = styles.firstOrNull { it == bot.combat.weapon.styleDef } ?: styles.first()
+        if (selected != bot.combat.weapon.styleDef) bot.combat.weapon.changeStyle(selected.button)
+        return true
+    }
 
     /**
      * Determines whether the given mob is considered an extreme combat threat to this bot.

@@ -47,6 +47,7 @@ object InventoryProductionFixtures {
     fun bot(): Bot {
         val fixtureWorld = world
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
+        `when`(bot.preferences.pk).thenReturn(null)
         `when`(bot.attributes()).thenReturn(AttributeMap())
         `when`(bot.world).thenReturn(fixtureWorld)
         `when`(bot.health).thenReturn(99)

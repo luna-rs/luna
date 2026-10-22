@@ -44,6 +44,7 @@ class SuperheatItemBotScript(
     bot: Bot, val barType: BarType, duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
 ) : InventoryBotScript(bot, duration, zones) {
+    override val trainingSkill = SKILL_MAGIC
     override val verifiedProductionWithdrawals = true
 
     companion object {

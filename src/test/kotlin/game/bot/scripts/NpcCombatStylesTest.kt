@@ -35,7 +35,8 @@ class NpcCombatStylesTest {
         @JvmStatic @BeforeAll fun fixtures() {
             InventoryProductionFixtures.initialize()
             EquipmentDefinitionFileParser().run()
-            WeaponDefinitionFileParser().run()
+            if (io.luna.game.model.def.WeaponTypeDefinition.ALL.isEmpty()) WeaponTypeDefinitionFileParser().run()
+            if (io.luna.game.model.def.WeaponDefinition.getWeapons().isEmpty()) WeaponDefinitionFileParser().run()
             AmmoDefinitionFileParser().run()
             CombatSpellDefinitionFileParser().run()
         }
@@ -206,6 +207,11 @@ class NpcCombatStylesTest {
         val style = mock(io.luna.game.model.def.CombatStyleDefinition::class.java)
         `when`(style.exp).thenReturn(com.google.common.collect.ImmutableList.of(io.luna.game.model.mob.Skill.RANGED))
         `when`(style.button).thenReturn(77)
+        val weapon = bot.combat.weapon
+        doAnswer {
+            `when`(weapon.styleDef).thenReturn(style)
+            null
+        }.`when`(weapon).changeStyle(77)
         `when`(bot.combat.weapon.typeDef.styles).thenReturn(listOf(style))
         `when`(bot.equipment.weapon).thenReturn(Item(841))
         `when`(bot.equipment.computeAmountForId(882)).thenReturn(100)

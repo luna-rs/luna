@@ -1,6 +1,7 @@
 package game.bot.scripts
 
 import api.predef.*
+import api.bot.action.BotCombatActionHandler
 
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
@@ -50,6 +51,8 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
         /** Selects usable owned gear without creating supplies or silently changing combat purpose. */
         fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null): NpcCombatLoadout? {
             if (purpose !in setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) return null
+            if (bot.preferences.isSkiller) return null
+            if (purpose == BotGearPurpose.MAGIC && !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return null
             fun spellFor(weapon: Int): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values
                 .filter { definition ->
                     definition.spellbook == bot.spellbook && definition.level <= bot.magic.level &&
@@ -59,9 +62,12 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
                         definition.required.all { it is RuneRequirement } &&
                         runeCosts(definition, weapon).all { (id, amount) -> bot.itemTracker.count(id) >= amount }
                 }.maxByOrNull { it.maxHit }
-            val selected = BotGearSelector.find(bot, setOf(purpose)) { item ->
+            val selected = BotGearSelector.find(bot, setOf(purpose)) reject@{ item ->
                 if (item.index != Equipment.WEAPON) false else {
-                    val type = WeaponDefinition.ALL.get(item.id).orElse(null)?.type
+                    val definition = WeaponDefinition.ALL.get(item.id).orElse(null) ?: return@reject true
+                    if (purpose != BotGearPurpose.MAGIC &&
+                        BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isEmpty()) return@reject true
+                    val type = definition.type
                     when (purpose) {
                         BotGearPurpose.RANGED -> if (type in thrown) item.id !in AmmoDefinition.NO_AMMO_WEAPONS
                             else type !in bows || ammunition(bot, item.id) == null
@@ -72,6 +78,8 @@ internal data class NpcCombatLoadout(val gear: Array<Int?>, val spell: CombatSpe
             }
             val weapon = selected.equipment[Equipment.WEAPON]
             if (purpose != BotGearPurpose.MELEE && weapon == null) return null
+            if (purpose == BotGearPurpose.MELEE && weapon == null &&
+                BotCombatActionHandler.allowedStyles(bot, WeaponDefinition.getUnarmed().typeDef.styles).isEmpty()) return null
             if (purpose == BotGearPurpose.RANGED && weapon != null &&
                 WeaponDefinition.ALL.get(weapon).orElse(null)?.type in bows) {
                 selected.equipment[Equipment.AMMUNITION] = ammunition(bot, weapon) ?: return null

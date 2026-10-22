@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -352,7 +353,8 @@ open class NpcCombatScript(bot: Bot,
             bot.naturalDelay()
         }
         for ((index, item) in bot.inventory.withIndex()) {
-            if (item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
+            if (item != null && BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER) &&
+                Bone.ID_TO_BONE.containsKey(item.id)) {
                 handler.inventory.clickItem(1, item.id, index)
                 break
             }
@@ -375,6 +377,7 @@ open class NpcCombatScript(bot: Bot,
 
     /** Validates actual equipment and one attack's supplies before permitting any attack click. */
     internal fun prepareCombat(): Boolean {
+        if (bot.preferences.isSkiller) return false
         // Existing melee callers retain their click behavior before initialization.
         val selected = loadout ?: return purpose == BotGearPurpose.MELEE
         val weapon = selected.gear[Equipment.WEAPON]
@@ -389,6 +392,12 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         if (purpose == BotGearPurpose.MAGIC) {
+            if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) {
+                bot.combat.target = null
+                clearMagic()
+                stop()
+                return false
+            }
             val definition = selected.spell ?: return false
             if (bot.spellbook != definition.spellbook || bot.magic.level < definition.level) {
                 clearMagic()
@@ -414,16 +423,21 @@ open class NpcCombatScript(bot: Bot,
                 return false
             }
         }
-        if (!combatConfigured) {
-            bot.combat.weapon.changeStyle(selectCombatStyle().button)
+        // Recheck after level changes as well as equipment changes.
+        val allowed = BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles)
+        if (allowed.isEmpty()) {
+            bot.combat.target = null
+            stop()
+            return false
+        }
+        if (!combatConfigured || bot.combat.weapon.styleDef !in allowed) {
+            bot.combat.weapon.changeStyle(selectCombatStyle(allowed).button)
             combatConfigured = true
         }
         return true
     }
 
-    private fun selectCombatStyle(): CombatStyleDefinition {
-
-        val styles = bot.combat.weapon.typeDef.styles
+    private fun selectCombatStyle(styles: List<CombatStyleDefinition>): CombatStyleDefinition {
         if (purpose == BotGearPurpose.RANGED) {
             return styles.firstOrNull { Skill.RANGED in it.exp } ?: styles.first()
         }

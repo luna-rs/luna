@@ -362,6 +362,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     var expireAt: Long = System.currentTimeMillis() + duration.toLong(DurationUnit.MILLISECONDS)
 
     override suspend fun init(resumed: Boolean): Boolean {
+        if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
         // todo@0.5.0 Make sure we go to the bank first and prepare items (resetItem())
         return false
     }
@@ -371,6 +372,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     override suspend fun run(): Boolean {
+        if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
         if (System.currentTimeMillis() > expireAt) {
             bot.log("Script expired. Travelling back home.")
 

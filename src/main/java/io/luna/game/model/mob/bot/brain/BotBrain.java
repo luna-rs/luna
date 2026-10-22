@@ -51,16 +51,17 @@ public class BotBrain {
          * - Does the bot have everything needed for this activity?
          * - Should activity weights decay or use cooldowns?
          */
-        var map = bot.getPreferences().getActivities();
+        var map = new HashMap<>(bot.getPreferences().getActivities());
         if (bot.getTimePlayed().toDays() < 2) {
             // New bots have an additional chance to do combat activities.
-            map = new HashMap<>(bot.getPreferences().getActivities());
             map.computeIfPresent(BotActivity.TRAINING_COMBAT, (key, value) -> value + 0.35);
             map.computeIfPresent(BotActivity.PROFIT_COMBAT, (key, value) -> value + 0.25);
         }
+        map.keySet().removeIf(activity -> !bot.getPreferences().canChooseActivity(activity));
         BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
-            activity = RandomUtils.random(BotActivity.ALL);
+            activity = RandomUtils.random(BotActivity.ALL.stream()
+                    .filter(bot.getPreferences()::canChooseActivity).toList());
         }
         return activity.getCoordinator();
     }

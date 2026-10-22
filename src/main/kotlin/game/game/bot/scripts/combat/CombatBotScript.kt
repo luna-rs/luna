@@ -1,5 +1,6 @@
 package game.bot.scripts.combat
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.delay
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.DynamicBotScript
@@ -78,6 +79,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
         }
         when (initialState) {
             InitialState.ATTACK -> {
+                if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+                    bot.combat.target = null
+                    return true
+                }
                 bot.combat.attack(focus)
                 bot.speechStack.setDisableGeneral(true)
                 delay(600.milliseconds)
@@ -102,6 +107,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun run(): Boolean {
+        if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+            bot.combat.target = null
+            handler.combat.fleeCombat()
+            return true
+        }
         targetEnemy()
         delay(600.milliseconds, 1200.milliseconds)
 
@@ -148,6 +158,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
                 }
             }
 
+            if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+                bot.combat.target = null
+                stop()
+                return
+            }
             bot.combat.attack(focus)
             delay(1200.milliseconds, 3.seconds)
             return
@@ -289,6 +304,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             }
         }
 
+        if (!BotCombatActionHandler(bot, handler).prepareTrainingStyle()) {
+            bot.combat.target = null
+            stop()
+            return
+        }
         bot.combat.specialBar.toggleOn()
     }
 

@@ -47,6 +47,7 @@ import kotlin.time.Duration
  */
 class ChargeOrbBotScript(bot: Bot, val type: ChargeOrbType, duration: Duration, zones: MutableList<SubZone>) :
     InventoryBotScript(bot, duration, zones) {
+    override val trainingSkill = SKILL_MAGIC
     override val verifiedProductionWithdrawals = true
 
     companion object {
