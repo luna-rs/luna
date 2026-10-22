@@ -11,6 +11,7 @@ import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.CombatRestriction
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import kotlin.math.floor
@@ -36,7 +37,8 @@ inline fun <reified T : Mob> forRadiusMobs(attacker: Mob, victim: T, radius: Int
     val area = Area.of(victim.position, radius)
     val viewable: Set<T> = world.locator.findViewable(victim.type, victim.position)
     for (mob in viewable) {
-        if (mob != victim && mob != attacker && area.contains(mob) && mob.inMultiArea()) {
+        if (mob != victim && mob != attacker && area.contains(mob) && mob.inMultiArea() &&
+            CombatRestriction.permits(attacker, mob)) {
             action(mob)
         }
     }

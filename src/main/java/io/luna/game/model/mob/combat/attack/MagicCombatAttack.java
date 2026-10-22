@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
@@ -148,6 +149,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public final void onProjectileReached() {
+        if (!CombatRestriction.permits(attacker, victim)) {
+            return;
+        }
         if (nextDamage.getAmount().isPresent() || spellEffect == null) {
             // The hit landed or is a non-spell book magic attack and requires a 0 hitsplat.
             applyEffects();

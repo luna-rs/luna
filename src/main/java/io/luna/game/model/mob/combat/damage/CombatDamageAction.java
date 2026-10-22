@@ -4,6 +4,7 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.combat.CombatAction;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 
 /**
@@ -72,7 +73,7 @@ public final class CombatDamageAction extends Action<Mob> {
 
     @Override
     public boolean run() {
-        if (victim.isAlive()) {
+        if (victim.isAlive() && CombatRestriction.permits(attacker, victim)) {
             // Last defensive modifications/hooks to the damage before applying it.
             victim.getCombat().onNextDefence(attacker, this);
 

@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.state;
 import com.google.common.base.Stopwatch;
 import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
@@ -186,6 +187,10 @@ public abstract class CombatContext<T extends Mob> {
      * @param enemy The mob to attack.
      */
     public final void attack(Mob enemy) {
+        if (!CombatRestriction.permits(mob, enemy)) {
+            mob.ifPlayer(player -> player.sendMessage("Someone else is fighting that."));
+            return;
+        }
         if (mob instanceof Player) {
             Player player = (Player) mob;
             if (!player.getControllers().checkCombat(enemy)) {

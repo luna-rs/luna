@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
+import io.luna.game.model.mob.combat.CombatRestriction;
+
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
@@ -111,6 +113,10 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
+        if (!CombatRestriction.permits(attacker, victim)) {
+            attacker.getCombat().setTarget(null);
+            return;
+        }
         // todo onAttack is redundant, do anything within calculate damage?
         // todo maybe just only pass the builder until attack is ready to run?
         nextDamage = onAttack(calculateDamage(victim));
