@@ -17,7 +17,7 @@ import io.luna.util.RandomUtils
  * Coordinates merchanting activities for bots.
  *
  * Selects economy-related scripts based on the bot's wanted-item stock, merchanting preferences,
- * personality, and emotions. Bots prioritize selling surplus items before acquiring wanted items,
+ * personality, and emotions. Bots choose equally between selling surplus and acquiring wanted items when both apply,
  * falling back to general shop purchases when neither activity is available.
  *
  * Trading and shop interactions are performed by the scripts pushed onto the bot's script stack.
@@ -27,26 +27,12 @@ import io.luna.util.RandomUtils
  */
 object MerchantingCoordinator : BotCoordinator {
 
-    /**
-     * Selects and schedules a merchanting activity for the specified bot.
-     *
-     * Bots with surplus wanted items attempt to sell them through player trading or a General Store.
-     * General Store selling requires available shop space, a random chance, and either a dumb personality
-     * or an intelligent personality currently feeling greedy.
-     *
-     * When no surplus exists, bots with wanted items to acquire attempt player trading. If neither
-     * surplus nor acquisition candidates exist, the bot attempts generic purchases from shops.
-     *
-     * Player trading uses merchant-specific purposes more frequently when the bot likes or loves
-     * merchanting. The selected script is pushed onto the bot's script stack for execution.
-     *
-     * @param bot The bot receiving the merchanting activity.
-     */
     override fun accept(bot: Bot) {
         val likesMerchanting = bot.preferences.likesActivity(BotActivity.MERCHANTING)
         val lovesMerchanting = bot.preferences.lovesActivity(BotActivity.MERCHANTING)
         val wantedItemSurplus = bot.preferences.wantedItemsToTrim()
-        if (wantedItemSurplus.isNotEmpty()) {
+        val needsItems = bot.preferences.wantedItemsToAcquire().isNotEmpty()
+        if (chooseSelling(wantedItemSurplus.isNotEmpty(), needsItems)) {
             // Start trading script, or sell items to store.
             val purpose =
                 if ((randBoolean() && lovesMerchanting) || (RandomUtils.roll(1 of 3) && likesMerchanting)) {
@@ -61,7 +47,7 @@ object MerchantingCoordinator : BotCoordinator {
             } else {
                 bot.scriptStack.push(TradeBotScript(bot, purpose, BotMarketplace.select(bot)))
             }
-        } else if (bot.preferences.wantedItemsToAcquire().isNotEmpty()) {
+        } else if (needsItems) {
             // Start trading script, or buy items from store.
             val purpose =
                 if ((randBoolean() && lovesMerchanting) || (RandomUtils.roll(1 of 3) && likesMerchanting)) {
@@ -81,4 +67,11 @@ object MerchantingCoordinator : BotCoordinator {
             bot.scriptStack.push(BuyFromStoreBotScript(bot))
         }
     }
+
+    /**
+     * Gives buying and selling equal chances when both are available.
+     */
+    internal fun chooseSelling(hasSurplus: Boolean, needsItems: Boolean,
+                               sellCoinFlip: () -> Boolean = { randBoolean() }): Boolean =
+        hasSurplus && (!needsItems || sellCoinFlip())
 }

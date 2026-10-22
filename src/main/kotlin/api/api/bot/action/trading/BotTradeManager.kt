@@ -192,7 +192,7 @@ object BotTradeManager {
     /**
      * Builds candidate sale items for normal or merchant selling.
      *
-     * Normal selling selects at most one priced, unrestricted surplus item when its unnoted stock
+     * Normal selling collects every priced, unrestricted surplus item when its unnoted stock
      * reaches [SURPLUS_SELL_RATIO] times the wanted target. The proposed amount comes from the
      * wanted-item surplus calculation, which can include ownership beyond the unnoted stock.
      *
@@ -202,7 +202,7 @@ object BotTradeManager {
      * @param bot The bot selecting items to sell.
      * @param priceStrategy The strategy used to calculate sale prices.
      * @param purpose The selling purpose, either [BotTradePurpose.SELL] or [BotTradePurpose.MERCHANT_SELL].
-     * @return Candidate items to sell, with at most one item for ordinary selling.
+     * @return All eligible items to sell; the trading script selects the session stock.
      * @throws IllegalStateException If a buying purpose is supplied.
      */
     private fun computeSellItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
@@ -245,7 +245,6 @@ object BotTradeManager {
                                                    priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
                                                    purpose,
                                                    bot)
-                        break
                     }
                 }
             }
@@ -257,7 +256,7 @@ object BotTradeManager {
     /**
      * Builds candidate wanted items for normal or merchant buying.
      *
-     * Normal buying rebalances wanted items and selects at most one priced item, using the remaining amount
+     * Normal buying rebalances wanted items and collects every priced item, using the remaining amount
      * needed to reach its target. Merchant buying selects all wanted items with
      * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
      *
@@ -266,7 +265,7 @@ object BotTradeManager {
      * @param bot The bot selecting items to buy.
      * @param priceStrategy The strategy used to calculate purchase prices.
      * @param purpose The buying purpose, either [BotTradePurpose.BUY] or [BotTradePurpose.MERCHANT_BUY].
-     * @return Candidate items to buy, with at most one item for ordinary buying.
+     * @return All eligible items to buy; the trading script selects the session demand.
      * @throws IllegalStateException If a selling purpose is supplied.
      */
     private fun computeBuyItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
@@ -314,7 +313,6 @@ object BotTradeManager {
                                                priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
                                                purpose,
                                                bot)
-                    break
                 }
             }
             return candidates

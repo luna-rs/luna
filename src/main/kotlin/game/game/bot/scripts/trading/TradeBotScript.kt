@@ -220,8 +220,19 @@ class TradeBotScript(bot: Bot,
     private fun computeOfferAndExpected(): Boolean {
         bot.preferences.rebalanceWantedItems()
         val strategy = resolveTradePrice()
-        offering = BotTradeManager.computeOfferItems(bot, strategy, purpose)
-        expected = BotTradeManager.computeExpected(bot, strategy, purpose, offering)
+        val offers = BotTradeManager.computeOfferItems(bot, strategy, purpose)
+        val wants = BotTradeManager.computeExpected(bot, strategy, purpose, offers)
+        val traders = world.players.filterIsInstance<Bot>().mapNotNull {
+            it.scriptStack.current() as? TradeBotScript
+        }.filter { availableAtMarket(it) }
+        val candidates = if (buying) wants else offers
+        // Merchants already carry every trend-qualified candidate, including any matching goods.
+        val selected = if (purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) {
+            listOfNotNull(selectMarketItem(candidates, offers, traders))
+        } else candidates
+        offering = if (buying) offers else selected
+        expected = if (buying) selected
+        else BotTradeManager.computeExpected(bot, strategy, purpose, offering)
         message = null
         messageTimer.reset()
         if (offering.isEmpty() || expected.isEmpty() ||
@@ -231,6 +242,41 @@ class TradeBotScript(bot: Bot,
             return false
         }
         return true
+    }
+
+    /**
+     * Inspects prepared traders throughout this market, independently of the arriving bot's location.
+     */
+    private fun availableAtMarket(other: TradeBotScript): Boolean =
+        other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
+            buying != other.buying && marketplace.contains(other.bot.position) &&
+            !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
+            other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
+
+    /**
+     * Prefers goods that support an actual exchange with a prepared trader, then randomizes the fallback.
+     * Buyers retain all eligible payment stock. Merchant sessions keep their full trend-qualified baskets.
+     */
+    private fun selectMarketItem(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
+                                 traders: List<TradeBotScript>): BotTradeItem? {
+        val eligible = candidates.filter {
+            buying || TradeBasket.value(quantities(listOf(it.item), true), prices(listOf(it))) >=
+                BotTradeManager.MINIMUM_OFFER_VALUE
+        }
+        val matching = eligible.filter { candidate ->
+            traders.any { other ->
+                if (buying) {
+                    TradeBasket.exchange(quantities(other.carriedOffer.toItems(), true),
+                        quantities(listOf(candidate.item), true), prices(other.offering), prices(listOf(candidate)),
+                        quantities(payment.map { it.item }, true), prices(payment)) != null
+                } else {
+                    TradeBasket.exchange(quantities(listOf(candidate.item), true),
+                        quantities(other.expected.map { it.item }, true), prices(listOf(candidate)), prices(other.expected),
+                        quantities(other.carriedOffer.toItems(), true), prices(other.offering)) != null
+                }
+            }
+        }
+        return (matching.ifEmpty { eligible }).randomOrNull()
     }
 
     /** Sends an advertisement immediately, then repeats it at the chosen merchanting interval. */
