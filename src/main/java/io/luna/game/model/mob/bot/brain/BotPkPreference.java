@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Permanent PK identity, separate from personality and the equipment available for a session.
- * Targets describe desired training levels, never granted levels or experience suppression.
+ * Targets guide training and cap native XP awards without granting levels or removing existing XP.
  * Existing accounts are assigned only builds compatible with their actual levels.
  *
  * @author lare96
@@ -43,6 +43,18 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
             this.melee = melee;
             this.ranged = ranged;
             this.magic = magic;
+        }
+
+        /**
+         * Tests whether this permanent combination includes the requested offensive discipline.
+         */
+        public boolean uses(int skill) {
+            return switch (skill) {
+                case Skill.ATTACK, Skill.STRENGTH -> melee;
+                case Skill.RANGED -> ranged;
+                case Skill.MAGIC -> magic;
+                default -> false;
+            };
         }
     }
 

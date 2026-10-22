@@ -1,5 +1,12 @@
 package api.bot.action
 
+import engine.bot.gear.BotGearPurpose
+import io.luna.game.model.item.Equipment.EquipmentBonus
+import io.luna.game.model.mob.Player
+import io.luna.util.RandomUtils
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone
 import api.predef.*
@@ -8,6 +15,7 @@ import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
 import game.skill.magic.Staff
+import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
@@ -66,6 +74,23 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
 
         /**
+         * Limits one native XP award to the remaining experience needed for a permanent build target.
+         * Called by Skill.addExperience after multiplier selection, including for delayed attacks and rewards.
+         * Capped skills stop exactly at their target's XP threshold. Existing excess XP is never removed;
+         * level-99 targets and non-combat skills retain normal experience gains beyond the level threshold.
+         * Skiller templates receive no combat XP, including incidental Hitpoints XP.
+         */
+        @JvmStatic
+        fun limitExperience(bot: Bot, skill: Skill, amount: Double): Double {
+            if (!Skill.isCombatSkill(skill.id)) return amount
+            if (bot.preferences.isSkiller) return 0.0
+            val target = bot.preferences.pk?.build()?.targetLevel(skill.id) ?: return amount
+            if (target == 99) return amount
+            val remaining = (SkillSet.experienceForLevel(target) - skill.experience).coerceAtLeast(0.0)
+            return amount.coerceAtMost(remaining)
+        }
+
+        /**
          * Filters every XP-bearing skill, so controlled and defensive ranged modes cannot train a capped Defence.
          */
         @JvmStatic
@@ -97,6 +122,55 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         val selected = styles.firstOrNull { it == bot.combat.weapon.styleDef } ?: styles.first()
         if (selected != bot.combat.weapon.styleDef) bot.combat.weapon.changeStyle(selected.button)
         return true
+    }
+
+    /**
+     * Chooses an armour counter from supply-ready disciplines allowed by the saved PK identity.
+     * Callers supply only disciplines whose owned equipment, ammunition and damage spells are usable.
+     * This policy does not equip items, initiate fights, select targets, or authorize risk from bank stock.
+     * Lowest armour defence wins; ties retain the current discipline to avoid pointless switching.
+     * Intelligence and dexterity reduce the chance of choosing a weaker available counter.
+     * Reaction timing is supplied separately by [pkSwitchDelay] for the future PK session controller.
+     */
+    fun selectPkStyle(target: Player, available: Set<BotGearPurpose>, mistakeRoll: Double = RandomUtils.nextDouble()): BotGearPurpose? {
+        if (bot.preferences.isSkiller) return null
+        val styles = bot.preferences.pk?.styles() ?: return null
+        val options = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC).filter { purpose ->
+            purpose in available && when (purpose) {
+                BotGearPurpose.MELEE -> styles.uses(Skill.ATTACK) &&
+                    listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE).any { mayGainExperience(bot, it) }
+                BotGearPurpose.RANGED -> styles.uses(Skill.RANGED) && mayGainExperience(bot, Skill.RANGED)
+                BotGearPurpose.MAGIC -> styles.uses(Skill.MAGIC) && mayGainExperience(bot, Skill.MAGIC)
+                else -> false
+            }
+        }
+        if (options.isEmpty()) return null
+        val current = when {
+            bot.combat.magic.isAutocasting -> BotGearPurpose.MAGIC
+            bot.combat.weapon.isRanged -> BotGearPurpose.RANGED
+            else -> BotGearPurpose.MELEE
+        }
+        fun defence(purpose: BotGearPurpose): Int = when (purpose) {
+            BotGearPurpose.MELEE -> listOf(EquipmentBonus.STAB_DEFENCE, EquipmentBonus.SLASH_DEFENCE,
+                EquipmentBonus.CRUSH_DEFENCE).minOf { target.equipment.getBonus(it) }
+            BotGearPurpose.RANGED -> target.equipment.getBonus(EquipmentBonus.RANGED_DEFENCE)
+            else -> target.equipment.getBonus(EquipmentBonus.MAGIC_DEFENCE)
+        }
+        val best = options.minWith(compareBy<BotGearPurpose> { defence(it) }.thenBy { it != current })
+        val intelligence = bot.personality.intelligence.coerceIn(0.0, 1.0)
+        val dexterity = bot.personality.dexterity.coerceIn(0.0, 1.0)
+        val errorChance = 0.30 * (1.0 - intelligence) * (1.0 - dexterity / 2.0)
+        return if (mistakeRoll < errorChance) options.filter { it != best }.randomOrNull() ?: best else best
+    }
+
+    /**
+     * Proposed decision cadence: one to five native 600-ms ticks, scaled by intelligence and dexterity.
+     * The session controller must retain the current choice until this reaction delay has elapsed.
+     */
+    fun pkSwitchDelay(): Duration {
+        val competence = (bot.personality.intelligence.coerceIn(0.0, 1.0) +
+                bot.personality.dexterity.coerceIn(0.0, 1.0)) / 2.0
+        return ((1 + ((1.0 - competence) * 4).roundToInt()) * 600).milliseconds
     }
 
     /**

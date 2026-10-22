@@ -2,6 +2,9 @@ package io.luna.game.model.mob.bot.brain
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.InventoryProductionFixtures
+import engine.bot.gear.BotGearPurpose
+import io.luna.game.model.item.Equipment.EquipmentBonus
+import io.luna.game.model.mob.Player
 import engine.bot.gear.BotGearSet
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.mob.Skill
@@ -204,6 +207,79 @@ class BotPkPreferenceTest {
         assertEquals(CombatStance.AGGRESSIVE, weapon.styleDef.stance)
         assertTrue(policy.prepareTrainingStyle())
         verify(weapon, times(2)).changeStyle(anyInt())
+    }
+
+    @Test fun armourCounterChoosesLowestAvailableDefenceWithinTheSavedStyles() {
+        val account = bot(BotPkPreference(Purpose.GENERIC, Styles.TRIBRID, Build.MAIN))
+        `when`(account.personality.intelligence).thenReturn(1.0)
+        val target = mock(Player::class.java, RETURNS_DEEP_STUBS)
+        val melee = BotGearPurpose.MELEE
+        val ranged = BotGearPurpose.RANGED
+        val magic = BotGearPurpose.MAGIC
+        for (bonus in listOf(EquipmentBonus.STAB_DEFENCE,
+            EquipmentBonus.SLASH_DEFENCE,
+            EquipmentBonus.CRUSH_DEFENCE)) {
+            `when`(target.equipment.getBonus(bonus)).thenReturn(100)
+        }
+        `when`(target.equipment.getBonus(EquipmentBonus.RANGED_DEFENCE)).thenReturn(80)
+        `when`(target.equipment.getBonus(EquipmentBonus.MAGIC_DEFENCE)).thenReturn(-20)
+        val policy = BotCombatActionHandler(account, account.actionHandler)
+        assertEquals(magic, policy.selectPkStyle(target, setOf(melee, ranged, magic), 1.0))
+        assertEquals(ranged, policy.selectPkStyle(target, setOf(melee, ranged), 1.0))
+        assertNull(policy.selectPkStyle(target, emptySet(), 1.0))
+    }
+
+    @Test fun singleStylePkersAndSkillersCannotSwitchOutsideTheirIdentity() {
+        val account = bot(BotPkPreference(Purpose.SKILL, Styles.MELEE, Build.GMAUL_PURE))
+        val target = mock(Player::class.java, RETURNS_DEEP_STUBS)
+        val melee = BotGearPurpose.MELEE
+        val ranged = BotGearPurpose.RANGED
+        val magic = BotGearPurpose.MAGIC
+        val policy = BotCombatActionHandler(account, account.actionHandler)
+        assertEquals(melee, policy.selectPkStyle(target, setOf(melee, ranged, magic), 0.0))
+        assertNull(policy.selectPkStyle(target, setOf(ranged, magic), 0.0))
+        val skiller = bot(type = PersonalityTemplateType.SKILLER)
+        assertNull(BotCombatActionHandler(skiller, skiller.actionHandler)
+            .selectPkStyle(target, setOf(melee, ranged, magic), 0.0))
+    }
+
+    @Test fun mistakesChooseOnlyAnotherAvailableSavedStyleAndArmourTiesRetainCurrentStyle() {
+        val account = bot(BotPkPreference(Purpose.GENERIC, Styles.TRIBRID, Build.MAIN))
+        val target = mock(Player::class.java, RETURNS_DEEP_STUBS)
+        val policy = BotCombatActionHandler(account, account.actionHandler)
+        val available = setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED)
+        `when`(account.personality.intelligence).thenReturn(0.0)
+        `when`(account.personality.dexterity).thenReturn(0.0)
+        `when`(target.equipment.getBonus(EquipmentBonus.RANGED_DEFENCE)).thenReturn(-20)
+        assertEquals(BotGearPurpose.RANGED, policy.selectPkStyle(target, available, 1.0))
+        assertEquals(BotGearPurpose.MELEE, policy.selectPkStyle(target, available, 0.0))
+        `when`(target.equipment.getBonus(EquipmentBonus.RANGED_DEFENCE)).thenReturn(0)
+        `when`(account.combat.weapon.isRanged).thenReturn(true)
+        assertEquals(BotGearPurpose.RANGED, policy.selectPkStyle(target, available, 1.0))
+    }
+
+    @Test fun allSevenCombinationsAdmitOnlyTheirDeclaredDisciplines() {
+        val target = mock(Player::class.java, RETURNS_DEEP_STUBS)
+        for (styles in Styles.values()) {
+            val account = bot(BotPkPreference(Purpose.GENERIC, styles, Build.MAIN))
+            val policy = BotCombatActionHandler(account, account.actionHandler)
+            for ((purpose, skill) in mapOf(BotGearPurpose.MELEE to Skill.ATTACK,
+                BotGearPurpose.RANGED to Skill.RANGED, BotGearPurpose.MAGIC to Skill.MAGIC)) {
+                assertEquals(if (styles.uses(skill)) purpose else null,
+                    policy.selectPkStyle(target, setOf(purpose), 1.0))
+            }
+        }
+    }
+
+    @Test fun reactionDelayScalesWithinOneToFiveGameTicks() {
+        val account = bot()
+        val policy = BotCombatActionHandler(account, account.actionHandler)
+        `when`(account.personality.intelligence).thenReturn(0.0)
+        `when`(account.personality.dexterity).thenReturn(0.0)
+        assertEquals(3000, policy.pkSwitchDelay().inWholeMilliseconds)
+        `when`(account.personality.intelligence).thenReturn(1.0)
+        `when`(account.personality.dexterity).thenReturn(1.0)
+        assertEquals(600, policy.pkSwitchDelay().inWholeMilliseconds)
     }
 
     @Test fun maxedMainCanFightWithoutWantingMoreTraining() {
