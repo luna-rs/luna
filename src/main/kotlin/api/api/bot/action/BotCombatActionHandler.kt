@@ -21,6 +21,7 @@ import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
+import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.EntityState
@@ -29,9 +30,11 @@ import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplat
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.state.CombatContext.COMBAT_TIMER_DURATION
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.movement.NavigationResult
 import kotlinx.coroutines.future.await
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -131,13 +134,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
 
         /**
-         * Samples active kind GENERIC sessions each game cycle, including while patrol travel is suspended.
-         * Evidence may interrupt that session to protect a visible player, subject to ordinary combat legality.
+         * Samples GENERIC sessions each game cycle, including while patrol travel is suspended.
+         * All GENERIC personalities may observe fleeing; only kind sessions interrupt travel to protect a victim.
          */
         @JvmStatic
         fun observePvpMovement(bot: Bot) {
             val session = bot.scriptStack.findActive(PkBotScript::class.java).orElse(null) ?: return
-            if (!session.isKindGenericSession()) return
+            if (!session.isGenericSession()) return
             session.observeMovement(bot.world.locator.findViewablePlayers(bot))
             session.protectObservedPlayer()
         }
@@ -170,6 +173,38 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      */
     fun canAttackWildernessPlayer(target: Player): Boolean = levelAt(bot.position) > 0 &&
         levelAt(target.position) > 0 && canAttackPlayer(target)
+
+    /**
+     * Recognizes a current attack attempt against this bot or its latest received attack during active combat.
+     * A received hit must match the current opponent and the native combat timeout. Old hits cannot authorize
+     * retaliation just because unrelated combat has started later. A current incoming attempt remains sufficient.
+     * Callers must independently enforce native player combat legality.
+     */
+    fun canRetaliateAgainst(target: Player, now: Instant = Instant.now()): Boolean {
+        if (target.combat.target === bot) return true
+        if (!bot.combat.inCombat() || bot.combat.lastCombatWith !== target) return false
+        val received = bot.combat.lastAttackReceived ?: return false
+        val timestamp = received.timestamp ?: return false
+        return received.attacker === target &&
+            java.time.Duration.between(timestamp, now).seconds in 0..COMBAT_TIMER_DURATION.toLong()
+    }
+
+    /**
+     * Counts visible advantages for opportunistic GENERIC target preference, with one point per signal.
+     * Lower health percentage, lower combat level, lower worn equipment tier and observed fleeing each add one.
+     * Ties retain the patrol's existing ordering. This is a preference, not a win prediction or a legality bypass.
+     */
+    fun pkTargetVulnerability(target: Player, fleeing: Boolean): Int =
+        listOf(target.healthPercent < bot.healthPercent, target.combatLevel < bot.combatLevel,
+            wornCombatTier(target) < wornCombatTier(bot), fleeing).count { it }
+
+    /**
+     * Uses the same highest-equipment-requirement tier proxy as the gear selector, once per worn slot.
+     * Unknown definitions contribute zero; bank stock, inventory, ammunition quantity and item prices are ignored.
+     */
+    private fun wornCombatTier(player: Player): Int = player.equipment.filterNotNull().sumOf {
+        EquipmentDefinition.ALL.get(it.id).orElse(null)?.highestRequirement ?: 0
+    }
 
     /**
      * Returns this bot's desired combat training skills for coordinators and content scripts.

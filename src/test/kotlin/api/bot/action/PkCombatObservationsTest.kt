@@ -143,6 +143,7 @@ class PkCombatObservationsTest {
         assertFalse(session.wantsToAttack(attacker))
         observations.attackStarted(attacker, victim)
         assertTrue(observations.canProtectAgainst(attacker))
+        assertFalse(observations.isFleeing(victim))
         `when`(attacker.isViewableFrom(bot)).thenReturn(false)
         assertFalse(observations.canProtectAgainst(attacker))
     }
@@ -154,10 +155,12 @@ class PkCombatObservationsTest {
         moveChase()
         observations.observe(listOf(attacker, victim))
         assertTrue(observations.canProtectAgainst(attacker))
+        assertTrue(observations.isFleeing(victim))
         // A subsequent standstill does not erase the witnessed pursuit while the same victim is still targeted.
         cycle++
         observations.observe(listOf(attacker, victim))
         assertTrue(observations.canProtectAgainst(attacker))
+        assertFalse(observations.isFleeing(victim))
     }
 
     @Test fun mutualCombatMovementDoesNotRevealWhoStartedTheFight() {
@@ -240,10 +243,10 @@ class PkCombatObservationsTest {
         verify(bot.combat, never()).attack(attacker)
     }
 
-    @Test fun nonKindGenericAndClanInitiationWaitForTheirOwnPolicyWithoutAffectingValueHunting() {
+    @Test fun nonKindGenericInitiationDoesNotEnableUndefinedClanPolicyOrRestrictValueHunting() {
         `when`(attacker.skullIcon).thenReturn(SkullIcon.WHITE)
         `when`(bot.personality.isKind).thenReturn(false)
-        assertFalse(session.wantsToAttack(attacker))
+        assertTrue(session.wantsToAttack(attacker))
         `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.CLAN, Styles.TRIBRID, Build.MAIN))
         assertFalse(session.wantsToAttack(attacker))
         `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))

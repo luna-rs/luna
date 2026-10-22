@@ -51,7 +51,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     private val observations = PkCombatObservations(bot)
 
     // TODO Prepare owned supplies using personality risk budgets before enabling coordinator dispatch/registration.
-    // TODO Define clan membership and non-kind GENERIC initiation policies.
+    // TODO Define clan membership and associated initiation policies.
     // TODO Add local NPC avoidance that preserves an actively followed travel path.
 
     /**
@@ -378,28 +378,40 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     /**
      * Keeps both ends of an owned pursuit inside the hunting area, including after equipment suspensions.
      * Kind GENERIC fights also require a skull or a continuing defensive reason.
+     * Uncertain non-kind GENERIC bots only engage a current or recently received attacker.
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
-    internal fun allowsPursuit(target: Player): Boolean = allowsHuntingAt(bot.position) &&
-        allowsHuntingAt(target.position) && (!isKindGenericSession() || target.skullIcon != SkullIcon.NONE ||
-        observations.canProtectAgainst(target) || target.combat.target === bot)
+    internal fun allowsPursuit(target: Player): Boolean {
+        if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
+        if (!isGenericSession()) return true
+        if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
+            observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
+        return !bot.personality.isUncertain || combatPolicy.canRetaliateAgainst(target)
+    }
+
+    /**
+     * Enables local observations for GENERIC PK sessions without changing the permanent purpose or style identity.
+     */
+    internal fun isGenericSession(): Boolean = bot.preferences.pk?.purpose() == Purpose.GENERIC &&
+        !bot.preferences.isSkiller
 
     /**
      * Uses the established kindness threshold; saved PK purpose remains separate from the personality template.
      */
-    internal fun isKindGenericSession(): Boolean = bot.preferences.pk?.purpose() == Purpose.GENERIC &&
-        bot.personality.isKind && !bot.preferences.isSkiller
+    internal fun isKindGenericSession(): Boolean = isGenericSession() && bot.personality.isKind
 
     /**
      * Applies purpose-specific initiation. Kind GENERIC bots may challenge idle skulled players or protect a
      * witnessed victim, including against an unskulled aggressor. Unknown ongoing fights are left alone.
-     * Clan membership and non-kind GENERIC initiation remain disabled until those policies are defined.
+     * Non-kind uncertain bots only retaliate. Other non-kind bots can initiate, with vulnerability preference
+     * applied separately unless they are stupidly confident. Clan initiation still requires its membership policy.
      */
     internal fun wantsToAttack(target: Player): Boolean = when (bot.preferences.pk?.purpose()) {
         Purpose.SKILL -> BotCombatActionHandler.isPker(target)
         Purpose.VALUE -> true
-        Purpose.GENERIC -> isKindGenericSession() && (observations.canProtectAgainst(target) ||
-            (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null))
+        Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
+            (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
+            else !bot.personality.isUncertain && !bot.preferences.isSkiller
         else -> false
     }
 
@@ -414,7 +426,19 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Maintains consecutive visible movement samples while this session or a combat child is active.
      */
     internal fun observeMovement(players: Collection<Player>) {
-        if (isKindGenericSession()) observations.observe(players)
+        if (isGenericSession()) observations.observe(players)
+    }
+
+    /**
+     * Preserves ordinary patrol ordering for reckless challengers. Other non-kind GENERIC bots prefer visible
+     * vulnerability, while kind bots prioritize a witnessed victim's aggressor over ordinary skull challenges.
+     * This ranks an already legal candidate list; it never grants permission to interfere in single combat.
+     */
+    internal fun orderTargets(targets: List<Player>): List<Player> = when {
+        isKindGenericSession() -> targets.sortedByDescending { observations.canProtectAgainst(it) }
+        isGenericSession() && !bot.personality.isStupidlyConfident && !bot.personality.isUncertain ->
+            targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
+        else -> targets
     }
 
     /**
@@ -602,9 +626,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             }
         }
 
-        // Protect witnessed victims before considering ordinary skull-based challenges.
-        val ordered = if (isKindGenericSession()) targets.sortedByDescending { observations.canProtectAgainst(it) } else targets
-        for (other in ordered) {
+        for (other in orderTargets(targets)) {
             if (check(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
                 // The child owns the first attack, after its reaction delay and carried-supply checks.

@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Session-local evidence for protecting players without inventing an aggressor in an existing fight.
+ * Session-local evidence for protection and visible fleeing without inventing an aggressor in an existing fight.
  * Records visible fresh attack starts and visible pursuits over consecutive bot cycles. A chase requires
  * ordinary walking/running movement towards a fleeing player, rather than a shared destination or mutual combat.
  * Evidence expires when either participant disappears or the attacker stops targeting the observed victim.
@@ -20,6 +20,7 @@ internal class PkCombatObservations(private val bot: Bot) {
     private var previousCycle: Long? = null
     private var previous = emptyMap<Player, Position>()
     private val aggressors = mutableMapOf<Player, Player>()
+    private val fleeing = mutableMapOf<Player, Player>()
 
     /**
      * Called only for a fresh native PvP attack, before combat timers are reset.
@@ -38,6 +39,7 @@ internal class PkCombatObservations(private val bot: Bot) {
     fun observe(players: Collection<Player>) {
         val cycle = bot.cycles
         if (previousCycle == cycle) return
+        fleeing.clear()
         aggressors.entries.removeIf { !threatening(it.key, it.value) }
         val current = players.filter { visible(it) }.associateWith { it.position }
         if (previousCycle?.plus(1) == cycle) {
@@ -53,7 +55,10 @@ internal class PkCombatObservations(private val bot: Bot) {
                 if (attackerSteps !in 1..2 || victimSteps !in 1..2) continue
                 val oldGap = before.computeLongestDistance(victimBefore)
                 if (now.computeLongestDistance(victimBefore) < oldGap &&
-                    before.computeLongestDistance(victimNow) > oldGap) aggressors.putIfAbsent(attacker, victim)
+                    before.computeLongestDistance(victimNow) > oldGap) {
+                    aggressors.putIfAbsent(attacker, victim)
+                    fleeing[victim] = attacker
+                }
             }
         }
         previous = current
@@ -67,12 +72,19 @@ internal class PkCombatObservations(private val bot: Bot) {
     fun canProtectAgainst(attacker: Player): Boolean = aggressors[attacker]?.let { threatening(attacker, it) } == true
 
     /**
+     * Reports current-cycle fleeing only, rather than labelling every witnessed attack victim as fleeing.
+     * A stationary victim, broken observation continuity or discontinued pursuit removes this preference.
+     */
+    fun isFleeing(player: Player): Boolean = fleeing[player]?.let { threatening(it, player) } == true
+
+    /**
      * Drops world references when the owning session finishes; observations are never persisted across login.
      */
     fun clear() {
         previousCycle = null
         previous = emptyMap()
         aggressors.clear()
+        fleeing.clear()
     }
 
     private fun threatening(attacker: Player, victim: Player): Boolean = visible(attacker) && visible(victim) &&
