@@ -36,6 +36,11 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     private var gem: Int? = null
 
     /**
+     * If this execution rolled for ore, rather than handing over ore found on the previous tick.
+     */
+    private var rolled = false
+
+    /**
      * If the last roll found ore that arrives on this execution.
      */
     private var oreDue = false
