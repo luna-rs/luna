@@ -5,6 +5,7 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotGearLocator
@@ -18,6 +19,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils.roll
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -113,6 +115,17 @@ class TanHideBotScript(
 
     /** Opens the normal tanning interface and selects its existing tan-all button; shared hooks verify progress. */
     private suspend fun startTanning(hide: Hide, tanner: Npc): Boolean {
+        // Native NPC navigation rejects out-of-view targets before pathfinding. Reach the
+        // tannery with carried supplies first, retaining normal NPC reach/collision checks.
+        if (!bot.position.isViewable(tanner.position)) {
+            val arrived = withTimeoutOrNull(60.seconds) {
+                handler.webWalkTo(tanner.position, radius = 1, bank = BankAccess.NONE)
+            } == true
+            if (!arrived || !isActionSafe() || !bot.position.isViewable(tanner.position)) {
+                tannerNpc = null
+                return false
+            }
+        }
         if (!handler.interactions.interact(2, tanner)) {
             tannerNpc = null
             return false
