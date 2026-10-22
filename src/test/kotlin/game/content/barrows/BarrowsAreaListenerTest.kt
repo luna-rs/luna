@@ -3,6 +3,7 @@ package game.content.barrows
 import io.luna.game.model.Position
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.model.mob.controller.ControllerManager
 import io.luna.game.model.mob.overlay.AbstractOverlaySet
 import io.luna.game.model.mob.overlay.WalkableInterface
@@ -36,6 +37,7 @@ class BarrowsAreaListenerTest {
             }
         }
         player = mock(Player::class.java, RETURNS_DEEP_STUBS)
+        `when`(player.attributes()).thenReturn(AttributeMap())
         overlays = AbstractOverlaySet(player)
         controllers = ControllerManager(player)
         `when`(player.overlays).thenReturn(overlays)

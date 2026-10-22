@@ -70,6 +70,8 @@ on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
         // These routes have Castle Wars membership and carried-standard checks.
         if (def.id() in setOf(4415, 4417, 4418, 4419, 4420)) continue
+        // Barrows' four tunnel ladders return to the run's chosen crypt, not a fixed upstairs tile.
+        if (def.id() in 6709..6712) continue
         if (def.name !in StairDestination.NAMES) {
             continue
         }

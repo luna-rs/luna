@@ -25,6 +25,7 @@ object BarrowsAreaListener : PlayerAreaListener() {
     }
 
     override fun exit(plr: Player) {
+        BarrowsEncounters.clear(plr)
         plr.queue(MinimapStateMessageWriter(State.NORMAL))
         // Another area may already have opened its overlay during this position change.
         if (plr.overlays.has(BarrowsOverlay::class.java)) {
