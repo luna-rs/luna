@@ -80,6 +80,7 @@ object BarrowsDoors {
             player.crossingDoor = false
             task.cancel()
         }
+        BarrowsTunnelSpawns.spawn(player)
     }
 
     private fun display(player: Player, visual: GameObject, show: Boolean) {
