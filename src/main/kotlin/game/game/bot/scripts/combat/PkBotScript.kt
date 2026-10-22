@@ -1,6 +1,7 @@
 package game.bot.scripts.combat
 
 import api.bot.Suspendable.delay
+import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
@@ -10,7 +11,6 @@ import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
-import io.luna.game.model.EntityState
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -19,7 +19,6 @@ import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
@@ -40,6 +39,11 @@ import kotlin.time.DurationUnit
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    /**
+     * Shared native eligibility checks, also used by the combat child's equipment-switch loop.
+     */
+    private val combatPolicy = BotCombatActionHandler(bot, handler)
 
     // TODO Load in registerscripts
     // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
@@ -355,7 +359,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     /**
-     * Absolute script expiry time in nanoseconds.
+     * Absolute script expiry time in milliseconds.
      *
      * Once this time is reached, the bot stops hunting and attempts to flee the Wilderness.
      */
@@ -410,13 +414,14 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         }
 
         bot.log("Target found. Combat script should now be active.")
-        return bot.combat.inCombat()
+        // The paused parent must resume after its combat child; selecting a fight does not complete the session.
+        return false
     }
 
     override fun snapshot(): PkData {
         val remaining = expireAt - System.currentTimeMillis()
         val data = PkData()
-        data.duration = if (remaining < 1) Duration.ZERO else remaining.nanoseconds
+        data.duration = remaining.coerceAtLeast(0).milliseconds
         return data
     }
 
@@ -470,12 +475,13 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     /**
-     * Searches nearby viewable players and attacks the first suitable target.
+     * Searches nearby viewable players and queues a combat child for the first eligible target.
      *
-     * Candidate targets must be alive, active, and valid according to multi-combat rules. If multiple candidates are
-     * found, the bot may sort them by distance or health to create less predictable target selection.
+     * Candidates must pass the shared Wilderness, visibility, combat-level, controller and single-combat checks.
+     * If multiple candidates are found, the bot may sort them by distance or health. The child owns equipment
+     * readiness, reaction timing and the first attack; this patrol never attacks directly.
      *
-     * @return `true` if a target was selected and attacked, otherwise `false`.
+     * @return `true` if a combat child was queued, otherwise `false`.
      */
     fun searchAndAttack(): Boolean {
 
@@ -483,9 +489,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
          * Checks whether [other] is a valid target candidate for this bot.
          */
         fun check(other: Player): Boolean {
-            return other.isAlive &&
-                    bot.combat.checkMultiCombat(other) &&
-                    other.state == EntityState.ACTIVE
+            return combatPolicy.canAttackWildernessPlayer(other)
         }
 
         if (bot.combat.inCombat()) {
@@ -522,7 +526,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         for (other in targets) {
             if (check(other)) {
                 bot.log("Selected target $other. Pushing CombatBotScript.")
-                bot.combat.attack(other)
+                // The child owns the first attack, after its reaction delay and carried-supply checks.
                 bot.scriptStack.pushHead(CombatBotScript(bot, other))
                 return true
             }

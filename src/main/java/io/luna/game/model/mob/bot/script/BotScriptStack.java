@@ -318,6 +318,19 @@ public final class BotScriptStack {
     }
 
     /**
+     * Finds an active or paused script of the supplied type anywhere in this stack.
+     * A paused parent still owns its session while a child runs. Idle queued work and completed or terminated
+     * scripts do not describe the bot's current activity. Call on the game thread, as with other stack operations.
+     *
+     * @param type The script type to inspect.
+     * @return Whether a running or paused script matches the type.
+     */
+    public boolean containsActive(Class<? extends BotScript> type) {
+        return buffer.stream().anyMatch(script -> type.isInstance(script) && !script.isTerminated() &&
+                !script.isFinished() && (script.isRunning() || script.isPaused()));
+    }
+
+    /**
      * Clears all queued scripts except the currently running script.
      * <p>
      * If the current script is running, it is preserved at the head of the buffer. Idle, paused, finished, and pending

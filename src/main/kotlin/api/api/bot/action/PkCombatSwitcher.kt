@@ -84,8 +84,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     /**
      * Rechecks target legality after suspensions and actual weapon, ammunition, levels and rune stock before use.
      */
-    private fun validTarget(target: Player): Boolean = target.isAlive && target.isViewableFrom(bot) &&
-        bot.combat.checkMultiCombat(target) && bot.controllers.checkCombat(target)
+    private fun validTarget(target: Player): Boolean = combat.canAttackPlayer(target)
 
     /**
      * Checks the actual selected weapon and consumables, without trusting tracked bank ownership.

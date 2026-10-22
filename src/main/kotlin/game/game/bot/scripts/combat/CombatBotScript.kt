@@ -208,6 +208,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             if (!prepareAttack()) return
             // Equipping can suspend; do not initiate against a dead, vanished or newly contested target.
             if (!focus.isAlive || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus)) return
+            if (usesPkSwitching && !combatPolicy.canAttackPlayer(focus as Player)) return
             bot.combat.attack(focus)
             if (!usesPkSwitching) delay(1200.milliseconds, 3.seconds)
             return

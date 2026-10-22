@@ -11,6 +11,8 @@ import game.skill.magic.Rune
 import io.luna.Luna
 import io.luna.LunaSettings
 import io.luna.game.model.def.*
+import io.luna.game.model.EntityState
+import io.luna.game.model.Position
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.item.Item
@@ -63,6 +65,9 @@ class PkCombatSwitcherTest {
             stackableField.setBoolean(original, true)
         }
         bot = InventoryProductionFixtures.bot()
+        `when`(bot.isAlive).thenReturn(true)
+        doReturn(Position(3100, 3540)).`when`(bot).position
+        `when`(bot.combat.isAttackable).thenReturn(true)
         `when`(bot.healthPercent).thenReturn(100)
         `when`(bot.spellbook).thenReturn(Spellbook.REGULAR)
         `when`(bot.rights).thenReturn(PlayerRights.PLAYER)
@@ -80,6 +85,9 @@ class PkCombatSwitcherTest {
         `when`(bot.equipment).thenReturn(equipment)
         enemy = mock(Player::class.java, RETURNS_DEEP_STUBS)
         `when`(enemy.isAlive).thenReturn(true)
+        `when`(enemy.state).thenReturn(EntityState.ACTIVE)
+        doReturn(Position(3101, 3540)).`when`(enemy).position
+        `when`(enemy.combat.isAttackable).thenReturn(true)
         `when`(enemy.isViewableFrom(bot)).thenReturn(true)
         `when`(bot.combat.checkMultiCombat(enemy)).thenReturn(true)
         `when`(bot.controllers.checkCombat(enemy)).thenReturn(true)
@@ -260,6 +268,18 @@ class PkCombatSwitcherTest {
         profile(Styles.MAGIC)
         carry(Item(1381), Item(Rune.MIND.id, 50))
         afterEquip = { `when`(enemy.isViewableFrom(bot)).thenReturn(false) }
+        val switching = switcher()
+        switching.prepare(enemy)
+        now = 600_000_000
+        assertEquals(PkCombatSwitcher.Result.WAITING, switching.prepare(enemy))
+        assertFalse(bot.combat.magic.isAutocasting)
+        verify(bot.combat, never()).attack(any())
+    }
+
+    @Test fun targetCrossingTheWildernessBoundaryWhileEquippingCannotStartAnAttack() = runBlocking<Unit> {
+        profile(Styles.MAGIC)
+        carry(Item(1381), Item(Rune.MIND.id, 50))
+        afterEquip = { doReturn(Position(3101, 3518)).`when`(enemy).position }
         val switching = switcher()
         switching.prepare(enemy)
         now = 600_000_000

@@ -12,6 +12,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import engine.controllers.WildernessLocatableController.levelAt
+import game.bot.scripts.combat.PkBotScript
 import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
 import game.skill.magic.Staff
@@ -20,6 +22,9 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.EntityState
+import io.luna.game.model.mob.SkullIcon
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
@@ -96,7 +101,46 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         @JvmStatic
         fun allowedStyles(bot: Bot, styles: Iterable<CombatStyleDefinition>): List<CombatStyleDefinition> =
             styles.filter { style -> style.exp.isNotEmpty() && style.exp.all { mayGainExperience(bot, it) } }
+
+        /**
+         * Recognizes bots by their PKER template or active PK session, including a paused parent beneath combat.
+         * A saved build alone does not imply current PK activity, and a bot's skull is not a substitute for intent.
+         * Human players are recognized by their native skull icon.
+         */
+        @JvmStatic
+        fun isPker(player: Player): Boolean = if (player is Bot) {
+            !player.preferences.isSkiller && (player.personality.type == PersonalityTemplateType.PKER ||
+                player.scriptStack.containsActive(PkBotScript::class.java))
+        } else player.skullIcon != SkullIcon.NONE
     }
+
+    /**
+     * Rechecks player combat eligibility before selection and after suspendable equipment actions.
+     * Wilderness level difference uses the shallower endpoint, matching the Lost City PvP rule.
+     * Positional levels avoid relying on a cached controller attribute during boundary movement.
+     * Outside Wilderness, native controllers retain ownership of rules such as duelling.
+     * This checks legality only; the PK purpose and personality decide whether to initiate.
+     */
+    fun canAttackPlayer(target: Player): Boolean {
+        if (target === bot || bot.preferences.isSkiller || !bot.isAlive || !target.isAlive ||
+            bot.state != EntityState.ACTIVE || target.state != EntityState.ACTIVE ||
+            bot.position.z != target.position.z || !target.isViewableFrom(bot) ||
+            bot.combat.isDisabled || !bot.combat.isAttackable || !target.combat.isAttackable) return false
+        val attackerLevel = levelAt(bot.position)
+        val targetLevel = levelAt(target.position)
+        if (attackerLevel > 0 || targetLevel > 0) {
+            if (attackerLevel == 0 || targetLevel == 0 ||
+                kotlin.math.abs(bot.combatLevel - target.combatLevel) > minOf(attackerLevel, targetLevel)) return false
+        }
+        return bot.combat.checkMultiCombat(target) && bot.controllers.checkCombat(target)
+    }
+
+    /**
+     * Restricts a PK patrol candidate to two players currently inside the Wilderness.
+     * Defensive combat elsewhere can use [canAttackPlayer] under its native controller instead.
+     */
+    fun canAttackWildernessPlayer(target: Player): Boolean = levelAt(bot.position) > 0 &&
+        levelAt(target.position) > 0 && canAttackPlayer(target)
 
     /**
      * Returns this bot's desired combat training skills for coordinators and content scripts.
