@@ -1,12 +1,6 @@
 package game.skill.mining
 
-import api.drops.DropTable
-import api.drops.DropTableHandler
-import api.drops.DropTableItemList
 import api.predef.*
-import api.predef.ext.*
-import io.luna.game.model.Entity
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 
 /**
@@ -22,38 +16,37 @@ object Mining {
     private val CHARGED_GLORY_IDS = setOf(1712, 1710, 1708, 1706)
 
     /**
-     * The mining gem drop table.
+     * Uncut sapphire, emerald, ruby and diamond, with their weights on the mining gem table.
      */
-    val MINING_GEM_DROP_TABLE = DropTableHandler.create {
-        nothing(10 of 4681)
-        "Uncut sapphire" x 1 chance (1 of 1024)
-        "Uncut emerald" x 1 chance (1 of 2048)
-        "Uncut ruby" x 1 chance (1 of 4096)
-        "Uncut diamond" x 1 chance (1 of 16_384)
-    }.table {
-        object : DropTable() {
-            override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                return rand().nextInt(256) == 0 // 1/256 chance to roll on the table.
-            }
+    private val GEMS = listOf(1623 to 32, 1621 to 16, 1619 to 8, 1617 to 2)
 
-            override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
-                if (mob is Player) {
-                    val hasChargedGlory = CHARGED_GLORY_IDS.contains(mob.equipment.amulet?.id ?: -1)
-                    if (hasChargedGlory) {
-                        // We have a charged amulet of glory equipped.
-                        return DropTableHandler.createList {
-                            nothing(1 of 117)
-                            "Uncut sapphire" x 1 chance (1 of 257)
-                            "Uncut emerald" x 1 chance (1 of 514)
-                            "Uncut ruby" x 1 chance (1 of 1027)
-                            "Uncut diamond" x 1 chance (1 of 4108)
-                        }
-                    }
-                }
-                return table
-            }
-
-            override fun computePossibleItems(): DropTableItemList = table
+    /**
+     * The gem roll made before each ore roll: 1 in 256, or 1 in 86 with a charged amulet of glory worn. The gem table
+     * itself gives nothing 1 time in 70.
+     *
+     * @return The uncut gem found, or `null`.
+     */
+    fun rollGem(plr: Player): Int? {
+        val hasChargedGlory = CHARGED_GLORY_IDS.contains(plr.equipment.amulet?.id ?: -1)
+        if (rand().nextInt(if (hasChargedGlory) 86 else 256) != 0 || rand().nextInt(70) == 0) {
+            return null
         }
+        var roll = rand().nextInt(GEMS.sumOf { it.second })
+        for ((id, weight) in GEMS) {
+            roll -= weight
+            if (roll < 0) {
+                return id
+            }
+        }
+        return null
+    }
+
+    /**
+     * The message for finding the uncut gem [id] while mining, like "You just found a Sapphire!".
+     */
+    fun gemMessage(id: Int): String {
+        val gem = itemName(id).removePrefix("Uncut ").replaceFirstChar { it.uppercase() }
+        val article = if (gem.first().lowercaseChar() in "aeiou") "an" else "a"
+        return "You just found $article $gem!"
     }
 }

@@ -31,6 +31,11 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     private var swung = false
 
     /**
+     * The uncut gem found on this attempt instead of ore, if any.
+     */
+    private var gem: Int? = null
+
+    /**
      * If this execution rolled for ore, rather than handing over ore found on the previous tick.
      */
     private var rolled = false
@@ -89,13 +94,15 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun execute() {
-        if (rolled) {
-            val gemItems = Mining.MINING_GEM_DROP_TABLE.roll(mob, rockObj)
-            if (!mob.inventory.isFull && gemItems.isNotEmpty()) {
-                // Gem rolls happen independently of ore rolls.
-                mob.inventory.add(gemItems.removeFirst())
-                mob.sendMessage("You find a gem in the rock.")
+        val foundGem = gem
+        if (foundGem != null) {
+            // A gem takes the place of this attempt's ore, and the rock keeps its ore.
+            gem = null
+            mob.sendMessage(Mining.gemMessage(foundGem))
+            if (mob.inventory.isFull) {
+                stopFull = true
             }
+            return
         }
         if (currentAdd.isNotEmpty()) {
             if (ore == RUNE_ESSENCE) {
@@ -118,11 +125,17 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     override fun add(): List<Item> {
         if (oreDue) {
             oreDue = false
-            rolled = false
             delay = pick.speed
             return listOf(Item(ore.item))
         }
-        rolled = true
+        if (ore != RUNE_ESSENCE) {
+            // The gem roll comes before the ore roll.
+            gem = Mining.rollGem(mob)
+            val foundGem = gem
+            if (foundGem != null) {
+                return listOf(Item(foundGem))
+            }
+        }
         val (low, high) = ore.chance
         return when {
             ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
@@ -146,14 +159,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
     override fun onInventoryFull() =
         "Your inventory is too full to hold any more ${if (ore == RUNE_ESSENCE) "rune stones" else ore.typeName.lowercase()}."
-
-    /**
-     * Faces the rock and starts the mining animation.
-     */
-    private fun swing() {
-        mob.interact(rockObj)
-        mob.animation(pick.animation)
-    }
 
     /**
      * Faces the rock and starts the mining animation.
