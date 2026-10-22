@@ -156,6 +156,14 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     /**
+     * Faces the rock and starts the mining animation.
+     */
+    private fun swing() {
+        mob.interact(rockObj)
+        mob.animation(pick.animation)
+    }
+
+    /**
      * Deletes and respawns an [Ore] rock object.
      */
     private fun deleteAndRespawnRock() {
