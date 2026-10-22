@@ -86,6 +86,12 @@ public class Npc extends Mob {
     private int respawnTicks;
 
     /**
+     * How many times this NPC has entered the world: 1 after its first spawn, one more for each respawn. Code that
+     * keeps a reference across a death compares it to tell a new life from the one it saw die.
+     */
+    private int spawnCount;
+
+    /**
      * The set of human players that currently have this NPC in their local view.
      * <p>
      * This is maintained as a concurrent set and can be used for things like targeted updates, proximity-based
@@ -222,6 +228,7 @@ public class Npc extends Mob {
 
     @Override
     protected final void onActive() {
+        spawnCount++;
         status.load();
         onSpawn();
     }
@@ -272,6 +279,7 @@ public class Npc extends Mob {
         walking.setRunning(false);
         unlock();
         interact(null);
+        setLastDirection(Direction.SOUTH);
 
         definition = NpcDefinition.ALL.retrieve(id);
         combatDefinition = NpcCombatDefinition.ALL.get(id);
@@ -446,6 +454,13 @@ public class Npc extends Mob {
      */
     public void setRespawnTicks(int respawnTicks) {
         this.respawnTicks = respawnTicks;
+    }
+
+    /**
+     * @return How many times this NPC has entered the world, one more for each respawn.
+     */
+    public int getSpawnCount() {
+        return spawnCount;
     }
 
     /**

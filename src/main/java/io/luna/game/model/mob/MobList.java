@@ -212,11 +212,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param mob The mob to register.
      * @return {@code true} if the mob was successfully added.
      * @throws IllegalStateException If the list is full.
-     * @throws IllegalArgumentException If the mob is already ACTIVE or already has a slot.
+     * @throws IllegalArgumentException If the mob is not NEW: it is in a list already, or it is dead and waiting to
+     * respawn.
      */
     public boolean add(E mob) {
-        checkArgument(mob.getState() != EntityState.ACTIVE, "Mob is already ACTIVE.");
-        checkArgument(mob.getIndex() == -1, "Mob already has a slot.");
+        checkArgument(mob.getState() == EntityState.NEW, "Mob must be NEW, not " + mob.getState() + ".");
 
         Integer index = indexPool.poll();
         if (index == null) {
