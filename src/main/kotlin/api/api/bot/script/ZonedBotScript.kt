@@ -95,6 +95,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     private var timestamp = 0L
 
+    /** A paused initializer must finish its gear and banking work before a resumed session can run. */
+    private var initialPreparationComplete = false
+
     /**
      * The bank object currently cached for the selected active zone.
      *
@@ -153,7 +156,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!awaitActionSafety()) return true
         timestamp = System.currentTimeMillis()
 
-        if (!resumed) {
+        if (!resumed || !initialPreparationComplete) {
+            initialPreparationComplete = false
             bot.log("Initial setup complete. Equipping required gear. candidateZones=${zones.size}")
             val equipmentLocator = equipment()
             if (!awaitActionSafety()) return true
@@ -181,6 +185,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
 
             zones.shuffle()
+            initialPreparationComplete = true
         }
 
         bot.log("Initialization complete.")

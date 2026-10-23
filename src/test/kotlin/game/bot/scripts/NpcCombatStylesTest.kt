@@ -13,6 +13,10 @@ import game.bot.scripts.NpcCombatScript.Companion.NpcCombatData
 import game.skill.magic.Rune
 import io.luna.Luna
 import io.luna.LunaSettings
+import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.def.WeaponDefinition
+import io.luna.game.model.def.AmmoDefinition
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -34,10 +38,11 @@ class NpcCombatStylesTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() {
             InventoryProductionFixtures.initialize()
-            EquipmentDefinitionFileParser().run()
-            WeaponDefinitionFileParser().run()
-            AmmoDefinitionFileParser().run()
-            CombatSpellDefinitionFileParser().run()
+            // Shared by the preparation tests; definition repositories can only be locked once.
+            if (EquipmentDefinition.ALL.get(1381).isEmpty) EquipmentDefinitionFileParser().run()
+            if (WeaponDefinition.ALL.get(1381).isEmpty) WeaponDefinitionFileParser().run()
+            if (AmmoDefinition.ALL.isEmpty()) AmmoDefinitionFileParser().run()
+            if (CombatSpellDefinition.getSpells().isEmpty()) CombatSpellDefinitionFileParser().run()
         }
     }
     private lateinit var luna: MockedStatic<Luna>

@@ -149,13 +149,15 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        // Gear selection and banking can suspend waiting for combat to end. Keep the normal
+        // combat response available until this script is ready to handle an actual engagement.
+        bot.reflex.isDisableCombatReflex = false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
             handler.combat.fleeCombat()
             return false
         }
 
-        bot.reflex.isDisableCombatReflex = true
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
         loadout = NpcCombatLoadout.find(bot, purpose, spell) ?: return false
@@ -166,7 +168,7 @@ open class NpcCombatScript(bot: Bot,
             loadout!!.gear[Equipment.SHIELD] = 1540
         }
         spell = loadout!!.spell?.spell
-        if (resumed && !prepareCombat()) forceBanking = true
+        if (resumed && !configureCombat()) forceBanking = true
         return true
     }
 
@@ -196,6 +198,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
+        bot.reflex.isDisableCombatReflex = false
         combatConfigured = false
         bot.combat.target = null
         clearMagic()
@@ -243,7 +246,7 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        if (!prepareCombat()) {
+        if (!configureCombat()) {
             stop()
             return
         }
@@ -404,6 +407,14 @@ open class NpcCombatScript(bot: Bot,
 
     /** Validates actual equipment and one attack's supplies before permitting any attack click. */
     internal fun prepareCombat(): Boolean {
+        val ready = configureCombat()
+        // A missing weapon, ammunition or spell cost sends us to a non-combat bank operation.
+        // Let the existing combat reflex take over if we are attacked during that preparation.
+        bot.reflex.isDisableCombatReflex = ready
+        return ready
+    }
+
+    private fun configureCombat(): Boolean {
         // Existing melee callers retain their click behavior before initialization.
         val selected = loadout ?: return purpose == BotGearPurpose.MELEE
         val weapon = selected.gear[Equipment.WEAPON]
