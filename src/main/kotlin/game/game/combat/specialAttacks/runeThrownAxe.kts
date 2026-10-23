@@ -80,6 +80,8 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * cost and displaying a projectile. After the travel delay, it applies damage and schedules the next rebound.
  * Exhausted targets, exhausted attacks, ineligible targets, or insufficient energy end the chain and unlock the bar.
  * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
+ * Before each new rebound, the attacker must still be alive and active. Already launched hits can land after death,
+ * but their target-owned actions must not launch more projectiles or spend more of the attacker's energy.
  *
  * @param attacker The player performing the special attack.
  * @param lastVictim The mob most recently hit by the thrownaxe.
@@ -93,7 +95,7 @@ fun handleChainHit(
     targets: Iterator<Mob>,
     source: CombatAttack<Player>,
     attacksLeft: Int) {
-    if (targets.hasNext() && attacksLeft > 0) {
+    if (attacker.isAlive && targets.hasNext() && attacksLeft > 0) {
         val nextVictim = targets.next()
         if (!nextVictim.combat.isAttackable || !attacker.controllers.checkCombat(nextVictim) ||
             !attacker.combat.checkMultiCombat(nextVictim) || !attacker.combat.specialBar.drain(10, true)) {
