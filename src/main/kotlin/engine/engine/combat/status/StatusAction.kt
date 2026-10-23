@@ -6,6 +6,7 @@ import api.attr.setValue
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import engine.combat.status.StatusAction.Companion.statusEffectData
+import engine.combat.status.hooks.PoisonStatusEffect
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
@@ -54,6 +55,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
      * decide whether the new effect can replace it.
      * Poison is rejected before replacement checks when antipoison is active or the NPC definition grants immunity.
+     * Existing poison accepts only a stronger severity and retains its countdown instead of restarting the effect.
      *
      * @param listener The status effect to add.
      * @param onlyIfAbsent Whether the effect should only be added when no effect of the same type exists.
@@ -71,6 +73,8 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
                 return false
             } else if (!current.refreshable) {
                 return false
+            } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
+                return current.strengthenFrom(listener)
             } else if (current.countdown > listener.countdown) {
                 return false
             }

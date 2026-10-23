@@ -33,6 +33,22 @@ class PoisonStatusEffect(mob: Mob, private var severity: Int) :
      */
     constructor(mob: Mob) : this(mob, 0)
 
+    /**
+     * Raises this effect's remaining severity without restarting its damage countdown.
+     *
+     * Equal or weaker poison is ignored so repeated hits cannot weaken poison or postpone its next damage tick.
+     *
+     * @param incoming The new poison effect whose severity is being considered.
+     * @return Whether the existing severity was increased.
+     */
+    fun strengthenFrom(incoming: PoisonStatusEffect): Boolean {
+        if (incoming.severity <= severity) {
+            return false
+        }
+        severity = incoming.severity
+        return true
+    }
+
     override fun start(restored: Boolean) {
         if (!restored && mob is Player) {
             mob.sendMessage("You have been poisoned!")
