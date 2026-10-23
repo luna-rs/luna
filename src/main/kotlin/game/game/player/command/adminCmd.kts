@@ -393,3 +393,21 @@ cmd("tele", RIGHTS_ADMIN) {
         plr.move(Position(x, y, z))
     }
 }
+/**
+ * TEMPORARY: A command that teleports the player to a farm with allotment patches (1-4). The positions are
+ * approximate and unverified.
+ */
+cmd("farmtele", RIGHTS_ADMIN) {
+    val farms = listOf(
+        Position(3052, 3302, 0), // Falador
+        Position(2811, 3464, 0), // Catherby
+        Position(2662, 3370, 0), // Ardougne
+        Position(3600, 3523, 0)  // Port Phasmatys
+    )
+    val index = asInt(0)
+    if (index in 1..farms.size) {
+        plr.move(farms[index - 1])
+    } else {
+        plr.sendMessage("Usage: ::farmtele 1-${farms.size} (1=Falador, 2=Catherby, 3=Ardougne, 4=Phasmatys)")
+    }
+}
