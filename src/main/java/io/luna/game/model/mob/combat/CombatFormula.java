@@ -17,6 +17,9 @@ import io.luna.util.RandomUtils;
  * <p>
  * This class centralizes the common roll, stance, prayer, and equipment-bonus calculations used by combat accuracy and
  * physical max-hit logic.
+ * Player effective strength includes eight base levels and the appropriate stance bonus. Magic uses its own equipment
+ * bonus and fixed attack stance, while NPC accuracy and defence include nine effective levels. Player magic defence
+ * rounds the combined weighted Defence and Magic levels once.
  *
  * @author lare96
  * @see <a href="https://rune-server.org/threads/archive-combat-formulas.688072/">
