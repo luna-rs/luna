@@ -99,6 +99,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public void onDamageApplied(CombatDamage damage) {
+        super.onDamageApplied(damage);
         int rawAmount = Math.max(0, damage.getRawAmount());
         attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);

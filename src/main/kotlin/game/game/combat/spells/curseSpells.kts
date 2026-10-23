@@ -51,7 +51,7 @@ spell(CombatSpell.ENTANGLE) {
 
 // Teleblock curse spell.
 spell(CombatSpell.TELEBLOCK) {
-    if (victim is Player) {
+    if (victim is Player && victim.isAlive) {
         val plr = victim.asPlr()
         var duration = TELE_BLOCK_MINUTES.minutes.inWholeSeconds.toInt()
         if (plr.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) {

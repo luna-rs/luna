@@ -25,6 +25,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * Attacks use a five-tick cooldown. Ordinary fire supports shield, prayer and antifire protection;
  * special breaths ignore antifire and can poison, freeze or drain every skill except Hitpoints.
  * Secondary effects require an accurate hit, including accurate hits that roll zero damage.
+ * Delivered hits run the shared magic impact visuals before applying breath-specific effects.
  *
  * @param npc The attacking King Black Dragon.
  * @param other The target receiving the breath.
@@ -110,6 +111,7 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distan
     }
 
     override fun onDamageApplied(damage: CombatDamage?) {
+        if (damage != null) super.onDamageApplied(damage)
         if (!accurate || victim !is Player || !victim.isAlive || kind == Kind.FIRE) return
         val protected = shield && (kind != Kind.SHOCK || prayer)
         if (rand().nextInt(if (protected) 8 else 2) != 0) return
