@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.script.InventoryProductionFixtures
 import api.combat.death.DeathHookHandler
 import api.combat.death.PlayerDeathItems
+import engine.controllers.WildernessLocatableController.wildernessLevel
 import engine.combat.prayer.CombatPrayer
 import game.skill.runecrafting.essencePouch.EssencePouch
 import game.bot.scripts.combat.PkBotScript
@@ -209,6 +210,8 @@ class PkRiskBudgetTest {
         val position = Position(3100, 3540)
         val targetPosition = Position(3101, 3540)
         `when`(bot.position).thenReturn(position)
+        `when`(bot.asPlr()).thenReturn(bot)
+        bot.wildernessLevel = 3
         val target = mock(Player::class.java, RETURNS_DEEP_STUBS)
         `when`(target.position).thenReturn(targetPosition)
         `when`(bot.preferences.canChooseActivity(BotActivity.PKING)).thenReturn(true)
@@ -222,11 +225,28 @@ class PkRiskBudgetTest {
             luna.`when`<io.luna.LunaSettings> { Luna.settings() }.thenReturn(settings)
             assertFalse(session.enterWild())
             assertFalse(session.allowsPursuit(target))
-            assertTrue(session.run())
+            assertFalse(session.run())
             verify(escape).fleeWilderness()
             InventoryProductionFixtures.bank(bot, Item(995, 10_000))
-            assertTrue(session.allowsPursuit(target))
+            assertFalse(session.allowsPursuit(target))
+            assertTrue(PkBotScript(bot, 5.minutes).allowsPursuit(target))
         }
+    }
+
+    @Test fun proposedContainersDoNotInflateWealthAndTiedProtectionBoundsEverySwitchOrder() {
+        InventoryProductionFixtures.inventory(bot, Item(4151), Item(1333))
+        InventoryProductionFixtures.bank(bot, Item(995, 100_000))
+        ItemDefinition::class.java.getDeclaredField("value").apply { isAccessible = true }
+            .setInt(ItemDefinition.ALL.retrieve(1333), 10_000)
+        `when`(bot.skullIcon).thenReturn(SkullIcon.WHITE)
+        `when`(bot.combat.prayers.isActive(CombatPrayer.PROTECT_ITEM)).thenReturn(true)
+        `when`(bot.world.economy.getPrice(4151)).thenReturn(100_000L)
+        `when`(bot.world.economy.getPrice(1333)).thenReturn(10_000L)
+        val carried = listOf(Item(4151), Item(1333))
+        assertEquals(BigInteger.valueOf(10_000), PkRiskBudget.assess(bot, true, carried, emptyList()).deathLoss)
+        assertEquals(BigInteger.valueOf(100_000), PkRiskBudget.assess(bot, true, carried, emptyList(), true).deathLoss)
+        val proposed = PkRiskBudget.assess(bot, true, listOf(Item(1127, 1000)), emptyList())
+        assertEquals(BigInteger.valueOf(210_000), proposed.wealth)
     }
 
     @Test fun nativeDefaultDeathScriptUsesTheSameStackPartitionAsRiskPlanning() {

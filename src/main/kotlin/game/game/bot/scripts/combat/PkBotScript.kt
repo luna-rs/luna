@@ -3,6 +3,7 @@ package game.bot.scripts.combat
 import api.bot.Suspendable.delay
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatObservations
+import api.bot.action.PkLoadoutPreparation
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
@@ -49,8 +50,31 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      */
     private val combatPolicy = BotCombatActionHandler(bot, handler)
     private val observations = PkCombatObservations(bot)
+    private val preparation = PkLoadoutPreparation(bot, handler)
 
-    // TODO Prepare owned supplies using personality risk budgets before enabling coordinator dispatch/registration.
+    /**
+     * Runtime preparation state. Reloaded sessions rebuild their kit; normal combat pauses keep the current pack.
+     * Restocking suppresses owned pursuits and clears native auto-attacks while escape or banking is in progress.
+     */
+    private var preparationState = PreparationState.NOT_PREPARED
+        set(value) {
+            field = value
+            if (value == PreparationState.RESTOCKING || value == PreparationState.LEAVING) bot.combat.target = null
+        }
+
+    /**
+     * Keeps resupply separate from a final departure, so an aborted trip cannot restart after prices change.
+     *
+     * @author lare96
+     */
+    private enum class PreparationState { NOT_PREPARED, READY, RESTOCKING, LEAVING }
+
+    /**
+     * Leaves escape and bank preparation with the parent instead of repeatedly queuing defensive combat children.
+     */
+    fun isRestocking(): Boolean = preparationState in setOf(PreparationState.RESTOCKING, PreparationState.LEAVING)
+
+    // TODO Enable coordinator dispatch/registration once the remaining session and clan policies are complete.
     // TODO Define clan membership and associated initiation policies.
     // TODO Add local NPC avoidance that preserves an actively followed travel path.
 
@@ -383,6 +407,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
     internal fun allowsPursuit(target: Player): Boolean {
+        if (isRestocking()) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
         if (!combatPolicy.pkRiskBudget().withinBudget) return false
         if (!isGenericSession()) return true
@@ -466,7 +491,6 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
-        // todo@0.5.0 Make sure we go to the bank first and prepare items (resetItem())
         return false
     }
 
@@ -481,18 +505,31 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     override suspend fun run(): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
-        if (!resetItems()) {
-            bot.log("PK death loss exceeds the personality budget. Ending the trip after leaving Wilderness.")
+        if (System.currentTimeMillis() > expireAt) {
+            preparationState = PreparationState.LEAVING
+        }
+        if (preparationState == PreparationState.LEAVING) {
             return handler.combat.fleeWilderness()
         }
-        if (System.currentTimeMillis() > expireAt) {
-            bot.log("Script expired. Travelling back home.")
-
-            val finished = handler.travelTo(SubZone.HOME)
-            bot.log("travelHome finished=$finished, inWilderness=${bot.inWilderness()}")
-
-            delay(1.seconds, 3.seconds)
-            return finished
+        if (preparationState != PreparationState.READY || !preparation.ready()) {
+            preparationState = PreparationState.RESTOCKING
+            if (bot.inWilderness()) {
+                handler.combat.fleeWilderness()
+                return false
+            }
+            if (!ActionSafety.NON_COMBAT.allows(bot)) return false
+            if (!preparation.prepare()) {
+                preparationState = PreparationState.LEAVING
+                return if (bot.inWilderness()) handler.combat.fleeWilderness() else true
+            }
+            preparationState = PreparationState.READY
+            return false
+        }
+        val risk = combatPolicy.pkRiskBudget()
+        if (!risk.withinBudget) {
+            preparationState = PreparationState.LEAVING
+            bot.log("PK death loss ${risk.deathLoss} exceeds allowance ${risk.maximumLoss}. Ending the trip safely.")
+            return handler.combat.fleeWilderness()
         }
 
         if (checkCombat()) {
@@ -656,20 +693,6 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             bot.log("Travelling to PK patrol anchor=$anchor")
             bot.navigator.navigate(anchor, true).await()
         }
-    }
-
-    /**
-     * Verifies the current loadout's death loss before entering or continuing a PK trip.
-     *
-     * An over-budget session must escape rather than initiate another fight or repeatedly retry the same loadout.
-     * Owned bank preparation and supply selection remain separate from this live affordability guard.
-     *
-     * @return `true` if the bot is ready to continue PKing, otherwise `false`.
-     */
-    private fun resetItems(): Boolean {
-        val risk = combatPolicy.pkRiskBudget()
-        bot.log("PK risk: loss=${risk.deathLoss}, maximum=${risk.maximumLoss}, wealth=${risk.wealth}.")
-        return risk.withinBudget
     }
 
     /**

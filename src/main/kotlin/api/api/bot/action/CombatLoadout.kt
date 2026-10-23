@@ -64,15 +64,17 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
         /**
          * Selects usable owned gear without creating supplies or silently changing combat purpose.
          * Carried selection bypasses the locator's bank-oriented fill and free-ammunition fallback.
+         * PK planning may exclude expensive preferred weapons or lower the damage-spell tier when a kit exceeds risk.
          */
         fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null,
-                 carriedOnly: Boolean = false): CombatLoadout? {
+                 carriedOnly: Boolean = false, excludingWeapons: Set<Int> = emptySet(),
+                 maximumSpellHit: Int = Int.MAX_VALUE): CombatLoadout? {
             if (purpose !in setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) return null
             if (bot.preferences.isSkiller) return null
             if (purpose == BotGearPurpose.MAGIC && !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return null
             fun spellFor(weapon: Int): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values
                 .filter { definition ->
-                    definition.spellbook == bot.spellbook && definition.level <= bot.magic.level &&
+                    definition.spellbook == bot.spellbook && definition.level <= bot.magic.level && definition.maxHit <= maximumSpellHit &&
                         definition.spell.name.substringAfterLast('_') in setOf("STRIKE", "BOLT", "BLAST", "WAVE") &&
                         definition.spell.name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE") &&
                         (requested == null || definition.spell == requested) &&
@@ -83,6 +85,7 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                 }.maxByOrNull { it.maxHit }
             val selected = BotGearSelector.find(bot, setOf(purpose)) reject@{ item ->
                 if (carriedOnly && carried(bot, item.id) == 0) true else if (item.index != Equipment.WEAPON) false else {
+                    if (item.id in excludingWeapons) return@reject true
                     val definition = WeaponDefinition.ALL.get(item.id).orElse(null) ?: return@reject true
                     if (purpose != BotGearPurpose.MAGIC &&
                         BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isEmpty()) return@reject true

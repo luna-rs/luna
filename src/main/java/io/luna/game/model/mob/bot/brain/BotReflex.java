@@ -102,15 +102,17 @@ public final class BotReflex {
 
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+            PkBotScript pkSession = bot.getScriptStack().findActive(PkBotScript.class).orElse(null);
+            if (pkSession != null && bot.getScriptStack().current() == pkSession && pkSession.isRestocking()) {
+                return true;
+            }
             Mob focus = bot.getCombat().getTarget();
             if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
                 focus = bot.getCombat().getLastAttackReceived().getAttacker();
             }
             if (focus != null) {
                 InitialState response = bot.getEmotions().getCombatResponse(focus);
-                PkBotScript pkSession = focus instanceof Player ?
-                        bot.getScriptStack().findActive(PkBotScript.class).orElse(null) : null;
-                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, pkSession));
+                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, focus instanceof Player ? pkSession : null));
                 bot.log("Reflex [responding to combat] triggered.");
                 return false;
             }

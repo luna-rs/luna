@@ -46,11 +46,22 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
          * Takes a synchronous snapshot of physical stock; no items are moved, purchased or created.
          * Callers supply whether default item loss applies to the bot's current server/rank configuration.
          * Active Protect Item and the current skull determine retention, and must be reassessed after changes.
-         * This assesses current stock only; it does not authorize withdrawals or controller-specific deaths.
+         * Optional proposed containers are valued against actual owned wealth, without adding proposed items to wealth.
+         * Planning may protect the cheapest guide-valued units within equal native base-value groups, bounding loss
+         * across equipment-switch ordering. Live assessments retain the actual native container order.
+         * This does not authorize ownership, withdrawals or controller-specific deaths.
          */
-        fun assess(bot: Bot, losesItems: Boolean): PkRiskBudget {
-            val inventory = bot.inventory.filterNotNull()
-            val equipment = bot.equipment.filterNotNull()
+        fun assess(bot: Bot, losesItems: Boolean, inventory: List<Item> = bot.inventory.filterNotNull(),
+                   equipment: List<Item> = bot.equipment.filterNotNull(), conservativeTies: Boolean = false): PkRiskBudget =
+            assessor(bot, losesItems)(inventory, equipment, conservativeTies)
+
+        /**
+         * Quotes owned wealth, prices and protection once for a synchronous sequence of pack candidates.
+         * The planner must discard this function before suspending; departure uses a fresh live assessment.
+         */
+        internal fun assessor(bot: Bot, losesItems: Boolean): (List<Item>, List<Item>, Boolean) -> PkRiskBudget {
+            val ownedInventory = bot.inventory.filterNotNull()
+            val ownedEquipment = bot.equipment.filterNotNull()
             val bank = bot.bank.filterNotNull()
             val prices = HashMap<Int, Long>()
             fun value(items: Iterable<Item>): BigInteger = items.fold(BigInteger.ZERO) { total, item ->
@@ -68,20 +79,25 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
             }
 
             // Pouch attributes belong to the account, not each item. Count each pouch type only once.
-            val ownedPouches = (inventory + bank).filter { it.id in EssencePouch.ID_TO_POUCH }
+            val ownedPouches = (ownedInventory + bank).filter { it.id in EssencePouch.ID_TO_POUCH }
                 .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
-            val carriedPouches = inventory.filter { it.id in EssencePouch.ID_TO_POUCH }
-                .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
-            val wealth = value(inventory + equipment + bank) + value(pouchContents(ownedPouches))
-            val lost = if (losesItems) {
-                val tradeable = (inventory.filter { it.id !in EssencePouch.ID_TO_POUCH } + equipment)
-                value(PlayerDeathItems.select(tradeable, PlayerDeathItems.keepCount(bot)).lost) +
-                    value(inventory.filter { it.id in EssencePouch.ID_TO_POUCH }) + value(pouchContents(carriedPouches))
-            } else BigInteger.ZERO
+            val wealth = value(ownedInventory + ownedEquipment + bank) + value(pouchContents(ownedPouches))
             val share = if (bot.preferences.isSkiller || bot.preferences.pk == null) 0 else basisPoints(
                 bot.personality.confidence, bot.personality.intelligence,
                 bot.preferences.activities[BotActivity.PKING] ?: 0.0)
-            return PkRiskBudget(share, wealth, lost)
+            val keepCount = PlayerDeathItems.keepCount(bot)
+            return { inventory, equipment, conservativeTies ->
+                val carriedPouches = inventory.filter { it.id in EssencePouch.ID_TO_POUCH }
+                    .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
+                val lost = if (losesItems) {
+                    val carried = inventory.filter { it.id !in EssencePouch.ID_TO_POUCH } + equipment
+                    val tradeable = if (conservativeTies) carried.sortedWith(
+                        Item.VALUE_COMPARATOR.thenBy { value(listOf(it.withAmount(1))) }) else carried
+                    value(PlayerDeathItems.select(tradeable, keepCount).lost) +
+                        value(inventory.filter { it.id in EssencePouch.ID_TO_POUCH }) + value(pouchContents(carriedPouches))
+                } else BigInteger.ZERO
+                PkRiskBudget(share, wealth, lost)
+            }
         }
     }
 }
