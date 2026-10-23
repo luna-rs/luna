@@ -28,6 +28,9 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 object PartyRoomDonations {
+    /**
+     * The persisted epoch-millisecond time when this bot may next consider a donation.
+     */
     private var Bot.nextPartyDonation by Attr.long().persist("next_party_donation")
 
     /**
@@ -67,6 +70,12 @@ object PartyRoomDonations {
  * A saved confirmation attempt is never repeated, including when interrupted before the result can be observed.
  * Bounded failures leave retained supplies intact and allow the progressive coordinator to continue.
  *
+ * @param bot The bot donating its existing surplus.
+ * @property itemId The unnoted item identifier authorized for donation.
+ * @property amount The maximum authorized quantity, checked against live surplus before staging.
+ * @property deadline The epoch-millisecond deadline for the entire donation attempt.
+ * @property attempted Whether confirmation was already sent and must not be repeated.
+ *
  * @author lare96
  */
 class DepositPartyRoomItemBotScript(
@@ -82,9 +91,21 @@ class DepositPartyRoomItemBotScript(
      * @author lare96
      */
     class DonationData : BotScriptData() {
+        /**
+         * The unnoted item identifier authorized for this donation.
+         */
         var itemId = -1
+        /**
+         * The maximum authorized donation quantity before live surplus is checked again.
+         */
         var amount = 0
+        /**
+         * The epoch-millisecond deadline shared by banking, travel and chest interactions.
+         */
         var deadline = 0L
+        /**
+         * Whether confirmation was sent, preventing another attempt after restoration.
+         */
         var attempted = false
         override fun load(data: JsonObject) {
             itemId = data.get("item_id").asInt
@@ -100,6 +121,9 @@ class DepositPartyRoomItemBotScript(
         }
     }
 
+    /**
+     * Restores the authorized donation and confirmation state for [bot] from [data].
+     */
     constructor(bot: Bot, data: DonationData) : this(bot, data.itemId, data.amount, data.deadline, data.attempted)
 
     override suspend fun run(): Boolean {

@@ -27,6 +27,9 @@ import kotlin.time.Duration.Companion.seconds
  * @author lare96
  */
 object MinigameCoordinator : ProgressiveCoordinator() {
+    /**
+     * The last runtime party this bot was invited to, preventing duplicate attendance scripts.
+     */
     private var Bot.attendedParty by Attr.long()
     override val activity get() = BotActivity.MINIGAMES
     override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot)

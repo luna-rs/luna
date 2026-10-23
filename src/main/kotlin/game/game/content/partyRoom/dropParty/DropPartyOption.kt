@@ -42,9 +42,15 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Handles the countdown.
      *
+     * @property balloonItems The funded items and generated junk to drop after the countdown.
+     * @property countdown The duration calculated from the funded value before the chest is cleared.
+     *
      * @author lare96
      */
     class DropPartyCountdown(val balloonItems: MutableList<Item>, val countdown: Duration) : Task(false, 1) {
+        /**
+         * The countdown rounded up to whole 600-millisecond game ticks.
+         */
         private val ticksNeeded = Ints.saturatedCast((countdown.toMillis() + 599) / 600)
 
         override fun execute() {
@@ -60,6 +66,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
     /**
      * Handles the dropping of balloons.
+     *
+     * @property balloonItems The remaining rewards consumed as balloons are spawned.
      *
      * @author lare96
      */
@@ -152,6 +160,10 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * A data class representing a balloon object.
      *
+     * @property pos The native spawn position of the balloon.
+     * @property item The concealed reward released when the balloon is stomped.
+     * @property partyId The runtime party that owns this balloon.
+     *
      * @author lare96
      */
     data class BalloonObject(private val pos: Position, val item: Item, val partyId: Long = currentPartyId) :
@@ -168,6 +180,9 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         var reward: GroundItem? = null
             private set
 
+        /**
+         * The first player to claim this balloon, or null while it remains available.
+         */
         var stompedBy: Player? = null
 
         override fun onActive() {
@@ -179,6 +194,9 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
             activeBalloons.remove(this)
         }
 
+        /**
+         * Claims the balloon for [plr] and schedules its native, owner-visible reward drop.
+         */
         fun stomp(plr: Player) {
             if (stompedBy == null) {
                 stompedBy = plr
@@ -274,6 +292,9 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      */
     val chest = DropPartyChest()
 
+    /**
+     * Active native balloons retained until removal, including those left after the lever resets.
+     */
     private val activeBalloons = mutableSetOf<BalloonObject>()
 
     /**

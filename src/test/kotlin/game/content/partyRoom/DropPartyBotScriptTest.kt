@@ -15,11 +15,17 @@ import org.mockito.Mockito.*
  * @author lare96
  */
 class DropPartyBotScriptTest {
+    /**
+     * Initializes the native fixtures and resets the state used by each test.
+     */
     @BeforeEach
     fun setup() {
         InventoryProductionFixtures.initialize()
     }
 
+    /**
+     * Verifies that expired attendance completes before travelling or changing inventory.
+     */
     @Test
     fun expiredAttendanceCompletesBeforeTravellingOrChangingInventory() = runBlocking<Unit> {
         val bot = InventoryProductionFixtures.bot()
@@ -29,6 +35,9 @@ class DropPartyBotScriptTest {
         assertEquals(0, bot.inventory.size())
     }
 
+    /**
+     * Verifies that stale party attendance completes and lets the stack resume its parent.
+     */
     @Test
     fun stalePartyAttendanceCompletesAndLetsTheStackResumeItsParent() = runBlocking<Unit> {
         val bot = InventoryProductionFixtures.bot()
@@ -37,6 +46,9 @@ class DropPartyBotScriptTest {
         verifyNoInteractions(bot.actionHandler)
     }
 
+    /**
+     * Verifies that saved attendance preserves both party identity and its original deadline.
+     */
     @Test
     fun snapshotPreservesPartyIdentityAndAttendanceDeadline() {
         val bot = InventoryProductionFixtures.bot()

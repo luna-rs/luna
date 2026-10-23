@@ -15,6 +15,10 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Attends one native party, choosing unclaimed balloons without inspecting their concealed prizes.
  *
+ * @param bot The bot attending the party through ordinary object and ground-item interactions.
+ * @property partyId The runtime party identifier that this visit may attend.
+ * @property deadline The epoch-millisecond deadline limiting this visit.
+ *
  * @author lare96
  */
 class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadline: Long) : BotScript(bot) {
@@ -24,7 +28,13 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
      * @author lare96
      */
     class PartyData : BotScriptData() {
+        /**
+         * The runtime party identifier to revalidate before resuming attendance.
+         */
         var partyId = 0L
+        /**
+         * The epoch-millisecond deadline after which the saved visit must finish.
+         */
         var deadline = 0L
         override fun load(data: JsonObject) {
             partyId = data.get("party_id")?.asLong ?: 0L
@@ -36,8 +46,14 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
         }
     }
 
+    /**
+     * Restores the party identity and attendance deadline for [bot] from [data].
+     */
     constructor(bot: Bot, data: PartyData) : this(bot, data.partyId, data.deadline)
 
+    /**
+     * Consecutive failed balloon or reward interactions; three failures end the visit.
+     */
     private var failedInteractions = 0
 
     override suspend fun init(resumed: Boolean): Boolean {
@@ -79,9 +95,15 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
         return false
     }
 
+    /**
+     * Determines whether the visit deadline has passed or its runtime party is no longer active.
+     */
     internal fun ended(): Boolean = System.currentTimeMillis() >= deadline ||
         !DropPartyOption.isCurrentParty(partyId)
 
+    /**
+     * Cancels navigation and clears queued walking when attendance pauses, fails or finishes.
+     */
     private fun cleanup() {
         bot.navigator.cancel()
         bot.walking.clear()

@@ -23,12 +23,21 @@ import java.util.function.Predicate
  * @author lare96
  */
 class PartyRewardOwnershipTest {
+    /**
+     * Verifies that a merged reward resolves to the replacement stack with the correct owner.
+     */
     @Test fun mergedRewardUsesNewOwnerStackRatherThanAnExistingCoincidentDrop() {
         exercise(false)
     }
+    /**
+     * Verifies that rejected overflow cannot claim an existing stack as its reward.
+     */
     @Test fun rejectedOverflowCannotClaimAnExistingStackAsItsReward() {
         exercise(true)
     }
+    /**
+     * Exercises native ground-item merging with either sufficient capacity or stack overflow.
+     */
     private fun exercise(overflow: Boolean) {
         InventoryProductionFixtures.initialize()
         val previousItems = world.items

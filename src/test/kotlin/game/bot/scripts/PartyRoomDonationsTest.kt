@@ -25,9 +25,18 @@ import org.mockito.Mockito.*
  * @author lare96
  */
 class PartyRoomDonationsTest {
+    /**
+     * The bot fixture used to exercise the native script and inventory APIs.
+     */
     private lateinit var bot: Bot
+    /**
+     * The item identifier configured with retained stock and donation surplus.
+     */
     private var id = 0
 
+    /**
+     * Initializes the native fixtures and resets the state used by each test.
+     */
     @BeforeEach fun setup() {
         InventoryProductionFixtures.initialize()
         bot = InventoryProductionFixtures.bot()
@@ -43,6 +52,9 @@ class PartyRoomDonationsTest {
         DropPartyOption.chest.locked = false
     }
 
+    /**
+     * Verifies that kind minigame enthusiasts and dumb bots are independent volunteering paths.
+     */
     @Test fun kindMinigameEnthusiastsAndDumbBotsAreIndependentVolunteeringPaths() {
         assertFalse(PartyRoomDonations.eligible(bot))
         `when`(bot.personality.isKind).thenReturn(true)
@@ -53,6 +65,9 @@ class PartyRoomDonationsTest {
         assertTrue(PartyRoomDonations.candidates(bot).isEmpty(), "Being dumb cannot donate nonexistent stock")
     }
 
+    /**
+     * Verifies that donation candidates respect trim thresholds and higher minimum reserves.
+     */
     @Test fun trimThresholdDoesNotDonateNormalSuppliesAndHigherMinimumIsRetained() {
         bot.bank.add(Item(id, 2_500))
         assertTrue(PartyRoomDonations.candidates(bot).isEmpty())
@@ -62,6 +77,9 @@ class PartyRoomDonationsTest {
         assertEquals(2_501, bot.totalItemAmount(id), "Planning cannot move any items")
     }
 
+    /**
+     * Verifies that the economy-value budget caps large surplus donations.
+     */
     @Test fun largeSurplusIsCappedByDonationValueBudget() {
         bot.bank.add(Item(id, 100_000))
         assertEquals(10_000, PartyRoomDonations.candidates(bot).single().amount)
@@ -69,12 +87,18 @@ class PartyRoomDonationsTest {
         assertTrue(PartyRoomDonations.candidates(bot).isEmpty())
     }
 
+    /**
+     * Verifies that expired or already attempted donation cannot withdraw again.
+     */
     @Test fun expiredOrAlreadyAttemptedDonationCannotWithdrawAgain() = runBlocking<Unit> {
         assertTrue(DepositPartyRoomItemBotScript(bot, id, 100, 0).run())
         assertTrue(DepositPartyRoomItemBotScript(bot, id, 100, System.currentTimeMillis() + 60_000, true).run())
         verifyNoInteractions(bot.actionHandler)
     }
 
+    /**
+     * Verifies that saved donation authorization preserves an earlier confirmation attempt.
+     */
     @Test fun savedAttemptRetainsAuthorizationWithoutRepeatingConfirmation() = runBlocking<Unit> {
         val original = DepositPartyRoomItemBotScript(bot, id, 100, System.currentTimeMillis() + 60_000, true)
         val json = JsonObject().also { original.snapshot().save(it) }
@@ -85,14 +109,23 @@ class PartyRoomDonationsTest {
         assertTrue(DepositPartyRoomItemBotScript(bot, restored).run())
         verifyNoInteractions(bot.actionHandler)
     }
+    /**
+     * Verifies that deposit uses native stage and confirmation without touching retained stock.
+     */
     @Test fun depositUsesNativeStageAndConfirmationWithoutTouchingRetainedStock() = runBlocking<Unit> {
         exerciseDeposit(false)
     }
 
+    /**
+     * Verifies that rejected confirmation returns the staged donation and does not retry.
+     */
     @Test fun rejectedConfirmationReturnsTheStagedDonationAndDoesNotRetry() = runBlocking<Unit> {
         exerciseDeposit(true)
     }
 
+    /**
+     * Exercises native deposit packets and verifies stock conservation when confirmation succeeds or is rejected.
+     */
     private suspend fun exerciseDeposit(reject: Boolean) {
         val chest = mock(io.luna.game.model.`object`.GameObject::class.java)
         val handler = bot.actionHandler
@@ -157,6 +190,9 @@ class PartyRoomDonationsTest {
         }
     }
 
+    /**
+     * Returns the number of staged items still owned by this bot.
+     */
     private fun Bot.gameDepositSize(): Int = with(game.content.partyRoom.dropParty.DropPartyOption) { depositItems.size() }
 
 }

@@ -20,22 +20,34 @@ import org.mockito.Mockito.*
  * @author lare96
  */
 class PartyAttendanceTest {
+    /**
+     * Initializes the native fixtures and resets the state used by each test.
+     */
     @BeforeEach fun setup() {
         InventoryProductionFixtures.initialize()
         PartyRoom.option = null
         DropPartyOption.chest.items.clear()
         `when`(world.players.iterator()).thenAnswer { emptyList<Player>().iterator() }
     }
+    /**
+     * Restores shared fixture state after each test.
+     */
     @AfterEach fun cleanup() {
         PartyRoom.option = null
         `when`(world.players.iterator()).thenAnswer { emptyList<Player>().iterator() }
     }
+    /**
+     * Creates an eligible bot with no dialogue, reflex or active script blocking attendance.
+     */
     private fun bot() = InventoryProductionFixtures.bot().also {
         `when`(it.asPlr()).thenReturn(it)
         `when`(it.dialogues).thenReturn(null)
         `when`(it.reflex.activeReflex).thenReturn(null)
         `when`(it.scriptStack.current()).thenReturn(null)
     }
+    /**
+     * Starts a player-funded native party with controlled server settings.
+     */
     private fun start() {
         val settings = mock(LunaSettings::class.java, RETURNS_DEEP_STUBS)
         mockStatic(Luna::class.java).use { luna ->
@@ -45,6 +57,9 @@ class PartyAttendanceTest {
             DropPartyOption.execute(mock(Player::class.java))
         }
     }
+    /**
+     * Verifies that player-funded parties invite each eligible bot once, regardless of personality.
+     */
     @Test fun everyPersonalityReceivesExactlyOneInvitationForAPlayerFundedParty() {
         val bots = listOf(bot(), bot(), bot())
         bots.forEachIndexed { i, bot -> `when`(bot.personality.intelligence).thenReturn(i * 0.5) }
@@ -53,6 +68,9 @@ class PartyAttendanceTest {
         repeat(2) { MinigameCoordinator.onPartyStarted() }
         bots.forEach { verify(it.scriptStack, times(1)).pushHead(any(DropPartyBotScript::class.java)) }
     }
+    /**
+     * Verifies that a bot excluded during combat can attend after combat ends.
+     */
     @Test fun unsafeBotIsReconsideredAfterCombatEnds() {
         val bot = bot()
         `when`(world.players.iterator()).thenAnswer { listOf<Player>(bot).iterator() }
@@ -64,6 +82,9 @@ class PartyAttendanceTest {
         MinigameCoordinator.onPartyStarted()
         verify(bot.scriptStack).pushHead(any(DropPartyBotScript::class.java))
     }
+    /**
+     * Verifies that locks, death, Wilderness presence and open windows prevent interruption.
+     */
     @Test fun lockDeathWildernessAndOpenWindowsProtectExistingActivities() {
         val bots = listOf(
             bot().also { `when`(it.isLocked).thenReturn(true) },

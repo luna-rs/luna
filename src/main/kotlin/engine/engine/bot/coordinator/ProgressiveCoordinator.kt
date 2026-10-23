@@ -44,6 +44,11 @@ abstract class ProgressiveCoordinator : BotCoordinator {
     /**
      * Persists the deferred dispatch independently of the preliminary script's outcome.
      *
+     * @param bot The bot whose script stack will receive the main activity.
+     * @property activity The activity used to resolve the coordinator after restoration.
+     * @property source The current coordinator instance, or null when restored from saved data.
+     * @property dispatched Whether main activity selection has already been attempted.
+     *
      * @author lare96
      */
     class Continuation(
@@ -58,7 +63,13 @@ abstract class ProgressiveCoordinator : BotCoordinator {
          * @author lare96
          */
         class ContinuationData : BotScriptData() {
+            /**
+             * The originating activity used to resolve the coordinator after restoration.
+             */
             var activity = BotActivity.SOCIALIZING
+            /**
+             * Whether main activity selection already occurred and must not be repeated.
+             */
             var dispatched = false
             override fun load(data: JsonObject) {
                 activity = BotActivity.valueOf(data.get("activity").asString)
@@ -70,6 +81,9 @@ abstract class ProgressiveCoordinator : BotCoordinator {
             }
         }
 
+        /**
+         * Restores a deferred activity selection for [bot] from its saved [data].
+         */
         constructor(bot: Bot, data: ContinuationData) : this(bot, data.activity, dispatched = data.dispatched)
 
         override suspend fun run(): Boolean {

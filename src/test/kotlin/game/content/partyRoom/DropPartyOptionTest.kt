@@ -22,6 +22,9 @@ import java.time.Duration
  * @author lare96
  */
 internal object PartyRoomTestFixtures {
+    /**
+     * The lazily registered tradeable stack identifier used by native transfer tests.
+     */
     val stackId by lazy {
         InventoryProductionFixtures.initialize()
         val id = (1 until ItemDefinition.SIZE).first { ItemDefinition.ALL.get(it).isEmpty }
@@ -42,6 +45,9 @@ internal object PartyRoomTestFixtures {
  * @author lare96
  */
 class DropPartyOptionTest {
+    /**
+     * Initializes the native fixtures and resets the state used by each test.
+     */
     @BeforeEach
     fun setup() {
         InventoryProductionFixtures.initialize()
@@ -55,11 +61,17 @@ class DropPartyOptionTest {
         }
     }
 
+    /**
+     * Creates a regular player with the Party Room deposit interface open.
+     */
     private fun player() = InventoryProductionFixtures.bot().also {
         `when`(it.overlays.has(DropPartyInterface::class.java)).thenReturn(true)
         `when`(it.rights).thenReturn(io.luna.game.model.mob.PlayerRights.PLAYER)
     }
 
+    /**
+     * Verifies that a full chest leaves all staged items owned by the player.
+     */
     @Test
     fun fullChestLeavesEveryStagedItemWithThePlayer() {
         repeat(DropPartyOption.chest.items.capacity()) { assertTrue(DropPartyOption.chest.items.add(Item(526))) }
@@ -70,6 +82,9 @@ class DropPartyOptionTest {
         assertEquals(0, DropPartyOption.chest.items.computeAmountForId(PartyRoomTestFixtures.stackId))
     }
 
+    /**
+     * Verifies that a partially full chest accepts only the items it can hold.
+     */
     @Test
     fun partiallyFullChestTransfersOnlyWhatFits() {
         repeat(DropPartyOption.chest.items.capacity() - 1) { DropPartyOption.chest.items.add(Item(526)) }
@@ -82,6 +97,9 @@ class DropPartyOptionTest {
         assertEquals(1, player.depositItems.computeAmountForId(592))
     }
 
+    /**
+     * Verifies that chest locks and closed interfaces prevent transfers of staged items.
+     */
     @Test
     fun lockedChestAndClosedInterfaceLeaveStagedItemsUntouched() {
         val player = player()
@@ -94,6 +112,9 @@ class DropPartyOptionTest {
         assertEquals(100, player.depositItems.computeAmountForId(PartyRoomTestFixtures.stackId))
     }
 
+    /**
+     * Verifies that stale slots and invalid quantities cannot transfer inventory items.
+     */
     @Test
     fun staleSlotAndNegativeAmountCannotStageAnInventoryItem() {
         val player = player()
@@ -105,6 +126,9 @@ class DropPartyOptionTest {
         assertEquals(0, player.depositItems.size())
     }
 
+    /**
+     * Verifies that rejected staging preserves inventory and successful staging caps requested amount.
+     */
     @Test
     fun rejectedStagingPreservesInventoryAndSuccessfulStagingCapsRequestedAmount() {
         val player = player()
@@ -118,6 +142,9 @@ class DropPartyOptionTest {
         assertEquals(100, player.depositItems.computeAmountForId(PartyRoomTestFixtures.stackId))
     }
 
+    /**
+     * Verifies that closing returns unconfirmed donations and preserves overflow.
+     */
     @Test
     fun closingReturnsUnconfirmedDonationsAndPreservesOverflow() {
         val player = player()
@@ -132,6 +159,9 @@ class DropPartyOptionTest {
         assertEquals(100, player.depositItems.computeAmountForId(PartyRoomTestFixtures.stackId))
     }
 
+    /**
+     * Verifies that value multiplies in long arithmetic and selects the high value countdown.
+     */
     @Test
     fun valueMultipliesInLongArithmeticAndSelectsTheHighValueCountdown() {
         DropPartyOption.chest.items.add(Item(PartyRoomTestFixtures.stackId, Int.MAX_VALUE))
@@ -146,6 +176,9 @@ class DropPartyOptionTest {
         }
     }
 
+    /**
+     * Verifies that one minute countdown waits one hundred game ticks.
+     */
     @Test
     fun oneMinuteCountdownWaitsOneHundredGameTicks() {
         val manager = TaskManager()
