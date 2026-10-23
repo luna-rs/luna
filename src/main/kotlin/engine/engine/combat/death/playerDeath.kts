@@ -19,7 +19,8 @@ import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 
 /**
- * Items will be lost if the player is below this rank.
+ * Players below this rank use normal item-loss rules. Players at or above it are exempt outside beta mode;
+ * beta mode applies normal item-loss rules to every rank.
  */
 val loseItemsBelow = RIGHTS_ADMIN
 
@@ -36,7 +37,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
 
     death {
         // Admin+ don't lose any items in production mode.
-        if (victim.rights < loseItemsBelow && !Luna.settings().game().betaMode()) {
+        if (victim.rights >= loseItemsBelow && !Luna.settings().game().betaMode()) {
             return@death
         }
 
@@ -78,7 +79,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
                 if(it.amount > 0) {
                     val groundItem = DeathGroundItem(ctx, it.id, it.amount, victim.position, view, victim)
                     world.addItem(groundItem)
-                    victim.deathItems = HashSet()
+                    // Retain every generated drop in the recovery collection, including earlier unrecovered drops.
                     victim.deathItems += groundItem
                 }
             }
