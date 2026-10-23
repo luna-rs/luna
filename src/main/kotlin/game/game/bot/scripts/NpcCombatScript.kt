@@ -39,6 +39,8 @@ import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.util.GsonUtils
+import kotlinx.coroutines.isActive
+import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -142,6 +144,11 @@ open class NpcCombatScript(bot: Bot,
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
+    /**
+     * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
+     */
+    private var cannonPrepared = false
+
     override suspend fun equipment(): BotGearLocator = BotGearLocator(bot, loadout!!.gear)
 
     override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
@@ -149,6 +156,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (!CannonBotSupport.recover(bot)) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
             handler.combat.fleeCombat()
@@ -177,6 +185,12 @@ open class NpcCombatScript(bot: Bot,
         if (!isPaused()) {
             clearMagic()
         }
+        if (coroutineContext.isActive) CannonBotSupport.recover(bot)
+    }
+
+    override suspend fun beforeLeavingZone(): Boolean {
+        bot.combat.target = null
+        return CannonBotSupport.recover(bot)
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
@@ -199,7 +213,11 @@ open class NpcCombatScript(bot: Bot,
         combatConfigured = false
         bot.combat.target = null
         clearMagic()
-        return true
+        if (CannonBotSupport.needsRecovery(bot) && bot.emotions.isNervousAboutHp && bot.combat.inCombat()) {
+            handler.banking.travelToNearestBank()
+            return false
+        }
+        return CannonBotSupport.recover(bot)
     }
 
     /** Dragon protection is withdrawn from owned stock rather than generated during banking. */
@@ -255,7 +273,7 @@ open class NpcCombatScript(bot: Bot,
                 stop()
             }
         }
-
+        cannonPrepared = CannonBotSupport.prepare(bot, originalZones, purpose)
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {
@@ -289,6 +307,13 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) return true
         eatFood()
+        if (cannonPrepared && !forceBanking) {
+            val zone = activeZone
+            if (zone != null && !CannonBotSupport.maintain(bot, zone)) {
+                forceBanking = true
+                return true
+            }
+        }
         if (focus?.isAlive != true) {
             lootItems()
             return true

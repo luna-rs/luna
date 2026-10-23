@@ -387,6 +387,7 @@ public final class Bot extends Player {
     @Override
     protected void onActive() {
         super.onActive();
+        game.bot.scripts.CannonBotSupport.restoreState(this);
         reflex.add(new LootItemReflexScript(this));
         reflex.add(new DeathReflexScript(this));
         reflex.add(new EatFoodReflexScript(this));

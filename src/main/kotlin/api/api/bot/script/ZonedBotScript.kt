@@ -198,7 +198,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         if (!checkDuration()) {
-            return true
+            return beforeLeavingZone()
         }
 
         // A failed banking attempt keeps forceBanking set. Retry it from here instead of travelling
@@ -229,6 +229,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             val accepted = prepared && executeInZone()
             if (!isActionSafe()) return !awaitActionSafety()
             if (!accepted) {
+                if (!beforeLeavingZone()) return false
                 val removed = zones.remove(zone)
                 bot.log(
                     "Execution rejected active zone. zone=$zone, removed=$removed, " +
@@ -355,6 +356,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
     }
 
+    /**
+     * Releases activity-owned world resources before completion or abandoning a working area.
+     * False retains the current area so interrupted cleanup can retry without rotating camps.
+     */
+    protected open suspend fun beforeLeavingZone(): Boolean = true
+
     open suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
 
     }
@@ -407,6 +414,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return true
             }
 
+            if (!beforeLeavingZone()) return true
             bot.log("Could not return to active zone. Clearing it. activeZone=$zone")
             cachedBank = null
             activeZone = null
