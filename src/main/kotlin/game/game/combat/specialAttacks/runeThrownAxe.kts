@@ -74,6 +74,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * Each rebound validates attackability, controller permission, and multi-combat eligibility before paying its energy
  * cost and displaying a projectile. After the travel delay, it applies damage and schedules the next rebound.
  * Exhausted targets, exhausted attacks, ineligible targets, or insufficient energy end the chain and unlock the bar.
+ * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
  *
  * @param attacker The player performing the special attack.
  * @param lastVictim The mob most recently hit by the thrownaxe.
@@ -99,7 +100,11 @@ fun handleChainHit(
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
                 CombatDamageAction(nextDamage, source, true, 1).run()
-                handleChainHit(attacker, nextVictim, targets, source, attacksLeft - 1)
+                if (nextDamage.isAccurate) {
+                    handleChainHit(attacker, nextVictim, targets, source, attacksLeft - 1)
+                } else {
+                    attacker.combat.specialBar.isLocked = false
+                }
                 return true
             }
         })
@@ -120,6 +125,11 @@ attack(type = RUNE_THROWN_AXE,
     launched { attacker.combat.specialBar.isLocked = true; damage }
 
     arrived {
+        // A missed initial throw must not spend energy on any rebounds.
+        if (!damage.isAccurate) {
+            attacker.combat.specialBar.isLocked = false
+            return@arrived
+        }
         val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(5)
         val filter: (Mob) -> Boolean =
             { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
