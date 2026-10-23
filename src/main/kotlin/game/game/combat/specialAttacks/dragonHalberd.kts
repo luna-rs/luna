@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_HALBERD
 import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
@@ -60,22 +61,23 @@ attack(type = DRAGON_HALBERD,
 
     launched {
         if (victim.size() > 1) {
-            // Deal additional hit against large targets.
-            resolveDamage(attacker, victim, true).apply(attack)
+            // Deliver the additional hit through normal defence hooks and retaliation handling.
+            victim.submitAction(CombatDamageAction(resolveDamage(attacker, victim, true), attack, false))
         } else if (attacker.inMultiArea() && victim.inMultiArea()) {
             // Deal damage to adjacent targets in multi-combat.
             val (tile1, tile2) = resolveAdjacentTiles(attacker, victim)
             val cond: (Mob) -> Boolean = {
-                // Filter for potential enemies on the correct tiles.
+                // Only select attackable enemies on the correct tiles that the attacker's controllers permit.
                 it != attacker && it != victim &&
-                        it.inMultiArea() && (it.position == tile1 || it.position == tile2)
+                        it.inMultiArea() && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
+                        (it.position == tile1 || it.position == tile2)
             }
             val local = if (victim is Player) world.locator.findViewablePlayers(victim, cond) else
                 world.locator.findViewableNpcs(victim, cond)
             var targets = if (victim is Player) MAX_PLAYER_TARGETS else MAX_NPC_TARGETS
             for (other in local) {
                 // Apply damage to filtered targets.
-                resolveDamage(attacker, other).apply(attack)
+                other.submitAction(CombatDamageAction(resolveDamage(attacker, other), attack, false))
                 if (--targets < 1) {
                     // Maximum number of targets damaged.
                     break
