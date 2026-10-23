@@ -15,7 +15,9 @@ import kotlin.time.Duration.Companion.minutes
 
 /**
  * Selects supply-ready combat disciplines and level-appropriate, explicitly named NPC camps.
- * Candidate camps share the existing zone travel fallback; boss preparation is handled separately.
+ * Candidate camps share the existing zone travel fallback. KBD requires combat readiness of at least
+ * 100, profit mode, a one-handed melee loadout and an owned anti-dragon shield. The combat script
+ * equips protection and withdraws stronger food before travelling to the lair.
  *
  * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
@@ -46,12 +48,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
-            Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true)
+            Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
+            Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true)
         )
         // TODO Add Fire Giant and Blue Dragon camps when lare96 supplies subzone data.
         // Camp(SubZone.FIRE_GIANT_CAMP, 65, setOf("Fire giant"), true)
         // Camp(SubZone.BLUE_DRAGON_CAMP, 75, setOf("Blue dragon"), true)
-        // Bosses such as KBD need protection/supply rules before joining generic NPC dispatch.
 
         /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
         internal fun combatReadiness(bot: Bot, purpose: BotGearPurpose): Int {
@@ -67,7 +69,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
                                    hasDragonShield: Boolean): List<Camp> {
             val eligible = camps.filter { it.minimum <= level &&
-                (it.zone != SubZone.GREEN_DRAGONS || (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
+                (it.zone !in NpcCombatScript.DRAGON_ZONES ||
+                    (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
             // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
             val threshold = (preferred.maxOfOrNull { it.minimum } ?: 3) - 25

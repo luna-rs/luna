@@ -1239,22 +1239,33 @@ enum class SubZone(val inside: Position,
      * the Mining Guild safely.
      */
 
-    /*
-     * King Black Dragon lair.
-     *
-     * Remaining work:
-     * - Verify the inside/outside coordinates.
-     * - Add KBD combat/bossing support.
-     * - Implement gates.
-     * - Fix simple door handling if required.
-     * - Redo/fix docs after the route is confirmed.
-     * - TODO@1.0 enter(): Implement wilderness dungeon + lever route into the KBD lair.
-     * - TODO@1.0 leave(): Implement lever route out of the KBD lair.
+    /**
+     * King Black Dragon lair, reached through the Wilderness ladder and dungeon lever.
      */
-    KBD_LAIR(inside = Position(2900, 3294),
-             outside = { Position(3004, 3849) },
+    KBD_LAIR(inside = Position(2271, 4680),
+             outside = { Position(3016, 3849) },
              area = SimpleBoxArea.of(2249, 4674, 2291, 4717),
-             parent = { WILDERNESS }),
+             parent = { WILDERNESS }) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val ladder = world.locator.findObjectsOnTile(Position(3017, 3849)) {
+                it.def().name.equals("Ladder", true)
+            }.firstOrNull() ?: return false
+            if (!bot.actionHandler.interactions.interact(1, ladder) ||
+                !waitFor { bot.position.y > 10000 }) return false
+            val lever = world.locator.findViewableObjects(bot) { it.id == 1816 }.firstOrNull() ?: return false
+            return bot.actionHandler.interactions.interact(1, lever) && waitFor { area.contains(bot) }
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val lever = world.locator.findObjects(inside, 32) { it.id == 1817 }.firstOrNull() ?: return false
+            if (!bot.actionHandler.interactions.interact(1, lever) ||
+                !waitFor { bot.position.y > 10000 }) return false
+            val ladder = world.locator.findObjectsOnTile(Position(3069, 10256)) {
+                it.def().name.equals("Ladder", true)
+            }.firstOrNull() ?: return false
+            return bot.actionHandler.interactions.interact(1, ladder) && waitFor { bot.position.y < 10000 }
+        }
+    },
 
     /*
      * Level 20 Wilderness chaos temple.

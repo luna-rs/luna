@@ -46,6 +46,11 @@ import kotlin.time.Duration.Companion.seconds
  * Fights configured NPCs using owned melee, ranged or elemental autocast supplies.
  * The existing targeting and banking lifecycle handles travel, replenishment and bounded target searches.
  *
+ * Sessions including KBD require combat level 100, a one-handed melee loadout and an owned anti-dragon
+ * shield. Banking equips that shield before travel and withdraws up to twenty food items healing at
+ * least sixteen Hitpoints. Missing protection or food requests another bank visit. Bones collected
+ * in the lair are retained for profit instead of buried.
+ *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
  * @author lare96
@@ -65,7 +70,8 @@ open class NpcCombatScript(bot: Bot,
 
         /** Camps that require an equipped anti-dragon shield before fighting. */
         val DRAGON_ZONES = setOf(
-            SubZone.GREEN_DRAGONS
+            SubZone.GREEN_DRAGONS,
+            SubZone.KBD_LAIR
         )
 
         /** Per-zone NPC restrictions must survive script persistence. */
@@ -153,6 +159,12 @@ open class NpcCombatScript(bot: Bot,
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
         loadout = NpcCombatLoadout.find(bot, purpose, spell) ?: return false
+        if (SubZone.KBD_LAIR in originalZones) {
+            val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
+            if (bot.combatLevel < 100 || purpose != BotGearPurpose.MELEE ||
+                equipDef(weapon).isTwoHanded || !bot.itemTracker.contains(1540)) return false
+            loadout!!.gear[Equipment.SHIELD] = 1540
+        }
         spell = loadout!!.spell?.spell
         if (resumed && !prepareCombat()) forceBanking = true
         return true
@@ -210,6 +222,11 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        if (SubZone.KBD_LAIR in originalZones && bot.equipment.shield?.id != 1540 &&
+            (!handler.equipment.equip(1540) || bot.equipment.weapon == null)) {
+            stop()
+            return
+        }
         if (purpose == BotGearPurpose.RANGED) {
             val id = selected.gear[Equipment.AMMUNITION] ?: weapon
             if (id == null || (bot.equipment.computeAmountForId(id) == 0 &&
@@ -232,7 +249,11 @@ open class NpcCombatScript(bot: Bot,
         }
         if (!handler.inventory.hasAnyFood()) {
             // todo change minimum heal scaling to combat level
-            handler.banking.withdrawAnyFood(amount = 8)
+            val kbd = SubZone.KBD_LAIR in originalZones
+            if (!handler.banking.withdrawAnyFood(amount = if (kbd) 20 else 8,
+                    minimumHeal = if (kbd) 16 else 0, retry = !kbd) && kbd) {
+                stop()
+            }
         }
 
     }
@@ -315,6 +336,10 @@ open class NpcCombatScript(bot: Bot,
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (npc.id == 50) {
+            return activeZone == SubZone.KBD_LAIR && bot.combatLevel >= 100 &&
+                bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null && handler.inventory.hasAnyFood()
+        }
         if (npc.combat.target == bot) {
             return true
         }
@@ -352,7 +377,7 @@ open class NpcCombatScript(bot: Bot,
             bot.naturalDelay()
         }
         for ((index, item) in bot.inventory.withIndex()) {
-            if (item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
+            if (activeZone != SubZone.KBD_LAIR && item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
                 handler.inventory.clickItem(1, item.id, index)
                 break
             }
@@ -360,6 +385,10 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private suspend fun eatFood() {
+        if (activeZone == SubZone.KBD_LAIR &&
+            (bot.equipment.shield?.id != 1540 || !handler.inventory.hasAnyFood())) {
+            forceBanking = true
+        }
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             forceBanking = true
         }
