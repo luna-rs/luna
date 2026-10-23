@@ -4,10 +4,9 @@ import api.combat.death.DeathHookHandler
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
 import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.combat.AmmoType
-import io.luna.game.model.mob.combat.CombatSpell
 
 for (brother in BarrowsBrother.entries) {
+    combat(brother.npcId) { attack { BarrowsCombat.attack(npc, other, brother) } }
     object1(brother.sarcophagusId) {
         if (plr.position.z != 3 || !BarrowsAreaListener.inside(plr.position)) return@object1
         if (BarrowsRun.state(plr) == 0) BarrowsRun.enterCrypt(plr)
@@ -49,7 +48,3 @@ for (chamber in BarrowsChamber.entries) {
         }
     }
 }
-
-// Baseline attack styles. The contribution explicitly marks the special effects/combat pass unfinished.
-combat(2025) { attack { magic(CombatSpell.FIRE_WAVE, speed = 6) } }
-combat(2028) { attack { ranged(AmmoType.BOLT_RACK, range = 7, speed = 4) } }

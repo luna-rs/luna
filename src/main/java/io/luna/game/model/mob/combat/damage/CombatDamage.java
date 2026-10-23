@@ -48,6 +48,11 @@ public final class CombatDamage {
      */
     private final OptionalInt amount;
 
+    /**
+     * Hitpoints removed at impact, capped to the victim's remaining health before damage events run.
+     */
+    private int appliedAmount;
+
     // todo docs, the source, can be null
    // private final CombatAttack<?> source;
 
@@ -83,6 +88,7 @@ public final class CombatDamage {
             }
             // Pushed before the damage, so the hit that kills the victim counts toward who killed it.
             victim.getCombat().getDamageStack().push(this);
+            appliedAmount = Math.min(Math.max(0, victim.getHealth()), Math.max(0, rawAmount));
             victim.damage(rawAmount);
         }
         // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync
@@ -128,5 +134,12 @@ public final class CombatDamage {
      */
     public int getRawAmount() {
         return amount.orElse(0);
+    }
+
+    /**
+     * @return The damage actually applied, excluding overkill, or zero before impact.
+     */
+    public int getAppliedAmount() {
+        return appliedAmount;
     }
 }

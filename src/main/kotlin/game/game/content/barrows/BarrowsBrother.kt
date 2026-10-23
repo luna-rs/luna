@@ -8,7 +8,7 @@ import io.luna.game.model.Position
  *
  * Sources: LostCityRS/Content at 44eab09081ef0f6c5f3eaabd1897a588ad7d9e50, pack/npc.pack and
  * pack/spotanim.pack. Digging destinations and bounds remain owned by [SpadeDigSpot]. A graphic ID
- * identifies an asset only; effect chance, target and timing still require combat implementation.
+ * identifies an asset only; the reconstructed behavior is implemented by [BarrowsCombat].
  *
  * @author lare96
  */
