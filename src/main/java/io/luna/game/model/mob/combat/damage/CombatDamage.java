@@ -121,6 +121,22 @@ public final class CombatDamage {
     }
 
     /**
+     * Caps numeric damage while retaining its participants, damage type, and original accuracy result.
+     * Splashes and effect-only hits are returned unchanged.
+     *
+     * @param maximum The largest permitted numeric hit; negative values are treated as zero.
+     * @return This hit if already within the cap, otherwise a capped copy.
+     */
+    public CombatDamage cappedAt(int maximum) {
+        if (amount.isEmpty() || amount.getAsInt() < 0) {
+            return this;
+        }
+        int capped = Math.min(amount.getAsInt(), Math.max(0, maximum));
+        return capped == amount.getAsInt() ? this :
+                new CombatDamage(attacker, victim, type, OptionalInt.of(capped), accurate);
+    }
+
+    /**
      * @return The attacker.
      */
     public Mob getAttacker() {

@@ -7,7 +7,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 
 //Ice cooler -> Same concept as bag of salt for desert lizards under 5hp
 
@@ -22,10 +21,10 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
+                damage = damage?.cappedAt(npc.health - 1)
                 npc.combat.prepareForExecution()
                 if (other.inventory.remove(ICE_COOLER)) {
                     val finishingAttack = source
-                    damage = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
                             if (executions == 0) {
@@ -40,8 +39,6 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                             return false
                         }
                     })
-                } else {
-                    damage = CombatDamageRequest.zero(other, npc).resolve()
                 }
             }
         }

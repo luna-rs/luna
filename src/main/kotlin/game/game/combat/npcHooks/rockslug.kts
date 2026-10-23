@@ -7,7 +7,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
@@ -34,20 +33,20 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     /*
      * Handles rockslug finishing behaviour.
      *
-     * When an incoming hit would reduce a rockslug to or below the finishing threshold, the normal damage is cancelled and
-     * the slug is left at 1 hitpoint. If the attacker is a player carrying a bag of salt, the player performs the
-     * salting sequence and the slug is killed shortly after.
+     * When an incoming hit would reduce a rockslug to or below the finishing threshold, the hit is capped to leave at least
+     * one hitpoint and still delivered for damage credit and experience. If the attacker carries a bag of salt,
+     * the player performs the salting sequence and the slug is killed shortly after.
      *
-     * If the player does not have salt, they will always hit 0.
+     * Without salt, the slug remains prepared for execution and cannot be reduced below one hitpoint by these hits.
      */
     combat(1622, 1623) {
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
+                damage = damage?.cappedAt(npc.health - 1)
                 npc.combat.prepareForExecution()
                 if (other.inventory.remove(BAG_OF_SALT)) {
                     val finishingAttack = source
-                    damage = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
                             if (executions == 0) {
@@ -62,8 +61,6 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                             return false
                         }
                     })
-                } else {
-                    damage = CombatDamageRequest.zero(other, npc).resolve()
                 }
             }
         }

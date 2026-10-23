@@ -157,14 +157,14 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * This state is used for NPCs that should not die from normal damage immediately, but instead must be finished
      * by a special execution action.
      * <p>
-     * Preparing for execution reduces the mob to {@code 1} health, clears any active poison, disables further combat
-     * processing, locks movement, and clears the current combat target.
+     * Preparing for execution clears active poison, disables further combat processing, locks movement, and clears
+     * the current combat target. It does not modify health: the initiating hit must be delivered normally, capped to
+     * leave at least one hitpoint, so its damage contribution and rewards are retained.
      * <p>
      * If this mob is already disabled, this method does nothing.
      */
     public void prepareForExecution() {
         if (!isDisabled()) {
-            mob.setHealth(1);
             mob.getStatus().remove(StatusEffectType.POISONED);
             setDisabled(true);
             mob.getWalking().setLocked(true);

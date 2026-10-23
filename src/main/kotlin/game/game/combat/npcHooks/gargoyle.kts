@@ -69,7 +69,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         defend {
             val amount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - amount <= HITPOINTS_THRESHOLD) {
-                damage = null
+                damage = damage?.cappedAt(npc.health - 1)
                 npc.combat.prepareForExecution()
                 npc.transform(1611)
             }
