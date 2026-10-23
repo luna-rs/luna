@@ -20,7 +20,9 @@ import java.util.function.BiFunction;
  * This type adds player-specific behavior to the generic magic attack flow, including rune consumption, selected-spell
  * clearing, cast sound playback, and Magic and Hitpoints experience rewards.
  * <p>
- * The attack delay is determined by whether the spell was manually selected or auto-cast.
+ * Ordinary spellbook casts use the same five-tick attack delay for manual casting and autocasting.
+ * Base spell experience is awarded when casting; damage experience is awarded after the hit is delivered and capped
+ * to the victim's remaining health.
  *
  * @author lare96
  */
@@ -40,7 +42,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
      * @param selectedSpell {@code true} if the spell was manually selected, or {@code false} if it is being auto-cast.
      */
     public PlayerMagicCombatAttack(Player attacker, Mob victim, CombatSpellDefinition spell, boolean selectedSpell) {
-        super(attacker, victim, spell, !selectedSpell ? 5 : 4);
+        super(attacker, victim, spell, 5);
         magic = attacker.getCombat().getMagic();
     }
 
@@ -91,18 +93,15 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         }
         attacker.playSound(spellEffect.getStartSound());
 
-        int rawAmount = damage.getRawAmount();
-        attacker.skill(Skill.MAGIC).addExperience(spellEffect.getExp() + (damage.getRawAmount() * 2));
-        attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
+        attacker.skill(Skill.MAGIC).addExperience(spellEffect.getExp());
         return damage;
     }
 
     @Override
-    public CombatDamage onEffect(CombatDamage damage) {
-        int rawAmount = damage.getRawAmount();
+    public void onDamageApplied(CombatDamage damage) {
+        int rawAmount = Math.max(0, damage.getRawAmount());
         attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
-        return damage;
     }
 
     /**

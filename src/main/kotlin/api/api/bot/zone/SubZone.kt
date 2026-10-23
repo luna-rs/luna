@@ -582,6 +582,24 @@ enum class SubZone(val inside: Position,
                              { SEERS_VILLAGE }),
 
     /**
+     * The wheat field beside the Lumbridge windmill. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    LUMBRIDGE_MILL_WHEAT(inside = Position(3158, 3298),
+                         area = SimpleBoxArea.of(3152, 3288, 3163, 3306),
+                         parent = { LUMBRIDGE }),
+
+    /**
+     * The wheat field south of the windmill north of Ardougne. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    ARDOUGNE_MILL_WHEAT(inside = Position(2647, 3349),
+                        area = SimpleBoxArea.of(2640, 3345, 2655, 3353),
+                        parent = { ARDOUGNE }),
+
+    /**
      * The yew trees south of Seers' Village. Intended for money-makers and low -> high level dumb woodcutters.
      * - 3 yew trees
      * - Normal trees

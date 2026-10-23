@@ -50,9 +50,11 @@ class CombatPrayerSet(private val player: Player) {
      */
     fun activate(prayer: CombatPrayer) {
 
-        // Stop here if prayer is disabled.
-        if(StatusEffectType.DRAGON_SCIMITAR in player.status) {
-            player.sendMessage("Your prayers have been disabled by a recent attack.")
+        // The dragon scimitar blocks protection prayers only; other prayers remain available.
+        if (StatusEffectType.DRAGON_SCIMITAR in player.status &&
+            (prayer == CombatPrayer.PROTECT_FROM_MELEE || prayer == CombatPrayer.PROTECT_FROM_MISSILES ||
+                    prayer == CombatPrayer.PROTECT_FROM_MAGIC)) {
+            player.sendMessage("Your protection prayers have been disabled by a recent attack.")
             return
         }
 

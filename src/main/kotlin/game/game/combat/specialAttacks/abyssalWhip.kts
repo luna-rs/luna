@@ -16,9 +16,9 @@ attack(type = ABYSSAL_WHIP,
        attackBonus = 0.25) {
 
     arrived {
-        // Attack has landed, play tentacle spotanim, siphon run energy.
+        // Show the impact graphic on arrival, but only siphon energy when the accuracy roll succeeded.
         victim.graphic(GRAPHIC)
-        if (victim is Player) {
+        if (victim is Player && damage.isAccurate) {
             val removeEnergy = floor(victim.runEnergy * 0.10)
             if (removeEnergy > 0) {
                 victim.runEnergy -= removeEnergy

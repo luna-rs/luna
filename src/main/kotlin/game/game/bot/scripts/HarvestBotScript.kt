@@ -8,6 +8,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.SkillingScriptFactory
+import game.bot.scripts.skills.MillFlourBotScript
 import game.bot.scripts.skills.SpinTextileBotScript
 import game.obj.resource.harvestable.CabbageResource
 import game.obj.resource.harvestable.FlaxResource
@@ -156,6 +157,11 @@ class HarvestBotScript(
             (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
             val script = SpinTextileBotScript(bot, SkillingScriptFactory.getDuration(bot))
             bot.scriptStack.pushTail(script, 2)
+        }
+        // Chance to queue milling the wheat into flour.
+        if (harvestable == Harvestable.WHEAT && (rand(bot.personality.intelligence) || bot.personality.isDextrous)) {
+            val mill = MillFlourBotScript.pickMill(bot)
+            bot.scriptStack.pushTail(MillFlourBotScript(bot, mill, SkillingScriptFactory.getDuration(bot)), 2)
         }
     }
 }

@@ -79,10 +79,9 @@ class ChainHitCombatAttack(source: CombatAttack<Player>) :
 /**
  * Processes the next delayed rune thrownaxe chain hit.
  *
- * Each rebound displays a projectile from the previous victim to the next valid target, waits for the
- * projectile travel delay, drains additional special attack energy, applies the resolved ranged damage,
- * then recursively schedules the next rebound. The chain ends once there are no more valid targets or
- * no attacks remain.
+ * Each rebound validates attackability, controller permission, and multi-combat eligibility before paying its energy
+ * cost and displaying a projectile. After the travel delay, it applies damage and schedules the next rebound.
+ * Exhausted targets, exhausted attacks, ineligible targets, or insufficient energy end the chain and unlock the bar.
  *
  * @param attacker The player performing the special attack.
  * @param lastVictim The mob most recently hit by the thrownaxe.
@@ -98,11 +97,15 @@ fun handleChainHit(
     attacksLeft: Int) {
     if (targets.hasNext() && attacksLeft > 0) {
         val nextVictim = targets.next()
+        if (!nextVictim.combat.isAttackable || !attacker.controllers.checkCombat(nextVictim) ||
+            !attacker.combat.checkMultiCombat(nextVictim) || !attacker.combat.specialBar.drain(10, true)) {
+            attacker.combat.specialBar.isLocked = false
+            return
+        }
         val nextDamage = CombatDamageRequest.standard(attacker, nextVictim, CombatDamageType.RANGED).resolve()
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
-                attacker.combat.specialBar.drain(10, true)
                 CombatDamageAction(nextDamage, source, true, 1).run()
                 handleChainHit(attacker, nextVictim, targets, source, attacksLeft - 1)
                 return true
@@ -127,7 +130,8 @@ attack(type = RUNE_THROWN_AXE,
     arrived {
         val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(5)
         val filter: (Mob) -> Boolean =
-            { it != attacker && it != victim && it.isWithinDistance(victim, 3) && attacker.combat.checkMultiCombat(it) }
+            { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
+                    it.isWithinDistance(victim, 3) && attacker.combat.checkMultiCombat(it) }
         val targets = // Gather npc OR player targets.
             (if (victim is Npc) world.locator.findViewableNpcs(victim, filter)
             else world.locator.findViewablePlayers(victim, filter)).iterator()
@@ -135,6 +139,8 @@ attack(type = RUNE_THROWN_AXE,
         if (attacksLeft > 0 && targets.hasNext()) {
             // Use recursion to handle chain hits.
             handleChainHit(attacker, victim, targets, ChainHitCombatAttack(source), attacksLeft)
+        } else {
+            attacker.combat.specialBar.isLocked = false
         }
     }
 }

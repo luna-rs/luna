@@ -106,6 +106,7 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This method calculates the base damage, passes it through {@link #onAttack(CombatDamage)} to allow subclasses
      * to modify or cancel the result, then applies the standard combat delay and timer updates before invoking {@link #attack()}.
+     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -118,7 +119,9 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        attacker.getCombat().setAttackDelay(delay);
+        if (!ignoreAttackDelay) {
+            attacker.getCombat().setAttackDelay(delay);
+        }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);
