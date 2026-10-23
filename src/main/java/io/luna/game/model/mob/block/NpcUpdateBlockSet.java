@@ -3,6 +3,7 @@ package io.luna.game.model.mob.block;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.netty.buffer.ByteBuf;
 
@@ -20,7 +21,7 @@ import io.netty.buffer.ByteBuf;
  * </ul>
  *
  * <p>
- * The update pipeline calls {@link AbstractUpdateBlockSet#addBlockSet(Mob, ByteMessage, UpdateState)} during NPC
+ * The update pipeline calls {@link AbstractUpdateBlockSet#addBlockSet(Mob, ByteMessage, UpdateState, Player)} during NPC
  * synchronization. NPCs never cache block sets (unlike players).
  * </p>
  *
@@ -29,7 +30,7 @@ import io.netty.buffer.ByteBuf;
 public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     @Override
-    public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
+    public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state, Player viewer) {
         ByteBuf cachedBlock = npc.acquireCachedBlock();
         if (cachedBlock != null) {
             try {
@@ -42,7 +43,7 @@ public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
         ByteMessage blockMsg = ByteMessage.raw();
         try {
-            encodeBlockSet(npc, blockMsg, state);
+            encodeBlockSet(npc, blockMsg, state, viewer);
             msg.putBytes(blockMsg);
             npc.cacheBlockIfAbsent(blockMsg);
         } finally {
@@ -52,7 +53,7 @@ public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
     }
 
     @Override
-    public void encodeBlock(Npc npc, UpdateBlock block, ByteMessage blockMsg) {
+    public void encodeBlock(Npc npc, UpdateBlock block, ByteMessage blockMsg, Player viewer) {
         block.encodeForNpc(blockMsg, npc.getBlockData());
     }
 

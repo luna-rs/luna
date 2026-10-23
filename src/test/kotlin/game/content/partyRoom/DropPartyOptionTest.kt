@@ -191,4 +191,19 @@ class DropPartyOptionTest {
         assertEquals(TaskState.CANCELLED, task.state)
         assertEquals(0, DropPartyOption.secondsLeft)
     }
+    /**
+     * Verifies that staging and returning a dynamic item preserves its per-item attributes and identity.
+     */
+    @Test
+    fun dynamicDonationRetainsItsOriginalItemInstance() {
+        val player = player()
+        val item = io.luna.game.model.item.DynamicItem(526)
+        assertTrue(player.inventory.add(item))
+        val index = player.inventory.computeIndexForId(item.id)
+        assertTrue(DropPartyOption.stageDeposit(player, item.id, index, 1))
+        assertSame(item, player.depositItems.filterNotNull().single())
+        DropPartyOption.returnOffers(player)
+        assertSame(item, player.inventory.filterNotNull().single())
+        assertEquals(0, player.depositItems.size())
+    }
 }

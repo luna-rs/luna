@@ -215,12 +215,6 @@ public abstract class Mob extends Entity {
         super(context, type);
     }
 
-    @Override
-    public abstract boolean equals(Object obj);
-
-    @Override
-    public abstract int hashCode();
-
     /**
      * @return The pathfinder to be used for interactions.
      */

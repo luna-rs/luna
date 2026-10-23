@@ -10,7 +10,9 @@ import api.predef.ext.*
 import engine.bot.coordinator.skill.SmithingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.LogoutBotScript
+import game.player.QuestJournalInterface
 import game.player.item.consume.food.Food
+import game.skill.magic.Rune
 import game.skill.mining.Ore
 import game.skill.smithing.BarType
 import io.luna.Luna
@@ -21,6 +23,8 @@ import io.luna.game.model.area.Area
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Bank
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.Shop
+import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
@@ -42,6 +46,7 @@ import io.luna.util.NumberUtils
 import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
 
+// todo each command in its own file
 
 /**
  * A command that sends a client config.
@@ -51,6 +56,16 @@ cmd("config", RIGHTS_DEV) {
     val value = if (args.size == 1) 0 else asInt(1)
     plr.sendMessage("config[$id] = $value")
     plr.sendVarp(Varp(id, value))
+}
+
+cmd("shop") {
+    val shopList = ArrayList<Shop>()
+    for(shop in world.shops.values()) {
+        if(shop.viewing.isNotEmpty()) {
+            shopList += shop
+        }
+    }
+    plr.overlays.open(ShopInterface(shopList.random()))
 }
 
 cmd("botscript", RIGHTS_DEV) {
@@ -110,7 +125,8 @@ cmd("goto", RIGHTS_DEV) {
 cmd("rockcrabs") {
 
 }
-cmd("zonebots", RIGHTS_DEV) {
+cmd("zonebots", RIGHTS_DEV) {// todo not working? craftarmorbotscript, https://i.imgur.com/LTo2YUn.png no fishing spots here?,
+   // todo check craftrunebotscript? some teleport areas incorrect?? (after air, etc.)
     for (nextPlr in world.players) {
         if (nextPlr is Bot) {
             if (nextPlr.scriptStack.current() is ZonedBotScript) {
@@ -121,26 +137,32 @@ cmd("zonebots", RIGHTS_DEV) {
 }
 
 cmd("botstats", RIGHTS_DEV) {
-    var (totalLevel, totalLevelUsername) = Pair<Int, String?>(0, null)
-    var (combatLevel, combatLevelUsername) = Pair<Int, String?>(0, null)
+    class BotStat(val totalLevel: Int, val combatLevel: Int, val username: String)
+
+    val allStats = ArrayList<BotStat>(world.bots.onlineCount)
     for (plr in world.players) {
         if (plr is Bot) {
-            var newTotalLevel = 0
-            for (skill in plr.skills.asIterable()) {
-                newTotalLevel += skill.staticLevel
-            }
-            if (newTotalLevel > totalLevel) {
-                totalLevel = newTotalLevel
-                totalLevelUsername = plr.username
-            }
-            if (plr.combatLevel > combatLevel) {
-                combatLevel = plr.combatLevel
-                combatLevelUsername = plr.username
-            }
+            allStats += BotStat(plr.skills.sumOf { it.staticLevel }, plr.combatLevel, plr.username)
         }
     }
-    plr.sendMessage("Highest total level $totalLevel, by $totalLevelUsername")
-    plr.sendMessage("Highest combat level $combatLevel, by $combatLevelUsername")
+    val sortedTotalLevel = allStats.sortedByDescending { it.totalLevel }.toMutableList()
+    val sortedCombatLevel = allStats.sortedByDescending { it.combatLevel }.toMutableList()
+    val display = QuestJournalInterface("Bot level stats")
+    display.addLine("TOTAL LEVEL")
+    repeat(5) {
+        if (sortedTotalLevel.isNotEmpty()) {
+            val next = sortedTotalLevel.removeFirst()
+            display.addLine("${next.username} | Total level: ${next.totalLevel}")
+        }
+    }
+    display.addLine("COMBAT LEVEL")
+    repeat(5) {
+        if (sortedCombatLevel.isNotEmpty()) {
+            val next = sortedCombatLevel.removeFirst()
+            display.addLine("${next.username} | Combat level: ${next.combatLevel}")
+        }
+    }
+    display.open(plr)
 }
 
 cmd("botskill", RIGHTS_DEV) {
@@ -184,8 +206,22 @@ cmd("botrich", RIGHTS_DEV) {
     plr.sendMessage("Highest bank value ${NumberUtils.formatPrice(value - 810_000)}, by $valueUsername")
 }
 
+cmd("hasrunes"){
+    for(bot in world.players) {
+        if(bot is Bot && bot.inventory.containsAnyIds(Rune.ID_TO_RUNE.keys)) {
+            plr.move(bot.position)
+            break
+        }
+    }
+}
+
 cmd("saveall", RIGHTS_DEV) {
-    world.persistenceService.saveAll().thenRun { logger.info("All players saved.") }
+    plr.lock()
+    plr.newDialogue().text("Starting mass save...").open()
+    world.persistenceService.saveAll().thenRunAsync({
+        plr.unlock()
+        plr.newDialogue().text("Mass save complete.").open()
+    }, gameService.gameExecutor)
 }
 
 cmd("die", RIGHTS_DEV) {
@@ -388,17 +424,29 @@ cmd("findfight") {
     plr.move(choices.random())
 }
 cmd("findbot") {
-    val choices = ArrayList<Position>()
+    val choices = ArrayList<Bot>()
     for (next in world.players) {
-        if (next.isBot && !next.isViewableFrom(plr)) {
-            choices += next.position
+        if (next is Bot && !next.isViewableFrom(plr)) {
+            choices += next
         }
     }
-    if (choices.isNotEmpty()) {
-        plr.move(choices.random())
-    } else {
-        plr.sendMessage("No non-viewable bots to teleport to.")
+    var count = 1
+    plr.sendMessage("Viewable bot list: ${choices.size}")
+    world.schedule(10, true) {
+        if(!plr.walking.isEmpty) {
+            it.cancel()
+        } else {
+            if (choices.isNotEmpty()) {
+                val nextBot = choices.removeAt(rand().nextInt(choices.size))
+                plr.sendMessage("Moving to bot #${count++}: ${nextBot.username}.")
+                plr.move(nextBot.position)
+            } else {
+                plr.sendMessage("Viewable bot list has been exhausted.")
+                it.cancel()
+            }
+        }
     }
+
 }
 
 /**

@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import com.google.common.collect.ImmutableSet;
 import io.luna.game.event.impl.WidgetItemClickEvent;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFifthClickEvent;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
@@ -7,6 +8,7 @@ import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFourthClickEvent;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemSecondClickEvent;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemThirdClickEvent;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
@@ -20,6 +22,12 @@ import io.luna.net.msg.GameMessageReader;
  * @author lare96
  */
 public final class WidgetItemClickMessageReader extends GameMessageReader<WidgetItemClickEvent> {
+
+    /**
+     * The widgets that show the inventory: the inventory tab, the trade, shop, and bank or Party Room chest side
+     * panels, and the deposit box.
+     */
+    private static final ImmutableSet<Integer> INVENTORY_WIDGETS = ImmutableSet.of(3214, 3322, 3823, 5064, 7423);
 
     @Override
     public WidgetItemClickEvent decode(Player player, GameMessage msg) {
@@ -60,6 +68,14 @@ public final class WidgetItemClickMessageReader extends GameMessageReader<Widget
 
     @Override
     public boolean validate(Player player, WidgetItemClickEvent event) {
-        return event.getWidgetId() > 0 && event.getIndex() >= 0 && ItemDefinition.isIdValid(event.getItemId());
+        int index = event.getIndex();
+        if (event.getWidgetId() <= 0 || index < 0 || !ItemDefinition.isIdValid(event.getItemId())) {
+            return false;
+        }
+        if (INVENTORY_WIDGETS.contains(event.getWidgetId())) {
+            Inventory inventory = player.getInventory();
+            return index < inventory.capacity() && inventory.contains(index, event.getItemId());
+        }
+        return true;
     }
 }

@@ -11,6 +11,8 @@ import io.luna.game.model.mob.controller.PlayerController
  * A [PlayerController] that enforces wilderness-specific gameplay rules.
  *
  * This controller is registered while a player is inside the wilderness.
+ * Player combat requires both participants to be inside the wilderness and limits their combat-level difference to
+ * the shallower participant's wilderness level. Eligibility uses current positions rather than cached display levels.
  *
  * @author lare96
  */
@@ -38,7 +40,11 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
 
         // Do combat level checks for players.
         val combatLevel = plr.combatLevel
-        val wildernessLevel = plr.wildernessLevel
+        val wildernessLevel = minOf(WildernessLocatableController.levelAt(plr.position),
+                                    WildernessLocatableController.levelAt(victim.position))
+        if (wildernessLevel < 1) {
+            return false
+        }
         val attackRange = combatLevel - wildernessLevel..combatLevel + wildernessLevel
         val attackable = attackRange.contains(victim.combatLevel)
         if (!attackable) {
@@ -50,9 +56,7 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun move() {
-        val position = plr.position
-        var newLevel = if (position.y > 6400) position.y - 6400 else position.y
-        newLevel = ((newLevel - 3520) / 8) + 1
+        val newLevel = WildernessLocatableController.levelAt(plr.position)
         if (plr.wildernessLevel != newLevel) {
             plr.wildernessLevel = newLevel
             plr.sendText("@yel@Level: $newLevel", 199)

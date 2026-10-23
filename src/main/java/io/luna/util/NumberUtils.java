@@ -35,7 +35,7 @@ public class NumberUtils {
      */
     public static String formatPrice(long value) {
         if (value < 10_000) {
-            return value + "gp";
+            return WHOLE_NUMBER.format(value) + "gp";
         }
         if (value < 1_000_000) {
             return abbreviateCeil(value, 1_000, "K", 1);

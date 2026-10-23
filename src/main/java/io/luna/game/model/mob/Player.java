@@ -346,7 +346,6 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        status.save();
         pendingPlacement = true;
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
@@ -744,7 +743,9 @@ public class Player extends Mob {
         if (lastRegion == null || needsRegionUpdate()) {
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionMessageWriter(position));
+            if (!(this instanceof Bot)) {
+                queue(new RegionMessageWriter(position));
+            }
         }
     }
 

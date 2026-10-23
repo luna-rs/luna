@@ -94,7 +94,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                 if (other.isViewableFrom(player) && !other.isPendingPlacement() &&
                         other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
-                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL, player);
                     return false;
                 } else {
                     // No longer viewable or being placed; remove from local view.
@@ -114,7 +114,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                 }
                 if (other.isViewableFrom(player) && localMobs.add(other)) {
                     addNpc(player, other, msg);
-                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL, player);
                     added++;
                 }
             }

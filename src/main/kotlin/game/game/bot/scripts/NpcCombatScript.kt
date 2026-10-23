@@ -161,7 +161,10 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun finish() {
         bot.reflex.isDisableCombatReflex = false
-        clearMagic()
+        // Keep the spell through a pause, so the combat reflex can finish the fight with it.
+        if (!isPaused()) {
+            clearMagic()
+        }
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {

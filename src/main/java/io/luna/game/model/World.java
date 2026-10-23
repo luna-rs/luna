@@ -455,7 +455,7 @@ public final class World {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
             try {
-                if (player.getClient().isPendingLogout() || player.isBot()) {
+                if (player.getClient().isPendingLogout()) {
                     // No point sending updates to a client that is leaving, or to bots (no real client view).
                     synchronizer.arriveAndDeregister();
                     continue;
@@ -466,6 +466,14 @@ public final class World {
                  * Queued data will be sent after updating completes, within the synchronization task.
                  */
                 player.updateRegion();
+
+                if(player.isBot()) {
+                    // Bots don't need player updating.
+                    // TODO Add toggle for this, we can enable bot player updating to simulate the engine handling
+                    //  more realistic players. While ON = greatly increases CPU usage and decreases performance.
+                    synchronizer.arriveAndDeregister();
+                    continue;
+                }
 
                 // Prepare local mobs for updating and encode them using our thread pool.
                 List<Player> localPlayers = locator.computeVisiblePlayersFor(player);

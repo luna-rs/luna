@@ -5,10 +5,10 @@ import api.predef.ext.*
 import game.content.partyRoom.dropParty.DropPartyOption.BalloonObject
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import game.player.Messages
+import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.EntityState
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
 
@@ -24,14 +24,20 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
  * Withdraws an item from the party chest.
  */
 fun withdraw(plr: Player, event: WidgetItemClickEvent, amount: Int) {
-    val chestAmt = plr.depositItems.computeAmountForId(event.itemId)
-    val finalAmt = if (amount > chestAmt) chestAmt else amount
-    val removeItem = Item(event.itemId, finalAmt)
+    // Withdraw-X runs once the amount is entered, and the slot can change before then.
+    val offered = plr.depositItems
+    val offerItem = if (event.index < offered.capacity()) offered[event.index] else null
+    if (offerItem == null || offerItem.id != event.itemId || amount < 1) {
+        return
+    }
+
+    val newAmount = minOf(amount, offered.computeAmountForId(offerItem.id))
+    val removeItem = if (offerItem.isDynamic) offerItem else offerItem.withAmount(newAmount)
     if (!plr.inventory.hasSpaceFor(removeItem)) {
         plr.sendMessage(Messages.inventoryFull())
         return
     }
-    if (plr.depositItems.remove(removeItem)) {
+    if (offered.remove(removeItem)) {
         plr.inventory.add(removeItem)
     }
 }
@@ -64,6 +70,9 @@ button(2246) {
 
 // Open the drop party chest interface.
 object1(2417) { plr.overlays.open(DropPartyInterface()) }
+
+// Return offers that a logout left in the chest.
+on(LoginEvent::class) { DropPartyOption.returnOffers(plr) }
 
 // Deposit
 on(WidgetItemFirstClickEvent::class)

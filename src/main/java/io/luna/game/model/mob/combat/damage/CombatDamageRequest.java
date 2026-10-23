@@ -310,7 +310,7 @@ public final class CombatDamageRequest {
          * Sets a percentage-based damage modifier.
          * <p>
          * Positive values increase rolled damage, while negative values reduce it. This modifier is applied after
-         * damage is rolled, and after protection prayer mitigation.
+         * damage is rolled, before protection prayer mitigation.
          *
          * @param percentAmount The percentage-based damage modifier to apply.
          * @return This builder.
@@ -334,8 +334,8 @@ public final class CombatDamageRequest {
         /**
          * Sets a flat damage modifier.
          * <p>
-         * This value is applied after damage is rolled, after any percentage-based adjustment, and after protection
-         * prayer mitigation.
+         * This value is applied after damage is rolled and after any percentage-based adjustment, but before
+         * protection prayer mitigation.
          *
          * @param flatAmount The flat damage modifier to apply.
          * @return This builder.
@@ -424,23 +424,26 @@ public final class CombatDamageRequest {
      *     <li>If the hit is inaccurate, magic splashes and all other styles resolve as zero damage.</li>
      *     <li>If the hit is accurate and damage is disabled, a special non-damaging hit marker is produced.</li>
      *     <li>Otherwise, base max hit is resolved, flat max-hit bonuses are applied, and damage is rolled.</li>
-     *     <li>Protection prayers are applied first, followed by percentage and flat damage bonuses.</li>
+     *     <li>Percentage and flat damage bonuses are applied before final protection prayer mitigation.</li>
      * </ul>
      *
      * @return The fully resolved combat damage.
      */
     public CombatDamage resolve() {
-        double baseAccuracy = accuracy.orElse(CombatFormula.calculateHitChance(attacker, victim, type));
+        double baseAccuracy = accuracy.isPresent() ? accuracy.getAsDouble() :
+                CombatFormula.calculateHitChance(attacker, victim, type);
         baseAccuracy +=  flatBonusAccuracy;
         OptionalInt computedDamage;
-        if (!damageDisabled) {
-            if (RandomUtils.roll(baseAccuracy)) {
+        boolean accurate = baseAccuracy > 0.0 && RandomUtils.roll(baseAccuracy);
+        if (accurate) {
+            if (damageDisabled) {
+                computedDamage = OptionalInt.of(-1);
+            } else {
                 int baseMaxHit = maxHit.orElseGet(() -> attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
                 baseMaxHit += (int) Math.floor(baseMaxHit * percentBonusStrength);
 
                 int damage = baseMaxHit < 1 ? 0 : RandomUtils.inclusive(baseMaxHit);
-                damage = applyPrayer(damage);
                 int damageMod = percentBonusDamage != 0.0 ? (int) Math.floor(damage * Math.abs(percentBonusDamage)) : 0;
                 if (percentBonusDamage > 0.0) {
                     damage += damageMod;
@@ -448,16 +451,14 @@ public final class CombatDamageRequest {
                     damage -= damageMod;
                 }
                 damage += flatBonusDamage;
-                computedDamage = OptionalInt.of(Math.max(0, damage));
-            } else if (type == CombatDamageType.MAGIC) {
-                computedDamage = OptionalInt.empty();
-            } else {
-                computedDamage = OptionalInt.of(0);
+                computedDamage = OptionalInt.of(applyPrayer(Math.max(0, damage)));
             }
+        } else if (type == CombatDamageType.MAGIC) {
+            computedDamage = OptionalInt.empty();
         } else {
-            computedDamage = OptionalInt.of(-1);
+            computedDamage = OptionalInt.of(0);
         }
-        return new CombatDamage(attacker, victim, type, computedDamage);
+        return new CombatDamage(attacker, victim, type, computedDamage, accurate);
     }
 
     /**

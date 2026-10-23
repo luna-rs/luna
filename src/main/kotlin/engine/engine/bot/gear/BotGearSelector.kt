@@ -40,8 +40,8 @@ object BotGearSelector {
      * groups into one lookup table where each equipment slot maps to the known candidate items for that slot.
      *
      * Full set items are included so set pieces can participate in generic purpose-based selection. Slot-specific groups
-     * are then added for amulets, boots, capes, gloves, rings, shields, and weapons. Repeated item IDs retain the
-     * union of their purposes and the highest declared priority, including the generic melee and PK fallback.
+     * are then added for amulets, boots, capes, gloves, headgear, rings, shields, and weapons. Repeated item IDs retain
+     * the union of their purposes and the highest declared priority, including the generic melee and PK fallback.
      */
     val ALL_GEAR = lazyVal {
         val map = ArrayListMultimap.create<Int, BotGearItem>()
@@ -58,6 +58,7 @@ object BotGearSelector {
         BootsBotGear.entries.forEach { map.putAll(BOOTS, it.items()) }
         CapeBotGear.entries.forEach { map.putAll(CAPE, it.items()) }
         GlovesBotGear.entries.forEach { map.putAll(HANDS, it.items()) }
+        HeadBotGear.entries.forEach { map.putAll(HEAD, it.items()) }
         RingBotGear.entries.forEach { map.putAll(RING, it.items()) }
         ShieldBotGear.entries.forEach { map.putAll(SHIELD, it.items()) }
         WeaponBotGear.entries.forEach { map.putAll(WEAPON, it.items()) }
@@ -263,6 +264,9 @@ object BotGearSelector {
      * satisfy all requested purposes, groups them by equipment slot, and selects the highest-scoring item for each empty
      * slot.
      *
+     * Show-off layouts then give the head slot to the bot's first owned [HeadBotGear] rare, unless it holds a piece of
+     * a complete set that is still worn in full.
+     *
      * The returned builder can still be refined before equipping. For example, a script can replace a weapon, fill missing
      * slots with a secondary purpose, or request a specific utility item before calling [BotGearSelectorFill.buildLocator].
      *
@@ -281,6 +285,7 @@ object BotGearSelector {
 
         // More intelligent bots tend to use gear sets.
         val equipment = arrayOfNulls<Int>(14)
+        var completeSet = emptySet<Int>()
         if (bot.personality.isIntelligent || rand(bot.personality.intelligence)) {
             // Determine which gear sets we can use. Must have at least size / 2 pieces of the set.
             val gearSelection = EnumMap<BotGearSet, Int>(BotGearSet::class.java)
@@ -321,6 +326,9 @@ object BotGearSelector {
                     }
                     equipment[item.index] = item.id
                 }
+                if (selected.key.equipment.size == selected.value) {
+                    completeSet = selected.key.equipment
+                }
 
                 // Dumb social bots prefer full sets, even when inefficient.
                 if (selected.key.equipment.size == selected.value && bot.personality.isDumb && bot.personality.isSocial) {
@@ -355,6 +363,11 @@ object BotGearSelector {
                     equipment[index] = selectionItem?.id
                 }
             }
+        }
+        val keepSetHead = equipment[HEAD] in completeSet && completeSet.all { it in equipment }
+        if (BotGearPurpose.SHOW_OFF in purposes && !keepSetHead) {
+            val owned = selection[HEAD].map { it.id }
+            HeadBotGear.entries.flatMap { it.ids }.firstOrNull { it in owned }?.let { equipment[HEAD] = it }
         }
         return BotGearSelectorFill(bot, equipment)
     }

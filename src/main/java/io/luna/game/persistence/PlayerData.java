@@ -140,7 +140,7 @@ public class PlayerData {
         if (hashedPw == null) {
             // No hashed password, we need to generate one.
             PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
-            if (passwordStrength != PasswordStrength.NONE) {
+            if (passwordStrength != PasswordStrength.NONE && !player.isBot()) {
                 String salt = BCrypt.gensalt(passwordStrength.getRounds());
                 password = BCrypt.hashpw(plainTextPw, salt);
             } else {
@@ -186,6 +186,8 @@ public class PlayerData {
         } else {
             isBot = false;
         }
+        // Write live status effects into their attribute before copying the attributes.
+        player.getStatus().save();
         attributes = player.getAttributes().save();
         return this;
     }

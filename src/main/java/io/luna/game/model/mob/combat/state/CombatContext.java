@@ -180,12 +180,17 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Starts attacking the supplied enemy.
      * <p>
+     * Null targets, self-attacks, and engagements involving a dead mob are ignored without changing combat state.
+     * <p>
      * If the owning mob is a {@link Player}, combat initiation is first validated by the player's active controllers.
      * If combat is allowed, the target is set and a {@link CombatAction} is submitted if one is not already active.
      *
      * @param enemy The mob to attack.
      */
     public final void attack(Mob enemy) {
+        if (enemy == null || enemy == mob || !mob.isAlive() || !enemy.isAlive()) {
+            return;
+        }
         if (mob instanceof Player) {
             Player player = (Player) mob;
             if (!player.getControllers().checkCombat(enemy)) {
@@ -376,15 +381,13 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Extends the current attack delay after food is eaten.
      * <p>
-     * This only applies an additional delay if an attack cooldown is already active. If the current attack delay is
-     * zero or less, no delay is added.
+     * Adds delay even when the mob is ready to attack. Both the current cooldown and supplied delay are clamped to
+     * zero before addition, so negative values cannot shorten the cooldown.
      *
      * @param delay The additional delay to add.
      */
     public void addFoodDelay(int delay) {
-        if (attackDelay > 0) {
-            attackDelay += delay;
-        }
+        attackDelay = Math.max(0, attackDelay) + Math.max(0, delay);
     }
 
     /**

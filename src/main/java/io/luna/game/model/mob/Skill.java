@@ -339,6 +339,8 @@ public final class Skill {
      * If the level does not change, no listeners are notified and no restoration is scheduled.
      * <p>
      * For NPCs, setting the dynamic level also updates the cached static level to match.
+     * <p>
+     * Hitpoints that reach full health clear the mob's damage stack.
      *
      * @param newLevel The new dynamic level.
      */
@@ -355,6 +357,11 @@ public final class Skill {
         }
         if (oldLevel == level) {
             return;
+        }
+        Mob mob = set.getMob();
+        if (id == HITPOINTS && level >= mob.getTotalHealth()) {
+            // Back to full health, so earlier damage no longer counts toward who kills this mob.
+            mob.getCombat().getDamageStack().clear();
         }
         set.restoreSkills(this);
         notifyListeners(experience, getStaticLevel(), oldLevel);

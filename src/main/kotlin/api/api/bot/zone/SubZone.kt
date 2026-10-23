@@ -213,6 +213,13 @@ enum class SubZone(val inside: Position,
          parent = { VARROCK }),
 
     /**
+     * The main varrock square containing the fountain water source.
+     */
+    VARROCK_SQUARE(inside = Position(3207, 3428),
+                   area = SimpleBoxArea.ofRadius(3205, 3421, 20, 18),
+                   parent = { VARROCK }),
+
+    /**
      * The deep wilderness area where the 10-coin chest is contained.
      */
     TEN_COIN_CHEST_HUT(inside = Position(3190, 3959),
@@ -506,6 +513,22 @@ enum class SubZone(val inside: Position,
                        { FALADOR }),
 
     /**
+     * The farm south of Falador. Has a water source, cabbage patch, loom, cows, and chickens.
+     */
+    SOUTH_FALADOR_FARM(inside = Position(3008, 3314), // todo add to combat and harvesting
+                       area = SimpleBoxArea.ofRadius(3012, 3279, 58, 37),
+                       parent =
+                           { FALADOR }),
+
+    /**
+     * The main Edgeville area including the bank and water sources.
+     */
+    EDGEVILLE_MAIN(inside = Position(3087, 3494),
+                       area = SimpleBoxArea.ofRadius(3074, 3486, 29, 20),
+                       parent =
+                           { EDGEVILLE }),
+
+    /**
      * The Lumbridge river area. Intended for bait drop-fishers and low-level combat.
      * - Goblins
      * - 2 bait fishing spots
@@ -566,6 +589,24 @@ enum class SubZone(val inside: Position,
                              area = SimpleBoxArea.of(2734, 3436, 2751, 3453),
                              parent =
                              { SEERS_VILLAGE }),
+
+    /**
+     * The wheat field beside the Lumbridge windmill. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    LUMBRIDGE_MILL_WHEAT(inside = Position(3158, 3298),
+                         area = SimpleBoxArea.of(3152, 3288, 3163, 3306),
+                         parent = { LUMBRIDGE }),
+
+    /**
+     * The wheat field south of the windmill north of Ardougne. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    ARDOUGNE_MILL_WHEAT(inside = Position(2647, 3349),
+                        area = SimpleBoxArea.of(2640, 3345, 2655, 3353),
+                        parent = { ARDOUGNE }),
 
     /**
      * The yew trees south of Seers' Village. Intended for money-makers and low -> high level dumb woodcutters.

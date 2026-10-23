@@ -6,8 +6,6 @@ import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.movement.PathfinderType;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
@@ -16,9 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static io.luna.game.model.collision.CollisionFlag.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -106,43 +102,6 @@ final class RoutePathfinderTest {
         assertEquals(PathResultType.FAILED, result.getType());
     }
 
-    @Test
-    void testFullIntelligenceAlwaysTakesTheRouteOfTheGame() {
-        RoutePathfinder standard = pathfinder(1, 0);
-        RoutePathfinder smart = new RoutePathfinder(map.manager(), 1, 0, RouteStrategy.NORMAL, 1.0);
-        List<Position> expected = list(standard.find(new Position(100, 100), new Position(110, 103)));
-        for (int i = 0; i < 50; i++) {
-            assertEquals(expected, list(smart.find(new Position(100, 100), new Position(110, 103))));
-        }
-    }
-
-    @Test
-    void testNoIntelligenceTakesRoutesOfDifferentShapes() {
-        RoutePathfinder dim = new RoutePathfinder(map.manager(), 1, 0, RouteStrategy.NORMAL, 0.0);
-        Set<List<Position>> shapes = new HashSet<>();
-        for (int i = 0; i < 100; i++) {
-            PathResult<Position> result = dim.find(new Position(100, 100), new Position(110, 103));
-            assertEquals(PathResultType.COMPLETE, result.getType());
-            shapes.add(list(result));
-        }
-        assertTrue(shapes.size() > 1, "every route had the same shape");
-    }
-
-    @Test
-    void testIntelligenceSetsHowOftenTheRouteOfTheGameIsTaken() {
-        List<Position> standard = list(pathfinder(1, 0).find(new Position(100, 100), new Position(110, 103)));
-        RoutePathfinder average = new RoutePathfinder(map.manager(), 1, 0, RouteStrategy.NORMAL, 0.5);
-        int same = 0;
-        for (int i = 0; i < 400; i++) {
-            if (list(average.find(new Position(100, 100), new Position(110, 103))).equals(standard)) {
-                same++;
-            }
-        }
-        // Half of the routes are the route of the game, and a varied route can still turn out to be the same.
-        assertTrue(same >= 150 && same <= 400, "took the route of the game " + same + " times");
-        assertTrue(same < 400, "never varied");
-    }
-
     private Mob mob(Class<? extends Mob> type, EntityType entityType, int size) {
         Mob mob = Mockito.mock(type);
         World world = Mockito.mock(World.class);
@@ -155,7 +114,7 @@ final class RoutePathfinderTest {
     }
 
     @Test
-    void testPlayersAndBotsWalkThroughNpcsAndOtherPlayers() {
+    void testPlayersWalkThroughNpcsAndOtherPlayers() {
         map.flag(104, 100, BLOCK_NPCS);
         map.flag(106, 100, BLOCK_PLAYERS);
         Position start = new Position(100, 100);
@@ -164,9 +123,6 @@ final class RoutePathfinderTest {
         Mob player = mob(Player.class, EntityType.PLAYER, 1);
         assertEquals(1, PathfinderType.PLAYER.getPfFunction().apply(player).find(start, end).getPath().size());
         assertEquals(1, Pathfinders.forPlayer(player).find(start, end).getPath().size());
-
-        Bot bot = bot(1.0);
-        assertEquals(1, PathfinderType.BOT.getPfFunction().apply(bot).find(start, end).getPath().size());
     }
 
     @Test
@@ -204,43 +160,6 @@ final class RoutePathfinderTest {
 
         Mob large = mob(Npc.class, EntityType.NPC, 2);
         assertEquals(PathResultType.PARTIAL, Pathfinders.forNpc(large).find(start, end).getType());
-    }
-    @Test
-    void testBotsVaryWithTheirIntelligence() {
-        Position start = new Position(100, 100);
-        Position end = new Position(110, 103);
-        List<Position> standard = list(pathfinder(1, 0).find(start, end));
-
-        Bot smart = bot(1.0);
-        for (int i = 0; i < 30; i++) {
-            assertEquals(standard, list(PathfinderType.BOT.getPfFunction().apply(smart).find(start, end)));
-        }
-
-        Bot dim = bot(0.0);
-        Set<List<Position>> shapes = new HashSet<>();
-        for (int i = 0; i < 100; i++) {
-            shapes.add(list(PathfinderType.BOT.getPfFunction().apply(dim).find(start, end)));
-        }
-        assertTrue(shapes.size() > 1);
-    }
-
-    @Test
-    void testBotPathfindersFallBackForMobsThatAreNotBots() {
-        Position start = new Position(100, 100);
-        Position end = new Position(110, 103);
-        Mob player = mob(Player.class, EntityType.PLAYER, 1);
-        List<Position> standard = list(Pathfinders.forPlayer(player).find(start, end));
-        for (int i = 0; i < 30; i++) {
-            assertEquals(standard, list(Pathfinders.forBot(player).find(start, end)));
-        }
-    }
-
-    private Bot bot(double intelligence) {
-        Bot bot = (Bot) mob(Bot.class, EntityType.PLAYER, 1);
-        BotPersonality personality = Mockito.mock(BotPersonality.class);
-        Mockito.when(personality.getIntelligence()).thenReturn(intelligence);
-        Mockito.when(bot.getPersonality()).thenReturn(personality);
-        return bot;
     }
 
     @Test

@@ -57,6 +57,36 @@ public class ObjectClickEvent extends PlayerEvent implements ControllableEvent, 
     }
 
     /**
+     * An event sent when a player clicks an object's fourth index.
+     *
+     * @author lare96
+     */
+    public static final class ObjectFourthClickEvent extends ObjectClickEvent {
+
+        /**
+         * Creates a new {@link ObjectFourthClickEvent}.
+         */
+        public ObjectFourthClickEvent(Player player, GameObject gameObject) {
+            super(player, gameObject);
+        }
+    }
+
+    /**
+     * An event sent when a player clicks an object's fifth index.
+     *
+     * @author lare96
+     */
+    public static final class ObjectFifthClickEvent extends ObjectClickEvent {
+
+        /**
+         * Creates a new {@link ObjectFifthClickEvent}.
+         */
+        public ObjectFifthClickEvent(Player player, GameObject gameObject) {
+            super(player, gameObject);
+        }
+    }
+
+    /**
      * The clicked object.
      */
     public  GameObject gameObject;

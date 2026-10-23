@@ -61,6 +61,8 @@ import game.bot.scripts.skills.AssembleFoodBotScript
 import game.bot.scripts.skills.AssembleFoodBotScript.Companion.AssemblyData
 import game.bot.scripts.skills.CutFoodBotScript.Companion.CutFoodData
 import game.bot.scripts.skills.MakeDoughBotScript.Companion.DoughData
+import game.bot.scripts.skills.MillFlourBotScript
+import game.bot.scripts.skills.MillFlourBotScript.Companion.MillData
 import game.bot.scripts.skills.MakeSoftClayBotScript.Companion.SoftClayData
 import game.bot.scripts.skills.MakeBattlestaffBotScript.Companion.BattlestaffData
 import game.bot.scripts.skills.MakePotionBotScript
@@ -142,6 +144,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<AssemblyData>(AssembleFoodBotScript::class) { bot, data -> AssembleFoodBotScript(bot, data) }
     scriptManager.addScript<CutFoodData>(CutFoodBotScript::class) { bot, data -> CutFoodBotScript(bot, data) }
     scriptManager.addScript<DoughData>(MakeDoughBotScript::class) { bot, data -> MakeDoughBotScript(bot, data) }
+    scriptManager.addScript<MillData>(MillFlourBotScript::class) { bot, data -> MillFlourBotScript(bot, data) }
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
     scriptManager.addScript<NestData>(SearchNestBotScript::class) { bot, data -> SearchNestBotScript(bot, data) }

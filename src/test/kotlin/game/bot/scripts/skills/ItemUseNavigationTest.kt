@@ -3,7 +3,7 @@ package game.bot.scripts.skills
 import api.bot.action.BotActionHandler
 import api.bot.action.BotInventoryActionHandler
 import api.predef.world
-import engine.bot.coordinator.skill.ThievingScriptFactoryTest
+import engine.bot.coordinator.skill.ScriptFixtures
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.model.mob.bot.Bot
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture
 class ItemUseNavigationTest {
     companion object {
         @JvmStatic @BeforeAll
-        fun fixtures() = ThievingScriptFactoryTest.initializeScriptFixtures()
+        fun fixtures() = ScriptFixtures.initialize()
     }
 
     private fun bot(): Bot = mock(Bot::class.java, RETURNS_DEEP_STUBS).also {

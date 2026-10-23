@@ -338,7 +338,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         if (held.id != id || !held.itemDef.isTradeable) return false
         val count = minOf(amount, plr.inventory.computeAmountForId(id),
             if (held.itemDef.isStackable) Int.MAX_VALUE else 8)
-        val transfer = held.withAmount(count)
+        val transfer = if (held.isDynamic) held else held.withAmount(count)
         if (!plr.depositItems.hasSpaceFor(transfer) || !plr.inventory.remove(transfer)) return false
         if (!plr.depositItems.add(transfer)) {
             check(plr.inventory.add(transfer)) { "Could not restore rejected party deposit." }
@@ -423,6 +423,19 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 MinigameCoordinator.onPartyStarted()
             }
         })
+    }
+
+    /**
+     * Moves the items [plr] offered but didn't accept back to their inventory. Items that don't fit stay offered.
+     */
+    fun returnOffers(plr: Player) {
+        val offered = plr.depositItems
+        for (index in 0 until offered.capacity()) {
+            val item = offered[index] ?: continue
+            if (plr.inventory.hasSpaceFor(item) && plr.inventory.add(item)) {
+                offered[index] = null
+            }
+        }
     }
 
     /**

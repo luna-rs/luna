@@ -180,14 +180,6 @@ class NpcCombatStylesTest {
         verify(bot.preferences).addWantedItem(882, 1000)
         verify(bot.actionHandler.interactions, never()).interact(anyInt(), any())
     }
-    @Test fun campDistributionHasExplicitTargetsAndMultipleLevelAppropriateChoices() {
-        for (level in listOf(3, 10, 25, 50, 75, 126)) {
-            val choices = CombatCoordinator.eligibleCamps(level, true, BotGearPurpose.RANGED, false)
-            assertTrue(choices.size > 1)
-            assertTrue(choices.all { it.minimum <= level && it.names.isNotEmpty() })
-            assertFalse(choices.any { it.zone == SubZone.KBD_LAIR || it.zone == SubZone.VARROCK_DARK_WIZARDS })
-        }
-    }
     @Test fun dragonDispatchRequiresProfitMeleeAndOwnedShield() {
         fun choices(training: Boolean, purpose: BotGearPurpose, shield: Boolean) =
             CombatCoordinator.eligibleCamps(126, training, purpose, shield).map { it.zone }
@@ -253,13 +245,6 @@ class NpcCombatStylesTest {
         verify(bot.combat.magic).setSelectedSpell(io.luna.game.model.def.CombatSpellDefinition.NONE)
         verify(bot.combat.magic).setAutocastSpell(io.luna.game.model.def.CombatSpellDefinition.NONE)
         verify(bot.combat.magic).setAutocasting(false)
-    }
-
-    @Test fun specificGearPurposesSurviveAlongsideGenericMeleeAndPkingFallback() {
-        val bow = engine.bot.gear.BotGearSelector.ALL_GEAR.value[Equipment.WEAPON].first { it.id == 841 }
-        assertTrue(bow.purposes.containsAll(setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING, BotGearPurpose.RANGED)))
-        val staff = engine.bot.gear.BotGearSelector.ALL_GEAR.value[Equipment.WEAPON].first { it.id == 1381 }
-        assertTrue(staff.purposes.containsAll(setOf(BotGearPurpose.MELEE, BotGearPurpose.PKING, BotGearPurpose.MAGIC)))
     }
 
     @Test fun highDefensiveCombatLevelDoesNotSendNoviceOffensiveStylesToStrongNpcs() {

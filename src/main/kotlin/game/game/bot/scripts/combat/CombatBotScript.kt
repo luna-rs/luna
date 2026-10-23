@@ -316,7 +316,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             // TODO@0.5.0 Intelligent bots should use Smite, Retribution, and Redemption strategically.
             val prayerPercent = bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble()
 
-            if (prayerPercent < 0.15 && bot.combat.prayers.active.entrySet().size > 2) {
+            if (prayerPercent < 0.15 && bot.combat.prayers.active.size > 2) {
                 bot.combat.prayers.deactivateAll()
                 bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
                 bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)

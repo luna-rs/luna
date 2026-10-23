@@ -17,6 +17,9 @@ import io.luna.util.RandomUtils;
  * <p>
  * This class centralizes the common roll, stance, prayer, and equipment-bonus calculations used by combat accuracy and
  * physical max-hit logic.
+ * Player effective strength includes eight base levels and the appropriate stance bonus. Magic uses its own equipment
+ * bonus and fixed attack stance, while NPC accuracy and defence include nine effective levels. Player magic defence
+ * rounds the combined weighted Defence and Magic levels once.
  *
  * @author lare96
  * @see <a href="https://rune-server.org/threads/archive-combat-formulas.688072/">
@@ -75,8 +78,8 @@ public final class CombatFormula {
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type) {
         // An NPC's attack style bonus describes its melee attack, so its ranged attacks need their own.
-        EquipmentBonus attackStyleBonus = attacker instanceof Npc && type == CombatDamageType.RANGED ?
-                EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
+        EquipmentBonus attackStyleBonus = type == CombatDamageType.MAGIC ? EquipmentBonus.MAGIC_ATTACK :
+                type == CombatDamageType.RANGED ? EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
         double attackRoll = calculateAttackRoll(attacker, attackStyleBonus, type);
         double defenceRoll = type == CombatDamageType.MAGIC ?
                 calculateMagicDefenceRoll(victim) :
@@ -133,12 +136,12 @@ public final class CombatFormula {
 
         int level = attacker.getSkills().getSkill(skill).getLevel();
         if (attacker instanceof Npc) {
-            return (level + 8) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
+            return (level + 9) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
         }
 
         Player player = attacker.asPlr();
         return (int) (Math.floor(level * getAttackRollPrayerMultiplier(player, type))
-                + getAttackRollStanceBonus(player) + 8)
+                + (type == CombatDamageType.MAGIC ? 1 : getAttackRollStanceBonus(player)) + 8)
                 * (getOffensiveAccuracyBonus(player, attackStyleBonus) + 64);
     }
 
@@ -155,7 +158,7 @@ public final class CombatFormula {
     private static int calculatePhysicalDefenceRoll(Mob victim, EquipmentBonus attackStyleBonus) {
         int level = victim.getSkills().getSkill(Skill.DEFENCE).getLevel();
         if (victim instanceof Npc) {
-            return level * (getMatchingPhysicalDefenceBonus(victim, attackStyleBonus) + 64);
+            return (level + 9) * (getMatchingPhysicalDefenceBonus(victim, attackStyleBonus) + 64);
         }
 
         Player victimPlr = victim.asPlr();
@@ -177,17 +180,16 @@ public final class CombatFormula {
     private static int calculateMagicDefenceRoll(Mob victim) {
         if (victim instanceof Player) {
             Player player = victim.asPlr();
-            int effectiveDefence = (int) Math.floor(
-                    Math.floor(player.getSkills().getSkill(Skill.DEFENCE).getLevel() *
-                            getDefenceRollPrayerMultiplier(player)) * 0.3
-            );
-            int effectiveMagic = (int) Math.floor(victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7);
+            double effectiveDefence = Math.floor(player.getSkills().getSkill(Skill.DEFENCE).getLevel() *
+                    getDefenceRollPrayerMultiplier(player));
+            int effectiveMagicDefence = (int) Math.floor(effectiveDefence * 0.3 +
+                    victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7);
             int magicDefenceBonus = player.getEquipment().getBonus(EquipmentBonus.MAGIC_DEFENCE);
-            return (effectiveDefence + effectiveMagic + 8) * (magicDefenceBonus + 64);
+            return (effectiveMagicDefence + 8) * (magicDefenceBonus + 64);
         }
 
         Npc npc = victim.asNpc();
-        return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 8) *
+        return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 9) *
                 (npc.combatDef().getMagicDefenceBonus() + 64);
     }
 
@@ -207,7 +209,7 @@ public final class CombatFormula {
                 CombatDamageType.RANGED : CombatDamageType.MELEE);
         int stanceBonus = getPhysicalStrengthStanceBonus(player, type);
 
-        return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus;
+        return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus + 8;
     }
 
     /**
@@ -225,7 +227,8 @@ public final class CombatFormula {
             return attacker.asPlr().getEquipment().getBonus(attackStyleBonus);
         }
         NpcCombatDefinition def = attacker.asNpc().combatDef();
-        return attackStyleBonus == EquipmentBonus.RANGED_ATTACK ? def.getRangedBonus() : def.getAttackBonus();
+        return attackStyleBonus == EquipmentBonus.MAGIC_ATTACK ? def.getMagicBonus() :
+                attackStyleBonus == EquipmentBonus.RANGED_ATTACK ? def.getRangedBonus() : def.getAttackBonus();
     }
 
     /**
@@ -312,7 +315,7 @@ public final class CombatFormula {
         }
 
         switch (stance) {
-            case ACCURATE:
+            case AGGRESSIVE:
                 return 3;
             case CONTROLLED:
                 return 1;

@@ -1,7 +1,7 @@
 package api.bot.script
 
 import api.predef.*
-import engine.bot.coordinator.skill.ThievingScriptFactoryTest
+import engine.bot.coordinator.skill.ScriptFixtures
 import engine.bot.gear.BotItemTracker
 import io.luna.game.action.Action
 import io.luna.game.action.ActionQueue
@@ -17,9 +17,15 @@ import io.luna.game.model.mob.bot.Bot
 import org.mockito.Mockito.*
 import kotlinx.coroutines.Job
 
-/** Mock world/bot fixture with real inventory, bank, and gameplay action queue; no server or network is started. */
+/**
+ * Mock world/bot fixture with real inventory, bank, and gameplay action queue; no server or network is started.
+ *
+ * @author lare96
+ */
 object InventoryProductionFixtures {
-    /** Direct lifecycle-hook tests need an active job for BotScript.stop to perform normal cancellation. */
+    /**
+     * Direct lifecycle-hook tests need an active job for BotScript.stop to perform normal cancellation.
+     */
     fun <T : BotScript> active(script: T): T {
         val progress = AbstractBotScript::class.java.getDeclaredField("progress")
         progress.isAccessible = true
@@ -28,7 +34,7 @@ object InventoryProductionFixtures {
     }
 
     fun initialize() {
-        ThievingScriptFactoryTest.initializeScriptFixtures()
+        ScriptFixtures.initialize()
         for (id in listOf(5292, 5063, 8880, 8866, 8899, 8938)) {
             if (WidgetDefinition.ALL.get(id).isEmpty) {
                 val definition = mock(WidgetDefinition::class.java)
@@ -70,7 +76,9 @@ object InventoryProductionFixtures {
         check(action.run()) { "Fixture expects a single completed gameplay operation." }
     }
 
-    /** Loads the actual compiled registration script and executes its server-launch callback. */
+    /**
+     * Loads the actual compiled registration script and executes its server-launch callback.
+     */
     @Suppress("UNCHECKED_CAST")
     fun register(name: String) {
         val first = scriptListeners.size

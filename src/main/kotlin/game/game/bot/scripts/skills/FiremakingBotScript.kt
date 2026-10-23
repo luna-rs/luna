@@ -48,6 +48,9 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
 
     override val verifiedProductionWithdrawals = true
 
+    // Lighting a log drops it on the bot's tile first.
+    override val ignoredLoot = setOf(log.id)
+
     companion object {
 
         /**
@@ -359,7 +362,7 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
             return true
         }
         val path =
-            bot.navigator.findPath(bot.position, tile, Pathfinders.forBot(bot), true).await()
+            bot.navigator.findPath(bot.position, tile, Pathfinders.forPlayer(bot), true).await()
         if (path?.peekLast() != tile) {
             return false
         }
