@@ -37,7 +37,7 @@ abstract class ProgressiveCoordinator : BotCoordinator {
         try {
             firstScript(bot)?.let { bot.scriptStack.push(it) }
         } finally {
-            bot.scriptStack.push(Continuation(bot, activity, this))
+            bot.scriptStack.push(ProgressiveScript(bot, activity, this))
         }
     }
 
@@ -51,7 +51,7 @@ abstract class ProgressiveCoordinator : BotCoordinator {
      *
      * @author lare96
      */
-    class Continuation(
+    class ProgressiveScript(
         bot: Bot,
         private val activity: BotActivity,
         private val source: ProgressiveCoordinator? = null,
@@ -62,7 +62,7 @@ abstract class ProgressiveCoordinator : BotCoordinator {
          *
          * @author lare96
          */
-        class ContinuationData : BotScriptData() {
+        class ProgressionData : BotScriptData() {
             /**
              * The originating activity used to resolve the coordinator after restoration.
              */
@@ -84,7 +84,7 @@ abstract class ProgressiveCoordinator : BotCoordinator {
         /**
          * Restores a deferred activity selection for [bot] from its saved [data].
          */
-        constructor(bot: Bot, data: ContinuationData) : this(bot, data.activity, dispatched = data.dispatched)
+        constructor(bot: Bot, data: ProgressionData) : this(bot, data.activity, dispatched = data.dispatched)
 
         override suspend fun run(): Boolean {
             if (dispatched) return true
@@ -94,7 +94,7 @@ abstract class ProgressiveCoordinator : BotCoordinator {
             return true
         }
 
-        override fun snapshot() = ContinuationData().also {
+        override fun snapshot() = ProgressionData().also {
             it.activity = activity
             it.dispatched = dispatched
         }
