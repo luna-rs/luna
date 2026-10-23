@@ -206,6 +206,9 @@ enum class SubZone(val inside: Position,
          area = SimpleBoxArea.of(3171, 3425, 3198, 3451),
          parent = { VARROCK }),
 
+    /**
+     * The main varrock square containing the fountain water source.
+     */
     VARROCK_SQUARE(inside = Position(3207, 3428),
                    area = SimpleBoxArea.ofRadius(3205, 3421, 20, 18),
                    parent = { VARROCK }),
