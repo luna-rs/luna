@@ -228,7 +228,7 @@ class TradeBotScript(bot: Bot,
         val candidates = if (buying) wants else offers
         // Merchants already carry every trend-qualified candidate, including any matching goods.
         val selected = if (purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) {
-            listOfNotNull(selectMarketItem(candidates, offers, traders))
+            prioritizeMarketItems(candidates, offers, traders)
         } else candidates
         offering = if (buying) offers else selected
         expected = if (buying) selected
@@ -254,11 +254,11 @@ class TradeBotScript(bot: Bot,
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
 
     /**
-     * Prefers goods that support an actual exchange with a prepared trader, then randomizes the fallback.
-     * Buyers retain all eligible payment stock. Merchant sessions keep their full trend-qualified baskets.
+     * Keeps every eligible intention, placing currently matchable stock first for capacity-limited withdrawal.
+     * Later partners can match any retained item without waiting for a new banking trip.
      */
-    private fun selectMarketItem(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
-                                 traders: List<TradeBotScript>): BotTradeItem? {
+    private fun prioritizeMarketItems(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
+                                      traders: List<TradeBotScript>): List<BotTradeItem> {
         val eligible = candidates.filter {
             buying || TradeBasket.value(quantities(listOf(it.item), true), prices(listOf(it))) >=
                 BotTradeManager.MINIMUM_OFFER_VALUE
@@ -276,14 +276,14 @@ class TradeBotScript(bot: Bot,
                 }
             }
         }
-        return (matching.ifEmpty { eligible }).randomOrNull()
+        return matching + eligible.filterNot { it in matching }
     }
 
     /** Sends an advertisement immediately, then repeats it at the chosen merchanting interval. */
     private fun sendMessage() {
         if (message == null) {
-            val item = if (purpose == BotTradePurpose.BUY) expected.firstOrNull()
-            else if (purpose == BotTradePurpose.SELL) offering.firstOrNull() else null
+            val item = if (purpose == BotTradePurpose.BUY) expected.randomOrNull()
+            else if (purpose == BotTradePurpose.SELL) offering.randomOrNull() else null
             if ((purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) && item == null) return
             message = BotTradeManager.advertiseTrade(bot, item, purpose)
             messageCooldown = when {
@@ -296,6 +296,7 @@ class TradeBotScript(bot: Bot,
         if (!messageTimer.isRunning || messageTimer.elapsed().seconds >= messageCooldown) {
             message?.let { bot.output.chat(it.text, it.color, it.effect) }
             messageTimer.reset().start()
+            message = null // Allow the next advertisement to describe another retained item.
         }
     }
 

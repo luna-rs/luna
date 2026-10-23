@@ -25,6 +25,7 @@ import java.util.function.BiFunction
  *
  * This receiver exposes helper methods for constructing melee, ranged, and magic combat attacks that automatically
  * integrate special attack launch handling, custom damage calculation, and arrival callbacks.
+ * Applied damage first runs the base attack's experience and poison handling, then the special arrival callback.
  *
  * The receiver is created for a single attacker, victim, and special attack configuration.
  *
@@ -71,6 +72,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -109,6 +111,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -152,6 +155,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }

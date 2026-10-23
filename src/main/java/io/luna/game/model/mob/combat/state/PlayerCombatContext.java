@@ -33,6 +33,8 @@ import static io.luna.game.model.def.CombatSpellDefinition.NONE;
  * <p>
  * This class provides player-specific combat state and behavior, including prayer handling, weapon state, special
  * attacks, ranged ammunition state, magic state, and attack construction.
+ * Each combat update rechecks target attackability and, for player targets, the attacker's PvP permission before
+ * consulting active controllers.
  *
  * @author lare96
  */
@@ -72,7 +74,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * A cached first attack supplied externally, usually by interaction code.
      * <p>
      * When present, this attack is consumed before normal attack selection logic in
-     * {@link CombatContext#getNextAttack(Mob)}.
+     * {@link CombatContext#getNextAttack(Mob)}. A cached attack for a different victim is discarded and a new attack
+     * is selected for the current target.
      */
     private CombatAttack<Player> firstAttack;
 
@@ -95,7 +98,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public boolean onCombatProcess(boolean reached) {
         // Handle combat hooks and check controllers to make sure we can attack.
         PlayerCombatHandler.INSTANCE.consumeCombat(player);
-        return target != null && player.getControllers().checkCombat(target);
+        return target != null && target.getCombat().isAttackable() &&
+                (!(target instanceof Player) || isAttackable()) && player.getControllers().checkCombat(target);
     }
 
     @Override
@@ -121,7 +125,9 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         if (firstAttack != null) {
             CombatAttack<Player> nextAttack = firstAttack;
             firstAttack = null;
-            return nextAttack;
+            if (nextAttack.getVictim() == victim) {
+                return nextAttack;
+            }
         }
 
         // Combat hooks from scripts always take first priority.

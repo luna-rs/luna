@@ -13,8 +13,7 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
  * The owning mob for this action is the damage victim. When executed, the action:
  * <ul>
  *     <li>Applies the resolved hit if the victim is still alive.</li>
- *     <li>Either immediately retaliates or stores the attacker as an auto-retaliate target, depending on the victim's
- *     current combat state.</li>
+ *     <li>Retaliates against a living attacker when enabled and no active engagement with a living target remains.</li>
  * </ul>
  * This action completes after a single execution.
  *
@@ -82,11 +81,10 @@ public final class CombatDamageAction extends Action<Mob> {
             }
 
             // Determine whether the victim should retaliate.
-            if (victim.isAlive() && victim.getCombat().isAutoRetaliate()) {
-                if (victim.getCombat().getTarget() == null || !victim.getActions().contains(CombatAction.class)) {
+            if (victim.isAlive() && attacker.isAlive() && victim.getCombat().isAutoRetaliate()) {
+                if (victim.getCombat().getTarget() == null || !victim.getCombat().getTarget().isAlive() ||
+                        !victim.getActions().contains(CombatAction.class)) {
                     victim.getCombat().attack(attacker);
-                } else {
-                    victim.getCombat().setAutoRetaliateTarget(attacker);
                 }
             }
         }
