@@ -2,7 +2,6 @@ package game.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
-import game.player.Sound
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.item.GroundItem

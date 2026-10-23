@@ -104,7 +104,7 @@ public final class MusicDefinition implements Definition {
     }
 
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

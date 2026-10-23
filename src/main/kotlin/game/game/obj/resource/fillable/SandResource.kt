@@ -20,7 +20,7 @@ object SandResource : FillableResource() {
     }
 
     override fun registerResource(obj: GameObjectDefinition) {
-        useItem(1925).onObject(obj.id) { fill(plr, usedItemId, gameObject) }
+        useItem(1925).onObject(obj.id()) { fill(plr, usedItemId, gameObject) }
     }
 
     override fun getFilled(empty: Int): Int? =

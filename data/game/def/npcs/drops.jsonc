@@ -24781,34 +24781,6 @@
         "table": 1
       },
       {
-        "id": 5509, // Small pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5510, // Medium pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5512, // Large pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
-        "id": 5514, // Giant pouch
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.023809523809523808,
-        "table": 1
-      },
-      {
         "id": 7936, // Pure essence
         "quantity": "1",
         "noted": true,
@@ -25393,6 +25365,7 @@
       397, // Cow
       1766, // Cow calf
       955, // Cow
+      1767, // Cow
       1768, // Cow calf
       2310 // Cow calf
     ],
@@ -25498,7 +25471,8 @@
   {
     "ids": [
       1195, // Grizzly bear
-      106 // Bear
+      106, // Bear
+      105 // Bear
     ],
     "rare": null,
     "drops": [
@@ -25518,13 +25492,6 @@
       },
       {
         "id": 2136, // Raw bear meat
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
-        "table": 1
-      },
-      {
-        "id": 7815, // Bear ribs
         "quantity": "1",
         "noted": false,
         "rarity": 1.0,

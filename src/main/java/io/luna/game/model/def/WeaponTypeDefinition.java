@@ -128,7 +128,7 @@ public final class WeaponTypeDefinition implements Definition {
     }
 
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

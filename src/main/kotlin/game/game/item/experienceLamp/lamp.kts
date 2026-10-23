@@ -2,7 +2,7 @@ package game.item.experienceLamp
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.varp.*
+import io.luna.game.model.mob.varp.PersistentVarp
 
 /**
  * Rubbing the lamp.
@@ -28,7 +28,7 @@ for (skill in ExperienceLampInterface.InterfaceSkill.values()) {
 button(2831) {
     if (ExperienceLampInterface::class in plr.overlays) {
         plr.overlays.closeWindows()
-        plr.inventory.remove(2528)
+        if (!plr.inventory.remove(2528)) return@button
         val skillId: Int = ExperienceLampInterface.InterfaceSkill.getSkillByVarp(plr.varpManager.getValue(PersistentVarp.XP_LAMP))
         val skill = plr.skills.getSkill(skillId)
         val experienceGain = skill.staticLevel * 10.toDouble()

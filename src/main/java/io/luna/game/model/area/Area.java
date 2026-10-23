@@ -57,6 +57,21 @@ public abstract class Area implements Locatable {
     }
 
     /**
+     * Creates a rectangular {@link SimpleBoxArea} from a south-west coordinate using the specified dimensions.
+     *
+     * @param southWestX The x-coordinate of the south-west corner
+     * @param southWestY The y-coordinate of the south-west corner
+     * @param width The width of the area in tiles
+     * @param height The height of the area in tiles
+     * @return The resulting {@link SimpleBoxArea}
+     */
+    public static SimpleBoxArea ofRadius(int southWestX, int southWestY, int width, int height) {
+        int northEastX = southWestX + width - 1;
+        int northEastY = southWestY + height - 1;
+        return of(southWestX, southWestY, northEastX, northEastY);
+    }
+
+    /**
      * Creates a square {@link SimpleBoxArea} centered around {@code center} with a tile radius.
      * <p>
      * The produced box includes the edges at {@code center +/- radius}.

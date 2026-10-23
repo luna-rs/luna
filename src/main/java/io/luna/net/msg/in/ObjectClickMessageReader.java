@@ -1,7 +1,9 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.ObjectClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFifthClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFourthClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
@@ -53,6 +55,18 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
                 // todo remove after done discovery
                 System.out.println(gameObject.getId()+" third click");
                 return new ObjectThirdClickEvent(player, gameObject);
+            case 136:
+                objectX = payload.getShort(true);
+                objectY = payload.getShort(false, ByteOrder.LITTLE);
+                objectId = payload.getShort(false);
+                gameObject = findObject(player, objectX, objectY, objectId);
+                return new ObjectFourthClickEvent(player, gameObject);
+            case 55:
+                objectId = payload.getShort(false, ByteOrder.LITTLE);
+                objectY = payload.getShort(false, ByteOrder.LITTLE);
+                objectX = payload.getShort(true);
+                gameObject = findObject(player, objectX, objectY, objectId);
+                return new ObjectFifthClickEvent(player, gameObject);
         }
         throw new IllegalStateException("invalid opcode");
     }

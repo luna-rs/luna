@@ -75,19 +75,19 @@ public final class ItemPriceData {
     /**
      * The item id this price snapshot belongs to.
      */
-    final int id;
+    public final int id;
 
     /**
      * The current internal guide price for this item.
      * <p>
      * This value may contain fractional GP and should be used for economy calculations.
      */
-    final double price;
+    public final double price;
 
     /**
      * The guide price before the most recent update.
      */
-    final double lastPrice;
+    public final double lastPrice;
 
     /**
      * The total number of effective samples that have contributed to this item's current price.
@@ -95,7 +95,7 @@ public final class ItemPriceData {
      * Effective samples are raw item amounts after stack-size scaling and {@link SampleType} confidence have been
      * applied.
      */
-    final long samples;
+    public final long samples;
 
     /**
      * The total effective sample count before the most recent update.
@@ -103,14 +103,14 @@ public final class ItemPriceData {
      * The number of effective samples added by the most recent update can be calculated with
      * {@code samples - lastSamples}.
      */
-    final long lastSamples;
+    public final long lastSamples;
 
     /**
      * The time this price snapshot was created, in epoch milliseconds.
      * <p>
      * Since price updates create new snapshots, this also represents the update time for this instance.
      */
-    final long lastUpdated;
+    public final long lastUpdated;
 
     /**
      * Creates a price snapshot from persisted or already-calculated economy values.

@@ -1,8 +1,9 @@
 package game.bot.scripts.combat
 
+import api.bot.Suspendable.delay
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
-import api.bot.Suspendable.delay
+import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -38,13 +39,16 @@ import kotlin.time.DurationUnit
  */
 class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
+    override val actionSafety = ActionSafety.COMBAT
+
+    // TODO Load in registerscripts
     // TODO@0.5.0 This should start the bot at 1 of 4 banks: FALADOR, VARROCK, EDGEVILLE, HOME (DRAYNOR) depending on
     //  distance. Then it should cache that bank and use that as the home bank for PKing activities.
     // TODO@0.5.0 Anchor points for entering the wild from those banks (or use LOW_LEVEL_ANCHOR_POINTS sorted by distance?).
     // TODO@1.0 dynamic "clans", bots will advertise at edgeville they're looking to start or join and then they wil pk together
     // TODO do not attack liked players when searching, UNLESS we're greedy and unkind. then we attack everyone
     // TODO PKers who are kind only attack other pkers (you can check which script they have!). Unkind PKers go for everyone.
-        // TODO Pking groups with liked bots? Pking groups are persisted and permanent, each bot clan is assigned to a team cape.
+    // TODO Pking groups with liked bots? Pking groups are persisted and permanent, each bot clan is assigned to a team cape.
     // TODO each bot clan has a leader which determines who can/can't join their clan (must be liked/neutral/etc. by leader)
     //  bots will not attack anyone wearing their team cape.
     // TODO there's currently 50 team capes meaning 50 possible clans for bots to join. chatgpt needs to generate:
@@ -536,7 +540,8 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         if (!bot.combat.inCombat() &&
             bot.inWilderness() &&
             !bot.navigator.isActive &&
-            bot.tolerance.duration.toMinutes() > 10) {
+            bot.tolerance.duration.toMinutes() > 10
+        ) {
             val area = PkArea.ALL.random()
             val anchor = area.anchors.random()
 
@@ -572,8 +577,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
             val anchor = LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
-            bot.walking.isRunning = true
-            bot.navigator.navigate(anchor, true).await()
+            handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
             if (!bot.inWilderness()) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")

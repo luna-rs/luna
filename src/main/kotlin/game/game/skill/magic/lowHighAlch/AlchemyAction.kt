@@ -3,14 +3,14 @@ package game.skill.magic.lowHighAlch
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.player.Sound
+import game.skill.magic.Magic
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
-import game.player.Animations
-import game.player.Sound
-import game.skill.magic.Magic
 
 /**
  * A [QueuedAction] that handles the process of players doing low and high alchemy.
@@ -39,7 +39,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
             }
             val lowAlch = type == AlchemyType.LOW
             val itemValue = item.itemDef.value
-            val goldAmount = (if (lowAlch) itemValue * 0.4 else itemValue * 0.6).toInt()
+            val goldAmount = (itemValue * type.valueMultiplier).toInt()
             if (!item.itemDef.isTradeable || itemValue == 0) {
                 mob.sendMessage("You cannot use alchemy on that item.")
                 return

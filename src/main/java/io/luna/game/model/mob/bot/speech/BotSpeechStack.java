@@ -168,7 +168,7 @@ public final class BotSpeechStack {
      * Does nothing if {@link #disableGeneral} is true or if no humans are near.
      */
     public void maybePushFiller() {
-        if (disableGeneral) {
+        if (disableGeneral || bot.getLocalHumans().isEmpty()) {
             return;
         }
         // Scale filler ratio to social score.

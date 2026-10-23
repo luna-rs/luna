@@ -1,0 +1,188 @@
+package game.bot.scripts.skills
+
+import api.bot.Suspendable.naturalDecisionDelay
+import api.bot.Suspendable.naturalDelay
+import api.bot.script.BotScriptData
+import api.bot.script.InventoryBotScript
+import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.zone.SubZone
+import api.predef.*
+import api.predef.ext.*
+import engine.bot.coordinator.skill.MiningScriptFactory
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.smithing.BarType
+import game.skill.smithing.Smithing
+import game.skill.smithing.Smithing.HAMMER
+import game.skill.smithing.smithBar.SmithingInterface
+import game.skill.smithing.smithBar.SmithingItem
+import game.skill.smithing.smithBar.SmithingTable
+import io.luna.game.action.ActionType
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.`object`.GameObject
+import kotlin.time.Duration
+
+/**
+ * Smiths bars into finished smithing items at an anvil.
+ *
+ * If [selectedItems] is supplied, this script attempts to smith that specific item when the bot has the required level
+ * and enough bars. Otherwise, it chooses a smithable item from the bot's available bars and smithing level.
+ *
+ * The script withdraws a hammer and a full inventory of the required bar type, travels to an anvil, opens the smithing
+ * interface, and clicks the matching smithing-table slot.
+ *
+ * @param bot The bot running this script.
+ * @param selectedItems The specific item to smith, or `null` to choose from available bars.
+ * @param duration How long this script should run before completing normally.
+ * @author lare96
+ */
+class SmithBarBotScript(
+    bot: Bot,
+    val selectedItems: MutableList<SmithingItem> = mutableListOf(),
+    duration: Duration
+) : InventoryBotScript(bot, duration, mutableListOf(SubZone.HOME)) {
+
+    /**
+     * Recreates a smithing script from saved zone and duration data.
+     *
+     * This constructor does not restore a fixed [selectedItems], so the script will choose a smithable item from the
+     * bot's available bars when it initializes.
+     *
+     * @param bot The bot running this script.
+     * @param data The saved zone and duration data.
+     */
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, mutableListOf(), data.duration)
+
+    /**
+     * The cached anvil object used by this script.
+     *
+     * This avoids scanning the active zone every cycle once a usable anvil has been found.
+     */
+    private var anvilObject: GameObject? = null
+
+    /**
+     * The item selected for the current smithing session.
+     *
+     * This is resolved by [withdraw] from either [selectedItems] or the bot's available bars.
+     */
+    private var smithingItem: SmithingItem? = null
+
+    override fun bankWithdraw(): List<Item> = withdraw()
+
+    override fun withdraw(): List<Item> {
+        // Resolve smithing bar type and item type.
+        selectedItems.removeIf {
+            bot.smithing.staticLevel < it.level || bot.itemTracker.count(it.barType.id) < SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
+        }
+        if (selectedItems.isEmpty()) {
+            // Important: Always attempt bars from the lowest -> the highest level.
+            var smithingBar: BarType? = null
+            for (bar in BarType.VALUES) {
+                if (SmithingTable.BAR_TO_ITEM[bar].any {
+                        bot.smithing.staticLevel >= it.level &&
+                            bot.itemTracker.count(bar.id) >= SmithingTable.ID_TO_TABLE[it.item.id]!!.bars
+                    }) {
+                    smithingBar = bar
+                    break
+                }
+            }
+            if (smithingBar == null) {
+                bot.log("No smithing bar types could be found in the bank.")
+                bot.scriptStack.pushTail(MiningScriptFactory.getScript(bot, bot.mining.staticLevel, mutableListOf(), randBoolean()), 2)
+                stop()
+                return listOf()
+            }
+            for (item in SmithingTable.BAR_TO_ITEM[smithingBar]) {
+                if (bot.smithing.staticLevel >= item.level &&
+                    bot.itemTracker.count(item.barType.id) >= SmithingTable.ID_TO_TABLE[item.item.id]!!.bars) {
+                    selectedItems += item
+                }
+            }
+            if (selectedItems.isEmpty()) {
+                bot.log("No smithing item types can be created with $smithingBar.")
+                stop()
+                return listOf()
+            }
+            smithingItem = selectedItems.random()
+        } else {
+            smithingItem = selectedItems.random()
+        }
+
+        val item = smithingItem
+        if (item == null) {
+            bot.log("Could not resolve smithing item.")
+            return listOf()
+        }
+        return listOf(Item(HAMMER), Item(item.barType.id, bot.itemTracker.count(item.barType.id).coerceAtMost(27)))
+    }
+
+    override suspend fun onExecuteInZone(): Boolean {
+        val zone = activeZone!!
+        val item = smithingItem
+        if (item == null) {
+            bot.log("No smithing item configured.")
+            stop()
+            return true
+        }
+
+        val id = item.item.id
+        val table = SmithingTable.ID_TO_TABLE[id]!!
+        val bar = item.barType
+        if (!bot.inventory.contains(Item(bar.id, table.bars)) && bot.actions.size(ActionType.WEAK) == 0) {
+            bot.log("Not enough bars to continue smithing, forcing a bank run.")
+            forceBanking = true
+            return true
+        }
+
+        if (anvilObject == null) {
+            anvilObject = world.locator
+                .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in Smithing.ANVIL_OBJECTS }
+                .firstOrNull()
+        }
+
+        bot.log("Attempting to interact with anvil.")
+        val anvil = anvilObject
+        if (anvil == null) {
+            bot.log("No anvil object found in zone area.")
+            stop()
+            return true
+        }
+
+        if (!handler.inventory.useItem(bar.id).onObject(anvil)) {
+            bot.log("Could not interact with anvil. Trying again next cycle.")
+            return true
+        }
+
+        bot.naturalDelay()
+        if (SmithingInterface::class !in bot.overlays) {
+            bot.log("Smithing interface isn't open. Trying again next cycle.")
+            return true
+        }
+
+        bot.log("Smithing item: ${itemDef(id).name}")
+        output.sendItemWidgetClick(2, table.slotId, table.widgetId, id)
+        bot.naturalDecisionDelay()
+
+        if (selectedItems.size > 1) {
+            smithingItem = selectedItems.filter { it.barType == bar }.random()
+        }
+        return true
+    }
+
+    override suspend fun onInventoryBankRequested(): Boolean {
+        return forceBanking || !(smithingItem?.let {
+                bot.inventory.contains(Item(it.barType.id, SmithingTable.ID_TO_TABLE[it.item.id]!!.bars))
+            } == true)
+    }
+
+    override fun snapshot(): BotScriptData {
+        val data = ZonedBotScriptData()
+        data.duration = duration
+        data.zones = originalZones.toMutableList()
+        return data
+    }
+
+    override fun onPaused() {
+        anvilObject = null
+    }
+}

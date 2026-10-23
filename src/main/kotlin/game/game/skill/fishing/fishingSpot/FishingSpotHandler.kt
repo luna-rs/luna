@@ -1,9 +1,6 @@
 package game.skill.fishing.fishingSpot
 
 import api.predef.*
-import api.predef.ext.*
-import game.skill.fishing.fishingSpot.FishingSpotHandler.add
-import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.task.Task
 
@@ -12,101 +9,63 @@ import io.luna.game.task.Task
  *
  * @author lare96
  */
-object FishingSpotHandler : Task(false, 100) {
+object FishingSpotHandler : Task(false, 1) {
 
     /**
-     * A model representing a randomly moving fishing spot.
+     * A model representing a fishing spot that moves around its [area].
      */
-    class FishingSpot(val id: Int,
-                      val home: Position,
-                      val away: List<Position>,
-                      var countdown: Int = 1)
+    private class MovingSpot(val npc: Npc, val area: FishingSpotArea, var countdown: Int = 1)
+// todo this can probably be dynamically automated. Look for all possible water tiles within half viewing distance,
+//  where a tile only has 1 non-water tile at one of its cardinal axes. Then that is a possible teleportation tile.
+//  when doing the selection, fail/re-select if another fishing spot is already on that tile
+    /**
+     * How many ticks a fishing spot waits before moving again.
+     */
+    private val MOVE_INTERVAL = 280..529
 
     /**
-     * A model representing a receiver for when registering fishing spots using [add].
+     * How many random tiles are tried before a fishing spot gives up moving.
      */
-    class FishingSpotReceiver(var id: Int? = null,
-                              var home: Position? = null,
-                              val away: ArrayList<Position> = ArrayList())
+    private const val MOVE_ATTEMPTS = 50
 
     /**
-     * A range of how often fishing spots can move.
+     * The tracked fishing spots.
      */
-    private val MOVE_INTERVAL_MINUTES = 3..7
+    private val movingSpots = ArrayList<MovingSpot>()
 
     /**
-     * A map of tracked fishing spots.
+     * If the spawned fishing spots have been added to [movingSpots].
      */
-    private val fishingSpots = HashMap<Npc, FishingSpot>()
+    private var loaded = false
 
     override fun execute() {
-        fishingSpots.forEach { (spotNpc, spot) ->
+        if (!loaded) {
+            // Global NPC spawns are added before the first tick, so they can all be found here.
+            for (npc in world.npcs) {
+                val area = FishingSpotArea.NPC_TO_AREA[npc.id] ?: continue
+                movingSpots += MovingSpot(npc, area)
+            }
+            loaded = true
+        }
+        for (spot in movingSpots) {
             if (--spot.countdown <= 0) {
-                when (spotNpc.position) {
-                    // Move NPC between home and away positions.
-                    spot.home -> spotNpc.move(spot.away.random())
-                    else -> spotNpc.move(spot.home)
-                }
-                spot.countdown = MOVE_INTERVAL_MINUTES.random()
+                move(spot)
+                spot.countdown = MOVE_INTERVAL.random()
             }
         }
     }
 
     /**
-     * Adds a potential fishing spot to be tracked by this handler, making it eligible for random
-     * periodic movement. [spawn] refers to if the fishing spot should be spawned using this method, or if
-     * you wish to track an existing spot. Usage is as follows
-     *
-     * ```
-     * add {
-     *     id = 316
-     *     home = Position(3222, 3222) // Must match spawn coordinates.
-     *
-     *     away += Position(3223, 3222)
-     *     away += Position(3221, 3222)
-     *     ...
-     * }
-     *
-     * // Spawn is 'false', we need to explicitly add the NPC.
-     * world.addNpc(id = 316, x = 3222, y = 3222)
-     * ```
+     * Moves [spot] to a random tile in its area that no other fishing spot is on. The spot stays where it is if no
+     * such tile is found.
      */
-    fun add(spawn: Boolean = false, action: FishingSpotReceiver.() -> Unit) {
-        val receiver = FishingSpotReceiver()
-        action(receiver)
-
-        val id = receiver.id
-        val home = receiver.home
-        val away = receiver.away
-        when {
-            id == null -> throw IllegalStateException("ID must be set.")
-            home == null -> throw IllegalStateException("Home position must be set.")
-            away.isEmpty() -> throw IllegalStateException("At least one away position must be added.")
-            else -> {
-                val npc = computeSpotNpc(id, home, spawn)
-                when {
-                    npc == null -> throw IllegalStateException("No fishing spot matching $id found on $home.")
-                    fishingSpots.containsKey(npc) ->
-                        throw IllegalStateException("This fishing spot has already been registered.")
-
-                    else -> fishingSpots[npc] = FishingSpot(id, home, away)
-                }
+    private fun move(spot: MovingSpot) {
+        repeat(MOVE_ATTEMPTS) {
+            val tile = spot.area.tiles.random()
+            if (world.locator.findNpcsOnTile(tile) { it.def().name == "Fishing spot" }.isEmpty()) {
+                spot.npc.move(tile)
+                return
             }
-        }
-    }
-
-    /**
-     * Computes the NPC that will be registered with this handler. Either an existing fishing spot, or create a new
-     * one.
-     */
-    private fun computeSpotNpc(id: Int, home: Position, spawn: Boolean): Npc? {
-        if (spawn) {
-            val npc = Npc(ctx, id, home)
-            // 'add' might be called from script loading thread. So sync it with game thread just in case.
-            gameService.sync { world.addNpc(npc) }
-            return npc
-        } else {
-            return world.locator.findNpcsOnTile(home) { it.id == id && it.def().name == "Fishing spot" }.firstOrNull()
         }
     }
 }

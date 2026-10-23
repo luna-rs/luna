@@ -1,10 +1,10 @@
 package game.skill.mining.mineOre
 
 import api.predef.*
-import io.luna.game.model.mob.Player
-import io.luna.game.model.`object`.GameObject
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
+import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 
 /**
  * Starts the mining action.

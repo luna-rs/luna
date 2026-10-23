@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -7,12 +8,16 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.thieving.stealFromStall.StealFromAction
 import game.skill.thieving.stealFromStall.ThievingStallType
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A thieving bot script that steals from configured stall types inside selected subzones.
@@ -39,6 +44,9 @@ class StealBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : SkillingBotScript<GameObject>(bot, duration, zones, bot.thieving) {
+
+    // Move on if stalls remain unavailable or unsafe, rather than waiting until the entire script expires.
+    override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
 
@@ -103,13 +111,15 @@ class StealBotScript(
         ids
     }
 
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: GameObject?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true
         }
     }
-
+    override suspend fun equipment(): BotGearLocator? {
+        return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
+    }
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.15).toInt())) {
@@ -131,7 +141,7 @@ class StealBotScript(
      * @return The nearby full-stall objects this script can attempt to steal from, or an empty collection if the bot
      * should avoid stealing right now.
      */
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         val isGuardWatching = world.locator.findViewableNpcs(searchBase) {
             it.combat.isAttackable &&
                     StealFromAction.GUARD_NAMES.contains(it.def().name) &&
@@ -146,7 +156,7 @@ class StealBotScript(
         return world.locator.findObjects(searchBase, searchRadius, true) { it.id in stallIds }
     }
 
-    override fun interactionOption(): Int = 2
+    override suspend fun interactionOption(target: GameObject): Int = 2
 
     override fun levelRequired(): Int = stalls.maxOfOrNull { it.level } ?: 0
 

@@ -2,11 +2,11 @@ package game.skill.smithing.smeltOre
 
 import api.predef.*
 import com.google.common.collect.ImmutableList
+import game.skill.smithing.BarType
+import game.skill.smithing.Smithing
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
-import game.skill.smithing.BarType
-import game.skill.smithing.Smithing
 
 /**
  * An enum representing all types of ores that can be used with a furnace.

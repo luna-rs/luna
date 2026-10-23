@@ -3,6 +3,7 @@ package game.content.partyRoom
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import game.content.partyRoom.dropParty.DropPartyOption
+import game.player.Sound
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -33,6 +34,16 @@ object PartyRoom {
         Position(2736, 3475, 0),
         Position(2737, 3475, 0)
     )
+
+    /**
+     * Pulling the party room lever.
+     */
+    private val PULL_ANIMATION = Animation(798)
+
+    /**
+     * The party room lever's own animation when it's pulled.
+     */
+    private const val LEVER_ANIMATION = 450
 
     /**
      * The active [PartyRoomOption], possibly null.
@@ -70,15 +81,21 @@ object PartyRoom {
     }
 
     /**
-     * Sets a new event option to this lever. Takes payment from the player and registers the option.
+     * Sets a new event option to this lever. Takes payment once the option can start, then registers it.
      */
     private fun setLeverOption(plr: Player, newOption: PartyRoomOption, obj: GameObject?) {
         val costItem = Item(995, newOption.cost)
-        if (plr.rights <= RIGHTS_MOD && !plr.inventory.remove(costItem)) {
+        val pays = plr.rights <= RIGHTS_MOD
+        if (pays && !plr.inventory.contains(costItem)) {
             plr.newDialogue().text("You do not have enough coins to pull this lever.").open()
         } else if (newOption.canExecute(plr)) {
+            if (pays) {
+                plr.inventory.remove(costItem)
+            }
             if (obj != null) {
-                plr.animation(Animation(2140))
+                plr.animation(PULL_ANIMATION)
+                obj.animate(LEVER_ANIMATION)
+                plr.playSound(Sound.LEVER)
             } else {
                 plr.sendMessage("You have set the current party room lever option to [${newOption.description}].")
             }

@@ -337,6 +337,22 @@ public final class DialogueQueueBuilder {
     }
 
     /**
+     * Sets the title of the last appended dialogue, which must be an {@link OptionDialogue}.
+     *
+     * @param title The title.
+     * @return This builder, for chaining.
+     */
+    public DialogueQueueBuilder title(String title) {
+        checkLocked();
+
+        DialogueInterface lastDialogue = dialogues.peekLast();
+
+        checkState(lastDialogue instanceof OptionDialogue, "No option dialogue to set the title of.");
+        ((OptionDialogue) lastDialogue).setTitle(title);
+        return this;
+    }
+
+    /**
      * Throws an exception if this builder is locked.
      */
     private void checkLocked() {

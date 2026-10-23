@@ -1,6 +1,5 @@
 package io.luna;
 
-import api.bot.zone.SubZone;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -28,6 +27,7 @@ import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
 import io.luna.util.parser.impl.ItemNicknameDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
+import io.luna.util.parser.impl.WantedItemDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
@@ -39,10 +39,12 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -71,6 +73,12 @@ public final class LunaServer {
      * Async logger.
      */
     private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * How long the shutdown hook waits for the graceful shutdown. That normally takes seconds, so this only matters
+     * when the game thread is stuck.
+     */
+    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofMinutes(1);
 
     /**
      * Owning context (cache/world/services/plugins).
@@ -105,7 +113,7 @@ public final class LunaServer {
      * @throws Exception If a fatal startup failure occurs.
      */
     public void init() throws Exception {
-        try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
+        try (ScanResult result = new ClassGraph().enableClassInfo().scan()) {
             classpath = result;
             Stopwatch launchTimer = Stopwatch.createStarted();
 
@@ -119,6 +127,7 @@ public final class LunaServer {
 
             // We're ready to accept logins.
             initNetwork();
+            initShutdownHook(game);
 
             long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
             logger.info("Luna is now online on port {} (took {}s).",
@@ -165,6 +174,31 @@ public final class LunaServer {
     }
 
     /**
+     * Adds a shutdown hook that runs the graceful shutdown when the JVM is stopped some other way, such as by Ctrl+C,
+     * {@code kill} or closing the terminal, so that players are still saved. A shutdown that already started is waited
+     * for.
+     *
+     * @param game The game service.
+     */
+    private void initShutdownHook(GameService game) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Only stop a running service: stopping a NEW one would run its exit listener here and hang the JVM.
+            if (game.isRunning()) {
+                game.stopAsync();
+            }
+            try {
+                game.awaitTerminated(SHUTDOWN_TIMEOUT);
+            } catch (TimeoutException e) {
+                logger.fatal("The graceful shutdown did not finish within {}s, exiting anyway.",
+                        box(SHUTDOWN_TIMEOUT.toSeconds()));
+            } catch (IllegalStateException e) {
+                // The game service failed, and its listener has logged why.
+            }
+            LogManager.shutdown();
+        }, "ShutdownHookThread"));
+    }
+
+    /**
      * Starts core {@link Service}s (game loop and world login/logout services) and waits until healthy.
      *
      * @throws InterruptedException If startup is interrupted.
@@ -190,7 +224,6 @@ public final class LunaServer {
      */
     private void initLaunchTasks() {
         List<Runnable> taskList = new ArrayList<>();
-        taskList.add(SubZone.Companion::findAreaOverlaps);
         taskList.add(new EquipmentDefinitionFileParser());
         taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new WeaponTypeDefinitionFileParser());
@@ -203,6 +236,7 @@ public final class LunaServer {
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new WeaponAnimationDefinitionFileParser());
         taskList.add(new ItemNicknameDefinitionFileParser());
+        taskList.add(new WantedItemDefinitionFileParser());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {

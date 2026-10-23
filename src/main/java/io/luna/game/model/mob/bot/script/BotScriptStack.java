@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -129,7 +128,11 @@ public final class BotScriptStack {
                 logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
         }
-        buffer.addAll(Arrays.asList(loadedScripts));
+        for (BotScript script : loadedScripts) {
+            if (script != null) {
+                buffer.addLast(script);
+            }
+        }
         buffer.removeIf(script -> script instanceof VoidBotScript); // Remove all void scripts after to maintain order.
     }
 
@@ -289,6 +292,20 @@ public final class BotScriptStack {
         }
         buffer.add(script);
         bot.log("Pushed {" + scriptName + "} to tail of buffer.");
+    }
+
+    /**
+     * Pushes a script to the tail of the buffer if the buffer has not reached the specified maximum size.
+     * <p>
+     * If the buffer already contains {@code maximumSize} scripts or more, the script is not added.
+     *
+     * @param script The script to enqueue at the tail.
+     * @param maximumSize The maximum number of scripts allowed in the buffer before rejecting the script.
+     */
+    public void pushTail(BotScript script, int maximumSize) {
+        if (buffer.size() < maximumSize) {
+            pushTail(script);
+        }
     }
 
     /**

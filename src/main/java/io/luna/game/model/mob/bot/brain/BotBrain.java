@@ -4,6 +4,7 @@ import api.bot.script.BotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 /**
@@ -50,7 +51,14 @@ public class BotBrain {
          * - Does the bot have everything needed for this activity?
          * - Should activity weights decay or use cooldowns?
          */
-        BotActivity activity = RandomUtils.weightedRoll(bot.getPreferences().getActivities());
+        var map = bot.getPreferences().getActivities();
+        if (bot.getTimePlayed().toDays() < 2) {
+            // New bots have an additional chance to do combat activities.
+            map = new HashMap<>(bot.getPreferences().getActivities());
+            map.computeIfPresent(BotActivity.TRAINING_COMBAT, (key, value) -> value + 0.35);
+            map.computeIfPresent(BotActivity.PROFIT_COMBAT, (key, value) -> value + 0.25);
+        }
+        BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
             activity = RandomUtils.random(BotActivity.ALL);
         }

@@ -1,19 +1,15 @@
 package engine.obj
 
 import api.predef.*
-import api.predef.ext.addObject
+import api.predef.ext.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.ObjectDirection
 
 // Deletes pesky overworld gates/doors/etc. that mess with bot pathing.
-// THIS IS TEMPORARY AND WILL BE DELETED BEFORE 0.5.0 (maybe change it to always keeping these doors/gates open?)
+// THIS IS TEMPORARY AND WILL BE DELETED BEFORE 0.5.0 (maybe change it to always keeping these doors/gates open?).
 on(ServerLaunchEvent::class) {
     val positions = listOf(
-
-        // Falador -> Taverly gates.
-        Position(2935, 3450),
-        Position(2935, 3451),
 
         // King black dragon gates.
         Position(3008, 3850),
@@ -22,10 +18,6 @@ on(ServerLaunchEvent::class) {
         // Deep wilderness red dragons.
         Position(3201, 3856),
         Position(3202, 3856),
-
-        // Al Kharid gates.
-        Position(3268, 3227),
-        Position(3268, 3228),
 
         // Edgeville dungeon brass key door.
         Position(3115, 3450),
@@ -55,7 +47,17 @@ on(ServerLaunchEvent::class) {
         Position(3337, 3896),
         Position(3336, 3896),
         Position(2948, 3904),
-        Position(2947, 3904)
+        Position(2947, 3904),
+      
+        // Varrock range near bank.
+        Position(3241, 3406),
+        Position(3242, 3412),
+
+        // HAM cult area door.
+        Position(3158, 9640),
+
+        // Seers' Village spinning wheel house door.
+        Position(2716, 3472)
     )
 
     for (position in positions) {
@@ -63,12 +65,9 @@ on(ServerLaunchEvent::class) {
     }
 }
 
-// Temp objects spawns (should be done from cache)
-
-/**
- * Spawn spinning wheel near home area.
- */
+// Temp objects spawns (should be done from cache).
 on(ServerLaunchEvent::class) {
+    // Spinning wheel near ::home.
     world.addObject(id = 2644,
                     x = 3208,
                     y = 3415,

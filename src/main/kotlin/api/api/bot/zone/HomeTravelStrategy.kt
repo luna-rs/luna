@@ -2,9 +2,9 @@ package api.bot.zone
 
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone.HOME
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * A [TravelStrategy] implementation that forces a [Bot] to teleport home, and then walk to its destination.
@@ -12,11 +12,11 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 object HomeTravelStrategy : TravelStrategy {
-    override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean = true
+    override suspend fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean = true
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
-        if (bot.subZone != HOME && bot.zone != HOME.parent(bot)) {
+        if (HOME !in bot.subZones && bot.zone != HOME.parent(bot)) {
             bot.output.sendCommand("home")
-            if (!waitFor { bot.subZone == HOME }) {
+            if (!waitFor { HOME in bot.subZones }) {
                 bot.log("Home teleport failed or timed out.")
                 return false
             }

@@ -127,6 +127,11 @@ fun rand(upperInclusive: Int): Int = rand().nextInt(upperInclusive + 1)
 fun rand(range: IntRange) = range.random()
 
 /**
+ * Generates a random double within [range].
+ */
+fun rand(range: ClosedFloatingPointRange<Double>) = rand(range.start, range.endInclusive)
+
+/**
  * Delegates to [RandomUtils.roll].
  */
 fun rand(chance: Double) = RandomUtils.roll(chance)

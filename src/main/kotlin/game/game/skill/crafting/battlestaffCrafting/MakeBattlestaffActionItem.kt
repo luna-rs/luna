@@ -1,9 +1,9 @@
 package game.skill.crafting.battlestaffCrafting
 
 import api.predef.*
+import game.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
-import game.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
 
 /**
  * An [InventoryAction] implementation that makes battlestaves.

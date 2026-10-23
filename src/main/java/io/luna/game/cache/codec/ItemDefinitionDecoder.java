@@ -138,12 +138,12 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
     @Override
     public void handle(LunaContext context, Cache cache, ImmutableList<ItemDefinition> decodedObjects) {
         Map<Integer, ItemDefinition> lookup = new HashMap<>(decodedObjects.size());
-        decodedObjects.forEach(def -> lookup.put(def.getId(), def));
+        decodedObjects.forEach(def -> lookup.put(def.id(), def));
 
         List<ItemDefinition> newDecodedObjects = new ArrayList<>(decodedObjects);
         for (ItemDefinition def : noted) {
             if (def.getUnnotedId().isEmpty()) {
-                throw new IllegalStateException("Item [" + def.getId() + ", " + def.getName() + "] is not noted, but in noted definition list!");
+                throw new IllegalStateException("Item [" + def.id() + ", " + def.getName() + "] is not noted, but in noted definition list!");
             }
             ItemDefinition unnotedId = lookup.get(def.getUnnotedId().getAsInt());
             newDecodedObjects.add(def.toNote(unnotedId));

@@ -132,7 +132,6 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     @Override
     public boolean isAttackable() {
         return mob.isAlive() &&
-                mob.def().getCombatLevel() > 0 &&
                 mob.def().getActions().contains("Attack");
     }
 

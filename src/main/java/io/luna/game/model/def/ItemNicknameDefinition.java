@@ -64,7 +64,7 @@ public final class ItemNicknameDefinition implements Definition {
      * @return The item id.
      */
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

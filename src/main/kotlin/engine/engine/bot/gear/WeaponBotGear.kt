@@ -643,11 +643,11 @@ enum class WeaponBotGear(private val priority: Int,
         return priority
     }
 
-    override fun containsId(id: Int): Boolean {
-        return id in ids
+    override fun ids(): Set<Int> {
+        return ids
     }
 
-    override fun containsPurpose(purpose: BotGearPurpose): Boolean {
-        return purpose in purposeSet
+    override fun purposes(): Set<BotGearPurpose> {
+        return purposeSet
     }
 }

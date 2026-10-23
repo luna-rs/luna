@@ -137,7 +137,7 @@ public final class AbstractOverlaySet {
      * @param <T> The overlay subtype.
      * @return {@code true} if an overlay of the specified class is currently active; otherwise {@code false}.
      */
-    public <T extends AbstractOverlay> boolean contains(Class<T> type) {
+    public <T extends AbstractOverlay> boolean has(Class<T> type) {
         return getOverlay(type) != null;
     }
 

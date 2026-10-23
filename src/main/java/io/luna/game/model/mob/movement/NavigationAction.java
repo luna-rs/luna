@@ -6,6 +6,8 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.interact.InteractionType;
+import io.luna.game.model.object.GameObject;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -89,7 +91,21 @@ final class NavigationAction extends Action<Mob> {
         Locatable target = request.getTarget();
         Position targetPos = target.abs();
 
-        if ((sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) || request.getPending().isCancelled()) {
+        if (target instanceof Mob targetMob && (!targetMob.isAlive() || !sourcePos.isViewable(targetPos))) {
+            // Stop tracking dead or out-of-view players and NPCs, including one-shot requests.
+            reachedOnce = false;
+            result = NavigationResult.DIDNT_REACH;
+            if (current != null) {
+                cancelCurrent();
+            } else {
+                navigator.discardPaths();
+            }
+            mob.getWalking().clear();
+            return true;
+        }
+
+        if ((!isTargetMob && sourcePos.computeLongestDistance(targetPos) >= 15 && request.isContinuous()) ||
+                request.getPending().isCancelled()) {
             result = NavigationResult.DIDNT_REACH;
             return true;
         }
@@ -106,8 +122,7 @@ final class NavigationAction extends Action<Mob> {
             // Step away if occupying same tile and interaction policy isn't equal position.
             boolean stepped = navigator.stepRandom(false);
             if (stepped && current != null) {
-                current.cancel(true);
-                current = null;
+                cancelCurrent();
             } else if (!stepped && !request.isContinuous()) {
                 result = NavigationResult.DIDNT_REACH;
                 return true;
@@ -118,13 +133,12 @@ final class NavigationAction extends Action<Mob> {
         if (reached) {
             // When reached: clear walking queue, cancel pathing, and stop action if tracking isn't required.
             reachedOnce = true;
-            if(!request.isContinuous()) {
+            if (!request.isContinuous()) {
                 // TODO: More testing around this with following, combat, and normal interactions..
                 mob.getWalking().clear();
             }
             if (current != null) {
-                current.cancel(true);
-                current = null;
+                cancelCurrent();
             }
             return !request.isContinuous();
         }
@@ -139,10 +153,14 @@ final class NavigationAction extends Action<Mob> {
                     return true;
                 }
             } else if (current.isDone()) {
-                // Pathing finished without reaching the untracked target.
-                if (!request.isContinuous() && mob.getWalking().isEmpty()) {
-                    result = NavigationResult.DIDNT_REACH;
-                    return true;
+                if (!request.isContinuous()) {
+                    // Keep the completed path future while its queued steps are being walked. Otherwise, losing
+                    // this completion marker makes a one-shot request re-path forever when it stops short.
+                    if (mob.getWalking().isEmpty()) {
+                        result = NavigationResult.DIDNT_REACH;
+                        return true;
+                    }
+                    return false;
                 }
 
                 // Continuous request, prepare for re-pathing.
@@ -157,23 +175,40 @@ final class NavigationAction extends Action<Mob> {
 
         // Cancel any active asynchronous path before re-pathing a continuous request.
         if (current != null && !current.isDone() && request.isContinuous()) {
-            current.cancel(true);
-            current = null;
+            cancelCurrent();
         }
 
         // Re-path to target if needed.
         if (current == null) {
-            current = isTargetMob ?
-                    navigator.walk(navigator.computeOffsetPosition((Entity) target, request.getOffsetDir()),
-                            request.getPathfinder(), request.isAsync()) :
-                    navigator.walk(target, request.getPathfinder(), request.isAsync());
+            if (target instanceof GameObject object && request.getPolicy().getType() == InteractionType.SIZE &&
+                    request.getPolicy().getDistance() == 1) {
+                current = navigator.walkToObject(object, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
+            } else {
+                current = isTargetMob ?
+                    navigator.walk(navigator.computeOffsetPosition((Entity) request.getTarget(), request.getOffsetDir()), request.getPathfinder(), request.isAsync()) :
+                    navigator.walk(request.getTarget(), request.getPathfinder(), request.isAsync());
+            }
             lastPosition = targetPos;
         }
         return false;
     }
 
+    /**
+     * Cancels the active pathfinding future and discards its path. Cancelling the future alone does not stop a path
+     * that is already being computed from being applied, so the navigator is told to discard it as well.
+     */
+    private void cancelCurrent() {
+        current.cancel(true);
+        current = null;
+        navigator.discardPaths();
+    }
+
     @Override
     public void onFinished() {
+        if (current != null) {
+            current.cancel(false);
+            current = null;
+        }
         mob.interact(null);
         if (reachedOnce) {
             result = NavigationResult.REACHED;

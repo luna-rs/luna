@@ -8,6 +8,7 @@ import game.player.Sound;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
+import io.luna.game.event.impl.DamageReceivedEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
@@ -39,7 +40,8 @@ import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
-import io.luna.game.model.path.PlayerPathfinder;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.Pathfinders;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.LunaChannelFilter;
@@ -169,6 +171,16 @@ public class Player extends Mob {
      * Whether the region changed this tick.
      */
     private boolean regionChanged;
+
+    /**
+     * The position chunk updates were last sent for, or {@code null} if none have been sent.
+     */
+    private Position lastViewPosition;
+
+    /**
+     * Whether the move in progress leaves this player's interfaces open.
+     */
+    private boolean keepWindowsOnMove;
 
     /**
      * The current dialogue queue, or {@code null} if none is active.
@@ -334,7 +346,6 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        status.save();
         pendingPlacement = true;
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
@@ -342,7 +353,24 @@ public class Player extends Mob {
 
     @Override
     public void onMove(Position position) {
-        overlays.closeWindows();
+        if (!keepWindowsOnMove) {
+            overlays.closeWindows();
+        }
+    }
+
+    /**
+     * Immediately moves this player to {@code position} like {@link #move(Position)}, but leaves their interfaces
+     * open. Used when an open interface is showing the journey, so it keeps showing it while the new area loads.
+     *
+     * @param position The destination position.
+     */
+    public void moveKeepingWindows(Position position) {
+        keepWindowsOnMove = true;
+        try {
+            move(position);
+        } finally {
+            keepWindowsOnMove = false;
+        }
     }
 
     @Override
@@ -380,8 +408,8 @@ public class Player extends Mob {
     }
 
     @Override
-    public PlayerPathfinder getInteractionPf() {
-        return new PlayerPathfinder(world.getCollisionManager(), getZ());
+    public GamePathfinder<Position> getInteractionPf() {
+        return Pathfinders.forPlayer(this);
     }
 
     @Override
@@ -398,6 +426,7 @@ public class Player extends Mob {
         } else {
             //playSound(Sound.UNARMED_BLOCK);
         }*/
+        plugins.post(new DamageReceivedEvent(this, hit));
     }
 
     /**
@@ -660,7 +689,9 @@ public class Player extends Mob {
                 return;
             }
         }
-        if (force || isBot()) {
+        if (isBot()) {
+            asBot().forceLogout();
+        } else if (force) {
             client.setForcedLogout(true);
         }
         var channel = client.getChannel();
@@ -706,30 +737,30 @@ public class Player extends Mob {
     }
 
     /**
-     * Sends a region update if needed and refreshes nearby {@link Entity} instances.
-     * <p>
-     * This method:
-     * </p>
-     * <ol>
-     *     <li>Detects if a region change has occurred and sends a {@link RegionMessageWriter} if required.</li>
-     *     <li>Handles pending placement (full refresh).</li>
-     *     <li>Delegates to {@link io.luna.game.model.chunk.ChunkManager#sendUpdates(Player, Position, boolean)}.</li>
-     * </ol>
-     *
-     * @param oldPosition The previous position before movement processing.
+     * Sends a {@link RegionMessageWriter} if a region change has occurred. This must happen before player updating.
      */
-    public void updateLocalView(Position oldPosition) {
-        boolean fullRefresh = false;
+    public void updateRegion() {
         if (lastRegion == null || needsRegionUpdate()) {
-            fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionMessageWriter(position));
+            if (!(this instanceof Bot)) {
+                queue(new RegionMessageWriter(position));
+            }
         }
-        if (isPendingPlacement()) {
-            fullRefresh = true;
-        }
-        world.getChunks().sendUpdates(this, oldPosition, fullRefresh);
+    }
+
+    /**
+     * Refreshes nearby {@link Entity} instances through
+     * {@link io.luna.game.model.chunk.ChunkManager#sendUpdates(Player, Position, boolean)}. A region change or
+     * pending placement refreshes every viewable chunk.
+     * <p>
+     * This must happen after player updating, because the #377 client applies chunk updates to the height level it
+     * is on.
+     */
+    public void updateLocalView() {
+        Position oldPosition = lastViewPosition != null ? lastViewPosition : position;
+        lastViewPosition = position;
+        world.getChunks().sendUpdates(this, oldPosition, regionChanged || isPendingPlacement());
     }
 
     /**

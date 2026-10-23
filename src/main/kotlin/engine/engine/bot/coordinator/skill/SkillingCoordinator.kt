@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import api.attr.Attr
 import api.bot.zone.SubZone
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -28,19 +29,10 @@ import io.luna.util.RandomUtils
 class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
 
     /*
-     * TODO Bot money-making activities, smelting, smithing, etc.
+     * TODO Bot money-making activities.
      *
      * Add richer money-making behavior once the economy system, item valuation, and item tagging are stable enough for
      * bots to make sensible profit-based decisions.
-     *
-     * Fishing:
-     * - Fish lobsters, swordfish, and sharks.
-     * - Pick fishing spots based on level, confidence, danger, and bank distance.
-     *
-     * Simple gathering and processing:
-     * - Pick flax.
-     * - Spin flax into bow strings.
-     * - Tan hides.
      *
      * Crafting and production:
      * - Make jewellery when the bot has useful gems, bars, moulds, and profit data.
@@ -79,6 +71,11 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
          * Flat selection-weight bonus applied to the bot's preferred skills.
          */
         private const val PREFERENCE_WEIGHT = 0.50
+
+        /**
+         * Attribute representing if this coordinator was last in profit or training mode.
+         */
+        var Bot.profitMode by Attr.boolean { false }
     }
 
     /**
@@ -88,19 +85,19 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         MiningScriptFactory,
         ThievingScriptFactory,
         WoodcuttingScriptFactory,
+        FiremakingScriptFactory,
         FletchingScriptFactory,
         CraftingScriptFactory,
-        SmithingScriptFactory
+        HerbloreScriptFactory,
+        SmithingScriptFactory,
+        CookingScriptFactory,
+        FishingScriptFactory,
+        MagicScriptFactory,
+        RunecraftingScriptFactory,
+        PrayerScriptFactory,
+        AgilityScriptFactory
     ).associateBy { it.skillId }
 
-    /**
-     * Selects and starts a skilling script for [bot].
-     *
-     * The selected skill is chosen using weighted odds. If the selected skill does not have a supported factory, a
-     * random supported factory is used as a fallback.
-     *
-     * @param bot The bot that will perform the skilling activity.
-     */
     override fun accept(bot: Bot) {
         val weights = HashMap<Int, Double>()
 
@@ -115,14 +112,16 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         }
 
         val selectedSkill = RandomUtils.weightedRoll(weights)
-        val level = bot.skill(selectedSkill).staticLevel
         val zones = ArrayList<SubZone>()
 
+        bot.profitMode = !training
+
         bot.scriptStack.push(run {
-            var script = factories[selectedSkill]?.getScript(bot, level, zones, training)
+            var script = factories[selectedSkill]?.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
 
             if (script == null) {
-                script = factories.values.random().getScript(bot, level, zones, training)
+                val factory = factories.values.random()
+                script = factory.getScript(bot, bot.skill(factory.skillId).staticLevel, zones, training)
             }
 
             script

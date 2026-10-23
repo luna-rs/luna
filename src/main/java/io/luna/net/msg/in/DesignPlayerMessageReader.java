@@ -33,6 +33,6 @@ public final class DesignPlayerMessageReader extends GameMessageReader<DesignPla
 
     @Override
     public boolean validate(Player player, DesignPlayerEvent event) {
-        return player.getOverlays().contains(DesignPlayerInterface.class);
+        return player.getOverlays().has(DesignPlayerInterface.class);
     }
 }

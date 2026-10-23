@@ -13,6 +13,7 @@ on(ServerLaunchEvent::class) {
     Banking.loadBankingNpcs()
     for (id in Banking.bankingNpcs) {
         npc1(id) { openDialogue(plr, id) }
+        npc2(id) { plr.bank.open() }
     }
 
     // Load all banking objects, make them open the bank.

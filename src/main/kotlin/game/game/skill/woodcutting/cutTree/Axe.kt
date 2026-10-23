@@ -21,10 +21,12 @@ enum class Axe(val id: Int,
            animation = Animation(879),
            chances = mapOf(
                NORMAL to (64 to 200),
+               ACHEY to (64 to 200),
                OAK to (32 to 100),
                WILLOW to (16 to 50),
                TEAK to (15 to 46),
                MAPLE to (8 to 25),
+               HOLLOW to (18 to 26),
                MAHOGANY to (8 to 25),
                YEW to (4 to 12),
                MAGIC to (2 to 6)
@@ -34,11 +36,13 @@ enum class Axe(val id: Int,
          animation = Animation(877),
          chances = mapOf(
              NORMAL to (96 to 300),
+             ACHEY to (96 to 300),
              OAK to (48 to 150),
              WILLOW to (24 to 75),
              TEAK to (23 to 70),
              MAPLE to (12 to 37),
-             MAHOGANY to (12 to 25),
+             HOLLOW to (28 to 40),
+             MAHOGANY to (12 to 38),
              YEW to (6 to 19),
              MAGIC to (3 to 9)
          )),
@@ -47,23 +51,27 @@ enum class Axe(val id: Int,
           animation = Animation(875),
           chances = mapOf(
               NORMAL to (128 to 400),
+              ACHEY to (128 to 400),
               OAK to (64 to 200),
               WILLOW to (32 to 100),
               TEAK to (31 to 93),
               MAPLE to (16 to 50),
+              HOLLOW to (36 to 54),
               MAHOGANY to (16 to 50),
               YEW to (8 to 25),
               MAGIC to (4 to 12)
           )),
     BLACK(id = 1361,
           level = 6,
-          animation = Animation(875),
+          animation = Animation(873),
           chances = mapOf(
               NORMAL to (144 to 450),
-              OAK to (144 to 225),
-              WILLOW to (72 to 112),
-              TEAK to (36 to 102),
+              ACHEY to (144 to 450),
+              OAK to (72 to 225),
+              WILLOW to (36 to 112),
+              TEAK to (35 to 102),
               MAPLE to (18 to 56),
+              HOLLOW to (42 to 57),
               MAHOGANY to (18 to 54),
               YEW to (9 to 28),
               MAGIC to (5 to 13)
@@ -73,10 +81,12 @@ enum class Axe(val id: Int,
             animation = Animation(871),
             chances = mapOf(
                 NORMAL to (160 to 500),
+                ACHEY to (160 to 500),
                 OAK to (80 to 250),
                 WILLOW to (40 to 125),
                 TEAK to (39 to 117),
                 MAPLE to (20 to 62),
+                HOLLOW to (46 to 68),
                 MAHOGANY to (20 to 63),
                 YEW to (10 to 31),
                 MAGIC to (5 to 15)
@@ -86,10 +96,12 @@ enum class Axe(val id: Int,
             animation = Animation(869),
             chances = mapOf(
                 NORMAL to (192 to 600),
+                ACHEY to (192 to 600),
                 OAK to (96 to 300),
                 WILLOW to (48 to 150),
                 TEAK to (47 to 140),
                 MAPLE to (24 to 75),
+                HOLLOW to (59 to 81),
                 MAHOGANY to (25 to 75),
                 YEW to (12 to 37),
                 MAGIC to (6 to 18)
@@ -99,26 +111,31 @@ enum class Axe(val id: Int,
          animation = Animation(867),
          chances = mapOf(
              NORMAL to (224 to 700),
+             ACHEY to (224 to 700),
              OAK to (112 to 350),
              WILLOW to (56 to 175),
              TEAK to (55 to 164),
              MAPLE to (28 to 87),
+             HOLLOW to (64 to 94),
              MAHOGANY to (29 to 88),
              YEW to (14 to 44),
              MAGIC to (7 to 21)
          )),
+    // Until 22 August 2006 the dragon axe cut exactly like a rune axe, at the same level.
     DRAGON(id = 6739,
-           level = 61,
+           level = 41,
            animation = Animation(2846),
            chances = mapOf(
-               NORMAL to (240 to 750),
-               OAK to (120 to 375),
-               WILLOW to (60 to 187),
-               TEAK to (60 to 190),
-               MAPLE to (30 to 93),
-               MAHOGANY to (34 to 94),
-               YEW to (15 to 47),
-               MAGIC to (7 to 22)
+               NORMAL to (224 to 700),
+               ACHEY to (224 to 700),
+               OAK to (112 to 350),
+               WILLOW to (56 to 175),
+               TEAK to (55 to 164),
+               MAPLE to (28 to 87),
+               HOLLOW to (64 to 94),
+               MAHOGANY to (29 to 88),
+               YEW to (14 to 44),
+               MAGIC to (7 to 21)
            ));
 
     companion object {
@@ -154,6 +171,14 @@ enum class Axe(val id: Int,
                 }
             }
             return axe
+        }
+
+        /**
+         * Tells [plr] that they have no axe they can use.
+         */
+        fun sendNoAxeMessages(plr: Player) {
+            plr.sendMessage("You need an axe to chop down this tree.")
+            plr.sendMessage("You do not have an axe which you have the woodcutting level to use.")
         }
 
         /**

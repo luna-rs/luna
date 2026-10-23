@@ -1,5 +1,6 @@
 package io.luna.game.model.item;
 
+import engine.bot.gear.BotItemTracker;
 import game.player.Messages;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
@@ -34,6 +35,6 @@ public final class Inventory extends ItemContainer {
      */
     public Inventory(Player player) {
         super(28, StackPolicy.STANDARD, 3214);
-        setListeners(new PlayerRefreshListener(player, Messages.INSTANCE.inventoryFull()), new WeightListener(player));
+        setListeners(new PlayerRefreshListener(player, Messages.INSTANCE.inventoryFull()), new BotItemTracker(player), new WeightListener(player));
     }
 }

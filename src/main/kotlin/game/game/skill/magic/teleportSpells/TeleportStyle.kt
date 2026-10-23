@@ -1,14 +1,24 @@
 package game.skill.magic.teleportSpells
 
-import io.luna.game.model.mob.Spellbook
 import game.skill.magic.Magic
+import io.luna.game.model.mob.Spellbook
 
 /**
  * An enum representing the different teleport styles.
  *
  * @author lare96
  */
-enum class TeleportStyle(val spellbook: Spellbook, val action: (TeleportAction) -> Boolean) {
+enum class TeleportStyle(val spellbook: Spellbook, val action: (TeleportAction) -> Boolean) : TeleportSequence {
     REGULAR(Spellbook.REGULAR, { Magic.regularStyle(it) }),
-    ANCIENT(Spellbook.ANCIENT, { Magic.ancientStyle(it) })
+    ANCIENT(Spellbook.ANCIENT, { Magic.ancientStyle(it) });
+
+    override fun step(action: TeleportAction) = this.action(action)
+
+    companion object {
+
+        /**
+         * Mappings of [Spellbook] -> [TeleportStyle].
+         */
+        val SPELLBOOK_TO_STYLE = entries.associateBy { it.spellbook }
+    }
 }

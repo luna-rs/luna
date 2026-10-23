@@ -1,16 +1,21 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Trains Thieving by pickpocketing configured NPC types inside selected zones.
@@ -36,6 +41,9 @@ class PickpocketBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.thieving) {
+
+    // Move on if no eligible NPC can be selected, rather than waiting until the entire script expires.
+    override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
 
@@ -96,7 +104,7 @@ class PickpocketBotScript(
      * @param searching Whether the parent script is currently searching for a new target.
      * @param focus The currently selected NPC target, or `null` if no target is focused.
      */
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: Npc?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true
@@ -116,17 +124,21 @@ class PickpocketBotScript(
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.25).toInt())) {
-            handler.supplies.getWantedFood().forEach { bot.preferences.wantedItems += it.id }
+            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
             bot.log("No food left, ending script.")
             stop()
         }
+    }
+
+    override suspend fun equipment(): BotGearLocator {
+        return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
     }
 
     override suspend fun refocus(): Boolean {
         return false
     }
 
-    override fun interactionOption(): Int = 2
+    override suspend fun interactionOption(target: Npc): Int = 2
 
     override fun snapshot(): BotScriptData {
         val data = PickpocketData()
@@ -136,7 +148,7 @@ class PickpocketBotScript(
         return data
     }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         return world.locator.findNpcs(searchBase, searchRadius, true) {
             val def = it.def()
             def.actions.elementAtOrNull(2)?.equals("Pickpocket") == true && def.name in npcNames

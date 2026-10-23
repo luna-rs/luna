@@ -1,5 +1,6 @@
 package api.bot.skill
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.TargetingZonedBotScript
 import api.bot.zone.SubZone
@@ -8,7 +9,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.bot.Bot
 import java.util.*
 import kotlin.time.Duration
 
@@ -38,8 +38,7 @@ abstract class SkillingBotScript<E : Entity>(
 
     // TODO More testing needs to be done with bot death while skilling. Can they retrieve their items and go back
     //  to skilling correctly?
-
-    // TODO Some sort of abstract function for equipment selection once the equipment selector is complete.
+    // TODO Stop scripts after advancing 5 levels in the skill.
 
     companion object {
 
@@ -66,7 +65,7 @@ abstract class SkillingBotScript<E : Entity>(
      * @param resumed `true` if this script is being restored from a saved snapshot.
      * @return `true` if the script can start, or `false` if the bot does not meet the requirements.
      */
-    final override fun onInit(resumed: Boolean): Boolean {
+    final override suspend fun onInit(resumed: Boolean): Boolean {
         val requiredLevel = levelRequired()
 
         // Check any level or subclass-defined requirements before doing setup work.
@@ -159,9 +158,8 @@ abstract class SkillingBotScript<E : Entity>(
      * Equippable tools are equipped automatically when carried in the inventory.
      *
      * @param searching `true` when the targeting layer is searching for a new focus.
-     * @param focus The current focused skilling target, or `null` if no target is active.
      */
-    final override suspend fun onExecuteInZone(searching: Boolean, focus: E?) {
+    final override suspend fun onExecuteInZone(searching: Boolean) {
         val toolId = tool?.id
         if (toolId != null) {
             if (!hasCarriedItem(toolId)) {
@@ -191,7 +189,18 @@ abstract class SkillingBotScript<E : Entity>(
         }
 
         // Run normal execution hook for subclasses.
-        onExecuteSkilling(searching, focus)
+        onExecuteSkilling(searching)
+    }
+
+    override suspend fun refocus(): Boolean {
+        val toolId = tool?.id
+        if (toolId != null) {
+            if (toolId !in bot.inventory && toolId !in bot.equipment) {
+                forceBanking = true
+                return true
+            }
+        }
+        return super.refocus()
     }
 
     /**
@@ -207,9 +216,8 @@ abstract class SkillingBotScript<E : Entity>(
      * This is called after the base script has verified tool availability and equipped the selected tool when possible.
      *
      * @param searching `true` when the targeting layer is searching for a new focus.
-     * @param focus The current focused skilling target, or `null` if no target is active.
      */
-    open suspend fun onExecuteSkilling(searching: Boolean, focus: E?) {
+    open suspend fun onExecuteSkilling(searching: Boolean) {
 
     }
 
@@ -280,7 +288,7 @@ abstract class SkillingBotScript<E : Entity>(
 
         val candidates = TreeSet(configuredTools.comparator())
         candidates.addAll(configuredTools)
-        
+
         candidates.removeIf {
             skill.staticLevel < it.skillLevel || (it.id !in bot.equipment &&
                     it.id !in bot.inventory &&

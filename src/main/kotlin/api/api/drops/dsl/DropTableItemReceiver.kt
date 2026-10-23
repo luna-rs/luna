@@ -1,7 +1,6 @@
 package api.drops.dsl
 
 import api.drops.DropTableItem
-import io.luna.util.Rational
 
 /**
  * Represents the receiver for building drop table items in our DSL.

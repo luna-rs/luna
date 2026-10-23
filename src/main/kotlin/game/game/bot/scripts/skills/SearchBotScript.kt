@@ -1,14 +1,18 @@
 package game.bot.scripts.skills
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearSelector
+import engine.bot.gear.BotGearSet
 import game.skill.thieving.searchForTraps.ThievingChest
 import io.luna.game.model.Position
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
 
@@ -79,7 +83,7 @@ class SearchBotScript(
         ids
     }
 
-    override suspend fun onExecuteSkilling(searching: Boolean, focus: GameObject?) {
+    override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
             forceBanking = true
@@ -93,8 +97,11 @@ class SearchBotScript(
             stop()
         }
     }
+    override suspend fun equipment(): BotGearLocator? {
+        return BotGearSelector.find(bot, BotGearSet.ROGUE).fillAll(setOf(BotGearPurpose.SKILLING)).buildLocator()
+    }
 
-    override fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
+    override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius, true) { it.id in chestIds }
     }
 
@@ -104,7 +111,7 @@ class SearchBotScript(
      * Most capable bots use option `2`, which should be the "Search for traps" option. Less intelligent or less
      * dextrous bots can accidentally use option `1`, simulating a misclick or poor game knowledge.
      */
-    override fun interactionOption(): Int =
+    override suspend fun interactionOption(target: GameObject): Int =
         if (bot.personality.isIntelligent || bot.personality.isDextrous ||
             rand(bot.personality.intelligence) || rand(bot.personality.dexterity)) 2
         else 1

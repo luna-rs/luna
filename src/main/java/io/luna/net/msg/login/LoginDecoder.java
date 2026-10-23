@@ -1,5 +1,6 @@
 package io.luna.net.msg.login;
 
+import com.google.common.base.Strings;
 import io.luna.LunaContext;
 import io.luna.net.client.Client;
 import io.luna.net.client.LoginClient;
@@ -168,7 +169,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         String message = cause.getMessage();
-        boolean ignoreMessage = (message == null || "null".equals(message)) && cause instanceof ReadTimeoutException;
+        boolean ignoreMessage = Strings.isNullOrEmpty(message) && cause instanceof ReadTimeoutException;
         if (!ignoreMessage) {
             logger.error("An error was thrown by the login decoder!", cause);
         }

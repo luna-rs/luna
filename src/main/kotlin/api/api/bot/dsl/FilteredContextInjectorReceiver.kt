@@ -1,9 +1,9 @@
 package api.bot.dsl
 
-import api.predef.*
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.injection.BotContextInjector
+import api.predef.*
 import io.luna.game.event.impl.InjectableEvent
+import io.luna.game.model.mob.bot.injection.BotContextInjector
 import kotlin.reflect.KClass
 
 /**

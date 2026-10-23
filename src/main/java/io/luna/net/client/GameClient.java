@@ -55,9 +55,16 @@ public class GameClient extends Client<GameMessage> {
     protected final Queue<GameMessage> pendingReadMessages = new ConcurrentLinkedQueue<>();
 
     /**
-     * A queue of encoded messages awaiting transmission to the client. Used to prevent pooled buffer leaks.
+     * A queue of outgoing messages held back until the game encoder is installed on the channel. Only used while
+     * {@link #holdingOutgoing} is {@code true}.
      */
-    protected final Queue<GameMessage> pendingWriteMessages = new ConcurrentLinkedQueue<>();
+    private final Queue<GameMessage> heldMessages = new ConcurrentLinkedQueue<>();
+
+    /**
+     * If outgoing messages are being held in {@link #heldMessages} instead of written to the channel. Set during the
+     * final login handshake, when the channel pipeline can't yet encode {@link GameMessage} types.
+     */
+    private volatile boolean holdingOutgoing;
 
     /**
      * The message repository that maps opcodes to their corresponding {@link GameMessageReader}.
@@ -121,7 +128,7 @@ public class GameClient extends Client<GameMessage> {
     public void handleDecodedMessages() {
         int processed = 0;
         GameMessage msg;
-        while ((msg = pendingReadMessages.poll()) != null && processed++ < MAX_READ_MESSAGES) {
+        while (processed++ < MAX_READ_MESSAGES && (msg = pendingReadMessages.poll()) != null) {
             try {
                 GameMessageReader<?> reader = repository.get(msg.getOpcode());
                 if (reader == null) {
@@ -133,7 +140,6 @@ public class GameClient extends Client<GameMessage> {
                 logger.error("Error reading packet {}.", msg.getOpcode(), e);
             } finally {
                 msg.getPayload().releaseAll();
-                processed++;
             }
         }
     }
@@ -141,10 +147,9 @@ public class GameClient extends Client<GameMessage> {
     /**
      * Queues an outgoing message for transmission to the client.
      * <p>
-     * The message is built using the specified {@link GameMessageWriter} and written to the
-     * channel asynchronously. Messages are not flushed immediately but will be sent collectively
-     * when {@link #flush()} is called at the end of the cycle.
-     * </p>
+     * The message is built using the specified {@link GameMessageWriter} and written to the channel asynchronously.
+     * Messages are not flushed immediately but will be sent collectively when {@link #flush()} is called at the end of
+     * the cycle.
      *
      * @param writer The writer responsible for building the message to send.
      */
@@ -153,31 +158,72 @@ public class GameClient extends Client<GameMessage> {
         if (msg == null) {
             return;
         }
-        if (channel.isActive()) {
-            channel.eventLoop().execute(() -> {
-                channel.write(msg, channel.voidPromise());
-                if (msg.getPayload().refCnt() > 0) {
-                    pendingWriteMessages.add(msg);
-                }
-            });
-        } else {
+        if (holdingOutgoing) {
+            heldMessages.add(msg);
+            return;
+        }
+        write(msg);
+    }
+
+    /**
+     * Writes a built message to the channel on its event loop, releasing the payload if it can't be sent.
+     *
+     * @param msg The message to write.
+     */
+    private void write(GameMessage msg) {
+        if (!channel.isActive()) {
             msg.getPayload().releaseAll();
+            return;
+        }
+        channel.eventLoop().execute(() -> {
+            if (channel.isActive()) {
+                channel.write(msg).addListener(future -> {
+                    // Netty won't release our payload if the write fails (e.g. no encoder for the message).
+                    if (!future.isSuccess() && msg.getPayload().refCnt() > 0) {
+                        msg.getPayload().releaseAll();
+                    }
+                });
+            } else if (msg.getPayload().refCnt() > 0) {
+                msg.getPayload().releaseAll();
+            }
+        });
+    }
+
+    /**
+     * Starts holding outgoing messages instead of writing them. Used during the final login handshake, since messages
+     * queued before the game encoder is installed can't be encoded. Must be paired with {@link #releaseHeldMessages()}.
+     */
+    public void holdOutgoingMessages() {
+        holdingOutgoing = true;
+    }
+
+    /**
+     * Stops holding outgoing messages and writes everything that was held, in order. Should be called once the game
+     * encoder has been installed on the channel.
+     */
+    public void releaseHeldMessages() {
+        holdingOutgoing = false;
+        GameMessage msg;
+        while ((msg = heldMessages.poll()) != null) {
+            write(msg);
         }
     }
 
     /**
-     * Releases all pending write messages without sending them.
+     * Releases all pending inbound messages without processing them.
      * <p>
-     * This is typically used when the channel has closed before a flush operation
-     * could complete, to prevent memory leaks.
-     * </p>
+     * This is typically used when the channel closes before pending messages can be processed, ensuring that retained
+     * buffers do not cause memory leaks.
      */
-    public void releasePendingWrites() {
-        for (; ; ) {
-            GameMessage msg = pendingWriteMessages.poll();
-            if (msg == null) {
-                break;
+    public void releasePendingMessages() {
+        GameMessage msg;
+
+        while ((msg = pendingReadMessages.poll()) != null) {
+            if (msg.getPayload().refCnt() > 0) {
+                msg.getPayload().releaseAll();
             }
+        }
+        while ((msg = heldMessages.poll()) != null) {
             if (msg.getPayload().refCnt() > 0) {
                 msg.getPayload().releaseAll();
             }
@@ -196,12 +242,7 @@ public class GameClient extends Client<GameMessage> {
      */
     public void flush() {
         if (channel.isActive()) {
-            channel.eventLoop().submit(() -> {
-                channel.flush();
-                releasePendingWrites();
-            });
-        } else {
-            releasePendingWrites();
+            channel.eventLoop().submit(channel::flush);
         }
     }
 

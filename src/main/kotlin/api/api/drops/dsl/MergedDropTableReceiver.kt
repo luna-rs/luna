@@ -5,7 +5,6 @@ import api.drops.DropTableHandler
 import api.drops.DropTableItem
 import api.drops.SimpleDropTable
 import api.predef.*
-import io.luna.util.Rational
 
 /**
  * Represents the receiver for building [EntityDropTableSet] types in our DSL.

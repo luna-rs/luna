@@ -1,59 +1,62 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
-import api.bot.script.BotScriptData
+import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.StationaryInventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.ownsProductionSupplies
+import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.SkillingScriptFactory
+import game.skill.fletching.attachArrow.Arrow
+import game.skill.fletching.cutLog.CutLogActionItem
 import game.skill.fletching.cutLog.Log
 import game.skill.fletching.cutLog.Log.Companion.KNIFE
+import game.skill.fletching.stringBow.Bow
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Handles stationary bot fletching by repeatedly using a knife on one configured log type.
+ * Cuts a configured log into its existing arrow-shaft or unstrung-bow recipe through the player dialogue.
+ * One log and a knife qualify. Banking withdraws up to twenty-seven logs, including the final partial stock.
+ * If arrow shafts are defined as non-stackable, the batch is reduced to fit their fifteen-per-log output.
  *
- * [StationaryInventoryBotScript] ensures the bot is already in a valid stationary zone where it can safely process
- * inventory actions. Banking is requested when the bot runs out of the configured [log]. The script withdraws 27 logs
- * because the knife occupies one inventory slot.
+ * The shared inventory lifecycle handles verified banking, travel, safety, expiry, and bounded retries.
+ * Snapshots retain the log, valid recipe index, zones, duration, and retry budgets. On normal completion,
+ * personality can queue stringing for the selected bow only when the matching bow and string are owned.
  *
- * @property log The log type this script should fletch.
- * @property index The make-item dialogue index to select after using the knife on the log.
+ * @param bot The bot cutting logs.
+ * @property log The log type consumed throughout the session.
+ * @property index The existing player dialogue index within this log's recipes.
+ * @param duration The production session duration.
+ * @param zones Existing processing zones with banking and travel support.
  * @author lare96
  */
-class CutLogBotScript(bot: Bot,
-                      val log: Log,
-                      val index: Int,
-                      duration: Duration) : StationaryInventoryBotScript(bot, duration) {
+class CutLogBotScript(
+    bot: Bot,
+    val log: Log,
+    val index: Int,
+    duration: Duration,
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_FLETCHING)
+) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     init {
-        require(index >= 0 && index <= 4) { "Make-item index must be within inclusive bounds (0..4)." }
+        require(index in log.bows.indices) { "Make-item index must identify a recipe for $log." }
     }
 
     companion object {
-
-        /**
-         * Serializable data used to save and restore a [CutLogBotScript].
-         *
-         * This extends [ZonedBotScriptData] with the configured fletching [Log] and make-item dialogue index, allowing
-         * the script to resume with the same selected product, remaining duration, and candidate zones.
-         */
-        class CutLogData : ZonedBotScriptData() {
-
-            /**
-             * The log type the bot should fletch.
-             */
+        /** Saved log recipe and inherited session/retry state. @author lare96 */
+        class CutLogData : InventoryScriptData() {
+            /** Log enum retained under the existing snapshot field name. */
             var log: Log = Log.NORMAL
-
-            /**
-             * The make-item dialogue index to select after opening the fletching interface.
-             */
+            /** Player recipe index retained under the existing snapshot field name. */
             var index = 0
 
             override fun load(data: JsonObject) {
@@ -70,55 +73,76 @@ class CutLogBotScript(bot: Bot,
         }
     }
 
-    /**
-     * Recreates a fletching bot script from saved script data.
-     *
-     * @param bot The bot that owns this script.
-     * @param data The previously saved fletching script data.
-     */
-    constructor(bot: Bot, data: CutLogData) : this(bot, data.log, data.index, data.duration)
+    /** Actual product selected by this log's player dialogue. */
+    val bow = log.bows[index]
+    /** Permanent Fletching level required to select and initialize the configured recipe. */
+    val requiredLevel = bow.level
+    /** One input log; the knife is a reusable tool rather than a consumable. */
+    private val materials = listOf(Item(log.id))
+    /** Tool reserved in bank batches and requested at the shared tool-stock target when missing. */
+    private val requiredTools = setOf(KNIFE)
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
-        if (log.id !in bot.inventory) {
-            bot.log("No ${log.name} logs left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
-        }
+    /** Restores the existing log/index fields, saved zones, duration, and shared retry budgets. */
+    constructor(bot: Bot, data: CutLogData) : this(bot, data.log, data.index, data.duration, data.zones) {
+        restoreInventoryState(data)
+    }
 
-        if (KNIFE !in bot.inventory) {
-            bot.log("Knife is missing from inventory; requesting bank trip to restore tools.")
-            forceBanking = true
-            return true
-        }
+    /** Checks permanent level, one owned log, and a knife across inventory and bank. */
+    fun isEligible(): Boolean = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel &&
+            bot.ownsProductionSupplies(materials, requiredTools)
 
-        handler.inventory.useItem(KNIFE).onItem(log.id)
+    /** Returns a partial log batch with one tool slot and sufficient room for the configured output. */
+    fun bankBatch(): List<Item> {
+        val batch = bot.productionBatch(materials, requiredTools)
+        if (batch.isEmpty() || bow != Bow.ARROW_SHAFT || bot.inventory.stackable(bow.unstrung)) return batch
+        val amount = minOf(batch.last().amount, (bot.inventory.capacity() - requiredTools.size) / Arrow.SET_AMOUNT)
+        return if (amount > 0) listOf(Item(KNIFE), Item(log.id, amount)) else emptyList()
+    }
 
-        if (!waitFor(1200.milliseconds) { MakeItemDialogue::class in bot.overlays }) {
-            bot.log("Make-item dialogue did not open for ${log.name}; retrying next cycle.")
-            return true
-        }
+    override fun withdraw(): List<Item> = productionWithdraw(materials, requiredTools,
+        levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
 
-        bot.log("Selecting make-item index $index for ${log.name}.")
-        handler.widgets.clickMakeItem(index, Int.MAX_VALUE)
+    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
 
-        bot.naturalDexterityDelay()
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
+
+    /** Checks the minimum supplies and space released by consuming the next log. */
+    private fun hasMaterials(): Boolean {
+        if (!bot.inventory.containsAll(materials) || !bot.inventory.contains(KNIFE)) return false
+        val freed = if (!bot.inventory.stackable(log.id) || bot.inventory.computeAmountForId(log.id) == 1) 1 else 0
+        val output = if (!bot.inventory.stackable(bow.unstrung)) {
+            if (bow == Bow.ARROW_SHAFT) Arrow.SET_AMOUNT else 1
+        } else if (bot.inventory.contains(bow.unstrung)) 0 else 1
+        return bot.inventory.computeRemainingSize() + freed >= output
+    }
+
+    override suspend fun onExecuteInZone(): Boolean {
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_FLETCHING).level >= requiredLevel)) return true
+        attemptProduction(log.id) { startProduction() }
         return true
     }
 
-    override fun withdraw(): List<Item> {
-        return listOf(Item(log.id, 27))
+    /** Uses a knife on the configured log and requests exactly the carried log count for its recipe index. */
+    private suspend fun startProduction(): Boolean {
+        if (!handler.inventory.useItem(KNIFE).onItem(log.id)) return false
+        if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
+        handler.widgets.clickMakeItem(index, bot.inventory.computeAmountForId(log.id))
+        return true
     }
 
-    override fun tools(): Set<Int> {
-        return setOf(KNIFE)
+    override suspend fun finish() {
+        bot.actions.first(CutLogActionItem::class.java)?.interrupt()
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = CutLogData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        data.log = log
-        data.index = index
-        return data
+    override fun snapshot(): CutLogData = CutLogData().also {
+        it.log = log
+        it.index = index
+        saveInventoryState(it)
+    }
+
+    override suspend fun completed() {
+        if (bow == Bow.ARROW_SHAFT || !(rand(bot.personality.intelligence) || bot.personality.isDextrous)) return
+        val script = StringBowBotScript(bot, bow, SkillingScriptFactory.getDuration(bot))
+        if (script.isEligible()) bot.scriptStack.pushTail(script, 2)
     }
 }

@@ -1,9 +1,9 @@
 package game.bot.scripts.combat
 
-import api.bot.script.DynamicBotScript
 import api.bot.Suspendable.delay
+import io.luna.game.model.mob.bot.Bot
+import api.bot.script.DynamicBotScript
 import api.combat.specialAttack.SpecialAttackHandler
-import api.combat.specialAttack.SpecialAttackHandler.specialAttackData
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
@@ -13,7 +13,8 @@ import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.time.Duration.Companion.milliseconds
@@ -29,9 +30,12 @@ import kotlin.time.Duration.Companion.seconds
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
  * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
+ * @author lare96
  */
 class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
     DynamicBotScript(bot) {
+
+    override val actionSafety = ActionSafety.COMBAT
 
     /**
      * An enumerated type representing the initial action this bot should perform.
@@ -58,20 +62,20 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
 
     /**
      * The weapon equipped before swapping to a special attack weapon.
-     *
-     * TODO@0.5.0 This is currently never assigned before the special weapon swap, so the script cannot reliably switch
-     *  back to the previous weapon after special attack energy is too low.
      */
     private var previousWeapon: Int? = null
 
     /**
      * The shield equipped before swapping to a two-handed special attack weapon.
-     *
-     * TODO@0.5.0 This is currently never assigned before the special weapon swap, so shield restoration will not work.
      */
     private var previousShield: Int? = null
 
     override suspend fun init(resumed: Boolean): Boolean {
+        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
+            // Skillers do not engage in combat.
+            handler.combat.fleeCombat()
+            return true
+        }
         when (initialState) {
             InitialState.ATTACK -> {
                 bot.combat.attack(focus)
@@ -118,6 +122,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     override suspend fun finish() {
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
+    }
+
+    override suspend fun completed() {
+        restoreWeapons()
     }
 
     /**
@@ -202,12 +210,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
 
         if (!bot.strength.isBoosted) {
             potions += Potion.STRENGTH_POTION.doses
-            potions += Potion.SUPER_ATTACK.doses
+            potions += Potion.SUPER_STRENGTH.doses
         }
 
         if (!bot.ranged.isBoosted) {
             potions += Potion.RANGING_POTION.doses
-            potions += Potion.SUPER_ATTACK.doses
         }
 
         if (!bot.magic.isBoosted) {
@@ -230,8 +237,9 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     /**
      * Attempts to use the bot's special attack weapon.
      *
-     * The special weapon is resolved once and cached. If the bot is not already wielding that weapon, it attempts to
-     * equip it from inventory. Once equipped, the special attack bar is toggled on if enough energy is available.
+     * The special weapon is resolved once and cached. If enough energy is available and the bot is not already
+     * wielding that weapon, it attempts to equip it from inventory, then toggles the special attack bar on. Otherwise,
+     * the previous weapon and shield are re-equipped.
      */
     private suspend fun useSpecialAttack() {
         val weaponId = bot.equipment.weapon?.id
@@ -255,11 +263,23 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             return
         }
 
+        if (bot.combat.specialBar.energy < SpecialAttackHandler.getDrain(specialWeapon!!)) {
+            restoreWeapons()
+            return
+        }
+
         if (weaponId != specialWeapon) {
-            if (bot.inventory.isFull && equipDef(weaponId!!).isTwoHanded) {
+            val shieldId = bot.equipment.shield?.id
+            val twoHanded = equipDef(specialWeapon!!).isTwoHanded
+            if (bot.inventory.isFull && twoHanded && weaponId != null && shieldId != null) {
                 return
             }
 
+            // Recorded before equipping, since pausing this script mid-equip doesn't stop the swap.
+            previousWeapon = weaponId
+            if (twoHanded && shieldId != null) {
+                previousShield = shieldId
+            }
             if (!handler.equipment.equip(specialWeapon!!)) {
                 return
             }
@@ -269,16 +289,19 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             }
         }
 
-        if (bot.combat.specialBar.energy >= bot.combat.specialAttackData().drain) {
-            bot.combat.specialBar.toggleOn()
-        } else {
-            if (previousShield != null && handler.equipment.equip(previousShield!!)) {
-                previousShield = null
-            }
+        bot.combat.specialBar.toggleOn()
+    }
 
-            if (previousWeapon != null && handler.equipment.equip(previousWeapon!!)) {
-                previousWeapon = null
-            }
+    /**
+     * Re-equips the weapon and shield that were worn before swapping to the special attack weapon.
+     */
+    private suspend fun restoreWeapons() {
+        if (previousWeapon != null && handler.equipment.equip(previousWeapon!!)) {
+            previousWeapon = null
+        }
+
+        if (previousShield != null && handler.equipment.equip(previousShield!!)) {
+            previousShield = null
         }
     }
 

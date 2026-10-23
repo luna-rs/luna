@@ -2,14 +2,14 @@ package game.skill.cooking.cookFood
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.player.Sound
+import game.skill.Skills
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
-import game.player.Animations
-import game.player.Sound
-import game.skill.Skills
 
 /**
  * An [InventoryAction] that cooks food.
@@ -72,10 +72,9 @@ class CookFoodActionItem(plr: Player,
      * Determines if the food will be burnt this action cycle.
      */
     private fun computeFoodBurnt(): Boolean {
-
-        // Cooking gauntlets decreases burn chance.
         val level = mob.cooking.level
         var burnLevel = food.burnStopLvl
+        // Cooking gauntlets decreases burn chance.
         if (mob.equipment.contains(775)) {
             burnLevel = when (food) {
                 Food.LOBSTER -> 64

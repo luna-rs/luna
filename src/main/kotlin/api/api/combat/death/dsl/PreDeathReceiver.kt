@@ -2,7 +2,6 @@ package api.combat.death.dsl
 
 import api.predef.*
 import engine.combat.status.StatusEffectType
-import io.luna.game.model.mob.Player
 
 /**
  * A receiver class used during the **pre-death stage** of a [DeathHookReceiver].

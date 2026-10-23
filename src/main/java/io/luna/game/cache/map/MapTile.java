@@ -40,6 +40,15 @@ public final class MapTile {
     public static final int BRIDGE = 0x2;
 
     /**
+     * Bit flag: this tile is covered by a roof.
+     * <p>
+     * The client hides roofs when the player is standing on a tile with this flag, which makes it a reliable marker for
+     * the inside of a building.
+     * </p>
+     */
+    public static final int ROOF = 0x4;
+
+    /**
      * Local X offset inside the {@link Region} this tile belongs to (0–63).
      */
     private final int offsetX;
@@ -158,6 +167,15 @@ public final class MapTile {
      */
     public boolean isBridge() {
         return (attributes & BRIDGE) != 0;
+    }
+
+    /**
+     * Returns whether this tile is covered by a roof.
+     *
+     * @return {@code true} if the {@link #ROOF} bit is set, otherwise {@code false}.
+     */
+    public boolean isRoof() {
+        return (attributes & ROOF) != 0;
     }
 
     /**

@@ -2,6 +2,8 @@ package io.luna.game.model.mob;
 
 import io.luna.util.StringUtils;
 
+import java.util.regex.Pattern;
+
 /**
  * Holds the authentication credentials for a single player account.
  * <p>
@@ -12,6 +14,21 @@ import io.luna.util.StringUtils;
  * @author lare96
  */
 public final class PlayerCredentials {
+
+    /**
+     * The pattern a normalized username must match: 1-12 lower-case letters, digits, underscores, or spaces.
+     */
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-z0-9_ ]{1,12}$");
+
+    /**
+     * Determines if a normalized (lower-case, trimmed) username is valid.
+     *
+     * @param username The username to check.
+     * @return {@code true} if the username is valid.
+     */
+    public static boolean isValidUsername(String username) {
+        return USERNAME_PATTERN.matcher(username).matches();
+    }
 
     /**
      * The normalized, lower-case username for this account.

@@ -159,12 +159,21 @@ public class GameObject extends StationaryEntity {
         if (definition != null && !isHidden()) {
             int animationId = definition.getAnimationId().orElseThrow(() ->
                     new IllegalStateException("Object [" + id + "] does not have an animation!"));
-            if (animationId > 0) {
-                int offset = getChunk().offset(position);
-                AnimateGameObjectMessageWriter msg = new AnimateGameObjectMessageWriter(offset, objectType.getId(),
-                        direction.getId(), animationId);
-                chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
-            }
+            animate(animationId);
+        }
+    }
+
+    /**
+     * Animates this object with {@code animationId}, for objects with more than one animation.
+     *
+     * @param animationId The animation identifier.
+     */
+    public void animate(int animationId) {
+        if (animationId > 0 && !isHidden()) {
+            int offset = getChunk().offset(position);
+            AnimateGameObjectMessageWriter msg = new AnimateGameObjectMessageWriter(offset, objectType.getId(),
+                    direction.getId(), animationId);
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
         }
     }
 

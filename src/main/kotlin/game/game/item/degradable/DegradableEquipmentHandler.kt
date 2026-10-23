@@ -3,7 +3,11 @@ package game.item.degradable
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
+import game.item.degradable.DegradableEquipmentHandler.charges
 import game.item.degradable.DegradableEquipmentHandler.degrade
+import game.item.degradable.DegradableEquipmentHandler.dropRestricted
+import game.item.degradable.DegradableEquipmentHandler.idMap
+import game.item.degradable.DegradableEquipmentHandler.nextItem
 import io.luna.game.model.item.DynamicItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -39,19 +43,9 @@ object DegradableEquipmentHandler {
     const val RING_OF_RECOIL_CHARGES = 40
 
     /**
-     * The health percentage at or below which a Ring of Life should activate.
-     */
-    const val RING_OF_LIFE_HEALTH_PERCENT = 10
-
-    /**
      * The starting charge count assigned to Crystal items managed by this handler.
      */
     const val CRYSTAL_ITEMS_CHARGES = 2500
-
-    /**
-     * Tracks whether the player's Ring of Life has already activated for the current situation.
-     */
-    var Player.ringOfLifeActive by Attr.boolean()
 
     /**
      * The player's remaining Ring of Recoil capacity.

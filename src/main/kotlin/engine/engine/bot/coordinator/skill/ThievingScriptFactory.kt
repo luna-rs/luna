@@ -102,7 +102,7 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
                     }
 
                     npcs += ThievingNpcType.WARRIOR
-                    zones += SubZone.ARDOUGNE_SQUARE_THIEVING
+                    zones += SubZone.ARDOUGNE_WARRIOR_THIEVING
                 }
             }
 
@@ -185,24 +185,21 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
          */
         fun searchForTraps(bot: Bot): SearchBotScript {
             val chests = EnumSet.noneOf(ThievingChest::class.java)
-            if (level >= ThievingChest.TEN_COIN.level) {
-                chests += ThievingChest.TEN_COIN
-                zones += SubZone.TEN_COIN_CHEST_HUT
+            if (level >= ThievingChest.BLOOD_RUNES.level) {
+                chests += ThievingChest.BLOOD_RUNES
+                zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
             } else if (level >= ThievingChest.STEEL_ARROWTIPS.level) {
                 chests += ThievingChest.STEEL_ARROWTIPS
                 zones += SubZone.HEMENSTER_CHEST_ROOM
-            } else if (level >= ThievingChest.BLOOD_RUNES.level) {
-                chests += ThievingChest.BLOOD_RUNES
-                zones += SubZone.CHAOS_DRUID_TOWER_DUNGEON
-            }
+            } else
 
-            chests.removeIf { level < it.level }
+                chests.removeIf { level < it.level }
             return SearchBotScript(bot, chests, getDuration(bot), zones)
         }
 
         return if (rand(bot.personality.intelligence) || level < ThievingStallType.SEED.level) {
             pickpocketing(bot)
-        } else if(randBoolean()) {
+        } else if (randBoolean() || level < ThievingChest.STEEL_ARROWTIPS.level) {
             stealingFromStalls(bot)
         } else {
             searchForTraps(bot)

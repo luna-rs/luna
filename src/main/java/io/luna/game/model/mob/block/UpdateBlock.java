@@ -60,6 +60,17 @@ public abstract class UpdateBlock {
     }
 
     /**
+     * Encodes a player block for a particular recipient. Region-independent blocks use the default encoder.
+     *
+     * @param msg The outgoing buffer.
+     * @param data The data to apply within this block.
+     * @param viewer The player receiving the packet.
+     */
+    public void encodeForPlayer(ByteMessage msg, UpdateBlockData data, Player viewer) {
+        encodeForPlayer(msg, data);
+    }
+
+    /**
      * Encodes this update block for an {@link Npc}.
      * Subclasses must override if they support NPC encoding.
      *

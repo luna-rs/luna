@@ -5,11 +5,11 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
- * Registers [objectList] with [itemArray] for object clicking and using an item on an object.
+ * Registers the objects of [type] with [itemArray] for object clicking and using an item on an object.
  */
-fun register(objectList: Set<Int>, itemArray: IntArray) {
-    registerObjectClick(objectList, itemArray)
-    registerUseItemOnObject(objectList)
+fun register(type: TextileType, itemArray: IntArray) {
+    registerObjectClick(type.objectIds, itemArray)
+    registerUseItemOnObject(type)
 }
 
 /**
@@ -31,11 +31,11 @@ fun registerObjectClick(objectList: Set<Int>, itemArray: IntArray) {
 }
 
 /**
- * Registers using an item on an object.
+ * Registers using an item on an object, for only the textiles made with [type].
  */
-fun registerUseItemOnObject(objectList: Set<Int>) {
-    Textile.RAW_IDS_TO_TEXTILES.entries.forEach { entry ->
-        objectList.forEach {
+fun registerUseItemOnObject(type: TextileType) {
+    Textile.RAW_IDS_TO_TEXTILES.entries.filter { it.value.type == type }.forEach { entry ->
+        type.objectIds.forEach {
             useItem(entry.key).onObject(it) {
                 plr.overlays.open(object : MakeItemDialogue(entry.value.processedItem.id) {
                     override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
@@ -48,5 +48,5 @@ fun registerUseItemOnObject(objectList: Set<Int>) {
 }
 
 // Register both loom and spinning wheel objects here.
-register(TextileType.SPINNING_WHEEL.objectIds, Textile.SPINNING_WHEEL_PROCESSED_IDS)
-register(TextileType.LOOM.objectIds, Textile.LOOM_PROCESSED_IDS)
+register(TextileType.SPINNING_WHEEL, Textile.SPINNING_WHEEL_PROCESSED_IDS)
+register(TextileType.LOOM, Textile.LOOM_PROCESSED_IDS)

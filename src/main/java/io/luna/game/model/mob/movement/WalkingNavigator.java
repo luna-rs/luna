@@ -8,15 +8,12 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
-import io.luna.game.model.path.BotPathfinder;
+import io.luna.game.model.object.GameObject;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PathResult;
 import io.luna.game.model.path.PathResultType;
-import io.luna.game.model.path.PlayerPathfinder;
-import io.luna.game.model.path.SimplePathfinder;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +24,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFactory;
 
@@ -68,6 +68,13 @@ public class WalkingNavigator {
     private static final ForkJoinPool pool = new ForkJoinPool(2, defaultForkJoinWorkerThreadFactory, null, true);
 
     /**
+     * The farthest, in tiles, that a mob may have moved from where a path was computed for the path to still be
+     * applied. A mob that walked on while the path was being computed is still close enough for the walking queue to
+     * splice the path in, but one that was teleported is not.
+     */
+    private static final int MAX_PATH_DRIFT = 4;
+
+    /**
      * The collision manager used for step validation and pathfinding.
      */
     private final CollisionManager collisionManager;
@@ -83,6 +90,13 @@ public class WalkingNavigator {
      * A request remains active until its pending future is completed or cancelled.
      */
     private NavigationRequest active;
+
+    /**
+     * The generation of the most recent path request. A path is only applied if no newer request has been made, and
+     * nothing has been cancelled, since it was requested. Cancelling the future returned by {@link #walk} does not stop
+     * work that is already in flight, so this is what keeps stale paths from being applied.
+     */
+    private final AtomicInteger pathGeneration = new AtomicInteger();
 
     /**
      * Creates a new walking navigator for a mob.
@@ -108,7 +122,8 @@ public class WalkingNavigator {
      * @return The pending navigation result.
      */
     public CompletableFuture<NavigationResult> submit(NavigationRequest request) {
-        if (request.equals(active)) {
+        // A completed result describes an earlier attempt, not this retry's current reachability.
+        if (isActive() && request.equals(active)) {
             return active.getPending();
         }
         if (isActive()) {
@@ -260,7 +275,9 @@ public class WalkingNavigator {
      * @return {@code true} if the step was queued, otherwise {@code false}.
      */
     public boolean step(Direction direction) {
-        if (direction != Direction.NONE && collisionManager.traversable(mob.getPosition(), mob.getType(), direction)) {
+        if (direction != Direction.NONE &&
+                collisionManager.traversable(mob.getPosition(), mob.getType(), direction, mob.size(),
+                        mob.getRouteStrategy())) {
             mob.getWalking().addStep(direction);
             return true;
         }
@@ -277,7 +294,8 @@ public class WalkingNavigator {
         ImmutableList<Direction> directions = includeDiagonals ? Direction.ALL_EXCEPT_NONE : Direction.NESW;
         List<Direction> selectFrom = new ArrayList<>(directions.size());
         for (Direction next : directions) {
-            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next)) {
+            if (collisionManager.traversable(mob.getPosition(), mob.getType(), next, mob.size(),
+                    mob.getRouteStrategy())) {
                 selectFrom.add(next);
             }
         }
@@ -292,9 +310,17 @@ public class WalkingNavigator {
      * Cancels the currently active navigation request, if one exists.
      */
     public void cancel() {
+        discardPaths();
         if (isActive()) {
             active.getPending().cancel(true);
         }
+    }
+
+    /**
+     * Discards the paths that are still being computed, so that they are not applied once they are done.
+     */
+    void discardPaths() {
+        pathGeneration.incrementAndGet();
     }
 
     /**
@@ -368,6 +394,12 @@ public class WalkingNavigator {
             }
             return null;
         });
+        pathFuture.whenComplete((path, error) -> {
+            if (pathFuture.isCancelled()) {
+                // Prevent queued searches from starting. Running searches are not interrupted by CompletableFuture.
+                pathResultFuture.cancel(false);
+            }
+        });
         return handleExceptions(target, pathFuture);
     }
 
@@ -375,38 +407,181 @@ public class WalkingNavigator {
      * Computes and queues a path to a destination.
      * <p>
      * The path is computed using the supplied pathfinder, then applied to the mob's walking queue on the game
-     * executor.
+     * executor. The path is dropped instead of applied if it went stale in the meantime: if a newer path was
+     * requested, if paths were {@link #discardPaths() discarded}, if the request it was computed for is no longer
+     * active, or if the mob has since moved more than {@link #MAX_PATH_DRIFT} tiles from where the path starts.
      *
+     * @param request The navigation request that owns this path.
      * @param destination The destination to walk to.
      * @param pathfinder The pathfinder implementation to use.
      * @param async {@code true} to perform pathfinding asynchronously, otherwise {@code false}.
-     * @return A future that completes once the path has been computed and queued.
+     * @return A future that completes once the path has been computed and queued, or dropped.
      */
     CompletableFuture<Void> walk(Locatable destination, GamePathfinder<Position> pathfinder, boolean async) {
-        CompletableFuture<Void> result = findPath(mob.getPosition(), destination.abs(), pathfinder, async)
-                .thenAcceptAsync(path -> mob.getWalking().replacePath(path), mob.getService().getGameExecutor());
+        Position start = mob.getPosition();
+        NavigationRequest request = active;
+        int generation = pathGeneration.incrementAndGet();
+        CompletableFuture<Void> result = findPath(start, destination.abs(), pathfinder, async)
+                .thenAcceptAsync(path -> {
+                    if (isStale(start, request, generation)) {
+                        return;
+                    }
+                    mob.getWalking().replacePath(path);
+                }, mob.getService().getGameExecutor());
         return handleExceptions(destination, result);
     }
 
     /**
-     * Selects the default pathfinder for this mob.
-     * <ul>
-     *     <li>{@link Bot} mobs use {@link BotPathfinder}.</li>
-     *     <li>{@link Player} mobs use {@link PlayerPathfinder}.</li>
-     *     <li>All other mobs use {@link SimplePathfinder}.</li>
-     * </ul>
+     * Paths to a usable object interaction tile rather than the object's occupied origin. Reach is checked on the
+     * game thread using the same rotated footprint/access/collision rules as the eventual interaction. Try another
+     * legal side if the nearest side has no complete route; retain a partial route for long-distance travel.
+     */
+    CompletableFuture<Void> walkToObject(GameObject target, Optional<Direction> offsetDir,
+                                         GamePathfinder<Position> pathfinder, boolean async) {
+        Position start = mob.getPosition();
+        NavigationRequest request = active;
+        int generation = pathGeneration.incrementAndGet();
+        List<Position> candidates = objectApproachPositions(target, offsetDir);
+        var search = async ? CompletableFuture.supplyAsync(() -> findObjectPath(start, candidates, pathfinder), pool) :
+                CompletableFuture.completedFuture(findObjectPath(start, candidates, pathfinder));
+        var result = search.thenAcceptAsync(path -> {
+            if (!isStale(start, request, generation)) {
+                mob.getWalking().replacePath(path);
+            }
+        }, mob.getService().getGameExecutor());
+        result.whenComplete((value, error) -> {
+            if (result.isCancelled()) {
+                search.cancel(false);
+            }
+        });
+        return handleExceptions(target, result);
+    }
+
+    /**
+     * Checks for a complete walking route to a legal interaction tile without moving the mob.
+     * Partial paths are not proof of reachability. Targets and candidate tiles are captured on the game thread;
+     * searches run on the pathfinding pool and return false if no complete route is confirmed within five seconds.
+     * Each running search retains the pathfinder's existing node bound; timeout prevents further candidate searches.
+     */
+    public CompletableFuture<Boolean> canReachForInteraction(Entity target) {
+        Position start = mob.getPosition();
+        if (start.getZ() != target.getPosition().getZ()) {
+            return CompletableFuture.completedFuture(false);
+        }
+        if (collisionManager.reached(mob, target, InteractionPolicy.STANDARD_SIZE)) {
+            return CompletableFuture.completedFuture(true);
+        }
+        List<Position> candidates = interactionApproachPositions(target, Optional.empty());
+        GamePathfinder<Position> pathfinder = getDefaultPathfinder();
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        result.completeAsync(() -> {
+            for (Position candidate : candidates) {
+                if (result.isDone()) {
+                    return false;
+                }
+                PathResult<Position> path = pathfinder.find(start, candidate);
+                if (path.getType() == PathResultType.COMPLETE ||
+                        (path.getType() == PathResultType.EMPTY && start.equals(candidate))) {
+                    return true;
+                }
+            }
+            return false;
+        }, pool);
+        CompletableFuture<Boolean> checked = result.completeOnTimeout(false, 5, TimeUnit.SECONDS)
+                .exceptionally(error -> {
+                    logger.debug("Could not confirm an interaction route from {}.", start, error);
+                    return false;
+                });
+        checked.whenComplete((reachable, error) -> {
+            if (checked.isCancelled()) {
+                result.cancel(false);
+            }
+        });
+        return checked;
+    }
+
+    /** Returns the full legal perimeter, including interior tiles along a multi-tile object's sides. */
+    List<Position> objectApproachPositions(GameObject target, Optional<Direction> offsetDir) {
+        return interactionApproachPositions(target, offsetDir);
+    }
+
+    private List<Position> interactionApproachPositions(Entity target, Optional<Direction> offsetDir) {
+        List<Position> candidates = new ArrayList<>();
+        if (offsetDir.isPresent()) {
+            candidates.add(computeOffsetPosition(target, offsetDir));
+        } else {
+            Position origin = target.getPosition();
+            for (int x = origin.getX() - mob.sizeX() + 1; x < origin.getX() + target.sizeX(); x++) {
+                candidates.add(new Position(x, origin.getY() - mob.sizeY(), origin.getZ()));
+                candidates.add(new Position(x, origin.getY() + target.sizeY(), origin.getZ()));
+            }
+            for (int y = origin.getY() - mob.sizeY() + 1; y < origin.getY() + target.sizeY(); y++) {
+                candidates.add(new Position(origin.getX() - mob.sizeX(), y, origin.getZ()));
+                candidates.add(new Position(origin.getX() + target.sizeX(), y, origin.getZ()));
+            }
+        }
+        return candidates.stream()
+                .filter(position -> collisionManager.reached(position, target, InteractionPolicy.STANDARD_SIZE))
+                .sorted(java.util.Comparator.comparingInt(position -> position.computeLongestDistance(mob.getPosition())))
+                .toList();
+    }
+
+    /** Complete endpoints are preferred over a nearer side's fallback path. */
+    Deque<Position> findObjectPath(Position start, List<Position> candidates, GamePathfinder<Position> pathfinder) {
+        Deque<Position> partial = null;
+        int partialDistance = Integer.MAX_VALUE;
+        for (Position candidate : candidates) {
+            PathResult<Position> result = pathfinder.find(start, candidate);
+            Deque<Position> path = result.getPath();
+            if (result.getType() == PathResultType.COMPLETE ||
+                    (result.getType() == PathResultType.EMPTY && start.equals(candidate))) {
+                return path;
+            }
+            if (result.getType() == PathResultType.PARTIAL && path != null && !path.isEmpty()) {
+                int distance = path.peekLast().computeLongestDistance(candidate);
+                if (distance < partialDistance) {
+                    partial = path;
+                    partialDistance = distance;
+                }
+            }
+        }
+        return partial;
+    }
+
+    /**
+     * Determines if a path that was computed from {@code start} should no longer be applied. Must be called on the
+     * game thread.
+     *
+     * @param start The position the path was computed from.
+     * @param request The request that was active when the path was requested.
+     * @param generation The path generation of the request.
+     * @return {@code true} if the path is stale and should be dropped.
+     */
+    private boolean isStale(Position start, NavigationRequest request, int generation) {
+        if (generation != pathGeneration.get()) {
+            return true;
+        }
+        if (request != null && (active != request || request.getPending().isDone())) {
+            return true;
+        }
+        Position current = mob.getPosition();
+        return current.getZ() != start.getZ() || current.computeLongestDistance(start) > MAX_PATH_DRIFT;
+    }
+
+    /**
+     * Selects the default pathfinder for this mob: {@link PathfinderType#PLAYER} for players and bots, and
+     * {@link PathfinderType#NPC} for NPCs.
      *
      * @return The default pathfinder for this mob.
      */
     GamePathfinder<Position> getDefaultPathfinder() {
-        int plane = mob.getPosition().getZ();
-        if (mob instanceof Bot) {
-            return new BotPathfinder(collisionManager, plane);
-        } else if (mob instanceof Player) {
-            return new PlayerPathfinder(collisionManager, plane);
+        PathfinderType type;
+        if (mob instanceof Player) {
+            type = PathfinderType.PLAYER;
         } else {
-            return new SimplePathfinder(collisionManager);
+            type = PathfinderType.NPC;
         }
+        return type.getPfFunction().apply(mob);
     }
 
     /**
@@ -421,13 +596,23 @@ public class WalkingNavigator {
      * @return A future that logs unexpected failures and returns {@code null} when recovery is needed.
      */
     <T> CompletableFuture<T> handleExceptions(Locatable target, CompletableFuture<T> result) {
-        return result.exceptionally(ex -> {
-            boolean ignored = ex instanceof CancellationException;
+        CompletableFuture<T> handled = result.exceptionally(ex -> {
+            Throwable cause = ex;
+            while (cause instanceof CompletionException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            boolean ignored = cause instanceof CancellationException;
             if (!ignored) {
                 logger.error("Pathfinding for mob {} to target {} failed!", mob, target, ex);
             }
             return null;
         });
+        handled.whenComplete((value, error) -> {
+            if (handled.isCancelled()) {
+                result.cancel(false);
+            }
+        });
+        return handled;
     }
 
     /**
@@ -445,6 +630,16 @@ public class WalkingNavigator {
      * @return The computed adjacent offset position.
      */
     Position computeOffsetPosition(Entity target, Optional<Direction> offsetDir) {
+        if (offsetDir.isEmpty()) {
+            // Default interaction approaches must end at a side that satisfies the same reach check as combat.
+            var candidates = Direction.NESW.stream()
+                    .map(direction -> computeOffsetPosition(target, Optional.of(direction))).toList();
+            java.util.Comparator<Position> distance = java.util.Comparator.comparingInt(
+                    candidate -> candidate.computeLongestDistance(mob.getPosition()));
+            return candidates.stream()
+                    .filter(candidate -> collisionManager.reached(candidate, target, InteractionPolicy.STANDARD_SIZE))
+                    .min(distance).orElseGet(() -> candidates.stream().min(distance).orElseThrow());
+        }
         Position targetPosition = target.getPosition();
         int sizeX = mob.sizeX();
         int sizeY = mob.sizeY();
@@ -455,7 +650,7 @@ public class WalkingNavigator {
         Position position = mob.getPosition();
         int height = position.getZ();
 
-        Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
+        Direction direction = offsetDir.get();
         int dx = direction.getTranslateX();
         int dy = direction.getTranslateY();
 

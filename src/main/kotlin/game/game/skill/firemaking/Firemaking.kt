@@ -1,9 +1,9 @@
 package game.skill.firemaking
 
 import api.predef.*
-import io.luna.game.model.mob.Player
 import game.skill.Skills
 import io.luna.Luna
+import io.luna.game.model.mob.Player
 
 /**
  * Holds constants and useful global functions related to Firemaking.

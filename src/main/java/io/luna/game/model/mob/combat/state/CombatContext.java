@@ -83,6 +83,11 @@ public abstract class CombatContext<T extends Mob> {
     private CombatAttack<?> lastAttackReceived;
 
     /**
+     * The last attack sent by this mob.
+     */
+    private CombatAttack<?> lastAttackSent;
+
+    /**
      * The most recent combat damage received by this mob.
      * <p>
      * This is updated when damage is applied and can be used by combat scripts, prayers, effects, or listeners
@@ -433,6 +438,24 @@ public abstract class CombatContext<T extends Mob> {
      */
     public void setLastAttackReceived(CombatAttack<?> lastAttackReceived) {
         this.lastAttackReceived = lastAttackReceived;
+    }
+
+    /**
+     * Gets the most recent attack sent by this mob.
+     *
+     * @return The last attack sent by this mob, or {@code null} if none has been tracked.
+     */
+    public CombatAttack<?> getLastAttackSent() {
+        return lastAttackSent;
+    }
+
+    /**
+     * Sets the last attack sent by this mob.
+     *
+     * @param lastAttackSent The last attack.
+     */
+    public void setLastAttackSent(CombatAttack<?> lastAttackSent) {
+        this.lastAttackSent = lastAttackSent;
     }
 
     /**

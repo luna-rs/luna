@@ -2,6 +2,7 @@ package io.luna.game.model.item;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import engine.bot.gear.BotItemTracker;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
@@ -483,7 +484,7 @@ public final class Equipment extends ItemContainer {
         EquipmentListener equipmentListener = new EquipmentListener(player);
         this.equipmentListener = equipmentListener;
 
-        setListeners(new PlayerRefreshListener(player, ERROR_MSG), equipmentListener, new WeightListener(player));
+        setListeners(new PlayerRefreshListener(player, ERROR_MSG), equipmentListener, new BotItemTracker(player), new WeightListener(player));
     }
 
     /**

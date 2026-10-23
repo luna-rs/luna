@@ -4,7 +4,17 @@ import com.google.common.collect.ImmutableSet
 import io.luna.game.model.item.Item
 
 /**
- * An enum representing a drinkable potion.
+ * Recipes registered by the player finished-potion mixing script.
+ * Each operation consumes one unfinished potion and one secondary ingredient, producing the configured
+ * three-dose potion or preparation oil. The gameplay action checks current Herblore level and awards XP.
+ * Ingredient IDs correspond to [game.skill.herblore.makeUnfPotion.UnfPotion]; drinkable outputs agree
+ * with [game.player.item.consume.potion.Potion].
+ *
+ * @property id Finished product item ID.
+ * @property unf Required unfinished-potion item ID.
+ * @property secondary Consumed secondary ingredient item ID.
+ * @property level Current Herblore level required to mix the recipe.
+ * @property exp Herblore experience awarded for each successful operation.
  *
  * @author lare96
  */
@@ -14,13 +24,13 @@ enum class FinishedPotion(val id: Int,
                           val level: Int,
                           val exp: Double) {
 
-    ATTACK_POTION(id = 221,
+    ATTACK_POTION(id = 121,
                   unf = 91,
-                  secondary = 121,
+                  secondary = 221,
                   level = 3,
                   exp = 25.0),
     ANTIPOISON(id = 175,
-               unf = 91,
+               unf = 93,
                secondary = 235,
                level = 5,
                exp = 37.5),
@@ -114,12 +124,12 @@ enum class FinishedPotion(val id: Int,
                  secondary = 3138,
                  level = 76,
                  exp = 172.5),
-    ZAMORAK_BREW(id = 169,
-                 unf = 75,
+    ZAMORAK_BREW(id = 189,
+                 unf = 111,
                  secondary = 247,
                  level = 78,
                  exp = 175.0),
-    SARADOMIN_BREW(id = 169,
+    SARADOMIN_BREW(id = 6687,
                    unf = 3002,
                    secondary = 6693,
                    level = 81,

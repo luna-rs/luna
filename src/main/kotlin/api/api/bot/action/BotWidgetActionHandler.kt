@@ -2,9 +2,9 @@ package api.bot.action
 
 import api.bot.Suspendable.naturalDelay
 import api.bot.SuspendableCondition
+import io.luna.game.model.mob.bot.Bot
 import api.predef.ext.*
 import engine.widget.make.ButtonIndex
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.NumberInput
@@ -50,8 +50,17 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * @param amount The amount to make.
      */
     suspend fun clickMakeItem(index: Int, amount: Int) {
-        bot.overlays[MakeItemDialogue::class] ?: return
-        val button = INDEX_MAP[index] ?: return
+        val dialogue = bot.overlays[MakeItemDialogue::class] ?: return
+        if (index !in 0 until dialogue.length) return
+        // The client uses a different button group for each dialogue length (see engine.widget.make.makeItem).
+        val button = when (dialogue.length) {
+            1 -> ButtonIndex(make1 = 8893, index = 0)
+            2 -> ButtonIndex(make1 = 8874 + index * 4, index = index)
+            3 -> ButtonIndex(make1 = 8889 + index * 4, index = index)
+            4 -> ButtonIndex(make1 = 8909 + index * 4, index = index)
+            5 -> INDEX_MAP[index]
+            else -> null
+        } ?: return
         when (amount) {
             1 -> bot.output.clickButton(button.make1)
             5 -> bot.output.clickButton(button.make5)
@@ -88,6 +97,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                 when (option) {
                     1 -> bot.output.clickButton(14445)
                     2 -> bot.output.clickButton(14446)
+                    else -> return false
                 }
 
             2469 ->
@@ -95,6 +105,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     1 -> bot.output.clickButton(2471)
                     2 -> bot.output.clickButton(2472)
                     3 -> bot.output.clickButton(2473)
+                    else -> return false
                 }
 
             8207 ->
@@ -103,6 +114,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     2 -> bot.output.clickButton(8210)
                     3 -> bot.output.clickButton(8211)
                     4 -> bot.output.clickButton(8212)
+                    else -> return false
                 }
 
             8219 ->
@@ -112,6 +124,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     3 -> bot.output.clickButton(8223)
                     4 -> bot.output.clickButton(8224)
                     5 -> bot.output.clickButton(8225)
+                    else -> return false
                 }
 
             else -> {
@@ -124,13 +137,21 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Clicks the logout button.
+     * Clicks the option with some text on the currently open [OptionDialogue].
      *
-     * This uses the normal client logout control instead of forcibly disconnecting the bot.
+     * @param text The text of the option, with any case.
+     *
+     * @return `true` if a supported dialogue interface was open with the option on it and a click was attempted, or
+     * `false` if not.
      */
-    fun clickLogout() {
-        bot.output.clickLogout()
-        bot.log("Clicking logout button.")
+    fun clickDialogueOption(text: String): Boolean {
+        val activeInterface = bot.overlays[OptionDialogue::class] ?: return false
+        val index = activeInterface.options.indexOfFirst { it.equals(text, ignoreCase = true) }
+        if (index == -1) {
+            bot.log("No dialogue option '$text' in ${activeInterface.options}.")
+            return false
+        }
+        return clickDialogueOption(index + 1)
     }
 
     /**

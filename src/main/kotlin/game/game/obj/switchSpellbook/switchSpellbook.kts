@@ -3,8 +3,8 @@ package game.obj.switchSpellbook
 import api.combat.magic.CombatSpellHandler.resetAutocast
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.Spellbook
 import game.player.Animations
+import io.luna.game.model.mob.Spellbook
 
 // Switch spell books when the altar is clicked, reset auto-cast state.
 object1(6552) {

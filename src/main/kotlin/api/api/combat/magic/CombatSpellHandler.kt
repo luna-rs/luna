@@ -1,7 +1,6 @@
 package api.combat.magic
 
 import api.combat.CombatHandler.displayCombatOverlay
-import api.predef.ext.*
 import engine.combat.status.hooks.ImmobilizedStatusEffect
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob

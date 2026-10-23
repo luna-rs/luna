@@ -2,6 +2,9 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
+import io.luna.net.msg.out.WidgetVisibilityMessageWriter;
+
+import java.util.List;
 
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which displays a series of options.
@@ -11,9 +14,19 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 public class OptionDialogue extends DialogueInterface {
 
     /**
+     * The title shown when none is set.
+     */
+    private static final String DEFAULT_TITLE = "Select an Option";
+
+    /**
      * The options.
      */
     private final String[] options;
+
+    /**
+     * The title, or {@code null} for {@link #DEFAULT_TITLE}.
+     */
+    private String title;
 
     /**
      * Creates a new {@link OptionDialogue}.
@@ -70,8 +83,31 @@ public class OptionDialogue extends DialogueInterface {
 
     }
 
+    /**
+     * @return The options, in the order they are shown.
+     */
+    public List<String> getOptions() {
+        return List.of(options);
+    }
+
+    /**
+     * Sets the title shown above the options. A custom title is framed by the wider pair of swords, so longer text
+     * fits.
+     *
+     * @param title The title, or {@code null} for {@link #DEFAULT_TITLE}.
+     */
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public final boolean init(Player player) {
+        // The client keeps the last title and swords it was sent, so a dialogue without a title resets them.
+        int[] swords = DialogueUtils.optionSwordLayers(options.length);
+        player.queue(new WidgetTextMessageWriter(title == null ? DEFAULT_TITLE : title, getId() + 1));
+        player.queue(new WidgetVisibilityMessageWriter(swords[0], title != null));
+        player.queue(new WidgetVisibilityMessageWriter(swords[1], title == null));
+
         int textWidgetId = getId() + 2;
         for (String line : options) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));

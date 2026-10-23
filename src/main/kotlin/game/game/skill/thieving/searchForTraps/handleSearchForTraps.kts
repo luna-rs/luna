@@ -28,7 +28,7 @@ fun searchForTraps(plr: Player, event: ObjectClickEvent) {
 /* Add object interactions for 'open' and 'search for traps.' */
 for (def in GameObjectDefinition.ALL) {
     if (def != null && def.actions.contains("Search for traps")) {
-        object1(def.id) { openTrap(plr, this) }
-        object2(def.id) { searchForTraps(plr, this) }
+        object1(def.id()) { openTrap(plr, this) }
+        object2(def.id()) { searchForTraps(plr, this) }
     }
 }

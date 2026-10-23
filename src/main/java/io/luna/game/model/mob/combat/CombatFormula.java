@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat;
 
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.prayer.CombatPrayerSet;
+import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -73,7 +74,9 @@ public final class CombatFormula {
      * @return The hit chance percentage.
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type) {
-        EquipmentBonus attackStyleBonus = attacker.getCombat().getAttackStyleBonus();
+        // An NPC's attack style bonus describes its melee attack, so its ranged attacks need their own.
+        EquipmentBonus attackStyleBonus = attacker instanceof Npc && type == CombatDamageType.RANGED ?
+                EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
         double attackRoll = calculateAttackRoll(attacker, attackStyleBonus, type);
         double defenceRoll = type == CombatDamageType.MAGIC ?
                 calculateMagicDefenceRoll(victim) :
@@ -218,9 +221,11 @@ public final class CombatFormula {
      * @return The offensive accuracy bonus.
      */
     private static int getOffensiveAccuracyBonus(Mob attacker, EquipmentBonus attackStyleBonus) {
-        return attacker instanceof Player ?
-                attacker.asPlr().getEquipment().getBonus(attackStyleBonus) :
-                attacker.asNpc().combatDef().getAttackBonus();
+        if (attacker instanceof Player) {
+            return attacker.asPlr().getEquipment().getBonus(attackStyleBonus);
+        }
+        NpcCombatDefinition def = attacker.asNpc().combatDef();
+        return attackStyleBonus == EquipmentBonus.RANGED_ATTACK ? def.getRangedBonus() : def.getAttackBonus();
     }
 
     /**

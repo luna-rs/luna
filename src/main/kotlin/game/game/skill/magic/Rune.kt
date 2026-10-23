@@ -29,7 +29,7 @@ enum class Rune(val id: Int) {
         /**
          * Maps rune item ids to their matching [Rune] entry.
          */
-        val ID_TO_RUNE = values().associateBy { it.id }
+        val ID_TO_RUNE = entries.associateBy { it.id }
     }
 
     /**

@@ -9,40 +9,35 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
- * Represents a selection of traits that make up the personality of a {@link Bot}.
+ * Defines the personality traits of a {@link Bot}.
  * <p>
- * A bot's personality determines how robust its survival instincts are, how it navigates through the world, and how
- * it interacts with other bots and players.
+ * A personality consists of intelligence, kindness, confidence, sociability, and dexterity values. These traits can
+ * be used by bot systems to influence decision-making and behavior.
  * <p>
- * Each bot is assigned a unique combination of core attributes ({@code intelligence}, {@code kindness},
- * {@code confidence}, {@code social}, {@code dexterity}), which collectively influence its decision-making,
- * emotional responses, and behavioral quirks.
- * <p>
- * For example, a bot with high confidence and low kindness may appear arrogant, while a bot with high intelligence
- * and low confidence might behave cautiously or submissively.
- * <p>
- * This class also defines a nested {@link Builder} for generating new personality instances, either from predefined
- * templates or fully randomized distributions.
+ * Personalities may be created from a predefined {@link PersonalityTemplate}, randomized from a template with
+ * variance, or generated using completely random trait values.
  *
  * @author lare96
  */
 public final class BotPersonality {
 
     /**
-     * A fluent builder used to construct {@link BotPersonality} instances.
-     * <p>
-     * Builders can load values from predefined {@link PersonalityTemplate}s, apply random variance, or generate
-     * entirely randomized personalities for testing or procedural generation.
+     * A builder for creating {@link BotPersonality} instances.
      */
     public static final class Builder {
 
         /**
-         * The bot personality manager.
+         * The manager used to retrieve predefined personality templates.
          */
         private final BotPersonalityManager personalityManager;
 
         /**
-         * Core personality traits. Defaulted to -1 to indicate unset state.
+         * The template type used to generate the personality.
+         */
+        private PersonalityTemplateType type = PersonalityTemplateType.NONE;
+
+        /**
+         * The personality trait values. A value of {@code -1} indicates that the trait has not been assigned.
          */
         private double intelligence = -1;
         private double kindness = -1;
@@ -51,19 +46,19 @@ public final class BotPersonality {
         private double dexterity = -1;
 
         /**
-         * Creates a new builder for the specified bot.
+         * Creates a new {@link Builder}.
          *
-         * @param personalityManager The bot personality manager.
+         * @param personalityManager The personality manager.
          */
         public Builder(BotPersonalityManager personalityManager) {
             this.personalityManager = personalityManager;
         }
 
         /**
-         * Sets the intelligence trait.
+         * Sets the intelligence value.
          *
-         * @param intelligence The intelligence value between {@code 0.0} and {@code 1.0}.
-         * @return This builder for chaining.
+         * @param intelligence The intelligence value.
+         * @return This builder.
          */
         public Builder setIntelligence(double intelligence) {
             this.intelligence = intelligence;
@@ -71,10 +66,10 @@ public final class BotPersonality {
         }
 
         /**
-         * Sets the kindness trait.
+         * Sets the kindness value.
          *
-         * @param kindness The kindness value between {@code 0.0} and {@code 1.0}.
-         * @return This builder for chaining.
+         * @param kindness The kindness value.
+         * @return This builder.
          */
         public Builder setKindness(double kindness) {
             this.kindness = kindness;
@@ -82,10 +77,10 @@ public final class BotPersonality {
         }
 
         /**
-         * Sets the confidence trait.
+         * Sets the confidence value.
          *
-         * @param confidence The confidence value between {@code 0.0} and {@code 1.0}.
-         * @return This builder for chaining.
+         * @param confidence The confidence value.
+         * @return This builder.
          */
         public Builder setConfidence(double confidence) {
             this.confidence = confidence;
@@ -93,10 +88,10 @@ public final class BotPersonality {
         }
 
         /**
-         * Sets the social trait.
+         * Sets the social value.
          *
-         * @param social The social value between {@code 0.0} and {@code 1.0}.
-         * @return This builder for chaining.
+         * @param social The social value.
+         * @return This builder.
          */
         public Builder setSocial(double social) {
             this.social = social;
@@ -104,10 +99,10 @@ public final class BotPersonality {
         }
 
         /**
-         * Sets the dexterity trait.
+         * Sets the dexterity value.
          *
-         * @param dexterity The dexterity value between {@code 0.0} and {@code 1.0}.
-         * @return This builder for chaining.
+         * @param dexterity The dexterity value.
+         * @return This builder.
          */
         public Builder setDexterity(double dexterity) {
             this.dexterity = dexterity;
@@ -150,13 +145,14 @@ public final class BotPersonality {
         }
 
         /**
-         * Loads values from a predefined {@link PersonalityTemplateType} without applying any variance.
+         * Loads all personality values from the specified template.
          *
-         * @param from The template type to load from.
-         * @return This builder for chaining.
+         * @param from The template type.
+         * @return This builder.
          */
         public Builder template(PersonalityTemplateType from) {
             PersonalityTemplate template = personalityManager.getTemplate(from);
+            type = template.type;
             intelligence = template.intelligence;
             kindness = template.kindness;
             confidence = template.confidence;
@@ -166,17 +162,18 @@ public final class BotPersonality {
         }
 
         /**
-         * Loads values from a predefined {@link PersonalityTemplateType} and applies random variance.
+         * Loads personality values from the specified template and applies a random variance to each trait.
          * <p>
-         * Variance introduces subtle deviations to create more organic and individualized behavior.
+         * Each trait receives an independently generated value between {@code -variance} and {@code variance}.
          *
-         * @param from The base template type.
-         * @param variance The maximum deviation for each trait.
-         * @return This builder for chaining.
+         * @param from The template type.
+         * @param variance The maximum variance applied to each trait.
+         * @return This builder.
          */
         public Builder randomizeTemplate(PersonalityTemplateType from, double variance) {
             Supplier<Double> varianceSupplier = () -> ThreadLocalRandom.current().nextDouble(-variance, variance);
             PersonalityTemplate template = personalityManager.getTemplate(from);
+            type = template.type;
             intelligence = template.intelligence + varianceSupplier.get();
             kindness = template.kindness + varianceSupplier.get();
             confidence = template.confidence + varianceSupplier.get();
@@ -186,22 +183,21 @@ public final class BotPersonality {
         }
 
         /**
-         * Randomizes this bot’s personality using a random template type and a dynamic variance value.
+         * Generates a personality from a randomly selected template with randomized variance.
          * <p>
-         * The variance is chosen randomly between {@code 0.05} and {@code 0.25}, introducing a natural spread of
-         * unique personalities without producing extreme outliers.
+         * The variance is randomly selected between {@code 0.05} inclusive and {@code 0.25} exclusive.
          *
-         * @return This builder instance for chaining.
+         * @return This builder.
          */
         public Builder randomizeSmart() {
-            return randomizeTemplate(RandomUtils.random(PersonalityTemplateType.ALL),
+            return randomizeTemplate(RandomUtils.random(PersonalityTemplateType.ALL_EXCEPT_NONE),
                     ThreadLocalRandom.current().nextDouble(0.05, 0.25));
         }
 
         /**
-         * Generates a fully random personality with all traits uniformly distributed between {@code 0.0} and {@code 1.0}.
+         * Randomizes every personality trait independently.
          *
-         * @return This builder for chaining.
+         * @return This builder.
          */
         public Builder randomize() {
             intelligence = RandomUtils.nextDouble();
@@ -213,12 +209,14 @@ public final class BotPersonality {
         }
 
         /**
-         * Builds the resulting {@link BotPersonality} instance.
+         * Builds a new {@link BotPersonality} using the configured values.
+         * <p>
+         * Trait values greater than {@code 1.0} are capped at {@code 1.0}.
          *
-         * @return The new personality.
+         * @return The resulting personality.
          */
         public BotPersonality build() {
-            return new BotPersonality(
+            return new BotPersonality(type,
                     Math.min(intelligence, 1.0),
                     Math.min(kindness, 1.0),
                     Math.min(confidence, 1.0),
@@ -227,26 +225,55 @@ public final class BotPersonality {
         }
     }
 
-    public static final BotPersonality DEFAULT = new BotPersonality(0.5, 0.5, 0.5, 0.5, 0.5);
     /**
-     * Core personality attributes.
+     * The default personality, with every trait set to {@code 0.5}.
+     */
+    public static final BotPersonality DEFAULT = new BotPersonality(PersonalityTemplateType.JACK_OF_ALL_TRADES,
+            0.5, 0.5, 0.5, 0.5, 0.5);
+
+    /**
+     * The template type this personality was generated from.
+     */
+    private final PersonalityTemplateType type;
+
+    /**
+     * The intelligence value.
      */
     private final double intelligence;
+
+    /**
+     * The kindness value.
+     */
     private final double kindness;
+
+    /**
+     * The confidence value.
+     */
     private final double confidence;
+
+    /**
+     * The social value.
+     */
     private final double social;
+
+    /**
+     * The dexterity value.
+     */
     private final double dexterity;
 
     /**
      * Creates a new {@link BotPersonality}.
      *
-     * @param intelligence The bot’s intelligence value.
-     * @param kindness The bot’s kindness value.
-     * @param confidence The bot’s confidence value.
-     * @param social The bot’s sociability value.
-     * @param dexterity The bot’s dexterity value.
+     * @param type The template type.
+     * @param intelligence The intelligence value.
+     * @param kindness The kindness value.
+     * @param confidence The confidence value.
+     * @param social The social value.
+     * @param dexterity The dexterity value.
      */
-    private BotPersonality(double intelligence, double kindness, double confidence, double social, double dexterity) {
+    private BotPersonality(PersonalityTemplateType type, double intelligence, double kindness, double confidence,
+                           double social, double dexterity) {
+        this.type = type;
         this.intelligence = intelligence;
         this.kindness = kindness;
         this.confidence = confidence;
@@ -255,156 +282,149 @@ public final class BotPersonality {
     }
 
     /**
-     * Determines if this bot tends to be arrogant.
+     * Determines whether this personality is considered intelligent.
      *
-     * @return {@code true} if arrogance exceeds {@code 0.7}.
-     */
-    public boolean isArrogant() {
-        return getArrogance() >= 0.7;
-    }
-
-    /**
-     * Determines if this bot is considered intelligent.
-     *
-     * @return {@code true} if intelligence exceeds {@code 0.7}.
+     * @return {@code true} if intelligence is at least {@code 0.7}.
      */
     public boolean isIntelligent() {
         return intelligence >= 0.7;
     }
 
     /**
-     * Determines if this bot is considered dumb.
+     * Determines whether this personality is considered dumb.
      *
-     * @return {@code true} if intelligence is below {@code 0.3}.
+     * @return {@code true} if intelligence is at most {@code 0.3}.
      */
     public boolean isDumb() {
         return intelligence <= 0.3;
     }
 
     /**
-     * Determines if this bot is kind.
+     * Determines whether this personality is considered kind.
      *
-     * @return {@code true} if kindness exceeds {@code 0.7}.
+     * @return {@code true} if kindness is at least {@code 0.7}.
      */
     public boolean isKind() {
         return kindness >= 0.7;
     }
 
     /**
-     * Determines if this bot is mean-spirited.
+     * Determines whether this personality is considered mean.
      *
-     * @return {@code true} if kindness is below {@code 0.3}.
+     * @return {@code true} if kindness is at most {@code 0.3}.
      */
     public boolean isMean() {
         return kindness <= 0.3;
     }
 
     /**
-     * Determines if this bot is confident.
+     * Determines whether this personality is considered confident.
      *
-     * @return {@code true} if confidence exceeds {@code 0.7}.
+     * @return {@code true} if confidence is at least {@code 0.7}.
      */
     public boolean isConfident() {
         return confidence >= 0.7;
     }
 
     /**
-     * Determines if this bot is stupidly confident.
+     * Determines whether this personality combines low intelligence with high confidence.
      *
-     * @return {@code true} if {@link #isDumb()} and {@link #isConfident()} are both true.
+     * @return {@code true} if this personality is both dumb and confident.
      */
     public boolean isStupidlyConfident() {
         return isDumb() && isConfident();
     }
 
     /**
-     * Determines if this bot is uncertain or lacks confidence.
+     * Determines whether this personality is considered uncertain.
      *
-     * @return {@code true} if confidence is below {@code 0.3}.
+     * @return {@code true} if confidence is at most {@code 0.3}.
      */
     public boolean isUncertain() {
         return confidence <= 0.3;
     }
 
     /**
-     * Determines if this bot is highly social.
+     * Determines whether this personality is considered social.
      *
-     * @return {@code true} if social exceeds {@code 0.7}.
+     * @return {@code true} if the social value is at least {@code 0.7}.
      */
     public boolean isSocial() {
         return social >= 0.7;
     }
 
     /**
-     * Determines if this bot is antisocial.
+     * Determines whether this personality is considered antisocial.
      *
-     * @return {@code true} if social is below {@code 0.3}.
+     * @return {@code true} if the social value is at most {@code 0.3}.
      */
     public boolean isAntiSocial() {
         return social <= 0.3;
     }
 
     /**
-     * Determines if this bot is dexterous and precise.
+     * Determines whether this personality is considered dexterous.
      *
-     * @return {@code true} if dexterity exceeds {@code 0.7}.
+     * @return {@code true} if dexterity is at least {@code 0.7}.
      */
     public boolean isDextrous() {
         return dexterity >= 0.7;
     }
 
     /**
-     * Determines if this bot is clumsy or uncoordinated.
+     * Determines whether this personality is considered clumsy.
      *
-     * @return {@code true} if dexterity is below {@code 0.3}.
+     * @return {@code true} if dexterity is at most {@code 0.3}.
      */
     public boolean isClumsy() {
         return dexterity <= 0.3;
     }
 
     /**
-     * Computes a dynamic arrogance score.
+     * Returns the template type this personality was generated from.
      * <p>
-     * Arrogance increases with confidence and dexterity, but decreases with intelligence and kindness.
-     * The resulting score is typically within the {@code [0.0, 1.0]} range.
+     * {@link PersonalityTemplateType#NONE} indicates that the personality was not generated from a predefined
+     * template. This method never returns {@code null}.
      *
-     * @return The computed arrogance value.
+     * @return The personality template type.
      */
-    public double getArrogance() {
-        return (confidence * 0.60) + (dexterity * 0.25)
-                - (kindness * 0.60) - (intelligence * 0.25);
+    public PersonalityTemplateType getType() {
+        if (type == null) {
+            return PersonalityTemplateType.NONE;
+        }
+        return type;
     }
 
     /**
-     * @return The raw intelligence value.
+     * @return The intelligence value.
      */
     public double getIntelligence() {
         return intelligence;
     }
 
     /**
-     * @return The raw kindness value.
+     * @return The kindness value.
      */
     public double getKindness() {
         return kindness;
     }
 
     /**
-     * @return The raw confidence value.
+     * @return The confidence value.
      */
     public double getConfidence() {
         return confidence;
     }
 
     /**
-     * @return The raw social value.
+     * @return The social value.
      */
     public double getSocial() {
         return social;
     }
 
     /**
-     * @return The raw dexterity value.
+     * @return The dexterity value.
      */
     public double getDexterity() {
         return dexterity;

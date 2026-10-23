@@ -5,6 +5,7 @@ import api.predef.ext.*
 import io.luna.game.model.item.economy.CompletedTradeData
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.InventoryOverlayInterface
+import io.luna.util.NumberUtils
 import java.text.NumberFormat
 import java.util.*
 
@@ -49,7 +50,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
     /**
      * If the trade has been completed.
      */
-    private var completed = false
+    var completed = false
+        private set
 
 
     override fun onOpen(plr: Player) {
@@ -58,6 +60,12 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         val itemText = computeItemsText()
         plr.sendText(itemText, 3557)
         other.sendText(itemText, 3558)
+
+        // Display total value.
+        val totalValue = NumberUtils.formatPrice(tradingItems.filterNotNull().sumOf { world.economy.getTotalPrice(it) })
+        val text = "Total value ~ $totalValue"
+        plr.sendText(text, 3533)
+        other.sendText(text, 3534)
     }
 
     override fun onClose(plr: Player) {

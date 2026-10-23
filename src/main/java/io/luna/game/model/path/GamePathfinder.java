@@ -50,6 +50,19 @@ public abstract class GamePathfinder<T extends Locatable> {
     public abstract PathResult<T> find(T origin, T target);
 
     /**
+     * Determines whether this pathfinder is able to search for a path between the two locatables. A pathfinder that
+     * limits how far it searches returns {@code false} for searches beyond that limit, so that a
+     * {@link FallbackPathfinder} can hand them to another pathfinder.
+     *
+     * @param origin The starting locatable.
+     * @param target The target locatable.
+     * @return {@code true} if {@link #find(Locatable, Locatable)} can search for this path, otherwise {@code false}.
+     */
+    public boolean supports(T origin, T target) {
+        return true;
+    }
+
+    /**
      * Determines whether walking one step from {@code current} in the given {@link Direction} is traversable
      * for a player.
      * <p>

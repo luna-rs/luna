@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import engine.bot.gear.BotItemTracker;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
@@ -189,7 +190,7 @@ public final class Bank extends ItemContainer {
                 player,
                 bankInterface,
                 "You do not have enough bank space to deposit that."
-        ));
+        ), new BotItemTracker(player));
     }
 
     /**
@@ -237,15 +238,20 @@ public final class Bank extends ItemContainer {
         }
 
         /*
-         * Clamp to the actual amount present in inventory (by the inventory item id).
+         * Clamp to the actual amount present in inventory (by the inventory item id). Dynamic copies aren't counted:
+         * one is only deposited when its own slot is picked, and then alone.
          */
-        int existingAmount = inventory.computeAmountForId(item.getId());
+        int existingAmount = inventory.computeNonDynamicAmountForId(item.getId());
         amount = Math.min(amount, existingAmount);
 
         /*
          * Remove what the player actually has (original id).
          */
-        item = item.withAmount(amount);
+        if (item instanceof DynamicItem) {
+            item = item.withAmount(1);
+        } else {
+            item = item.withAmount(amount);
+        }
 
         /*
          * Convert to unnoted id for bank storage.
@@ -258,7 +264,7 @@ public final class Bank extends ItemContainer {
             return false;
         }
 
-        if (inventory.remove(item)) {
+        if (inventory.removeFromIndex(inventoryIndex, item)) {
             return add(unnotedItem);
         }
         return false;
@@ -313,7 +319,7 @@ public final class Bank extends ItemContainer {
         }
 
         item = item.withAmount(amount);
-        if (remove(item)) {
+        if (remove(bankIndex, item)) {
             return inventory.add(depositItem);
         }
         return false;

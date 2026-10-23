@@ -28,7 +28,7 @@ object CombatHandler {
      */
     fun PlayerCombatContext.displayCombatOverlay() {
         weapon.display(mob.equipment.weapon?.id)
-        mob.tabs.set(TabIndex.COMBAT, weapon.typeDef.id)
+        mob.tabs.set(TabIndex.COMBAT, weapon.typeDef.id())
     }
 
     /**
@@ -40,10 +40,10 @@ object CombatHandler {
      * @param id The equipped weapon item id, or `null` if the player is unarmed.
      */
     fun PlayerCombatWeapon.display(id: Int?) {
-        player.tabs[TabIndex.COMBAT] = typeDef.id
+        player.tabs[TabIndex.COMBAT] = typeDef.id()
         if (id != null) {
             // Send item model onto weapon overlay.
-            player.queue(WidgetItemModelMessageWriter(typeDef.id + 1, 200, id))
+            player.queue(WidgetItemModelMessageWriter(typeDef.id() + 1, 200, id))
         }
 
         // Send text onto weapon overlay.

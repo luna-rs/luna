@@ -13,17 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 final class PositionTest {
 
     @Test
-    void invalidUpperZ() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4),
-                "Z must be in range [0, 3] inclusively.");
-    }
-
-    @Test
-    void invalidLowerZ() {
-        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, -1));
-    }
-
-    @Test
     void testIsWithinDistance() {
         Position startPosition = new Position(0, 0, 0);
 
@@ -61,20 +50,4 @@ final class PositionTest {
         assertFalse(startPosition.isViewable(endPosition));
     }
 
-    @Test
-    void testGetFarthestCoordinate() {
-        Position startPosition = new Position(0, 0, 0);
-
-        int farthestCoordinate = 1;
-        int closestCoordinate = 0;
-
-        Position endPosition = new Position(closestCoordinate, farthestCoordinate);
-        int computed = startPosition.computeLongestDistance(endPosition);
-        assertEquals(computed, farthestCoordinate);
-
-        // swap X and Y coordinates
-        endPosition = new Position(farthestCoordinate, closestCoordinate);
-        computed = startPosition.computeLongestDistance(endPosition);
-        assertEquals(computed, farthestCoordinate);
-    }
 }

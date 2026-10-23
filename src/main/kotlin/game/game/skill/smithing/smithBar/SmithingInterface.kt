@@ -2,12 +2,12 @@ package game.skill.smithing.smithBar
 
 import api.predef.*
 import com.google.common.collect.ArrayListMultimap
+import game.skill.smithing.BarType
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
-import game.skill.smithing.BarType
 
 /**
  * A [StandardInterface] that builds and represents the Smithing interface.
@@ -26,7 +26,7 @@ class SmithingInterface(barType: BarType? = null) : StandardInterface(994) {
         // First put all items that need to be displayed into the itemMap.
         val itemMap = ArrayListMultimap.create<Int, IndexedItem>()
         val clearSet = HashSet<SmithingTable>()
-        for (table in SmithingTable.VALUES) {
+        for (table in SmithingTable.entries) {
             var added = false
             for (smithItem in table.items) {
                 if (smithItem.barType == usingBar) {

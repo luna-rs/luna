@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.ActionType
@@ -34,7 +35,15 @@ abstract class StationaryInventoryBotScript(
          *
          * Subclasses can rely on these general-purpose banking/skilling hubs unless they need a more specific location.
          */
-        val DEFAULT_ZONES = setOf(SubZone.HOME, SubZone.DRAYNOR_MAIN, SubZone.SEERS_VILLAGE_MAIN)
+        val DEFAULT_ZONES = BotMarketplace.entries.map { it.activityZone }.toSet() + SubZone.DRAYNOR_MAIN
+
+        /**
+         * Bank-only production destinations matching a skill's market theme, plus the existing Draynor hub.
+         * Facility recipes supply their own zones and do not use this portable-production selection.
+         */
+        fun zonesForSkill(skill: Int): MutableList<SubZone> =
+            (BotMarketplace.entries.filter { it.skills.isEmpty() || skill in it.skills }
+                .map { it.activityZone } + SubZone.DRAYNOR_MAIN).toMutableList()
     }
 
     /**
@@ -61,17 +70,20 @@ abstract class StationaryInventoryBotScript(
      * @param resumed `true` if this script is being resumed from a saved snapshot.
      * @return `true` if all required items are available, or `false` if the script cannot start yet.
      */
-    final override fun onInit(resumed: Boolean): Boolean {
+    final override suspend fun onInit(resumed: Boolean): Boolean {
         depositInventoryWhenBanking = false
         withdraw = withdraw()
         tools = tools()
+        if (isTerminated()) {
+            return false
+        }
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("Bot does not have required withdraw items. Adding to wanted list.")
-            withdraw.forEach { bot.preferences.wantedItems.add(it.id) }
+            withdraw.forEach { bot.preferences.addWantedItem(it.id, 2000) }
             return false
         } else if (!bot.bank.containsAllIds(tools)) {
             bot.log("Bot does not have required tools. Adding to wanted list.")
-            tools.forEach { bot.preferences.wantedItems.add(it) }
+            tools.forEach { bot.preferences.addWantedItem(it, 3) }
             return false
         }
         return true
@@ -98,15 +110,14 @@ abstract class StationaryInventoryBotScript(
      *
      * If the bot already has a weak action running, this method does nothing and keeps the current zone active.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    final override suspend fun executeInZone(zone: SubZone): Boolean {
+    final override suspend fun executeInZone(): Boolean {
         if (bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true
         }
-        return onExecuteInZone(zone)
+        return onExecuteInZone()
     }
 
     /**
@@ -132,6 +143,11 @@ abstract class StationaryInventoryBotScript(
                     return
                 }
             }
+        }
+        if (!bot.bank.containsAll(withdraw)) {
+            bot.log("We no longer have the required withdraw items. Stopping script.")
+            stop()
+            return
         }
         handler.banking.withdrawAll(withdraw)
     }
@@ -159,11 +175,9 @@ abstract class StationaryInventoryBotScript(
      * Subclasses should perform their activity-specific interaction here, such as using one inventory item on another,
      * interacting with a nearby object, or clicking a make-item dialogue.
      *
-     * @param zone The active zone selected by [ZonedBotScript].
-     *
      * @return `true` if this zone should remain active, or `false` if the script should abandon it.
      */
-    open suspend fun onExecuteInZone(zone: SubZone): Boolean {
+    open suspend fun onExecuteInZone(): Boolean {
         return true
     }
 }

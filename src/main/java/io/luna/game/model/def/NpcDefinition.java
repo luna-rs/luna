@@ -176,7 +176,7 @@ public final class NpcDefinition implements Definition {
      * @return The id.
      */
     @Override
-    public int getId() {
+    public int id() {
         return id;
     }
 

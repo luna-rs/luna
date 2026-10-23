@@ -15,6 +15,8 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -85,11 +87,11 @@ public final class InteractionAction extends Action<Player> {
     }
 
     /**
-     * The interaction event that created this action.
+     * The most recent interaction event for this action.
      * <p>
      * This provides the interaction context and the backing target reference for this action.
      */
-    private final InteractableEvent event;
+    private InteractableEvent event;
 
     /**
      * The current entity being interacted with.
@@ -102,7 +104,8 @@ public final class InteractionAction extends Action<Player> {
      * The listeners still waiting to be satisfied for this interaction.
      */
     private List<InteractionActionListener> listeners;
-
+//todo docs
+    private boolean retry;
     /**
      * Creates a new {@link InteractionAction}.
      *
@@ -155,6 +158,11 @@ public final class InteractionAction extends Action<Player> {
      */
     @Override
     public boolean run() {
+        if (listeners.isEmpty()) {
+            mob.sendMessage("Nothing interesting happens.");
+            return true;
+        }
+
         CollisionManager collisionManager = mob.getWorld().getCollisionManager();
 
         InteractionPolicy trigger = null;
@@ -185,13 +193,13 @@ public final class InteractionAction extends Action<Player> {
             onReached(target instanceof Mob, instantEvent, trigger, pending);
             return true;
         } else if (mob.getWalking().isEmpty() && !listeners.isEmpty()) {
+            if(!retry) {
+                retry = true;
+                return false;
+            }
             onStanding();
             return true;
-        } else if (listeners.isEmpty()) {
-            mob.sendMessage("Nothing interesting happens.");
-            return true;
-        }
-        return false;
+        } else return listeners.isEmpty();
     }
 
     /**
@@ -235,6 +243,10 @@ public final class InteractionAction extends Action<Player> {
      */
     private boolean moveBeforeInteract(boolean isMob, InteractionPolicy trigger) {
         boolean moved = false;
+        if (target instanceof GameObject && ((GameObject) target).getObjectType().getId() < ObjectType.DEFAULT.getId()) {
+            // Walls and wall decorations can be used from their own tile, so there's nothing to correct.
+            return false;
+        }
         if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             if (mob.getStatus().isImmobilized()) {
@@ -316,12 +328,22 @@ public final class InteractionAction extends Action<Player> {
     }
 
     /**
-     * Sets the current interaction target.
+     * Sets the backing interaction event.
+     *
+     * @param event The new interaction event.
+     */
+    public void setEvent(InteractableEvent event) {
+        this.event = event;
+    }
+
+    /**
+     * Sets the current interaction target. This begins a new reach attempt, so the standing retry is reset.
      *
      * @param target The new interaction target.
      */
     public void setTarget(Entity target) {
         this.target = target;
+        retry = false;
     }
 
     /**

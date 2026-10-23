@@ -3,8 +3,10 @@ package io.luna.game.persistence;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.attr.Attribute;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * A {@link GameSerializer} implementation that stores persistent player data in local {@code JSON} files.
@@ -30,15 +32,14 @@ public final class JsonGameSerializer extends GameSerializer {
 
     static {
         try {
-            // Initialize directory if it doesn't exist.
             DIR = Path.of("data", "game");
-            Files.createDirectories(DIR);
+            PLAYER_DIR = DIR.resolve("saved_players");
+            BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
+            Files.createDirectories(PLAYER_DIR);
+            Files.createDirectories(BOT_DIR);
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
-        PLAYER_DIR = DIR.resolve("saved_players");
-        BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
-
     }
 
     @Override
@@ -49,7 +50,12 @@ public final class JsonGameSerializer extends GameSerializer {
             return null;
         }
         try {
-            return Attribute.getGsonInstance().fromJson(Files.readString(dir), PlayerData.class);
+            PlayerData data = Attribute.getGsonInstance().fromJson(Files.readString(dir), PlayerData.class);
+            if (data == null) {
+                // An empty file is a broken save, not a new account.
+                throw new IllegalStateException(dir + " has no player data.");
+            }
+            return data;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -57,9 +63,19 @@ public final class JsonGameSerializer extends GameSerializer {
 
     @Override
     public void savePlayer(World world, String username, PlayerData data) {
+        Path file = getDir(world, username);
+        // Unique per thread, as two threads can save one player at once. Not .json, which marks a saved bot.
+        Path temp = file.resolveSibling(username + "." + Thread.currentThread().threadId() + ".tmp");
         try {
-            Files.writeString(getDir(world, username), Attribute.getGsonInstance().toJson(data));
+            // Replace the file in one step, so a crash or full disk mid-write keeps the old save.
+            Files.writeString(temp, Attribute.getGsonInstance().toJson(data));
+            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (Exception e) {
+            try {
+                Files.deleteIfExists(temp);
+            } catch (IOException cleanup) {
+                e.addSuppressed(cleanup);
+            }
             throw new RuntimeException(e);
         }
     }

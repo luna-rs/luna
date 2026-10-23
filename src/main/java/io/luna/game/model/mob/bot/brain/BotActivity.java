@@ -2,7 +2,8 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
-import engine.bot.coordinator.SocializingCoordinator;
+import engine.bot.coordinator.GeneralActivityCoordinator;
+import engine.bot.coordinator.MerchantingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
@@ -47,17 +48,22 @@ public enum BotActivity {
     /**
      * Economic interactions, such as trading with other bots or players.
      */
-    MERCHANTING(new SkillingCoordinator(true)),
+    MERCHANTING(MerchantingCoordinator.INSTANCE),
 
     /**
-     * Social activities like chatting, emotes, or community events.
+     * Generic activities like chatting, community events, buying items from stores, etc.
      */
-    SOCIALIZING(SocializingCoordinator.INSTANCE),
+    SOCIALIZING(new SkillingCoordinator(true)),
 
     /**
      * Participation in structured mini-games or cooperative content.
      */
-    MINIGAMES(new SkillingCoordinator(true));
+    MINIGAMES(new SkillingCoordinator(true)),
+
+    /**
+     * Useful errands and general content, such as filling containers and processing or using crystal keys.
+     */
+    GENERAL_ACTIVITIES(GeneralActivityCoordinator.INSTANCE);
 
     /**
      * All {@link BotActivity} types in this enum.

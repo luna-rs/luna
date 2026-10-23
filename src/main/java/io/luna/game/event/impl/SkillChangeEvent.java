@@ -31,6 +31,9 @@ public final class SkillChangeEvent extends PlayerEvent implements InjectableEve
      */
     private final int id;
 
+    /** Whether this change raised the static level when the event was created. */
+    private final boolean levelUp;
+
     /**
      * Creates a new {@link SkillChangeEvent}.
      *
@@ -46,6 +49,7 @@ public final class SkillChangeEvent extends PlayerEvent implements InjectableEve
         this.oldStaticLvl = oldStaticLvl;
         this.oldLvl = oldLvl;
         this.id = id;
+        levelUp = oldStaticLvl < 99 && player.getSkills().getSkill(id).getStaticLevel() > oldStaticLvl;
     }
 
     @Override
@@ -59,16 +63,13 @@ public final class SkillChangeEvent extends PlayerEvent implements InjectableEve
     }
 
     /**
-     * Determines if this event results in a level up.
+     * Determines whether this change raised the static level when the event was created.
+     * Later skill changes do not alter the result for a queued event.
      *
      * @return {@code true} if {@code mob} leveled up when this event was sent.
      */
     public boolean isLevelUp() {
-        if(oldStaticLvl < 99) {
-            int newStaticLevel = plr.getSkills().getSkill(id).getStaticLevel();
-            return newStaticLevel > oldStaticLvl;
-        }
-        return false;
+        return levelUp;
     }
 
     /**

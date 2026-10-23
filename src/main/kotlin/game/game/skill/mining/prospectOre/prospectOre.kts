@@ -1,8 +1,8 @@
 package game.skill.mining.prospectOre
 
 import api.predef.*
-import io.luna.game.model.mob.Player
 import game.skill.mining.Ore
+import io.luna.game.model.mob.Player
 
 /**
  * Prospect the ore, tells the player what it is.

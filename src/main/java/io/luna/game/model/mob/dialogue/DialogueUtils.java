@@ -36,6 +36,17 @@ public final class DialogueUtils {
     );
 
     /**
+     * An immutable list of option dialogue sword layers. The first layer frames the default title. The second is
+     * hidden by default and spaced wider for longer titles.
+     */
+    private static final ImmutableList<int[]> OPTION_SWORDS = ImmutableList.of(
+            new int[]{14449, 14450},
+            new int[]{2476, 2479},
+            new int[]{8215, 8216},
+            new int[]{8228, 8229}
+    );
+
+    /**
      * Fix for the make item 5-options interface dialogue. Reduces the name by one word and makes it white.
      *
      * @param str The item name.
@@ -115,6 +126,17 @@ public final class DialogueUtils {
             default:
                 throw new IllegalArgumentException("Length must be between 2 and 5.");
         }
+    }
+
+    /**
+     * Returns the correct option dialogue sword layers based on the length.
+     *
+     * @param length The length.
+     * @return The default layer, then the wide layer.
+     */
+    public static int[] optionSwordLayers(int length) {
+        checkArgument(length >= 2 && length <= 5, "Length must be between 2 and 5.");
+        return OPTION_SWORDS.get(length - 2);
     }
 
     /**

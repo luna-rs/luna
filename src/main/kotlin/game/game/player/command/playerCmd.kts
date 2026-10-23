@@ -1,5 +1,6 @@
 package game.player.command
 
+import api.bot.zone.Zone
 import api.event.Matcher
 import api.predef.*
 import com.google.common.collect.HashMultimap
@@ -12,6 +13,14 @@ import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.overlay.TextInput
+
+
+//todo temporary until ship travel,etc. are added
+cmd("piscatoris") {
+    if ((plr.isBot || plr.rights >= RIGHTS_ADMIN) && !plr.status.isTeleBlocked() && plr.teleportDelay.ready(2)) {
+        plr.teleport(Zone.PISCATORIS_FISHING_COLONY.anchor, TeleportStyle.REGULAR)
+    }
+}
 
 /**
  * A command that changes the password of a player.
@@ -48,7 +57,6 @@ cmd("commands") {
         for (name in commandMap[rights]) {
             questJournal.addLine("::$name")
         }
-        questJournal.newLine()
     }
 
     // And finally, open the quest journal!

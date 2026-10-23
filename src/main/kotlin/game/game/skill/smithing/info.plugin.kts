@@ -11,6 +11,7 @@ plugin {
         -> Iron ore 50% chance of success when smelting
         -> Goldsmith gauntlets
         -> Smithing items with full interface
+        -> Making cannonballs from steel bars with an ammo mould
         """
     version = "1.0"
     authors += "lare96"

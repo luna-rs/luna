@@ -33,10 +33,9 @@ fun deposit(msg: WidgetItemClickEvent, amount: Int? = null) {
  */
 fun withdraw(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
-    val id = msg.itemId
     val index = msg.index
     when (amount) {
-        null -> plr.bank.withdraw(index, plr.bank.computeAmountForId(id))
+        null -> plr.bank.withdraw(index, plr.bank.computeAmountForIndex(index))
         else -> plr.bank.withdraw(index, amount)
     }
 }

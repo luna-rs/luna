@@ -158,12 +158,17 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Invalidates the cached combat level.
+     * Recomputes the combat level and updates the mob's appearance if the level changed.
      * <p>
-     * The combat level will be recomputed the next time {@link #getCombatLevel()} is called.
+     * The cached combat level is invalidated before being recalculated through {@link #getCombatLevel()}.
+     * If the newly calculated level differs from the previous value, the appearance update flag is set.
      */
     public void resetCombatLevel() {
+        int old = combatLevel;
         combatLevel = -1;
+        if (old != getCombatLevel()) {
+            mob.flags.flag(UpdateFlag.APPEARANCE);
+        }
     }
 
     /**
@@ -233,7 +238,7 @@ public final class SkillSet implements Iterable<Skill> {
     public void set(Skill[] newSkills) {
         checkArgument(newSkills.length == skills.length, "newSkills.length [" + newSkills.length + "] must equal skills.length [" + skills.length + "].");
 
-        firingEvents = false;
+        setFiringEvents(false);
         try {
             int index = 0;
             for (Skill newSkill : newSkills) {
@@ -243,7 +248,7 @@ public final class SkillSet implements Iterable<Skill> {
                 skills[index++] = skill;
             }
         } finally {
-            firingEvents = true;
+            setFiringEvents(true);
         }
     }
 
@@ -353,5 +358,8 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public void setFiringEvents(boolean firingEvents) {
         this.firingEvents = firingEvents;
+        if (firingEvents) {
+            resetCombatLevel();
+        }
     }
 }

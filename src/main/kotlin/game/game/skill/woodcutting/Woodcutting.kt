@@ -1,11 +1,10 @@
 package game.skill.woodcutting
 
-import api.attr.Attr
+import api.predef.*
 import game.skill.Skills
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
 import io.luna.Luna
-import io.luna.game.model.`object`.GameObject
 
 /**
  * Contains utility functions related to the woodcutting skill.
@@ -13,11 +12,6 @@ import io.luna.game.model.`object`.GameObject
  * @author lare96
  */
 object Woodcutting {
-
-    /**
-     * An attribute representing how many logs are left in a tree.
-     */
-    var GameObject.treeHealth: Int by Attr.int { -1 }
 
     /**
      * Simulate the result of woodcutting for [attempts] tries, and print the result.
@@ -66,10 +60,22 @@ object Woodcutting {
     }
 
     /**
+     * Determines if a tree falls after giving a log. Normal and achey trees give one log. Other trees have a 1 in 8
+     * chance each time they give a log.
+     */
+    fun fallsAfterLog(tree: Tree): Boolean =
+        tree == Tree.NORMAL || tree == Tree.ACHEY || rand().nextInt(8) == 0
+
+    /**
      * A function that determines if a log was successfully cut from a tree.
      */
-    fun success(level: Int, tree: Tree, axe: Axe): Boolean {
+    fun success(level: Int, tree: Tree, axe: Axe): Boolean = successRate(level, tree, axe) > rand().nextDouble()
+
+    /**
+     * The chance of cutting a log from [tree] with [axe] at [level]. Boosts count, but only up to level 99.
+     */
+    fun successRate(level: Int, tree: Tree, axe: Axe): Double {
         val (low, high) = axe.chances[tree]!!
-        return Skills.success(low, high, level)
+        return Skills.successRate(low, high, minOf(level, 99))
     }
 }

@@ -1,10 +1,10 @@
 package game.skill.mining.prospectOre
 
 import api.predef.*
-import io.luna.game.action.impl.LockedAction
-import io.luna.game.model.mob.Player
 import game.player.Sound
 import game.skill.mining.Ore
+import io.luna.game.action.impl.LockedAction
+import io.luna.game.model.mob.Player
 
 /**
  * A [LockedAction] that performs ore prospecting for a player.

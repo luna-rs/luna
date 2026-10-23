@@ -3,15 +3,15 @@ package game.skill.magic.teleOther
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.player.Animations
+import game.player.Sound
+import game.skill.magic.Magic
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.LocalSound
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import game.player.Animations
-import game.player.Sound
-import game.skill.magic.Magic
 
 /**
  * A [LockedAction] that handles [source] teleporting [target] to another location based on [type].

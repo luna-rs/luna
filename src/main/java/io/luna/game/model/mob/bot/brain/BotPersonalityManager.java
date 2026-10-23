@@ -10,120 +10,173 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manages the loading and retrieval of predefined templates that influence bot personalities.
+ * Loads and stores predefined bot personality templates.
  * <p>
- * {@link PersonalityTemplate}s define the behavioral archetypes that bots can be constructed from. These templates also
- * provide the base values for the core traits ({@code intelligence}, {@code kindness}, {@code confidence}, {@code social},
- * {@code dexterity}) and can also specify preferred {@link BotActivity} weights.
+ * Personality templates describe broad bot archetypes such as skillers, PKers, merchants, and scammers. Each
+ * template provides base values for the core personality traits used by {@link BotPersonality}, along with weighted
+ * activity preferences that influence what the bot is likely to do.
  * <p>
- * Templates are stored as JSON files and automatically loaded at runtime from {@code data/game/bots/personality/templates.json}.
- * <p>
- * Additionally, this class defines reference enums such as {@link GearSetType} and {@link GearSetPurpose}, which
- * describe equipment archetypes and their primary use cases.
+ * Templates are loaded from {@code data/game/bots/personalities.jsonc} during startup and can later be queried by
+ * their {@link PersonalityTemplateType}.
  *
  * @author lare96
  */
 public class BotPersonalityManager {
 
     /**
-     * Enumerates all predefined {@link BotPersonality} archetypes.
+     * The available predefined personality template types.
      * <p>
-     * Each template defines a unique behavioral identity that influences the bot's decision-making, emotional tendencies,
-     * and activity preferences.
+     * Each type represents a high-level behavioral archetype. The actual trait values and activity preferences for
+     * each type are loaded from the personality template JSON file.
      */
     public enum PersonalityTemplateType {
 
-        // TODO Serialize template type so it can influence decisions made?
+        /**
+         * No personality template.
+         *
+         * <p>This is used when a bot should not apply one of the predefined archetypes.
+         */
+        NONE,
 
         /**
-         * A bot focused heavily on skilling activities.
-         * <p>
-         * Skillers usually prefer gathering, production, and other non-combat progression. They tend to have higher dexterity
-         * so they make more efficient skilling choices.
+         * A bot focused on skilling activities.
+         *
+         * <p>Skillers usually prefer gathering, production, and other non-combat progression.
          */
         SKILLER,
 
         /**
-         * A bot focused heavily on player-killing and combat.
-         * <p>
-         * PKers tend to be more aggressive, less kind, and more intelligent when making combat or Wilderness-related decisions.
+         * A bot focused on player-killing and combat.
+         *
+         * <p>PKers usually prefer combat, Wilderness activity, and aggressive player interaction.
          */
         PKER,
 
         /**
-         * A bot focused heavily on trading and economy activity.
-         * <p>
-         * Merchants prefer buying, selling, flipping, and other market-driven behaviour.
+         * A bot focused on trading and economy activity.
+         *
+         * <p>Merchants usually prefer buying, selling, flipping, and other market-driven behavior.
          */
         MERCHANT,
 
         /**
-         * A highly active bot with strong overall behaviour.
-         * <p>
-         * No-life bots are meant to feel like dedicated players that spend a lot of time online and generally make effective
-         * decisions.
+         * A highly active bot with strong general behavior.
+         *
+         * <p>No-life bots are meant to feel like dedicated players that spend a lot of time online and make generally
+         * effective decisions.
          */
         NO_LIFE,
 
         /**
          * A highly active bot with weaker decision-making.
-         * <p>
-         * Kid bots are meant to feel inexperienced, impulsive, or inefficient while still spending a lot of time online.
+         *
+         * <p>Kid bots are meant to feel inexperienced, impulsive, inefficient, or chaotic while still spending a lot of
+         * time online.
          */
         KID,
 
         /**
          * A heroic social bot archetype.
-         * <p>
-         * Heroes are highly kind, social, intelligent, and dexterous. They should tend toward helpful, impressive, or
-         * protective behaviour.
+         *
+         * <p>Heroes tend toward helpful, impressive, protective, or socially positive behavior.
          */
         HERO,
 
         /**
          * A balanced bot archetype with broad interests.
-         * <p>
-         * Jack-of-all-trades bots are reasonably capable across many activities and do not strongly specialize in one playstyle.
+         *
+         * <p>Jack-of-all-trades bots are reasonably capable across many activities and do not strongly specialize in one
+         * playstyle.
          */
         JACK_OF_ALL_TRADES,
 
         /**
-         * A bot focused on manipulative trading and scam-like behaviour.
-         * <p>
-         * Scammers are highly intelligent and social, but low in kindness. They strongly prefer trading-related activity and
-         * social opportunities where scams can be attempted.
+         * A bot focused on manipulative trading and scam-like behavior.
+         *
+         * <p>Scammers usually have low kindness and strong trading or social preferences.
          */
         SCAMMER;
 
         /**
-         * An immutable cache of {@link #values()}.
+         * All template types except {@link #NONE}.
+         *
+         * <p>This is useful when randomly selecting a real personality archetype.
          */
-        public static final ImmutableList<PersonalityTemplateType> ALL = ImmutableList.copyOf(values());
+        public static final ImmutableList<PersonalityTemplateType> ALL_EXCEPT_NONE = Arrays.stream(values())
+                .filter(it -> it != NONE)
+                .collect(ImmutableList.toImmutableList());
     }
 
     /**
-     * Represents a single personality template definition.
-     * <p>
-     * A template defines the core trait distribution for a behavioral archetype, along with a descriptive label and
-     * optional preferred activity weights.
+     * A loaded personality template definition.
+     *
+     * <p>A template defines the base trait values and activity preferences for one personality archetype. These values
+     * are applied by {@link BotPersonality.Builder#template(PersonalityTemplateType)} when constructing a bot
+     * personality.
      */
     public static final class PersonalityTemplate {
+
+        /**
+         * The archetype this template represents.
+         */
         final PersonalityTemplateType type;
+
+        /**
+         * A short human-readable description of the template.
+         */
         final String description;
+
+        /**
+         * The base intelligence trait value.
+         */
         final double intelligence;
+
+        /**
+         * The base kindness trait value.
+         */
         final double kindness;
+
+        /**
+         * The base confidence trait value.
+         */
         final double confidence;
+
+        /**
+         * The base social trait value.
+         */
         final double social;
+
+        /**
+         * The base dexterity trait value.
+         */
         final double dexterity;
+
+        /**
+         * The activity preference weights for this template.
+         */
         final Map<BotActivity, Double> activities;
 
+        /**
+         * Creates a new personality template.
+         *
+         * @param type The template archetype.
+         * @param description A short description of the template.
+         * @param intelligence The base intelligence value.
+         * @param kindness The base kindness value.
+         * @param confidence The base confidence value.
+         * @param social The base social value.
+         * @param dexterity The base dexterity value.
+         * @param activities The activity preference weights.
+         */
         public PersonalityTemplate(PersonalityTemplateType type, String description, double intelligence, double kindness,
-                                   double confidence, double social, double dexterity, Map<BotActivity, Double> activities) {
+                                   double confidence, double social, double dexterity,
+                                   Map<BotActivity, Double> activities) {
             this.type = type;
             this.description = description;
             this.intelligence = intelligence;
@@ -135,12 +188,10 @@ public class BotPersonalityManager {
         }
     }
 
-
     /**
-     * The resolved path to the JSON file containing {@link PersonalityTemplate} definitions.
+     * The path to the personality template JSON file.
      */
     private static final Path PERSONALITIES_PATH;
-
 
     static {
         PERSONALITIES_PATH = Paths.get("data", "game", "bots", "personalities.jsonc");
@@ -152,24 +203,15 @@ public class BotPersonalityManager {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A map of all loaded {@link PersonalityTemplate} instances keyed by their corresponding
-     * {@link PersonalityTemplateType}.
-     * <p>
-     * Once populated, this structure allows rapid retrieval of template data for use in
-     * {@link BotPersonality.Builder#template(PersonalityTemplateType)} and other systems.
-     * <p>
-     * Example usage:
-     * <pre>
-     * {@code PersonalityTemplate template = personalityManager.getTemplate(PersonalityTemplateType.PKER);}
-     * </pre>
+     * The loaded personality templates, indexed by template type.
      */
     private final Map<PersonalityTemplateType, PersonalityTemplate> templateMap =
             new EnumMap<>(PersonalityTemplateType.class);
 
     /**
-     * Loads all bot personality data.
-     * <p>
-     * This method should be invoked during game initialization or server startup.
+     * Loads all personality templates from disk.
+     *
+     * <p>This should be called during server startup before bots are created from predefined personality templates.
      */
     public void load() {
         try {
@@ -190,6 +232,7 @@ public class BotPersonalityManager {
                     BotActivity activity = BotActivity.valueOf(entry.getKey());
                     activities.put(activity, entry.getValue().getAsDouble());
                 }
+
                 templateMap.put(type, new PersonalityTemplate(type, description, intelligence, kindness, confidence,
                         social, dexterity, activities));
             }
@@ -200,10 +243,10 @@ public class BotPersonalityManager {
     }
 
     /**
-     * Retrieves a loaded {@link PersonalityTemplate} by its type.
+     * Returns the loaded template for the specified type.
      *
      * @param type The template type to look up.
-     * @return The corresponding template, or {@code null} if not found.
+     * @return The loaded template, or {@code null} if no template exists for {@code type}.
      */
     public PersonalityTemplate getTemplate(PersonalityTemplateType type) {
         return templateMap.get(type);

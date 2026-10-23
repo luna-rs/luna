@@ -1,0 +1,525 @@
+package game.bot.scripts.trading
+
+import api.bot.Suspendable.waitFor
+import api.bot.action.trading.*
+import api.bot.action.trading.BotTradeManager.tradeRequests
+import api.bot.script.BotScriptData
+import api.bot.script.ZonedBotScript
+import api.bot.zone.SubZone
+import api.predef.*
+import api.predef.ext.*
+import com.google.common.base.Stopwatch
+import engine.bot.gear.BotGearLocator
+import engine.trade.ConfirmTradeInterface
+import engine.trade.OfferTradeInterface
+import engine.trade.tradingWith
+import io.luna.game.model.EntityState
+import io.luna.game.model.Position
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivity
+import io.luna.game.model.mob.varp.PersistentVarp
+import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
+
+/**
+ * Buys wanted items or sells surplus stock at a configured marketplace.
+ *
+ * Each banking trip resolves fresh intentions and stable unit prices, then withdraws only transferable stock.
+ * Buyers carry coins and eligible surplus payment stock; sellers carry noted sale stock when possible.
+ * Bot-to-bot exchanges use the seller's asking
+ * prices when they fit the buyer's limits, so both participants independently calculate the same exchange.
+ * Human sellers are paid for wanted quantities at the bot's advertised buying prices. Human buyers may pay in
+ * coins, priced tradeable items, or both, valued at guide prices for this trade attempt.
+ *
+ * Negotiations apply quantity differences against explicit target baskets. Empty exchanges, unsuccessful item
+ * movements, repeated offer cycles, and expired waits decline the trade. Both screens are checked against the
+ * accepted basket before confirmation. This temporary script is not persisted across logout or server restart.
+ *
+ * @param bot The bot participating in marketplace trading.
+ * @property purpose Whether the bot is buying or selling ordinary or merchant stock.
+ * @property marketplace The marketplace to return to after banking.
+ * @param duration The maximum remaining duration of the marketplace session.
+ * @param zone The candidate zones containing the marketplace.
+ * @author lare96
+ */
+class TradeBotScript(bot: Bot,
+                     private val purpose: BotTradePurpose,
+                     private val marketplace: BotMarketplace = BotMarketplace.VARROCK,
+                     duration: Duration = getPreferenceBasedDuration(bot),
+                     zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone)) :
+    ZonedBotScript(bot, duration, zone) {
+
+    companion object {
+
+        /** The currency used for marketplace payments. */
+        private const val COINS = 995
+
+        /** The maximum number of offer changes permitted in one negotiation. */
+        private const val MAX_NEGOTIATION_ROUNDS = 12
+
+        /** Selects a session duration, checking loved merchanting before the broader liked preference. */
+        private fun getPreferenceBasedDuration(bot: Bot): Duration {
+            return when {
+                bot.preferences.lovesActivity(BotActivity.MERCHANTING) -> rand(2, 4).hours
+                bot.preferences.likesActivity(BotActivity.MERCHANTING) -> rand(1, 3).hours
+                bot.preferences.hatesActivity(BotActivity.MERCHANTING) -> rand(30, 60).minutes
+                else -> rand(45, 120).minutes
+            }
+        }
+    }
+
+    /** Players temporarily excluded after failed attempts, or for persistent negative feelings. */
+    private val blacklist = HashMap<String, Instant>()
+
+    /** Throttles outgoing requests independently of incoming request processing. */
+    private val searchTimer = Stopwatch.createUnstarted()
+
+    /** Throttles advertisements for the current intentions. */
+    private val messageTimer = Stopwatch.createUnstarted()
+
+    /** Candidate sale stock or coin payment, using unnoted ids before withdrawal. */
+    private var offering = emptyList<BotTradeItem>()
+
+    /** Wanted quantities or expected sale value resolved for the current banking trip. */
+    private var expected = emptyList<BotTradeItem>()
+
+    /** Actual carried ids and quantities available for this trip, including bank notes. */
+    private var carriedOffer = emptyMap<Int, Int>()
+
+    /** Whether banking and marketplace travel have finished and requests may be processed. */
+    private var prepared = false
+
+    /** Whether this session has completed at least one exchange. */
+    private var traded = false
+
+    /** The offer stage owned by this script, retained for cancellation cleanup. */
+    private var activeTrade: BotTradeOfferStage? = null
+
+    /** The current advertisement, invalidated whenever trade intentions change. */
+    private var message: BotTradeMessage? = null
+
+    /** The advertisement interval selected for the current intentions, in seconds. */
+    private var messageCooldown = 0
+
+    /** The bank withdrawal mode to restore when the session finishes or pauses. */
+    private var previousBankMode: Int? = null
+
+    /** Whether this script has suppressed unrelated bot speech. */
+    private var speechDisabled = false
+
+    /** Whether this purpose acquires wanted items in exchange for coins or surplus payment stock. */
+    private val buying: Boolean
+        get() = purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.MERCHANT_BUY
+
+    override suspend fun onInit(resumed: Boolean): Boolean {
+        prepared = false
+        if (marketplace.positions.isEmpty()) {
+            bot.log("Marketplace has no available trading positions.")
+            return false
+        }
+        for ((name, feeling) in bot.preferences.playerFeelings) {
+            if (feeling < 0.25) addBlacklisted(name, 365.days)
+        }
+        if (!computeOfferAndExpected()) return false
+        previousBankMode = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
+        bot.speechStack.setDisableAll(true)
+        speechDisabled = true
+        // Zoned scripts skip initial banking on resume; explicitly prepare again in that case.
+        forceBanking = resumed
+        return true
+    }
+
+    override suspend fun equipment(): BotGearLocator? = null
+
+    override suspend fun onBankOpen(initial: Boolean) {
+        prepared = false
+        if (!computeOfferAndExpected()) return
+        handler.banking.clickBankingMode(true)
+        for (entry in offering) {
+            if (bot.inventory.computeRemainingSize() <= 1) break
+            val id = entry.item.id
+            // Bank.withdraw selects by id. Skip mixed stacks as well to avoid withdrawing dynamic instances.
+            if (bot.bank.any { it != null && it.id == id && it.isDynamic }) continue
+            val definition = itemDef(id)
+            val capacity = if (definition.isStackable || definition.notedId.isPresent) Int.MAX_VALUE
+            else (bot.inventory.computeRemainingSize() - 1).coerceAtLeast(0)
+            val transferable = minOf(entry.item.amount, bot.bank.computeAmountForId(id), capacity)
+            if (transferable > 0) handler.banking.withdraw(Item(id, transferable))
+        }
+        val limits = quantities(offering.map { it.item }, true).toMutableMap()
+        val stock = linkedMapOf<Int, Int>()
+        for (item in bot.inventory.filterNotNull()) {
+            if (item.isDynamic || !item.itemDef.isTradeable) continue
+            val id = unnotedId(item.id)
+            val amount = minOf(item.amount, limits[id] ?: 0)
+            if (amount > 0) {
+                stock[item.id] = (stock[item.id] ?: 0) + amount
+                limits[id] = limits.getValue(id) - amount
+            }
+        }
+        carriedOffer = stock
+        if (stock.isEmpty()) {
+            endSession("No transferable trade stock could be withdrawn.")
+            return
+        }
+        bot.overlays.closeWindows()
+        val tile = marketplace.positions.randomOrNull()
+        prepared = tile != null && handler.travelTo(marketplace.parent) &&
+                handler.webWalkTo(tile) && bot.position == tile
+        if (!prepared) endSession("Could not return to an available marketplace tile.")
+    }
+
+    override suspend fun finish() {
+        prepared = false
+        activeTrade?.decline()
+        activeTrade = null
+        bot.tradingWith = -1
+        previousBankMode?.let { bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, it) }
+        previousBankMode = null
+        if (speechDisabled) bot.speechStack.setDisableAll(false)
+        speechDisabled = false
+    }
+
+    override suspend fun completed() {
+        if (!traded) {
+            if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
+            else bot.scriptStack.push(SellToStoreBotScript(bot))
+        }
+    }
+
+    override suspend fun executeInZone(): Boolean {
+        if (!prepared) {
+            forceBanking = true
+            return true
+        }
+        val incoming = bot.tradeRequests.pollRequests { canTradeWith(it) }
+        if (incoming != null) {
+            attemptTrade(incoming)
+        } else if (!searchTimer.isRunning || searchTimer.elapsed().seconds >= 8) {
+            searchTimer.reset().start()
+            blacklist.entries.removeIf { !it.value.isAfter(Instant.now()) }
+            val other = world.locator.findPlayers(bot, Position.VIEWING_DISTANCE * 2) {
+                it is Bot && bot.isViewableFrom(it) && canTradeWith(it)
+            }.shuffled().firstOrNull()
+            if (other != null) attemptTrade(other)
+        }
+        if (prepared && !forceBanking) sendMessage()
+        return true
+    }
+
+    override fun snapshot(): BotScriptData? = null
+
+    /** Refreshes intentions from current ownership and ends the session normally when nothing useful remains. */
+    private fun computeOfferAndExpected(): Boolean {
+        bot.preferences.rebalanceWantedItems()
+        val strategy = resolveTradePrice()
+        val offers = BotTradeManager.computeOfferItems(bot, strategy, purpose)
+        val wants = BotTradeManager.computeExpected(bot, strategy, purpose, offers)
+        val traders = world.players.filterIsInstance<Bot>().mapNotNull {
+            it.scriptStack.current() as? TradeBotScript
+        }.filter { availableAtMarket(it) }
+        val candidates = if (buying) wants else offers
+        // Merchants already carry every trend-qualified candidate, including any matching goods.
+        val selected = if (purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) {
+            listOfNotNull(selectMarketItem(candidates, offers, traders))
+        } else candidates
+        offering = if (buying) offers else selected
+        expected = if (buying) selected
+        else BotTradeManager.computeExpected(bot, strategy, purpose, offering)
+        message = null
+        messageTimer.reset()
+        if (offering.isEmpty() || expected.isEmpty() ||
+            TradeBasket.value(quantities(offering.map { it.item }, true), prices(offering)) <
+            BotTradeManager.MINIMUM_OFFER_VALUE) {
+            endSession("No useful trade intentions remain.")
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Inspects prepared traders throughout this market, independently of the arriving bot's location.
+     */
+    private fun availableAtMarket(other: TradeBotScript): Boolean =
+        other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
+            buying != other.buying && marketplace.contains(other.bot.position) &&
+            !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
+            other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
+
+    /**
+     * Prefers goods that support an actual exchange with a prepared trader, then randomizes the fallback.
+     * Buyers retain all eligible payment stock. Merchant sessions keep their full trend-qualified baskets.
+     */
+    private fun selectMarketItem(candidates: List<BotTradeItem>, payment: List<BotTradeItem>,
+                                 traders: List<TradeBotScript>): BotTradeItem? {
+        val eligible = candidates.filter {
+            buying || TradeBasket.value(quantities(listOf(it.item), true), prices(listOf(it))) >=
+                BotTradeManager.MINIMUM_OFFER_VALUE
+        }
+        val matching = eligible.filter { candidate ->
+            traders.any { other ->
+                if (buying) {
+                    TradeBasket.exchange(quantities(other.carriedOffer.toItems(), true),
+                        quantities(listOf(candidate.item), true), prices(other.offering), prices(listOf(candidate)),
+                        quantities(payment.map { it.item }, true), prices(payment)) != null
+                } else {
+                    TradeBasket.exchange(quantities(listOf(candidate.item), true),
+                        quantities(other.expected.map { it.item }, true), prices(listOf(candidate)), prices(other.expected),
+                        quantities(other.carriedOffer.toItems(), true), prices(other.offering)) != null
+                }
+            }
+        }
+        return (matching.ifEmpty { eligible }).randomOrNull()
+    }
+
+    /** Sends an advertisement immediately, then repeats it at the chosen merchanting interval. */
+    private fun sendMessage() {
+        if (message == null) {
+            val item = if (purpose == BotTradePurpose.BUY) expected.firstOrNull()
+            else if (purpose == BotTradePurpose.SELL) offering.firstOrNull() else null
+            if ((purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) && item == null) return
+            message = BotTradeManager.advertiseTrade(bot, item, purpose)
+            messageCooldown = when {
+                bot.preferences.lovesActivity(BotActivity.MERCHANTING) -> BotTradeManager.STRONG_MERCHANT_COOLDOWN
+                bot.preferences.likesActivity(BotActivity.MERCHANTING) -> BotTradeManager.MERCHANT_COOLDOWN
+                bot.preferences.hatesActivity(BotActivity.MERCHANTING) -> BotTradeManager.HATE_COOLDOWN
+                else -> BotTradeManager.REGULAR_COOLDOWN
+            }.random()
+        }
+        if (!messageTimer.isRunning || messageTimer.elapsed().seconds >= messageCooldown) {
+            message?.let { bot.output.chat(it.text, it.color, it.effect) }
+            messageTimer.reset().start()
+        }
+    }
+
+    /** Owns request, negotiation, and cleanup for one participant, including every unsuccessful return path. */
+    private suspend fun attemptTrade(other: Player) {
+        var success = false
+        try {
+            val existing = bot.overlays[OfferTradeInterface::class]
+            val offer = if (existing?.other === other) {
+                BotTradeOfferStage(bot, other, BotTradeRequestStage(bot, other))
+            } else BotTradeRequestStage(bot, other).sendAndAwait() ?: return
+            activeTrade = offer
+            success = negotiate(offer, other)
+            if (success) {
+                traded = true
+                prepared = false
+                forceBanking = true
+                bot.preferences.rebalanceWantedItems()
+            }
+        } finally {
+            if (!success) {
+                // Requests can open a screen just before cancellation resumes the coroutine.
+                BotTradeStage(bot, other).decline()
+                addBlacklisted(other.username, 5.minutes)
+            }
+            activeTrade = null
+            if (bot.tradingWith == other.index) bot.tradingWith = -1
+        }
+    }
+
+    /**
+     * Applies complete target quantities and accepts only a stable, non-empty exchange.
+     *
+     * Bot partners share one deterministic plan. Human partners may change quantities during negotiation, so their
+     * next target is always recomputed from this trip's original stock. Repeated states and the overall deadline
+     * prevent cyclic or inactive trades from occupying the script indefinitely.
+     */
+    private suspend fun negotiate(offer: BotTradeOfferStage, other: Player): Boolean {
+        val partner = (other as? Bot)?.scriptStack?.current() as? TradeBotScript
+        val exchange = if (other is Bot) partner?.let { botExchange(it) } ?: return false else null
+        val guidePrices = HashMap<Int, Long>()
+        val timer = Stopwatch.createStarted()
+        val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
+        var lastState: Pair<Map<Int, Int>, Map<Int, Int>>? = null
+        var rounds = 0
+        while (timer.elapsed().seconds < BotTradeManager.OFFER_WAIT_SECONDS && rounds < MAX_NEGOTIATION_ROUNDS) {
+            val screen = bot.overlays[OfferTradeInterface::class] ?: return false
+            if (screen.other !== other) return false
+            val own = quantities(offer.getTradeItems())
+            val receiving = quantities(offer.getOtherTradeItems())
+            val state = own to receiving
+            if (state != lastState) {
+                lastState = state
+                rounds++
+                val visits = (seen[state] ?: 0) + 1
+                seen[state] = visits
+                if (visits > 2) return false
+            }
+            val target = exchange?.first ?: humanTarget(receiving, guidePrices)
+            if (own != target) {
+                if (!applyTarget(offer, target)) return false
+                continue
+            }
+            val valid = own.isNotEmpty() && receiving.isNotEmpty() &&
+                    if (exchange != null) receiving == exchange.second
+                    else humanTarget(receiving, guidePrices) == own && hasUsefulReturn(receiving, guidePrices)
+            if (valid && finishTradeWith(offer, own, receiving)) return true
+            if (bot.overlays[OfferTradeInterface::class] !== screen) return false
+            waitFor(2.seconds) {
+                bot.overlays[OfferTradeInterface::class] !== screen ||
+                        quantities(offer.getTradeItems()) != own || quantities(offer.getOtherTradeItems()) != receiving
+            }
+        }
+        bot.log("Trade negotiation expired or stopped making progress.")
+        return false
+    }
+
+    /**
+     * Builds both sides of a bot exchange, bounded by stock, demand, and the buyer's payment basket.
+     *
+     * Sale goods use the seller's asking prices and barter payments use the buyer's surplus-sale quotes.
+     * Normalized ids are used for matching; both resulting baskets use their actual carried note ids.
+     */
+    private fun botExchange(other: TradeBotScript): Pair<Map<Int, Int>, Map<Int, Int>>? {
+        if (buying == other.buying) return null
+        val buyer = if (buying) this else other
+        val seller = if (buying) other else this
+        val asks = seller.prices(seller.offering)
+        val selected = TradeBasket.exchange(quantities(seller.carriedOffer.toItems(), true),
+            quantities(buyer.expected.map { it.item }, true), asks, buyer.prices(buyer.expected),
+            quantities(buyer.carriedOffer.toItems(), true), buyer.prices(buyer.offering)) ?: return null
+        val stock = seller.carriedQuantities(selected.first)
+        val payment = buyer.carriedQuantities(selected.second)
+        return if (buying) payment to stock else stock to payment
+    }
+
+    /** Computes the outgoing target for a human offer using stable per-attempt guide prices for barter. */
+    private fun humanTarget(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Map<Int, Int> {
+        if (buying) {
+            val wanted = quantities(expected.map { it.item }, true)
+            val received = quantities(receiving.toItems(), true)
+            val useful = received.mapValues { (id, amount) -> minOf(amount, wanted[id] ?: 0) }
+            val budget = TradeBasket.value(if (receiving.isEmpty()) wanted else useful, prices(expected))
+            val payment = quantities(carriedOffer.toItems(), true)
+            val unitPrices = prices(offering)
+            val coins = minOf(budget, (payment[COINS] ?: 0).toLong()).toInt()
+            val selected = TradeBasket.select(payment.filterKeys { it != COINS }, unitPrices, budget - coins)
+                .toMutableMap()
+            if (coins > 0) selected[COINS] = coins
+            return carriedQuantities(selected)
+        }
+        if (receiving.isEmpty()) return carriedOffer
+        val budget = receivedValue(receiving, guidePrices)
+        return carriedQuantities(TradeBasket.select(quantities(carriedOffer.toItems(), true), prices(offering), budget))
+    }
+
+    /** Ensures ordinary exchanges receive useful stock or payment, even when scrutiny is permissive. */
+    private fun hasUsefulReturn(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Boolean {
+        if (!buying) return receivedValue(receiving, guidePrices) > 0
+        val wanted = quantities(expected.map { it.item }, true)
+        val received = quantities(receiving.toItems(), true)
+        // Do not pay for extras beyond wanted stock or accept unrelated items in place of the advertised purchase.
+        return received.isNotEmpty() && received.all { (id, amount) -> amount <= (wanted[id] ?: 0) }
+    }
+
+    /** Values barter once per id for this attempt, with coins always worth one coin. */
+    private fun receivedValue(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Long {
+        val normalized = quantities(receiving.toItems(), true)
+        for (id in normalized.keys) {
+            guidePrices.getOrPut(id) { if (id == COINS) 1L else world.economy.getPrice(id).coerceAtLeast(0) }
+        }
+        return TradeBasket.value(normalized, guidePrices)
+    }
+
+    /** Returns selected normalized quantities using the exact physical ids carried for the current trip. */
+    private fun carriedQuantities(selected: Map<Int, Int>): Map<Int, Int> {
+        val remaining = selected.toMutableMap()
+        val result = linkedMapOf<Int, Int>()
+        for ((id, amount) in carriedOffer.toSortedMap()) {
+            val base = unnotedId(id)
+            val take = minOf(amount, remaining[base] ?: 0)
+            if (take > 0) {
+                result[id] = take
+                remaining[base] = remaining.getValue(base) - take
+            }
+        }
+        return result
+    }
+
+    /** Removes excess quantities before adding only the positive difference to the target. */
+    private suspend fun applyTarget(offer: BotTradeOfferStage, target: Map<Int, Int>): Boolean {
+        for ((id, amount) in quantities(offer.getTradeItems())) {
+            val remove = amount - (target[id] ?: 0)
+            if (remove > 0 && !offer.remove(Item(id, remove))) return false
+        }
+        for ((id, amount) in target) {
+            val add = amount - (quantities(offer.getTradeItems())[id] ?: 0)
+            if (add > 0 && !offer.offer(Item(id, add))) return false
+        }
+        return quantities(offer.getTradeItems()) == target
+    }
+
+    /** Validates the original participants and both accepted baskets before each acceptance click. */
+    private suspend fun finishTradeWith(offer: BotTradeOfferStage, own: Map<Int, Int>, receiving: Map<Int, Int>): Boolean {
+        val confirm = offer.offerAndAwait {
+            quantities(offer.getTradeItems()) == own && quantities(offer.getOtherTradeItems()) == receiving
+        } ?: return false
+        val screen = bot.overlays[ConfirmTradeInterface::class] ?: return false
+        val otherScreen = offer.other.overlays[ConfirmTradeInterface::class] ?: return false
+        if (screen.offer.other !== offer.other || otherScreen.offer.other !== bot ||
+            quantities(screen.offer.items.filterNotNull()) != own ||
+            quantities(otherScreen.offer.items.filterNotNull()) != receiving) return false
+        return confirm.confirmAndAwait()
+    }
+
+    /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
+    private fun canTradeWith(other: Player): Boolean {
+        if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
+        val existing = other.overlays[OfferTradeInterface::class]
+        if (other.overlays.hasWindow() && existing?.other !== bot) return false
+        if (other !is Bot) return true
+        val script = other.scriptStack.current() as? TradeBotScript ?: return false
+        return prepared && script.prepared && botExchange(script) != null
+    }
+
+    /** Exposes the selected scrutiny policy for future personality-specific negotiation behavior. */
+    fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
+
+    /** Selects one pricing strategy when intentions are refreshed, rather than repricing during negotiation. */
+    fun resolveTradePrice(): BotTradePrice = BotTradePrice.computePriceStrategy(bot)
+
+    /** Records the expiry of a participant's temporary exclusion. */
+    private fun addBlacklisted(name: String, duration: Duration) {
+        blacklist[name] = Instant.now().plus(duration.toJavaDuration())
+    }
+
+    /** Tests exclusions without allowing expired entries to block a participant. */
+    private fun checkBlacklisted(name: String): Boolean = blacklist[name]?.isAfter(Instant.now()) == true
+
+    /** Finishes through the normal zoned-script lifecycle so shop fallback remains available. */
+    private fun endSession(reason: String) {
+        prepared = false
+        duration = Duration.ZERO
+        bot.log(reason)
+    }
+
+    /** Returns the base id used to match bank notes and their unnoted counterparts. */
+    private fun unnotedId(id: Int): Int = itemDef(id).unnotedId.orElse(id)
+
+    /** Combines duplicate quantities, optionally normalizing notes, without overflowing item amounts. */
+    private fun quantities(items: Collection<Item>, normalize: Boolean = false): Map<Int, Int> {
+        val result = linkedMapOf<Int, Int>()
+        for (item in items) {
+            if (item.amount < 1) continue
+            val id = if (normalize) unnotedId(item.id) else item.id
+            result[id] = minOf(Int.MAX_VALUE.toLong(), (result[id] ?: 0).toLong() + item.amount).toInt()
+        }
+        return result
+    }
+
+    /** Converts prepared quotes into positive unit prices keyed by base item id. */
+    private fun prices(items: List<BotTradeItem>): Map<Int, Long> =
+        items.associate { unnotedId(it.item.id) to it.price.coerceAtLeast(1) }
+
+    /** Converts a quantity basket into interface item requests. */
+    private fun Map<Int, Int>.toItems(): List<Item> = map { (id, amount) -> Item(id, amount) }
+}

@@ -4,8 +4,9 @@ import api.predef.*
 import game.player.login.firstLogin
 import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
 import game.skill.crafting.jewelleryMaking.SilverJewelleryTable
-import game.skill.fishing.Tool
+import game.skill.fishing.catchFish.Tool
 import game.skill.magic.Rune
+import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -53,11 +54,13 @@ val bankStarter = listOf(
     item("Chisel", 5),
     item("Knife", 5),
     item("Needle", 5),
-    item("Thread", 2_000_000_000),
+    item("Thread", 500),
     item("Iron pickaxe", 5),
     item("Iron axe", 5),
     item("Hammer", 5),
-    item("Tinderbox", 5)
+    item("Tinderbox", 5),
+    item("Fishing bait", 500),
+    item("Feather", 250)
     // TODO@0.5.0 Farming starter bot items.
 )
 
@@ -70,6 +73,7 @@ fun addBotItems(plr: Player) {
     Tool.ALL_IDS.forEach { plr.bank.add(Item(it)) }
     SilverJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
     GoldJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
+    Altar.entries.forEach { plr.bank.add(Item(it.talisman)) }
 }
 
 /**

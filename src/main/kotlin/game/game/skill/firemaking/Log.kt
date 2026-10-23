@@ -44,8 +44,8 @@ enum class Log(val id: Int, val level: Int, val exp: Double, val chance: Pair<In
     companion object {
 
         /**
-         * An immutable copy of [values].
+         * Mappings of log item IDs to [Log] values.
          */
-        val VALUES = ImmutableList.copyOf(values())
+        val ID_TO_LOG = entries.associateBy { it.id }
     }
 }

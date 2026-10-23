@@ -6,8 +6,6 @@ import api.predef.ext.*
 import game.skill.cooking.cookFood.Food
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
 
 /**
  * The chance that a piece of food will be spoiled and bonus damage applied.

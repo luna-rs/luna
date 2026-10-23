@@ -146,10 +146,12 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
 
     @Override
     void finishRequest(String username, LogoutRequest request) {
+        // Close windows before the save, so items held in them (trade offers) are back in the inventory.
+        request.player.getOverlays().closeWindows();
         PlayerData saveData = request.player.createSaveData();
 
-        // Flush any buffered outbound writes before disconnect/removal.
-        request.player.getClient().releasePendingWrites();
+        // Flush any buffered outbound reads and writes before disconnect/removal.
+        request.player.getClient().releasePendingMessages();
 
         // Remove player from the world immediately (game thread).
         world.getPlayers().remove(request.player);

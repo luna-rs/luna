@@ -13,7 +13,7 @@ import io.luna.game.model.mob.bot.Bot;
 public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, InteractableEvent, InjectableEvent {
 
     /**
-     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     * An event sent when a player clicks a target player's fourth interaction index.
      *
      * @author lare96
      */
@@ -28,7 +28,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     }
 
     /**
-     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     * An event sent when a player clicks a target player's fourth interaction index.
      *
      * @author lare96
      */
@@ -43,7 +43,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     }
 
     /**
-     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     * An event sent when a player clicks a target player's fourth interaction index.
      *
      * @author lare96
      */
@@ -59,7 +59,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     }
 
     /**
-     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     * An event sent when a player clicks a target player's fourth interaction index.
      *
      * @author lare96
      */
@@ -74,7 +74,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     }
 
     /**
-     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     * An event sent when a player clicks a target player's fourth interaction index.
      *
      * @author lare96
      */

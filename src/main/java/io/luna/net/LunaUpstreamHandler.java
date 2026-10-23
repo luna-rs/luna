@@ -45,9 +45,11 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Client<?> client = getClient(ctx);
         boolean isReadTimeout = e instanceof ReadTimeoutException;
-        boolean isIgnoredMessage = IGNORED.contains(e.getMessage());
+        boolean isIgnoredMessage = e.getMessage() != null && IGNORED.contains(e.getMessage());
 
-        if (!isReadTimeout && !isIgnoredMessage) {
+        if (isReadTimeout) {
+            logger.info("Disconnecting {}, no incoming data received before the read timeout.", client);
+        } else if (!isIgnoredMessage) {
             logger.warn("Disconnecting {}, upstream exception thrown.", client, e);
         }
         client.onException(e);

@@ -1,13 +1,14 @@
 package engine.controllers
 
 import api.attr.Attr
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import com.google.common.collect.ImmutableSet
 import engine.combat.status.StatusEffectType
 import io.luna.game.model.Locatable
+import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.controller.PlayerAreaListener
@@ -26,6 +27,21 @@ object WildernessLocatableController : PlayerAreaListener() {
      * This value should be {@code 0} whenever the player is outside the wilderness.
      */
     var Player.wildernessLevel by Attr.int()
+
+    /**
+     * Computes the wilderness level at a position. The dungeons sit 6400 tiles north of the surface, so they share its
+     * levels.
+     *
+     * @param position The position.
+     * @return The wilderness level, or `0` outside the wilderness.
+     */
+    fun levelAt(position: Position): Int {
+        if (!inside(position)) {
+            return 0
+        }
+        val y = if (position.y > 6400) position.y - 6400 else position.y
+        return ((y - 3520) / 8) + 1
+    }
 
     override fun enter(plr: Player) {
         plr.overlays.open(WalkableInterface(197))
@@ -47,6 +63,8 @@ object WildernessLocatableController : PlayerAreaListener() {
     }
 
     override fun computeLocatables(): ImmutableSet<Locatable> = ImmutableSet.of(
-        Area.of(2944, 3519, 3392, 3966)
+        Area.of(2944, 3519, 3392, 3966),
+        // The Wilderness dungeons, which sit 6400 tiles north of the surface.
+        Area.of(2944, 9920, 3391, 12799)
     )
 }

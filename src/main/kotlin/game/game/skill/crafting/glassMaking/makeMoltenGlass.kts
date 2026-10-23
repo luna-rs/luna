@@ -4,13 +4,12 @@ import api.predef.*
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
-import kotlin.streams.toList
 
 /**
  * Retrieve all objects named "Furnace" with the "Smelt" option.
  */
 val furnaces = GameObjectDefinition.ALL.stream().filter { it.name.equals("Furnace") }
-    .filter { it.actions.contains("Smelt") }.map { it.id }.toList()
+    .filter { it.actions.contains("Smelt") }.map { it.id() }.toList()
 
 /**
  * Opens the molten glass interface.

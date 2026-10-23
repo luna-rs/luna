@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,8 +177,8 @@ public final class WorldEconomy extends AbstractScheduledService {
             List<Item> sideB = tradeData.getSideB();
 
             if (sideA.size() == 1 && sideB.size() == 1) {
-                Item itemA = sideA.get(0);
-                Item itemB = sideB.get(0);
+                Item itemA = sideA.getFirst();
+                Item itemB = sideB.getFirst();
                 if (itemA.getId() == itemB.getId()) {
                     continue;
                 }
@@ -191,13 +192,13 @@ public final class WorldEconomy extends AbstractScheduledService {
                 List<Item> barterItems = sideA.size() > 1 ? sideA : sideB;
                 List<Item> coinItem = sideA != barterItems ? sideA : sideB;
 
-                if ((barterItems == sideA && sideB.get(0).getId() != 995) ||
-                        (barterItems == sideB && sideA.get(0).getId() != 995)) {
+                if ((barterItems == sideA && sideB.getFirst().getId() != 995) ||
+                        (barterItems == sideB && sideA.getFirst().getId() != 995)) {
                     bartering(sideA, sideB);
                     continue;
                 }
 
-                multiItemForCoins(barterItems, coinItem.get(0).getAmount());
+                multiItemForCoins(barterItems, coinItem.getFirst().getAmount());
             } else {
                 bartering(sideA, sideB);
             }
@@ -236,11 +237,16 @@ public final class WorldEconomy extends AbstractScheduledService {
      * @return The active price data for the item, or {@code null} if the item should not be tracked.
      */
     public ItemPriceData resolvePriceData(int id) {
-        if (id == 995 || !ItemDefinition.ALL.retrieve(id).isTradeable()) {
+        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+        if (id == 995 || !def.isTradeable()) {
             return null;
         }
+        if (def.isNoted()) {
+            id = def.getUnnotedId().orElseThrow(() -> new IllegalStateException("Noted item [" + def.id() + "] doesn't have unnoted ID."));
+        }
+        int lookupId = id;
         return prices.computeIfAbsent(id, key -> {
-            ItemPriceData newData = new ItemPriceData(id);
+            ItemPriceData newData = new ItemPriceData(lookupId);
             priceUpdates.put(newData.id, newData);
             historyUpdates.add(newData);
             return newData;
@@ -551,5 +557,16 @@ public final class WorldEconomy extends AbstractScheduledService {
         double minimumValue = targetValue * (1.0 - settings.maximumUnderpayRatio());
         double maximumValue = targetValue * (1.0 + settings.maximumOverpayRatio());
         return value >= minimumValue && value <= maximumValue;
+    }
+
+    /**
+     * Returns an unmodifiable view of the current item price data, keyed by item ID.
+     * <p>
+     * The returned map reflects changes made to the underlying price data, but cannot be modified directly.
+     *
+     * @return an unmodifiable map containing item IDs mapped to their corresponding {@link ItemPriceData}
+     */
+    public Map<Integer, ItemPriceData> getPrices() {
+        return Collections.unmodifiableMap(prices);
     }
 }

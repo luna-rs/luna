@@ -3,13 +3,13 @@ package api.bot.zone
 import api.attr.Attr
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import game.skill.magic.ItemRequirement
 import game.skill.magic.RuneRequirement
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.bot.Bot
 
 /**
  * A [TravelStrategy] that uses a teleport spell before walking to the final destination.
@@ -35,7 +35,7 @@ class TeleportTravelStrategy(private val spell: TeleportSpell) : TravelStrategy 
         private val Bot.teleportItems by Attr.list<Item>()
     }
 
-    override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
+    override suspend fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
         // The bot must meet the spell level requirement and be on the spellbook that owns this teleport.
         if (bot.magic.staticLevel < spell.level || bot.spellbook != spell.style.spellbook) {
             return false

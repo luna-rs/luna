@@ -7,7 +7,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
-import io.luna.util.RandomUtils
 
 /**
  * An [InventoryAction] that harvests based on the [HarvestableResource] type.

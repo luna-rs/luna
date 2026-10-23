@@ -430,8 +430,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 break;
             case MIDDLE:
                 put(value >> 8);
-                put(value, transform);
                 put(value >> 16);
+                put(value, transform);
                 break;
             case INVERSE_MIDDLE:
                 throw new UnsupportedOperationException("Inversed-middle-endian middle is impossible.");

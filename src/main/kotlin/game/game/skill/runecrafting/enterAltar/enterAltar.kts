@@ -46,7 +46,7 @@ fun portalExit(plr: Player, altar: Altar) {
  * Intercept event for entering with talismans.
  */
 Altar.ALL.forEach {
-    useItem(it.talisman).onObject(it.id) {
+    useItem(it.talisman).onObject(it.outsideId) {
         talismanEnter(plr, it)
     }
 }
@@ -55,7 +55,7 @@ Altar.ALL.forEach {
  * Intercept event for entering with tiaras.
  */
 Altar.ALL.forEach {
-    object1(it.id) {
+    object1(it.outsideId) {
         val headId = plr.equipment.get(Equipment.HEAD)?.id
         if (headId == it.tiara) {
             tiaraEnter(plr, it)

@@ -1,5 +1,7 @@
 package engine.bot.gear
 
+import api.predef.*
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.def.ItemDefinition
 
 /**
@@ -222,10 +224,10 @@ enum class BotGearSet(
         setOf(
             4087, // Dragon platelegs
             3140, // Dragon chainbody
-            11335, // Dragon full helm (not in supplied 377 item dump)
+            1149, // Dragon med helm
             1187, // Dragon sq shield
             4587, // Dragon scimitar
-            11732 // Dragon boots (not in supplied 377 item dump)
+            4131 // Rune boots
         ),
         BotGearPurpose.PKING,
         BotGearPurpose.MELEE
@@ -236,10 +238,10 @@ enum class BotGearSet(
         setOf(
             4585, // Dragon plateskirt
             3140, // Dragon chainbody
-            11335, // Dragon full helm (not in supplied 377 item dump)
+            1149, // Dragon med helm
             1187, // Dragon sq shield
             4587, // Dragon scimitar
-            11732 // Dragon boots (not in supplied 377 item dump)
+            4131 // Rune boots
         ),
         BotGearPurpose.PKING,
         BotGearPurpose.MELEE
@@ -902,7 +904,7 @@ enum class BotGearSet(
             2497, // Black d'hide chaps
             2491, // Black d'hide vamb
             1169, // Coif
-            11732, // Dragon boots (not in supplied 377 item dump)
+            4131, // Rune boots
             861 // Magic shortbow
         ),
         BotGearPurpose.MELEE,
@@ -920,7 +922,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -933,7 +934,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -946,7 +946,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -959,7 +958,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -972,7 +970,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             1381 // Staff of air
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC
     ),
 
@@ -985,7 +982,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),
@@ -999,7 +995,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),
@@ -1013,7 +1008,6 @@ enum class BotGearSet(
             2579, // Wizard boots
             4675 // Ancient staff
         ),
-        BotGearPurpose.MELEE,
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING
     ),
@@ -1223,7 +1217,80 @@ enum class BotGearSet(
         ),
         BotGearPurpose.MAGIC,
         BotGearPurpose.PKING,
-        BotGearPurpose.SHOW_OFF
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BARKER_GREY_ROBES(
+        1,
+        setOf(
+            2900, // Grey hat
+            2896, // Grey robe top
+            2898, // Grey robe bottoms
+            2902, // Grey gloves
+            2894 // Grey boots
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BARKER_RED_ROBES(
+        1,
+        setOf(
+            2910, // Red hat
+            2906, // Red robe top
+            2908, // Red robe bottoms
+            2912, // Red gloves
+            2904, // Red boots
+            1007 // Red cape
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BARKER_YELLOW_ROBES(
+        1,
+        setOf(
+            2920, // Yellow hat
+            2916, // Yellow robe top
+            2918, // Yellow robe bottoms
+            2922, // Yellow gloves
+            2914, // Yellow boots
+            1023 // Yellow cape
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BARKER_TEAL_ROBES(
+        1,
+        setOf(
+            2930, // Teal hat
+            2926, // Teal robe top
+            2928, // Teal robe bottoms
+            2932, // Teal gloves
+            2924 // Teal boots
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    BARKER_PURPLE_ROBES(
+        1,
+        setOf(
+            2940, // Purple hat
+            2936, // Purple robe top
+            2938, // Purple robe bottoms
+            2942, // Purple gloves
+            2934 // Purple boots
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
     ),
 
     // Random event, quest, and disguise sets.
@@ -1265,21 +1332,25 @@ enum class BotGearSet(
         BotGearPurpose.SKILLING
     );
 
+    companion object {
+        val VALUES = ImmutableList.copyOf(values())
+    }
+
     /**
      * The high-level reasons a bot may choose this gear set.
      */
     val purposes: Set<BotGearPurpose> = setOf(firstPurpose, *additionalPurposes)
 
     override fun priority(): Int {
-        return level
+        return level / 9
     }
 
-    override fun containsId(id: Int): Boolean {
-        return id in equipment
+    override fun ids(): Set<Int> {
+        return equipment
     }
 
-    override fun containsPurpose(purpose: BotGearPurpose): Boolean {
-        return purpose in purposes
+    override fun purposes(): Set<BotGearPurpose> {
+        return purposes
     }
 
     /**
@@ -1290,12 +1361,11 @@ enum class BotGearSet(
      *
      * @return The total known weight of every item in this gear set.
      */
-    val totalWeight: Double
-        get() {
-            var total = 0.0
-            for (id in equipment) {
-                total += ItemDefinition.ALL.get(id).map(ItemDefinition::getWeight).orElse(0.0)
-            }
-            return total
+    val totalWeight = lazyVal {
+        var total = 0.0
+        for (id in equipment) {
+            total += ItemDefinition.ALL.get(id).map(ItemDefinition::getWeight).orElse(0.0)
         }
+        total
+    }
 }

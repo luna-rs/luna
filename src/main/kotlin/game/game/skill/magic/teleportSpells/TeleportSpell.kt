@@ -1,11 +1,11 @@
 package game.skill.magic.teleportSpells
 
 import com.google.common.collect.ImmutableList
-import io.luna.game.model.Position
 import game.skill.magic.ItemRequirement
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
+import io.luna.game.model.Position
 
 /**
  * An enum representing every single teleport spell that can be cast.
@@ -193,5 +193,10 @@ enum class TeleportSpell(val level: Int,
          * An immutable copy of [values].
          */
         val VALUES = ImmutableList.copyOf(values())
+
+        /**
+         * @return The spell with [name], or `null` if there is none.
+         */
+        fun named(name: String?): TeleportSpell? = entries.firstOrNull { it.name == name }
     }
 }

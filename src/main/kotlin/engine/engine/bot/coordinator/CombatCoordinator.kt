@@ -1,93 +1,97 @@
 package engine.bot.coordinator
 
 import api.bot.zone.SubZone
-import game.bot.scripts.CombatTrainingScript
+import api.predef.*
+import com.google.common.collect.HashMultimap
+import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.NpcCombatLoadout
+import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
+import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import kotlin.time.Duration.Companion.minutes
 
-class CombatCoordinator(private val training: Boolean) : BotCoordinator {
-
-    // todo test retrieving items after death
-    // todo 0.75 boost to combat training chance if intelligent 0.5 for average, 0.25 below average, and no boost for the dumbest bots
-    //TODO@0.5.0 Before this is done, item sets need to be added so we can determine what to equip, etc.
-    // also need to add support for magic sets maybe? ranged sets? sasfespotting?
-    /* Combat:
-     * - Kill profitable but dangerous monsters such as green dragons, red dragons, and lava dragons.
-     * - Add bossing behavior later for King Black Dragon and Kalphite Queen.
-     // todo switching styles to train correct stats
+/**
+ * Selects supply-ready combat disciplines and level-appropriate, explicitly named NPC camps.
+ * Candidate camps share the existing zone travel fallback; boss preparation is handled separately.
+ *
+ * @property training Whether to select training camps instead of camps with useful resource drops.
+ * @author lare96
  */
-    /* TODO@0.5.0 Training spots (once combat training coordinator and equipment selection are complete).
-            We may also need to do obstacles like doors and ladders to completion before starting this as well.
-            SkillingBotScript needs to be opened up to be general purpose ZonedBotScript (stays within a zone and relays
-            processing to subclasses). Instead of just taking a list of zones, scripts should take a list of zones with weights
-            (to determine how likely the bot is to go to that zone regardless of distance, etc).
-            Beginner popular spots (1-10)
-                - lumby chicken pen (3184, 3265, 3191, 3279)
-                - lumby north-east cow field (3241, 3255, 3265, 3297)
-            Other beginner spots
-                - lumby north cow field (3190, 3282, 3213, 3303)
-                - lumby swamp (3203, 3168, 3231, 3193)
-                - lumby goblins
-            Low level popular spots (10-30)
-                - al kharid palace (smart bots) (3281, 3158, 3304, 3178)
-                - the most intelligent bots will always go to rock crabs as soon as possible. > 50% intelligence have a
-                   chance to go to rock crabs but not guaranteed
-            Other low level spots
-                - edgeville monastary (3039, 3478, 3063, 3510)
-                - barbarian village (3068, 3404, 3100, 3449)
-                - varrock dark wizards by the circle
-            Mid level popular spots (30-60)
-                - rock crabs (> 80% intelligence always goes)
-                - varrock sewers (moss giants)
-                - edgeville dungeon (hill giants)
-            Other mid level spots
-                - chaos druid tower
-                - taverly dungeon (chaos druids)
-                - guards in popular cities (dumb bots)
-            High level popular spots (60+)
-                - intelligent bots will just train slayer instead of explicitly training combat
-                - crandor (lesser demons, other stuff)
-            Other high level spots
-                - white wolf mountain (ice giants, other stuff)
-                - wilderness (greater demons)
-                - wilderness (green dragons)
-                - taverly dungeon (poison spiders, hellhound)
-                - brimhaven dungeon (everything)
-         */
+class CombatCoordinator(private val training: Boolean) : BotCoordinator {
+    companion object {
+        /** A configured spawn group and the minimum combat readiness needed for deliberate attacks. */
+        internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>, val profit: Boolean = false)
+
+        /** Existing subzones and exact names verified against the configured spawn list. */
+        internal val camps = listOf(
+            Camp(SubZone.LUMBRIDGE_CHICKEN_COOP, 3, setOf("Chicken")),
+            Camp(SubZone.LUMBRIDGE_COW_PEN, 3, setOf("Cow", "Cow calf")),
+            Camp(SubZone.GOBLIN_VILLAGE, 3, setOf("Goblin")),
+            Camp(SubZone.LUMBRIDGE_SWAMP, 3, setOf("Giant rat")),
+            Camp(SubZone.LUMBRIDGE_RIVER, 3, setOf("Goblin", "Giant spider")),
+            Camp(SubZone.ICE_MOUNTAIN, 10, setOf("Icefiend", "Dwarf")),
+            Camp(SubZone.EDGEVILLE_MONASTERY, 10, setOf("Monk")),
+            Camp(SubZone.ROCK_CRABS, 10, setOf("Rock Crab")),
+            Camp(SubZone.HAM_CULT, 15, setOf("H.A.M. Guard")),
+            Camp(SubZone.AL_KHARID_PALACE, 15, setOf("Al-Kharid warrior")),
+            Camp(SubZone.BARBARIAN_VILLAGE, 20, setOf("Barbarian")),
+            Camp(SubZone.CHAOS_DRUID_TOWER, 25, setOf("Chaos druid"), true),
+            Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
+            Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
+            Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak")),
+            Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
+            Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
+            Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
+            Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true)
+        )
+        // TODO Add Fire Giant and Blue Dragon camps when lare96 supplies subzone data.
+        // Camp(SubZone.FIRE_GIANT_CAMP, 65, setOf("Fire giant"), true)
+        // Camp(SubZone.BLUE_DRAGON_CAMP, 75, setOf("Blue dragon"), true)
+        // Bosses such as KBD need protection/supply rules before joining generic NPC dispatch.
+
+        /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
+        internal fun combatReadiness(bot: Bot, purpose: BotGearPurpose): Int {
+            val offensive = when (purpose) {
+                BotGearPurpose.RANGED -> bot.ranged.level
+                BotGearPurpose.MAGIC -> bot.magic.level
+                else -> minOf(bot.attack.level, bot.strength.level)
+            }
+            return minOf(bot.combatLevel, offensive * 2 + 3)
+        }
+
+        /** Restricts camps by offensive readiness, profit intent and dragon-shield compatibility. */
+        internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
+                                   hasDragonShield: Boolean): List<Camp> {
+            val eligible = camps.filter { it.minimum <= level &&
+                (it.zone != SubZone.GREEN_DRAGONS || (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
+            val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
+            // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
+            val threshold = (preferred.maxOfOrNull { it.minimum } ?: 3) - 25
+            return preferred.filter { it.minimum >= threshold || (training && it.zone == SubZone.ROCK_CRABS) }
+        }
+    }
 
     override fun accept(bot: Bot) {
-        // For now, travel to any zone without transitions and fight any attackable mobs.
-        // TODO Combat script for the above ^ and basic equipment selection
-        // for now, ONLY BEGINNER AREAS!!
-        val zones = ArrayList<SubZone>()
-        if (bot.combatLevel < 10) {
-            zones += SubZone.LUMBRIDGE_RIVER
-            zones += SubZone.EAST_DRAYNOR_YEWS
-            // cow field lumby, varrock sewers
-        } else if (bot.combatLevel < 20) {
-            zones += SubZone.BARBARIAN_VILLAGE
-            zones += SubZone.WIZARDS_TOWER
-            zones += SubZone.GOBLIN_VILLAGE
-            if (bot.personality.isDumb) {
-                // use rand(1.0 - intelligence)
-                zones += SubZone.LUMBRIDGE_RIVER
-                zones += SubZone.EAST_DRAYNOR_YEWS
-            }
-            // al kharid palace
-        } else if (bot.combatLevel < 40) {
-            // edgeville monastery, rock crabs, dark wizards at verrock entry lol lol
-            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
-            zones += SubZone.BARBARIAN_VILLAGE
-
-        } else  {
-            zones += SubZone.CHAOS_DRUID_TOWER
-            zones += SubZone.NORTH_FALADOR_CHAOS_TEMPLE
-            zones += SubZone.EDGEVILLE_DUNGEON_MINE
-            zones += SubZone.ARDOUGNE_SQUARE_THIEVING
-
+        if (bot.personality.type == PersonalityTemplateType.SKILLER) {
+            (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
+            return
         }
-        // al kharid palace
-       bot.scriptStack.pushHead(CombatTrainingScript(bot, 100.minutes, zones))
+        val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
+            .mapNotNull { purpose -> NpcCombatLoadout.find(bot, purpose)?.let { purpose to it } }
+        val (purpose, loadout) = ready.randomOrNull() ?: return
+        val level = combatReadiness(bot, purpose)
+        val selected = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
+            loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true).shuffled().take(4)
+        if (selected.isEmpty()) return
+        val names = HashMultimap.create<SubZone, String>()
+        selected.forEach { names.putAll(it.zone, it.names) }
+        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
+            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        bot.scriptStack.push(NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
+            names, purpose, loadout.spell?.spell))
     }
 }

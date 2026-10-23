@@ -5,7 +5,9 @@ import api.bot.zone.SubZone;
 import api.bot.zone.Zone;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import game.bot.scripts.LootItemBotScript;
+import game.bot.scripts.DeathReflexScript;
+import game.bot.scripts.EatFoodReflexScript;
+import game.bot.scripts.LootItemReflexScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -105,14 +108,19 @@ public final class Bot extends Player {
         /**
          * Sets the username assigned to the bot.
          * <p>
-         * This only checks the active bot repository. Persistent data may still be loaded later during {@link Bot#login()}.
+         * The username is normalized and validated the same way as a player login. This only checks the active bot
+         * repository. Persistent data may still be loaded later during {@link Bot#login()}.
          *
          * @param username The username to assign.
          * @return This builder.
+         * @throws IllegalArgumentException If the username is not a valid login username.
          * @throws IllegalStateException If an active bot with this username is already online.
          */
         public Builder setUsername(String username) {
-            // TODO apply same name filtering from login
+            username = username.toLowerCase().trim();
+            if (!PlayerCredentials.isValidUsername(username)) {
+                throw new IllegalArgumentException("Invalid bot username [" + username + "].");
+            }
             BotRepository repository = context.getWorld().getBots();
             if (repository.isOnline(username)) {
                 throw new IllegalStateException("Bot is already logged in.");
@@ -232,8 +240,8 @@ public final class Bot extends Player {
                 preferences = new BotPreference.Builder(manager.getPersonalityManager(), personality).randomizeSmart()
                         .build();
             }
-            return new Bot(context, username, "lunaisthebest1997", reflex, brain, personality, preferences,
-                    spawnPosition, temporary);
+            return new Bot(context, username, RandomUtils.nextBoolean() ? "lunaisthebest1997" : "chubbychaser123",
+                    reflex, brain, personality, preferences, spawnPosition, temporary);
         }
     }
 
@@ -320,9 +328,9 @@ public final class Bot extends Player {
     private Zone zone;
 
     /**
-     * The bot's current sub-zone.
+     * The bot's current sub-zones.
      */
-    private SubZone subZone;
+    private final EnumSet<SubZone> subZones = EnumSet.noneOf(SubZone.class);
 
     /**
      * Local sub-zones in the bots current region.
@@ -362,6 +370,7 @@ public final class Bot extends Player {
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
         speechStack = new BotSpeechStack(this);
         setClient(botClient);
+        preferences.setBot(this);
     }
 
     /**
@@ -378,7 +387,9 @@ public final class Bot extends Player {
     @Override
     protected void onActive() {
         super.onActive();
-        reflex.add(new LootItemBotScript(this));
+        reflex.add(new LootItemReflexScript(this));
+        reflex.add(new DeathReflexScript(this));
+        reflex.add(new EatFoodReflexScript(this));
     }
 
     @Override
@@ -572,7 +583,7 @@ public final class Bot extends Player {
 
             EquipmentDefinition def = RandomUtils.random(eligible);
             if (def != null) {
-                Item equipItem = new Item(def.getId());
+                Item equipItem = new Item(def.id());
                 getEquipment().set(index, equipItem);
             }
             eligible.clear();
@@ -735,19 +746,10 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return The bot's current {@link SubZone}, or {@code null} if no sub-zone has been assigned.
+     * @return All {@link SubZone}s this bot is in.
      */
-    public SubZone getSubZone() {
-        return subZone;
-    }
-
-    /**
-     * Sets the sub-zone this bot is currently assigned to.
-     *
-     * @param subZone The new {@link SubZone}, or {@code null} to clear the current sub-zone.
-     */
-    public void setSubZone(SubZone subZone) {
-        this.subZone = subZone;
+    public EnumSet<SubZone> getSubZones() {
+        return subZones;
     }
 
     /**

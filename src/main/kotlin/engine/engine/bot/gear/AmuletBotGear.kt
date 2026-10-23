@@ -181,11 +181,11 @@ enum class AmuletBotGear(val priority: Int,
         return priority
     }
 
-    override fun containsId(id: Int): Boolean {
-        return ids.contains(id)
+    override fun ids(): Set<Int> {
+        return ids
     }
 
-    override fun containsPurpose(purpose: BotGearPurpose): Boolean {
-        return purposeSet.contains(purpose)
+    override fun purposes(): Set<BotGearPurpose> {
+        return purposeSet
     }
 }

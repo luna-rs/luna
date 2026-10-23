@@ -1,55 +1,55 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
-import api.bot.script.BotScriptData
+import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.StationaryInventoryBotScript
-import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
+import api.bot.script.ownsProductionSupplies
+import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import game.skill.fletching.stringBow.Bow
+import game.skill.fletching.stringBow.StringBowAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Handles stationary bot bow-stringing by repeatedly using bow string on one configured unstrung bow type.
+ * Strings one configured bow type using owned unstrung bows and bow strings.
+ * A single matching pair qualifies; bank withdrawals balance both inputs up to fourteen pairs, including
+ * the last partial batch. Production uses the ordinary item interaction and make dialogue, with conversion
+ * and experience supplied by [StringBowAction]. Arrow shafts are excluded because they cannot be strung.
  *
- * [StationaryInventoryBotScript] ensures the bot is already in a valid stationary zone where it can safely process
- * inventory actions. Banking is requested when the bot runs out of either unstrung bows or bow strings. The script
- * withdraws fourteen unstrung bows and fourteen bow strings so each inventory can process a full batch of completed bows.
+ * [InventoryBotScript] supplies travel, verified banking, safety, session expiry, and bounded retries.
+ * Saved scripts retain their bow, zones, duration, and retry counters. Missing inputs request stock targets
+ * through the shared production helper before the session stops.
  *
- * [Bow.ARROW_SHAFT] is rejected because arrow shafts are created by cutting logs, not by stringing bows.
- *
- * @property bow The bow type this script should string.
+ * @param bot The bot stringing bows.
+ * @property bow The bow recipe used throughout the session.
+ * @param duration The session duration.
+ * @param zones Existing processing zones with bank and travel support.
  * @author lare96
  */
 class StringBowBotScript(
     bot: Bot,
     val bow: Bow,
-    duration: Duration
-) : StationaryInventoryBotScript(bot, duration) {
+    duration: Duration,
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_FLETCHING)
+) : InventoryBotScript(bot, duration, zones) {
+    override val verifiedProductionWithdrawals = true
 
     init {
         require(bow != Bow.ARROW_SHAFT) { "ARROW_SHAFT bow type cannot be used with this script." }
     }
 
     companion object {
-
-        /**
-         * Serializable data used to save and restore a [StringBowBotScript].
-         *
-         * This extends [ZonedBotScriptData] with the configured [Bow], allowing the script to resume with the same
-         * bow type, remaining duration, and candidate zones.
-         */
-        class StringBowData : ZonedBotScriptData() {
-
-            /**
-             * The bow type the bot should string.
-             */
+        /** Saved bow recipe and inherited session/retry state. @author lare96 */
+        class StringBowData : InventoryScriptData() {
+            /** Bow enum retained under its existing snapshot field name. */
             var bow: Bow = Bow.SHORTBOW
 
             override fun load(data: JsonObject) {
@@ -64,55 +64,54 @@ class StringBowBotScript(
         }
     }
 
-    /**
-     * Recreates a bow-stringing bot script from saved script data.
-     *
-     * @param bot The bot that owns this script.
-     * @param data The previously saved bow-stringing script data.
-     */
-    constructor(bot: Bot, data: StringBowData) : this(bot, data.bow, data.duration)
+    /** Permanent Fletching level required for selection and startup. */
+    val requiredLevel = bow.level
+    /** One matching unstrung bow and string, the minimum complete recipe. */
+    private val materials = listOf(bow.unstrungItem, Item(Bow.BOW_STRING))
 
-    override suspend fun onExecuteInZone(zone: SubZone): Boolean {
-        if (bow.unstrung !in bot.inventory) {
-            bot.log("No unstrung ${bow.name} left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
-        }
+    /** Restores the legacy bow field together with saved zones and shared retry counters. */
+    constructor(bot: Bot, data: StringBowData) : this(bot, data.bow, data.duration, data.zones) {
+        restoreInventoryState(data)
+    }
 
-        if (Bow.BOW_STRING !in bot.inventory) {
-            bot.log("No bow strings left in inventory; requesting bank trip.")
-            forceBanking = true
-            return true
-        }
+    /** Checks permanent level and one complete owned pair across inventory and bank. */
+    fun isEligible(): Boolean = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel &&
+            bot.ownsProductionSupplies(materials)
 
-        bot.log("Using bow string on unstrung ${bow.name}; waiting for make-item dialogue.")
-        handler.inventory.useItem(Bow.BOW_STRING).onItem(bow.unstrung)
+    /** Returns up to fourteen balanced pairs, capped by the smaller bank stock. */
+    fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
-        if (!waitFor(1200.milliseconds) { MakeItemDialogue::class in bot.overlays }) {
-            bot.log("Make-item dialogue did not open for ${bow.name}; retrying next cycle.")
-            return true
-        }
+    override fun withdraw(): List<Item> = productionWithdraw(materials,
+        levelEligible = bot.skill(SKILL_FLETCHING).staticLevel >= requiredLevel)
 
-        bot.log("Selecting make-item index 0 for ${bow.name}.")
-        handler.widgets.clickMakeItem(0, Int.MAX_VALUE)
+    override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
 
-        bot.naturalDexterityDelay()
+    override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
+
+    /** Whether the carried inputs can produce at least one configured bow. */
+    private fun hasMaterials(): Boolean = bot.inventory.containsAll(materials)
+
+    override suspend fun onExecuteInZone(): Boolean {
+        if (!productionReady(hasMaterials(), levelEligible = bot.skill(SKILL_FLETCHING).level >= requiredLevel)) return true
+        attemptProduction(bow.unstrung) { startProduction() }
         return true
     }
 
-    override fun withdraw(): List<Item> {
-        return listOf(Item(bow.unstrung, 14), Item(Bow.BOW_STRING, 14))
+    /** Opens the native single-recipe dialogue and requests the carried balanced batch. */
+    private suspend fun startProduction(): Boolean {
+        if (!handler.inventory.useItem(Bow.BOW_STRING).onItem(bow.unstrung)) return false
+        if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
+        val amount = materials.minOf { bot.inventory.computeAmountForId(it.id) }
+        handler.widgets.clickMakeItem(0, amount)
+        return true
     }
 
-    override fun tools(): Set<Int> {
-        return emptySet()
+    override suspend fun finish() {
+        bot.actions.first(StringBowAction::class.java)?.interrupt()
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = StringBowData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        data.bow = bow
-        return data
+    override fun snapshot(): StringBowData = StringBowData().also {
+        it.bow = bow
+        saveInventoryState(it)
     }
 }

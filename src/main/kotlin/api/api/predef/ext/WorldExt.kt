@@ -1,7 +1,6 @@
 package api.predef.ext
 
 import api.predef.*
-import io.luna.game.model.Entity
 import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -13,8 +12,6 @@ import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
-import java.time.Duration
-import kotlin.reflect.KClass
 
 /**
  * Spawns an [Npc].
@@ -170,7 +167,14 @@ fun World.schedule(delay: Int, instant: Boolean = false, action: (Task) -> Unit)
 /**
  * Schedules a recurring task.
  */
-fun World.schedule(duration: Duration, instant: Boolean = false, action: (Task) -> Unit) {
+fun World.schedule(duration: java.time.Duration, instant: Boolean = false, action: (Task) -> Unit) {
+    schedule(duration.toTicks(), instant, action)
+}
+
+/**
+ * Schedules a recurring task.
+ */
+fun World.schedule(duration: kotlin.time.Duration, instant: Boolean = false, action: (Task) -> Unit) {
     schedule(duration.toTicks(), instant, action)
 }
 
@@ -187,6 +191,13 @@ fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
 /**
  * Schedules a task that suspends after one execution.
  */
-fun World.scheduleOnce(duration: Duration, action: (Task) -> Unit) {
+fun World.scheduleOnce(duration: java.time.Duration, action: (Task) -> Unit) {
+    scheduleOnce(duration.toTicks(), action)
+}
+
+/**
+ * Schedules a task that suspends after one execution.
+ */
+fun World.scheduleOnce(duration: kotlin.time.Duration, action: (Task) -> Unit) {
     scheduleOnce(duration.toTicks(), action)
 }

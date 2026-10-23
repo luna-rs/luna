@@ -1,7 +1,7 @@
 package game.skill.smithing.smithBar
 
 import api.predef.*
-import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableListMultimap
 import com.google.common.collect.ImmutableMap
 import game.skill.smithing.BarType
 
@@ -276,11 +276,13 @@ enum class SmithingTable(val widgetId: Int, val slotId: Int, val bars: Int, val 
     companion object {
 
         /**
-         * Immutable mappings of [SmithingItem.item] to [SmithingItem].
+         * Maps smithable item ids to their corresponding [SmithingItem] definitions.
+         *
+         * This allows a smithing item definition to be resolved directly from the produced item's id.
          */
         val ID_TO_ITEM = run {
             val map = ImmutableMap.builder<Int, SmithingItem>()
-            for (table in values()) {
+            for (table in entries) {
                 for (smithingItem in table.items) {
                     map.put(smithingItem.item.id, smithingItem)
                 }
@@ -289,11 +291,13 @@ enum class SmithingTable(val widgetId: Int, val slotId: Int, val bars: Int, val 
         }
 
         /**
-         * Immutable mappings of [SmithingItem.item] to [SmithingTable].
+         * Maps smithable item ids to the [SmithingTable] entries that contain them.
+         *
+         * This is used to resolve the interface widget, slot, and bar requirement associated with a smithable item.
          */
         val ID_TO_TABLE = run {
             val map = ImmutableMap.builder<Int, SmithingTable>()
-            for (table in values()) {
+            for (table in entries) {
                 for (smithingItem in table.items) {
                     map.put(smithingItem.item.id, table)
                 }
@@ -302,8 +306,18 @@ enum class SmithingTable(val widgetId: Int, val slotId: Int, val bars: Int, val 
         }
 
         /**
-         * An immutable copy of [values].
+         * Maps each [BarType] to every [SmithingItem] that can be created from that bar.
+         *
+         * A multimap is used because a single bar type can produce multiple weapons, armour pieces, and utility items.
          */
-        val VALUES = ImmutableList.copyOf(values())
+        val BAR_TO_ITEM = run {
+            val map = ImmutableListMultimap.builder<BarType, SmithingItem>()
+            for (table in entries) {
+                for (smithingItem in table.items) {
+                    map.put(smithingItem.barType, smithingItem)
+                }
+            }
+            map.build()
+        }
     }
 }

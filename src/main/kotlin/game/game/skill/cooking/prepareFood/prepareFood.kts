@@ -1,8 +1,8 @@
 package game.skill.cooking.prepareFood
 
 import api.predef.*
-import io.luna.game.model.mob.Player
 import game.skill.cooking.cookFood.MakeWineActionItem
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
@@ -36,8 +36,8 @@ fun openOther(plr: Player, food: IncompleteFood, removeIds: MutableSet<Int>) {
     })
 }
 
-// Loop through all incomplete foods and register listeners.
-IncompleteFood.ALL.values.forEach {
+// Register each ingredient recipe; multiple recipes may produce the same item.
+IncompleteFood.entries.forEach {
     for (id in it.otherIngredients) {
         useItem(it.baseIngredient).onItem(id) {
             val itemSet = mutableSetOf(usedItemId, targetItemId)

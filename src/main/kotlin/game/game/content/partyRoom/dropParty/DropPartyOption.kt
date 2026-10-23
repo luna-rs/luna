@@ -249,7 +249,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         if (chest.items.size() < 8) {
             if (isBetaMode) {
                 ItemDefinition.ALL.filterNotNull().filter { (it.value > 20_000 || it.isStackable) && it.isTradeable }
-                    .map { if (it.isStackable) Item(it.id, rand(1..Int.MAX_VALUE)) else Item(it.id) }
+                    .map { if (it.isStackable) Item(it.id(), rand(1..Int.MAX_VALUE)) else Item(it.id()) }
                     .shuffled().forEach { chest.items.add(it) }
                 plr.sendMessage("[BETA] Filling chest with random items above 20,000 gold value.")
                 return true
@@ -275,6 +275,19 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         // Start countdown, clear chest.
         chest.items.clear()
         world.schedule(DropPartyCountdown(balloonItems))
+    }
+
+    /**
+     * Moves the items [plr] offered but didn't accept back to their inventory. Items that don't fit stay offered.
+     */
+    fun returnOffers(plr: Player) {
+        val offered = plr.depositItems
+        for (index in 0 until offered.capacity()) {
+            val item = offered[index] ?: continue
+            if (plr.inventory.hasSpaceFor(item) && plr.inventory.add(item)) {
+                offered[index] = null
+            }
+        }
     }
 
     /**

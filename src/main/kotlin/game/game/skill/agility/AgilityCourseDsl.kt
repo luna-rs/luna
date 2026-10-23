@@ -1,13 +1,13 @@
 package game.skill.agility
 
 import api.predef.*
+import game.skill.agility.Agility.completedObstacles
 import io.luna.game.action.Action
 import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.ExactMovement
 import io.luna.game.model.`object`.GameObject
-import game.skill.agility.Agility.completedObstacles
 
 /**
  * A receiver that helps create our DSL to construct agility courses and their obstacles.
@@ -23,7 +23,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                  type: AgilityObstacle,
                  action: Player.(GameObject) -> Action<Player>) {
         object1(id) {
-            if (Agility.checkLevel(plr, courseType.level) && type.startIf(plr)) {
+            if (type.startIf(plr) && Agility.checkLevel(plr, courseType.level)) {
                 plr.submitAction(action(plr, gameObject))
                 plr.completedObstacles.put(courseType, type)
                 plr.agility.addExperience(type.xp)

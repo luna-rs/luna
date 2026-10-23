@@ -1,10 +1,10 @@
 package game.skill.crafting.hideTanning
 
+import game.skill.crafting.hideTanning.Hide.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter
-import game.skill.crafting.hideTanning.Hide.*
 
 /**
  * The interface opened when tanning hides.
@@ -14,6 +14,9 @@ import game.skill.crafting.hideTanning.Hide.*
 class TanInterface : StandardInterface(14670) {
 
     companion object {
+
+        /** NPCs with implemented talk and trade tanning handlers, shared with bot selection. */
+        val TANNER_IDS = setOf(804, 2824, 1041)
 
         /**
          * A list of hides displayed on the interface.

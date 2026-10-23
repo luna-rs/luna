@@ -1,11 +1,13 @@
 package engine.bot.coordinator.skill
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.of
 import game.bot.scripts.skills.MineBotScript
 import game.skill.mining.Ore
-import io.luna.game.model.mob.bot.Bot
+import io.luna.util.RandomUtils
 import java.util.*
 
 /**
@@ -31,24 +33,33 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         if (level > 15) {
             if (bot.personality.isDextrous) {
                 ores += Ore.IRON
-
+                if(RandomUtils.roll(1 of 3)) {
+                    ores += Ore.COAL
+                }
                 zones += SubZone.SOUTH_EAST_ARDOUGNE_MINE
                 zones += SubZone.LEGENDS_GUILD_MINE
             } else if (bot.personality.isIntelligent) {
                 ores += Ore.IRON
+                if(randBoolean()) {
+                    ores += Ore.COAL
+                }
 
-                zones += SubZone.AL_KHARID_MINE
                 zones += SubZone.LEGENDS_GUILD_MINE
             } else {
                 ores.addAll(Ore.ORE_MAP.keys())
 
                 if (!bot.personality.isDumb) {
                     ores.removeIf { it.level < 15 }
+                    ores -= Ore.SILVER
                 }
 
-                zones += SubZone.AL_KHARID_MINE
-                zones += SubZone.VARROCK_SE_MINE
-                zones += SubZone.VARROCK_SW_MINE
+                if(bot.personality.isDumb) {
+                    if(bot.combatLevel > 30) {
+                        zones += SubZone.AL_KHARID_MINE
+                    }
+                    zones += SubZone.VARROCK_SE_MINE
+                    zones += SubZone.VARROCK_SW_MINE
+                }
                 zones += SubZone.LEGENDS_GUILD_MINE
                 zones += SubZone.SOUTH_EAST_ARDOUGNE_MINE
             }
@@ -103,7 +114,6 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             ores += Ore.ADAMANT
             ores += Ore.RUNE
 
-            zones += SubZone.AL_KHARID_MINE
             zones += SubZone.SOUTH_LUMBRIDGE_MINE
             zones += SubZone.EDGEVILLE_DUNGEON_MINE
         }

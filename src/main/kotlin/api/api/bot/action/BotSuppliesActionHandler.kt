@@ -81,7 +81,7 @@ class BotSuppliesActionHandler(private val bot: Bot, private val handler: BotAct
         fun getBaseSellAmount(id: Int) = amount(id)!! * 2
     }
 
-    private val scale = bot.combatLevel / 126.0
+    private val scale get() = bot.combatLevel / 126.0
 
     fun getSellAmount(id: Int, type: WantedItemType) = floor(type.getBaseSellAmount(id) * scale).toInt()
 

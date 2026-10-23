@@ -1,6 +1,7 @@
 package engine.bot.speech
 
 import api.attr.Attr
+import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import engine.bot.speech.BotReactionSpeechPool.ReactionSpeech
@@ -11,12 +12,10 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.util.StringUtils
-import kotlin.math.floor
 
 /**
  * Coordinates event-driven emotional and speech reactions for bots. Bot reactions are small behavior hooks
@@ -152,12 +151,12 @@ object BotReactions {
     /**
      * Registers the reaction hook for witnessing another player's skill advancement.
      *
-     * When a skill change event is observed, happy and social bots may react with an [ReactionSpeech.OTHER_LEVEL_UP]
+     * When an actual level increase is observed, happy and social bots may react with an [ReactionSpeech.OTHER_LEVEL_UP]
      * line. Social bots also have a chance to refer to the player by a shortened name, stripping trailing digits for
      * more natural player-like speech.
      */
     fun reactToOtherLevelUp() {
-        inject(SkillChangeEvent::class).filter { true }.then {
+        inject(SkillChangeEvent::class).filter { msg.isLevelUp }.then {
             if (rand(bot.personality.social) && bot.emotions.isFeeling(EmotionType.HAPPY)) {
                 val delay = rand(4, 12)
                 bot.lastWitnessedSkillAdvance =

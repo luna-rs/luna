@@ -1,8 +1,8 @@
 package api.combat.npc
 
 import api.combat.npc.dsl.NpcAttackCombatHookReceiver
-import api.combat.npc.dsl.NpcDefenceCombatHookReceiver
 import api.combat.npc.dsl.NpcCombatReceiver
+import api.combat.npc.dsl.NpcDefenceCombatHookReceiver
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation

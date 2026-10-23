@@ -44,7 +44,7 @@ public final class DialogueQueue {
         } else {
             AbstractOverlaySet overlays = player.getOverlays();
             player.resetDialogues();
-            if (overlays.contains(DialogueInterface.class)) {
+            if (overlays.has(DialogueInterface.class)) {
                 overlays.closeWindows();
             }
         }

@@ -22,6 +22,6 @@ public final class TextInputMessageReader extends GameMessageReader<TextInputEve
 
     @Override
     public boolean validate(Player player, TextInputEvent event) {
-        return player.getOverlays().contains(TextInput.class);
+        return player.getOverlays().has(TextInput.class);
     }
 }

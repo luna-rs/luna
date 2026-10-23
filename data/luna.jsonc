@@ -18,7 +18,9 @@
     // The password-strength policy used when validating new or changed passwords.
     "password_strength": "DEFAULT",
     // Whether stackable ground items with the same id should merge together on the same tile.
-    "merge_stackable_ground_items": false
+    "merge_stackable_ground_items": false,
+    // How frequent the auto-save script should run. <= 0 means it will not run.
+    "autosave_minutes": 10
   },
   "economy": {
     /**
@@ -85,12 +87,6 @@
   "skills": {
     // The interval (in game ticks) between each attempt to cut a log while woodcutting.
     "woodcutting_speed": 4,
-    /**
-     * 317 style: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
-     *
-     * OSRS style: each tree has a health value that scales with its level, determining when it becomes a stump.
-     */
-    "use_317_tree_stumps": false,
     // Whether Slayer tasks should enforce required equipment checks.
     "slayer_equipment_needed": true,
     // The maximum number of ticks a player may spend trying to light a fire.
@@ -100,7 +96,7 @@
   },
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 50,
+    "base_online_count": 350,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The baseline number of hours bots should remain logged out before returning.
@@ -118,7 +114,7 @@
     // The chance that a newly created bot receives an unusually high intelligence value.
     "high_intelligence_chance": 0.05,
     // The chance that a newly created bot becomes a merchant.
-    "high_merchanting_chance": 0.15,
+    "high_merchanting_chance": 0.10,
     // The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and greed.
     "base_loot_value": 15000
   },

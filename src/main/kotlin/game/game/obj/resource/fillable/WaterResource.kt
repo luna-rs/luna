@@ -43,7 +43,7 @@ object WaterResource : FillableResource() {
 
     override fun registerResource(obj: GameObjectDefinition) {
         for (emptyId in EMPTY_IDS) {
-            useItem(emptyId).onObject(obj.id) { fill(plr, emptyId, gameObject) }
+            useItem(emptyId).onObject(obj.id()) { fill(plr, emptyId, gameObject) }
         }
     }
 

@@ -2,6 +2,7 @@ package io.luna.game.model.item.shop;
 
 import api.shop.dsl.ShopHandler.PendingShopItem;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.Inventory;
@@ -9,6 +10,7 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.item.ItemContainer.StackPolicy;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -134,6 +136,14 @@ public final class Shop {
     private final Set<Player> viewing = new HashSet<>();
 
     /**
+     * Whether this shop is intended specifically for merchanting bots.
+     * <p>
+     * This is classification metadata only. {@link #botAccess} remains the authoritative check for whether a particular
+     * bot may actually access the shop.
+     */
+    private final boolean merchantOnly;
+
+    /**
      * Snapshot of original stock amounts for each shop slot.
      * <p>
      * A present value indicates the item is naturally stocked by this shop and may be restocked according to policy.
@@ -152,28 +162,29 @@ public final class Shop {
      */
     private final Set<Integer> restockItems = new HashSet<>();
 
+    // todo docs
+    private final Predicate<Bot> botAccess;
+
     /**
      * Creates a new {@link Shop}.
-     * <p>
-     * The shop container is created immediately and configured with a {@link ShopListener} for stock initialization,
-     * restock triggering, and display update broadcasting.
-     * <p>
-     * The {@code amountMap} is initialized to {@link OptionalInt#empty()} for all slots. The actual snapshot of
-     * original stock values is established when the backing {@link ItemContainer} is initialized and the listener
-     * receives its {@code onInit} callback.
      *
      * @param world The world instance used for scheduling restock tasks.
      * @param name The shop name displayed to players.
      * @param restockPolicy The restock policy.
      * @param buyPolicy The policy controlling what items may be sold to this shop.
      * @param currency The currency item used for transactions.
+     * @param botAccess Determines whether a particular bot may access this shop.
+     * @param merchantOnly Whether this shop belongs to the merchant-only shop pool.
      */
-    public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy, Currency currency) {
+    public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy,
+                Currency currency, Predicate<Bot> botAccess, boolean merchantOnly) {
         this.world = world;
         this.name = name;
         this.restockPolicy = restockPolicy;
         this.buyPolicy = buyPolicy;
         this.currency = currency;
+        this.botAccess = botAccess;
+        this.merchantOnly = merchantOnly;
 
         amountMap = new OptionalInt[40];
         Arrays.fill(amountMap, OptionalInt.empty());
@@ -283,7 +294,7 @@ public final class Shop {
 
         if (inventory.remove(currencyItem) && inventory.add(buyItem)) {
             if (amountMap[index].isEmpty()) {
-                return items.remove(buyItem);
+                return items.remove(index, buyItem);
             } else {
                 items.set(index, shopItem.addAmount(-buyAmount));
                 return true;
@@ -319,7 +330,7 @@ public final class Shop {
             return false;
         }
 
-        int inventoryAmount = inventory.computeAmountForId(inventoryItem.getId());
+        int inventoryAmount = inventory.computeNonDynamicAmountForId(inventoryItem.getId());
         if (sellAmount > inventoryAmount) {
             sellAmount = inventoryAmount;
         }
@@ -330,14 +341,14 @@ public final class Shop {
             return false;
         }
 
-        int totalValue = computeSellValue(sellItem.getId(), sellAmount);
+        int totalValue = Math.max(1, computeSellValue(sellItem.getId(), sellAmount));
         Item currencyItem = new Item(currency.getId(), totalValue);
         if (!inventory.hasSpaceFor(currencyItem)) {
             inventory.onCapacityExceeded();
             return false;
         }
 
-        if (inventory.remove(sellItem) && inventory.add(currencyItem)) {
+        if (inventory.removeFromIndex(index, sellItem) && inventory.add(currencyItem)) {
             return items.add(sellItem);
         }
         return false;
@@ -427,6 +438,34 @@ public final class Shop {
     }
 
     /**
+     * Computes the current cost of buying up to {@code amount} of {@code id}.
+     * <p>
+     * The returned price uses the same dynamic stock-based pricing used by a real shop purchase. If the item is not
+     * currently stocked, an empty value is returned.
+     *
+     * @param id The item id to price.
+     * @param amount The requested amount.
+     * @return The current purchase price, or an empty value if the item is unavailable.
+     */
+    public OptionalInt computeBuyValue(int id, int amount) {
+        Preconditions.checkArgument(amount > 0, "Amount must be greater than zero.");
+
+        int index = items.computeIndexForId(id);
+        if (index == -1) {
+            return OptionalInt.empty();
+        }
+
+        Item item = items.get(index);
+        if (item == null || item.getAmount() < 1) {
+            return OptionalInt.empty();
+        }
+
+        // Clamp against current stock so callers can safely request more than the shop currently has.
+        int buyAmount = Math.min(amount, item.getAmount());
+        return OptionalInt.of(computeBuyValue(item, index, buyAmount));
+    }
+
+    /**
      * Computes the total currency received for selling {@code amountSold} units of an item into this shop.
      * <p>
      * The sell value depends on whether the item is naturally stocked by this shop:
@@ -507,12 +546,15 @@ public final class Shop {
 
     /**
      * Determines whether a given {@link Item} can be sold to this shop.
+     * <p>
+     * Dynamic items are never accepted: each would take a slot of its own beside the shop's stack of that id, and sell
+     * prices are worked out from the first slot holding the id.
      *
      * @param item The item being checked.
      * @return {@code true} if the item can be sold to this shop.
      */
     public boolean computeCanSell(Item item) {
-        return computeCanSell(item.getId());
+        return !item.isDynamic() && computeCanSell(item.getId());
     }
 
     /**
@@ -618,12 +660,10 @@ public final class Shop {
 
     /**
      * Retrieves the set of players currently viewing this shop.
-     * <p>
-     * Package-private to avoid exposing mutable internal state to outside packages.
      *
      * @return The viewing set.
      */
-    Set<Player> getViewing() {
+    public Set<Player> getViewing() {
         return viewing;
     }
 
@@ -645,5 +685,19 @@ public final class Shop {
      */
     public Set<Integer> getRestockItems() {
         return restockItems;
+    }
+
+    /**
+     * @return {@code true} if this shop belongs to the merchant-only shopping pool.
+     */
+    public boolean isMerchantOnly() {
+        return merchantOnly;
+    }
+
+    /**
+     * @return The predicate that determines whether an individual bot may access this shop.
+     */
+    public Predicate<Bot> getBotAccess() {
+        return botAccess;
     }
 }

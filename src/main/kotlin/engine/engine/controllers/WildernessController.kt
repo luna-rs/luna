@@ -1,7 +1,6 @@
 package engine.controllers
 
 import engine.controllers.WildernessLocatableController.wildernessLevel
-import game.item.degradable.DegradableEquipmentHandler.ringOfLifeActive
 import game.skill.magic.teleportSpells.TeleportAction
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -18,12 +17,14 @@ import io.luna.game.model.mob.controller.PlayerController
 class WildernessController(private val plr: Player) : PlayerController(plr) {
 
     override fun teleport(action: TeleportAction): Boolean {
-        if(plr.ringOfLifeActive) {
-            return plr.wildernessLevel <= 30
-        }
-        if (plr.wildernessLevel >= 20) {
-            plr.sendMessage("A mysterious force blocks your teleport spell!")
-            plr.sendMessage("You can't use this teleport after level 20 Wilderness.")
+        val maxLevel = action.maxWildernessLevel
+        if (plr.wildernessLevel > maxLevel) {
+            if (maxLevel >= 30) {
+                plr.sendMessage("A mysterious force blocks your teleport.")
+            } else {
+                plr.sendMessage("A mysterious force blocks your teleport spell!")
+            }
+            plr.sendMessage("You can't use this teleport after level $maxLevel wilderness.")
             return false
         }
         return true
@@ -49,9 +50,7 @@ class WildernessController(private val plr: Player) : PlayerController(plr) {
     }
 
     override fun move() {
-        val position = plr.position
-        var newLevel = if (position.y > 6400) position.y - 6400 else position.y
-        newLevel = ((newLevel - 3520) / 8) + 1
+        val newLevel = WildernessLocatableController.levelAt(plr.position)
         if (plr.wildernessLevel != newLevel) {
             plr.wildernessLevel = newLevel
             plr.sendText("@yel@Level: $newLevel", 199)

@@ -3,6 +3,8 @@ package io.luna.game.model.item.shop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -81,5 +83,18 @@ public final class ShopManager {
      */
     public boolean contains(String name) {
         return shops.containsKey(name);
+    }
+
+    /**
+     * Returns a read-only view of every currently registered shop.
+     * <p>
+     * This allows systems such as bot shopping to discover shops directly from the global registry instead of
+     * maintaining a second hardcoded list of shop names.
+     *
+     * @return Every registered shop.
+     */
+    public Collection<Shop> values() {
+        // Keep the actual backing collection private so callers cannot add or remove registered shops.
+        return Collections.unmodifiableCollection(shops.values());
     }
 }

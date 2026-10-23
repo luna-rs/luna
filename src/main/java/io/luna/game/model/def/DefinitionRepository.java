@@ -133,7 +133,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
     public final void storeDefinition(T definition) {
         checkState(!locked, "Cannot add definitions to a locked repository.");
 
-        int id = definition.getId();
+        int id = definition.id();
         checkState(put(id, definition), "Identifier [" + id + "] already mapped to a definition.");
         size++;
     }

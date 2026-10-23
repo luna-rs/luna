@@ -1,10 +1,10 @@
 package engine.player
 
+import io.luna.game.model.mob.bot.Bot
 import api.bot.zone.SubZone
-import api.bot.zone.SubZone.Companion.updateLocalSubZones
 import api.bot.zone.Zone
-import api.bot.zone.Zone.Companion.updateZone
 import api.predef.*
+import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
 import engine.player.punishment.PunishmentHandler
 import game.content.partyRoom.dropParty.DropPartyOption.depositItems
@@ -12,7 +12,6 @@ import io.luna.Luna
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SkillUpdateMessageWriter
@@ -51,7 +50,10 @@ on(LoginEvent::class, EventPriority.HIGH) {
     plr.status.load()
     if(plr is Bot) {
         val bot = plr as Bot
+        bot.preferences.rebalanceWantedItems()
         Zone.updateZone(bot, bot.position.regionId)
+
+        // TODO Make more efficient, only update local subzones when the region changes, only update
         SubZone.updateLocalSubZones(bot, bot.position.regionId)
         SubZone.updateSubZone(bot)
     }

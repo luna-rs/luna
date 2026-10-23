@@ -1,14 +1,12 @@
 package game.obj.resource.harvestable
 
 import api.predef.*
-import api.predef.ext.*
 import game.obj.resource.GameResource
+import game.player.Messages
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
-import io.luna.util.Rational
-import game.player.Messages
 
 /**
  * A [GameResource] that can be harvested by a player.
@@ -18,7 +16,7 @@ import game.player.Messages
 abstract class HarvestableResource : GameResource() {
 
     final override fun registerResource(obj: GameObjectDefinition) {
-        object2(obj.id) { harvest(plr, gameObject) }
+        object2(obj.id()) { harvest(plr, gameObject) }
     }
 
     /**

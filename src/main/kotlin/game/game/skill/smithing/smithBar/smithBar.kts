@@ -2,10 +2,10 @@ package game.skill.smithing.smithBar
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.event.impl.WidgetItemClickEvent.*
-import io.luna.game.model.mob.Player
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
+import io.luna.game.event.impl.WidgetItemClickEvent.*
+import io.luna.game.model.mob.Player
 
 /**
  * Looks up the first [BarType] found in the player's inventory.

@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.Service;
 import io.luna.LunaContext;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerReadyEvent;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -61,6 +62,14 @@ public final class GameService extends AbstractScheduledService {
      */
     private final class GameServiceExecutor implements Executor {
 
+        /**
+         * Runs a command immediately on the game thread or queues it for game-thread execution.
+         *
+         * <p>Commands submitted from other threads are added to {@link GameService#syncTasks}. Commands submitted
+         * from the game thread execute synchronously on the calling stack.
+         *
+         * @param command The command to execute on the game thread.
+         */
         @Override
         public void execute(Runnable command) {
             if (Thread.currentThread() == thread) {
@@ -79,6 +88,12 @@ public final class GameService extends AbstractScheduledService {
      */
     private final class GameServiceListener extends Service.Listener {
 
+        /**
+         * Initializes the world and completes the server startup sequence.
+         *
+         * <p>Loads plugins, runs pending synchronization tasks, starts the world, and waits for both
+         * launch and ready event tasks before releasing {@link GameService#onlineLock}.
+         */
         @Override
         public void running() {
             // Start the game world and run startup logic from Kotlin scripts.
@@ -89,16 +104,29 @@ public final class GameService extends AbstractScheduledService {
             // Players won't be able to log in until startup tasks are complete, so it's fine to block the game thread.
             runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
+            // Runs once every launch listener is done, so that these tasks can rely on the world that they have set up.
+            runKotlinTasks(ServerReadyEvent::new, "Waiting for Kotlin post-launch tasks to complete...");
+
             // Release the lock in LunaServer so networking can begin accepting logins.
             onlineLock.complete(null);
         }
 
+        /**
+         * Logs the start of a graceful service shutdown.
+         *
+         * @param from The service state before transitioning to stopping.
+         */
         @Override
         public void stopping(State from) {
             // A request to terminate gracefully has been made.
             logger.fatal("Gracefully terminating Luna...");
         }
 
+        /**
+         * Logs successful service termination and exits the application with status {@code 0}.
+         *
+         * @param from The service state before termination.
+         */
         @Override
         public void terminated(State from) {
             // The game thread was gracefully terminated.
@@ -106,6 +134,12 @@ public final class GameService extends AbstractScheduledService {
             System.exit(0);
         }
 
+        /**
+         * Logs an uncaught service failure and exits the application with status {@code 1}.
+         *
+         * @param from The service state before failure.
+         * @param failure The exception responsible for the service failure.
+         */
         @Override
         public void failed(State from, Throwable failure) {
             // An exception was thrown on the game thread.
@@ -129,6 +163,7 @@ public final class GameService extends AbstractScheduledService {
                         box(pluginCount), box(scriptCount));
             } catch (Exception e) {
                 logger.fatal("Error loading plugins!", e);
+                LogManager.shutdown();
                 System.exit(1);
             }
         }
@@ -145,6 +180,14 @@ public final class GameService extends AbstractScheduledService {
      * <p>These tasks are drained at the beginning of each tick by {@link #runSynchronizationTasks()}.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
+
+    /**
+     * Queue of yielded coroutine continuations awaiting a game-thread execution batch.
+     *
+     * <p>The queue is drained by {@link #runYieldedTasks()} before synchronization tasks and world
+     * processing. Its batch size is captured before execution to defer newly yielded continuations.
+     */
+    private final Queue<Runnable> yieldedTasks = new ConcurrentLinkedQueue<>();
 
     /**
      * Executor that marshals work onto the game thread via {@link #syncTasks}.
@@ -194,23 +237,46 @@ public final class GameService extends AbstractScheduledService {
         addListener(new GameServiceListener(), MoreExecutors.directExecutor());
     }
 
+    /**
+     * Processes one scheduled game tick.
+     *
+     * <p>Delegates to {@link #process()}, which runs yielded continuations, synchronization tasks,
+     * and world processing in that order.
+     */
     @Override
     protected void runOneIteration() {
         process();
     }
 
+    /**
+     * Configures the fixed-rate game loop schedule.
+     *
+     * @return A scheduler with an initial delay and tick interval of 600 milliseconds.
+     */
     @Override
     protected Scheduler scheduler() {
         // 600ms game tick cadence.
         return Scheduler.newFixedRateSchedule(600, 600, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Records and names the thread executing the scheduled game service.
+     *
+     * <p>The current thread becomes the game thread used by {@link GameServiceExecutor} to
+     * distinguish immediate execution from queued execution.
+     */
     @Override
     protected void startUp() {
         thread = Thread.currentThread();
         thread.setName("GameThread");
     }
 
+    /**
+     * Attempts to shut down the game service gracefully.
+     *
+     * <p>Delegates to {@link #gracefulShutdown()} and logs any {@link Exception} thrown by the
+     * shutdown sequence without rethrowing it.
+     */
     @Override
     public void shutDown() {
         try {
@@ -229,6 +295,7 @@ public final class GameService extends AbstractScheduledService {
     private void process() {
         try {
             // Drain tasks requested by other threads.
+            runYieldedTasks();
             runSynchronizationTasks();
 
             // Run the main game loop.
@@ -252,6 +319,30 @@ public final class GameService extends AbstractScheduledService {
             }
             try {
                 runnable.run();
+            } catch (Exception e) {
+                logger.catching(e);
+            }
+        }
+    }
+
+    /**
+     * Runs one batch of yielded coroutine continuations on the game thread.
+     *
+     * <p>Processes at most the number of tasks queued at the beginning of the batch. Continuations
+     * that yield again during execution are left for a later batch. Exceptions are logged so
+     * individual task failures do not stop the remainder of the batch.
+     */
+    private void runYieldedTasks() {
+        // Fix the batch size before executing anything. A continuation that yields
+        // again must wait for the next tick.
+        int batchSize = yieldedTasks.size();
+        for (int i = 0; i < batchSize; i++) {
+            Runnable task = yieldedTasks.poll();
+            if (task == null) {
+                break;
+            }
+            try {
+                task.run();
             } catch (Exception e) {
                 logger.catching(e);
             }
@@ -300,11 +391,23 @@ public final class GameService extends AbstractScheduledService {
         // Stop all coroutines.
         GameCoroutineScope.INSTANCE.shutdown();
 
+        // Run last minute yielded tasks from Kotlin.
+        runYieldedTasks();
+
         // Run last minute game tasks from other threads.
         runSynchronizationTasks();
 
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
         runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
+
+        // Close windows before the save, so items held in them (trade offers) are back in the inventory.
+        for (Player player : world.getPlayers()) {
+            try {
+                player.getOverlays().closeWindows();
+            } catch (Exception e) {
+                logger.error("Issue closing {}'s windows during shutdown.", player.getUsername(), e);
+            }
+        }
 
         // Save all players and wait for it to complete.
         world.getPersistenceService().saveAll(true).join();
@@ -340,15 +443,31 @@ public final class GameService extends AbstractScheduledService {
 
         // Schedule a graceful shutdown once the system update timer completes.
         world.schedule(new Task(ticks + 5) {
+            /**
+             * Rechecks the preliminary save and requests service shutdown once it completes.
+             *
+             * <p>Repeats the check each game tick until the save finishes, then cancels this task.
+             */
             @Override
             protected void execute() {
                 setDelay(1);
-                if(saveResult.isDone()) {
+                if (saveResult.isDone()) {
                     stopAsync();
                     cancel();
                 }
             }
         });
+    }
+
+    /**
+     * Queues a yielded coroutine continuation for a future game-thread execution batch.
+     *
+     * <p>The continuation is not run immediately, even when submitted from the game thread.
+     *
+     * @param task The continuation to execute in a future yield batch.
+     */
+    public void yield(Runnable task) {
+        yieldedTasks.add(task);
     }
 
     /**
@@ -426,6 +545,8 @@ public final class GameService extends AbstractScheduledService {
      * <p>
      * This can be used when you want "fire-and-forget" marshalling without the overhead of a {@link CompletableFuture}
      * (see {@link #sync(Supplier)}).
+     *
+     * @return The executor used to run or queue commands on the game thread.
      */
     public Executor getGameExecutor() {
         return gameExecutor;
