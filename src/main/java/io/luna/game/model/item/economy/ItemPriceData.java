@@ -198,7 +198,12 @@ public final class ItemPriceData {
             if (effectiveSamples < 1L) {
                 return this;
             }
-            double newPrice = calculateNewPrice(price, tradePrice, effectiveSamples, samples);
+            double calculatedPrice = calculateNewPrice(price, tradePrice, effectiveSamples, samples);
+            checkState(Double.isFinite(calculatedPrice), "<price> must be finite.");
+            boolean stackable = ItemDefinition.ALL.retrieve(id).isStackable();
+            int minimumPrice = stackable ? Luna.settings().economy().minimumStackablePrice() :
+                    Luna.settings().economy().minimumPrice();
+            double newPrice = Math.max(minimumPrice, calculatedPrice);
             return new ItemPriceData(id, newPrice, price, samples + effectiveSamples, samples);
         }
         return this;
