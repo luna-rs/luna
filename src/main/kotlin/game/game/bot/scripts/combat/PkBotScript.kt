@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.levelAt
+import game.obj.wildernessObelisk.Obelisk
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -22,7 +23,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPkPreference.Purpose
-import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -45,6 +45,13 @@ import kotlin.time.DurationUnit
  */
 class PkBotScript(bot: Bot, val duration: Duration,
                   val soloClanOuting: Boolean = PkClanPolicy.chooseSolo(bot)) : BotScript(bot) {
+
+    /**
+     * Restores the outing's remaining duration, solo decision and current destination without rerolling identity.
+     */
+    constructor(bot: Bot, data: PkData) : this(bot, data.duration, data.soloClanOuting) {
+        patrolDestination = data.patrolDestination?.takeIf { it.z == 0 && levelAt(it) > 0 && allowsHuntingAt(it) }
+    }
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -78,7 +85,6 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     fun isRestocking(): Boolean = preparationState in setOf(PreparationState.RESTOCKING, PreparationState.LEAVING)
 
-    // TODO Enable coordinator dispatch/registration once the remaining session and clan policies are complete.
 
     /**
      * Shared PK bot constants.
@@ -122,14 +128,25 @@ class PkBotScript(bot: Bot, val duration: Duration,
         class PkData : BotScriptData() {
             var duration = Duration.ZERO
             var soloClanOuting = false
+            var patrolDestination: Position? = null
             override fun load(data: JsonObject) {
                 duration = data.get("duration").asLong.milliseconds
                 soloClanOuting = data.get("soloClanOuting")?.asBoolean ?: false
+                patrolDestination = data.getAsJsonObject("patrol")?.let {
+                    Position(it.get("x").asInt, it.get("y").asInt, it.get("z").asInt)
+                }
             }
 
             override fun save(data: JsonObject) {
                 data.addProperty("duration", duration.inWholeMilliseconds)
                 data.addProperty("soloClanOuting", soloClanOuting)
+                patrolDestination?.let { position ->
+                    data.add("patrol", JsonObject().apply {
+                        addProperty("x", position.x)
+                        addProperty("y", position.y)
+                        addProperty("z", position.z)
+                    })
+                }
             }
         }
     }
@@ -393,6 +410,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
     var expireAt: Long = System.currentTimeMillis() + duration.toLong(DurationUnit.MILLISECONDS)
 
     /**
+     * Retains the current patrol goal through combat pauses and snapshots. Short loiter periods allow local searches.
+     */
+    internal var patrolDestination: Position? = null
+        private set
+    private var nextPatrolCycle = 0L
+
+    /**
      * Restricts recreational PK trips, without changing this account's NPC training or other coordinators.
      */
     private val isSkillSession: Boolean get() = bot.preferences.pk?.purpose() == Purpose.SKILL
@@ -412,7 +436,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
     internal fun allowsPursuit(target: Player): Boolean {
-        if (isRestocking()) return false
+        if (isRestocking() || System.currentTimeMillis() >= expireAt) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
         if (!combatPolicy.pkRiskBudget().withinBudget) return false
         if (clan.enabled) return clan.wearingCape() &&
@@ -438,7 +462,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Clanmates may be anywhere online. A solo decision belongs to this outing and never changes saved allegiance.
      */
-    internal fun clanCanHunt(): Boolean = !clan.enabled || soloClanOuting || clan.onlineMembers().isNotEmpty()
+    internal fun clanCanHunt(): Boolean = !clan.enabled || soloClanOuting || clan.onlineMembers(activePkOnly = false).isNotEmpty()
 
     /**
      * Enables fresh attack evidence for kind protection and cape-based clan infighting.
@@ -466,6 +490,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         Purpose.SKILL -> BotCombatActionHandler.isPker(target)
         Purpose.VALUE -> true
         Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
+            levelAt(bot.position) >= 30 && levelAt(target.position) >= 30 &&
             (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
         Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
             (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
@@ -499,6 +524,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             targets.sortedByDescending { if (observations.canDefendClanAgainst(it)) 2 else if (it in assisting) 1 else 0 }
         }
         isKindGenericSession() -> targets.sortedByDescending { observations.canProtectAgainst(it) }
+        bot.preferences.pk?.purpose() == Purpose.VALUE -> targets.sortedBy { BotCombatActionHandler.isPker(it) }
         isGenericSession() && !bot.personality.isStupidlyConfident && !bot.personality.isUncertain ->
             targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
         else -> targets
@@ -520,11 +546,35 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * Reuses verified low-level Edgeville anchors for SKILL; other purposes retain the existing area selection.
+     * SKILL stays in low Edgeville. VALUE covers resource hunters and obelisk arrivals. CLAN patrols deep surface
+     * Wilderness; GENERIC retains the full existing area selection. Travel is delegated to the shared walker.
      */
-    internal fun patrolAnchors(): List<Position> = if (isSkillSession) {
-        PkArea.LOW_LEVEL.anchors.filter { allowsHuntingAt(it) }
-    } else PkArea.ALL.random().anchors
+    internal fun patrolAnchors(): List<Position> {
+        val groups = when (bot.preferences.pk?.purpose()) {
+            Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { allowsHuntingAt(it) })
+            Purpose.VALUE -> listOf(PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
+                PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
+                listOfNotNull(SubZone.KBD_LAIR.outside(bot)))
+            Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
+                PkArea.DEMONIC_RUINS.anchors)
+            else -> PkArea.ALL.map { it.anchors }
+        }
+        return groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }
+            .filter { it.isNotEmpty() }.random()
+    }
+
+    /**
+     * Ordinary clan outings share the lowest-username-hash active member's current deep patrol goal.
+     * Solo outings choose independently, retaining clan allegiance and local assistance rules.
+     */
+    internal fun selectPatrolDestination(): Position {
+        if (clan.enabled && !soloClanOuting) {
+            val leader = (clan.onlineMembers().filter { clan.apparentAlly(it) } + bot).minBy { it.usernameHash }
+            if (leader !== bot) leader.scriptStack.findActive(PkBotScript::class.java).orElse(null)
+                ?.patrolDestination?.takeIf { it.z == 0 && levelAt(it) >= 30 }?.let { return it }
+        }
+        return patrolAnchors().random()
+    }
 
     override suspend fun init(resumed: Boolean): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
@@ -583,6 +633,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             return false
         }
 
+        if (searchAndAttack()) return false
         travelToNewArea()
 
         if (!searchAndAttack()) {
@@ -601,6 +652,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         val data = PkData()
         data.duration = remaining.coerceAtLeast(0).milliseconds
         data.soloClanOuting = soloClanOuting
+        data.patrolDestination = patrolDestination
         return data
     }
 
@@ -628,7 +680,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 return true
             } else if (attacker is Npc) {
                 avoidNpcCombat(attacker)
-                return true
+                return allowsHuntingAt(bot.position)
             } else if (attacker is Player) {
                 bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
                 bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
@@ -703,21 +755,25 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * Occasionally sends the bot to a random configured PK area.
-     *
-     * The bot only travels when it is in the Wilderness, not already navigating, not in combat, and has enough tolerance
-     * remaining to justify moving to another hotspot.
+     * Keeps an unfinished patrol goal, then loiters for 8–20 cycles after arrival before selecting another.
+     * Active walking/navigation is never replaced. Nearby opponents are searched before this travel begins.
      */
-    private suspend fun travelToNewArea() {
+    internal suspend fun travelToNewArea() {
         if (!bot.combat.inCombat() &&
             bot.inWilderness() &&
             !bot.navigator.isActive &&
-            bot.tolerance.duration.toMinutes() > 10
+            bot.walking.isEmpty && bot.cycles >= nextPatrolCycle
         ) {
-            val anchor = patrolAnchors().random()
-
+            val anchor = patrolDestination ?: selectPatrolDestination().also { patrolDestination = it }
             bot.log("Travelling to PK patrol anchor=$anchor")
-            bot.navigator.navigate(anchor, true).await()
+            val reached = handler.webWalkTo(anchor, bank = BankAccess.NONE)
+            if (reached && bot.position.z == anchor.z && bot.position.computeLongestDistance(anchor) <= 2) {
+                patrolDestination = null
+                nextPatrolCycle = bot.cycles + rand(8, 20)
+            } else {
+                patrolDestination = null
+                nextPatrolCycle = bot.cycles + 8
+            }
         }
     }
 

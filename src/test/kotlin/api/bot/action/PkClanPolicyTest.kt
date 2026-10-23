@@ -48,7 +48,7 @@ class PkClanPolicyTest {
     private fun clanBot(cape: Int): Bot = InventoryProductionFixtures.bot().also {
         `when`(it.preferences.pk).thenReturn(BotPkPreference(Purpose.CLAN, Styles.TRIBRID, Build.MAIN, cape))
         `when`(it.isAlive).thenReturn(true)
-        doReturn(Position(3100, 3540)).`when`(it).position
+        doReturn(Position(3100, 3800)).`when`(it).position
         val equipment = Equipment(it).also { gear -> gear.setListeners(BotItemTracker(it)) }
         `when`(it.equipment).thenReturn(equipment)
         equipment.set(Equipment.CAPE, Item(cape))
@@ -61,7 +61,7 @@ class PkClanPolicyTest {
     private fun player(cape: Int?): Player = mock(Player::class.java, RETURNS_DEEP_STUBS).also {
         `when`(it.isAlive).thenReturn(true)
         `when`(it.state).thenReturn(EntityState.ACTIVE)
-        doReturn(Position(3101, 3540)).`when`(it).position
+        doReturn(Position(3101, 3800)).`when`(it).position
         `when`(it.isViewableFrom(bot)).thenReturn(true)
         `when`(it.equipment[Equipment.CAPE]).thenReturn(cape?.let(::Item))
         `when`(it.combat.target).thenReturn(null)
@@ -107,6 +107,8 @@ class PkClanPolicyTest {
         val stranger = clanBot(4317)
         online = listOf(bot, member, stranger, player(4315))
         assertTrue(policy.onlineMembers().isEmpty())
+        assertTrue(PkBotScript(bot, 5.minutes, false).clanCanHunt())
+        assertEquals(listOf(member), policy.onlineMembers(activePkOnly = false))
         val active = InventoryProductionFixtures.active(PkBotScript(member, 5.minutes, false))
         member.scriptStack.pushTail(active)
         doReturn(Position(3300, 3890)).`when`(member).position
@@ -164,5 +166,21 @@ class PkClanPolicyTest {
         `when`(member.combat.target).thenReturn(enemy)
         assertEquals(listOf(enemy, other), session.orderTargets(listOf(other, enemy)))
         assertEquals(listOf(other), session.orderTargets(listOf(other)))
+    }
+
+    @Test fun ordinaryOutingsShareAnActiveClanPatrolGoalWhileSoloOutingsChooseTheirOwn() {
+        val member = clanBot(4315)
+        `when`(member.usernameHash).thenReturn(1L)
+        `when`(bot.usernameHash).thenReturn(2L)
+        val goal = Position(3000, 3900)
+        val data = PkBotScript.Companion.PkData().apply {
+            duration = 5.minutes
+            patrolDestination = goal
+        }
+        val leader = InventoryProductionFixtures.active(PkBotScript(member, data))
+        member.scriptStack.pushTail(leader)
+        online = listOf(bot, member)
+        assertEquals(goal, PkBotScript(bot, 5.minutes, false).selectPatrolDestination())
+        assertNotEquals(goal, PkBotScript(bot, 5.minutes, true).selectPatrolDestination())
     }
 }

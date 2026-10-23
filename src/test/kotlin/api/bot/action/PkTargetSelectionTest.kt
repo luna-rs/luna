@@ -5,6 +5,7 @@ import api.bot.webwalk.plan.BankAccess
 import api.predef.world
 import engine.controllers.WildernessLocatableController.levelAt
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import game.obj.wildernessObelisk.Obelisk
 import game.bot.scripts.combat.CombatBotScript
 import game.bot.scripts.combat.PkBotScript
 import io.luna.game.model.EntityState
@@ -307,12 +308,96 @@ class PkTargetSelectionTest {
         assertFalse(session.allowsPursuit(target))
     }
 
-    @Test fun nonSkillPurposesKeepTheirExistingPatrolDestinations() {
-        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
+    @Test fun genericSessionsKeepTheirExistingPatrolDestinations() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.GENERIC, Styles.TRIBRID, Build.MAIN))
         val session = PkBotScript(bot, 5.minutes)
         assertTrue(session.allowsHuntingAt(Position(3141, 3690)))
         assertTrue(session.allowsHuntingAt(Position(3100, 9992)))
         assertTrue(session.patrolAnchors().all { anchor -> PkBotScript.PkArea.ALL.any { anchor in it.anchors } })
+    }
+
+    @Test fun valuePatrolCoversResourceCampsEveryNativeWildernessObeliskAndTheConfirmedKbdApproach() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
+        val session = PkBotScript(bot, 5.minutes)
+        val found = mutableSetOf<Position>()
+        repeat(100) { found += session.patrolAnchors() }
+        assertTrue(found.containsAll(Obelisk.ALL.map { it.anchor }))
+        assertTrue(found.containsAll(PkBotScript.PkArea.GREEN_DRAGONS.anchors))
+        assertTrue(found.contains(Position(3004, 3849)))
+        assertTrue(found.all { it.z == 0 && levelAt(it) > 0 })
+    }
+
+    @Test fun clanInitiationAndPatrolStayDeepButIncomingAttacksStillAllowDefenseBelowThirty() {
+        val profile = BotPkPreference(Purpose.CLAN, Styles.TRIBRID, Build.MAIN, 4315)
+        `when`(bot.preferences.pk).thenReturn(profile)
+        val cape = io.luna.game.model.item.Item(4315)
+        `when`(bot.equipment[io.luna.game.model.item.Equipment.CAPE]).thenReturn(cape)
+        val session = PkBotScript(bot, 5.minutes, true)
+        assertFalse(session.wantsToAttack(target))
+        `when`(target.combat.target).thenReturn(bot)
+        assertTrue(session.allowsPursuit(target))
+        doReturn(Position(3100, 3800)).`when`(bot).position
+        doReturn(Position(3101, 3800)).`when`(target).position
+        assertTrue(session.wantsToAttack(target))
+        repeat(20) { assertTrue(session.patrolAnchors().all { levelAt(it) >= 30 }) }
+    }
+
+    @Test fun patrolTravelDoesNotReplaceQueuedWalkingAndFailedTravelHasABoundedRetry() = runBlocking<Unit> {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
+        `when`(bot.walking.isEmpty).thenReturn(false)
+        val session = PkBotScript(bot, 5.minutes)
+        session.travelToNewArea()
+        verifyNoInteractions(bot.actionHandler)
+        `when`(bot.walking.isEmpty).thenReturn(true)
+        val handler = bot.actionHandler
+        val fallback = Position(0, 0)
+        var calls = 0
+        doAnswer { calls++; false }.`when`(handler).webWalkTo(any(Position::class.java) ?: fallback,
+            eq(0), eq(1), eq(BankAccess.NONE) ?: BankAccess.NONE)
+        session.travelToNewArea()
+        session.travelToNewArea()
+        assertEquals(1, calls)
+        assertNull(session.patrolDestination)
+    }
+
+    @Test fun centralRegistrationRestoresTheSoloDecisionDestinationAndRemainingTime() {
+        val manager = BotScriptManager()
+        `when`(world.botManager.scriptManager).thenReturn(manager)
+        InventoryProductionFixtures.register("Scripts")
+        val data = PkBotScript.Companion.PkData().apply {
+            duration = 123456.milliseconds
+            soloClanOuting = true
+            patrolDestination = Position(3100, 3800)
+        }
+        val json = com.google.gson.JsonObject().also { data.save(it) }
+        val loaded = PkBotScript.Companion.PkData().also { it.load(json) }
+        val restored = manager.loadScript(PkBotScript::class.java.name, bot, loaded) as PkBotScript
+        assertEquals(data.duration, restored.duration)
+        assertTrue(restored.soloClanOuting)
+        assertEquals(data.patrolDestination, restored.patrolDestination)
+        assertTrue(manager.scriptMap.containsKey(PkBotScript::class.java.name))
+    }
+
+    @Test fun anExpiredParentCannotAuthorizeItsPausedCombatChildOrAnotherTargetSearch() {
+        `when`(bot.preferences.pk).thenReturn(BotPkPreference(Purpose.VALUE, Styles.TRIBRID, Build.MAIN))
+        `when`(world.locator.findViewablePlayers(bot)).thenReturn(setOf(target))
+        val session = PkBotScript(bot, 5.minutes)
+        session.expireAt = System.currentTimeMillis() - 1
+        assertFalse(session.allowsPursuit(target))
+        assertFalse(session.searchAndAttack())
+        assertEquals(0, bot.scriptStack.size())
+    }
+
+    @Test fun anIncidentalNpcCannotKeepASkillSessionFromReturningToEdgeville() = runBlocking<Unit> {
+        skillProfile()
+        doReturn(Position(3141, 3690)).`when`(bot).position
+        val npc = mock(io.luna.game.model.mob.Npc::class.java, RETURNS_DEEP_STUBS)
+        `when`(bot.combat.inCombat()).thenReturn(true)
+        `when`(bot.combat.lastCombatWith).thenReturn(npc)
+        `when`(bot.combat.target).thenReturn(npc)
+        val session = PkBotScript(bot, 5.minutes)
+        assertFalse(session.checkCombat())
+        assertEquals(0, bot.scriptStack.size())
     }
 
     @Test fun combatReflexRetainsTheSkillPatrolBoundary() = runBlocking<Unit> {

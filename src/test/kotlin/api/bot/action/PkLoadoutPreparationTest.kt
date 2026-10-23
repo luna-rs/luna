@@ -5,6 +5,7 @@ import api.bot.script.BotScript
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSet
 import engine.bot.gear.BotItemTracker
+import engine.bot.coordinator.PkingCoordinator
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.bot.scripts.combat.PkBotScript
 import game.bot.scripts.combat.CombatBotScript
@@ -149,6 +150,48 @@ class PkLoadoutPreparationTest {
 
     private fun allItems() = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
         .groupBy { it.id }.mapValues { (_, items) -> items.sumOf { it.amount.toLong() } }
+
+    @Test fun automaticPkDispatchUsesTheSavedIdentityAndOwnedAffordableSupplies() {
+        val manager = mock(BotScriptManager::class.java)
+        val stack = BotScriptStack(bot, manager)
+        `when`(bot.scriptStack).thenReturn(stack)
+        assertSame(PkingCoordinator, BotActivity.PKING.coordinator)
+        val identity = bot.preferences.pk
+        val before = allItems()
+        PkingCoordinator.accept(bot)
+        val queued = stack.current()
+        assertTrue(queued is PkBotScript)
+        assertSame(identity, bot.preferences.pk)
+        assertEquals(before, allItems())
+        PkingCoordinator.accept(bot)
+        assertEquals(1, stack.size())
+    }
+
+    @Test fun automaticPkDispatchDeclinesUnstockedOverBudgetAndCombatUnsafeAccounts() {
+        bot.bank.remove(Item(379, 100))
+        assertNull(PkingCoordinator.getScript(bot))
+        bot.bank.add(Item(379, 100))
+        `when`(bot.skullIcon).thenReturn(SkullIcon.WHITE)
+        `when`(bot.world.economy.getPrice(1277)).thenReturn(100_000_000L)
+        `when`(bot.world.economy.getPrice(4151)).thenReturn(100_000_000L)
+        `when`(bot.world.economy.getPrice(1381)).thenReturn(100_000_000L)
+        assertNull(PkingCoordinator.getScript(bot))
+        `when`(bot.combat.inCombat()).thenReturn(true)
+        assertNull(PkingCoordinator.getScript(bot))
+    }
+
+    @Test fun clanPreflightProjectsOnlyTheAuthorizedCapeWithoutSpawningItOrChangingTheBank() {
+        profile(Styles.MELEE)
+        val saved = bot.preferences.save().also {
+            it.add("pk", BotPkPreference(Purpose.CLAN, Styles.MELEE, Build.MAIN, 4315).save())
+        }
+        bot.preferences.load(saved)
+        val before = allItems()
+        assertNull(preparation.plan())
+        assertNotNull(preparation.plan(allowMissingClanCape = true))
+        assertEquals(before, allItems())
+        assertEquals(0, bot.bank.computeAmountForId(4315))
+    }
 
     @Test fun clanPreparationGrantsOnlyItsMissingCapeAndKeepsItEquippedAcrossAllSavedStyles() = runBlocking<Unit> {
         for (styles in Styles.values()) {

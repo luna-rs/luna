@@ -12,7 +12,8 @@ import java.util.concurrent.ThreadLocalRandom
 /**
  * Team-cape clan identity and session cooperation, using existing equipment and online bot state.
  * Saved assignments identify real bot members; visible capes identify perceived allies, including disguised humans.
- * Ordinary outings need an online member in the same PK script. Confident bots can choose a solo outing once.
+ * Ordinary outings need another assigned member online. Tactical cooperation uses active PK sessions only.
+ * Confident bots can choose a solo outing once.
  *
  * @author lare96
  */
@@ -50,16 +51,16 @@ internal class PkClanPolicy(private val bot: Bot) {
     fun apparentAlly(player: Player): Boolean = cape?.let { player.equipment[Equipment.CAPE]?.id == it } == true
 
     /**
-     * Online assigned clanmates must be alive and running this same PK script type.
-     * A paused PK parent beneath its combat child counts; unrelated online bots and human disguises do not.
+     * Online assigned clanmates must be alive. Trip eligibility can include members doing other activities;
+     * tactical cooperation requires this same active PK script. A paused PK parent beneath combat counts.
      * Newly started members count before bank preparation so simultaneous departures cannot deadlock.
      */
-    fun onlineMembers(): List<Bot> {
+    fun onlineMembers(activePkOnly: Boolean = true): List<Bot> {
         val id = cape ?: return emptyList()
         return bot.world.players.stream().filter { it is Bot && it !== bot }.map { it as Bot }.filter {
             it.state == EntityState.ACTIVE && it.isAlive && !it.preferences.isSkiller &&
                 it.preferences.pk?.purpose() == Purpose.CLAN && it.preferences.pk?.teamCape() == id &&
-                it.scriptStack.containsActive(PkBotScript::class.java)
+                (!activePkOnly || it.scriptStack.containsActive(PkBotScript::class.java))
         }.toList()
     }
 

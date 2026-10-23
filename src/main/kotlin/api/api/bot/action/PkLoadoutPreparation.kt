@@ -56,14 +56,18 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
-     * Plans synchronously from owned stock. Each unsuccessful minimum kit lowers the damage spell or excludes
+     * Plans synchronously from owned stock. A coordinator may project the one authorized missing clan cape;
+     * the actual cape is only replenished when the script runs. Other supplies always require physical stock.
+     * Each unsuccessful minimum kit lowers the damage spell or excludes
      * one preferred weapon, so cheap owned alternatives are considered without buying or creating supplies.
      * Extra food/armour/supplies are admitted only when every modeled switch fits both space and the risk cap.
      */
-    fun plan(): Plan? {
+    fun plan(allowMissingClanCape: Boolean = false): Plan? {
         val purposes = purposes().takeIf { it.isNotEmpty() } ?: return null
         val stock = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
             .groupBy { it.id }.mapValues { (_, items) -> items.sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }
+            .toMutableMap()
+        if (allowMissingClanCape) clan.cape?.let { stock.putIfAbsent(it, 1) }
         val foods = stock.keys.filter { Food.ID_TO_FOOD[it]?.heal?.let { heal -> heal > 0 } == true }
             .sortedByDescending { Food.ID_TO_FOOD.getValue(it).heal }
         if (foods.isEmpty()) return null
