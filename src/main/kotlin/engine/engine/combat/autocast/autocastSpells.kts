@@ -4,11 +4,8 @@ import api.combat.CombatHandler.displayCombatOverlay
 import api.combat.magic.CombatSpellHandler.resetAutocast
 import api.predef.*
 import game.skill.magic.Magic
-import game.skill.magic.Staff
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.Spellbook
-import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
 /**
@@ -23,12 +20,8 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * @return `true` if the player cannot perform the autocast action, or `false` otherwise.
  */
 fun invalid(plr: Player): Boolean {
-    val weaponId = plr.equipment.weapon?.id
-    if (weaponId == null || plr.combat.weapon.type != Weapon.STAFF) {
-        // TODO@0.5.0 Write a suspicion system? Flag suspicious? Changing autocast button with no/invalid weapon equipped.
-        return true
-    } else if (plr.spellbook == Spellbook.ANCIENT && weaponId !in Staff.AUTOCAST_ANCIENTS) {
-        plr.sendMessage("You cannot auto-cast Ancient Magicks with this staff.")
+    if (!plr.combat.magic.canUseAutocastStaff()) {
+        plr.sendMessage("You cannot auto-cast spells from this spellbook with your current equipment.")
         return true
     }
     return false
@@ -38,7 +31,8 @@ fun invalid(plr: Player): Boolean {
 for (spell in CombatSpellDefinition.ALL) {
     if (spell.button != -1) {
         button(spell.button) {
-            val requirements = Magic.checkRequirements(plr, spell.level, spell.required, true)
+            val requirements = if (plr.combat.magic.canAutocast(spell))
+                Magic.checkRequirements(plr, spell.level, spell.required, true) else null
             if (requirements != null) {
                 plr.combat.magic.autocastSpell = spell
                 plr.combat.displayCombatOverlay()
@@ -57,12 +51,10 @@ button(353) {
 
 // Auto-cast button on the combat style overlay.
 button(349) {
-    if (plr.combat.weapon.type == Weapon.STAFF) {
+    if (plr.combat.magic.isAutocasting || !invalid(plr)) {
         val magic = plr.combat.magic
         magic.isAutocasting = !magic.isAutocasting
         magic.refreshAutocast()
-    } else {
-        // todo@0.5.0 flag suspicious?
     }
 }
 

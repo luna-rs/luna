@@ -1,9 +1,12 @@
 package io.luna.game.model.mob.combat.state;
 
 import game.skill.magic.Magic;
+import game.skill.magic.Staff;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.item.Item;
+import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.Weapon;
 import io.luna.game.model.mob.varp.Varp;
@@ -65,6 +68,8 @@ public class PlayerMagicCombat {
      * <p>
      * Spells from another spellbook are rejected before rune consumption, and matching selected or autocast spells
      * are cleared.
+     * Autocasts also recheck staff eligibility before consuming runes; manually selected spells do not require an
+     * autocast-compatible staff.
      * <p>
      * If the spell fails its rune or equipment requirements and it is also the currently configured autocast spell,
      * the autocast spell is cleared.
@@ -90,6 +95,12 @@ public class PlayerMagicCombat {
             return false;
         }
 
+        if (selectedSpell == NONE && !canAutocast(spell)) {
+            setAutocastSpell(NONE);
+            player.sendMessage("You cannot auto-cast that spell with your current equipment.");
+            return false;
+        }
+
         List<Item> required = Magic.INSTANCE.checkRequirements(player, spell, false);
         if (required == null) {
             if (spell == autocastSpell) {
@@ -109,16 +120,40 @@ public class PlayerMagicCombat {
      * <ul>
      *     <li>A manual combat spell has been selected.</li>
      *     <li>An autocast spell is selected, autocasting is enabled, and the
-     *     player is wielding a staff.</li>
+     *     spellbook and equipped staff permit that spell.</li>
      * </ul>
      *
      * @return {@code true} if the player is considered to be casting, otherwise
      * {@code false}.
      */
     public boolean isCasting() {
-        PlayerCombatContext combat = player.getCombat();
         return selectedSpell != NONE
-                || (autocastSpell != NONE && autocasting && combat.getWeapon().getType() == Weapon.STAFF);
+                || (autocasting && canAutocast(autocastSpell));
+    }
+
+    /**
+     * Checks whether the equipped staff supports autocasting on the current spellbook.
+     *
+     * @return Whether a staff is equipped and, for Ancient Magicks, belongs to the supported staff set.
+     */
+    public boolean canUseAutocastStaff() {
+        int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        return weaponId >= 0 && player.getCombat().getWeapon().getType() == Weapon.STAFF &&
+                (player.getSpellbook() != Spellbook.ANCIENT ||
+                        Staff.Companion.getAUTOCAST_ANCIENTS().contains(weaponId));
+    }
+
+    /**
+     * Checks spellbook, autocast availability, and current staff eligibility without consuming supplies.
+     *
+     * This predicate is shared by selection buttons and execution. Level and rune requirements remain separate.
+     *
+     * @param spell The proposed autocast spell.
+     * @return Whether the spell is selectable for autocasting with the current spellbook and equipment.
+     */
+    public boolean canAutocast(CombatSpellDefinition spell) {
+        return spell != null && spell != NONE && spell.getButton() != -1 &&
+                spell.getSpellbook() == player.getSpellbook() && canUseAutocastStaff();
     }
 
     /**
