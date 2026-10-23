@@ -243,7 +243,7 @@ class PkCombatObservationsTest {
         verify(bot.combat, never()).attack(attacker)
     }
 
-    @Test fun nonKindGenericInitiationDoesNotEnableUndefinedClanPolicyOrRestrictValueHunting() {
+    @Test fun nonKindGenericInitiationDoesNotPermitClansWithoutTheirAssignedCapeOrRestrictValueHunting() {
         `when`(attacker.skullIcon).thenReturn(SkullIcon.WHITE)
         `when`(bot.personality.isKind).thenReturn(false)
         assertTrue(session.wantsToAttack(attacker))

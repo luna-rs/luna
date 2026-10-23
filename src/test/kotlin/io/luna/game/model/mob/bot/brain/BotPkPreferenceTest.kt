@@ -81,6 +81,34 @@ class BotPkPreferenceTest {
         }
     }
 
+    @Test fun allFiftyClanAssignmentsSurviveTheOriginalBuilderAndPreferencePersistence() {
+        for (cape in 4315..4413 step 2) {
+            val profile = BotPkPreference(Purpose.CLAN, Styles.TRIBRID, Build.MAIN, cape)
+            val account = bot(profile)
+            val saved = account.preferences.save()
+            account.preferences.load(saved)
+            assertEquals(profile, account.preferences.pk)
+            assertEquals(cape, account.preferences.pk!!.teamCape())
+        }
+        for (invalid in listOf(-1, 4314, 4316, 4414, 4415)) {
+            assertThrows(IllegalArgumentException::class.java) {
+                BotPkPreference(Purpose.CLAN, Styles.MELEE, Build.MAIN, invalid)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            BotPkPreference(Purpose.GENERIC, Styles.MELEE, Build.MAIN, 4315)
+        }
+    }
+
+    @Test fun legacyClanIdentityReceivesOneCapeAndThenPersistsItWithoutRerolls() {
+        val legacy = BotPkPreference(Purpose.CLAN, Styles.MELEE, Build.MAIN).save().also { it.remove("teamCape") }
+        val migrated = BotPkPreference.load(legacy)
+        assertTrue(BotPkPreference.isTeamCape(migrated.teamCape()))
+        repeat(10) { assertEquals(migrated, BotPkPreference.load(migrated.save())) }
+        val invalid = migrated.save().also { it.addProperty("teamCape", 4316) }
+        assertThrows(IllegalArgumentException::class.java) { BotPkPreference.load(invalid) }
+    }
+
     @Test fun malformedSavedIdentityFailsInsteadOfSilentlyRerolling() {
         val saved = BotPkPreference(Purpose.VALUE, Styles.RANGED, Build.MAIN).save()
         saved.addProperty("build", "UNKNOWN")

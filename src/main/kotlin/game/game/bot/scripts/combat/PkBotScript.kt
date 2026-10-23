@@ -4,6 +4,7 @@ import api.bot.Suspendable.delay
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatObservations
 import api.bot.action.PkLoadoutPreparation
+import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
@@ -39,9 +40,11 @@ import kotlin.time.DurationUnit
  *
  * @param bot The bot controlled by this script.
  * @param duration The maximum amount of time this script should actively PK before fleeing.
+ * @param soloClanOuting One outing's confidence-based permission to hunt without another online clanmate.
  * @author lare96
  */
-class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
+class PkBotScript(bot: Bot, val duration: Duration,
+                  val soloClanOuting: Boolean = PkClanPolicy.chooseSolo(bot)) : BotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -51,6 +54,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     private val combatPolicy = BotCombatActionHandler(bot, handler)
     private val observations = PkCombatObservations(bot)
     private val preparation = PkLoadoutPreparation(bot, handler)
+    private val clan = PkClanPolicy(bot)
 
     /**
      * Runtime preparation state. Reloaded sessions rebuild their kit; normal combat pauses keep the current pack.
@@ -75,7 +79,6 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     fun isRestocking(): Boolean = preparationState in setOf(PreparationState.RESTOCKING, PreparationState.LEAVING)
 
     // TODO Enable coordinator dispatch/registration once the remaining session and clan policies are complete.
-    // TODO Define clan membership and associated initiation policies.
     // TODO Add local NPC avoidance that preserves an actively followed travel path.
 
     /**
@@ -119,12 +122,15 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
         class PkData : BotScriptData() {
             var duration = Duration.ZERO
+            var soloClanOuting = false
             override fun load(data: JsonObject) {
                 duration = data.get("duration").asLong.milliseconds
+                soloClanOuting = data.get("soloClanOuting")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 data.addProperty("duration", duration.inWholeMilliseconds)
+                data.addProperty("soloClanOuting", soloClanOuting)
             }
         }
     }
@@ -410,6 +416,9 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         if (isRestocking()) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
         if (!combatPolicy.pkRiskBudget().withinBudget) return false
+        if (clan.enabled) return clan.wearingCape() &&
+            (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target) || combatPolicy.canRetaliateAgainst(target)) &&
+            (clanCanHunt() || combatPolicy.canRetaliateAgainst(target))
         if (!isGenericSession()) return true
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
             observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
@@ -428,14 +437,27 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     internal fun isKindGenericSession(): Boolean = isGenericSession() && bot.personality.isKind
 
     /**
+     * Clanmates may be anywhere online. A solo decision belongs to this outing and never changes saved allegiance.
+     */
+    internal fun clanCanHunt(): Boolean = !clan.enabled || soloClanOuting || clan.onlineMembers().isNotEmpty()
+
+    /**
+     * Enables fresh attack evidence for kind protection and cape-based clan infighting.
+     */
+    internal fun observesEncounters(): Boolean = isGenericSession() || clan.enabled
+
+    /**
      * Applies purpose-specific initiation. Kind GENERIC bots may challenge idle skulled players or protect a
      * witnessed victim, including against an unskulled aggressor. Unknown ongoing fights are left alone.
      * Non-kind uncertain bots only retaliate. Other non-kind bots can initiate, with vulnerability preference
-     * applied separately unless they are stupidly confident. Clan initiation still requires its membership policy.
+     * applied separately unless they are stupidly confident. Clan sessions challenge other capes and witnessed
+     * friendly initiators, requiring their own cape and an online clanmate unless this is a solo outing.
      */
     internal fun wantsToAttack(target: Player): Boolean = when (bot.preferences.pk?.purpose()) {
         Purpose.SKILL -> BotCombatActionHandler.isPker(target)
         Purpose.VALUE -> true
+        Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
+            (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
         Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
             (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
             else !bot.personality.isUncertain && !bot.preferences.isSkiller
@@ -446,14 +468,14 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Records only attack starts visible during this session; a later damage impact supplies no new evidence.
      */
     internal fun observeAttack(attacker: Player, victim: Player) {
-        if (isKindGenericSession()) observations.attackStarted(attacker, victim)
+        if (isKindGenericSession() || clan.enabled) observations.attackStarted(attacker, victim, clan::apparentAlly)
     }
 
     /**
      * Maintains consecutive visible movement samples while this session or a combat child is active.
      */
     internal fun observeMovement(players: Collection<Player>) {
-        if (isGenericSession()) observations.observe(players)
+        if (observesEncounters()) observations.observe(players)
     }
 
     /**
@@ -462,6 +484,11 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * This ranks an already legal candidate list; it never grants permission to interfere in single combat.
      */
     internal fun orderTargets(targets: List<Player>): List<Player> = when {
+        clan.enabled -> {
+            val assisting = clan.onlineMembers().filter { clan.apparentAlly(it) }
+                .mapNotNull { it.combat.target as? Player }.toSet()
+            targets.sortedByDescending { if (observations.canDefendClanAgainst(it)) 2 else if (it in assisting) 1 else 0 }
+        }
         isKindGenericSession() -> targets.sortedByDescending { observations.canProtectAgainst(it) }
         isGenericSession() && !bot.personality.isStupidlyConfident && !bot.personality.isUncertain ->
             targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
@@ -473,10 +500,11 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Native single-combat rules may prevent intervention even when the bot witnessed an attack.
      */
     internal fun protectObservedPlayer(): Boolean {
-        if (!isKindGenericSession() || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
+        if ((!isKindGenericSession() && !clan.enabled) || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
             System.currentTimeMillis() >= expireAt) return false
         val attacker = world.locator.findViewablePlayers(bot).firstOrNull {
-            observations.canProtectAgainst(it) && allowsPursuit(it) && combatPolicy.canAttackWildernessPlayer(it)
+            (if (clan.enabled) observations.canDefendClanAgainst(it) else observations.canProtectAgainst(it)) &&
+                allowsPursuit(it) && combatPolicy.canAttackWildernessPlayer(it)
         } ?: return false
         bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
         return true
@@ -505,6 +533,8 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     override suspend fun run(): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
+        if (!clan.ensureCape()) preparationState = PreparationState.LEAVING
+        if (!clanCanHunt()) preparationState = PreparationState.LEAVING
         if (System.currentTimeMillis() > expireAt) {
             preparationState = PreparationState.LEAVING
         }
@@ -561,6 +591,7 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
         val remaining = expireAt - System.currentTimeMillis()
         val data = PkData()
         data.duration = remaining.coerceAtLeast(0).milliseconds
+        data.soloClanOuting = soloClanOuting
         return data
     }
 

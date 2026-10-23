@@ -16,7 +16,15 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * @author lare96
  */
-public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
+public record BotPkPreference(Purpose purpose, Styles styles, Build build, int teamCape) {
+
+    /**
+     * Assigns one of the fifty native team capes once when a CLAN identity is created or migrated.
+     * Other purposes have no clan assignment. Explicit assignments use the four-argument constructor.
+     */
+    public BotPkPreference(Purpose purpose, Styles styles, Build build) {
+        this(purpose, styles, build, purpose == Purpose.CLAN ? 4315 + 2 * ThreadLocalRandom.current().nextInt(50) : -1);
+    }
 
     /**
      * The motivation for seeking Wilderness fights; targeting rules belong to the PK coordinator.
@@ -129,6 +137,16 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
         if (!build.supports(styles)) {
             throw new IllegalArgumentException("PK build does not support selected styles: " + build + "/" + styles);
         }
+        if (purpose == Purpose.CLAN ? !isTeamCape(teamCape) : teamCape != -1) {
+            throw new IllegalArgumentException("Invalid team cape for PK purpose: " + purpose + "/" + teamCape);
+        }
+    }
+
+    /**
+     * Recognizes unnoted native Team-1 through Team-50 capes; noted items cannot identify a worn clan.
+     */
+    public static boolean isTeamCape(int id) {
+        return id >= 4315 && id <= 4413 && (id - 4315) % 2 == 0;
     }
 
     /**
@@ -151,6 +169,7 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
         object.addProperty("purpose", purpose.name());
         object.addProperty("styles", styles.name());
         object.addProperty("build", build.name());
+        object.addProperty("teamCape", teamCape);
         return object;
     }
 
@@ -158,8 +177,10 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
      * Restores the exact identity. Invalid data fails visibly rather than silently rerolling a build.
      */
     public static BotPkPreference load(JsonObject object) {
-        return new BotPkPreference(Purpose.valueOf(object.get("purpose").getAsString()),
-                Styles.valueOf(object.get("styles").getAsString()),
-                Build.valueOf(object.get("build").getAsString()));
+        Purpose purpose = Purpose.valueOf(object.get("purpose").getAsString());
+        Styles styles = Styles.valueOf(object.get("styles").getAsString());
+        Build build = Build.valueOf(object.get("build").getAsString());
+        return object.has("teamCape") ? new BotPkPreference(purpose, styles, build, object.get("teamCape").getAsInt()) :
+                new BotPkPreference(purpose, styles, build);
     }
 }

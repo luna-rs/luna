@@ -32,6 +32,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      * A stable policy instance and per-fight selection state; failed disciplines are not retried indefinitely.
      */
     private val combat = BotCombatActionHandler(bot, handler)
+    private val clan = PkClanPolicy(bot)
     private val failed = mutableSetOf<BotGearPurpose>()
     private var active: Pair<BotGearPurpose, CombatLoadout>? = null
     private var nextDecision: Long? = null
@@ -65,7 +66,9 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
 
         val choices = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
             .filter { it !in failed }.mapNotNull { purpose ->
-                CombatLoadout.find(bot, purpose, carriedOnly = true)?.takeIf { it.gear[Equipment.WEAPON] != null }
+                CombatLoadout.find(bot, purpose, carriedOnly = true)?.also { outfit ->
+                    clan.cape?.let { outfit.gear[Equipment.CAPE] = it }
+                }?.takeIf { it.gear[Equipment.WEAPON] != null }
                     ?.let { purpose to it }
             }.toMap()
         val purpose = combat.selectPkStyle(target, choices.keys) ?: return Result.UNAVAILABLE
@@ -86,7 +89,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     /**
      * Rechecks target legality after suspensions and actual weapon, ammunition, levels and rune stock before use.
      */
-    private fun validTarget(target: Player): Boolean = acceptsTarget(target) && combat.canAttackPlayer(target)
+    private fun validTarget(target: Player): Boolean = clan.wearingCape() && acceptsTarget(target) && combat.canAttackPlayer(target)
 
     /**
      * Checks the actual selected weapon and consumables, without trusting tracked bank ownership.

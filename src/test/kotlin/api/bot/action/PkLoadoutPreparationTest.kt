@@ -150,6 +150,33 @@ class PkLoadoutPreparationTest {
     private fun allItems() = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
         .groupBy { it.id }.mapValues { (_, items) -> items.sumOf { it.amount.toLong() } }
 
+    @Test fun clanPreparationGrantsOnlyItsMissingCapeAndKeepsItEquippedAcrossAllSavedStyles() = runBlocking<Unit> {
+        for (styles in Styles.values()) {
+            profile(styles)
+            val saved = bot.preferences.save()
+            saved.add("pk", BotPkPreference(Purpose.CLAN, styles, Build.MAIN, 4315).save())
+            bot.preferences.load(saved)
+            assertTrue(preparation.prepare())
+            assertEquals(4315, bot.equipment[Equipment.CAPE]?.id)
+            assertTrue(preparation.ready())
+            assertEquals(1L, allItems()[4315])
+        }
+        assertTrue(bot.equipment.unequip(Equipment.CAPE))
+        assertFalse(preparation.ready())
+        assertTrue(preparation.prepare())
+        assertEquals(1L, allItems()[4315])
+    }
+
+    @Test fun everyTeamCapeHasNativeCapeSlotAndRequirementsUsableByPureBuilds() {
+        for (skill in 0..20) `when`(bot.skill(skill).staticLevel).thenReturn(1)
+        for (id in 4315..4413 step 2) {
+            val definition = EquipmentDefinition.ALL.retrieve(id)
+            assertEquals(Equipment.CAPE, definition.index)
+            assertTrue(definition.meetsAllRequirements(bot))
+            assertEquals(0, definition.getBonus(Equipment.EquipmentBonus.MAGIC_ATTACK.index))
+        }
+    }
+
     @Test fun allSevenStyleCombinationsPackOwnedWeaponsFoodAndSuppliesWithoutChangingPreferences() {
         for (styles in Styles.values()) {
             profile(styles)

@@ -26,6 +26,7 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 internal class PkLoadoutPreparation(private val bot: Bot, private val handler: BotActionHandler) {
+    private val clan = PkClanPolicy(bot)
     /**
      * A concrete departure outfit and inventory, checked against physical ownership and prospective death loss.
      *
@@ -39,7 +40,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      */
     fun ready(): Boolean {
         val purposes = purposes()
-        return purposes.isNotEmpty() && bot.inventory.any {
+        return clan.wearingCape() && purposes.isNotEmpty() && bot.inventory.any {
             it != null && Food.ID_TO_FOOD[it.id]?.heal?.let { heal -> heal > 0 } == true
         } && purposes.all { CombatLoadout.find(bot, it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
     }
@@ -74,6 +75,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             val selected = purposes.associateWith { CombatLoadout.find(bot, it, excludingWeapons = excluded,
                 maximumSpellHit = maximumSpellHit) ?: return null }
             val quantities = linkedMapOf<Int, Int>()
+            clan.cape?.let { quantities[it] = 1 }
             selected.values.forEach { quantities[it.gear[Equipment.WEAPON] ?: return null] = 1 }
             val ranged = selected[BotGearPurpose.RANGED]
             val ammunition = ranged?.gear?.get(Equipment.AMMUNITION) ?: ranged?.gear?.get(Equipment.WEAPON)
@@ -83,6 +85,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             magic?.runes?.forEach { (id, amount) -> quantities[id] = maxOf(quantities[id] ?: 0, amount) }
             if (quantities.any { (id, amount) -> (stock[id] ?: 0) < amount }) return null
             val starting = arrayOfNulls<Int>(14)
+            starting[Equipment.CAPE] = clan.cape
             starting[Equipment.WEAPON] = selected.values.first().gear[Equipment.WEAPON]
             starting[Equipment.AMMUNITION] = ranged?.gear?.get(Equipment.AMMUNITION)
 
@@ -146,7 +149,8 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             for (id in foods) while (foodCount < 16 && (quantities[id] ?: 0) < stock.getValue(id) && add(id)) foodCount++
 
             // Shared slots use the primary outfit, with neutral magic-compatible alternatives where possible.
-            for (slot in starting.indices.filter { it !in setOf(Equipment.WEAPON, Equipment.AMMUNITION) }) {
+            for (slot in starting.indices.filter { it !in setOf(Equipment.WEAPON, Equipment.AMMUNITION) &&
+                    !(it == Equipment.CAPE && clan.enabled) }) {
                 val id = selected.values.mapNotNull { it.gear[slot] }.firstOrNull { id ->
                     BotGearPurpose.MAGIC !in purposes || slot in setOf(Equipment.CHEST, Equipment.LEGS) ||
                         EquipmentDefinition.ALL.retrieve(id).getBonus(Equipment.EquipmentBonus.MAGIC_ATTACK.index) >= 0
@@ -191,6 +195,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             if (!handler.banking.travelToBankOpen() || !safe()) return false
             if (!handler.banking.depositInventory() || !safe() || !handler.equipment.unequipAll() || !safe() ||
                 !handler.banking.depositInventory() || !safe()) return false
+            if (!clan.ensureCape()) return false
             val plan = plan() ?: run {
                 if (bot.bank.none { it != null && Food.ID_TO_FOOD.containsKey(it.id) }) {
                     handler.supplies.getWantedFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }

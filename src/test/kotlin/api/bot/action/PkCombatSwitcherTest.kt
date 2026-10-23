@@ -151,6 +151,28 @@ class PkCombatSwitcherTest {
     private fun carry(vararg items: Item) { InventoryProductionFixtures.inventory(bot, *items) }
     private fun switcher() = PkCombatSwitcher(bot, bot.actionHandler) { now }
 
+    @Test fun clanSwitchesPreserveTheAssignedCapeAndStopIfItIsRemovedDuringAnEquip() = runBlocking<Unit> {
+        profile(Styles.TRIBRID, Purpose.CLAN)
+        val cape = bot.preferences.pk!!.teamCape()
+        carry(Item(cape), Item(1381), Item(Rune.MIND.id, 50), Item(841), Item(882, 50), Item(1052))
+        assertTrue(gear.equip(cape))
+        `when`(enemy.equipment.getBonus(EquipmentBonus.MAGIC_DEFENCE)).thenReturn(-100)
+        val switching = switcher()
+        assertEquals(PkCombatSwitcher.Result.WAITING, switching.prepare(enemy))
+        now = 600_000_000
+        assertEquals(PkCombatSwitcher.Result.READY, switching.prepare(enemy))
+        assertEquals(cape, bot.equipment[Equipment.CAPE]?.id)
+        `when`(enemy.equipment.getBonus(EquipmentBonus.MAGIC_DEFENCE)).thenReturn(100)
+        `when`(enemy.equipment.getBonus(EquipmentBonus.RANGED_DEFENCE)).thenReturn(-100)
+        afterEquip = { if (it == 841) bot.equipment.unequip(Equipment.CAPE) }
+        now = 1_200_000_000
+        assertEquals(PkCombatSwitcher.Result.WAITING, switching.prepare(enemy))
+        assertNull(bot.equipment[Equipment.CAPE])
+        assertFalse(bot.combat.magic.isAutocasting)
+        assertEquals(PkCombatSwitcher.Result.UNAVAILABLE, switching.prepare(enemy))
+        verify(gear, never()).equip(1052)
+    }
+
     @Test fun carriedLookupNeverUsesBankedWeaponsRunesOrAmmunition() {
         InventoryProductionFixtures.bank(bot, Item(1381), Item(Rune.MIND.id, 100), Item(882, 100))
         carry(Item(841))

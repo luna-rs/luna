@@ -120,7 +120,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         } else player.skullIcon != SkullIcon.NONE
 
         /**
-         * Delivers a fresh native PvP attack to nearby kind GENERIC session observers before combat timers reset.
+         * Delivers a fresh native PvP attack to nearby protection and clan observers before combat timers reset.
          * Existing PvP cannot establish who started a fight. Prior NPC combat does not hide a new player aggressor;
          * NPC attacks themselves do not call this hook.
          */
@@ -136,13 +136,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         }
 
         /**
-         * Samples GENERIC sessions each game cycle, including while patrol travel is suspended.
-         * All GENERIC personalities may observe fleeing; only kind sessions interrupt travel to protect a victim.
+         * Samples protection and clan sessions each game cycle, including while patrol travel is suspended.
+         * All GENERIC personalities may observe fleeing; kind and clan sessions can protect witnessed victims.
          */
         @JvmStatic
         fun observePvpMovement(bot: Bot) {
             val session = bot.scriptStack.findActive(PkBotScript::class.java).orElse(null) ?: return
-            if (!session.isGenericSession()) return
+            if (!session.observesEncounters()) return
             session.observeMovement(bot.world.locator.findViewablePlayers(bot))
             session.protectObservedPlayer()
         }

@@ -21,15 +21,19 @@ internal class PkCombatObservations(private val bot: Bot) {
     private var previous = emptyMap<Player, Position>()
     private val aggressors = mutableMapOf<Player, Player>()
     private val fleeing = mutableMapOf<Player, Player>()
+    private val clanAggressors = mutableMapOf<Player, Player>()
 
     /**
      * Called only for a fresh native PvP attack, before combat timers are reset.
      * Both participants must be visible to the observer at the start, not merely when damage lands later.
      */
-    fun attackStarted(attacker: Player, victim: Player) {
+    fun attackStarted(attacker: Player, victim: Player, clanAlly: (Player) -> Boolean = { false }) {
         // A witnessed fleeing victim fighting back does not become the aggressor of the same encounter.
         if (aggressors[victim] === attacker && threatening(victim, attacker)) return
-        if (attacker !== victim && visible(attacker) && visible(victim)) aggressors[attacker] = victim
+        if (attacker !== victim && visible(attacker) && visible(victim)) {
+            aggressors[attacker] = victim
+            if (clanAlly(attacker) && clanAlly(victim)) clanAggressors[attacker] = victim
+        }
     }
 
     /**
@@ -41,6 +45,7 @@ internal class PkCombatObservations(private val bot: Bot) {
         if (previousCycle == cycle) return
         fleeing.clear()
         aggressors.entries.removeIf { !threatening(it.key, it.value) }
+        clanAggressors.entries.removeIf { !threatening(it.key, it.value) }
         val current = players.filter { visible(it) }.associateWith { it.position }
         if (previousCycle?.plus(1) == cycle) {
             for ((attacker, now) in current) {
@@ -72,6 +77,12 @@ internal class PkCombatObservations(private val bot: Bot) {
     fun canProtectAgainst(attacker: Player): Boolean = aggressors[attacker]?.let { threatening(attacker, it) } == true
 
     /**
+     * Identifies only a witnessed fresh initiator against another apparent clanmate, never an inferred chase.
+     * Cape changes after the witnessed attack cannot hide the initiator or retrospectively blame the victim.
+     */
+    fun canDefendClanAgainst(attacker: Player): Boolean = clanAggressors[attacker]?.let { threatening(attacker, it) } == true
+
+    /**
      * Reports current-cycle fleeing only, rather than labelling every witnessed attack victim as fleeing.
      * A stationary victim, broken observation continuity or discontinued pursuit removes this preference.
      */
@@ -85,6 +96,7 @@ internal class PkCombatObservations(private val bot: Bot) {
         previous = emptyMap()
         aggressors.clear()
         fleeing.clear()
+        clanAggressors.clear()
     }
 
     private fun threatening(attacker: Player, victim: Player): Boolean = visible(attacker) && visible(victim) &&
