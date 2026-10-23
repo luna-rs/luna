@@ -65,12 +65,32 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
 class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
     CombatAttack<Player>(source.attacker, source.victim, source.interactionPolicy, source.delay) {
 
+    /**
+     * The hit delivered by the current synchronous rebound attempt, or null when delivery was skipped or cancelled.
+     */
+    private var appliedDamage: CombatDamage? = null
+
+    /**
+     * Applies one rebound through defence hooks and continues only after an accurate hit was actually delivered.
+     * Resetting the result prevents a previous rebound from authorizing continuation when this victim is already dead.
+     * A killing hit and an accurate zero-damage hit both permit continuation.
+     *
+     * @param damage The resolved rebound to attempt.
+     * @return Whether delivery completed with an accurate hit.
+     */
+    fun applyRebound(damage: CombatDamage): Boolean {
+        appliedDamage = null
+        CombatDamageAction(damage, this, true, 1).run()
+        return appliedDamage?.isAccurate == true
+    }
+
     override fun attack() {}
 
     override fun calculateDamage(other: Mob?): CombatDamage? = null
 
     override fun onDamageApplied(damage: CombatDamage) {
         source.awardDamageExperience(damage)
+        appliedDamage = damage
     }
 }
 
@@ -85,6 +105,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * but their target-owned actions must not launch more projectiles or spend more of the attacker's energy.
  * Interrupting a delayed rebound releases the special bar, including interruption caused by an action exception.
  * Normal completion retains the lock when the next rebound has taken over the chain.
+ * A skipped or cancelled delivery ends the chain; continuation uses the delivered hit after defence hooks.
  *
  * @param attacker The player performing the special attack.
  * @param lastVictim The mob most recently hit by the thrownaxe.
@@ -96,7 +117,7 @@ fun handleChainHit(
     attacker: Player,
     lastVictim: Mob,
     targets: Iterator<Mob>,
-    source: CombatAttack<Player>,
+    source: ChainHitCombatAttack,
     attacksLeft: Int) {
     if (attacker.isAlive && targets.hasNext() && attacksLeft > 0) {
         val nextVictim = targets.next()
@@ -109,8 +130,7 @@ fun handleChainHit(
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
-                CombatDamageAction(nextDamage, source, true, 1).run()
-                if (nextDamage.isAccurate) {
+                if (source.applyRebound(nextDamage)) {
                     handleChainHit(attacker, nextVictim, targets, source, attacksLeft - 1)
                 } else {
                     attacker.combat.specialBar.isLocked = false
