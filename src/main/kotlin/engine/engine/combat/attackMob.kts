@@ -32,6 +32,21 @@ fun getInteraction(plr: Player, target: Entity): InteractionPolicy {
     }
 }
 
+/**
+ * Resolves an untrusted manual combat spell id without mutating the current combat selection.
+ *
+ * Unknown ids, the no-spell sentinel, and spells from another spellbook are ignored. Rune and level requirements
+ * remain checked at execution, so this does not change manual casting's equipment rules.
+ *
+ * @param player The player whose spellbook must contain the spell.
+ * @param spellId The client-supplied spell id.
+ * @return A spell from the current spellbook, or null when the request is invalid.
+ */
+fun validManualSpell(player: Player, spellId: Int): CombatSpellDefinition? {
+    val spell = CombatSpellDefinition.ALL[spellId].orElse(null) ?: return null
+    return spell.takeIf { it != CombatSpellDefinition.NONE && it.spellbook == player.spellbook }
+}
+
 // "Attack" context menu option on players.
 on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
     if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
@@ -41,9 +56,9 @@ on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target
 
 // Use magic spell on player.
 on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT_BIF) {
-    if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
-        plr.combat.magic.selectedSpell =
-            CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
+    val spell = validManualSpell(plr, spellId)
+    if (spell != null && plr.combat.isAttackable && targetPlr.combat.isAttackable) {
+        plr.combat.magic.selectedSpell = spell
         plr.combat.firstAttack = plr.combat.getNextAttack(targetPlr)
         plr.combat.attack(targetPlr)
     }
@@ -58,9 +73,9 @@ on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { plr, target -> get
 
 // Use magic spell on NPC.
 on(MagicOnNpcEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LINE_OF_SIGHT_BIF) {
-    if (targetNpc.combat.isAttackable) {
-        plr.combat.magic.selectedSpell =
-            CombatSpellDefinition.ALL[spellId].orElseThrow { IllegalArgumentException("Invalid spell ID $spellId") }
+    val spell = validManualSpell(plr, spellId)
+    if (spell != null && targetNpc.combat.isAttackable) {
+        plr.combat.magic.selectedSpell = spell
         plr.combat.firstAttack = plr.combat.getNextAttack(targetNpc)
         plr.combat.attack(targetNpc)
     }
