@@ -153,6 +153,7 @@ object PlayerCombatHandler {
      * Defence hooks are evaluated in registration order. When a hook matches, it is allowed to mutate the receiver's
      * damage and animation values. Those values are then copied back into the supplied [CombatDamageAction], the
      * player's defence animation is played, and no further hooks are processed.
+     * If no hook matches, the ordinary defence animation is played when the incoming damage has a valid animation.
      *
      * @param player The defending player.
      * @param other The opposing mob responsible for the combat interaction.
@@ -175,6 +176,13 @@ object PlayerCombatHandler {
                     }
                 }
                 return
+            }
+        }
+        val damage = action.damage
+        if (damage != null) {
+            val animationId = player.combat.getDefenceAnimation(damage.type, damage.rawAmount)
+            if (animationId > 0) {
+                player.animation(Animation(animationId))
             }
         }
     }

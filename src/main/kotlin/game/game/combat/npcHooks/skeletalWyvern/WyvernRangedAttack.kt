@@ -9,6 +9,7 @@ import io.luna.game.model.mob.combat.attack.RangedCombatAttack
 
 /**
  * A skeletal wyvern ranged combat attack.
+ * Uses the NPC definition's attack speed and a six-tile attack range.
  *
  * @param npc The skeletal wyvern performing the attack.
  * @param other The target being attacked.
@@ -21,8 +22,8 @@ class WyvernRangedAttack(npc: Npc, other: Mob) : RangedCombatAttack<Npc>(
     RANGED_START_GRAPHIC,
     RANGED_PROJECTILE,
     null,
-    6,
-    npc.combatDef().attackSpeed) {
+    npc.combatDef().attackSpeed,
+    6) {
 
     companion object {
 
