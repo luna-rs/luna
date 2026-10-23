@@ -29,6 +29,11 @@ val ANIMATION = 1068
 val GRAPHIC = Graphic(257, 100, 0)
 
 /**
+ * The maximum number of rebounds after the initial hit, limiting one special attack to five targets in total.
+ */
+val MAX_REBOUNDS = 4
+
+/**
  * Creates the rune thrown axe special attack projectile.
  */
 val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
@@ -130,7 +135,7 @@ attack(type = RUNE_THROWN_AXE,
             attacker.combat.specialBar.isLocked = false
             return@arrived
         }
-        val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(5)
+        val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(MAX_REBOUNDS)
         val filter: (Mob) -> Boolean =
             { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
                     it.isWithinDistance(victim, 3) && attacker.combat.checkMultiCombat(it) }
