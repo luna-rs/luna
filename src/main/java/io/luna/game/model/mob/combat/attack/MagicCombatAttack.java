@@ -27,6 +27,9 @@ import java.util.function.BiFunction;
  * The primary hit for this attack is resolved as {@link CombatDamageType#MAGIC}. Any secondary hits produced by spell
  * effects, such as multi-target or area-of-effect behavior, are accumulated in {@link #damageList} and applied after
  * the primary hit resolves accurately.
+ * Custom attacks without a spell definition use the attacker's default magic maximum hit. A negative spell maximum
+ * hit denotes an effect-only spell that still checks accuracy. Projectile arrival discards hits against dead victims
+ * before playing impact graphics or invoking spell effects.
  *
  * @param <T> The concrete {@link Mob} type performing the magic attack.
  * @author lare96
@@ -134,8 +137,14 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     @Override
     public CombatDamage calculateDamage(Mob other) {
         // Use spell effect max hit.
-        return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC).
-                setBaseMaxHit(spellEffect.getMaxHit()).build().resolve();
+        CombatDamageRequest.Builder request = new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC);
+        if (spellEffect != null) {
+            request.setBaseMaxHit(spellEffect.getMaxHit());
+            if (spellEffect.getMaxHit() < 0) {
+                request.disableDamage();
+            }
+        }
+        return request.build().resolve();
     }
 
     @Override
@@ -148,6 +157,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public final void onProjectileReached() {
+        if (!victim.isAlive()) {
+            return;
+        }
         if (nextDamage.getAmount().isPresent() || spellEffect == null) {
             // The hit landed or is a non-spell book magic attack and requires a 0 hitsplat.
             applyEffects();

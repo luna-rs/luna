@@ -8,6 +8,7 @@ import io.luna.game.model.mob.PrayerIcon
 /**
  * An enum representing combat prayers.
  *
+ * @property drain The drain units accrued per game tick while active, combined by the shared prayer timer.
  * @author lare96
  */
 enum class CombatPrayer(val level: Int,
@@ -19,19 +20,19 @@ enum class CombatPrayer(val level: Int,
                         val group: CombatPrayerGroup? = null) {
     THICK_SKIN(level = 1,
                button = 5609,
-               drain = 1,
+               drain = 3,
                varp = 83,
                sound = Sound.THICK_SKIN,
                group = CombatPrayerGroup.DEFENCE),
     BURST_OF_STRENGTH(level = 4,
                       button = 5610,
-                      drain = 1,
+                      drain = 3,
                       varp = 84,
                       sound = Sound.STRENGTH_BURST,
                       group = CombatPrayerGroup.STRENGTH),
     CLARITY_OF_THOUGHT(level = 7,
                        button = 5611,
-                       drain = 1,
+                       drain = 3,
                        varp = 85,
                        sound = Sound.CLARITY,
                        group = CombatPrayerGroup.ATTACK),
