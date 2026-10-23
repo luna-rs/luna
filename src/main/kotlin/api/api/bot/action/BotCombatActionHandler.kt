@@ -8,15 +8,14 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
-import api.bot.zone.SubZone
+import api.bot.zone.Zone
+import api.bot.webwalk.plan.BankAccess
 import api.combat.death.PlayerDeathItems
 import io.luna.Luna
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
-import engine.controllers.WildernessLocatableController.wildernessLevel
 import engine.controllers.WildernessLocatableController.levelAt
 import game.bot.scripts.combat.PkBotScript
-import game.bot.scripts.combat.PkBotScript.Companion.LOW_LEVEL_ANCHOR_POINTS
 import game.skill.magic.Magic
 import game.skill.magic.Staff
 import io.luna.game.model.mob.SkillSet
@@ -27,6 +26,8 @@ import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.EntityState
+import io.luna.game.model.Direction
+import io.luna.game.model.Position
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.Spellbook
@@ -34,8 +35,6 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.state.CombatContext.COMBAT_TIMER_DURATION
 import io.luna.game.model.mob.combat.Weapon
-import io.luna.game.model.mob.movement.NavigationResult
-import kotlinx.coroutines.future.await
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
@@ -341,52 +340,62 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Attempts to escape from the Wilderness.
-     *
-     * Low-level Wilderness bots teleport home immediately. Higher-level Wilderness bots first attempt to navigate to
-     * one of the configured low-level anchor points before teleporting home.
-     *
-     * Combat is temporarily disabled while the bot is fleeing so it does not keep re-engaging targets during escape.
-     *
-     * @return `true` if the bot is no longer in the Wilderness or successfully reached home, otherwise `false`.
+     * Queues one collision-checked retreat step only when no navigator request or walking path already owns movement.
+     * Prefer distance from the threat's centre, trying lateral steps when a direct retreat is blocked. Never step
+     * closer or outside the caller's permitted area; a boxed-in bot waits instead of clipping or replacing its path.
+     */
+    fun stepAwayFrom(threat: Mob, accepts: (Position) -> Boolean = { true }): Boolean {
+        if (bot.state != EntityState.ACTIVE || !bot.isAlive || bot.isLocked || bot.walking.isLocked ||
+            bot.navigator.isActive || !bot.walking.isEmpty || threat.state != EntityState.ACTIVE || !threat.isAlive ||
+            bot.position.z != threat.position.z || !threat.isViewableFrom(bot)) return false
+        val origin = bot.position
+        val centreX = threat.position.x * 2L + threat.size() - 1
+        val centreY = threat.position.y * 2L + threat.size() - 1
+        fun distance(position: Position): Long {
+            val x = position.x * 2L - centreX
+            val y = position.y * 2L - centreY
+            return x * x + y * y
+        }
+        val before = distance(origin)
+        return Direction.ALL_EXCEPT_NONE.map { it to origin.translate(1, it) }
+            .filter { (_, next) -> accepts(next) && distance(next) > before }
+            .sortedByDescending { (_, next) -> distance(next) }
+            .any { (direction, _) -> bot.navigator.step(direction) }
+    }
+
+    /**
+     * Uses native home teleport checks at Wilderness level 20 or below, unless teleblocked. Otherwise reuses the
+     * existing web-walker to reach the safe Edgeville anchor, without bank access or forced zone teleportation.
+     * Actual Wilderness membership determines success. Combat and wandering flags are restored on every exit,
+     * including cancellation; native attacks stay disabled throughout a pending escape.
      */
     suspend fun fleeWilderness(): Boolean {
+        if (!bot.inWilderness()) return true
+        fun active(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive
+        if (!active()) return false
+        val previousDisabled = bot.combat.isDisabled
+        val previousWandering = bot.isWandering
         bot.walking.isRunning = true
-
-        if (bot.inWilderness()) {
-            bot.isWandering = false
-            bot.combat.isDisabled = true
-            try {
-                if (bot.wildernessLevel < 20) {
-                    bot.output.sendCommand("home")
-                    bot.combat.isDisabled = false
-                    val success = waitFor(10.seconds) { SubZone.HOME in bot.subZones }
-                    if (success) {
-                        return true
-                    }
-                }
-
-                val subZone = bot.subZones.firstOrNull()
-                val outside = subZone?.outside?.invoke(bot)
-                val parent = subZone?.parent?.invoke(bot)
-                if (outside != null && parent != null) {
-                    subZone.leave(bot, parent, outside)
-                }
-
-                // TODO@0.5.0 Fall back to reverse-pursuit action previously mentioned?
-                if (SubZone.HOME in bot.subZones ||
-                    bot.navigator.navigate(LOW_LEVEL_ANCHOR_POINTS.random(), true)
-                        .await() == NavigationResult.REACHED
-                ) {
-                    bot.output.sendCommand("home")
-                    return waitFor(10.seconds) { SubZone.HOME in bot.subZones }
-                }
-            } finally {
-                bot.combat.isDisabled = false
-            }
-            return false
+        bot.isWandering = false
+        bot.combat.target = null
+        bot.combat.isDisabled = true
+        suspend fun tryHome(): Boolean {
+            if (!active() || levelAt(bot.position) > 20 || bot.status.isTeleBlocked()) return false
+            bot.output.sendCommand("home")
+            if (active() && !bot.inWilderness()) return true
+            waitFor(10.seconds) { !active() || !bot.inWilderness() }
+            return active() && !bot.inWilderness()
         }
-        return true
+        try {
+            if (tryHome()) return true
+            if (!active()) return false
+            handler.webWalkTo(Zone.EDGEVILLE.anchor, bank = BankAccess.NONE)
+            if (!active()) return false
+            return !bot.inWilderness() || tryHome()
+        } finally {
+            bot.combat.isDisabled = previousDisabled
+            bot.isWandering = previousWandering
+        }
     }
 
     /**
@@ -397,16 +406,14 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      */
     suspend fun fleeCombat() {
         bot.walking.isRunning = true
+        bot.combat.target = null
 
         if (bot.inWilderness()) {
             handler.combat.fleeWilderness()
         } else if (bot.healthPercent < 15) {
             bot.output.sendCommand("home")
         } else {
-            // TODO@0.5.0 Add a reverse-pursuit action for bots. First check nearby tiles in the opposite direction
-            //  of the threat. For example, if the attacker is east of the bot, prefer west, north-west, and
-            //  south-west tiles. If none are pathable, widen the search to lateral directions, then finally allow
-            //  less safe directions if the bot is boxed in.
+            (bot.combat.lastAttackReceived?.attacker ?: bot.combat.lastCombatWith)?.let { stepAwayFrom(it) }
         }
     }
 

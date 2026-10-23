@@ -79,7 +79,6 @@ class PkBotScript(bot: Bot, val duration: Duration,
     fun isRestocking(): Boolean = preparationState in setOf(PreparationState.RESTOCKING, PreparationState.LEAVING)
 
     // TODO Enable coordinator dispatch/registration once the remaining session and clan policies are complete.
-    // TODO Add local NPC avoidance that preserves an actively followed travel path.
 
     /**
      * Shared PK bot constants.
@@ -447,6 +446,16 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal fun observesEncounters(): Boolean = isGenericSession() || clan.enabled
 
     /**
+     * Leaves active patrol/escape paths intact and stops incidental NPC auto-attacks. Only an idle PK parent
+     * nudges away, within its hunting boundary; another coordinator's NPC training retains normal combat ownership.
+     */
+    fun avoidNpcCombat(npc: Npc) {
+        if (bot.combat.target is Player) return
+        if (bot.combat.target is Npc) bot.combat.target = null
+        combatPolicy.stepAwayFrom(npc) { allowsHuntingAt(it) && levelAt(it) > 0 }
+    }
+
+    /**
      * Applies purpose-specific initiation. Kind GENERIC bots may challenge idle skulled players or protect a
      * witnessed victim, including against an unskulled aggressor. Unknown ongoing fights are left alone.
      * Non-kind uncertain bots only retaliate. Other non-kind bots can initiate, with vulnerability preference
@@ -598,8 +607,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Handles the bot's current combat state.
      *
-     * If the bot is attacked outside the Wilderness, it immediately teleports home. Wilderness NPC combat may cause the
-     * bot to flee depending on NPC strength and randomness. Wilderness player combat pushes a dedicated
+     * If the bot is attacked outside the Wilderness, it immediately teleports home. Wilderness NPC combat retains
+     * existing travel or takes an idle local retreat step. Wilderness player combat pushes a dedicated
      * [CombatBotScript] so the bot can fight back using combat-specific behaviour.
      *
      * @return `true` if combat state was handled this tick, otherwise `false`.
@@ -618,21 +627,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 output.sendCommand("home")
                 return true
             } else if (attacker is Npc) {
-                val shouldFlee =
-                    attacker.def().combatLevel * 2 > bot.combatLevel || rand(1 of 3) // TODO@1.0 Base on intelligence.
-                bot.log(
-                    "Npc attacker=${attacker.id}, npcLevel=${attacker.def().combatLevel}, " +
-                            "botLevel=${bot.combatLevel}, shouldFlee=$shouldFlee"
-                )
-
-                if (shouldFlee) {
-                    bot.log("Fleeing NPC combat.")
-                    handler.combat.fleeCombat()
-                } else {
-                    bot.log("NPC attacker detected, but bot chose not to flee this tick.")
-                    bot.scriptStack.pushHead(CombatBotScript(bot, attacker))
-                }
-
+                avoidNpcCombat(attacker)
                 return true
             } else if (attacker is Player) {
                 bot.log("Player attacker detected. Pushing CombatBotScript for $attacker")
@@ -735,14 +730,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
      */
     internal suspend fun enterWild(): Boolean {
-        if (!combatPolicy.pkRiskBudget().withinBudget) return false
+        if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
             val anchor = if (isSkillSession) patrolAnchors().random() else LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
             handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
-            if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !combatPolicy.pkRiskBudget().withinBudget) {
+            if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !clan.wearingCape() || !clanCanHunt() ||
+                !combatPolicy.pkRiskBudget().withinBudget) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
                 return false
             }

@@ -6,6 +6,7 @@ import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.bot.Bot;
@@ -111,6 +112,10 @@ public final class BotReflex {
                 focus = bot.getCombat().getLastAttackReceived().getAttacker();
             }
             if (focus != null) {
+                if (focus instanceof Npc && pkSession != null && bot.getScriptStack().current() == pkSession) {
+                    pkSession.avoidNpcCombat((Npc) focus);
+                    return true;
+                }
                 InitialState response = bot.getEmotions().getCombatResponse(focus);
                 bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, focus instanceof Player ? pkSession : null));
                 bot.log("Reflex [responding to combat] triggered.");
