@@ -105,22 +105,20 @@ class TanHideBotScript(
             stop()
             return false
         }
-        attemptProduction(tanning!!.hide) { startTanning(tanning!!, tanner) }
+        // Travel has its own deadline; the production-start budget is only fifteen seconds.
+        val approached = bot.position.isViewable(tanner.position) || withTimeoutOrNull(60.seconds) {
+            handler.widgets.clickCloseInterface() && isActionSafe() &&
+                handler.webWalkTo(tanner.position, radius = 1, bank = BankAccess.NONE)
+        } == true
+        attemptProduction(tanning!!.hide,
+            available = approached && bot.position.isViewable(tanner.position)) {
+            startTanning(tanning!!, tanner)
+        }
         return true
     }
 
     /** Opens the normal tanning interface and selects its existing tan-all button; shared hooks verify progress. */
     private suspend fun startTanning(hide: Hide, tanner: Npc): Boolean {
-        // Native NPC navigation rejects out-of-view targets before pathfinding. Reach the
-        // tannery with carried supplies first, retaining normal NPC reach/collision checks.
-        if (!bot.position.isViewable(tanner.position)) {
-            val arrived = withTimeoutOrNull(60.seconds) {
-                handler.webWalkTo(tanner.position, radius = 1, bank = BankAccess.NONE)
-            } == true
-            if (!arrived || !isActionSafe() || !bot.position.isViewable(tanner.position)) {
-                return false
-            }
-        }
         if (!handler.interactions.interact(2, tanner)) {
             return false
         }
