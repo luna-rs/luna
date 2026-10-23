@@ -5,8 +5,8 @@ package game.skill.farming
  * @author hydrozoa
  */
 enum class AllotmentPatchLocation(val objectId: Int, val config: Int, val shifts: Int) {
-    FALADOR_SE(8551, 504, 8),
-    FALADOR_NW(8550, 504, 0),
+    FALADOR_SE(8551, Farming.ALLOTMENT_VARP_1, 8),
+    FALADOR_NW(8550, Farming.ALLOTMENT_VARP_1, 0),
     CATHERBY(0, 0, 0), // todo
     ARDOUGNE(0, 0,0),
     PORT_PHATASMYS(0, 0, 0),

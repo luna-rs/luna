@@ -186,11 +186,11 @@ on(LoginEvent::class) {
 
 useItem(6032).onObject(7836) {
     plr.sendMessage("Composting")
-    plr.sendVarp(Varp(511, 10))
+    plr.sendVarp(Varp(Farming.COMPOST_BIN_VARP, 10))
 }
 
 useItem(6034).onObject(7836) {
-    plr.sendVarp(Varp(512, 10))
+    plr.sendVarp(Varp(Farming.SUPERCOMPOST_BIN_VARP, 10))
     plr.sendMessage("Supercomposting")
 }
 

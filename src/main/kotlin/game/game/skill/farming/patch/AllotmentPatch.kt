@@ -6,7 +6,7 @@ import io.luna.game.model.item.*
 
 /**
  * Represents any allotment patch.
- * Uses varp id 504 and 505
+ * Uses varps [Farming.ALLOTMENT_VARP_1] and [Farming.ALLOTMENT_VARP_2]
  *
  * todo finish
  *

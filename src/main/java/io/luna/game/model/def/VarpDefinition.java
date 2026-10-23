@@ -66,12 +66,7 @@ public final class VarpDefinition implements Definition {
         /**
          * Bank rearrange mode (insert vs swap).
          */
-        BANK_INSERT_MODE(9),
-
-        COMPOST_BIN(511),
-
-        HERB_PATCH(515),
-        ;
+        BANK_INSERT_MODE(9);
 
         /**
          * The raw cache id for this varp type.

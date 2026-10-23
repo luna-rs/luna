@@ -3,7 +3,6 @@ package game.skill.farming
 import api.attr.*
 import game.skill.farming.Farming.herbPatches
 import game.skill.farming.patch.*
-import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.mob.*
 import io.luna.game.model.mob.varp.*
 
@@ -15,6 +14,42 @@ import io.luna.game.model.mob.varp.*
  * @author hydrozoa
  */
 object Farming {
+
+    /**
+     * The varp holding the state of the Falador allotment patches.
+     */
+    const val ALLOTMENT_VARP_1 = 504
+
+    /**
+     * The varp holding the state of the Ardougne allotment patches.
+     */
+    const val ALLOTMENT_VARP_2 = 505
+
+    /**
+     * The varp changed when using compost on a compost bin.
+     */
+    const val COMPOST_BIN_VARP = 511
+
+    /**
+     * The varp changed when using supercompost on a compost bin.
+     */
+    const val SUPERCOMPOST_BIN_VARP = 512
+
+    /**
+     * The varp holding the state of all herb patches.
+     */
+    const val HERB_PATCH_VARP = 515
+
+    /**
+     * The varp holding the tools stored with tool leprechauns. See [StorableTool].
+     */
+    const val TOOLS_VARP = 615
+
+    /**
+     * An attribute representing the tools stored with tool leprechauns, packed the same way as the `farming_tools`
+     * varp. See [StorableTool].
+     */
+    var Player.storedTools by Attr.int().persist("farming_tools")
 
     /**
      * An attribute representing all herb patches.
@@ -60,7 +95,7 @@ object Farming {
         plr.herbPatches.values.forEach { patch ->
             herbState += patch.getVarpValue()
         }
-        plr.sendVarp(Varp(VarpDefinition.VarpType.HERB_PATCH.id, herbState))
+        plr.sendVarp(Varp(HERB_PATCH_VARP, herbState))
     }
 
     /**
@@ -78,5 +113,12 @@ object Farming {
             System.out.println("Sent "+configId+" = "+value);
             plr.sendVarp(Varp(configId, value))
         }
+    }
+
+    /**
+     * Sends the tools stored with tool leprechauns to the player.
+     */
+    fun sendStoredTools(plr: Player) {
+        plr.sendVarp(Varp(TOOLS_VARP, plr.storedTools))
     }
 }

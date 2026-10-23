@@ -35,7 +35,7 @@ class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
     }
 
     override fun getVarpId(): Int {
-        return 515
+        return Farming.HERB_PATCH_VARP
     }
 
     override fun hasPlant(): Boolean {
