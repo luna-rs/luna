@@ -76,12 +76,12 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         }
     }
 
-    // If the attack is a GargoyleSmashAttack, kill NPC.
+    // A validated smash delivers attributed damage without re-entering this finishing hook.
     combat(1611) {
         defend {
             if (source is GargoyleSmashAttack) {
                 damage = null
-                npc.health = 0
+                npc.combat.finishExecution(source)
             }
         }
     }

@@ -24,6 +24,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
                 npc.combat.prepareForExecution()
                 if (other.inventory.remove(ICE_COOLER)) {
+                    val finishingAttack = source
                     damage = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
@@ -33,7 +34,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                                 other.sendMessage("You throw some water onto the desert lizard.")
                                 npc.animation(Animation(npc.combatDef().deathAnimation, AnimationPriority.HIGH))
                             } else if (executions == 1) {
-                                npc.health = 0
+                                npc.combat.finishExecution(finishingAttack)
                                 return true
                             }
                             return false

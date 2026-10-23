@@ -12,6 +12,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
 import java.util.Set;
@@ -169,6 +170,27 @@ public final class NpcCombatContext extends CombatContext<Npc> {
             mob.getWalking().setLocked(true);
             target = null;
         }
+    }
+
+    /**
+     * Delivers the remaining health as an attributed finishing blow after a script validates its finishing item.
+     * <p>
+     * Execution preparation must already have disabled this NPC. Damage delivery records the finishing player's
+     * contribution before death and invokes applied-damage callbacks. Defence hooks are deliberately not re-entered,
+     * because they initiated the execution sequence. Repeated completion attempts against a dead NPC do nothing.
+     *
+     * @param source The attack responsible for the validated finishing sequence.
+     */
+    public void finishExecution(CombatAttack<?> source) {
+        if (!isDisabled() || !mob.isAlive()) {
+            return;
+        }
+        new CombatDamageRequest.Builder(source.getAttacker(), mob, CombatDamageType.MELEE)
+                .setBaseAccuracy(1.0)
+                .setBaseMaxHit(0)
+                .setFlatBonusDamage(mob.getHealth())
+                .ignoreProtectionPrayers()
+                .build().resolve().apply(source);
     }
 
     /**

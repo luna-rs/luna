@@ -46,6 +46,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
                 npc.combat.prepareForExecution()
                 if (other.inventory.remove(BAG_OF_SALT)) {
+                    val finishingAttack = source
                     damage = null
                     other.submitAction(object : LockedAction(other, false, 1) {
                         override fun run(): Boolean {
@@ -55,7 +56,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                                 other.sendMessage("You pour some salt on the Rockslug.")
                                 npc.animation(Animation(npc.combatDef().deathAnimation, AnimationPriority.HIGH))
                             } else if (executions == 1) {
-                                npc.health = 0
+                                npc.combat.finishExecution(finishingAttack)
                                 return true
                             }
                             return false
