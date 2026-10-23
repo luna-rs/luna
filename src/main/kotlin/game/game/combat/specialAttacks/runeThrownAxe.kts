@@ -3,6 +3,7 @@ package game.combat.specialAttacks
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import api.predef.*
 import io.luna.game.action.Action
+import io.luna.game.action.ActionState
 import io.luna.game.action.ActionType
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
@@ -82,6 +83,8 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
  * Before each new rebound, the attacker must still be alive and active. Already launched hits can land after death,
  * but their target-owned actions must not launch more projectiles or spend more of the attacker's energy.
+ * Interrupting a delayed rebound releases the special bar, including interruption caused by an action exception.
+ * Normal completion retains the lock when the next rebound has taken over the chain.
  *
  * @param attacker The player performing the special attack.
  * @param lastVictim The mob most recently hit by the thrownaxe.
@@ -113,6 +116,12 @@ fun handleChainHit(
                     attacker.combat.specialBar.isLocked = false
                 }
                 return true
+            }
+
+            override fun onFinished() {
+                if (state == ActionState.INTERRUPTED) {
+                    attacker.combat.specialBar.isLocked = false
+                }
             }
         })
     } else {
