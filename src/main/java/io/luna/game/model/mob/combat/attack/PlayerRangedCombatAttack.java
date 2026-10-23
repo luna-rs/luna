@@ -121,6 +121,20 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
 
     @Override
     public void onDamageApplied(CombatDamage damage) {
+        awardDamageExperience(damage);
+        int rawAmount = Math.max(0, damage.getRawAmount());
+        if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
+            damage.getVictim().getStatus().add(new PoisonStatusEffect(damage.getVictim(), poison.getSeverity()), false);
+        }
+    }
+
+    /**
+     * Awards experience for delivered damage using the stance captured when this attack launched. Secondary hits can
+     * reuse this allocation without repeating poison rolls or special attack arrival callbacks.
+     *
+     * @param damage The applied damage, already capped to the victim's remaining health.
+     */
+    public final void awardDamageExperience(CombatDamage damage) {
         int rawAmount = Math.max(0, damage.getRawAmount());
         Skill ranged = attacker.skill(Skill.RANGED);
         if (attackStance == CombatStance.DEFENSIVE) {
@@ -132,9 +146,6 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
             ranged.addExperience(rawAmount * 4);
         }
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
-        if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
-            damage.getVictim().getStatus().add(new PoisonStatusEffect(damage.getVictim(), poison.getSeverity()), false);
-        }
     }
 
     /**

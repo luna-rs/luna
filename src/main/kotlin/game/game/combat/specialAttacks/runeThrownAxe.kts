@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.RUNE_THROWN_AXE
 import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
@@ -49,31 +50,22 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
  *
  * Chainhit reuses [CombatDamageAction] to apply delayed rebound damage, but it must not execute the original special
  * attack logic again. This wrapper keeps the original attack context while disabling attack execution and delegated
- * damage calculation.
+ * damage calculation. Delivered rebound damage awards experience through the original ranged attack's captured stance,
+ * without calling its special attack arrival callback and starting another chain.
  *
  * @param source The original rune thrownaxe special attack.
  * @author lare96
  */
-class ChainHitCombatAttack(source: CombatAttack<Player>) :
+class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
     CombatAttack<Player>(source.attacker, source.victim, source.interactionPolicy, source.delay) {
 
-    /**
-     * Does nothing.
-     *
-     * Chainhit damage is already resolved manually before the delayed damage action runs.
-     */
     override fun attack() {}
 
-    /**
-     * Returns no calculated damage.
-     *
-     * Rebound damage is supplied directly through [CombatDamageAction], so this wrapper should not
-     * calculate another hit.
-     *
-     * @param other The possible target of the attack.
-     * @return Always `null`.
-     */
     override fun calculateDamage(other: Mob?): CombatDamage? = null
+
+    override fun onDamageApplied(damage: CombatDamage) {
+        source.awardDamageExperience(damage)
+    }
 }
 
 /**
@@ -138,7 +130,7 @@ attack(type = RUNE_THROWN_AXE,
 
         if (attacksLeft > 0 && targets.hasNext()) {
             // Use recursion to handle chain hits.
-            handleChainHit(attacker, victim, targets, ChainHitCombatAttack(source), attacksLeft)
+            handleChainHit(attacker, victim, targets, ChainHitCombatAttack(source as PlayerRangedCombatAttack), attacksLeft)
         } else {
             attacker.combat.specialBar.isLocked = false
         }
