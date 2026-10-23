@@ -13,6 +13,7 @@ import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.def.WidgetDefinition
 import io.luna.game.model.mob.attr.AttributeMap
+import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.bot.Bot
 import org.mockito.Mockito.*
 import kotlinx.coroutines.Job
@@ -48,6 +49,7 @@ object InventoryProductionFixtures {
         val fixtureWorld = world
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         `when`(bot.preferences.pk).thenReturn(null)
+        `when`(bot.rights).thenReturn(PlayerRights.PLAYER)
         `when`(bot.attributes()).thenReturn(AttributeMap())
         `when`(bot.world).thenReturn(fixtureWorld)
         `when`(bot.health).thenReturn(99)

@@ -9,6 +9,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone
+import api.combat.death.PlayerDeathItems
+import io.luna.Luna
 import api.predef.*
 import engine.controllers.Controllers.inWilderness
 import engine.controllers.WildernessLocatableController.wildernessLevel
@@ -210,6 +212,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * Returns this bot's desired combat training skills for coordinators and content scripts.
      */
     fun wantedCombatSkills(): Set<Int> = wantedCombatSkills(bot)
+
+    /**
+     * Values current death loss against this bot's personality-based share of its owned wealth.
+     * Bank preparation and patrol entry must recheck after changes to stock, skulls or active Protect Item.
+     */
+    fun pkRiskBudget(): PkRiskBudget = PkRiskBudget.assess(bot,
+        PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode()))
 
     /**
      * Checks a training choice against the saved account build and skiller restriction.

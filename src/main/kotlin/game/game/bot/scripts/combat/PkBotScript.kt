@@ -379,10 +379,12 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * Keeps both ends of an owned pursuit inside the hunting area, including after equipment suspensions.
      * Kind GENERIC fights also require a skull or a continuing defensive reason.
      * Uncertain non-kind GENERIC bots only engage a current or recently received attacker.
+     * Current death loss must remain affordable after stock, skull, prayer or equipment changes.
      * Defensive combat started by another coordinator does not inherit this session boundary.
      */
     internal fun allowsPursuit(target: Player): Boolean {
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
+        if (!combatPolicy.pkRiskBudget().withinBudget) return false
         if (!isGenericSession()) return true
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
             observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
@@ -479,6 +481,10 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
     override suspend fun run(): Boolean {
         if (!bot.preferences.canChooseActivity(io.luna.game.model.mob.bot.brain.BotActivity.PKING)) return true
+        if (!resetItems()) {
+            bot.log("PK death loss exceeds the personality budget. Ending the trip after leaving Wilderness.")
+            return handler.combat.fleeWilderness()
+        }
         if (System.currentTimeMillis() > expireAt) {
             bot.log("Script expired. Travelling back home.")
 
@@ -491,12 +497,6 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
 
         if (checkCombat()) {
             bot.log("checkCombat handled current state.")
-            delay(1.seconds, 3.seconds)
-            return false
-        }
-
-        if (!resetItems()) {
-            bot.log("resetItems returned false.")
             delay(1.seconds, 3.seconds)
             return false
         }
@@ -659,17 +659,17 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
     }
 
     /**
-     * Verifies and resets the bot's PK supplies.
+     * Verifies the current loadout's death loss before entering or continuing a PK trip.
      *
-     * This is currently a placeholder. Future logic should verify food, runes, ammunition, teleport options, combat
-     * gear, and other resources required by the bot's combat profile.
+     * An over-budget session must escape rather than initiate another fight or repeatedly retry the same loadout.
+     * Owned bank preparation and supply selection remain separate from this live affordability guard.
      *
      * @return `true` if the bot is ready to continue PKing, otherwise `false`.
      */
     private fun resetItems(): Boolean {
-        bot.log("resetItems called.")
-        // TODO@0.5.0 Make sure we have food and proper combat equipment.
-        return true
+        val risk = combatPolicy.pkRiskBudget()
+        bot.log("PK risk: loss=${risk.deathLoss}, maximum=${risk.maximumLoss}, wealth=${risk.wealth}.")
+        return risk.withinBudget
     }
 
     /**
@@ -681,13 +681,14 @@ class PkBotScript(bot: Bot, val duration: Duration) : BotScript(bot) {
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
      */
     internal suspend fun enterWild(): Boolean {
+        if (!combatPolicy.pkRiskBudget().withinBudget) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
             val anchor = if (isSkillSession) patrolAnchors().random() else LOW_LEVEL_ANCHOR_POINTS.random()
 
             bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
             handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
-            if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
+            if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !combatPolicy.pkRiskBudget().withinBudget) {
                 bot.log("Reached anchor but bot is still not in wilderness. position=${bot.position}")
                 return false
             }
