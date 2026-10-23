@@ -5,6 +5,7 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotGearLocator
@@ -14,10 +15,12 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.crafting.armorCrafting.HideArmor
 import game.skill.crafting.hideTanning.Hide
 import game.skill.crafting.hideTanning.TanInterface
+import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.RandomUtils.roll
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -46,6 +49,19 @@ class TanHideBotScript(
     companion object {
         /** Saved tanning session configuration and inherited retry counters. @author lare96 */
         class TanningData : InventoryScriptData()
+
+        /** Shared by all tanning scripts, with at most one entry per configured zone. */
+        private val tanners = mutableMapOf<SubZone, Npc>()
+
+        private fun findTanner(zone: SubZone): Npc? {
+            tanners[zone]?.let {
+                if (it.state == EntityState.ACTIVE && it.id in TanInterface.TANNER_IDS &&
+                    it.position.z == zone.inside.z) return it
+            }
+            return world.locator.findNearestNpc(zone.inside) {
+                it.state == EntityState.ACTIVE && it.id in TanInterface.TANNER_IDS
+            }.also { if (it == null) tanners.remove(zone) else tanners[zone] = it }
+        }
     }
 
     // todo canifis tannery, crafting guild
@@ -67,14 +83,6 @@ class TanHideBotScript(
      */
     private var tanning: Hide? = null
 
-    /**
-     * The cached tanner NPC used by this script.
-     *
-     * This avoids scanning the zone every cycle once a tanner has been found. A failed interaction
-     * invalidates the reference so the next bounded retry searches for an available tanner.
-     */
-    private var tannerNpc: Npc? = null
-
     override suspend fun onInventoryBankRequested(): Boolean {
         if (tanning == null) return false
         return requestProductionBank(hasTanningSupplies())
@@ -90,20 +98,10 @@ class TanHideBotScript(
     override suspend fun onExecuteInZone(): Boolean {
         if (tanning == null) { stop(); return true }
         if (!productionReady(hasTanningSupplies())) return true
-        val zone = activeZone!!
-        if (tannerNpc == null) {
-            tannerNpc = world.locator
-                .findNpcs(zone.area.centerPosition, zone.area.tileRadius) {
-                    it.id in TanInterface.TANNER_IDS
-                }
-                .firstOrNull()
-        }
-
+        val tanner = findTanner(activeZone!!)
         bot.log("Attempting to interact with tanner NPC.")
-        val tanner = tannerNpc
         if (tanner == null) {
-            bot.log("No tanner NPC found in zone area.")
-            tannerNpc = null
+            bot.log("No active tanner NPC found.")
             stop()
             return false
         }
@@ -113,8 +111,17 @@ class TanHideBotScript(
 
     /** Opens the normal tanning interface and selects its existing tan-all button; shared hooks verify progress. */
     private suspend fun startTanning(hide: Hide, tanner: Npc): Boolean {
+        // Native NPC navigation rejects out-of-view targets before pathfinding. Reach the
+        // tannery with carried supplies first, retaining normal NPC reach/collision checks.
+        if (!bot.position.isViewable(tanner.position)) {
+            val arrived = withTimeoutOrNull(60.seconds) {
+                handler.webWalkTo(tanner.position, radius = 1, bank = BankAccess.NONE)
+            } == true
+            if (!arrived || !isActionSafe() || !bot.position.isViewable(tanner.position)) {
+                return false
+            }
+        }
         if (!handler.interactions.interact(2, tanner)) {
-            tannerNpc = null
             return false
         }
         if (!waitFor(3.seconds) { TanInterface::class in bot.overlays }) return false
@@ -167,10 +174,6 @@ class TanHideBotScript(
     }
 
     override fun snapshot(): TanningData = TanningData().also { saveInventoryState(it) }
-
-    override fun onPaused() { tannerNpc = null }
-
-    override suspend fun onNewActiveZone(lastZone: SubZone?) { tannerNpc = null }
 
     override suspend fun equipment(): BotGearLocator? {
         if (bot.personality.isIntelligent) {

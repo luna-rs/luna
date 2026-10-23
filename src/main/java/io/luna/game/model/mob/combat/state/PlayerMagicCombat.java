@@ -63,6 +63,9 @@ public class PlayerMagicCombat {
      * Checks whether the player can cast the specified combat spell and, if so, removes the required runes from their
      * inventory.
      * <p>
+     * Spells from another spellbook are rejected before rune consumption, and matching selected or autocast spells
+     * are cleared.
+     * <p>
      * If the spell fails its rune or equipment requirements and it is also the currently configured autocast spell,
      * the autocast spell is cleared.
      *
@@ -74,6 +77,17 @@ public class PlayerMagicCombat {
     public boolean removeRunes(CombatSpellDefinition spell) {
         if (spell == null || spell == NONE) {
             throw new IllegalStateException("Combat spell is null or NONE during magic combat state.");
+        }
+
+        if (spell.getSpellbook() != player.getSpellbook()) {
+            player.sendMessage("That spell is not in your current spellbook.");
+            if (spell == selectedSpell) {
+                setSelectedSpell(NONE);
+            }
+            if (spell == autocastSpell) {
+                setAutocastSpell(NONE);
+            }
+            return false;
         }
 
         List<Item> required = Magic.INSTANCE.checkRequirements(player, spell, false);

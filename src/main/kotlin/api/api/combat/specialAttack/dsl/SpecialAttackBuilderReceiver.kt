@@ -25,6 +25,7 @@ import java.util.function.BiFunction
  *
  * This receiver exposes helper methods for constructing melee, ranged, and magic combat attacks that automatically
  * integrate special attack launch handling, custom damage calculation, and arrival callbacks.
+ * Applied damage first runs the base attack's experience and poison handling, then the special arrival callback.
  *
  * The receiver is created for a single attacker, victim, and special attack configuration.
  *
@@ -71,6 +72,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -109,6 +111,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -152,6 +155,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -175,7 +179,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * - Special attack energy is drained.
      * - The launch callback is executed.
      *
-     * Instant special attacks also have their delay forced to `0` so they do not reset the normal combat timer.
+     * Non-instant attacks check energy before normal processing can consume ammunition or runes. Instant attacks
+     * have already handled their energy cost and clear the forced special selection here.
      *
      * @param attack The combat attack being processed.
      * @param damage The current damage result, if already resolved.
@@ -186,13 +191,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          damage: CombatDamage?,
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
+        if (!receiver.instant && !attacker.combat.specialBar.checkEnergy(receiver.drain)) {
+            return null
+        }
         var newDamage = action(damage)
         if (newDamage != null) {
             // Attack can go through, drain special attack energy, run launch listener.
             if(!receiver.instant) {
-                if(!attacker.combat.specialBar.checkEnergy(receiver.drain)) {
-                    return null
-                }
                 attacker.combat.specialBar.drain(receiver.drain, true)
             } else {
                 attacker.specialBarClicks = 0
@@ -209,7 +214,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * Resolves combat damage for this special attack using the configured bonuses and optional max-hit override.
      *
      * Damage is calculated using the standard combat damage pipeline, with the special attack's accuracy bonus,
-     * optional base max hit, and damage bonus applied on top.
+     * optional base max hit, strength bonus to maximum damage, and damage bonus applied on top.
      *
      * @param other The mob receiving the damage.
      * @param type The combat damage type to resolve.
@@ -219,6 +224,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
         val request = CombatDamageRequest.Builder(attacker, other, type)
             .setFlatBonusAccuracy(receiver.attackBonus)
             .setPercentBonusDamage(receiver.damageBonus)
+            .setPercentBonusStrength(receiver.strengthBonus)
         if (receiver.maxHit != null) {
             request.setBaseMaxHit(receiver.maxHit)
         }

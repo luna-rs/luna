@@ -64,6 +64,12 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
      * Ground items selected for pickup, ordered by death recovery, wanted-item status, and general value.
      */
     private val valuableItems = ArrayList<GroundItem>()
+    
+    
+    /**
+     * Script relative ignored item IDs.
+     */
+    private var ignored: Set<Int> = emptySet()
 
     /**
      * Whether a previous attempt failed to create enough inventory space.
@@ -82,6 +88,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             droppedJunk = false
         }
 
+        ignored = bot.scriptStack.current()?.takeIf { it.isRunning() }?.ignoredLoot ?: emptySet()
         minimumLootValue = calculateMinLootValue(bot)
         bot.deathItems.removeAll { it.state != EntityState.ACTIVE }
         findValuableItems()
@@ -212,7 +219,8 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     private fun findValuableItems() {
         for (groundItem in bot.viewableItems) {
             if (groundItem.state != EntityState.ACTIVE ||
-                !groundItem.isWithinDistance(bot, Position.VIEWING_DISTANCE * 2)) {
+                !groundItem.isWithinDistance(bot, Position.VIEWING_DISTANCE * 2) ||
+                groundItem.id in ignored) {
                 continue
             }
 

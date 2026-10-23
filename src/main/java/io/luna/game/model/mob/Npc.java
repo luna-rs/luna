@@ -31,6 +31,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Represents a non-player-controlled mob in the world.
+ * <p>
+ * <b>Identity equality:</b> {@link #equals(Object)} and {@link #hashCode()} use identity semantics (this instance
+ * only).
  *
  * @author lare96
  */
@@ -125,21 +128,26 @@ public class Npc extends Mob {
         setPosition(position);
     }
 
+    /**
+     * Uses identity-based hashing.
+     * <p>
+     * An NPC's index is {@code -1} before it is added to the world and again once it is removed, so a hash based on
+     * the index changes while the NPC sits in a hash-based collection, and it can no longer be found or removed.
+     * Final, so a subclass cannot bring that back.
+     */
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof Npc) {
-            Npc other = (Npc) obj;
-            return getIndex() == other.getIndex();
-        }
-        return false;
+    public final int hashCode() {
+        return System.identityHashCode(this);
     }
 
+    /**
+     * Uses identity-based equality.
+     *
+     * @see #hashCode()
+     */
     @Override
-    public int hashCode() {
-        return Objects.hash(getIndex());
+    public final boolean equals(Object obj) {
+        return this == obj;
     }
 
     @Override

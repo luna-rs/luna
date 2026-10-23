@@ -2,7 +2,6 @@ package engine.combat.prayer
 
 import api.predef.*
 import api.predef.ext.*
-import com.google.common.collect.HashMultiset
 import engine.combat.prayer.PrayerRestorationAction.RapidHealAction
 import engine.combat.prayer.PrayerRestorationAction.RapidRestoreAction
 import engine.combat.status.StatusEffectType
@@ -11,6 +10,8 @@ import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PrayerIcon
 import io.luna.game.model.mob.varp.Varp
+import java.util.Collections
+import java.util.EnumSet
 
 /**
  * A model representing the currently active set of [CombatPrayer] types for a single [player].
@@ -18,24 +19,26 @@ import io.luna.game.model.mob.varp.Varp
  * This class is responsible for:
  * - Toggling prayers on/off (including mutual exclusion via [CombatPrayer.group]).
  * - Driving client state (varps, head icons, sounds/messages) for [Player]s.
- * - Tracking per-prayer drain timing using [active] so flicking-like behavior still drains consistently.
+ * - Accumulating the combined drain of active prayers, retaining the remainder between timer executions.
  *
  * @author lare96
  */
 class CombatPrayerSet(private val player: Player) {
 
     /**
-     * The multiset of active [CombatPrayer]s.
-     *
-     * The multiset *count* represents the number of ticks remaining until a prayer point should be deducted for that
-     * prayer. We use counts instead of a simple boolean so that repeatedly toggling (e.g., flicking) does not reset the
-     * drain schedule in a way that would avoid prayer drain.
-     *
-     * Convention:
-     * - When a prayer is ready to deduct a point, its count will be `1`.
-     * - When a prayer is not present in this set, it is considered inactive.
+     * The active prayers, changed only through activation and deactivation so their timer stays in sync.
      */
-    val active: HashMultiset<CombatPrayer> = HashMultiset.create()
+    private val activePrayers = EnumSet.noneOf(CombatPrayer::class.java)
+
+    /**
+     * An unmodifiable view of the currently active prayers.
+     */
+    val active: Set<CombatPrayer> = Collections.unmodifiableSet(activePrayers)
+
+    /**
+     * Accrued drain not yet converted into a whole prayer point. Ordinary toggles preserve this remainder.
+     */
+    private var drainCounter = 0
 
     /**
      * Activates [prayer] and ensures any mutually-exclusive prayers in the same [CombatPrayer.group] are deactivated.
@@ -47,12 +50,16 @@ class CombatPrayerSet(private val player: Player) {
      * - Starts restoration actions for prayers that have periodic effects (rapid restore/heal).
      *
      * If [prayer] is already active, this method toggles it off (non-silently).
+     * Requirements are checked before replacing prayers in the same group, so rejected upgrades preserve the active
+     * prayer. The dragon scimitar status restricts protection prayers only.
      */
     fun activate(prayer: CombatPrayer) {
 
-        // Stop here if prayer is disabled.
-        if(StatusEffectType.DRAGON_SCIMITAR in player.status) {
-            player.sendMessage("Your prayers have been disabled by a recent attack.")
+        // The dragon scimitar blocks protection prayers only; other prayers remain available.
+        if (StatusEffectType.DRAGON_SCIMITAR in player.status &&
+            (prayer == CombatPrayer.PROTECT_FROM_MELEE || prayer == CombatPrayer.PROTECT_FROM_MISSILES ||
+                    prayer == CombatPrayer.PROTECT_FROM_MAGIC)) {
+            player.sendMessage("Your protection prayers have been disabled by a recent attack.")
             return
         }
 
@@ -61,13 +68,6 @@ class CombatPrayerSet(private val player: Player) {
             deactivate(prayer, false)
             return
         }
-        if (prayer.group != null) {
-            // Deactivate similar prayers if needed, silently.
-            for (otherPrayer in prayer.group.getPrayers()) {
-                deactivate(otherPrayer, true)
-            }
-        }
-
         // Send varbits, head icons, sounds, relevant messages.
         if (player.prayer.staticLevel < prayer.level) {
             player.playSound(Sound.PRAYER_OFF) // todo@0.5.0 confirm if correct sound
@@ -79,18 +79,23 @@ class CombatPrayerSet(private val player: Player) {
             player.sendMessage("Use an altar to recharge your Prayer points.")
             return
         }
+        if (prayer.group != null) {
+            for (otherPrayer in prayer.group.getPrayers()) {
+                deactivate(otherPrayer, true)
+            }
+        }
         player.sendVarp(Varp(prayer.varp, 1))
         player.playSound(prayer.sound)
         if (prayer.icon != PrayerIcon.NONE) {
             player.prayerIcon = prayer.icon
         }
 
-        // Start the prayer draining action if needed.
+        activePrayers.add(prayer)
+
+        // Start the shared drain timer if needed.
         if (!player.actions.contains(CombatPrayerDrainAction::class)) {
             player.submitAction(CombatPrayerDrainAction(player))
         }
-
-        active.add(prayer, computeDrainTicks(prayer))
 
         // Start actions for restoring skills or hitpoints if needed.
         if (prayer == CombatPrayer.RAPID_RESTORE && !player.actions.contains(RapidRestoreAction::class)) {
@@ -125,8 +130,8 @@ class CombatPrayerSet(private val player: Player) {
      * @return `true` if the prayer was active and was removed, otherwise `false`.
      */
     fun deactivate(prayer: CombatPrayer, silent: Boolean): Boolean {
-        val amount = active.setCount(prayer, 0)
-        if (amount > 0) {
+        val removed = activePrayers.remove(prayer)
+        if (removed) {
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
                 player.playSound(Sound.CANCEL_PRAYER)
@@ -134,19 +139,24 @@ class CombatPrayerSet(private val player: Player) {
             if (prayer.icon != PrayerIcon.NONE) {
                 player.prayerIcon = PrayerIcon.NONE
             }
+            if (activePrayers.isEmpty()) {
+                player.actions.first(CombatPrayerDrainAction::class.java)?.interrupt()
+            }
         }
-        return amount > 0
+        return removed
     }
 
     /**
      * Deactivates all prayers for this set.
      *
-     * This also clears all prayer varps and removes any active head icon.
+     * This also clears all prayer varps, the drain remainder and timer, and any active head icon.
      */
     fun deactivateAll() {
         CombatPrayer.VALUES.forEach { player.sendVarp(Varp(it.varp, 0)) }
         player.prayerIcon = PrayerIcon.NONE
-        active.clear()
+        activePrayers.clear()
+        drainCounter = 0
+        player.actions.first(CombatPrayerDrainAction::class.java)?.interrupt()
     }
 
     /**
@@ -155,33 +165,29 @@ class CombatPrayerSet(private val player: Player) {
     fun isActive(prayer: CombatPrayer): Boolean = active.contains(prayer)
 
     /**
-     * Decrements the drain counter for [prayer] by 1 tick.
+     * Accumulates five ticks of combined prayer drain and returns the whole points to deduct.
      *
-     * @return `true` if the prayer had a counter available to decrement (i.e., it was present and one unit was removed).
+     * Matches the shared timer in Lost City's 377 prayer script. The remainder survives ordinary toggles, and
+     * resistance is read each time so equipment changes take effect on the next drain. Integer arithmetic avoids
+     * rounding each prayer's interval down to a whole number of ticks.
+     *
+     * @return The number of prayer points consumed by this timer execution.
      */
-    fun drain(prayer: CombatPrayer): Boolean {
-        return active.remove(prayer, 1) == 1
+    internal fun drain(): Int {
+        if (activePrayers.isEmpty()) {
+            return 0
+        }
+        drainCounter += activePrayers.sumOf { it.drain } * CombatPrayerDrainAction.DRAIN_INTERVAL
+        val resistance = computeResistance()
+        val points = drainCounter / resistance
+        drainCounter %= resistance
+        return points
     }
 
     /**
-     * Computes how many ticks should elapse between prayer point deductions for [prayer], after applying prayer
-     * resistance from equipment.
-     *
-     * @param prayer The prayer to compute drain ticks for.
-     * @param resistance The effective resistance value to use. Defaults to [computeResistance].
-     * @return The number of ticks per drain cycle.
+     * Computes the prayer drain resistance from the player's current equipment bonus.
      */
-    fun computeDrainTicks(prayer: CombatPrayer, resistance: Int = computeResistance()) =
-        (((0.6 * (resistance / prayer.drain)) * 1000) / 600).toInt()
-
-    /**
-     * Computes the player's prayer drain resistance used by [computeDrainTicks].
-     *
-     * Resistance is derived from a base value plus a boost from the player's equipment prayer bonus
-     * ([EquipmentBonus.PRAYER]).
-     *
-     * @return The effective resistance value.
-     */
-    private fun computeResistance() = CombatPrayer.BASE_RESISTANCE +
-            (CombatPrayer.PRAYER_BONUS_BOOST * player.equipment.getBonus(EquipmentBonus.PRAYER))
+    private fun computeResistance() = (CombatPrayer.BASE_RESISTANCE +
+            CombatPrayer.PRAYER_BONUS_BOOST * player.equipment.getBonus(EquipmentBonus.PRAYER))
+        .coerceAtLeast(CombatPrayer.BASE_RESISTANCE)
 }

@@ -4,6 +4,7 @@ import api.combat.specialAttack.SpecialAttackHandler.attack
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_DAGGER
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
+import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 
 /**
@@ -35,7 +36,8 @@ attack(type = DRAGON_DAGGER,
             .build()
             .resolve()
 
-        secondHit.apply(attack)
+        // Use normal delivery so defence hooks, remaining health, and retaliation also apply to the second hit.
+        victim.submitAction(CombatDamageAction(secondHit, attack, false))
         damage
     }
 }

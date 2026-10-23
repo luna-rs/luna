@@ -40,7 +40,9 @@ class FillWaterBotScript(
     val empty: Int,
     val target: Int,
     duration: Duration,
-    zones: MutableList<SubZone> = mutableListOf(SubZone.DRAYNOR_MAIN)
+    zones: MutableList<SubZone> = mutableListOf(SubZone.SOUTH_FALADOR_FARM,
+                                                SubZone.EDGEVILLE_MAIN,
+                                                SubZone.VARROCK_SQUARE)
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
     companion object {
