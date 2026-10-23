@@ -8,6 +8,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
 import game.skill.cooking.cookFood.Food
 import game.bot.scripts.skills.MakeDoughBotScript
+import game.bot.scripts.skills.MillFlourBotScript
 import game.bot.scripts.skills.CutFoodBotScript
 import game.bot.scripts.skills.AssembleFoodBotScript
 import game.obj.resource.fillable.WaterResource
@@ -30,6 +31,7 @@ import api.predef.rand
  * - All other bots use Rogues' Den, which is the more efficient cooking spot.
  *
  * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
+ * It can also mill flour at a windmill, picking wheat or buying pots first when none are owned.
  * Owned pineapples can also be cut into rings when a knife is available. These recipes grant no experience.
  * Pizza and pie assembly select owned ingredients, including alternate meats and refillable water containers.
  * Owned bowls of nettle tea can be combined with milk at level 20, returning the empty bucket without awarding XP.
@@ -93,7 +95,8 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         val cutting = getBestActivity(bot, level, { it.requiredLevel },
             CutFoodBotScript.RECIPES.keys.map { CutFoodBotScript(bot, it, getDuration(bot)) }
                 .filter { it.isEligible() })
-        return listOfNotNull(getPreparationScript(bot, level), cutting, getAssemblyScript(bot, level)).randomOrNull()
+        val milling = MillFlourBotScript(bot, MillFlourBotScript.pickMill(bot), getDuration(bot))
+        return listOfNotNull(getPreparationScript(bot, level), cutting, getAssemblyScript(bot, level), milling).randomOrNull()
     }
 
     /**
