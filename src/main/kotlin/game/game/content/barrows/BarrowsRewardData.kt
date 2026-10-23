@@ -2,8 +2,8 @@ package game.content.barrows
 
 /**
  * Reviewable reward data from trufitus/Content at 0e7d7a8291d837f48646b2a962f3c5e208e744ad.
- * This is a reconstruction, not proof of 2005 behavior. Its PR explicitly leaves minimum reward
- * quantities unresolved. These data do not roll quantities, award items or activate the chest.
+ * This is a reconstruction, not proof of 2005 behavior. Quantity scaling follows that contribution,
+ * with the known chaos/death/blood minimum rounding discrepancies corrected in BarrowsRewards.
  *
  * @author lare96
  */

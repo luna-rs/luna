@@ -50,7 +50,7 @@ public final class CameraShakeMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player, ByteBuf buffer) {
-        ByteMessage msg = ByteMessage.message(35, buffer);
+        ByteMessage msg = ByteMessage.message(67, buffer);
         msg.put(cameraId);
         msg.put(jitter);
         msg.put(amplitude);

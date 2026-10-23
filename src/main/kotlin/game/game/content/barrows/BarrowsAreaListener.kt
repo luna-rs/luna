@@ -25,10 +25,12 @@ object BarrowsAreaListener : PlayerAreaListener() {
         plr.drainTicks = BarrowsDrain.INTERVAL
         plr.queue(MinimapStateMessageWriter(State.CONCEALED))
         plr.overlays.open(BarrowsOverlay())
+        BarrowsCollapse.enter(plr)
     }
 
     override fun exit(plr: Player) {
         plr.drainTicks = 0
+        BarrowsCollapse.exit(plr)
         BarrowsEncounters.clear(plr)
         plr.queue(MinimapStateMessageWriter(State.NORMAL))
         // Another area may already have opened its overlay during this position change.
@@ -38,6 +40,7 @@ object BarrowsAreaListener : PlayerAreaListener() {
     }
 
     override fun process(plr: Player) {
+        BarrowsCollapse.process(plr)
         if (plr.isAlive && --plr.drainTicks <= 0) {
             plr.drainTicks = BarrowsDrain.INTERVAL
             BarrowsDrain.drain(plr)
