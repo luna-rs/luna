@@ -20,7 +20,8 @@ public enum PersistentVarp {
     RUNNING(173),
     XP_LAMP(261),
     SPLIT_PRIVATE_CHAT(287),
-    ACCEPT_AID(427);
+    ACCEPT_AID(427),
+    FLOUR_BIN(695);
 
     /**
      * All varps within this enum mapped by client value -> PersistentVarp.
