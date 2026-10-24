@@ -31,12 +31,14 @@ val MAX_HIT_BONUS = 0.15
 /**
  * Queues Puncture's second strike, requiring a living, active attacker when the strike executes.
  * Successful delivery still uses normal defence hooks, damage attribution, and retaliation.
+ * Launch callbacks run before the primary melee hit is queued. This strike therefore waits two ticks instead of the
+ * primary hit's one tick, ensuring it lands one tick later even though it enters the victim's action queue first.
  *
  * @param damage The independently resolved second hit.
  * @param source The original special attack providing the attacker and damage callbacks.
  */
 fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
-    damage.victim.submitAction(object : Action<Mob>(damage.victim, ActionType.SOFT, false, 1) {
+    damage.victim.submitAction(object : Action<Mob>(damage.victim, ActionType.SOFT, false, 2) {
         override fun run(): Boolean {
             if (source.attacker.isAlive) {
                 CombatDamageAction(damage, source, true).run()
