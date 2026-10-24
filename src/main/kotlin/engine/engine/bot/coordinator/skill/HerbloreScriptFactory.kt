@@ -2,7 +2,6 @@ package engine.bot.coordinator.skill
 
 import api.bot.script.InventoryBotScript
 import api.bot.script.BotScript
-import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.IdentifyHerbBotScript
@@ -21,8 +20,8 @@ import io.luna.game.model.mob.SkillSet
  *
  * Training selects herb identification or finished-potion mixing. Finished recipes consume an unfinished
  * potion and its secondary ingredient through the existing player dialogue and award their configured XP.
- * Profit mode also considers grinding with an owned pestle and mortar,
- * or unfinished potions with owned identified herbs and water vials. Candidates require their permanent level
+ * Both modes also consider grinding with an owned pestle and mortar,
+ * and unfinished potions with owned identified herbs and water vials. Candidates require their permanent level
  * and supplies in inventory or bank, then use the inherited level/personality selector.
  * Grinding and unfinished-potion preparation award no XP;
  * selecting a profit activity does not guarantee a market margin.
@@ -31,8 +30,8 @@ import io.luna.game.model.mob.SkillSet
  * needed to reach that level. This supplies the initial Herblore unlock while bot questing is unavailable.
  * Normal experience-change listeners handle the level-up; bots already at or above level three receive no XP.
  *
- * When no recipe is available, a short-lived fallback requests unidentified guam and completes immediately.
- * It records demand without buying herbs.
+ * When no recipe is available, identification queues herb gathering until the stable 100-200-guam
+ * batch is available. A failed gathering attempt ends its continuation without recursively gathering.
  *
  * @author lare96
  */
@@ -40,15 +39,7 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         val selectionLevel = ensureMinimumLevel(bot, level)
         getProductionScript(bot, selectionLevel, true)?.let { return it }
-        return object : DynamicBotScript(bot) {
-            override suspend fun run(): Boolean {
-                // The implemented herb-identification recipes begin at level 3.
-                if (bot.herblore.staticLevel >= Herb.GUAM_LEAF.level) {
-                    bot.preferences.raiseWantedItemTarget(Herb.GUAM_LEAF.id, 1_000)
-                }
-                return true
-            }
-        }
+        return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
@@ -76,13 +67,13 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     }
 
     /**
-     * Selects identification, finished potions, or profit-only ingredient/potion preparation with inherited level/personality rules.
+     * Selects identification, finished potions, or ingredient/potion preparation in either mode with inherited level/personality rules.
      *
      * Scripts use their default processing zones and recheck current level and safety during execution.
      *
      * @param bot The bot whose stock and personality determine eligibility and selection.
      * @param level The Herblore level supplied by the coordinator to the inherited recipe selector.
-     * @param training Whether to exclude grinding and unfinished potions, which award no experience.
+     * @param training Retained for callers; both modes permit preparation needed to reach finished potions.
      * @return An eligible script, or null when no usable owned recipe is available in the requested mode.
      */
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
@@ -92,12 +83,10 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(FinishedPotion.entries.map { MakePotionBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
-            if (!training) {
-                addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
-                    .filter { it.isEligible() }.map { it.requiredLevel to it })
-                addAll(UnfPotion.entries.map { MakeUnfPotionBotScript(bot, it, duration) }
-                    .filter { it.isEligible() }.map { it.requiredLevel to it })
-            }
+            addAll(Ingredient.entries.map { GrindIngredientBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
+            addAll(UnfPotion.entries.map { MakeUnfPotionBotScript(bot, it, duration) }
+                .filter { it.isEligible() }.map { it.requiredLevel to it })
         }
         return getBestActivity(bot, level, { it.first }, candidates)?.second
     }

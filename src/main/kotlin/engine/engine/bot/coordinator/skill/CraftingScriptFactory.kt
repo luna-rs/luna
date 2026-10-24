@@ -82,7 +82,6 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             getProductionScript(bot, level, true)?.let { return it }
         }
 
-        val hides = getUntannedHides(bot)
         val craftable = getActivities(level, { it.level }, HideArmor.ALL)
             .filter { CraftArmorBotScript.hasSupplies(bot, it) }
 
@@ -91,10 +90,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (craftArmor != null) {
             return CraftArmorBotScript(bot, craftArmor, getDuration(bot))
         }
-        if (hides >= CollectHidesBotScript.hideTarget(bot)) {
-            return TanHideBotScript(bot, getDuration(bot))
-        }
-        return getCollectHidesScript(bot, zones)
+        return TanHideBotScript(bot, getDuration(bot))
     }
 
     override fun getProfitScript(
@@ -109,11 +105,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             zones += SubZone.FLAX_SPINNING_MAIN
             return SpinTextileBotScript(bot, getDuration(bot))
         }
-        if (getUntannedHides(bot) >= CollectHidesBotScript.hideTarget(bot)) {
+        if (getUntannedHides(bot) > 0 || randBoolean()) {
             return TanHideBotScript(bot, getDuration(bot))
-        }
-        if (randBoolean()) {
-            return getCollectHidesScript(bot, zones)
         }
         zones += SubZone.SOUTH_SEERS_VILLAGE_FLAX
         return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
