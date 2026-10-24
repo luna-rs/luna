@@ -31,6 +31,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
     /**
      * A [CombatAttack] implementation that makes the player's next attack perform a smash animation.
+     * The delayed smash only starts while both participants are alive and active.
      *
      * @author lare96
      */
@@ -40,6 +41,9 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         override fun attack() {
             attacker.submitAction(object : LockedAction(attacker, false, 2) {
                 override fun run(): Boolean {
+                    if (!attacker.isAlive || !victim.isAlive) {
+                        return true
+                    }
                     attacker.animation(Animation(1755, AnimationPriority.HIGH))
                     attacker.sendMessage("You smash the Gargoyle into pieces using your Rock hammer.")
                     victim.submitAction(CombatDamageAction(nextDamage, this@GargoyleSmashAttack, true))

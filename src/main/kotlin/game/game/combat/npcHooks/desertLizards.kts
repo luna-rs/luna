@@ -20,6 +20,10 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     val ANIMATION = Animation(1574)
     val GRAPHIC = Graphic(456, 0, 0)
 
+    /**
+     * Starts the cooling sequence only while both participants are alive and active.
+     * Once the water has been thrown, its delayed finish may still land after the player's death.
+     */
     combat(2804, 2805, 2806) {
         defend {
             val damageAmount = damage?.rawAmount ?: 0
@@ -34,6 +38,9 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                         }
 
                         override fun run(): Boolean {
+                            if (!npc.isAlive || (executions == 0 && !other.isAlive)) {
+                                return true
+                            }
                             if (executions == 0) {
                                 other.animation(ANIMATION)
                                 npc.graphic(GRAPHIC)

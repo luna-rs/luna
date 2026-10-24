@@ -38,6 +38,8 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * the player performs the salting sequence and the slug is killed shortly after.
      *
      * Without salt, the slug remains prepared for execution and cannot be reduced below one hitpoint by these hits.
+     * The salting sequence cannot start after either participant dies or leaves the world. Once salt has been
+     * applied, its delayed finish may still land after the player's death.
      */
     combat(1622, 1623) {
         defend {
@@ -53,6 +55,9 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                         }
 
                         override fun run(): Boolean {
+                            if (!npc.isAlive || (executions == 0 && !other.isAlive)) {
+                                return true
+                            }
                             if (executions == 0) {
                                 other.animation(SALT_ANIMATION)
                                 npc.graphic(SALT_GRAPHIC)
