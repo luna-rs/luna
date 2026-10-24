@@ -1,10 +1,12 @@
 package engine.combat.status.hooks
 
+import api.combat.npc.NpcCombatHandler
 import api.predef.ext.*
 import com.google.gson.JsonObject
 import engine.combat.status.StatusEffect
 import engine.combat.status.StatusEffectType
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Hit.HitType
 import kotlin.math.floor
@@ -16,6 +18,8 @@ import kotlin.math.max
  * Poison runs every `30` ticks. Players take damage using the current severity before it decreases; NPCs decrease
  * severity before calculating damage. This preserves the player's final one-damage tick and the separate NPC cadence.
  * The effect ends when poison severity reaches zero or when the mob has active antipoison.
+ * NPC combat registrations can prevent lethal poison for creatures that require a finishing item, even before
+ * an ordinary hit prepares them for execution. Capped zero-damage ticks do not emit a poison hitsplat.
  *
  * @param mob The mob affected by poison.
  * @param severity The initial poison severity.
@@ -62,8 +66,11 @@ class PoisonStatusEffect(mob: Mob, private var severity: Int) :
         }
         val damageSeverity = if (mob is Player) severity-- else --severity
         if (damageSeverity > 0) {
-            val damage = floor((damageSeverity + 4.0) / 5.0).toInt()
-            mob.damage(max(1, damage), HitType.POISON)
+            val damage = max(1, floor((damageSeverity + 4.0) / 5.0).toInt())
+            val appliedDamage = if (mob is Npc) NpcCombatHandler.capPoisonDamage(mob, damage) else damage
+            if (appliedDamage > 0) {
+                mob.damage(appliedDamage, HitType.POISON)
+            }
         }
         return severity <= 0
     }

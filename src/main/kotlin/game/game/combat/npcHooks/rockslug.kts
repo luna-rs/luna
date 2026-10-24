@@ -42,6 +42,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * applied, its delayed finish may still land after the player's death.
      */
     combat(1622, 1623) {
+        poisonCanKill = false
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {

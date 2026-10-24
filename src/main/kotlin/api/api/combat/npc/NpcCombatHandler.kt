@@ -125,4 +125,17 @@ object NpcCombatHandler {
         }
         return null
     }
+
+    /**
+     * Limits poison damage for NPCs whose combat registration requires a separate finishing blow.
+     * Uses the same type-before-id lookup as attack and defence hooks, including the NPC's current transformed id.
+     *
+     * @param npc The poisoned NPC.
+     * @param amount The requested poison damage.
+     * @return Non-negative damage that leaves at least one hitpoint when poison is not allowed to kill.
+     */
+    fun capPoisonDamage(npc: Npc, amount: Int): Int {
+        val maximum = if (resolve(npc) { it.poisonCanKill } == false) (npc.health - 1).coerceAtLeast(0) else npc.health
+        return amount.coerceIn(0, maximum.coerceAtLeast(0))
+    }
 }

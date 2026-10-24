@@ -74,6 +74,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * prevents healing and duplicate damage credit. The capped triggering hit is still delivered normally.
      */
     combat(1610) {
+        poisonCanKill = false
         defend {
             val healthBeforeTransform = npc.health
             val amount = damage?.rawAmount ?: 0
@@ -92,6 +93,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * The smash delivers attributed damage without re-entering this finishing hook.
      */
     combat(1611) {
+        poisonCanKill = false
         defend {
             if (source is GargoyleSmashAttack) {
                 damage = null
