@@ -17,10 +17,15 @@ val ANIMATION = 1062
  */
 val GRAPHIC = Graphic(252, 100, 0)
 
+/**
+ * Puncture increases each strike's maximum hit by 15 percent before its independent damage roll.
+ */
+val MAX_HIT_BONUS = 0.15
+
 attack(type = DRAGON_DAGGER,
        drain = 25,
        attackBonus = 0.25,
-       damageBonus = 0.15) {
+       strengthBonus = MAX_HIT_BONUS) {
 
     // Use the dragon dagger special attack animation.
     attack { melee(ANIMATION) }
@@ -31,7 +36,7 @@ attack(type = DRAGON_DAGGER,
         attacker.graphic(GRAPHIC)
 
         val secondHit = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE)
-            .setPercentBonusDamage(damageBonus)
+            .setPercentBonusStrength(strengthBonus)
             .setFlatBonusAccuracy(attackBonus)
             .build()
             .resolve()
