@@ -19,11 +19,16 @@ val GRAPHIC = Graphic(274, 100, 0)
  */
 val MAX_HIT_BONUS = 0.10
 
+/**
+ * Impale adds one recovery tick to the weapon's normal attack delay before the attacker can strike again.
+ */
+val EXTRA_ATTACK_DELAY = 1
+
 attack(type = RUNE_CLAWS,
        drain = 25,
        strengthBonus = MAX_HIT_BONUS) {
 
-    attack { melee(ANIMATION) }
+    attack { melee(ANIMATION, speed = atkCombat.weapon.speed + EXTRA_ATTACK_DELAY) }
 
     launched { attacker.graphic(GRAPHIC); damage }
 }
