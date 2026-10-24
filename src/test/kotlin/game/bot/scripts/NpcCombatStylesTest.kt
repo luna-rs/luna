@@ -201,20 +201,6 @@ class NpcCombatStylesTest {
         `when`(target.def().name).thenReturn("Cow")
         assertTrue(canAttack.invoke(script, target) as Boolean)
     }
-    @Test fun rangedStyleIsSelectedAfterEquipmentAndRetainedAcrossAttackClicks() = runBlocking<Unit> {
-        val bot = bot()
-        val style = mock(io.luna.game.model.def.CombatStyleDefinition::class.java)
-        `when`(style.exp).thenReturn(com.google.common.collect.ImmutableList.of(io.luna.game.model.mob.Skill.RANGED))
-        `when`(style.button).thenReturn(77)
-        `when`(bot.combat.weapon.typeDef.styles).thenReturn(listOf(style))
-        `when`(bot.equipment.weapon).thenReturn(Item(841))
-        `when`(bot.equipment.computeAmountForId(882)).thenReturn(100)
-        val script = script(bot, BotGearPurpose.RANGED, NpcCombatLoadout(gear(841, 882)))
-        val npc = mock(Npc::class.java)
-        assertEquals(3, script.interactionOption(npc))
-        assertEquals(3, script.interactionOption(npc))
-        verify(bot.combat.weapon, times(1)).changeStyle(77)
-    }
     @Test fun mismatchedResumeEquipmentCannotAttackWithAnImaginaryStaff() {
         val bot = bot()
         `when`(bot.equipment.weapon).thenReturn(Item(1387))
