@@ -6,6 +6,7 @@ import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.social.BotConversations
 import api.bot.social.BotTradeScams
+import api.bot.social.BotSocialInteractions
 import api.bot.social.SocialBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
@@ -75,14 +76,14 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
 
     override suspend fun run(): Boolean {
         if (ended()) return true
+        if (BotSocialInteractions.participate(bot)) {
+            delay(1.seconds)
+            return false
+        }
         if (!inside()) {
             arrived = false
             BotConversations.cancel(bot)
             if (!arrive()) return true
-        }
-        if (BotTradeScams.participate(bot)) {
-            delay(1.seconds)
-            return false
         }
         BotConversations.tick(bot)
         val now = System.currentTimeMillis()
@@ -101,14 +102,14 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
     override fun canSocialize(): Boolean = arrived && !ended() && inside()
 
     override fun paused() {
-        BotTradeScams.cancel(bot)
+        BotSocialInteractions.cancel(bot)
         cancelTravel()
         arrived = false
         BotConversations.cancel(bot)
     }
 
     override suspend fun finish() {
-        BotTradeScams.cancel(bot)
+        BotSocialInteractions.cancel(bot)
         cancelTravel()
         arrived = false
         BotConversations.cancel(bot)

@@ -45,6 +45,7 @@ class EnchantJewelleryBotScript(
     bot: Bot, val type: EnchantJewelleryType, val inputId: Int, duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_MAGIC)
 ) : InventoryBotScript(bot, duration, zones) {
+    override val trainingSkill = SKILL_MAGIC
     override val verifiedProductionWithdrawals = true
 
     companion object {

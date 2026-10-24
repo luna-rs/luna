@@ -39,6 +39,7 @@ class BuryBoneBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_PRAYER)
 ) : InventoryBotScript(bot, duration, zones) {
+    override val trainingSkill = SKILL_PRAYER
     override val verifiedProductionWithdrawals = true
 
     companion object {

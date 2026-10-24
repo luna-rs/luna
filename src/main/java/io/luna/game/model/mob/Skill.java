@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import api.bot.action.BotCombatActionHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
@@ -256,14 +257,17 @@ public final class Skill {
      * Non-positive amounts are ignored.
      * <p>
      * For non-bot mobs, the raw amount is multiplied by the configured game experience multiplier.
-     * Bots always receive experience using a multiplier of {@code 1.0}.
+     * Bots always receive experience using a multiplier of {@code 1.0}, with individual awards limited by
+     * {@link BotCombatActionHandler#limitExperience(Bot, Skill, double)} to preserve their account builds.
      *
      * @param amount The raw amount of experience to add.
      */
     public void addExperience(double amount) {
         if (amount > 0) {
-            double multiplier = set.getMob() instanceof Bot ? 1.0 : Luna.settings().game().experienceMultiplier();
-            setExperience(experience + (amount * multiplier));
+            double awarded = set.getMob() instanceof Bot bot ?
+                    BotCombatActionHandler.limitExperience(bot, this, amount) :
+                    amount * Luna.settings().game().experienceMultiplier();
+            setExperience(experience + awarded);
         }
     }
 

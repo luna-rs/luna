@@ -41,19 +41,9 @@ object BotTradeScams {
     }
 
     /**
-     * One live interaction per participant; no remote bot references are serialized.
+     * Runtime recruitment cooldown; shared interaction ownership is held by BotSocialInteractions.
      */
-    private var Bot.scam: Session? by Attr.nullableObj(Session::class)
     private var Bot.nextScam by Attr.long()
-
-    /**
-     * Returns live ownership, first releasing expired sessions or those whose scripts were replaced.
-     */
-    fun engaged(bot: Bot): Boolean {
-        val session = bot.scam ?: return false
-        if (!session.valid()) session.close()
-        return !session.ended
-    }
 
     /**
      * Starts an authored pitch only when both current scripts explicitly expose social availability.
@@ -69,38 +59,13 @@ object BotTradeScams {
         val lines = BotScamSpeechPool.exchange(kind.pitch) ?: return false
         val pitch = BotConversations.start(actor, victim, lines) ?: return false
         val session = Session(actor, victim, kind, pitch)
-        actor.scam = session
-        victim.scam = session
+        if (!BotSocialInteractions.claim(listOf(actor, victim), session)) {
+            pitch.close()
+            return false
+        }
         actor.nextScam = now + 60_000
         victim.nextScam = now + 10 * 60_000
         return true
-    }
-
-    /**
-     * Runs this participant's pending work before its normal idle or marketplace loop. Each script owns its coroutine.
-     */
-    suspend fun participate(bot: Bot): Boolean {
-        val session = bot.scam ?: return false
-        if (!session.valid()) {
-            session.close()
-            return true
-        }
-        if (!session.trading) {
-            session.pitch.tick()
-            if (session.pitch.ended) {
-                if (!session.pitch.completed) session.close()
-                else session.decide()
-            }
-        }
-        if (session.trading && !session.ended) session.trade(bot)
-        return true
-    }
-
-    /**
-     * Called by script pause, banking and finish hooks. Completed native loss is observed before owned screens close.
-     */
-    fun cancel(bot: Bot) {
-        bot.scam?.close()
     }
 
     /**
@@ -157,7 +122,7 @@ object BotTradeScams {
      *
      * @author lare96
      */
-    private class Session(val actor: Bot, val victim: Bot, val kind: Kind, val pitch: BotConversations.Conversation) {
+    private class Session(val actor: Bot, val victim: Bot, val kind: Kind, val pitch: BotConversations.Conversation) : BotSocialInteractions.Session {
         private val bots = listOf(actor, victim)
         private val scripts = bots.map { it.scriptStack.current() }
         private val deadline = System.currentTimeMillis() + 8 * 60_000
@@ -172,10 +137,7 @@ object BotTradeScams {
         var ended = false
             private set
 
-        /**
-         * Rechecks participants and captured activity ownership across every suspension.
-         */
-        fun valid(): Boolean = !ended && System.currentTimeMillis() < deadline &&
+        override fun valid(): Boolean = !ended && System.currentTimeMillis() < deadline &&
             actor.isWithinDistance(victim, 8) && bots.indices.all { index ->
                 val bot = bots[index]
                 bot.state == EntityState.ACTIVE && bot.scriptStack.current() === scripts[index] &&
@@ -183,6 +145,16 @@ object BotTradeScams {
                     bot.reflex.activeReflex == null && bot.combat.target == null &&
                     !bot.ignores.contains(bots[1 - index].usernameHash)
             }
+
+        override suspend fun participate(bot: Bot) {
+            if (!trading) {
+                pitch.tick()
+                if (pitch.ended) {
+                    if (!pitch.completed) close() else decide()
+                }
+            }
+            if (trading && !ended) trade(bot)
+        }
 
         /**
          * Makes one independent victim decision only after every pitch line has been delivered.
@@ -262,22 +234,19 @@ object BotTradeScams {
             scripts.forEach { (it as? SocialBotScript)?.socialTradeCompleted() }
         }
 
-        /**
-         * Releases the paired claim and matching native trade without touching another partner's replacement windows.
-         */
-        fun close() {
+        override fun close() {
             if (ended) return
             recordCompletion()
             ended = true
             pitch.close()
             bots.forEach { bot ->
                 val other = if (bot === actor) victim else actor
-                if (bot.scam === this) {
+                if (BotSocialInteractions.owns(bot, this)) {
                     BotTradeStage(bot, other).decline()
                     if (bot.tradingWith == other.index) bot.tradingWith = -1
-                    bot.scam = null
                 }
             }
+            BotSocialInteractions.release(bots, this)
         }
 
         /**

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import engine.bot.coordinator.CombatCoordinator;
 import engine.bot.coordinator.GeneralActivityCoordinator;
 import engine.bot.coordinator.MerchantingCoordinator;
+import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.MinigameCoordinator;
 import engine.bot.coordinator.SocializingCoordinator;
 import engine.bot.coordinator.skill.SkillingCoordinator;
@@ -45,7 +46,7 @@ public enum BotActivity {
     /**
      * Player-versus-player combat, including wilderness fights and PK strategies.
      */
-    PKING(new SkillingCoordinator(true)),
+    PKING(PkingCoordinator.INSTANCE),
 
     /**
      * Economic interactions, such as trading with other bots or players.

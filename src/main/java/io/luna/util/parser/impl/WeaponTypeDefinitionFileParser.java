@@ -68,7 +68,12 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             CombatStance stance = CombatStance.valueOf(obj.get("stance").getAsString());
             int range = obj.get("range").getAsInt();
             ImmutableList<Integer> exp = Arrays.stream(GsonUtils.getAsType(obj.get("exp"), String[].class)).
-                    map(Skill::getId).collect(ImmutableList.toImmutableList());
+                    flatMap(name -> "SHARED".equalsIgnoreCase(name) ?
+                            java.util.stream.Stream.of(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE) :
+                            java.util.stream.Stream.of(Skill.IDS.stream()
+                                    .filter(skill -> Skill.getName(skill).equalsIgnoreCase(name)).findFirst()
+                                    .orElseThrow(() -> new IllegalArgumentException("Unknown combat XP skill: " + name))))
+                    .collect(ImmutableList.toImmutableList());
             styles.add(new CombatStyleDefinition(styleType, speed, attackAnimation, defenceAnimation, config, bonus,
                     button, stance, range, exp));
         }

@@ -2,6 +2,7 @@ package game.bot.scripts.scams
 
 import api.bot.social.BotConversations
 import api.bot.social.BotTradeScams
+import api.bot.social.BotSocialInteractions
 import api.bot.zone.SubZone
 import api.predef.world
 import engine.bot.speech.BotScamSpeechPool
@@ -26,7 +27,7 @@ class TradeScamBotScript(bot: Bot, destination: SubZone, deadline: Long,
         val victim = world.locator.findViewablePlayers(bot) {
             it is Bot && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
         }.filterIsInstance<Bot>().shuffled().firstOrNull { BotTradeScams.approach(bot, it, kind) }
-        if (victim == null && !BotTradeScams.engaged(bot)) {
+        if (victim == null && !BotSocialInteractions.engaged(bot)) {
             BotScamSpeechPool.take(bot, kind.advert)?.let { bot.speechStack.push(BotSpeech(it, 4)) }
         }
     }

@@ -1,8 +1,10 @@
 package io.luna.game.model.mob.combat.attack;
 
+import api.bot.action.BotCombatActionHandler;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -118,6 +120,9 @@ public abstract class CombatAttack<T extends Mob> {
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);
             return;
+        }
+        if (attacker instanceof Player && victim instanceof Player) {
+            BotCombatActionHandler.observePvpAttack((Player) attacker, (Player) victim);
         }
         if (!ignoreAttackDelay) {
             attacker.getCombat().setAttackDelay(delay);

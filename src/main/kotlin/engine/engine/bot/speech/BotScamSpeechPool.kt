@@ -20,6 +20,7 @@ object BotScamSpeechPool : BotSpeechPool<BotScamSpeechPool.ScamSpeech>("scams.js
      */
     enum class ScamSpeech {
         GOLD, GEAR, PK,
+        LURE_ADVERT, LURE_PITCH, LURE_TRAVEL,
         DOUBLING_ADVERT, TRIMMING_ADVERT,
         DOUBLING_PITCH, TRIMMING_PITCH,
         DOUBLING_SUCCESS, TRIMMING_SUCCESS, REFUSAL
@@ -64,5 +65,5 @@ object BotScamSpeechPool : BotSpeechPool<BotScamSpeechPool.ScamSpeech>("scams.js
      * Retains the existing gold, gear and future lure advertisements alongside scenario-specific dialogue additions.
      */
     private val phrasesOnly = setOf(ScamSpeech.GOLD, ScamSpeech.GEAR, ScamSpeech.PK,
-        ScamSpeech.DOUBLING_ADVERT, ScamSpeech.TRIMMING_ADVERT)
+        ScamSpeech.DOUBLING_ADVERT, ScamSpeech.TRIMMING_ADVERT, ScamSpeech.LURE_ADVERT)
 }

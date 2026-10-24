@@ -7,6 +7,7 @@ import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
 import api.bot.social.BotTradeScams
+import api.bot.social.BotSocialInteractions
 import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -186,7 +187,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
-        BotTradeScams.cancel(bot)
+        BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
         activeTrade?.decline()
@@ -205,7 +206,6 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun executeInZone(): Boolean {
-        if (BotTradeScams.participate(bot)) return true
         BotConversations.tick(bot)
         if (BotConversations.engaged(bot)) return true
         if (socialStockChanged) {
@@ -232,6 +232,8 @@ class TradeBotScript(bot: Bot,
         if (prepared && !forceBanking) sendMessage()
         return true
     }
+
+    override suspend fun beforeZoneWork(): Boolean = BotSocialInteractions.participate(bot)
 
     override fun snapshot(): BotScriptData? = null
 
@@ -268,7 +270,7 @@ class TradeBotScript(bot: Bot,
      */
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
-            !BotTradeScams.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
+            !BotSocialInteractions.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
             buying != other.buying && marketplace.contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
@@ -496,7 +498,7 @@ class TradeBotScript(bot: Bot,
 
     /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
     private fun canTradeWith(other: Player): Boolean {
-        if (BotTradeScams.engaged(bot) || other is Bot && BotTradeScams.engaged(other)) return false
+        if (BotSocialInteractions.engaged(bot) || other is Bot && BotSocialInteractions.engaged(other)) return false
         if (BotConversations.engaged(bot) || other is Bot && BotConversations.engaged(other)) return false
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
@@ -517,12 +519,12 @@ class TradeBotScript(bot: Bot,
     }
 
     override fun onPaused() {
-        BotTradeScams.cancel(bot)
+        BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
-        BotTradeScams.cancel(bot)
+        BotSocialInteractions.cancel(bot)
         prepared = false
         BotConversations.cancel(bot)
         return true

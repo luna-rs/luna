@@ -7,6 +7,7 @@ import api.predef.*
 import game.bot.scripts.PartyRoomDonations
 import game.bot.scripts.IdleBotScript
 import game.bot.scripts.scams.TradeScamBotScript
+import game.bot.scripts.scams.PkScamBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 
@@ -25,7 +26,7 @@ object SocializingCoordinator : ProgressiveCoordinator() {
         val minutes = if (bot.preferences.likesActivity(BotActivity.SOCIALIZING)) rand(10, 30) else rand(5, 15)
         val deadline = System.currentTimeMillis() + minutes * 60_000L
         return if (bot.preferences.isScammer && rand(0.25 + bot.personality.confidence * 0.5))
-            TradeScamBotScript(bot, destination, deadline)
+            if (rand(0.25)) PkScamBotScript(bot, deadline) else TradeScamBotScript(bot, destination, deadline)
         else IdleBotScript(bot, destination, deadline)
     }
 }

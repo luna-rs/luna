@@ -55,7 +55,7 @@ object BotConversations {
      * Explicit opt-in from a running script, with invalid previous ownership released before reuse.
      */
     fun available(bot: Bot): Boolean {
-        if (BotTradeScams.engaged(bot) || engaged(bot)) return false
+        if (BotSocialInteractions.engaged(bot) || engaged(bot)) return false
         val script = bot.scriptStack.current()
         return script is SocialBotScript && script.isRunning() && ready(bot) && script.canSocialize()
     }
@@ -75,10 +75,12 @@ object BotConversations {
      */
     fun start(first: Bot, second: Bot, lines: List<String>,
               allowMovement: Boolean = false,
-              clock: () -> Long = { System.nanoTime() / 1_000_000 }): Conversation? {
+              clock: () -> Long = { System.nanoTime() / 1_000_000 },
+              interaction: BotSocialInteractions.Session? = null): Conversation? {
         if (first === second || lines.size !in 2..24 || lines.any { it.isBlank() || it.length > 80 } ||
-            !available(first) || !available(second) || !near(first, second)) return null
-        val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock)
+            !availableTo(first, interaction, allowMovement) || !availableTo(second, interaction, allowMovement) ||
+            !near(first, second)) return null
+        val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock, interaction)
         if (!first.speechStack.reserveConversation(session) { session.valid() }) return null
         if (!second.speechStack.reserveConversation(session) { session.valid() }) {
             first.speechStack.releaseConversation(session)
@@ -87,6 +89,17 @@ object BotConversations {
         first.conversation = session
         second.conversation = session
         return session
+    }
+
+    /**
+     * An existing owner may continue talking during its journey without reopening recruitment. It must still own
+     * both bots, retain their scripts and meet native speech/safety conditions; unrelated callers cannot bypass a claim.
+     */
+    private fun availableTo(bot: Bot, interaction: BotSocialInteractions.Session?, allowMovement: Boolean): Boolean {
+        if (interaction == null) return available(bot)
+        val script = bot.scriptStack.current()
+        return BotSocialInteractions.owns(bot, interaction) && interaction.valid() &&
+            script is SocialBotScript && script.isRunning() && ready(bot, allowMovement)
     }
 
     /**
@@ -117,7 +130,8 @@ object BotConversations {
      */
     class Conversation internal constructor(private val bots: List<Bot>, private val lines: List<String>,
                                              private val allowMovement: Boolean,
-                                             private val clock: () -> Long) {
+                                             private val clock: () -> Long,
+                                             private val interaction: BotSocialInteractions.Session?) {
         /**
          * Script identities captured at acquisition; a paused or replaced activity cannot keep talking.
          */
@@ -146,7 +160,8 @@ object BotConversations {
             near(bots[0], bots[1]) && bots.indices.all {
                 val script = bots[it].scriptStack.current()
                 script === scripts[it] && script is SocialBotScript && script.isRunning() &&
-                    ready(bots[it], allowMovement) && script.canSocialize()
+                    ready(bots[it], allowMovement) && (if (interaction == null) script.canSocialize()
+                    else BotSocialInteractions.owns(bots[it], interaction) && interaction.valid())
             }
 
         /**

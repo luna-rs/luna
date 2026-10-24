@@ -206,6 +206,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return true
         }
 
+        if (beforeZoneWork()) {
+            bot.naturalMicroDelay()
+            return false
+        }
+
         // A failed banking attempt keeps forceBanking set. Retry it from here instead of travelling
         // back to the work zone without the supplies that sent us to the bank.
         if (forceBanking && activeZone != null) {
@@ -276,6 +281,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * @return `true` if {@code zone} is still usable, or `false` to reject it.
      */
     abstract suspend fun executeInZone(): Boolean
+
+    /**
+     * Services an activity-owned interlude before banking or returning to a work zone. Returning true consumes this
+     * cycle while retaining normal safety, duration and pause handling. Ordinary zoned activities bypass this hook.
+     */
+    protected open suspend fun beforeZoneWork(): Boolean = false
 
     /**
      * Rejoins a precise marketplace work tile after initial travel, banking or displacement.
