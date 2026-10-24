@@ -286,7 +286,7 @@ enum class SubZone(
      * - 3 adamant
      */
     DWARVEN_MINE(
-        inside = Position( 3057, 9767),
+        inside = Position(3058, 9776),
         area = SimpleBoxArea.ofRadius(2959, 9753, 110, 104),
         parent = { FALADOR }),
 
