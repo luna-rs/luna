@@ -6,6 +6,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_DAGGER
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
@@ -29,6 +30,11 @@ val GRAPHIC = Graphic(252, 100, 0)
 val MAX_HIT_BONUS = 0.15
 
 /**
+ * Puncture boosts each strike's offensive roll by 15 percent before comparison with the target's defence.
+ */
+val ATTACK_ROLL_PERCENT = 115
+
+/**
  * Queues Puncture's second strike, requiring a living, active attacker when the strike executes.
  * Successful delivery still uses normal defence hooks, damage attribution, and retaliation.
  * Launch callbacks run before the primary melee hit is queued. This strike therefore waits two ticks instead of the
@@ -50,7 +56,7 @@ fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
 
 attack(type = DRAGON_DAGGER,
        drain = 25,
-       attackBonus = 0.25,
+       attackRollPercent = ATTACK_ROLL_PERCENT,
        strengthBonus = MAX_HIT_BONUS) {
 
     // Use the dragon dagger special attack animation.
@@ -63,7 +69,7 @@ attack(type = DRAGON_DAGGER,
 
         val secondHit = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE)
             .setPercentBonusStrength(strengthBonus)
-            .setFlatBonusAccuracy(attackBonus)
+            .setBaseAccuracy(CombatFormula.calculateHitChance(attacker, victim, CombatDamageType.MELEE, attackRollPercent))
             .build()
             .resolve()
 

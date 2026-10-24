@@ -216,7 +216,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      *
      * Damage is calculated using the standard combat damage pipeline, with the special attack's accuracy bonus,
      * optional base max hit, strength bonus to maximum damage, and damage bonus applied on top.
-     * An offensive roll multiplier is applied before hit probability is calculated; flat accuracy is added afterward.
+     * An integer offensive roll percentage is applied before hit probability is calculated; flat accuracy is added afterward.
      *
      * @param other The mob receiving the damage.
      * @param type The combat damage type to resolve.
@@ -230,8 +230,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
         if (receiver.maxHit != null) {
             request.setBaseMaxHit(receiver.maxHit)
         }
-        if (receiver.attackRollMultiplier != 1.0) {
-            request.setBaseAccuracy(CombatFormula.calculateHitChance(attacker, other, type, receiver.attackRollMultiplier))
+        if (receiver.attackRollPercent != 100) {
+            request.setBaseAccuracy(CombatFormula.calculateHitChance(attacker, other, type, receiver.attackRollPercent))
         }
         return request.build().resolve()
     }

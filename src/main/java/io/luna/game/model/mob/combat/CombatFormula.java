@@ -77,31 +77,31 @@ public final class CombatFormula {
      * @return The hit chance percentage.
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type) {
-        return calculateHitChance(attacker, victim, type, 1.0);
+        return calculateHitChance(attacker, victim, type, 100);
     }
 
     /**
      * Calculates hit chance after multiplying the offensive roll, before comparing it with the defensive roll.
      * Special attack accuracy bonuses modify this roll rather than adding percentage points to final hit chance.
+     * Integer percentage scaling avoids floating-point rounding errors and temporary decimal objects. A long
+     * intermediate safely holds the product of the integer base roll and percentage before division by 100.
      *
      * @param attacker The attacking mob.
      * @param victim The defending mob.
      * @param type The damage type being checked.
-     * @param attackRollMultiplier A finite, non-negative multiplier; {@code 1.0} preserves the ordinary roll.
+     * @param attackRollPercent A non-negative percentage; {@code 100} preserves the ordinary roll.
      * @return The resulting hit probability.
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type,
-                                          double attackRollMultiplier) {
-        if (!Double.isFinite(attackRollMultiplier) || attackRollMultiplier < 0.0) {
-            throw new IllegalArgumentException("Attack roll multiplier must be finite and non-negative.");
+                                          int attackRollPercent) {
+        if (attackRollPercent < 0) {
+            throw new IllegalArgumentException("Attack roll percentage must be non-negative.");
         }
         // An NPC's attack style bonus describes its melee attack, so its ranged attacks need their own.
         EquipmentBonus attackStyleBonus = type == CombatDamageType.MAGIC ? EquipmentBonus.MAGIC_ATTACK :
                 type == CombatDamageType.RANGED ? EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
-        double attackRoll = calculateAttackRoll(attacker, attackStyleBonus, type);
-        if (attackRollMultiplier != 1.0) {
-            attackRoll = Math.floor(attackRoll * attackRollMultiplier);
-        }
+        double attackRoll = Math.floorDiv((long) calculateAttackRoll(attacker, attackStyleBonus, type) *
+                attackRollPercent, 100L);
         double defenceRoll = type == CombatDamageType.MAGIC ?
                 calculateMagicDefenceRoll(victim) :
                 calculatePhysicalDefenceRoll(victim, attackStyleBonus);

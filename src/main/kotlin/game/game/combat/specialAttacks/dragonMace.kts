@@ -22,11 +22,11 @@ val MAX_HIT_BONUS = 0.50
 /**
  * Shatter boosts the offensive roll by 25 percent before comparison with the target's defence.
  */
-val ATTACK_ROLL_MULTIPLIER = 1.25
+val ATTACK_ROLL_PERCENT = 125
 
 attack(type = DRAGON_MACE,
        drain = 25,
-       attackRollMultiplier = ATTACK_ROLL_MULTIPLIER,
+       attackRollPercent = ATTACK_ROLL_PERCENT,
        strengthBonus = MAX_HIT_BONUS) {
 
     attack { melee(ANIMATION) }

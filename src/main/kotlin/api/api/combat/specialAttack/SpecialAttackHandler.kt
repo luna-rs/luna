@@ -111,7 +111,7 @@ object SpecialAttackHandler {
      * @param attackBonus A flat bonus applied to the special attack's accuracy.
      * @param strengthBonus A percentage-based bonus applied to damage.
      * @param maxHit An optional base max-hit override.
-     * @param attackRollMultiplier Multiplies the offensive roll before calculating hit probability.
+     * @param attackRollPercent Scales the offensive roll by an integer percentage; 100 preserves it.
      * @param action The DSL block used to configure the special attack.
      */
     fun attack(type: SpecialAttackType,
@@ -122,7 +122,7 @@ object SpecialAttackHandler {
                strengthBonus: Double = 0.0,
                damageBonus: Double = 0.0,
                maxHit: Int? = null,
-               attackRollMultiplier: Double = 1.0,
+               attackRollPercent: Int = 100,
                action: SpecialAttackDataReceiver.() -> Unit) {
         val receiver = SpecialAttackDataReceiver(drain,
                                                  damageType,
@@ -132,7 +132,7 @@ object SpecialAttackHandler {
                                                  damageBonus,
                                                  maxHit,
                                                  false,
-                                                 attackRollMultiplier)
+                                                 attackRollPercent)
         action(receiver)
         specialAttacks[type] = receiver
     }
