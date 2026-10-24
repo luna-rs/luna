@@ -128,6 +128,40 @@ public final class CombatFormula {
                 calculateMagicDefenceRoll(victim) :
                 calculatePhysicalDefenceRoll(victim, meleeDefenceBonus == null ?
                         attackStyleBonus : meleeDefenceBonus.getOpposite());
+        return calculateHitChanceFromRolls(attackRoll, defenceRoll);
+    }
+
+    /**
+     * Captures a player's ranged offensive roll, including current level, prayer, stance, and equipment bonuses.
+     * Delayed secondary attacks can retain this value without reading equipment changed after launch.
+     *
+     * @param attacker The attacking player.
+     * @return The ranged offensive roll before any special attack multiplier.
+     */
+    public static int calculateRangedAttackRoll(Player attacker) {
+        return calculateAttackRoll(attacker, EquipmentBonus.RANGED_ATTACK, CombatDamageType.RANGED);
+    }
+
+    /**
+     * Calculates ranged hit probability using a captured offensive roll and the victim's current defence.
+     *
+     * @param attackRoll The ranged offensive roll captured before launch.
+     * @param victim The target of this hit.
+     * @return The resulting hit probability.
+     */
+    public static double calculateRangedHitChance(int attackRoll, Mob victim) {
+        return calculateHitChanceFromRolls(attackRoll,
+                calculatePhysicalDefenceRoll(victim, EquipmentBonus.RANGED_ATTACK));
+    }
+
+    /**
+     * Converts offensive and defensive roll limits into the shared hit probability.
+     *
+     * @param attackRoll The offensive roll limit.
+     * @param defenceRoll The defensive roll limit.
+     * @return The resulting hit probability.
+     */
+    private static double calculateHitChanceFromRolls(double attackRoll, double defenceRoll) {
         double hitChance;
         if (attackRoll > defenceRoll) {
             hitChance = 1.0 - (defenceRoll + 2.0) / (2.0 * (attackRoll + 1.0));

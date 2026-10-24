@@ -10,6 +10,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
@@ -44,6 +45,16 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      * The ammunition definition captured before consumption, retained for special attacks and delayed secondary hits.
      */
     private AmmoDefinition launchedAmmo;
+
+    /**
+     * The visible Ranged level captured before consumption for secondary-hit damage formulas.
+     */
+    private int launchedRangedLevel;
+
+    /**
+     * The ranged offensive roll captured before consumption, including prayer, stance, and equipment bonuses.
+     */
+    private int launchedAttackRoll;
 
     /**
      * The chance for a successful poisonous ranged hit to apply poison to the victim.
@@ -114,6 +125,8 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         attackStance = combat.getStance();
         AmmoDefinition loadedAmmo = combat.getAmmoDef();
         launchedAmmo = loadedAmmo;
+        launchedRangedLevel = attacker.skill(Skill.RANGED).getLevel();
+        launchedAttackRoll = CombatFormula.calculateRangedAttackRoll(attacker);
         int poisonSlot = loadedAmmo.isAmmoless() ? Equipment.WEAPON : Equipment.AMMUNITION;
         int poisonId = attacker.getEquipment().computeIdForIndex(poisonSlot);
         poison = EquipmentPoisonDefinition.ALL.get(poisonId).orElse(null);
@@ -176,5 +189,19 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      */
     public AmmoDefinition getLaunchedAmmo() {
         return launchedAmmo;
+    }
+
+    /**
+     * @return The visible Ranged level captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedRangedLevel() {
+        return launchedRangedLevel;
+    }
+
+    /**
+     * @return The ranged offensive roll captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedAttackRoll() {
+        return launchedAttackRoll;
     }
 }

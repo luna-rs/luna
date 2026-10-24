@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.SpecialAttackType.RUNE_THROWN_AXE
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack
@@ -109,16 +110,18 @@ fun isVisibleRebound(origin: Position, target: Mob): Boolean =
 /**
  * Resolves a Chainhit strike using its special ranged-level-plus-ten damage cap.
  * Both the initial throw and rebounds use ammunition strength without ordinary stance or ranged prayer bonuses
- * to max hit. Accuracy and protection prayers continue through the standard ranged damage request.
+ * to max hit. The offensive roll and visible Ranged level are captured before launch; equipment, stance, prayer,
+ * and level changes during flight cannot alter them. Each target's defence and protection prayers remain live.
  * Ammunition strength comes from the original attack's snapshot before consumption, so firing the last axe or
  * changing equipment during flight cannot substitute another ammunition definition for the launched axe.
  * The rounding offset is added before integer division, with a long intermediate product.
  */
 fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatDamage {
     val attacker = source.attacker
-    val combatStat = (attacker.ranged.level.toLong() + 10) * (source.launchedAmmo.strength.toLong() + 64)
+    val combatStat = (source.launchedRangedLevel.toLong() + 10) * (source.launchedAmmo.strength.toLong() + 64)
     val maxHit = ((combatStat + 320) / 640).toInt()
     return CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
+        .setBaseAccuracy(CombatFormula.calculateRangedHitChance(source.launchedAttackRoll, victim))
         .setBaseMaxHit(maxHit)
         .build().resolve()
 }
