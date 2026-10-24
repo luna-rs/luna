@@ -230,7 +230,7 @@ enum class SubZone(
      */
     FALADOR_WEST_MINE(
         inside = Position(2912, 3355),
-        area = SimpleBoxArea.of(2898, 3349, 28, 24),
+        area = SimpleBoxArea.ofRadius(2898, 3349, 28, 24),
         parent = { FALADOR }),
 
     /**
@@ -246,7 +246,7 @@ enum class SubZone(
      */
     DWARVEN_MINE(
         inside = Position( 3057, 9767),
-        area = SimpleBoxArea.of(2959, 9753, 110, 104),
+        area = SimpleBoxArea.ofRadius(2959, 9753, 110, 104),
         parent = { FALADOR }),
 
     /**
@@ -259,7 +259,7 @@ enum class SubZone(
      */
     MINING_GUILD(
         inside = Position(3053, 9743),
-        area = SimpleBoxArea.of(2994, 9697, 73, 60),
+        area = SimpleBoxArea.ofRadius(2994, 9697, 73, 60),
         parent = { FALADOR }),
 
     // TODO rimmington mine

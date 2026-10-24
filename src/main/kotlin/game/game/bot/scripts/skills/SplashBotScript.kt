@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.naturalDelay
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
@@ -91,6 +92,7 @@ class SplashBotScript(
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
         if (resumed && spell != null && usingStaff != null && splashEquipment != null) {
             return true
         }
@@ -177,6 +179,7 @@ class SplashBotScript(
     }
 
     override suspend fun executeInZone(): Boolean {
+        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) { stop(); return false }
         val magicBonus = bot.equipment.getBonus(MAGIC_ATTACK)
         if (magicBonus > MAX_SPLASH_MAGIC_BONUS) {
             bot.log("Magic attack bonus is too high to guarantee splashes. bonus=$magicBonus")

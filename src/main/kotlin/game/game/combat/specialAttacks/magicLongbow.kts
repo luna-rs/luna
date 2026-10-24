@@ -4,11 +4,11 @@ import api.combat.specialAttack.SpecialAttackHandler.attack
 import api.predef.*
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.MAGIC_LONGBOW
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
-import kotlin.math.floor
 
 /**
  * The magic longbow special attack animation id.
@@ -36,6 +36,16 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
         .build()
 }
 
+/**
+ * Calculates Powershot's damage cap using the current ranged level plus ten and ammunition strength.
+ * Adds the rounding offset before integer division, retaining the full product until that final step.
+ * The resulting cap is used for an inclusive roll from zero; guaranteed accuracy does not add damage.
+ */
+fun calculateMaxHit(attacker: Player): Int {
+    val combatStat = (attacker.ranged.level.toLong() + 10) * (attacker.combat.ammoDef.strength.toLong() + 64)
+    return ((combatStat + 320) / 640).toInt()
+}
+
 attack(type = MAGIC_LONGBOW,
        drain = 25,
        attackBonus = 1.0) {
@@ -46,15 +56,12 @@ attack(type = MAGIC_LONGBOW,
                atkCombat.styleDef.speed, atkCombat.styleDef.range)
     }
 
-    // Ensure attack hits at least a 1, use modified max hit formula.
+    // Powershot guarantees accuracy, but does not bypass Protect from Missiles in PvP.
     launched {
-        val maxHit = floor(0.5 + ((attacker.ranged.level + 10) * (attacker.combat.ammoDef.strength + 64)) / 640).toInt()
         CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
-            .setBaseMaxHit(maxHit)
-            .setFlatBonusDamage(1)
+            .setBaseMaxHit(calculateMaxHit(attacker))
             .setBaseAccuracy(1.0)
             .setFlatBonusAccuracy(1.0)
-            .ignoreProtectionPrayers()
             .build().resolve()
     }
 }

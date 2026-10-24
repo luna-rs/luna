@@ -16,6 +16,7 @@
  * The corresponding PITCH and SUCCESS pools contain complete alternating conversations, actor first.
  * SUCCESS means the actor kept the items after a native completed trade; it never means a real trim or doubling.
  * REFUSAL contains paired exchanges for victims who decide against trading. Keep every exchange even in length.
+ * LURE_PITCH and LURE_TRAVEL contain complete actor/victim exchanges; LURE_ADVERT contains invitation lines.
  */
 {
   "GOLD": [
@@ -3024,6 +3025,130 @@
       "An expert at what?",
       "Getting free armour, apparently.",
       "I am never doing this again."
+    ]
+  ],
+  "LURE_ADVERT": [
+    "Anyone fancy a short walk? I know a quiet money spot.",
+    "Got a little time? Come see a spot I found.",
+    "Looking for company. I can show you something interesting.",
+    "Taking a break? There is something I want to show you."
+  ],
+  "LURE_PITCH": [
+    [
+      "Taking a break from trading?",
+      "For a little while.",
+      "Come for a walk. I found a quiet spot nearby.",
+      "What sort of spot?"
+    ],
+    [
+      "Fancy a bit of exploring?",
+      "I have a few minutes.",
+      "Follow me north. I will show you where I make my money.",
+      "North sounds suspicious."
+    ],
+    [
+      "I could use some company.",
+      "Where are you going?",
+      "Just past the bank. There is something worth seeing.",
+      "Is it far?"
+    ],
+    [
+      "You look bored standing here.",
+      "Maybe a little.",
+      "Come along. I know somewhere more interesting.",
+      "You had better know the way."
+    ],
+    [
+      "Ever wondered what is north of here?",
+      "Mostly trouble, I thought.",
+      "Not if you know a quiet place. Follow me.",
+      "I am not sure about that."
+    ],
+    [
+      "Want to see a secret spot?",
+      "Why tell me?",
+      "It gets lonely walking there alone.",
+      "That is quite an invitation."
+    ],
+    [
+      "How is the trading going?",
+      "Nothing much happening.",
+      "Come take a walk with me instead.",
+      "Where would we end up?"
+    ],
+    [
+      "There is something I want to show you.",
+      "What is it?",
+      "Easier to show you. Follow me north for a bit.",
+      "That does sound rather mysterious."
+    ]
+  ],
+  "LURE_TRAVEL": [
+    [
+      "Nice to get away from the bank for a bit.",
+      "I suppose it is."
+    ],
+    [
+      "Not much farther now.",
+      "You said that a minute ago."
+    ],
+    [
+      "Quiet up here, is it not?",
+      "A little too quiet."
+    ],
+    [
+      "You are keeping up nicely.",
+      "I am keeping an eye on you, actually."
+    ],
+    [
+      "You will like the spot when we get there.",
+      "It had better be worth the walk."
+    ],
+    [
+      "No need to look so nervous.",
+      "You are not going to scam me, are you?",
+      "Me? Pfft, no.",
+      "That answer did not help much."
+    ],
+    [
+      "I come this way all the time.",
+      "Do you usually bring strangers?"
+    ],
+    [
+      "Nearly there. Just keep following.",
+      "I still want to know what we are looking for."
+    ],
+    [
+      "Anything good happen today?",
+      "I will let you know when this walk is over."
+    ],
+    [
+      "Lovely weather for a walk.",
+      "That does not make the Wilderness any safer."
+    ],
+    [
+      "Trust me, I know this place.",
+      "Those words make me nervous."
+    ],
+    [
+      "You have been very good company.",
+      "Do not make me regret following you."
+    ],
+    [
+      "Did you bring anything to eat?",
+      "I was not planning a long trip."
+    ],
+    [
+      "There is usually nobody around here.",
+      "I would prefer it stayed that way."
+    ],
+    [
+      "A little adventure never hurt anyone.",
+      "That is plainly not true."
+    ],
+    [
+      "Just a few more steps.",
+      "I am starting to wish I stayed at the bank."
     ]
   ]
 }

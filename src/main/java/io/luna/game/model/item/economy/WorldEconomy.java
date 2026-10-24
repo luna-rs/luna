@@ -176,6 +176,11 @@ public final class WorldEconomy extends AbstractScheduledService {
             List<Item> sideA = tradeData.getSideA();
             List<Item> sideB = tradeData.getSideB();
 
+            // Gifts and bot trust-trade transfers have no exchange price to sample.
+            if (sideA.isEmpty() || sideB.isEmpty()) {
+                continue;
+            }
+
             if (sideA.size() == 1 && sideB.size() == 1) {
                 Item itemA = sideA.getFirst();
                 Item itemB = sideB.getFirst();

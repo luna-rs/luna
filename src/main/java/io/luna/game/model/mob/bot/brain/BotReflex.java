@@ -1,9 +1,13 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.ReflexBotScript;
+import api.bot.action.BotCombatActionHandler;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
+import game.bot.scripts.combat.PkBotScript;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.dialogue.NpcDialogue;
@@ -61,6 +65,7 @@ public final class BotReflex {
      * took over this tick.
      */
     public boolean process(Bot bot) {
+        BotCombatActionHandler.observePvpMovement(bot);
         if (activeReflex != null) {
             if (activeReflex.isRunning()) {
                 // Reflex script is still running; skip all other processing.
@@ -98,13 +103,21 @@ public final class BotReflex {
 
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+            PkBotScript pkSession = bot.getScriptStack().findActive(PkBotScript.class).orElse(null);
+            if (pkSession != null && bot.getScriptStack().current() == pkSession && pkSession.isRestocking()) {
+                return true;
+            }
             Mob focus = bot.getCombat().getTarget();
             if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
                 focus = bot.getCombat().getLastAttackReceived().getAttacker();
             }
             if (focus != null) {
+                if (focus instanceof Npc && pkSession != null && bot.getScriptStack().current() == pkSession) {
+                    pkSession.avoidNpcCombat((Npc) focus);
+                    return true;
+                }
                 InitialState response = bot.getEmotions().getCombatResponse(focus);
-                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response));
+                bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, focus instanceof Player ? pkSession : null));
                 bot.log("Reflex [responding to combat] triggered.");
                 return false;
             }

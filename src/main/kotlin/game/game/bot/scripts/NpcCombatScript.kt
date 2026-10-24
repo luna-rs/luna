@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.action.CombatLoadout
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -138,7 +140,7 @@ open class NpcCombatScript(bot: Bot,
                                                            (data as? NpcCombatData)?.spell)
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
-    private var loadout: NpcCombatLoadout? = null
+    private var loadout: CombatLoadout? = null
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
@@ -160,7 +162,7 @@ open class NpcCombatScript(bot: Bot,
 
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
-        loadout = NpcCombatLoadout.find(bot, purpose, spell) ?: return false
+        loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
         if (SubZone.KBD_LAIR in originalZones) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
             if (bot.combatLevel < 100 || purpose != BotGearPurpose.MELEE ||
@@ -380,7 +382,7 @@ open class NpcCombatScript(bot: Bot,
             bot.naturalDelay()
         }
         for ((index, item) in bot.inventory.withIndex()) {
-            if (activeZone != SubZone.KBD_LAIR && item != null && Bone.ID_TO_BONE.containsKey(item.id)) {
+            if (activeZone != SubZone.KBD_LAIR && item != null && BotCombatActionHandler.wantsToTrain(bot, SKILL_PRAYER) && Bone.ID_TO_BONE.containsKey(item.id)) {
                 handler.inventory.clickItem(1, item.id, index)
                 break
             }
@@ -407,6 +409,7 @@ open class NpcCombatScript(bot: Bot,
 
     /** Validates actual equipment and one attack's supplies before permitting any attack click. */
     internal fun prepareCombat(): Boolean {
+        if (bot.preferences.isSkiller) return false
         val ready = configureCombat()
         // A missing weapon, ammunition or spell cost sends us to a non-combat bank operation.
         // Let the existing combat reflex take over if we are attacked during that preparation.
@@ -429,6 +432,12 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         if (purpose == BotGearPurpose.MAGIC) {
+            if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) {
+                bot.combat.target = null
+                clearMagic()
+                stop()
+                return false
+            }
             val definition = selected.spell ?: return false
             if (bot.spellbook != definition.spellbook || bot.magic.level < definition.level) {
                 clearMagic()
@@ -454,16 +463,21 @@ open class NpcCombatScript(bot: Bot,
                 return false
             }
         }
-        if (!combatConfigured) {
-            bot.combat.weapon.changeStyle(selectCombatStyle().button)
+        // Recheck after level changes as well as equipment changes.
+        val allowed = BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles)
+        if (allowed.isEmpty()) {
+            bot.combat.target = null
+            stop()
+            return false
+        }
+        if (!combatConfigured || bot.combat.weapon.styleDef !in allowed) {
+            bot.combat.weapon.changeStyle(selectCombatStyle(allowed).button)
             combatConfigured = true
         }
         return true
     }
 
-    private fun selectCombatStyle(): CombatStyleDefinition {
-
-        val styles = bot.combat.weapon.typeDef.styles
+    private fun selectCombatStyle(styles: List<CombatStyleDefinition>): CombatStyleDefinition {
         if (purpose == BotGearPurpose.RANGED) {
             return styles.firstOrNull { Skill.RANGED in it.exp } ?: styles.first()
         }

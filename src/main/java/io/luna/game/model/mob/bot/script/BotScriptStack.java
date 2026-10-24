@@ -14,6 +14,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -315,6 +316,30 @@ public final class BotScriptStack {
      */
     public BotScript current() {
         return buffer.peek();
+    }
+
+    /**
+     * Finds an active or paused script of the supplied type anywhere in this stack.
+     * A paused parent still owns its session while a child runs. Idle queued work and completed or terminated
+     * scripts do not describe the bot's current activity. Call on the game thread, as with other stack operations.
+     *
+     * @param type The script type to inspect.
+     * @return Whether a running or paused script matches the type.
+     */
+    public boolean containsActive(Class<? extends BotScript> type) {
+        return findActive(type).isPresent();
+    }
+
+    /**
+     * Returns the first running or paused owner of the supplied type, including parents beneath a child script.
+     * Queued, completed and terminated scripts cannot claim ownership of a new reflex or interaction.
+     *
+     * @param type The script type to inspect on the game thread.
+     * @return The nearest active matching script, if present.
+     */
+    public <T extends BotScript> Optional<T> findActive(Class<T> type) {
+        return buffer.stream().filter(type::isInstance).filter(script -> !script.isTerminated() &&
+                !script.isFinished() && (script.isRunning() || script.isPaused())).map(type::cast).findFirst();
     }
 
     /**

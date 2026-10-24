@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -39,6 +40,20 @@ abstract class InventoryBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : ZonedBotScript(bot, duration, zones) {
+
+    /**
+     * Optional experience-bearing skill checked before startup and each production cycle.
+     */
+    protected open val trainingSkill: Int? = null
+
+    /**
+     * Stops resumed or active production when its skill no longer fits the account build.
+     */
+    private fun trainingAllowed(): Boolean {
+        if (trainingSkill?.let { BotCombatActionHandler.mayGainExperience(bot, it) } != false) return true
+        stop()
+        return false
+    }
 
     companion object {
         /**
@@ -181,7 +196,7 @@ abstract class InventoryBotScript(
         private set
 
     final override suspend fun onInit(resumed: Boolean): Boolean {
-        if (productionRetriesExhausted()) { stop(); return false }
+        if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
         withdraw = withdraw()
         if (isTerminated()) {
             return false
@@ -204,6 +219,7 @@ abstract class InventoryBotScript(
     }
 
     final override suspend fun executeInZone(): Boolean {
+        if (!trainingAllowed()) return false
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true

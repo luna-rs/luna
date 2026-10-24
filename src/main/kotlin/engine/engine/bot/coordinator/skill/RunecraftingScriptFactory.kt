@@ -19,15 +19,12 @@ import game.skill.runecrafting.enterAltar.Altar
 object RunecraftingScriptFactory : SkillingScriptFactory(SKILL_RUNECRAFTING) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        var (highestLevel, highestAltar) = Pair(1, Altar.AIR)
-        for (altar in Altar.entries) {
-            val rune = CraftableRune.ALTAR_TO_RUNE[altar]
-            if (rune != null && level >= rune.level && rune.level > highestLevel) {
-                highestLevel = rune.level
-                highestAltar = altar
-            }
+        val activities = Altar.entries.filter { it in CraftableRune.ALTAR_TO_RUNE }.map { altar ->
+            BotSkillingActivity(tokens = setOf(altar), zones = setOf(altar.zone))
         }
-        return CraftRuneBotScript(bot, highestAltar, getDuration(bot))
+        val activity = getSkillingActivities(level, { CraftableRune.ALTAR_TO_RUNE.getValue(it).level }, activities)
+            .firstOrNull() ?: BotSkillingActivity(tokens = setOf(Altar.AIR), zones = setOf(Altar.AIR.zone))
+        return CraftRuneBotScript(bot, activity.tokens.single(), getDuration(bot))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
