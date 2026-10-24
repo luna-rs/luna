@@ -305,7 +305,7 @@ object BotTradeManager {
             val candidates = ArrayList<BotTradeItem>()
             for (definition in ItemDefinition.ALL.filterNotNull()) {
                 val id = definition.id()
-                if (id == 995 || definition.isNoted || !definition.isTradeable) continue
+                if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
                 val guide = world.economy.getPrice(id)
                 if (guide <= 0) continue
                 val quote = if (bot.preferences.hasWantedItem(id)) priceStrategy.applyBuy(guide)
