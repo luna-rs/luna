@@ -195,7 +195,8 @@ attack(type = RUNE_THROWN_AXE,
     attack {
         ranged(animationId = ANIMATION,
                start = GRAPHIC,
-               projectileFunction = PROJECTILE)
+               projectileFunction = PROJECTILE,
+               projectileDiscarded = { attacker.combat.specialBar.isLocked = false })
     }
 
     launched {
