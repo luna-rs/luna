@@ -16,7 +16,13 @@ val STUNNED_GRAPHIC = Graphic(254, 100, 0)
 val ANIMATION = 1064
 
 /**
- * Applies the shove's existing seven-tick duration through the shared stun status.
+ * Shove's five-tick stun duration for players and NPCs. The Lost City scripts express this as a delay of four,
+ * documented as five game ticks; Luna's status countdown directly counts the five processing ticks.
+ */
+val STUN_DURATION = 5.ticks
+
+/**
+ * Applies the shove's five-tick duration through the shared stun status.
  * Repeated shoves refresh one timer instead of leaving older timers that can unlock combat early.
  * Expiration removes only this status and cannot clear independent combat restrictions such as Slayer execution.
  * The queued server-side shove remains available while stun checks block new player actions.
@@ -25,7 +31,7 @@ val ANIMATION = 1064
  */
 fun applyShoveStun(victim: Mob) {
     victim.interact(null)
-    victim.status.add(BasicStatusEffect(victim, StatusEffectType.STUNNED, 7.ticks, refreshable = true))
+    victim.status.add(BasicStatusEffect(victim, StatusEffectType.STUNNED, STUN_DURATION, refreshable = true))
 }
 
 /**
