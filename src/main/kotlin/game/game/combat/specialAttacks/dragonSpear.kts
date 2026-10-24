@@ -1,6 +1,5 @@
 package game.combat.specialAttacks
 
-import api.combat.player.VoidCombatAttack
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import api.predef.ext.*
 import engine.combat.status.BasicStatusEffect
@@ -29,17 +28,14 @@ fun applyShoveStun(victim: Mob) {
     victim.status.add(BasicStatusEffect(victim, StatusEffectType.STUNNED, 7.ticks, refreshable = true))
 }
 
+/**
+ * Shove applies its stun to eligible targets regardless of size. Only one-tile targets can be displaced;
+ * larger NPCs still consume the normal special energy and receive the stun without changing position.
+ */
 attack(type = DRAGON_SPEAR,
        drain = 25) {
 
-    attack {
-        if (victim.size() > 1) {
-            attacker.sendMessage("That creature is too large to knock back!")
-            VoidCombatAttack(attacker, victim)
-        } else {
-            melee(ANIMATION)
-        }
-    }
+    attack { melee(ANIMATION) }
 
     launched {
         attacker.graphic(SHOVE_GRAPHIC)
@@ -56,7 +52,9 @@ attack(type = DRAGON_SPEAR,
         attacker.combat.target = null
 
         // Stun and move the victim.
-        victim.navigator.step(pushDir)
+        if (victim.size() == 1) {
+            victim.navigator.step(pushDir)
+        }
         applyShoveStun(victim)
         CombatDamageRequest.effect(attacker, victim).resolve()
     }
