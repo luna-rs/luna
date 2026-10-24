@@ -100,7 +100,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * Checks the three-tile search radius and projectile visibility from the chain's original search position.
  * The distance check also rejects different height levels before raycasting against live collision data.
  *
- * @param origin The original target position captured when the chain began.
+ * @param origin The original target position captured when the initial axe was launched.
  * @param target The prospective rebound target.
  * @return Whether the target is within the visible search area.
  */
@@ -140,6 +140,7 @@ fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatD
  * Normal completion retains the lock when the next rebound has taken over the chain.
  * A skipped or cancelled delivery ends the chain; continuation uses the delivered hit after defence hooks.
  * Range and visibility are rechecked before paying energy because gathered targets can move between rebounds.
+ * The search centre stays at the initial target's launch-time position, even if that target moves during flight.
  *
  * @param attacker The player performing the special attack.
  * @param origin The fixed search position used for range and visibility checks throughout the chain.
@@ -210,17 +211,18 @@ attack(type = RUNE_THROWN_AXE,
             return@arrived
         }
         val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(MAX_REBOUNDS)
-        val origin = victim.position
+        val rangedSource = source as PlayerRangedCombatAttack
+        val origin = rangedSource.launchedTargetPosition
         val filter: (Mob) -> Boolean =
             { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
                     isVisibleRebound(origin, it) && attacker.combat.checkMultiCombat(it) }
         val targets = // Gather npc OR player targets.
-            (if (victim is Npc) world.locator.findViewableNpcs(victim, filter)
-            else world.locator.findViewablePlayers(victim, filter)).iterator()
+            (if (victim is Npc) world.locator.findViewableNpcs(origin, filter)
+            else world.locator.findViewablePlayers(origin, filter)).iterator()
 
         if (attacksLeft > 0 && targets.hasNext()) {
             // Use recursion to handle chain hits.
-            handleChainHit(attacker, origin, victim, targets, ChainHitCombatAttack(source as PlayerRangedCombatAttack), attacksLeft)
+            handleChainHit(attacker, origin, victim, targets, ChainHitCombatAttack(rangedSource), attacksLeft)
         } else {
             attacker.combat.specialBar.isLocked = false
         }
