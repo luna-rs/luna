@@ -39,7 +39,9 @@ import kotlin.time.Duration.Companion.seconds
  * Owned inputs are withdrawn in partial or full batches and converted by [MakeTextileActionItem]. Current
  * Crafting level is checked before each interaction. [InventoryBotScript] supplies verified unnoted banking,
  * safety checks, progress detection, and persistent retry budgets. Missing wool or roots request total stock
- * targets of 1,000; missing flax retains the existing flax-harvesting prerequisite.
+ * targets of 1,000; minimum missing inputs first use obtainWantedItem, with flax harvesting as fallback.
+ * Bowstring sessions below level ten pause for normal glove training and resume the same session.
+ * Three prerequisite attempts without earned Crafting XP end the session; this budget survives saved state.
  *
  * Existing Varrock and Seers' Village wheels remain available. Seers sessions climb before interacting and
  * descend before banking or finishing. Harvesting can still use [spinAtSeers] to process flax between harvests.
@@ -74,15 +76,21 @@ class SpinTextileBotScript(
         class TextileData : InventoryScriptData() {
             /** The source recipe; snapshots without this field retain legacy bowstring behavior. */
             var textile = Textile.BOWSTRING
+            var levelPreparationAttempts = 0
+            var levelPreparationExperience = -1.0
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 textile = data.get("textile")?.asString?.let(Textile::valueOf) ?: Textile.BOWSTRING
+                levelPreparationAttempts = data.get("level_preparation_attempts")?.asInt ?: 0
+                levelPreparationExperience = data.get("level_preparation_experience")?.asDouble ?: -1.0
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("textile", textile.name)
+                data.addProperty("level_preparation_attempts", levelPreparationAttempts)
+                data.addProperty("level_preparation_experience", levelPreparationExperience)
             }
         }
 
@@ -217,10 +225,16 @@ class SpinTextileBotScript(
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
         (data as? TextileData)?.textile ?: Textile.BOWSTRING) {
         if (data is InventoryScriptData) restoreInventoryState(data)
+        if (data is TextileData) {
+            levelPreparationAttempts = data.levelPreparationAttempts
+            levelPreparationExperience = data.levelPreparationExperience
+        }
     }
 
     /** Permanent Crafting level required for selection and initialization. */
     val requiredLevel = textile.level
+    private var levelPreparationAttempts = 0
+    private var levelPreparationExperience = -1.0
     /** Non-stackable input consumed by one player action. */
     private val materials = listOf(textile.rawItem)
 
@@ -265,7 +279,18 @@ class SpinTextileBotScript(
 
     override fun withdraw(): List<Item> {
         if (textile == Textile.BOWSTRING && bot.crafting.staticLevel < requiredLevel) {
-            bot.scriptStack.push(CraftingScriptFactory.getBasicScript(bot))
+            val experience = bot.crafting.experience
+            if (experience > levelPreparationExperience) levelPreparationAttempts = 0
+            levelPreparationExperience = experience
+            if (levelPreparationAttempts >= 3) {
+                bot.log("Crafting prerequisite made no XP progress after three attempts.")
+                stop()
+            } else {
+                levelPreparationAttempts++
+                // Pause this exact session. The stack resumes it after the prerequisite leaves.
+                bot.scriptStack.pushHead(CraftingScriptFactory.getBasicScript(bot, requiredLevel))
+            }
+            return emptyList()
         }
         return productionWithdraw(materials, levelEligible = bot.crafting.staticLevel >= requiredLevel,
             prepareMissing = {
@@ -282,6 +307,8 @@ class SpinTextileBotScript(
 
     override fun snapshot(): TextileData = TextileData().also {
         it.textile = textile
+        it.levelPreparationAttempts = levelPreparationAttempts
+        it.levelPreparationExperience = levelPreparationExperience
         saveInventoryState(it)
     }
 
