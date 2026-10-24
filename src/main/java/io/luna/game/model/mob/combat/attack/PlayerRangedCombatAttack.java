@@ -41,6 +41,11 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
     private EquipmentPoisonDefinition poison;
 
     /**
+     * The ammunition definition captured before consumption, retained for special attacks and delayed secondary hits.
+     */
+    private AmmoDefinition launchedAmmo;
+
+    /**
      * The chance for a successful poisonous ranged hit to apply poison to the victim.
      */
     private static final Rational RANGED_POISON_CHANCE = new Rational(1, 8);
@@ -108,6 +113,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         PlayerCombatContext combat = attacker.getCombat();
         attackStance = combat.getStance();
         AmmoDefinition loadedAmmo = combat.getAmmoDef();
+        launchedAmmo = loadedAmmo;
         int poisonSlot = loadedAmmo.isAmmoless() ? Equipment.WEAPON : Equipment.AMMUNITION;
         int poisonId = attacker.getEquipment().computeIdForIndex(poisonSlot);
         poison = EquipmentPoisonDefinition.ALL.get(poisonId).orElse(null);
@@ -160,5 +166,15 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      */
     public AmmoDefinition getAmmo() {
         return ammo;
+    }
+
+    /**
+     * Gets the ammunition used by this attack before its stack was decremented. Unlike live equipment state, this
+     * snapshot survives firing the last thrown weapon and equipment changes during projectile flight.
+     *
+     * @return The launched ammunition definition, or {@code null} before attack processing begins.
+     */
+    public AmmoDefinition getLaunchedAmmo() {
+        return launchedAmmo;
     }
 }

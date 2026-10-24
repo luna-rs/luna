@@ -56,8 +56,8 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
  * A lightweight [CombatAttack] wrapper used for rune thrownaxe chain hits.
  *
  * Chainhit reuses [CombatDamageAction] to apply delayed rebound damage, but it must not execute the original special
- * attack logic again. This wrapper keeps the original attack context while disabling attack execution and delegated
- * damage calculation. Delivered rebound damage awards experience through the original ranged attack's captured stance,
+ * attack logic again. This wrapper keeps the original attack context while disabling attack execution and resolving
+ * rebound damage with the original ammunition snapshot. Delivered damage awards experience through the captured stance,
  * without calling its special attack arrival callback and starting another chain.
  *
  * @param source The original rune thrownaxe special attack.
@@ -87,7 +87,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
 
     override fun attack() {}
 
-    override fun calculateDamage(other: Mob?): CombatDamage? = null
+    override fun calculateDamage(other: Mob): CombatDamage = calculateChainDamage(source, other)
 
     override fun onDamageApplied(damage: CombatDamage) {
         source.awardDamageExperience(damage)
@@ -110,10 +110,13 @@ fun isVisibleRebound(origin: Position, target: Mob): Boolean =
  * Resolves a Chainhit strike using its special ranged-level-plus-ten damage cap.
  * Both the initial throw and rebounds use ammunition strength without ordinary stance or ranged prayer bonuses
  * to max hit. Accuracy and protection prayers continue through the standard ranged damage request.
+ * Ammunition strength comes from the original attack's snapshot before consumption, so firing the last axe or
+ * changing equipment during flight cannot substitute another ammunition definition for the launched axe.
  * The rounding offset is added before integer division, with a long intermediate product.
  */
-fun calculateChainDamage(attacker: Player, victim: Mob): CombatDamage {
-    val combatStat = (attacker.ranged.level.toLong() + 10) * (attacker.combat.ammoDef.strength.toLong() + 64)
+fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatDamage {
+    val attacker = source.attacker
+    val combatStat = (attacker.ranged.level.toLong() + 10) * (source.launchedAmmo.strength.toLong() + 64)
     val maxHit = ((combatStat + 320) / 640).toInt()
     return CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
         .setBaseMaxHit(maxHit)
@@ -159,7 +162,7 @@ fun handleChainHit(
             attacker.combat.specialBar.isLocked = false
             return
         }
-        val nextDamage = calculateChainDamage(attacker, nextVictim)
+        val nextDamage = source.calculateDamage(nextVictim)
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
@@ -192,7 +195,7 @@ attack(type = RUNE_THROWN_AXE,
     }
 
     launched {
-        val initialDamage = calculateChainDamage(attacker, victim)
+        val initialDamage = calculateChainDamage(attack as PlayerRangedCombatAttack, victim)
         attacker.combat.specialBar.isLocked = true
         initialDamage
     }
