@@ -46,7 +46,8 @@ attack(type = MAGIC_LONGBOW,
                atkCombat.styleDef.speed, atkCombat.styleDef.range)
     }
 
-    // Ensure attack hits at least a 1, use modified max hit formula.
+    // Roll at least 1 using the modified max hit formula, then apply normal protection prayer mitigation.
+    // Powershot guarantees accuracy, but does not bypass Protect from Missiles in PvP.
     launched {
         val maxHit = floor(0.5 + ((attacker.ranged.level + 10) * (attacker.combat.ammoDef.strength + 64)) / 640).toInt()
         CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
@@ -54,7 +55,6 @@ attack(type = MAGIC_LONGBOW,
             .setFlatBonusDamage(1)
             .setBaseAccuracy(1.0)
             .setFlatBonusAccuracy(1.0)
-            .ignoreProtectionPrayers()
             .build().resolve()
     }
 }
