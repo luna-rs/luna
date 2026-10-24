@@ -67,6 +67,21 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     private int maxHit = -1;
 
     /**
+     * Whether this NPC has entered the state requiring a finishing item. Respawns receive a new combat context.
+     */
+    private boolean awaitingExecution;
+
+    /**
+     * Distinguishes execution preparation from temporary combat restrictions such as a stun.
+     * Prepared NPCs reject poison so damage-over-time cannot bypass their finishing-item requirement.
+     *
+     * @return Whether this NPC is waiting for a validated finishing blow.
+     */
+    public boolean isAwaitingExecution() {
+        return awaitingExecution;
+    }
+
+    /**
      * The player-owned finishing action currently reserved for this NPC, if any.
      */
     private Action<?> executionAction;
@@ -201,10 +216,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * the current combat target. It does not modify health: the initiating hit must be delivered normally, capped to
      * leave at least one hitpoint, so its damage contribution and rewards are retained.
      * <p>
-     * If this mob is already disabled, this method does nothing.
+     * Preparation is idempotent and remains effective even if a temporary restriction already disables combat.
      */
     public void prepareForExecution() {
-        if (!isDisabled()) {
+        if (!awaitingExecution) {
+            awaitingExecution = true;
             mob.getStatus().remove(StatusEffectType.POISONED);
             setDisabled(true);
             mob.getWalking().setLocked(true);
@@ -215,14 +231,14 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     /**
      * Delivers the remaining health as an attributed finishing blow after a script validates its finishing item.
      * <p>
-     * Execution preparation must already have disabled this NPC. Damage delivery records the finishing player's
+     * This NPC must already be awaiting execution. Damage delivery records the finishing player's
      * contribution before death and invokes applied-damage callbacks. Defence hooks are deliberately not re-entered,
      * because they initiated the execution sequence. Repeated completion attempts against a dead NPC do nothing.
      *
      * @param source The attack responsible for the validated finishing sequence.
      */
     public void finishExecution(CombatAttack<?> source) {
-        if (!isDisabled() || !mob.isAlive()) {
+        if (!awaitingExecution || !mob.isAlive()) {
             return;
         }
         new CombatDamageRequest.Builder(source.getAttacker(), mob, CombatDamageType.MELEE)

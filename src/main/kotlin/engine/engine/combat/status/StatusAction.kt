@@ -54,7 +54,8 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      *
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
      * decide whether the new effect can replace it.
-     * Poison is rejected before replacement checks when antipoison is active or the NPC definition grants immunity.
+     * Poison is rejected before replacement checks when antipoison is active, the NPC definition grants immunity,
+     * or the NPC is awaiting a finishing item. This also blocks poison reapplied by the hit that prepared execution.
      * Existing poison accepts only a stronger severity and retains its countdown instead of restarting the effect.
      *
      * @param listener The status effect to add.
@@ -63,7 +64,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun add(listener: StatusEffect<out Mob>, onlyIfAbsent: Boolean = false): Boolean {
         if (listener.type == StatusEffectType.POISONED &&
-            (isAntiPoison() || (mob is Npc && mob.combatDef().isImmunePoison))) {
+            (isAntiPoison() || (mob is Npc && (mob.combatDef().isImmunePoison || mob.combat.isAwaitingExecution)))) {
             return false
         }
         val current = effects[listener.type]
