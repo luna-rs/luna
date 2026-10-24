@@ -64,14 +64,20 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         }
     }
 
-    // Regular gargoyle fell to low HP, turn to stone (transform -> 1611).
+    /**
+     * Turns a weakened gargoyle to stone while preserving its health before the pending hit is applied.
+     * Transforming reloads the NPC's combat skills, including full hitpoints; restoring the captured health
+     * prevents healing and duplicate damage credit. The capped triggering hit is still delivered normally.
+     */
     combat(1610) {
         defend {
+            val healthBeforeTransform = npc.health
             val amount = damage?.rawAmount ?: 0
-            if (other is Player && npc.health - amount <= HITPOINTS_THRESHOLD) {
-                damage = damage?.cappedAt(npc.health - 1)
+            if (other is Player && healthBeforeTransform - amount <= HITPOINTS_THRESHOLD) {
+                damage = damage?.cappedAt(healthBeforeTransform - 1)
                 npc.combat.prepareForExecution()
                 npc.transform(1611)
+                npc.health = healthBeforeTransform
             }
         }
     }
