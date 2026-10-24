@@ -22,6 +22,11 @@ interface SocialBotScript {
      * Whether this script is currently waiting and can accept a social approach.
      */
     fun canSocialize(): Boolean
+
+    /**
+     * Invalidates activity-specific stock assumptions after a native social exchange actually completes.
+     */
+    fun socialTradeCompleted() {}
 }
 
 /**
@@ -50,7 +55,7 @@ object BotConversations {
      * Explicit opt-in from a running script, with invalid previous ownership released before reuse.
      */
     fun available(bot: Bot): Boolean {
-        if (engaged(bot)) return false
+        if (BotTradeScams.engaged(bot) || engaged(bot)) return false
         val script = bot.scriptStack.current()
         return script is SocialBotScript && script.isRunning() && ready(bot) && script.canSocialize()
     }

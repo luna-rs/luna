@@ -5,6 +5,7 @@ import api.bot.action.trading.BotMarketplace
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.social.BotConversations
+import api.bot.social.BotTradeScams
 import api.bot.social.SocialBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
@@ -26,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
  * @property deadline Epoch-millisecond expiry, including time offline.
  * @author lare96
  */
-class IdleBotScript(bot: Bot, private val destination: SubZone, private val deadline: Long) :
+open class IdleBotScript(bot: Bot, private val destination: SubZone, private val deadline: Long) :
     BotScript(bot), SocialBotScript {
 
     /**
@@ -79,20 +80,17 @@ class IdleBotScript(bot: Bot, private val destination: SubZone, private val dead
             BotConversations.cancel(bot)
             if (!arrive()) return true
         }
+        if (BotTradeScams.participate(bot)) {
+            delay(1.seconds)
+            return false
+        }
         BotConversations.tick(bot)
         val now = System.currentTimeMillis()
         if (BotConversations.engaged(bot)) {
             nextConsideration = now + 60_000
         } else if (now >= nextConsideration && BotConversations.available(bot)) {
             nextConsideration = now + (30_000L..90_000L).random()
-            if (rand(bot.personality.social)) {
-                val partner = world.locator.findViewablePlayers(bot) {
-                    it is Bot && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
-                }.filterIsInstance<Bot>().shuffled().firstOrNull()
-                if (partner != null) {
-                    BotConversationPool.select(bot, partner)?.let { BotConversations.start(bot, partner, it) }
-                }
-            }
+            considerConversation()
             // Keep the existing proximity policy for spontaneous filler. Explicit paired conversations work bot-only.
             if (!BotConversations.engaged(bot) && bot.localHumans.isNotEmpty()) bot.speechStack.pushFiller()
         }
@@ -103,20 +101,34 @@ class IdleBotScript(bot: Bot, private val destination: SubZone, private val dead
     override fun canSocialize(): Boolean = arrived && !ended() && inside()
 
     override fun paused() {
+        BotTradeScams.cancel(bot)
         cancelTravel()
         arrived = false
         BotConversations.cancel(bot)
     }
 
     override suspend fun finish() {
+        BotTradeScams.cancel(bot)
         cancelTravel()
         arrived = false
         BotConversations.cancel(bot)
     }
 
-    override fun snapshot() = IdleData().also {
+    override fun snapshot(): IdleData? = IdleData().also {
         it.destination = destination
         it.deadline = deadline
+    }
+
+    /**
+     * Selects casual company during an available idle visit. Specialized social scripts can offer a different pitch
+     * while retaining the same arrival, expiry, interruption and conversation lifecycle.
+     */
+    protected open fun considerConversation() {
+        if (!rand(bot.personality.social)) return
+        val partner = world.locator.findViewablePlayers(bot) {
+            it is Bot && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
+        }.filterIsInstance<Bot>().shuffled().firstOrNull() ?: return
+        BotConversationPool.select(bot, partner)?.let { BotConversations.start(bot, partner, it) }
     }
 
     /**

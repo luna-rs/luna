@@ -6,6 +6,7 @@ import api.bot.action.trading.BotTradeManager.tradeRequests
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
+import api.bot.social.BotTradeScams
 import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -109,6 +110,11 @@ class TradeBotScript(bot: Bot,
      */
     private var negotiating = false
 
+    /**
+     * A completed trust trade invalidates carried quantities once its optional aftermath dialogue has finished.
+     */
+    private var socialStockChanged = false
+
     /** The current advertisement, invalidated whenever trade intentions change. */
     private var message: BotTradeMessage? = null
 
@@ -180,6 +186,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
+        BotTradeScams.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
         activeTrade?.decline()
@@ -198,8 +205,15 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun executeInZone(): Boolean {
+        if (BotTradeScams.participate(bot)) return true
         BotConversations.tick(bot)
         if (BotConversations.engaged(bot)) return true
+        if (socialStockChanged) {
+            socialStockChanged = false
+            prepared = false
+            forceBanking = true
+            return true
+        }
         if (!prepared) {
             forceBanking = true
             return true
@@ -254,7 +268,7 @@ class TradeBotScript(bot: Bot,
      */
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
-            !BotConversations.engaged(other.bot) &&
+            !BotTradeScams.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
             buying != other.buying && marketplace.contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
@@ -482,6 +496,7 @@ class TradeBotScript(bot: Bot,
 
     /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
     private fun canTradeWith(other: Player): Boolean {
+        if (BotTradeScams.engaged(bot) || other is Bot && BotTradeScams.engaged(other)) return false
         if (BotConversations.engaged(bot) || other is Bot && BotConversations.engaged(other)) return false
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
@@ -497,11 +512,17 @@ class TradeBotScript(bot: Bot,
     override fun canSocialize(): Boolean = prepared && !forceBanking && !negotiating && activeTrade == null &&
         duration > Duration.ZERO && marketplace.contains(bot.position)
 
+    override fun socialTradeCompleted() {
+        socialStockChanged = true
+    }
+
     override fun onPaused() {
+        BotTradeScams.cancel(bot)
         BotConversations.cancel(bot)
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
+        BotTradeScams.cancel(bot)
         prepared = false
         BotConversations.cancel(bot)
         return true

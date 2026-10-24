@@ -5,6 +5,7 @@ import api.predef.*
 import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript
 import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript.ProgressionData
 import engine.bot.speech.BotConversationPool
+import engine.bot.speech.BotScamSpeechPool
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
 import game.bot.scripts.DropPartyBotScript.PartyData
 import game.bot.scripts.IdleBotScript.IdleData
@@ -106,6 +107,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     BotConversationPool.load()
+    BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
     scriptManager.addScript<IdleData>(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
