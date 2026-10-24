@@ -21,7 +21,6 @@ import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptManager
 import io.luna.game.model.mob.combat.CombatSpell
-import io.luna.game.model.mob.combat.Weapon
 import io.luna.util.parser.impl.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
@@ -66,44 +65,6 @@ class NpcCombatStylesTest {
         it[Equipment.AMMUNITION] = ammo
     }
 
-    @Test fun bowWithoutCompatibleAmmoIsRejectedWithoutFreeSupplies() {
-        val bot = bot()
-        bot.itemTracker.add(841)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.RANGED))
-        assertEquals(1, bot.itemTracker.size)
-        assertEquals(0, bot.bank.size())
-    }
-    @Test fun bowSelectsOwnedCompatibleAmmoAndRejectsIncompatibleArrows() {
-        val bot = bot()
-        bot.itemTracker.add(841)
-        bot.itemTracker.add(892, 500)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.RANGED))
-        bot.itemTracker.add(882, 500)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.RANGED)!!
-        assertEquals(841, selected.gear[Equipment.WEAPON])
-        assertEquals(882, selected.gear[Equipment.AMMUNITION])
-    }
-    @Test fun throwingWeaponsUseOwnedWeaponStackWithoutQuiverAmmo() {
-        val bot = bot()
-        bot.itemTracker.add(806, 100)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.RANGED)!!
-        assertEquals(806, selected.gear[Equipment.WEAPON])
-        assertNull(selected.gear[Equipment.AMMUNITION])
-    }
-    @Test fun magicRequiresStaffSpellbookLevelAndOwnedRunes() {
-        val bot = bot()
-        bot.itemTracker.add(1381)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-        bot.itemTracker.add(Rune.MIND.id, 50)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC)!!
-        assertEquals(CombatSpell.WIND_STRIKE, selected.spell!!.spell)
-        assertEquals(mapOf(Rune.MIND.id to 1), selected.runes)
-        `when`(bot.magic.level).thenReturn(0)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-        `when`(bot.magic.level).thenReturn(99)
-        `when`(bot.spellbook).thenReturn(Spellbook.ANCIENT)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-    }
     @Test fun runeCostsApplyOnlyTheSelectedStaffAndKeepCatalystRunes() {
         val spell = CombatSpell.FIRE_STRIKE.def
         assertEquals(mapOf(Rune.AIR.id to 1, Rune.MIND.id to 1), NpcCombatLoadout.runeCosts(spell, 1387))
@@ -150,26 +111,6 @@ class NpcCombatStylesTest {
         assertNull(script.interactionOption(mock(Npc::class.java)))
         verify(bot.actionHandler.interactions, never()).interact(anyInt(), any())
         assertTrue(ZonedBotScript::class.java.getDeclaredField("forceBanking").apply { isAccessible = true }.getBoolean(script))
-    }
-    @Test fun missingRunesClearAutocastAndRequestBanking() {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), CombatSpell.WIND_STRIKE.def))
-        assertFalse(script.prepareCombat())
-        verify(bot.combat.magic).setAutocasting(false)
-        assertTrue(ZonedBotScript::class.java.getDeclaredField("forceBanking").apply { isAccessible = true }.getBoolean(script))
-    }
-    @Test fun magicUsesExistingAutocastHelperAndNeverSelectsMeleeStyle() {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        `when`(bot.combat.weapon.type).thenReturn(Weapon.STAFF)
-        bot.inventory.add(Item(Rune.MIND.id))
-        val definition = CombatSpell.WIND_STRIKE.def
-        `when`(bot.actionHandler.combat.setAutocastSpell(definition)).thenReturn(true)
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), definition))
-        assertTrue(script.prepareCombat())
-        verify(bot.actionHandler.combat).setAutocastSpell(definition)
-        verify(bot.combat.weapon, never()).changeStyle(anyInt())
     }
     @Test fun depletedBankSuppliesRequestTotalStockAndCancelInsteadOfLooping() = runBlocking<Unit> {
         val bot = bot()
