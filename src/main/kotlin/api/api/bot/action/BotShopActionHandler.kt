@@ -3,10 +3,14 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.zone.SubZone
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.ShopInterface
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A [BotActionHandler] implementation for shop related actions.
@@ -111,5 +115,54 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         }
         val soldItemCond = SuspendableCondition { bot.inventory.computeAmountForId(id) < amountBefore }
         return soldItemCond.submit(5) // Unsuspend when the inventory amount decreases.
+    }
+
+    /**
+     * Ensures one [id] is carried or equipped, withdrawing owned stock before purchasing it at home.
+     * Returns false when travel, funds, access, stock, or inventory space prevent acquisition.
+     * The caller resumes directly; no shopping script is queued. Attempts are bounded to two minutes.
+     */
+    suspend fun obtainWantedItem(id: Int): Boolean {
+        return id in bot.inventory || id in bot.equipment || withTimeoutOrNull(120.seconds) {
+            try {
+                if (id in bot.bank) {
+                    return@withTimeoutOrNull handler.banking.travelToBankWithdraw(listOf(Item(id))) &&
+                            id in bot.inventory
+                }
+                val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
+                if (shops.isEmpty()) return@withTimeoutOrNull false
+                bot.actions.interruptWeak()
+                bot.overlays.closeWindows()
+                if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) {
+                    return@withTimeoutOrNull false
+                }
+                for (shop in shops) {
+                    if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) continue
+                    val price = shop.computeBuyValue(id, 1).orElse(-1)
+                    if (price < 0) continue
+                    val currency = shop.currency.id
+                    val carried = bot.inventory.computeAmountForId(currency)
+                    if (carried.toLong() + bot.bank.computeAmountForId(currency) < price) continue
+                    if (carried < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                        if (!handler.banking.travelToBankOpen()) continue
+                        if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(currency, maxOf(1, price))))) {
+                            if (!handler.banking.depositInventory(setOf(currency))) continue
+                        }
+                        val missing = price - bot.inventory.computeAmountForId(currency)
+                        if (missing > 0 && !handler.banking.withdraw(Item(currency, missing))) continue
+                    }
+                    bot.overlays.closeWindows()
+                    if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) continue
+                    if (!shop.botAccess.apply(bot)) continue
+                    bot.overlays.open(ShopInterface(shop))
+                    if (bot.overlays[ShopInterface::class]?.shop === shop && buy1(id).await()) {
+                        return@withTimeoutOrNull id in bot.inventory
+                    }
+                }
+                false
+            } finally {
+                bot.overlays.closeWindows()
+            }
+        } == true
     }
 }

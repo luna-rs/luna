@@ -88,6 +88,7 @@ class BotActionHandler(val bot: Bot) {
      * @return `true` if the item exists in equipment, inventory, or bank storage.
      */
     fun has(item: Item): Boolean {
+        // todo replace with item tracker?
         if (bot.equipment.contains(item)) {
             return true
         } else if (bot.inventory.contains(item)) {

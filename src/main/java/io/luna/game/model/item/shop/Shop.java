@@ -9,12 +9,14 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.item.ItemContainer.StackPolicy;
+import io.luna.game.model.item.ItemTracker;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -136,6 +138,11 @@ public final class Shop {
     private final Set<Player> viewing = new HashSet<>();
 
     /**
+     * The set of items IDs currently contained within this shop.
+     */
+    private final Set<Integer> itemIds = new HashSet<>();
+
+    /**
      * Whether this shop is intended specifically for merchanting bots.
      * <p>
      * This is classification metadata only. {@link #botAccess} remains the authoritative check for whether a particular
@@ -190,7 +197,11 @@ public final class Shop {
         Arrays.fill(amountMap, OptionalInt.empty());
 
         restockTask = new RestockTask(this);
-        items.setListeners(new ShopListener(this));
+        items.setListeners(new ShopListener(this),
+                ItemTracker.create(
+                        item -> itemIds.add(item.getId()),
+                        item -> itemIds.remove(item.getId())
+                ));
     }
 
     /**
@@ -699,5 +710,12 @@ public final class Shop {
      */
     public Predicate<Bot> getBotAccess() {
         return botAccess;
+    }
+
+    /**
+     * @return The set of items IDs currently contained within this shop.
+     */
+    public Set<Integer> getItemIds() {
+        return Collections.unmodifiableSet(itemIds);
     }
 }
