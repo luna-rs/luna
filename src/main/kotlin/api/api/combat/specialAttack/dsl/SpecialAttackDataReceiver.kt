@@ -25,6 +25,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * @property damageBonus A percentage-based modifier applied to the special attack's damage.
  * @property maxHit An optional base max-hit override for this special attack.
  * @property activationOnly `true` if this special only performs activation logic and does not behave like a normal attack.
+ * @property attackRollMultiplier Multiplies the offensive roll before converting it into a hit probability.
  * @author lare96
  */
 class SpecialAttackDataReceiver(
@@ -35,7 +36,8 @@ class SpecialAttackDataReceiver(
     val strengthBonus: Double = 0.0,
     val damageBonus: Double = 0.0,
     val maxHit: Int? = null,
-    val activationOnly: Boolean
+    val activationOnly: Boolean,
+    val attackRollMultiplier: Double = 1.0
 ) {
 
     /**

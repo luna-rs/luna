@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack
@@ -215,6 +216,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      *
      * Damage is calculated using the standard combat damage pipeline, with the special attack's accuracy bonus,
      * optional base max hit, strength bonus to maximum damage, and damage bonus applied on top.
+     * An offensive roll multiplier is applied before hit probability is calculated; flat accuracy is added afterward.
      *
      * @param other The mob receiving the damage.
      * @param type The combat damage type to resolve.
@@ -227,6 +229,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             .setPercentBonusStrength(receiver.strengthBonus)
         if (receiver.maxHit != null) {
             request.setBaseMaxHit(receiver.maxHit)
+        }
+        if (receiver.attackRollMultiplier != 1.0) {
+            request.setBaseAccuracy(CombatFormula.calculateHitChance(attacker, other, type, receiver.attackRollMultiplier))
         }
         return request.build().resolve()
     }
