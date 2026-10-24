@@ -14,10 +14,15 @@ val ANIMATION = 1060
  */
 val GRAPHIC = Graphic(251, 100, 0)
 
+/**
+ * Shatter increases the maximum hit by 50 percent before rolling, allowing every damage value up to that maximum.
+ */
+val MAX_HIT_BONUS = 0.50
+
 attack(type = DRAGON_MACE,
        drain = 25,
        attackBonus = 0.25,
-       damageBonus = 0.50) {
+       strengthBonus = MAX_HIT_BONUS) {
 
     attack { melee(ANIMATION) }
 
