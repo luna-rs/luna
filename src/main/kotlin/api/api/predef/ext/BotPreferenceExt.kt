@@ -2,6 +2,9 @@ package api.predef.ext
 
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.mining.Pickaxe
+import game.skill.woodcutting.cutTree.Axe
+import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.mob.bot.Bot
@@ -76,7 +79,8 @@ fun BotPreference.rebalanceWantedItems() {
  * restrictions.
  *
  * Persistent items below their minimum ownership are treated as urgent. Results are ordered by descending item
- * priority, with urgent items appearing first when priorities are equal.
+ * priority, with urgent items appearing first when priorities are equal. Equipment the bot cannot yet use
+ * follows usable items, without removing future upgrades from its wants.
  *
  * @return Wanted-item definitions that are eligible for acquisition.
  */
@@ -127,7 +131,19 @@ fun BotPreference.wantedItemsToAcquire(): List<WantedItemDefinition> {
     }
 
     // Keep shopping order natural between bots while still preserving minimum-stock urgency.
-    return (urgent + normal).sortedByDescending { it.priority.level }
+    return (urgent + normal).sortedWith(compareByDescending<WantedItemDefinition> { bot.canUseWantedItem(it.id) }
+        .thenByDescending { it.priority.level })
+}
+
+/**
+ * Checks known tool and equipment requirements without attempting to equip or use the item.
+ * Axes and pickaxes can be used from inventory without meeting their wielding requirements.
+ * Items without known requirements remain eligible as supplies or merchant stock.
+ */
+fun Bot.canUseWantedItem(id: Int): Boolean {
+    Pickaxe.ID_TO_PICKAXE[id]?.let { return mining.staticLevel >= it.level }
+    Axe.values().firstOrNull { it.id == id }?.let { return woodcutting.staticLevel >= it.level }
+    return EquipmentDefinition.ALL.get(id).map { it.meetsAllRequirements(this) }.orElse(true)
 }
 
 /**

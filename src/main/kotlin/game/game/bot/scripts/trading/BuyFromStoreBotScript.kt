@@ -205,7 +205,8 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         val candidates = bot.preferences.wantedItemsToAcquire()
             .filterNot { it.id in blocked || it.id == COINS_ID }
             .filter { wanted -> shopsFor(shops, wanted.id).any { canBuyOne(it, wanted.id, budget) } }
-        return ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }.firstOrNull()
+        return ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }
+            .sortedByDescending { bot.canUseWantedItem(it.id) }.firstOrNull()
     }
 
     /**

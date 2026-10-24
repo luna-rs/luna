@@ -172,7 +172,8 @@ object BotTradeManager {
                         offering: List<BotTradeItem>): List<BotTradeItem> {
         return when (purpose) {
             // Buyers expect whatever they're buying.
-            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> computeBuyItems(bot, priceStrategy, purpose)
+            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> affordablePurchases(
+                computeBuyItems(bot, priceStrategy, purpose), offering)
             BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> {
                 // Sellers only expect gold value equivalent to what they're offering.
                 // This will later be interpreted as "general value" when trading.
@@ -187,6 +188,29 @@ object BotTradeManager {
                 }
             }
         }
+    }
+
+    /**
+     * Reserves available payment across wanted items in priority order, using the same whole-item payment
+     * rules as negotiation. Unaffordable items are skipped so cheaper needs can still be selected.
+     * Call again with actual carried stock after banking, since withdrawals can be limited by capacity.
+     */
+    internal fun affordablePurchases(candidates: List<BotTradeItem>, payment: List<BotTradeItem>): List<BotTradeItem> {
+        val remaining = payment.associate { it.item.id to it.item.amount }.toMutableMap()
+        val paymentPrices = payment.associate { it.item.id to it.price }
+        val selected = ArrayList<BotTradeItem>()
+        for (candidate in candidates) {
+            val id = candidate.item.id
+            val demand = mapOf(id to candidate.item.amount)
+            val prices = mapOf(id to candidate.price)
+            val exchange = TradeBasket.exchange(demand, demand, prices, prices, remaining, paymentPrices) ?: continue
+            selected += BotTradeItem(Item(id, exchange.first.getValue(id)), candidate.price,
+                candidate.purpose, candidate.bot)
+            for ((paymentId, amount) in exchange.second) {
+                remaining[paymentId] = remaining.getValue(paymentId) - amount
+            }
+        }
+        return selected
     }
 
     /**
@@ -260,7 +284,7 @@ object BotTradeManager {
      * needed to reach its target. Merchant buying selects all wanted items with
      * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
      *
-     * Neither path reserves payment or checks whether the other participant can supply the quantity.
+     * [computeExpected] caps these candidates to available payment. Partner stock is checked during negotiation.
      *
      * @param bot The bot selecting items to buy.
      * @param priceStrategy The strategy used to calculate purchase prices.
@@ -288,7 +312,8 @@ object BotTradeManager {
                     }
                 }
             }
-            return candidates
+            return candidates.sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
+                .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 })
         }
 
         // Otherwise, buy any wanted items we need to acquire.
