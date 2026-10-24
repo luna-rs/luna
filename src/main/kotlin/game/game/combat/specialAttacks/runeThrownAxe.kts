@@ -107,6 +107,20 @@ fun isVisibleRebound(origin: Position, target: Mob): Boolean =
     origin.isWithinDistance(target.position, 3) && world.collisionManager.raycast(origin, target.position)
 
 /**
+ * Resolves a Chainhit strike using its special ranged-level-plus-ten damage cap.
+ * Both the initial throw and rebounds use ammunition strength without ordinary stance or ranged prayer bonuses
+ * to max hit. Accuracy and protection prayers continue through the standard ranged damage request.
+ * The rounding offset is added before integer division, with a long intermediate product.
+ */
+fun calculateChainDamage(attacker: Player, victim: Mob): CombatDamage {
+    val combatStat = (attacker.ranged.level.toLong() + 10) * (attacker.combat.ammoDef.strength.toLong() + 64)
+    val maxHit = ((combatStat + 320) / 640).toInt()
+    return CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
+        .setBaseMaxHit(maxHit)
+        .build().resolve()
+}
+
+/**
  * Processes the next delayed rune thrownaxe chain hit.
  *
  * Each rebound validates attackability, controller permission, and multi-combat eligibility before paying its energy
@@ -145,7 +159,7 @@ fun handleChainHit(
             attacker.combat.specialBar.isLocked = false
             return
         }
-        val nextDamage = CombatDamageRequest.standard(attacker, nextVictim, CombatDamageType.RANGED).resolve()
+        val nextDamage = calculateChainDamage(attacker, nextVictim)
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
@@ -177,7 +191,11 @@ attack(type = RUNE_THROWN_AXE,
                projectileFunction = PROJECTILE)
     }
 
-    launched { attacker.combat.specialBar.isLocked = true; damage }
+    launched {
+        val initialDamage = calculateChainDamage(attacker, victim)
+        attacker.combat.specialBar.isLocked = true
+        initialDamage
+    }
 
     arrived {
         // A missed initial throw must not spend energy on any rebounds.
