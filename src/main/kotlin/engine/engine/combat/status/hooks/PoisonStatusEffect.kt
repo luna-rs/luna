@@ -13,8 +13,9 @@ import kotlin.math.max
 /**
  * Periodic poison damage status effect.
  *
- * Poison runs every `30` ticks. Each cycle decreases the mob's combat poison severity and applies poison damage based on
- * the remaining severity. The effect ends when poison severity reaches zero or when the mob has active antipoison.
+ * Poison runs every `30` ticks. Players take damage using the current severity before it decreases; NPCs decrease
+ * severity before calculating damage. This preserves the player's final one-damage tick and the separate NPC cadence.
+ * The effect ends when poison severity reaches zero or when the mob has active antipoison.
  *
  * @param mob The mob affected by poison.
  * @param severity The initial poison severity.
@@ -56,13 +57,15 @@ class PoisonStatusEffect(mob: Mob, private var severity: Int) :
     }
 
     override fun run(): Boolean {
-        if (--severity > 0 && !mob.status.isAntiPoison()) {
-            val damage = floor((severity + 4.0) / 5.0).toInt()
-            mob.damage(max(1, damage), HitType.POISON)
-            return false
+        if (severity <= 0 || mob.status.isAntiPoison()) {
+            return true
         }
-
-        return true
+        val damageSeverity = if (mob is Player) severity-- else --severity
+        if (damageSeverity > 0) {
+            val damage = floor((damageSeverity + 4.0) / 5.0).toInt()
+            mob.damage(max(1, damage), HitType.POISON)
+        }
+        return severity <= 0
     }
 
     override fun load(obj: JsonObject?) {
