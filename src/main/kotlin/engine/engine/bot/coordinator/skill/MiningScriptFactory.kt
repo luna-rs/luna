@@ -1,125 +1,143 @@
 package engine.bot.coordinator.skill
 
-import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
-import api.predef.ext.of
 import game.bot.scripts.skills.MineBotScript
+import game.content.miningGuild.MiningGuild
 import game.skill.mining.Ore
-import io.luna.util.RandomUtils
-import java.util.*
+import game.skill.mining.Ore.*
+import io.luna.game.model.mob.bot.Bot
 
 /**
- * Creates mining scripts based on the bot's level, personality, and current objective.
- *
- * Training scripts focus on experience and progression, while profit scripts favor ores that are more likely to
- * produce useful or valuable resources. The selected ores and zones are adjusted according to the bot's Mining level
- * so the bot does not attempt to mine ores it cannot access.
- *
- * Personality affects the training path:
- * - Dextrous bots prefer efficient iron mining.
- * - Intelligent bots prefer stronger mining locations.
- * - Other bots mine a broader set of available ores.
- * - Low-level bots start with basic ores in starter mining zones.
+ * Mining methods keep each mine's rocks together with its access and personality preferences.
+ * Training retains iron-focused efficient personalities and broader casual routes. Profit progresses
+ * from essence/basic ores to gold, coal, and high-tier metals. The guild is preferred once accessible.
  *
  * @author lare96
  */
 object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
+    /**
+     * Supported rock types from the subzone definitions; essence is a separate mining method.
+     */
+    internal val rocks = linkedMapOf(
+        SubZone.VARROCK_SW_MINE to setOf(CLAY, TIN, IRON, SILVER),
+        SubZone.VARROCK_SE_MINE to setOf(COPPER, TIN, IRON),
+        SubZone.FALADOR_WEST_MINE to setOf(COPPER, TIN, IRON, COAL),
+        SubZone.DWARVEN_MINE to setOf(CLAY, COPPER, TIN, IRON, COAL, GOLD, MITHRIL, ADAMANT),
+        SubZone.MINING_GUILD to setOf(IRON, COAL, MITHRIL, ADAMANT, RUNE),
+        SubZone.LEGENDS_GUILD_MINE to setOf(IRON, COAL),
+        SubZone.SOUTH_EAST_ARDOUGNE_MINE to setOf(IRON, COAL),
+        SubZone.AL_KHARID_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, GOLD, MITHRIL, ADAMANT),
+        SubZone.SOUTH_LUMBRIDGE_MINE to setOf(COAL, MITHRIL, ADAMANT),
+        SubZone.EDGEVILLE_DUNGEON_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, MITHRIL, ADAMANT),
+        SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE)
+    )
 
-    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val ores = EnumSet.noneOf(Ore::class.java)
+    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        createScript(bot, level, zones, true)
 
-        if (level > 15) {
-            if (bot.personality.isDextrous) {
-                ores += Ore.IRON
-                if(RandomUtils.roll(1 of 3)) {
-                    ores += Ore.COAL
-                }
-                zones += SubZone.SOUTH_EAST_ARDOUGNE_MINE
-                zones += SubZone.LEGENDS_GUILD_MINE
-            } else if (bot.personality.isIntelligent) {
-                ores += Ore.IRON
-                if(randBoolean()) {
-                    ores += Ore.COAL
-                }
+    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        createScript(bot, level, zones, false)
 
-                zones += SubZone.LEGENDS_GUILD_MINE
-            } else {
-                ores.addAll(Ore.ORE_MAP.keys())
-
-                if (!bot.personality.isDumb) {
-                    ores.removeIf { it.level < 15 }
-                    ores -= Ore.SILVER
-                }
-
-                if(bot.personality.isDumb) {
-                    if(bot.combatLevel > 30) {
-                        zones += SubZone.AL_KHARID_MINE
-                    }
-                    zones += SubZone.VARROCK_SE_MINE
-                    zones += SubZone.VARROCK_SW_MINE
-                }
-                zones += SubZone.LEGENDS_GUILD_MINE
-                zones += SubZone.SOUTH_EAST_ARDOUGNE_MINE
-            }
-        } else {
-            ores += Ore.COPPER
-            ores += Ore.TIN
-            ores += Ore.CLAY
-
-            zones += SubZone.VARROCK_SW_MINE
-            zones += SubZone.VARROCK_SE_MINE
-        }
-
-        ores.removeIf { level < it.level }
-        require(ores.isNotEmpty()) { "No tree types were selected from MiningScriptFactory." }
-        return MineBotScript(bot, ores, getDuration(bot), zones)
+    /**
+     * Selects a complete mining activity with the existing personality rule.
+     */
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): MineBotScript {
+        val activity = getBestSkillingActivity(bot, level, { it.level }, activities(bot, level, training))
+            ?: error("No mining activity is available at level $level.")
+        zones.clear()
+        zones.addAll(activity.zones)
+        return MineBotScript(bot, activity.tokens, getDuration(bot), zones)
     }
 
-    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val ores = EnumSet.noneOf(Ore::class.java)
-
-        if (level < Ore.GOLD.level) {
-            ores += Ore.RUNE_ESSENCE
-            zones += SubZone.ESSENCE_MINE
-        } else if (level < Ore.MITHRIL.level) {
-            if (rand(bot.personality.intelligence)) {
-                ores += Ore.GOLD
-            } else {
-                ores += Ore.COAL
-                ores += Ore.RUNE_ESSENCE
-                zones += SubZone.ESSENCE_MINE
+    /**
+     * Keeps ore and access decisions in the mining factory rather than adding a generic policy system.
+     */
+    internal fun activities(bot: Bot, level: Int, training: Boolean): List<BotSkillingActivity<Ore>> {
+        val efficient = bot.personality.isDextrous || bot.personality.isIntelligent
+        val desired = if (training) trainingOres(bot, level) else profitOres(bot, level)
+        val activities = ArrayList<BotSkillingActivity<Ore>>()
+        for ((zone, supported) in rocks) {
+            if (zone == SubZone.MINING_GUILD &&
+                (level < MiningGuild.REQUIRED_LEVEL || bot.mining.level < MiningGuild.REQUIRED_LEVEL)) {
+                continue
             }
-
-            zones += SubZone.AL_KHARID_MINE
-        } else if (level < Ore.ADAMANT.level) {
-            if (rand(bot.personality.intelligence)) {
-                ores += Ore.COAL
-                ores += Ore.MITHRIL
-            } else {
-                ores += Ore.GOLD
-                ores += Ore.SILVER
-                ores += Ore.COAL
-                zones += SubZone.AL_KHARID_MINE
+            if (training && zone == SubZone.AL_KHARID_MINE && bot.combatLevel <= 30) {
+                continue
             }
-
-            zones += SubZone.SOUTH_LUMBRIDGE_MINE
-        } else {
-            // TODO@0.5.0 Mining guild.
-            // TODO Rune rocks in wilderness if feeling greedy.
-            //  Need to modify script superclass to logout/run automatically if a PKer is spotted.
-            //  Based on personality and emotions.
-            ores += Ore.MITHRIL
-            ores += Ore.ADAMANT
-            ores += Ore.RUNE
-
-            zones += SubZone.SOUTH_LUMBRIDGE_MINE
-            zones += SubZone.EDGEVILLE_DUNGEON_MINE
+            if (training && zone == SubZone.EDGEVILLE_DUNGEON_MINE) {
+                continue
+            }
+            val tokens = linkedSetOf<Ore>()
+            for (ore in desired) {
+                if (ore in supported && ore.level <= level) {
+                    tokens.add(ore)
+                }
+            }
+            if (tokens.isNotEmpty()) {
+                activities.add(BotSkillingActivity(tokens = tokens, zones = setOf(zone)))
+            }
         }
+        val preferGuild = if (training) efficient else bot.personality.isIntelligent
+        if (preferGuild) {
+            for (activity in activities) {
+                if (SubZone.MINING_GUILD in activity.zones) {
+                    return listOf(activity)
+                }
+            }
+        }
+        return activities
+    }
 
-        ores.removeIf { level < it.level }
-        require(ores.isNotEmpty()) { "No tree types were selected from MiningScriptFactory." }
-        return MineBotScript(bot, ores, getDuration(bot), zones)
+    /**
+     * Chooses training ores using the existing personality preferences.
+     */
+    private fun trainingOres(bot: Bot, level: Int): Set<Ore> {
+        if (level < IRON.level) {
+            return setOf(COPPER, TIN, CLAY)
+        }
+        if (bot.personality.isDextrous || bot.personality.isIntelligent) {
+            val coalChance = if (bot.personality.isDextrous) 1.0 / 3.0 else 0.5
+            if (rand(coalChance)) {
+                return setOf(IRON, COAL)
+            }
+            return setOf(IRON)
+        }
+        if (bot.personality.isDumb) {
+            return Ore.entries.toSet() - setOf(RUNE_ESSENCE, PURE_ESSENCE)
+        }
+        return setOf(IRON, COAL, GOLD, MITHRIL, ADAMANT, RUNE)
+    }
+
+    /**
+     * Chooses profit ores using the existing level progression and intelligence rolls.
+     */
+    private fun profitOres(bot: Bot, level: Int): Set<Ore> {
+        if (level < GOLD.level) {
+            if (!rand(bot.personality.intelligence)) {
+                return setOf(RUNE_ESSENCE)
+            }
+            if (level >= COAL.level) {
+                return setOf(COAL)
+            }
+            if (level >= IRON.level) {
+                return setOf(IRON)
+            }
+            return setOf(COPPER, TIN)
+        }
+        if (level < MITHRIL.level) {
+            if (rand(bot.personality.intelligence)) {
+                return setOf(GOLD)
+            }
+            return setOf(COAL, RUNE_ESSENCE)
+        }
+        if (level < ADAMANT.level) {
+            if (rand(bot.personality.intelligence)) {
+                return setOf(COAL, MITHRIL)
+            }
+            return setOf(GOLD, SILVER, COAL)
+        }
+        return setOf(MITHRIL, ADAMANT, RUNE)
     }
 }

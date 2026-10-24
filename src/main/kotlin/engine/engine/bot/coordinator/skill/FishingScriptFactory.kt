@@ -140,13 +140,17 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        val tool = getBestActivity(bot, level, { it.level }, BOT_TOOLS) ?: SMALL_NET
+        val activities = BOT_TOOLS.map { tool ->
+            BotSkillingActivity(tokens = setOf(tool), zones = getZones(bot, tool).toSet())
+        }
+        val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
+            ?: BotSkillingActivity(tokens = setOf(SMALL_NET), zones = getZones(bot, SMALL_NET).toSet())
 
         return FishBotScript(
             bot,
-            tool,
+            activity.tokens.single(),
             getDuration(bot),
-            getZones(bot, tool)
+            activity.zones.toMutableList()
         )
     }
 

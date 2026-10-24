@@ -1,194 +1,98 @@
 package engine.bot.coordinator.skill
 
-import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
 import game.skill.woodcutting.cutTree.Tree
-import java.util.*
+import game.skill.woodcutting.cutTree.Tree.*
+import io.luna.game.model.mob.bot.Bot
 
 /**
- * Creates Woodcutting scripts based on the bot's level, personality, and objective.
- *
- * Training scripts favor experience progression. Low-level bots start with normal
- * trees and oaks, then branch into more efficient tree choices once willows are
- * unlocked. Dexterous bots prefer focused willow training, while less capable bots
- * may use broader and less optimized tree pools.
- *
- * Profit scripts favor higher-value logs when the bot's Woodcutting level allows it.
- * Dumb bots may include lower-value trees as fallback options, producing a broader
- * but less profit-focused route.
+ * Selects tree-specific methods, preserving willow training and level-based profit progression.
+ * Each route carries only the trees it supports; casual bots retain a broader range of methods.
  *
  * @author lare96
  */
 object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
+    /**
+     * Dedicated routes for each supported resource. Unmapped exotic trees are excluded.
+     */
+    private val routes = mapOf(
+        NORMAL to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES),
+        OAK to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES),
+        WILLOW to setOf(SubZone.DRAYNOR_MAIN, SubZone.WEST_DRAYNOR_WILLOWS, SubZone.CATHERBY_BEACH_WILLOWS,
+            SubZone.SOUTH_ARDOUGNE_WILLOWS, SubZone.NORTH_ARDOUGNE_WILLOWS,
+            SubZone.EAST_ARDOUGNE_WILLOWS, SubZone.SOUTH_YANILLE_WILLOWS),
+        MAPLE to setOf(SubZone.SEERS_VILLAGE_MAIN, SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES,
+            SubZone.NORTH_SEERS_VILLAGE_MAPLES, SubZone.SOUTH_SORCERERS_TOWER_MAPLES),
+        YEW to setOf(SubZone.LUMBER_YARD_YEWS, SubZone.EAST_DRAYNOR_YEWS, SubZone.VARROCK_PALACE_YEWS,
+            SubZone.SOUTH_FALADOR_YEWS, SubZone.SOUTH_SEERS_VILLAGE_YEWS, SubZone.WEST_CATHERBY_YEWS),
+        MAGIC to setOf(SubZone.SORCERERS_TOWER_MAGICS, SubZone.SOUTH_SEERS_VILLAGE_MAGICS)
+    )
+
+    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        createScript(bot, level, zones, true)
+
+    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
+        createScript(bot, level, zones, false)
 
     /**
-     * Creates a Woodcutting training script for [bot].
-     *
-     * The selected trees and zones are chosen mainly for experience gain and account
-     * progression. Lower-level bots use simple starter trees, while higher-level bots
-     * branch into personality-driven routes.
-     *
-     * @param bot The bot that will train Woodcutting.
-     * @param level The bot's current Woodcutting level.
-     * @param zones The mutable zone list to populate with valid Woodcutting areas.
-     * @return A Woodcutting script configured for training.
+     * Keeps the existing training/profit tree choices attached to their supported routes.
      */
-    override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val trees = EnumSet.noneOf(Tree::class.java)
+    private fun createScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): CutTreeBotScript {
+        val trees = if (training) trainingTrees(bot, level) else profitTrees(bot, level)
+        val activities = ArrayList<BotSkillingActivity<Tree>>()
+        for (tree in trees) {
+            activities.add(BotSkillingActivity(tokens = setOf(tree), zones = routes.getValue(tree)))
+        }
+        val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
+            ?: error("No woodcutting activity is available at level $level.")
+        zones.clear()
+        zones.addAll(activity.zones)
+        return CutTreeBotScript(bot, activity.tokens, getDuration(bot), zones)
+    }
 
-        if (level >= Tree.WILLOW.level) {
-            if (bot.personality.isDextrous) {
-                // Dexterous bots focus on efficient willow training.
-                trees += Tree.WILLOW
-                zones += SubZone.DRAYNOR_MAIN
-                zones += SubZone.WEST_DRAYNOR_WILLOWS
-                zones += SubZone.CATHERBY_BEACH_WILLOWS
-                zones += SubZone.SOUTH_ARDOUGNE_WILLOWS
-            } else if (!bot.personality.isDumb) {
-                // Non-dumb bots use stronger training trees around Seers' Village, Ardougne, and Yanille.
-                trees += Tree.MAPLE
-                trees += Tree.WILLOW
-                zones += SubZone.SEERS_VILLAGE_MAIN
-                zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
-                willowZones(zones)
-                if (level >= Tree.MAPLE.level) {
-                    mapleZones(zones)
-                }
-            } else {
-                // Dumb bots use any accessible tree type, regardless of efficiency.
-                for (tree in Tree.ALL.values) {
-                    trees += tree
-                }
+    /**
+     * Keeps efficient training focused on willows and gives casual bots more variety.
+     */
+    private fun trainingTrees(bot: Bot, level: Int): Set<Tree> {
+        if (level < WILLOW.level) {
+            return setOf(NORMAL, OAK)
+        }
+        if (bot.personality.isDextrous) {
+            return setOf(WILLOW)
+        }
+        if (!bot.personality.isDumb) {
+            return setOf(WILLOW, MAPLE)
+        }
+        return routes.keys
+    }
 
-                zones += SubZone.EAST_DRAYNOR_YEWS
-                zones += SubZone.LUMBER_YARD_YEWS
-                zones += SubZone.SOUTH_FALADOR_YEWS
-                zones += SubZone.WEST_CATHERBY_YEWS
-                zones += SubZone.SOUTH_SEERS_VILLAGE_YEWS
-                zones += SubZone.LUMBRIDGE_RIVER
-                zones += SubZone.SEERS_VILLAGE_MAIN
-                zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
-                zones += SubZone.WEST_DRAYNOR_WILLOWS
-                zones += SubZone.CATHERBY_BEACH_WILLOWS
-                willowZones(zones)
-                mapleZones(zones)
-                treeZones(zones)
+    /**
+     * Advances profit targets by level while retaining the casual alternatives.
+     */
+    private fun profitTrees(bot: Bot, level: Int): Set<Tree> {
+        if (level < WILLOW.level) {
+            return setOf(NORMAL)
+        }
+        val trees = linkedSetOf<Tree>()
+        if (level < YEW.level) {
+            trees.addAll(setOf(WILLOW, MAPLE))
+            if (bot.personality.isDumb) {
+                trees.add(OAK)
+            }
+        } else if (level < MAGIC.level) {
+            trees.add(YEW)
+            if (bot.personality.isDumb) {
+                trees.addAll(setOf(WILLOW, MAPLE))
             }
         } else {
-            // Starter bots cut basic trees until better routes are unlocked.
-            trees += Tree.NORMAL
-            trees += Tree.OAK
-
-            zones += SubZone.EAST_DRAYNOR_YEWS
-            zones += SubZone.DRAYNOR_MAIN
-            zones += SubZone.LUMBER_YARD_YEWS
-            zones += SubZone.SOUTH_FALADOR_YEWS
-            zones += SubZone.BARBARIAN_VILLAGE
-            treeZones(zones)
-        }
-
-        trees.removeIf { level < it.level }
-
-        require(trees.isNotEmpty()) {
-            "No tree types were selected from WoodcuttingScriptFactory."
-        }
-
-        return CutTreeBotScript(bot, trees, getDuration(bot), zones)
-    }
-
-    override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-
-        /**
-         * Adds common yew-cutting zones used as general-purpose profit locations.
-         */
-        fun defaultZones() {
-            zones += SubZone.LUMBER_YARD_YEWS
-            zones += SubZone.EAST_DRAYNOR_YEWS
-            zones += SubZone.VARROCK_PALACE_YEWS
-            zones += SubZone.SOUTH_FALADOR_YEWS
-            zones += SubZone.SOUTH_SEERS_VILLAGE_YEWS
-            zones += SubZone.WEST_CATHERBY_YEWS
-        }
-
-        val trees = EnumSet.noneOf(Tree::class.java)
-
-        if (level < Tree.WILLOW.level) {
-            trees += Tree.NORMAL
-            defaultZones()
-            treeZones(zones)
-        } else if (level < Tree.YEW.level) {
-            trees += Tree.WILLOW
-            trees += Tree.MAPLE
-
-            zones += SubZone.SEERS_VILLAGE_MAIN
-            zones += SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES
-            if (level >= Tree.MAPLE.level) {
-                mapleZones(zones)
-            } else {
-                zones += SubZone.CATHERBY_BEACH_WILLOWS
-                willowZones(zones)
-            }
-
+            trees.add(MAGIC)
             if (bot.personality.isDumb) {
-                trees += Tree.OAK
-                defaultZones()
-            }
-        } else if (level < Tree.MAGIC.level) {
-            trees += Tree.YEW
-
-            zones += SubZone.VARROCK_PALACE_YEWS
-            zones += SubZone.WEST_CATHERBY_YEWS
-
-            if (bot.personality.isDumb) {
-                trees += Tree.WILLOW
-                trees += Tree.MAPLE
-                defaultZones()
-            }
-        } else {
-            trees += Tree.MAGIC
-            zones += SubZone.SORCERERS_TOWER_MAGICS
-            zones += SubZone.SOUTH_SEERS_VILLAGE_MAGICS
-
-            if (bot.personality.isDumb) {
-                trees += Tree.WILLOW
-                trees += Tree.MAPLE
-                trees += Tree.YEW
-                defaultZones()
+                trees.addAll(setOf(WILLOW, MAPLE, YEW))
             }
         }
-
-        trees.removeIf { level < it.level }
-        require(trees.isNotEmpty()) { "No tree types were selected." }
-        return CutTreeBotScript(bot, trees, getDuration(bot), zones)
-    }
-
-    /**
-     * Adds the willow zones around Ardougne and Yanille.
-     */
-    private fun willowZones(zones: MutableList<SubZone>) {
-        zones += SubZone.SOUTH_ARDOUGNE_WILLOWS
-        zones += SubZone.NORTH_ARDOUGNE_WILLOWS
-        zones += SubZone.EAST_ARDOUGNE_WILLOWS
-        zones += SubZone.SOUTH_YANILLE_WILLOWS
-    }
-
-    /**
-     * Adds the maple zones that have no willows. Only add these for bots that can cut maples.
-     */
-    private fun mapleZones(zones: MutableList<SubZone>) {
-        zones += SubZone.NORTH_SEERS_VILLAGE_MAPLES
-        zones += SubZone.SOUTH_SORCERERS_TOWER_MAPLES
-    }
-
-    /**
-     * Adds the zones meant for normal and oak trees.
-     */
-    private fun treeZones(zones: MutableList<SubZone>) {
-        zones += SubZone.WEST_VARROCK_TREES
-        zones += SubZone.EAST_EDGEVILLE_TREES
-        zones += SubZone.NORTH_CATHERBY_TREES
+        return trees
     }
 }
