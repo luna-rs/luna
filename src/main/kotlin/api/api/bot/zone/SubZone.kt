@@ -15,8 +15,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
-import kotlinx.coroutines.future.await
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -1496,7 +1494,7 @@ enum class SubZone(
                 // The gate opens on a later tick, and pathing before then finds no way through.
                 waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
             }
-            return bot.navigator.navigate(destination, true).await() == NavigationResult.REACHED
+            return bot.actionHandler.webWalkTo(destination, bank = api.bot.webwalk.plan.BankAccess.NONE)
         }
 
         /**

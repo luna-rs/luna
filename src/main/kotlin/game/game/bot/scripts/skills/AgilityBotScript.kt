@@ -15,8 +15,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.Pathfinders
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -191,15 +190,12 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     }
 
     /**
-     * Reaches an exact local obstacle entry using the existing bot pathfinder, without adding a travel route.
+     * Reaches an exact obstacle entry through the web without accepting adjacency as arrival.
      */
-    private suspend fun walkTo(tile: Position): Boolean {
-        if (bot.position == tile) return true
-        val path = bot.navigator.findPath(bot.position, tile, Pathfinders.forPlayer(bot), true).await()
-        if (path?.peekLast() != tile) return false
-        bot.walking.replacePath(path)
-        return waitFor(30.seconds) { bot.position == tile && bot.walking.isEmpty }
-    }
+    private suspend fun walkTo(tile: Position): Boolean = withTimeoutOrNull(30.seconds) {
+        handler.webWalkToAny(listOf(tile)) && bot.position == tile && bot.walking.isEmpty
+    } == true
+
 
     override fun snapshot(): AgilityData = AgilityData().also {
         it.course = course.name

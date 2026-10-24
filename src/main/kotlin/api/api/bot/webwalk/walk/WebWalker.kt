@@ -275,6 +275,36 @@ object WebWalker {
     }
 
     /**
+     * Routes to the cheapest reachable interaction stand with the existing graph and carried resources.
+     * A set of collision-checked stands avoids routing onto a solid object's own tile or accepting a
+     * nearby tile on the wrong side of a wall. Interaction approaches never detour through a bank.
+     */
+    suspend fun webWalkToAny(bot: Bot, destinations: Collection<Position>): WebWalkResult {
+        val stands = destinations.distinct()
+        if (stands.isEmpty()) return WebWalkResult(false, "No valid interaction stands.")
+        if (bot.position in stands) return WebWalkResult(true, "Already at an interaction stand.")
+        missingData()?.let { return WebWalkResult(false, it) }
+        return withAttempts(bot, 1, disableCombatReflex = false) {
+            val activePlanner = planner
+            val start = bot.position
+            val snapshot = BotCapabilities.snapshot(bot, graph.teleports)
+            val intelligence = bot.personality.intelligence
+            val plan = try {
+                CompletableFuture.supplyAsync({
+                    activePlanner.planToNearest(start, stands, snapshot, intelligence)
+                }, planPool).await()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error("Could not plan an interaction approach for ${bot.username}!", e)
+                return@withAttempts WebWalkResult(false, "Could not plan the approach: $e")
+            } ?: return@withAttempts WebWalkResult(false, "No trip to an interaction stand.")
+            val destination = plan.destination ?: start
+            follow(bot, plan, destination, 0)
+        }
+    }
+
+    /**
      * Walks a bot to the nearest bank, which is the one that the cheapest trip ends at. Must be called from a bot script, on
      * the game thread. It is walked like any other trip, see [webWalk], and the bank that the bot is sent to is in the result.
      * Returns at once if the bot is within the radius of a bank already.
@@ -297,17 +327,19 @@ object WebWalker {
     }
 
     /**
-     * Tries a walk a number of times, with the combat reflex of the bot disabled.
+     * Tries a walk a number of times. Zone travel can hold the combat reflex; interaction approaches retain it.
      *
      * @param bot The bot.
      * @param attempts How many times to try.
+     * @param disableCombatReflex Whether this travel owns suppression of the combat reflex.
      * @param walk Walks once.
      * @return How it went, which is that of the last attempt.
      */
-    private suspend fun withAttempts(bot: Bot, attempts: Int, walk: suspend () -> WebWalkResult): WebWalkResult {
+    private suspend fun withAttempts(bot: Bot, attempts: Int, disableCombatReflex: Boolean = true,
+                                     walk: suspend () -> WebWalkResult): WebWalkResult {
         val disabledBefore = bot.reflex.isDisableCombatReflex
         try {
-            bot.reflex.isDisableCombatReflex = true
+            if (disableCombatReflex) bot.reflex.isDisableCombatReflex = true
             var attempt = 1
             while (true) {
                 val result = walk()
@@ -319,7 +351,7 @@ object WebWalker {
                 delay(1.seconds, 3.seconds)
             }
         } finally {
-            bot.reflex.isDisableCombatReflex = disabledBefore
+            if (disableCombatReflex) bot.reflex.isDisableCombatReflex = disabledBefore
         }
     }
 

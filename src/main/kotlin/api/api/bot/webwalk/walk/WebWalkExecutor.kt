@@ -212,7 +212,7 @@ class WebWalkExecutor(private val bot: Bot,
         repeat(DOOR_ATTEMPTS) {
             val door = find(position, closedId)
             if (door != null) {
-                if (!handler.interactions.interact(1, door)) {
+                if (!handler.interactions.interactOnLeg(1, door)) {
                     lastProblem = "could not reach the door $closedId at $position"
                     return@repeat
                 }
@@ -243,7 +243,7 @@ class WebWalkExecutor(private val bot: Bot,
         val name = action.option ?: "Climb"
         val option = optionNumber(obj.def().actions, name) ?: return "object $id has no '$name' option"
 
-        if (!handler.interactions.interact(option, obj)) {
+        if (!handler.interactions.interactOnLeg(option, obj)) {
             return "could not reach the object $id at $position"
         }
         if (leg.type == EdgeType.ENTRANCE) {
@@ -277,7 +277,7 @@ class WebWalkExecutor(private val bot: Bot,
 
         var obj = find(position, *ids) ?: return "there is no trapdoor $id at $position"
         if (obj.id == trapdoor.closed) {
-            if (!handler.interactions.interact(1, obj)) {
+            if (!handler.interactions.interactOnLeg(1, obj)) {
                 return "could not reach the trapdoor at $position"
             }
             if (!waitFor(ACTION_TIMEOUT) { find(position, trapdoor.open) != null }) {
@@ -285,7 +285,7 @@ class WebWalkExecutor(private val bot: Bot,
             }
             obj = find(position, trapdoor.open) ?: return "the trapdoor at $position closed again"
         }
-        if (!handler.interactions.interact(1, obj)) {
+        if (!handler.interactions.interactOnLeg(1, obj)) {
             return "could not reach the open trapdoor at $position"
         }
         return if (awaitArrival(leg)) null else

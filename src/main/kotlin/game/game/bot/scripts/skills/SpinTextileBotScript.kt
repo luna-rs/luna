@@ -28,10 +28,7 @@ import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
-import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.movement.NavigationRequest
 import io.luna.game.model.`object`.GameObject
-import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -201,12 +198,9 @@ class SpinTextileBotScript(
             if (plane == 1) {
                 // Any action still running would cancel the walk.
                 waitFor { bot.actions.size(ActionType.WEAK) == 0 && bot.actions.size(ActionType.STRONG) == 0 }
-                val walk = NavigationRequest.builder(bot)
-                    .async(true)
-                    .continuous(false)
-                    .policy(InteractionPolicy.EQUAL_POSITION)
-                    .target(SEERS_HOUSE_INSIDE)
-                bot.navigator.submit(walk.build()).await()
+                if (!bot.actionHandler.webWalkToAny(listOf(SEERS_HOUSE_INSIDE))) {
+                    return false
+                }
                 if (bot !in SEERS_HOUSE) {
                     bot.log("Could not walk into the Seers' Village house. position=${bot.position}")
                     return false

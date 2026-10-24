@@ -84,7 +84,7 @@ object ShipVoyage {
                 lastProblem = "there is no gangplank $plankId at $plankPosition"
                 return@repeat
             }
-            if (!context.handler.interactions.interact(1, plank)) {
+            if (!context.handler.interactions.interactOnLeg(1, plank)) {
                 lastProblem = "could not reach the gangplank $plankId at $plankPosition"
                 return@repeat
             }
@@ -116,7 +116,7 @@ object ShipVoyage {
         }
         val crew = context.findNpc(leg.from, route.crew, CREW_RADIUS)
             ?: return "none of the crew ${route.crew} is within $CREW_RADIUS tiles of ${leg.from}"
-        if (!context.handler.interactions.interact(1, crew)) {
+        if (!context.handler.interactions.interactOnLeg(1, crew)) {
             return "could not reach the crew ${crew.id} at ${crew.position}"
         }
         val boarding = ShipBoarding.of(route) ?: return "there is no way to board the ship of ${route.name}"

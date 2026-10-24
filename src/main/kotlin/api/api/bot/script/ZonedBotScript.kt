@@ -16,7 +16,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
-import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -530,17 +529,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         val bank = cachedBank
         if (bank != null && !bot.bank.isOpen) {
-            val origin = bot.position
             val targetPosition = bank.position
-            val reachable = bot.navigator.canReachForInteraction(bank).await()
+            val reachable = handler.interactions.approach(bank) {
+                ActionSafety.NON_COMBAT.allows(bot)
+            }
             if (!awaitActionSafety()) return
             // An async result belongs to its original positions. Retry rather than route on a stale result.
-            if (bot.position != origin || bank.position != targetPosition) {
+            if (bank.position != targetPosition) {
                 forceBanking = true
                 return
             }
             if (!reachable) {
-                bot.log("No complete walking route confirmed to cached bank. Resolving parent/home route. cachedBank=$bank")
+                bot.log("No web approach confirmed to cached bank. Resolving parent/home route. cachedBank=$bank")
                 cachedBank = null
             }
         }

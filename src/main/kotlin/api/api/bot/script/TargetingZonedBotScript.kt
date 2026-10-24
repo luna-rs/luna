@@ -14,8 +14,6 @@ import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.movement.NavigationRequest
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -281,8 +279,8 @@ abstract class TargetingZonedBotScript<E : Entity>(
     }
 
     /**
-     * Approaches a newly discovered Mob's fixed location until it becomes visible, then leaves normal Mob
-     * navigation to the interaction handler. Objects retain their existing interaction path. This does not
+     * Approaches a newly discovered Mob through the web, with a bounded discovery deadline. Objects use
+     * the shared web-backed interaction approach directly. This does not
      * weaken NavigationAction's dead/out-of-view Mob guard or continuously chase an unseen moving target.
      */
     protected suspend fun approachTarget(target: E): Boolean {
@@ -298,36 +296,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val timeout = minOf(targetApproachTimeout, remainingSearch)
         if (timeout <= Duration.ZERO || forceBanking || bot.navigator.isActive) return false
 
-        val destination = target.position
-        val pending = bot.navigator.submit(NavigationRequest.builder(bot)
-            .async(true)
-            .continuous(target is Npc)
-            .policy(InteractionPolicy.STANDARD_SIZE)
-            .target(destination)
-            .build())
-        try {
-            waitFor(timeout) {
-                !isActionSafe() || pending.isDone || bot.navigator.currentPending !== pending || forceBanking ||
-                    !target.isAlive || target.state != EntityState.ACTIVE || (target !is Npc && target.position != destination)
-                        || bot.position.isViewable(target.position) ||
-                    (searchStartedAt != null &&
-                        (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds >= targetSearchTimeout)
-            }
-            // Completed requests disappear from currentPending; a finished approach can still reveal the target.
-            val current = bot.navigator.currentPending
-            val available = current === pending || (current == null && pending.isDone)
-            return isActionSafe() && available && !pending.isCancelled && !forceBanking &&
-                target.isAlive && target.state == EntityState.ACTIVE && (target.position == destination || target is Npc)
-                    && bot.position.isViewable(target.position) &&
-                (searchStartedAt == null ||
-                    (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds < targetSearchTimeout)
-        } finally {
-            // Timeout, visibility, target invalidation and coroutine cancellation all stop our discovery walk.
-            // A replacement request belongs to another activity and must not be cancelled or have its queue cleared.
-            if (bot.navigator.currentPending === pending) {
-                if (!pending.isDone) bot.navigator.cancel()
-                bot.walking.clear()
-            }
+        return handler.interactions.approach(target, timeout = timeout, allowOutOfView = true) {
+            isActionSafe() && !forceBanking &&
+                    (searchStartedAt == null ||
+                        (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds < targetSearchTimeout)
         }
     }
 
