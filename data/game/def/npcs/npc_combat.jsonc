@@ -13935,7 +13935,10 @@
   {
     "id": 1156, // Kalphite Worker
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": {
+      "policy": "ALWAYS",
+      "tolerance_minutes": -1
+    },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 40,

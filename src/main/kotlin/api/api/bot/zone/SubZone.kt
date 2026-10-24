@@ -40,7 +40,8 @@ enum class SubZone(
     val inside: Position,
     val outside: Bot.() -> Position? = { null },
     val area: SimpleBoxArea,
-    val parent: Bot.() -> Zone
+    val parent: Bot.() -> Zone,
+    val plane: Int? = null
 ) {
     /**
      * Turael's Burthorpe house, used for native Slayer assignment dialogue.
@@ -1464,6 +1465,47 @@ enum class SubZone(
         }
     },
 
+    /**
+     * Queen chamber reached through both rope entrances. Existing ropes are reused without consuming stock.
+     * Temporary transitions until the webwalker covers rope attachment and both lair descents.
+     * Remove the overrides and outside anchor after https://github.com/luna-rs/luna/issues/707 has full route coverage.
+     */
+    KALPHITE_QUEEN(
+        inside = Position(3485, 9498),
+        outside = { Position(3226, 3108) },
+        area = SimpleBoxArea.of(3456, 9472, 3519, 9535),
+        parent = { AL_KHARID }, plane = 0) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            suspend fun descend(anchor: Position, bare: Int, tied: Int, arrived: () -> Boolean): Boolean {
+                fun entrance() = world.locator.findObjects(anchor, 8) { it.id == bare || it.id == tied }.firstOrNull()
+                var tunnel = entrance() ?: return false
+                if (tunnel.id == bare) {
+                    if (!bot.inventory.contains(954) || !bot.actionHandler.inventory.useItem(954).onObject(tunnel) ||
+                        !waitFor { entrance()?.id == tied }) return false
+                    tunnel = entrance() ?: return false
+                }
+                return bot.actionHandler.interactions.interact(1, tunnel) && waitFor { arrived() }
+            }
+            // Re-entry can resume on the upper floor after the first descent.
+            if (bot.position.z != 2 || bot.position.y !in 9472..9535) {
+                if (!descend(Position(3226, 3108), 3827, 3828) {
+                    bot.position.z == 2 && bot.position.y in 9472..9535
+                }) return false
+            }
+            bot.combat.prayers.activateIfOff(engine.combat.prayer.CombatPrayer.PROTECT_FROM_MAGIC)
+            return descend(Position(3508, 9497, 2), 3830, 3831) { bot.position.z == 0 && area.contains(bot) }
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val exit = world.locator.findObjects(Position(3508, 9493), 8) { it.id == 3832 }.firstOrNull()
+                ?: return false
+            if (!bot.actionHandler.interactions.interact(1, exit) || !waitFor { bot.position.z == 2 }) return false
+            val upperExit = world.locator.findObjects(Position(3483, 9510, 2), 8) { it.id == 3829 }.firstOrNull()
+                ?: return false
+            return bot.actionHandler.interactions.interact(1, upperExit) && waitFor { bot.position.y < 9000 }
+        }
+    },
+
     /*
      * Level 20 Wilderness chaos temple.
      *
@@ -1565,7 +1607,7 @@ enum class SubZone(
             bot.subZones.clear()
             if (bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
-                    if (bot in zone.area) {
+                    if (bot in zone.area && (zone.plane == null || bot.position.z == zone.plane)) {
                         bot.subZones.add(zone)
                     }
                 }
