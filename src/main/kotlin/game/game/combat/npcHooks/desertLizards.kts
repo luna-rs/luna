@@ -23,9 +23,13 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
                 damage = damage?.cappedAt(npc.health - 1)
                 npc.combat.prepareForExecution()
-                if (other.inventory.remove(ICE_COOLER)) {
+                if (!npc.combat.isExecutionPending && other.inventory.remove(ICE_COOLER)) {
                     val finishingAttack = source
-                    other.submitAction(object : LockedAction(other, false, 1) {
+                    val finishingAction = object : LockedAction(other, false, 1) {
+                        override fun onUnlock() {
+                            npc.combat.clearExecution(this)
+                        }
+
                         override fun run(): Boolean {
                             if (executions == 0) {
                                 other.animation(ANIMATION)
@@ -38,7 +42,9 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                             }
                             return false
                         }
-                    })
+                    }
+                    npc.combat.trackExecution(finishingAction)
+                    other.submitAction(finishingAction)
                 }
             }
         }

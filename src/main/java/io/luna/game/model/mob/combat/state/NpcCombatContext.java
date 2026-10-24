@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.state;
 import api.combat.npc.NpcCombatHandler;
 import com.google.common.collect.ImmutableSet;
 import engine.combat.status.StatusEffectType;
+import io.luna.game.action.Action;
 import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
@@ -64,6 +65,45 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * The max hit override, takes effect when above or equal to 0.
      */
     private int maxHit = -1;
+
+    /**
+     * The player-owned finishing action currently reserved for this NPC, if any.
+     */
+    private Action<?> executionAction;
+
+    /**
+     * Checks whether a finishing sequence is already pending before another consumable is removed.
+     * Completed and interrupted actions release the reservation lazily, allowing a later hit to retry.
+     *
+     * @return Whether an unfinished execution action is already reserved.
+     */
+    public boolean isExecutionPending() {
+        if (executionAction != null && executionAction.isFinished()) {
+            executionAction = null;
+        }
+        return executionAction != null;
+    }
+
+    /**
+     * Reserves a finishing action before it is submitted on the game thread.
+     * Callers check {@link #isExecutionPending()} before consuming the finishing item and registering the action.
+     *
+     * @param action The action that owns this NPC's pending finish.
+     */
+    public void trackExecution(Action<?> action) {
+        executionAction = action;
+    }
+
+    /**
+     * Releases a finishing action on completion or interruption without clearing a newer reservation.
+     *
+     * @param action The finishing action releasing its reservation.
+     */
+    public void clearExecution(Action<?> action) {
+        if (executionAction == action) {
+            executionAction = null;
+        }
+    }
 
     /**
      * Creates a new {@link NpcCombatContext}.
