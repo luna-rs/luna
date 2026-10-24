@@ -8,8 +8,10 @@ import game.player.Sound
 import game.skill.thieving.Thieving
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
+import io.luna.game.model.Locatable
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 
@@ -26,6 +28,26 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
          * A set of names of guards in local cities.
          */
         val GUARD_NAMES = setOf("Guard", "Market Guard")
+
+        /**
+         * Determines if [npc] is a guard who would stop a theft right now. A guard who is already fighting doesn't.
+         *
+         * @param npc The NPC.
+         * @return `true` if [npc] is a guard free to stop a theft.
+         */
+        fun isGuard(npc: Npc): Boolean =
+            !npc.combat.inCombat() && GUARD_NAMES.contains(npc.def().name) && npc.combat.isAttackable
+
+        /**
+         * Determines if [npc] can see a theft by someone standing on [thief]: nothing blocks its line of sight, and
+         * [thief] is inside its view cone.
+         *
+         * @param npc The NPC watching.
+         * @param thief The thief, or the tile a thief would stand on.
+         * @return `true` if [npc] sees the theft.
+         */
+        fun canSee(npc: Npc, thief: Locatable): Boolean =
+            world.collisionManager.raycast(npc.position, thief.abs()) && npc.inViewCone(thief)
     }
 
     /**
@@ -114,7 +136,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
     private fun alertOwner(): Boolean {
         val owners = world.locator.findViewableNpcs(mob) { thievable.owners.contains(it.def().name) }
         for (owner in owners) {
-            if (world.collisionManager.raycast(owner.position, mob.position) && owner.inViewCone(mob)) {
+            if (canSee(owner, mob)) {
                 owner.speak("Hey! Get your hands off there!")
                 return true
             }
@@ -128,11 +150,9 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
      * @return `true` if a guard saw you.
      */
     private fun alertGuards(): Boolean {
-        val nearbyGuards = world.locator.findViewableNpcs(mob) {
-            !it.combat.inCombat() && GUARD_NAMES.contains(it.def().name) && it.combat.isAttackable
-        }
+        val nearbyGuards = world.locator.findViewableNpcs(mob) { isGuard(it) }
         for (guard in nearbyGuards) {
-            if (world.collisionManager.raycast(guard.position, mob.position) && guard.inViewCone(mob) && !guard.combat.inCombat()) {
+            if (canSee(guard, mob)) {
                 // The guard can see the player.
                 guard.speak("Hey! Get your hands off there!")
                 guard.combat.attack(mob)
