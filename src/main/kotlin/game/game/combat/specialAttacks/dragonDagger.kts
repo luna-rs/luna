@@ -32,7 +32,7 @@ val MAX_HIT_BONUS = 0.15
 /**
  * Puncture boosts each strike's offensive roll by 15 percent before comparison with the target's defence.
  */
-val ATTACK_ROLL_PERCENT = 115
+val ATTACK_ROLL_MULTIPLIER = 1.15
 
 /**
  * Queues Puncture's second strike, requiring a living, active attacker when the strike executes.
@@ -56,7 +56,7 @@ fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
 
 attack(type = DRAGON_DAGGER,
        drain = 25,
-       attackRollPercent = ATTACK_ROLL_PERCENT,
+       attackRollMultiplier = ATTACK_ROLL_MULTIPLIER,
        strengthBonus = MAX_HIT_BONUS) {
 
     // Use the dragon dagger special attack animation.

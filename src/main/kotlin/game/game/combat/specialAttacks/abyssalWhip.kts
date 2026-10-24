@@ -11,9 +11,14 @@ import kotlin.math.floor
  */
 val GRAPHIC = Graphic(341, 100, 0)
 
+/**
+ * Energy Drain scales the offensive roll to 125 percent before comparison with the target's defence.
+ */
+val ATTACK_ROLL_MULTIPLIER = 1.25
+
 attack(type = ABYSSAL_WHIP,
        drain = 50,
-       attackBonus = 0.25) {
+       attackRollMultiplier = ATTACK_ROLL_MULTIPLIER) {
 
     arrived {
         // Show the impact graphic on arrival, but only siphon energy when the accuracy roll succeeded.

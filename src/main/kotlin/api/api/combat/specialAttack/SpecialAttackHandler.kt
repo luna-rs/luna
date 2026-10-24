@@ -111,7 +111,8 @@ object SpecialAttackHandler {
      * @param attackBonus A flat bonus applied to the special attack's accuracy.
      * @param strengthBonus A percentage-based bonus applied to damage.
      * @param maxHit An optional base max-hit override.
-     * @param attackRollPercent Scales the offensive roll by an integer percentage; 100 preserves it.
+     * @param attackRollMultiplier A finite, non-negative multiplier in whole-percent increments, such as 1.15.
+     * Converted once at registration to an integer percentage for allocation-free combat calculations.
      * @param action The DSL block used to configure the special attack.
      */
     fun attack(type: SpecialAttackType,
@@ -122,8 +123,18 @@ object SpecialAttackHandler {
                strengthBonus: Double = 0.0,
                damageBonus: Double = 0.0,
                maxHit: Int? = null,
-               attackRollPercent: Int = 100,
+               attackRollMultiplier: Double = 1.0,
                action: SpecialAttackDataReceiver.() -> Unit) {
+        val scaledPercent = attackRollMultiplier * 100.0
+        require(attackRollMultiplier.isFinite() && attackRollMultiplier >= 0.0 && scaledPercent <= Int.MAX_VALUE) {
+            "Attack roll multiplier must produce a finite, non-negative Int percentage."
+        }
+        val roundedPercent = Math.round(scaledPercent)
+        // Permit binary representation error, but reject fractional percentage configuration.
+        require(kotlin.math.abs(scaledPercent - roundedPercent) <= Math.ulp(scaledPercent) * 2) {
+            "Attack roll multiplier must use whole-percent increments."
+        }
+        val attackRollPercent = roundedPercent.toInt()
         val receiver = SpecialAttackDataReceiver(drain,
                                                  damageType,
                                                  instant,

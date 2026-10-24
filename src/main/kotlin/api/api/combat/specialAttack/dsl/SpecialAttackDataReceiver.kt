@@ -25,7 +25,8 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * @property damageBonus A percentage-based modifier applied to the special attack's damage.
  * @property maxHit An optional base max-hit override for this special attack.
  * @property activationOnly `true` if this special only performs activation logic and does not behave like a normal attack.
- * @property attackRollPercent Scales the offensive roll by an integer percentage; 100 preserves it.
+ * @property attackRollPercent The integer percentage converted from the configured multiplier at registration.
+ * Combat calculations reuse this value; 100 preserves the ordinary offensive roll.
  * @author lare96
  */
 class SpecialAttackDataReceiver(
