@@ -20,7 +20,7 @@
     // Whether stackable ground items with the same id should merge together on the same tile.
     "merge_stackable_ground_items": false,
     // How frequent the auto-save script should run. <= 0 means it will not run.
-    "autosave_minutes": 10
+    "autosave_minutes": 60
   },
   "economy": {
     /**
@@ -96,7 +96,7 @@
   },
   "bots": {
     // The baseline number of bots the world should try to keep online.
-    "base_online_count": 350,
+    "base_online_count": 500,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
     // The baseline number of hours bots should remain logged out before returning.
