@@ -131,8 +131,16 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      */
     suspend fun interact(option: Int, target: Entity?): Boolean = interact(option, target, onWebWalkLeg = false)
 
-    private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean): Boolean {
-        if (target == null) {
+    /**
+     * Rechecks script-specific permission throughout the web approach and before sending the click.
+     * This prevents an assignment that expires during an approach from authorizing a stale attack.
+     */
+    suspend fun interact(option: Int, target: Entity?, allowed: () -> Boolean): Boolean =
+        interact(option, target, onWebWalkLeg = false, allowed = allowed)
+
+    private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean,
+                                 allowed: () -> Boolean = { true }): Boolean {
+        if (target == null || !allowed()) {
             return false
         }
 
@@ -161,11 +169,12 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
                 }
                 throw e
             }
-        } else approach(target, policy)
+        } else approach(target, policy, canContinue = allowed)
         if (!reached) {
             bot.log("Interaction failed: web approach did not reach the target.")
             return false
         }
+        if (!allowed()) return false
         val previousAttack = bot.combat.lastAttackSent
         val npcAttack = target is Npc && option == 3
         val cond = SuspendableCondition {

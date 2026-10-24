@@ -43,6 +43,48 @@ enum class SubZone(
     val parent: Bot.() -> Zone
 ) {
     /**
+     * Turael's Burthorpe house, used for native Slayer assignment dialogue.
+     */
+    TURAEL(
+        inside = Position(2931, 3536),
+        area = SimpleBoxArea.ofRadius(2927, 3533, 9, 8),
+        parent = { BURTHORPE }),
+
+    /**
+     * Supplied Canifis town footprint containing Mazchna's configured spawn.
+     */
+    CANIFIS_MAIN(
+        inside = Position(3494, 3473),
+        area = SimpleBoxArea.ofRadius(3473, 3461, 47, 57),
+        parent = { CANIFIS }),
+
+    /**
+     * Supplied Edgeville Dungeon footprint; the arrival tile is Vannaka's configured spawn.
+     * Existing webwalking and travel fallback handle the dungeon transition.
+     */
+    EDGEVILLE_DUNGEON(
+        inside = Position(3147, 9914),
+        area = SimpleBoxArea.ofRadius(3075, 9816, 77, 185),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Supplied Zanaris town footprint containing Chaeldar's configured spawn.
+     */
+    ZANARIS_MAIN(
+        inside = Position(2387, 4455),
+        area = SimpleBoxArea.ofRadius(2314, 4351, 197, 135),
+        parent = { ZANARIS }),
+
+    /**
+     * Supplied Shilo Village footprint and arrival tile, shared by local gameplay activities.
+     * Duradel is upstairs within this footprint; the webwalker handles his approach.
+     */
+    SHILO_VILLAGE(
+        inside = Position(2852, 2958),
+        area = SimpleBoxArea.ofRadius(2816, 2944, 64, 64),
+        parent = { KARAMJA }),
+
+    /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
      * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
      */

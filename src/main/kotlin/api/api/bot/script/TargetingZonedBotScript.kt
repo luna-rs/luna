@@ -213,7 +213,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 val option = interactionOption(target)
                 if (!targetActionReady(target)) return true
                 if (option == null) continue
-                val interacted = handler.interactions.interact(option, target)
+                val interacted = interactWithTarget(option, target)
                 if (!targetActionReady(target)) return true
                 if (!interacted) {
                     bot.log("Failed to interact with target ${describeTarget(target)} using option $option.")
@@ -347,7 +347,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
         if (isActionSafe() && focus?.state == EntityState.ACTIVE && bot.actions.size(ActionType.WEAK) == 0) {
             val option = interactionOption(focus!!) ?: return true
             if (!isActionSafe()) return false
-            handler.interactions.interact(option, focus)
+            interactWithTarget(option, focus!!)
 
             if (rand(bot.personality.dexterity)) {
                 bot.naturalDelay()
@@ -381,6 +381,12 @@ abstract class TargetingZonedBotScript<E : Entity>(
      * @return The interaction option index to send.
      */
     open suspend fun interactionOption(target: E): Int? = 1
+
+    /**
+     * Dispatches a selected interaction. Subclasses may retain live eligibility checks during navigation.
+     */
+    protected open suspend fun interactWithTarget(option: Int, target: E): Boolean =
+        handler.interactions.interact(option, target)
 
     /**
      * Runs script-specific logic during each zone execution cycle.

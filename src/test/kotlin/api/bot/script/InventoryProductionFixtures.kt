@@ -12,6 +12,12 @@ import io.luna.game.model.item.Bank
 import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.def.WidgetDefinition
+import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.def.WeaponDefinition
+import io.luna.game.model.def.WeaponTypeDefinition
+import io.luna.game.model.def.AmmoDefinition
+import io.luna.game.model.def.CombatSpellDefinition
+import io.luna.util.parser.impl.*
 import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.model.mob.bot.Bot
 import org.mockito.Mockito.*
@@ -48,6 +54,7 @@ object InventoryProductionFixtures {
         val fixtureWorld = world
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         `when`(bot.attributes()).thenReturn(AttributeMap())
+        `when`(bot.preferences.pk).thenReturn(null)
         `when`(bot.world).thenReturn(fixtureWorld)
         `when`(bot.health).thenReturn(99)
         `when`(bot.state).thenReturn(EntityState.ACTIVE)
@@ -61,6 +68,18 @@ object InventoryProductionFixtures {
         `when`(bot.bank).thenReturn(bank)
         `when`(bot.actions).thenReturn(ActionQueue(bot))
         return bot
+    }
+
+    /**
+     * Loads native combat metadata once in dependency order for suites sharing the same test JVM.
+     */
+    fun initializeCombat() {
+        initialize()
+        if (WeaponTypeDefinition.ALL.isEmpty()) WeaponTypeDefinitionFileParser().run()
+        if (EquipmentDefinition.ALL.size == 0) EquipmentDefinitionFileParser().run()
+        if (WeaponDefinition.ALL.size == 0) WeaponDefinitionFileParser().run()
+        if (AmmoDefinition.ALL.isEmpty()) AmmoDefinitionFileParser().run()
+        if (CombatSpellDefinition.getSpells().isEmpty()) CombatSpellDefinitionFileParser().run()
     }
 
     fun bank(bot: Bot, vararg items: Item) {

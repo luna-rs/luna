@@ -16,6 +16,9 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.slayer.Slayer.activeSlayerTask
+import game.skill.slayer.SlayerMaster
+import game.skill.slayer.SlayerTaskType
 import game.skill.fishing.catchFish.Fish
 import game.skill.herblore.identifyHerb.Herb
 import game.skill.magic.Magic
@@ -55,6 +58,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
+ * @property slayerTask Optional native assignment restricting this session to exact task NPC IDs.
+ * @property slayerMaster The original assignee; an assignment change ends this combat session.
  * @author lare96
  */
 open class NpcCombatScript(bot: Bot,
@@ -62,7 +67,9 @@ open class NpcCombatScript(bot: Bot,
                            zones: MutableList<SubZone>,
                            private val names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of(),
                            val purpose: BotGearPurpose = BotGearPurpose.MELEE,
-                           private var spell: CombatSpell? = null) :
+                           private var spell: CombatSpell? = null,
+                           private val slayerTask: SlayerTaskType? = null,
+                           private val slayerMaster: SlayerMaster? = null) :
     TargetingZonedBotScript<Npc>(bot, duration, zones) {
 
     override val actionSafety = ActionSafety.COMBAT
@@ -86,8 +93,19 @@ open class NpcCombatScript(bot: Bot,
             /** Optional elemental autocast spell; absent in older melee sessions. */
             var spell: CombatSpell? = null
 
+            /**
+             * Optional native Slayer restriction; absent from legacy ordinary combat sessions.
+             */
+            var slayerTask: SlayerTaskType? = null
+            /**
+             * Master that assigned the saved task, used to reject a changed assignment on restoration.
+             */
+            var slayerMaster: SlayerMaster? = null
+
             override fun load(data: JsonObject) {
                 super.load(data)
+                slayerTask = data.get("slayerTask")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerTaskType::valueOf)
+                slayerMaster = data.get("slayerMaster")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerMaster::valueOf)
                 purpose = data.get("purpose")?.asString?.let(BotGearPurpose::valueOf) ?: BotGearPurpose.MELEE
                 spell = data.get("spell")?.takeUnless { it.isJsonNull }?.asString?.let(CombatSpell::valueOf)
                 val builder = ImmutableSetMultimap.builder<SubZone, String>()
@@ -100,6 +118,8 @@ open class NpcCombatScript(bot: Bot,
 
             override fun save(data: JsonObject) {
                 super.save(data)
+                slayerTask?.let { data.addProperty("slayerTask", it.name) }
+                slayerMaster?.let { data.addProperty("slayerMaster", it.name) }
                 data.addProperty("purpose", purpose.name)
                 spell?.let { data.addProperty("spell", it.name) }
                 val savedNames = JsonObject()
@@ -137,7 +157,35 @@ open class NpcCombatScript(bot: Bot,
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
                                                            (data as? NpcCombatData)?.names ?: ImmutableSetMultimap.of(),
                                                            (data as? NpcCombatData)?.purpose ?: BotGearPurpose.MELEE,
-                                                           (data as? NpcCombatData)?.spell)
+                                                           (data as? NpcCombatData)?.spell,
+                                                           (data as? NpcCombatData)?.slayerTask,
+                                                           (data as? NpcCombatData)?.slayerMaster)
+
+    /**
+     * Runtime identity rejects a replaced task even when its type and master happen to match.
+     * Restored scripts bind to the independently persisted native assignment and validate its metadata.
+     */
+    private val assignment = if (slayerTask == null) null else bot.activeSlayerTask
+
+    /**
+     * Checks live assignment state without awarding credit or altering the native task.
+     */
+    internal fun assignmentActive(): Boolean = slayerTask == null ||
+        (assignment != null && bot.activeSlayerTask === assignment && assignment.task == slayerTask &&
+            assignment.assignee == slayerMaster && assignment.remaining > 0 && bot.slayer.level >= slayerTask.level)
+
+    /**
+     * Keeps task NPC IDs authoritative even when several monsters share a camp or display name.
+     */
+    internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
+        (slayerTask == null || npc.id in slayerTask.npcs)
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (assignmentActive()) return false
+        bot.combat.target = null
+        stop()
+        return true
+    }
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null
@@ -154,6 +202,7 @@ open class NpcCombatScript(bot: Bot,
         // Gear selection and banking can suspend waiting for combat to end. Keep the normal
         // combat response available until this script is ready to handle an actual engagement.
         bot.reflex.isDisableCombatReflex = false
+        if (!assignmentActive()) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
             handler.combat.fleeCombat()
@@ -187,7 +236,8 @@ open class NpcCombatScript(bot: Bot,
         eatFood()
         if (!prepareCombat()) return mutableListOf()
         if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc) {
-            return mutableListOf(bot.combat.lastCombatWith as Npc)
+            return (bot.combat.lastCombatWith as Npc).takeIf { acceptsAssignment(it) }
+                ?.let { mutableListOf(it) } ?: mutableListOf()
         }
         val options = world.locator.findNpcs(searchBase, searchRadius, true) {
             canAttack(it) && it.combat.isAttackable
@@ -284,7 +334,12 @@ open class NpcCombatScript(bot: Bot,
         if (bot.combat.lastCombatWith?.isAlive == true && bot.combat.inCombat() &&
             !bot.actions.contains(CombatAction::class.java)
         ) {
-            handler.interactions.interact(3, bot.combat.lastCombatWith)
+            val opponent = bot.combat.lastCombatWith
+            if (slayerTask == null) {
+                handler.interactions.interact(3, opponent)
+            } else if (opponent is Npc && acceptsAssignment(opponent)) {
+                interactWithTarget(3, opponent)
+            }
             bot.naturalDelay()
         } else if (focus?.isAlive != true) {
             lootItems()
@@ -294,7 +349,7 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) return true
         eatFood()
-        if (focus?.isAlive != true) {
+        if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
             lootItems()
             return true
         }
@@ -311,11 +366,11 @@ open class NpcCombatScript(bot: Bot,
             return true
         }
         // Retry the current target through the same click path as a human, and abandon it on failure.
-        return !handler.interactions.interact(3, focus)
+        return !interactWithTarget(3, focus!!)
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
-        val allowed = bot.combat.checkMultiCombat(newFocus)
+        val allowed = acceptsAssignment(newFocus) && bot.combat.checkMultiCombat(newFocus)
         if (!allowed) {
             bot.log("Rejected combat target id=${newFocus.id} at ${newFocus.position}: multi-combat check failed.")
         }
@@ -326,7 +381,14 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun interactionOption(target: Npc): Int? {
         eatFood()
-        return if (prepareCombat()) 3 else null
+        return if (prepareCombat() && acceptsAssignment(target)) 3 else null
+    }
+
+    override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
+        if (slayerTask == null) return super.interactWithTarget(option, target)
+        return handler.interactions.interact(option, target) {
+            isActionSafe() && acceptsAssignment(target) && prepareCombat()
+        }
     }
 
     override fun snapshot(): NpcCombatData {
@@ -336,11 +398,14 @@ open class NpcCombatScript(bot: Bot,
         data.names = ImmutableSetMultimap.copyOf(names)
         data.purpose = purpose
         data.spell = spell
+        data.slayerTask = slayerTask
+        data.slayerMaster = slayerMaster
         return data
     }
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (!acceptsAssignment(npc)) return false
         if (npc.id == 50) {
             return activeZone == SubZone.KBD_LAIR && bot.combatLevel >= 100 &&
                 bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null && handler.inventory.hasAnyFood()
@@ -409,6 +474,20 @@ open class NpcCombatScript(bot: Bot,
 
     /** Validates actual equipment and one attack's supplies before permitting any attack click. */
     internal fun prepareCombat(): Boolean {
+        if (!assignmentActive()) {
+            bot.combat.target = null
+            clearMagic()
+            bot.reflex.isDisableCombatReflex = false
+            stop()
+            return false
+        }
+        val opponent = bot.combat.lastCombatWith
+        if (slayerTask != null && bot.combat.inCombat() && opponent != null &&
+            (opponent !is Npc || !acceptsAssignment(opponent))) {
+            // Unrelated aggression belongs to the normal defensive reflex, not task target selection.
+            bot.reflex.isDisableCombatReflex = false
+            return false
+        }
         if (bot.preferences.isSkiller) return false
         val ready = configureCombat()
         // A missing weapon, ammunition or spell cost sends us to a non-combat bank operation.

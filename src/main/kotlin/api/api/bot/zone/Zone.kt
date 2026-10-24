@@ -13,6 +13,7 @@ import io.luna.game.model.EntityType
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.Region
+import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.chunk.Chunk
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
@@ -44,6 +45,14 @@ enum class Zone(val price: Int,
                 val bankAnchors: List<Position> = emptyList(),
                 val travel: List<TravelStrategy> = emptyList(),
                 val safe: Boolean = true) {
+    /**
+     * Canifis footprint derived from the supplied main-town rectangle. The anchor is user supplied;
+     * bank anchors are intentionally empty. Travel costs the supplied 5,000 GP fee.
+     */
+    CANIFIS(price = 5000,
+            anchor = Position(3494, 3473),
+            regions = SimpleBoxArea.ofRadius(3473, 3461, 47, 57).touchedRegions),
+
     /**
      * Gnome Stronghold travel destination and western bank anchors.
      */

@@ -32,11 +32,7 @@ import kotlin.time.Duration.Companion.minutes
 class NpcCombatStylesTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() {
-            InventoryProductionFixtures.initialize()
-            EquipmentDefinitionFileParser().run()
-            WeaponDefinitionFileParser().run()
-            AmmoDefinitionFileParser().run()
-            CombatSpellDefinitionFileParser().run()
+            InventoryProductionFixtures.initializeCombat()
         }
     }
     private lateinit var luna: MockedStatic<Luna>

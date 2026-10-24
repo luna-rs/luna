@@ -1,6 +1,8 @@
 package game.bot.scripts
 
 import game.bot.scripts.combat.PkBotScript
+import game.bot.scripts.skills.SlayerBotScript
+import game.bot.scripts.skills.SlayerBotScript.SlayerData
 import game.bot.scripts.combat.PkBotScript.Companion.PkData
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -158,6 +160,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
+    scriptManager.addScript<SlayerData>(SlayerBotScript::class) { bot, data -> SlayerBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }

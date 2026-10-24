@@ -96,7 +96,8 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         MagicScriptFactory,
         RunecraftingScriptFactory,
         PrayerScriptFactory,
-        AgilityScriptFactory
+        AgilityScriptFactory,
+        SlayerScriptFactory
     ).associateBy { it.skillId }
 
     override fun accept(bot: Bot) {
