@@ -2,8 +2,8 @@ package game.bot.scripts
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
-import engine.bot.coordinator.ProgressiveCoordinator.Continuation
-import engine.bot.coordinator.ProgressiveCoordinator.Continuation.ContinuationData
+import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript
+import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript.ProgressionData
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
 import game.bot.scripts.DropPartyBotScript.PartyData
 import game.bot.scripts.skills.AgilityBotScript
@@ -84,11 +84,7 @@ import game.bot.scripts.skills.StealBotScript
 import game.bot.scripts.skills.StealBotScript.Companion.StealData
 import game.bot.scripts.skills.StringBowBotScript
 import game.bot.scripts.skills.StringJewelleryBotScript
-import game.bot.scripts.MakeCrystalKeyBotScript
-import game.bot.scripts.FillWaterBotScript
-import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.SearchNestBotScript.Companion.NestData
-import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.OpenCrystalChestBotScript.Companion.ChestData
 import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
 import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
@@ -108,7 +104,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
-    scriptManager.addScript<ContinuationData>(Continuation::class) { bot, data -> Continuation(bot, data) }
+    scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
     scriptManager.addScript<DonationData>(DepositPartyRoomItemBotScript::class) { bot, data -> DepositPartyRoomItemBotScript(bot, data) }
     scriptManager.addScript<PartyData>(DropPartyBotScript::class) { bot, data -> DropPartyBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
