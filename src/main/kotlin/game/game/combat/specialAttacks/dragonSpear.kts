@@ -2,8 +2,9 @@ package game.combat.specialAttacks
 
 import api.combat.player.VoidCombatAttack
 import api.combat.specialAttack.SpecialAttackHandler.attack
-import io.luna.game.action.Action
-import io.luna.game.action.ActionType
+import api.predef.ext.*
+import engine.combat.status.BasicStatusEffect
+import engine.combat.status.StatusEffectType
 import io.luna.game.model.Direction
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.block.Graphic
@@ -14,6 +15,19 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 val SHOVE_GRAPHIC = Graphic(253, 100, 0)
 val STUNNED_GRAPHIC = Graphic(254, 100, 0)
 val ANIMATION = 1064
+
+/**
+ * Applies the shove's existing seven-tick duration through the shared stun status.
+ * Repeated shoves refresh one timer instead of leaving older timers that can unlock combat early.
+ * Expiration removes only this status and cannot clear independent combat restrictions such as Slayer execution.
+ * The queued server-side shove remains available while stun checks block new player actions.
+ *
+ * @param victim The shoved mob.
+ */
+fun applyShoveStun(victim: Mob) {
+    victim.interact(null)
+    victim.status.add(BasicStatusEffect(victim, StatusEffectType.STUNNED, 7.ticks, refreshable = true))
+}
 
 attack(type = DRAGON_SPEAR,
        drain = 25) {
@@ -43,18 +57,7 @@ attack(type = DRAGON_SPEAR,
 
         // Stun and move the victim.
         victim.navigator.step(pushDir)
-        // todo status effects: stunned (equivalent to locked but can still be moved by server)
-        // todo stunned should disable walking like immobiliaztion but also eating, equipping items, etc.
-        // todo but stunned should still allow the walking queue to move the player
-        // todo for now just  disable combat
-        // todo stunned just a combination of disabled combat, immobilization (with no message prints), and restricted actions?
-        victim.combat.isDisabled = true
-        victim.submitAction(object : Action<Mob>(victim, ActionType.SOFT, false, 7) {
-            override fun run(): Boolean {
-                victim.combat.isDisabled = false
-                return true
-            }
-        })
-        CombatDamageRequest.effect(attacker, victim).resolve()// todo status effects: stunned (equivalent to locked)
+        applyShoveStun(victim)
+        CombatDamageRequest.effect(attacker, victim).resolve()
     }
 }
