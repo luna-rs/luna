@@ -111,7 +111,8 @@ fun isVisibleRebound(origin: Position, target: Mob): Boolean =
  *
  * Each rebound validates attackability, controller permission, and multi-combat eligibility before paying its energy
  * cost and displaying a projectile. After the travel delay, it applies damage and schedules the next rebound.
- * Exhausted targets, exhausted attacks, ineligible targets, or insufficient energy end the chain and unlock the bar.
+ * Ineligible candidates are skipped without spending energy or consuming a rebound. Exhausted targets, exhausted
+ * attacks, or insufficient energy end the chain and unlock the bar.
  * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
  * Before each new rebound, the attacker must still be alive and active. Already launched hits can land after death,
  * but their target-owned actions must not launch more projectiles or spend more of the attacker's energy.
@@ -134,10 +135,13 @@ fun handleChainHit(
     targets: Iterator<Mob>,
     source: ChainHitCombatAttack,
     attacksLeft: Int) {
-    if (attacker.isAlive && targets.hasNext() && attacksLeft > 0) {
+    while (attacker.isAlive && targets.hasNext() && attacksLeft > 0) {
         val nextVictim = targets.next()
-        if (!isVisibleRebound(origin, nextVictim) || !nextVictim.combat.isAttackable || !attacker.controllers.checkCombat(nextVictim) ||
-            !attacker.combat.checkMultiCombat(nextVictim) || !attacker.combat.specialBar.drain(10, true)) {
+        if (!nextVictim.combat.isAttackable || !isVisibleRebound(origin, nextVictim) ||
+            !attacker.controllers.checkCombat(nextVictim) || !attacker.combat.checkMultiCombat(nextVictim)) {
+            continue
+        }
+        if (!attacker.combat.specialBar.drain(10, true)) {
             attacker.combat.specialBar.isLocked = false
             return
         }
@@ -159,9 +163,9 @@ fun handleChainHit(
                 }
             }
         })
-    } else {
-        attacker.combat.specialBar.isLocked = false
+        return
     }
+    attacker.combat.specialBar.isLocked = false
 }
 
 attack(type = RUNE_THROWN_AXE,
