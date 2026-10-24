@@ -23,6 +23,12 @@ public enum SampleType {
     ITEM_FOR_COINS(1.0),
 
     /**
+     * A bot purchase from a coin shop. Uses full samples so single purchases still count, but applies only
+     * 35% of the equivalent coin trade's movement after historical resistance and the movement cap.
+     */
+    SHOP_PURCHASE(1.0, 0.35),
+
+    /**
      * Multiple non-coin item stacks traded for coins.
      * <p>
      * This is useful, but less precise than {@link #ITEM_FOR_COINS} because the total coin value must be split
@@ -55,12 +61,35 @@ public enum SampleType {
     private final double confidence;
 
     /**
+     * The multiplier applied to the final calculated price movement.
+     */
+    private final double movementMultiplier;
+
+    /**
      * Creates a sample type with the given confidence multiplier.
      *
      * @param confidence The weighting multiplier for this sample type.
      */
     SampleType(double confidence) {
+        this(confidence, 1.0);
+    }
+
+    /**
+     * Creates a sample type with separate sample confidence and final movement strength.
+     *
+     * @param confidence The sample weighting multiplier.
+     * @param movementMultiplier The final price movement multiplier.
+     */
+    SampleType(double confidence, double movementMultiplier) {
         this.confidence = confidence;
+        this.movementMultiplier = movementMultiplier;
+    }
+
+    /**
+     * @return The final price movement multiplier.
+     */
+    public double getMovementMultiplier() {
+        return movementMultiplier;
     }
 
     /**

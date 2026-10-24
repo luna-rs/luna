@@ -21,13 +21,16 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/** Runs the actual suspend helper with completed navigation and a deterministic game-task fixture. */
+/** Runs the actual suspend helper with a web-route adapter and a deterministic game-task fixture. */
 class BotNpcInteractionTest {
     private static World world;
     private static Method runTask;
     private Bot bot;
     private Npc target;
     private BotInteractionActionHandler handler;
+    private BotActionHandler actions;
+    private boolean reached;
+    private boolean routeSucceeds;
     private Continuation<Boolean> continuation;
 
     @BeforeAll static void initializeBindings() throws Exception {
@@ -51,13 +54,31 @@ class BotNpcInteractionTest {
             for (int tick = 0; tick < 25 && task.getState() != TaskState.CANCELLED; tick++) runTask.invoke(task);
             return null;
         }).when(world).schedule(any(Task.class));
-        handler = new BotInteractionActionHandler(bot, mock(BotActionHandler.class));
+        actions = mock(BotActionHandler.class);
+        reached = false;
+        routeSucceeds = true;
+        when(bot.getState()).thenReturn(io.luna.game.model.EntityState.ACTIVE);
+        when(bot.isAlive()).thenReturn(true);
+        when(bot.getPosition()).thenReturn(new io.luna.game.model.Position(3200, 3200));
+        when(bot.getWalking().isEmpty()).thenReturn(true);
+        when(target.getState()).thenReturn(io.luna.game.model.EntityState.ACTIVE);
+        when(target.isAlive()).thenReturn(true);
+        when(target.getPosition()).thenReturn(new io.luna.game.model.Position(3202, 3200));
+        when(target.isViewableFrom(bot)).thenReturn(true);
+        when(world.getCollisionManager().reached(any(io.luna.game.model.Locatable.class), eq(target),
+                eq(io.luna.game.model.mob.interact.InteractionPolicy.STANDARD_SIZE)))
+                .thenAnswer(invocation -> invocation.getArgument(0) != bot || reached);
+        when(actions.webWalkToAny(anyCollection(), null)).thenAnswer(invocation -> {
+            reached = routeSucceeds;
+            return routeSucceeds;
+        });
+        handler = new BotInteractionActionHandler(bot, actions);
         continuation = mock(Continuation.class);
         when(continuation.getContext()).thenReturn(EmptyCoroutineContext.INSTANCE);
     }
 
     @Test void failedNavigationDoesNotSendAnAttackClick() {
-        when(bot.getNavigator().submit(any())).thenReturn(CompletableFuture.completedFuture(NavigationResult.DIDNT_REACH));
+        routeSucceeds = false;
         assertEquals(false, handler.interact(3, target, continuation));
         verify(bot.getOutput(), never()).sendNpcInteraction(anyInt(), any());
     }

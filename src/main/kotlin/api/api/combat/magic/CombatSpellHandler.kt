@@ -1,6 +1,8 @@
 package api.combat.magic
 
 import api.combat.CombatHandler.displayCombatOverlay
+import engine.controllers.Controllers.inMultiArea
+import io.luna.game.model.area.Area
 import engine.combat.status.hooks.ImmobilizedStatusEffect
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
@@ -29,7 +31,7 @@ object CombatSpellHandler {
      *
      * Each listener executes in the context of the resulting [CombatDamage] instance for that spell hit.
      */
-    private val spells = HashMap<CombatSpell, MagicCombatAttack<*>.() -> Unit>()
+    private val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
 
     /**
      * Applies a weakening effect to a mob's skill level.
@@ -42,6 +44,7 @@ object CombatSpellHandler {
      * @param percent The fraction of the skill to weaken by.
      */
     fun weaken(mob: Mob, skill: Skill, percent: Double) {
+        if (!mob.isAlive) return
         val amount = floor(skill.staticLevel * percent).toInt()
         val result = skill.weaken(amount)
         if (mob is Player && result) {
@@ -59,6 +62,7 @@ object CombatSpellHandler {
      * @param duration The immobilization duration.
      */
     fun immobilize(mob: Mob, duration: Duration) {
+        if (!mob.isAlive) return
         mob.status.add(ImmobilizedStatusEffect(mob, duration))
     }
 
@@ -70,7 +74,7 @@ object CombatSpellHandler {
      * @param spell The spell to register.
      * @param damageListener The listener to invoke for damage dealt by that spell.
      */
-    fun spell(spell: CombatSpell, damageListener: MagicCombatAttack<*>.() -> Unit) {
+    fun spell(spell: CombatSpell, damageListener: CombatDamage.() -> Unit) {
         if (spells.putIfAbsent(spell, damageListener) != null) {
             throw IllegalStateException("A listener already exists for spell $spell.")
         }
@@ -82,10 +86,35 @@ object CombatSpellHandler {
      * If no listener has been registered for the supplied spell, this method does nothing.
      *
      * @param spell The spell whose side effect handler should be executed.
-     * @param attack The combat damage context passed into the spell effect listener.
+     * @param damage The applied hit after defensive hooks and health capping.
      */
-    fun effect(spell: CombatSpell, attack: MagicCombatAttack<*>) {
-        spells[spell]?.invoke(attack)
+    fun effect(spell: CombatSpell, damage: CombatDamage) {
+        spells[spell]?.invoke(damage)
+    }
+
+    /**
+     * Selects and rolls up to eight secondary hits without applying spell effects.
+     *
+     * Preserves the existing primary-accuracy gate. Both primary participants and each secondary must be in multi
+     * combat. Each secondary must be alive, attackable, and allowed by the attacker's controllers.
+     *
+     * @param attack The primary magic attack whose impact is being processed.
+     * @return Independently rolled secondary hits, including splashes.
+     */
+    fun secondaryHits(attack: MagicCombatAttack<*>): List<CombatDamage> {
+        val spell = attack.spellEffect ?: return emptyList()
+        val attacker = attack.attacker
+        val victim = attack.victim
+        if (spell.radius < 1 || !attack.nextDamage.isAccurate || !attacker.inMultiArea() || !victim.inMultiArea()) {
+            return emptyList()
+        }
+        val area = Area.of(victim.position, spell.radius)
+        val viewable: Set<Mob> = attacker.world.locator.findViewable(victim.type, victim.position)
+        return viewable.asSequence().filter {
+            it !== attacker && it !== victim && it.isAlive && area.contains(it) && it.inMultiArea() &&
+                    it.combat.isAttackable && attacker.combat.checkMultiCombat(it) &&
+                    (attacker !is Player || attacker.controllers.checkCombat(it))
+        }.take(8).map { attack.calculateDamage(it) }.toList()
     }
 
     /**

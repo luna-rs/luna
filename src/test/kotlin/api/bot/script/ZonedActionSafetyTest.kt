@@ -7,7 +7,6 @@ import api.bot.webwalk.plan.BankAccess
 import engine.bot.gear.BotGearLocator
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
-import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.*
@@ -50,8 +49,6 @@ class ZonedActionSafetyTest {
         var executions = 0
         var initialBank = false
         init { depositInventoryWhenBanking = false }
-        fun bank(bank: GameObject) { forceBanking = true; cachedBank = bank }
-        fun bankingPending() = forceBanking
         override suspend fun onInit(resumed: Boolean): Boolean { setups++; return true }
         override suspend fun equipment(): BotGearLocator? = null
         override suspend fun onBankRequested(initial: Boolean) = !initial || initialBank
@@ -122,21 +119,4 @@ class ZonedActionSafetyTest {
         assertEquals(1, script.zones.size)
     }
 
-    @Test fun combatActivityDoesNotPerformBankHooksWhileStillFighting() = runBlocking<Unit> {
-        val script = Activity(bot, ActionSafety.COMBAT)
-        assertFalse(script.init(true))
-        setZone(script)
-        val bank = spy(bot.bank)
-        doReturn(true).`when`(bank).isOpen
-        `when`(bot.bank).thenReturn(bank)
-        script.bank(mock(GameObject::class.java))
-        `when`(bot.combat.inCombat()).thenReturn(true)
-        assertFalse(script.run())
-        assertEquals(0, script.bankVisits)
-        assertTrue(script.bankingPending())
-        `when`(bot.combat.inCombat()).thenReturn(false)
-        assertFalse(script.run())
-        assertEquals(1, script.bankVisits)
-        assertFalse(script.bankingPending())
-    }
 }

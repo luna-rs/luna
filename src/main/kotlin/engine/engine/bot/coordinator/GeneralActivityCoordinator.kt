@@ -1,5 +1,6 @@
 package engine.bot.coordinator
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.predef.*
 import game.bot.scripts.UseLampBotScript
@@ -53,9 +54,10 @@ object GeneralActivityCoordinator : BotCoordinator {
         val duration = if (bot.preferences.likesActivity(BotActivity.GENERAL_ACTIVITIES))
             rand(100, 350).minutes else rand(45, 120).minutes
         if (owned(bot, UseLampBotScript.LAMP) > 0) {
-            val preferred = InterfaceSkill.values().filter { it.skill in bot.preferences.skills }
-            val skill = preferred.randomOrNull() ?: InterfaceSkill.values().random()
-            return UseLampBotScript(bot, skill, duration)
+            val eligible = InterfaceSkill.values().filter { BotCombatActionHandler.wantsToTrain(bot, it.skill) }
+            val preferred = eligible.filter { it.skill in bot.preferences.skills }
+            val skill = preferred.randomOrNull() ?: eligible.randomOrNull()
+            if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {

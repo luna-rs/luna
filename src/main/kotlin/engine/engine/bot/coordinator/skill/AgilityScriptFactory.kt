@@ -19,12 +19,14 @@ import io.luna.game.model.mob.bot.Bot
  */
 object AgilityScriptFactory : SkillingScriptFactory(SKILL_AGILITY) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        val course = getBestActivity(bot, level, { it.course.level }, AgilityBotCourse.entries)
+        val activity = getBestSkillingActivity(bot, level, { it.course.level }, AgilityBotCourse.entries.map {
+            BotSkillingActivity(tokens = setOf(it), zones = setOf(it.zone))
+        })
             ?: return object : DynamicBotScript(bot) {
                 override suspend fun run() = true
             }
-        zones.add(course.zone)
-        return AgilityBotScript(bot, course, getDuration(bot))
+        zones.addAll(activity.zones)
+        return AgilityBotScript(bot, activity.tokens.single(), getDuration(bot))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =

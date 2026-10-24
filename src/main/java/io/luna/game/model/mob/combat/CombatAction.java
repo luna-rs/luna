@@ -103,17 +103,18 @@ public final class CombatAction extends Action<Mob> {
             return clearTarget();
         }
 
+        if (mob instanceof Player) {
+            updatePlayerPursuit(target, policy, reached);
+        } else if (mob instanceof Npc) {
+            updateNpcPursuit(policy, reached);
+        }
+
         // Continue pursuing until the target is inside interaction range.
         if (!reached) {
             if (mob.getWalking().isEmpty() && mob instanceof Npc) {
                 // We are stationary and still not in range, so re-initiate pursuit.
                 mob.interact(target);
                 mob.getActions().submitIfAbsent(new PursuitAction(mob.asNpc(), policy));
-            } else if (!target.equals(mob.getNavigator().getCurrentTarget()) && mob instanceof Player) {
-                // For players, submit a navigation request to track our target if needed.
-                var request = NavigationRequest.builder(mob).policy(policy).continuous(true).
-                        target(combat.getTarget()).build();
-                mob.getNavigator().submit(request);
             }
             // Stay active while combat should continue.
             return pendingAttackExpired(target);
@@ -137,6 +138,52 @@ public final class CombatAction extends Action<Mob> {
             return false;
         }
         return pendingAttackExpired(target);
+    }
+
+    /**
+     * Starts pursuit when out of range or refreshes an existing chase after attack reach changes.
+     * Queued movement is preserved while the selected attack remains out of range. Once it can reach,
+     * the active chase and its queued steps are cancelled, including pending path results. Pursuit resumes
+     * if the target later leaves range. Matching out-of-range policies retain the existing navigation request.
+     *
+     * @param target The current combat target.
+     * @param policy The selected attack's reach rules.
+     * @param reached Whether the selected attack can already reach the target.
+     */
+    private void updatePlayerPursuit(Mob target, InteractionPolicy policy, boolean reached) {
+        var navigator = mob.getNavigator();
+        boolean chasingTarget = target.equals(navigator.getCurrentTarget());
+        if (reached) {
+            if (chasingTarget) {
+                navigator.cancel();
+                mob.getWalking().clear();
+            }
+            return;
+        }
+        if (!navigator.isFollowing(target, policy)) {
+            var request = NavigationRequest.builder(mob).policy(policy).continuous(true).target(target).build();
+            navigator.submit(request);
+        }
+    }
+
+    /**
+     * Refreshes an existing NPC chase with the selected attack's reach rules.
+     * Movement is retained while out of range. Once in range, finishing pursuit prevents another queued
+     * execution from adding a step, and clearing its walking steps stops the old chase.
+     *
+     * @param policy The selected attack's reach rules.
+     * @param reached Whether the selected attack can already reach the target.
+     */
+    private void updateNpcPursuit(InteractionPolicy policy, boolean reached) {
+        PursuitAction pursuit = mob.getActions().first(PursuitAction.class);
+        if (pursuit != null) {
+            if (reached) {
+                pursuit.complete();
+                mob.getWalking().clear();
+            } else {
+                pursuit.setPolicy(policy);
+            }
+        }
     }
 
     /** The combat timer starts after an attack; it cannot decide whether a first attack is still pending. */

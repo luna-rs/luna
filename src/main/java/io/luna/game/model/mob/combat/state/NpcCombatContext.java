@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.state;
 import api.combat.npc.NpcCombatHandler;
 import com.google.common.collect.ImmutableSet;
 import engine.combat.status.StatusEffectType;
+import io.luna.game.action.Action;
 import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
@@ -12,6 +13,7 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
 import java.util.Set;
@@ -63,6 +65,60 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * The max hit override, takes effect when above or equal to 0.
      */
     private int maxHit = -1;
+
+    /**
+     * Whether this NPC has entered the state requiring a finishing item. Respawns receive a new combat context.
+     */
+    private boolean awaitingExecution;
+
+    /**
+     * Distinguishes execution preparation from temporary combat restrictions such as a stun.
+     * Prepared NPCs reject poison so damage-over-time cannot bypass their finishing-item requirement.
+     *
+     * @return Whether this NPC is waiting for a validated finishing blow.
+     */
+    public boolean isAwaitingExecution() {
+        return awaitingExecution;
+    }
+
+    /**
+     * The player-owned finishing action currently reserved for this NPC, if any.
+     */
+    private Action<?> executionAction;
+
+    /**
+     * Checks whether a finishing sequence is already pending before another consumable is removed.
+     * Completed and interrupted actions release the reservation lazily, allowing a later hit to retry.
+     *
+     * @return Whether an unfinished execution action is already reserved.
+     */
+    public boolean isExecutionPending() {
+        if (executionAction != null && executionAction.isFinished()) {
+            executionAction = null;
+        }
+        return executionAction != null;
+    }
+
+    /**
+     * Reserves a finishing action before it is submitted on the game thread.
+     * Callers check {@link #isExecutionPending()} before consuming the finishing item and registering the action.
+     *
+     * @param action The action that owns this NPC's pending finish.
+     */
+    public void trackExecution(Action<?> action) {
+        executionAction = action;
+    }
+
+    /**
+     * Releases a finishing action on completion or interruption without clearing a newer reservation.
+     *
+     * @param action The finishing action releasing its reservation.
+     */
+    public void clearExecution(Action<?> action) {
+        if (executionAction == action) {
+            executionAction = null;
+        }
+    }
 
     /**
      * Creates a new {@link NpcCombatContext}.
@@ -156,19 +212,41 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * This state is used for NPCs that should not die from normal damage immediately, but instead must be finished
      * by a special execution action.
      * <p>
-     * Preparing for execution reduces the mob to {@code 1} health, clears any active poison, disables further combat
-     * processing, locks movement, and clears the current combat target.
+     * Preparing for execution clears active poison, disables further combat processing, locks movement, and clears
+     * the current combat target. It does not modify health: the initiating hit must be delivered normally, capped to
+     * leave at least one hitpoint, so its damage contribution and rewards are retained.
      * <p>
-     * If this mob is already disabled, this method does nothing.
+     * Preparation is idempotent and remains effective even if a temporary restriction already disables combat.
      */
     public void prepareForExecution() {
-        if (!isDisabled()) {
-            mob.setHealth(1);
+        if (!awaitingExecution) {
+            awaitingExecution = true;
             mob.getStatus().remove(StatusEffectType.POISONED);
             setDisabled(true);
             mob.getWalking().setLocked(true);
             target = null;
         }
+    }
+
+    /**
+     * Delivers the remaining health as an attributed finishing blow after a script validates its finishing item.
+     * <p>
+     * This NPC must already be awaiting execution. Damage delivery records the finishing player's
+     * contribution before death and invokes applied-damage callbacks. Defence hooks are deliberately not re-entered,
+     * because they initiated the execution sequence. Repeated completion attempts against a dead NPC do nothing.
+     *
+     * @param source The attack responsible for the validated finishing sequence.
+     */
+    public void finishExecution(CombatAttack<?> source) {
+        if (!awaitingExecution || !mob.isAlive()) {
+            return;
+        }
+        new CombatDamageRequest.Builder(source.getAttacker(), mob, CombatDamageType.MELEE)
+                .setBaseAccuracy(1.0)
+                .setBaseMaxHit(0)
+                .setFlatBonusDamage(mob.getHealth())
+                .ignoreProtectionPrayers()
+                .build().resolve().apply(source);
     }
 
     /**

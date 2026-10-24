@@ -73,7 +73,7 @@ object BorderGateCrossing : CrossingHandler {
                 return@repeat
             }
             val leaf = context.find(position, closedId) ?: return@repeat
-            if (!context.handler.interactions.interact(1, leaf)) {
+            if (!context.handler.interactions.interactOnLeg(1, leaf)) {
                 lastProblem = "could not reach the gate $closedId at $position"
                 return@repeat
             }

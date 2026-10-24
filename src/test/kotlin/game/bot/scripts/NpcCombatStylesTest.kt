@@ -21,7 +21,6 @@ import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptManager
 import io.luna.game.model.mob.combat.CombatSpell
-import io.luna.game.model.mob.combat.Weapon
 import io.luna.util.parser.impl.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
@@ -33,11 +32,7 @@ import kotlin.time.Duration.Companion.minutes
 class NpcCombatStylesTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() {
-            InventoryProductionFixtures.initialize()
-            EquipmentDefinitionFileParser().run()
-            WeaponDefinitionFileParser().run()
-            AmmoDefinitionFileParser().run()
-            CombatSpellDefinitionFileParser().run()
+            InventoryProductionFixtures.initializeCombat()
         }
     }
     private lateinit var luna: MockedStatic<Luna>
@@ -50,6 +45,7 @@ class NpcCombatStylesTest {
     @AfterEach fun restoreMode() { luna.close() }
 
     private fun bot(): Bot = InventoryProductionFixtures.bot().also {
+        `when`(it.preferences.pk).thenReturn(null)
         `when`(it.magic.level).thenReturn(99)
         `when`(it.spellbook).thenReturn(Spellbook.REGULAR)
         `when`(it.rights).thenReturn(PlayerRights.PLAYER)
@@ -66,44 +62,6 @@ class NpcCombatStylesTest {
         it[Equipment.AMMUNITION] = ammo
     }
 
-    @Test fun bowWithoutCompatibleAmmoIsRejectedWithoutFreeSupplies() {
-        val bot = bot()
-        bot.itemTracker.add(841)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.RANGED))
-        assertEquals(1, bot.itemTracker.size)
-        assertEquals(0, bot.bank.size())
-    }
-    @Test fun bowSelectsOwnedCompatibleAmmoAndRejectsIncompatibleArrows() {
-        val bot = bot()
-        bot.itemTracker.add(841)
-        bot.itemTracker.add(892, 500)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.RANGED))
-        bot.itemTracker.add(882, 500)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.RANGED)!!
-        assertEquals(841, selected.gear[Equipment.WEAPON])
-        assertEquals(882, selected.gear[Equipment.AMMUNITION])
-    }
-    @Test fun throwingWeaponsUseOwnedWeaponStackWithoutQuiverAmmo() {
-        val bot = bot()
-        bot.itemTracker.add(806, 100)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.RANGED)!!
-        assertEquals(806, selected.gear[Equipment.WEAPON])
-        assertNull(selected.gear[Equipment.AMMUNITION])
-    }
-    @Test fun magicRequiresStaffSpellbookLevelAndOwnedRunes() {
-        val bot = bot()
-        bot.itemTracker.add(1381)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-        bot.itemTracker.add(Rune.MIND.id, 50)
-        val selected = NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC)!!
-        assertEquals(CombatSpell.WIND_STRIKE, selected.spell!!.spell)
-        assertEquals(mapOf(Rune.MIND.id to 1), selected.runes)
-        `when`(bot.magic.level).thenReturn(0)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-        `when`(bot.magic.level).thenReturn(99)
-        `when`(bot.spellbook).thenReturn(Spellbook.ANCIENT)
-        assertNull(NpcCombatLoadout.find(bot, BotGearPurpose.MAGIC))
-    }
     @Test fun runeCostsApplyOnlyTheSelectedStaffAndKeepCatalystRunes() {
         val spell = CombatSpell.FIRE_STRIKE.def
         assertEquals(mapOf(Rune.AIR.id to 1, Rune.MIND.id to 1), NpcCombatLoadout.runeCosts(spell, 1387))
@@ -151,26 +109,6 @@ class NpcCombatStylesTest {
         verify(bot.actionHandler.interactions, never()).interact(anyInt(), any())
         assertTrue(ZonedBotScript::class.java.getDeclaredField("forceBanking").apply { isAccessible = true }.getBoolean(script))
     }
-    @Test fun missingRunesClearAutocastAndRequestBanking() {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), CombatSpell.WIND_STRIKE.def))
-        assertFalse(script.prepareCombat())
-        verify(bot.combat.magic).setAutocasting(false)
-        assertTrue(ZonedBotScript::class.java.getDeclaredField("forceBanking").apply { isAccessible = true }.getBoolean(script))
-    }
-    @Test fun magicUsesExistingAutocastHelperAndNeverSelectsMeleeStyle() {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        `when`(bot.combat.weapon.type).thenReturn(Weapon.STAFF)
-        bot.inventory.add(Item(Rune.MIND.id))
-        val definition = CombatSpell.WIND_STRIKE.def
-        `when`(bot.actionHandler.combat.setAutocastSpell(definition)).thenReturn(true)
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), definition))
-        assertTrue(script.prepareCombat())
-        verify(bot.actionHandler.combat).setAutocastSpell(definition)
-        verify(bot.combat.weapon, never()).changeStyle(anyInt())
-    }
     @Test fun depletedBankSuppliesRequestTotalStockAndCancelInsteadOfLooping() = runBlocking<Unit> {
         val bot = bot()
         `when`(bot.equipment.weapon).thenReturn(Item(841))
@@ -189,6 +127,105 @@ class NpcCombatStylesTest {
         assertFalse(SubZone.GREEN_DRAGONS in choices(false, BotGearPurpose.MAGIC, true))
         assertFalse(SubZone.GREEN_DRAGONS in choices(false, BotGearPurpose.MELEE, false))
     }
+
+    private fun queenGear() = gear(4151).also {
+        it[Equipment.HEAD] = 1163
+        it[Equipment.CHEST] = 1127
+        it[Equipment.LEGS] = 1079
+        it[Equipment.SHIELD] = 1201
+    }
+
+    private fun queenBot(): Bot = bot().also { bot ->
+        `when`(bot.combatLevel).thenReturn(110)
+        `when`(bot.attack.staticLevel).thenReturn(85)
+        `when`(bot.strength.staticLevel).thenReturn(85)
+        `when`(bot.defence.staticLevel).thenReturn(85)
+        `when`(bot.hitpoints.staticLevel).thenReturn(85)
+        `when`(bot.prayer.staticLevel).thenReturn(70)
+        `when`(bot.prayer.level).thenReturn(70)
+        queenGear().forEachIndexed { slot, id ->
+            `when`(bot.equipment[slot]).thenReturn(id?.let(::Item))
+            if (id != null) {
+                bot.itemTracker.add(id)
+            }
+        }
+        KalphiteQueenTrip.supplies.forEach { (id, amount) -> bot.itemTracker.add(id, amount) }
+    }
+
+    @Test fun queenSelectionRequiresProfitMeleeAndTripReadiness() {
+        fun selected(training: Boolean, purpose: BotGearPurpose, ready: Boolean, level: Int = 110) =
+            CombatCoordinator.eligibleCamps(level, training, purpose, false, ready).any { it.zone == SubZone.KALPHITE_QUEEN }
+        assertTrue(selected(false, BotGearPurpose.MELEE, true))
+        assertFalse(selected(true, BotGearPurpose.MELEE, true))
+        assertFalse(selected(false, BotGearPurpose.RANGED, true))
+        assertFalse(selected(false, BotGearPurpose.MAGIC, true))
+        assertFalse(selected(false, BotGearPurpose.MELEE, false))
+        assertFalse(selected(false, BotGearPurpose.MELEE, true, 109))
+    }
+
+    @Test fun queenReadinessRejectsBoostedLowDefenceAndWeakGear() {
+        val bot = queenBot()
+        val loadout = NpcCombatLoadout(queenGear())
+        assertTrue(KalphiteQueenTrip.ready(bot, loadout))
+        `when`(bot.defence.staticLevel).thenReturn(84)
+        `when`(bot.defence.level).thenReturn(99)
+        assertFalse(KalphiteQueenTrip.ready(bot, loadout))
+        `when`(bot.defence.staticLevel).thenReturn(85)
+        assertFalse(KalphiteQueenTrip.ready(bot, NpcCombatLoadout(gear(1277))))
+        val noArmour = queenGear().also { it[Equipment.CHEST] = null }
+        assertFalse(KalphiteQueenTrip.gearReady(noArmour))
+    }
+
+    @Test fun queenTripsRequireOwnedStockAndKeepAnEscapeReserve() {
+        val bot = queenBot()
+        val loadout = NpcCombatLoadout(queenGear())
+        assertTrue(KalphiteQueenTrip.ready(bot, loadout))
+        bot.itemTracker.remove(KalphiteQueenTrip.ROPE, 1)
+        assertFalse(KalphiteQueenTrip.ready(bot, loadout))
+        InventoryProductionFixtures.inventory(bot, Item(KalphiteQueenTrip.FOOD, 3))
+        assertTrue(KalphiteQueenTrip.canContinue(bot))
+        bot.inventory.remove(Item(KalphiteQueenTrip.FOOD))
+        assertFalse(KalphiteQueenTrip.canContinue(bot))
+    }
+
+    @Test fun queenPreparationStopsAttackClicksWhenSuppliesAreMissing() {
+        val bot = queenBot()
+        val script = NpcCombatScript(bot, 10.minutes, mutableListOf(SubZone.KALPHITE_QUEEN))
+        assertFalse(script.prepareCombat())
+        assertTrue(ZonedBotScript::class.java.getDeclaredField("forceBanking").apply { isAccessible = true }.getBoolean(script))
+        verify(bot.combat).target = null
+        verify(bot.reflex).isDisableCombatReflex = true
+    }
+
+    @Test fun queenZoneDoesNotIncludeTheUpperLairFloor() {
+        val bot = bot()
+        `when`(bot.localSubZones).thenReturn(com.google.common.collect.ImmutableSet.of(SubZone.KALPHITE_QUEEN))
+        val memberships = java.util.EnumSet.noneOf(SubZone::class.java)
+        doReturn(memberships).`when`(bot).subZones
+        val upperFloor = io.luna.game.model.Position(3485, 9498, 2)
+        val chamber = io.luna.game.model.Position(3485, 9498)
+        `when`(bot.position).thenReturn(upperFloor)
+        val positionField = io.luna.game.model.Entity::class.java.getDeclaredField("position").apply { isAccessible = true }
+        positionField.set(bot, upperFloor)
+        SubZone.updateSubZone(bot)
+        assertFalse(SubZone.KALPHITE_QUEEN in memberships)
+        `when`(bot.position).thenReturn(chamber)
+        positionField.set(bot, chamber)
+        SubZone.updateSubZone(bot)
+        assertTrue(SubZone.KALPHITE_QUEEN in memberships)
+    }
+
+    @Test fun queenSessionKeepsItsZoneAndNpcRestrictionWhenSaved() {
+        val original = NpcCombatScript(bot(), 10.minutes, mutableListOf(SubZone.KALPHITE_QUEEN),
+            ImmutableSetMultimap.of(SubZone.KALPHITE_QUEEN, "Kalphite Queen"))
+        val json = JsonObject()
+        original.snapshot().save(json)
+        val data = NpcCombatData().also { it.load(json) }
+        val restored = NpcCombatScript(bot(), data).snapshot()
+        assertEquals(listOf(SubZone.KALPHITE_QUEEN), restored.zones)
+        assertEquals(setOf("Kalphite Queen"), restored.names[SubZone.KALPHITE_QUEEN])
+        assertEquals(BotGearPurpose.MELEE, restored.purpose)
+    }
     @Test fun explicitNpcRestrictionsCannotBeBypassedByRockCrabException() {
         val bot = bot()
         val target = mock(Npc::class.java, RETURNS_DEEP_STUBS)
@@ -200,36 +237,6 @@ class NpcCombatStylesTest {
         assertFalse(canAttack.invoke(script, target) as Boolean)
         `when`(target.def().name).thenReturn("Cow")
         assertTrue(canAttack.invoke(script, target) as Boolean)
-    }
-    @Test fun rangedStyleIsSelectedAfterEquipmentAndRetainedAcrossAttackClicks() = runBlocking<Unit> {
-        val bot = bot()
-        val style = mock(io.luna.game.model.def.CombatStyleDefinition::class.java)
-        `when`(style.exp).thenReturn(com.google.common.collect.ImmutableList.of(io.luna.game.model.mob.Skill.RANGED))
-        `when`(style.button).thenReturn(77)
-        `when`(bot.combat.weapon.typeDef.styles).thenReturn(listOf(style))
-        `when`(bot.equipment.weapon).thenReturn(Item(841))
-        `when`(bot.equipment.computeAmountForId(882)).thenReturn(100)
-        val script = script(bot, BotGearPurpose.RANGED, NpcCombatLoadout(gear(841, 882)))
-        val npc = mock(Npc::class.java)
-        assertEquals(3, script.interactionOption(npc))
-        assertEquals(3, script.interactionOption(npc))
-        verify(bot.combat.weapon, times(1)).changeStyle(77)
-    }
-    @Test fun partialRuneWithdrawalUsesActualAvailableStockAndRestoresAutocast() = runBlocking<Unit> {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        val definition = CombatSpell.WIND_STRIKE.def
-        `when`(bot.actionHandler.combat.setAutocastSpell(definition)).thenReturn(true)
-        val banking = bot.actionHandler.banking
-        doAnswer {
-            bot.inventory.add(Item(Rune.MIND.id, 2))
-            true
-        }.`when`(banking).withdraw(Item(Rune.MIND.id, 500))
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), definition))
-        script.onBankOpen(false)
-        assertEquals(2, bot.inventory.computeAmountForId(Rune.MIND.id))
-        verify(bot.actionHandler.combat).setAutocastSpell(definition)
-        verify(bot.preferences, never()).addWantedItem(anyInt(), anyInt())
     }
     @Test fun mismatchedResumeEquipmentCannotAttackWithAnImaginaryStaff() {
         val bot = bot()

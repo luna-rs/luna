@@ -4,7 +4,6 @@ import io.luna.game.event.impl.ItemClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFifthClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFourthClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemSecondClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemThirdClickEvent;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
@@ -35,11 +34,6 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
                 index = payload.getShort(false, ByteOrder.LITTLE);
                 id = payload.getShort(true, ByteOrder.LITTLE);
                 return new ItemFirstClickEvent(player, id, index, interfaceId);
-            case 24:
-                id = payload.getShort(false);
-                index = payload.getShort(false, ValueType.ADD);
-                interfaceId = payload.getShort(false, ValueType.ADD);
-                return new ItemSecondClickEvent(player, id, index, interfaceId);
             case 161:
                 index = payload.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
                 id = payload.getShort(false, ByteOrder.LITTLE, ValueType.ADD);

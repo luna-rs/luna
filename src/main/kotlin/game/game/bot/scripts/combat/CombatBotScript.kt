@@ -1,9 +1,12 @@
 package game.bot.scripts.combat
 
+import api.bot.action.BotCombatActionHandler
+import api.bot.action.PkCombatSwitcher
+import api.combat.specialAttack.SpecialAttackHandler
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.waitFor
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.DynamicBotScript
-import api.combat.specialAttack.SpecialAttackHandler
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
@@ -30,12 +33,64 @@ import kotlin.time.Duration.Companion.seconds
  * @param bot The bot controlled by this combat script.
  * @param focus The current combat target this bot should prioritize.
  * @param initialState The initial state of this combat script (if the bot should attack the focus or run from it).
+ * @param pkSession Optional patrol owner whose hunting boundary applies to this fight, including reflex children.
+ * @param targetAllowed Optional encounter guard, rechecked before attacks and suspendable equipment switches.
+ * @param onCombatFinished Cleanup after final completion or termination; a combat pause retains encounter ownership.
+ * @param lootOnVictory Whether to wait briefly for native death processing and attempt visible ground loot on victory.
  * @author lare96
  */
-class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState: InitialState = InitialState.ATTACK) :
+class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob,
+    private val initialState: InitialState = InitialState.ATTACK, private val pkSession: PkBotScript? = null,
+    private val targetAllowed: () -> Boolean = { true }, private val onCombatFinished: () -> Unit = {},
+    private val lootOnVictory: Boolean = false) :
     DynamicBotScript(bot) {
 
     override val actionSafety = ActionSafety.COMBAT
+
+    /**
+     * One fight-owned switch controller retains decision timing across repeated attack and eating checks.
+     */
+    private val pkSwitcher = PkCombatSwitcher(bot, handler,
+        acceptsTarget = { targetAllowed() && pkSession?.allowsPursuit(it) != false })
+    private val combatPolicy = BotCombatActionHandler(bot, handler)
+
+    /**
+     * Only player fights with a saved PK identity use carried mixed-style switching.
+     */
+    private val usesPkSwitching: Boolean get() = focus is Player && bot.preferences.pk != null
+
+    /**
+     * Keeps waiting during reaction windows, and abandons fights with no usable permitted discipline.
+     */
+    private suspend fun prepareAttack(): Boolean {
+        if (!targetAllowed()) {
+            bot.combat.target = null
+            stop()
+            return false
+        }
+        if (focus is Player && pkSession?.allowsPursuit(focus as Player) == false) {
+            bot.combat.target = null
+            if (bot.navigator.currentTarget === focus) bot.navigator.cancel()
+            bot.walking.clear()
+            stop()
+            return false
+        }
+        if (usesPkSwitching) {
+            return when (pkSwitcher.prepare(focus as Player)) {
+                PkCombatSwitcher.Result.READY -> true
+                PkCombatSwitcher.Result.WAITING -> false
+                PkCombatSwitcher.Result.UNAVAILABLE -> {
+                    handler.combat.fleeCombat()
+                    stop()
+                    false
+                }
+            }
+        }
+        if (combatPolicy.prepareTrainingStyle()) return true
+        bot.combat.target = null
+        stop()
+        return false
+    }
 
     /**
      * An enumerated type representing the initial action this bot should perform.
@@ -78,8 +133,10 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
         }
         when (initialState) {
             InitialState.ATTACK -> {
-                bot.combat.attack(focus)
                 bot.speechStack.setDisableGeneral(true)
+                if (!prepareAttack()) return isTerminated()
+                if (!targetAllowed()) return true
+                bot.combat.attack(focus)
                 delay(600.milliseconds)
 
                 // Twice as likely to say something when starting combat.
@@ -102,6 +159,29 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun run(): Boolean {
+        if (usesPkSwitching) {
+            if (!focus.isAlive && lootOnVictory) {
+                waitFor(5.seconds) { focus.health > 0 || focus.state != io.luna.game.model.EntityState.ACTIVE }
+                if (isActionSafe()) lootItems()
+                return true
+            }
+            if (!focus.isAlive || !focus.isViewableFrom(bot)) return true
+            targetEnemy()
+            if (isTerminated() || !focus.isAlive) return true
+            talk()
+            eatFood()
+            if (isTerminated()) return true
+            drinkPotion()
+            activatePrayer()
+            useSpecialAttack()
+            delay(600.milliseconds)
+            return isTerminated()
+        }
+        if (!combatPolicy.prepareTrainingStyle()) {
+            bot.combat.target = null
+            handler.combat.fleeCombat()
+            return true
+        }
         targetEnemy()
         delay(600.milliseconds, 1200.milliseconds)
 
@@ -120,8 +200,13 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
     }
 
     override suspend fun finish() {
+        if (!isPaused()) onCombatFinished()
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
+        if (usesPkSwitching && !isPaused()) {
+            if (bot.combat.target === focus) bot.combat.target = null
+            pkSwitcher.clear()
+        }
     }
 
     override suspend fun completed() {
@@ -136,7 +221,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      */
     private suspend fun targetEnemy() {
         if (focus.isAlive && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
-            if (focus is Player && rand(1 of 5)) {
+            if (focus is Player && !usesPkSwitching && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
                     bot.combat.checkMultiCombat(it) &&
                             it.healthPercent < 25 &&
@@ -148,8 +233,12 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
                 }
             }
 
+            if (!prepareAttack()) return
+            // Equipping can suspend; do not initiate against a dead, vanished or newly contested target.
+            if (!focus.isAlive || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus)) return
+            if (usesPkSwitching && !combatPolicy.canAttackPlayer(focus as Player)) return
             bot.combat.attack(focus)
-            delay(1200.milliseconds, 3.seconds)
+            if (!usesPkSwitching) delay(1200.milliseconds, 3.seconds)
             return
         }
 
@@ -181,6 +270,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
                 // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
                 //  Wilderness depth, and available escape options.
                 handler.combat.fleeCombat()
+                if (usesPkSwitching) stop()
                 return
             }
 
@@ -243,6 +333,13 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
      */
     private suspend fun useSpecialAttack() {
         val weaponId = bot.equipment.weapon?.id
+        if (usesPkSwitching) {
+            // Tactical special-weapon swaps are deferred; never override a chosen ranged or Magic phase.
+            if (!bot.combat.magic.isAutocasting && weaponId in SpecialAttackHandler.getAllWeaponIds() &&
+                bot.combat.specialBar.energy >= SpecialAttackHandler.getDrain(weaponId!!) &&
+                combatPolicy.prepareTrainingStyle()) bot.combat.specialBar.toggleOn()
+            return
+        }
 
         if (specialWeapon == null) {
             specialWeapon = -1
@@ -289,6 +386,11 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             }
         }
 
+        if (!combatPolicy.prepareTrainingStyle()) {
+            bot.combat.target = null
+            stop()
+            return
+        }
         bot.combat.specialBar.toggleOn()
     }
 
@@ -316,7 +418,7 @@ class CombatBotScript(bot: Bot, private var focus: Mob, private val initialState
             // TODO@0.5.0 Intelligent bots should use Smite, Retribution, and Redemption strategically.
             val prayerPercent = bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble()
 
-            if (prayerPercent < 0.15 && bot.combat.prayers.active.entrySet().size > 2) {
+            if (prayerPercent < 0.15 && bot.combat.prayers.active.size > 2) {
                 bot.combat.prayers.deactivateAll()
                 bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
                 bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)

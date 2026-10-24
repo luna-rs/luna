@@ -11,8 +11,8 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates Fishing bot scripts.
  *
- * The factory chooses the best fishing tool available for the bot's current Fishing level, then assigns a zone group
- * that supports that tool.
+ * The factory chooses the best supported fishing tool available for the bot's current Fishing level, then assigns
+ * a zone group that supports that tool.
  *
  * Zone selection is partly personality-based:
  * - Dumb and non-dextrous bots are sent to less efficient or lower-level areas.
@@ -23,14 +23,6 @@ import io.luna.game.model.mob.bot.Bot
  * @author lare96
  */
 object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
-
-    // TODO Add bot zone for KARAMBWANJI.
-
-    /**
-     * The tools bots fish with. The others are used at spots that no bot zone covers.
-     */
-    private val BOT_TOOLS =
-        Tool.entries - setOf(KARAMBWANJI_NET, SLIMY_EEL_FISHING_ROD, CAVE_EEL_FISHING_ROD, LAVA_EEL_FISHING_ROD)
 
     /**
      * A group of fishing zones that support one or more fishing tools.
@@ -108,7 +100,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
          * Big net and harpoon fishing at Catherby.
          */
         BIG_NET_AND_HARPOON(
-            tools = setOf(BIG_NET, HARPOON),
+            tools = setOf(BIG_NET, SHARK_HARPOON),
             zones = {
                 mutableListOf(SubZone.EAST_CATHERBY_FISHING)
             }
@@ -117,15 +109,30 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         /**
          * Piscatoris fishing zone.
          *
-         * Used for higher-level fishing activities such as monkfish-style fishing routes.
+         * Supports monkfish net fishing and tuna/swordfish harpooning.
          */
         SMALL_NET_AND_HARPOON(
-            tools = setOf(BIG_NET, HARPOON),
+            tools = setOf(MONKFISH_NET, HARPOON),
             zones = {
                 mutableListOf(SubZone.PISCATORIS_FISHING_COLONY_MAIN)
             }
+        ),
+
+        /**
+         * Karambwan vessel fishing on northeast Karamja.
+         */
+        KARAMBWAN(
+            tools = setOf(KARAMBWAN_VESSEL),
+            zones = {
+                mutableListOf(SubZone.KARAMJA_KARAMBWAN_FISHING)
+            }
         )
     }
+
+    /**
+     * Tools with supported bot routes. Keep selection and routing based on the same declarations.
+     */
+    private val BOT_TOOLS = Tool.entries.filter { tool -> FishingZone.entries.any { tool in it.tools } }
 
     /**
      * Builds a Fishing training script.
@@ -140,13 +147,17 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        val tool = getBestActivity(bot, level, { it.level }, BOT_TOOLS) ?: SMALL_NET
+        val activities = BOT_TOOLS.map { tool ->
+            BotSkillingActivity(tokens = setOf(tool), zones = getZones(bot, tool).toSet())
+        }
+        val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
+            ?: BotSkillingActivity(tokens = setOf(SMALL_NET), zones = getZones(bot, SMALL_NET).toSet())
 
         return FishBotScript(
             bot,
-            tool,
+            activity.tokens.single(),
             getDuration(bot),
-            getZones(bot, tool)
+            activity.zones.toMutableList()
         )
     }
 
@@ -171,35 +182,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
      * applied.
      */
     private fun getZones(bot: Bot, tool: Tool): MutableList<SubZone> {
-        val zones = when (tool) {
-            SMALL_NET -> listOf(FishingZone.SMALL_NET_AND_BAIT)
-
-            FISHING_ROD -> listOf(FishingZone.SMALL_NET_AND_BAIT)
-
-            FLY_FISHING_ROD,
-            PIKE_FISHING_ROD -> listOf(FishingZone.LURE_AND_BAIT)
-
-            BIG_NET,
-            SHARK_HARPOON -> listOf(FishingZone.BIG_NET_AND_HARPOON)
-
-            HARPOON -> listOf(
-                FishingZone.SMALL_NET_AND_HARPOON,
-                FishingZone.CAGE_AND_HARPOON
-            )
-
-            LOBSTER_POT -> listOf(FishingZone.CAGE_AND_HARPOON)
-
-            MONKFISH_NET -> listOf(FishingZone.SMALL_NET_AND_HARPOON)
-
-            KARAMBWAN_VESSEL -> listOf(
-                FishingZone.SMALL_NET_AND_HARPOON
-            ) // TODO Vessel fishing.
-
-            KARAMBWANJI_NET,
-            SLIMY_EEL_FISHING_ROD,
-            CAVE_EEL_FISHING_ROD,
-            LAVA_EEL_FISHING_ROD -> throw IllegalStateException("Bots don't fish with $tool.")
-        }
+        val zones = FishingZone.entries.filter { tool in it.tools }
 
         return zones.random().zones(bot)
     }

@@ -5,7 +5,6 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Table;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.GsonUtils;
 import io.luna.util.RandomUtils;
@@ -85,20 +84,42 @@ public class BotSpeechPool<T extends Enum<T>> {
      * Loads the speech pool into memory.
      */
     public final void load() {
-        try (BufferedReader br = Files.newBufferedReader(path)) {
-            JsonObject object = GsonUtils.GSON.fromJson(br, JsonObject.class);
-            for (Entry<String, JsonElement> entry : object.entrySet()) {
-                T value = Enum.valueOf(enumType, entry.getKey());
-                JsonElement arrayElement = object.get(value.name());
-                if (arrayElement != null && !arrayElement.isJsonNull()) {
-                    for (JsonElement phraseElement : arrayElement.getAsJsonArray()) {
-                        pool.put(value, phraseElement.getAsString());
-                    }
-                }
-            }
+        load(path);
+    }
+
+    /**
+     * Loads speech from an explicit source path using this pool's decoder. Relative paths are resolved against the
+     * working directory; the configured speech-directory path remains the default for {@link #load()}.
+     *
+     * @param source The source file to read.
+     */
+    public final void load(Path source) {
+        try (BufferedReader br = Files.newBufferedReader(source)) {
+            read(GsonUtils.GSON.fromJson(br, JsonElement.class));
         } catch (Exception e) {
             logger.catching(e);
         }
+    }
+
+    /**
+     * Decodes enum-keyed phrases. Pools containing structured exchanges can override this hook while retaining the
+     * shared file loading and error handling. Successful reloads replace existing phrases without changing their weight.
+     *
+     * @param data The parsed speech data.
+     */
+    protected void read(JsonElement data) {
+        ListMultimap<T, String> loaded = ArrayListMultimap.create();
+        for (Entry<String, JsonElement> entry : data.getAsJsonObject().entrySet()) {
+            T value = Enum.valueOf(enumType, entry.getKey());
+            JsonElement arrayElement = entry.getValue();
+            if (arrayElement != null && !arrayElement.isJsonNull()) {
+                for (JsonElement phraseElement : arrayElement.getAsJsonArray()) {
+                    loaded.put(value, phraseElement.getAsString());
+                }
+            }
+        }
+        pool.clear();
+        pool.putAll(loaded);
     }
 
     /**

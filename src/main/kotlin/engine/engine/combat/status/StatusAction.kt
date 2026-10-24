@@ -6,9 +6,11 @@ import api.attr.setValue
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import engine.combat.status.StatusAction.Companion.statusEffectData
+import engine.combat.status.hooks.PoisonStatusEffect
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import java.util.*
 import kotlin.reflect.KClass
@@ -52,12 +54,19 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      *
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
      * decide whether the new effect can replace it.
+     * Poison is rejected before replacement checks when antipoison is active, the NPC definition grants immunity,
+     * or the NPC is awaiting a finishing item. This also blocks poison reapplied by the hit that prepared execution.
+     * Existing poison accepts only a stronger severity and retains its countdown instead of restarting the effect.
      *
      * @param listener The status effect to add.
      * @param onlyIfAbsent Whether the effect should only be added when no effect of the same type exists.
      * @return `true` if the effect was added, otherwise `false`.
      */
     fun add(listener: StatusEffect<out Mob>, onlyIfAbsent: Boolean = false): Boolean {
+        if (listener.type == StatusEffectType.POISONED &&
+            (isAntiPoison() || (mob is Npc && (mob.combatDef().isImmunePoison || mob.combat.isAwaitingExecution)))) {
+            return false
+        }
         val current = effects[listener.type]
 
         if (current != null) {
@@ -65,6 +74,8 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
                 return false
             } else if (!current.refreshable) {
                 return false
+            } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
+                return current.strengthenFrom(listener)
             } else if (current.countdown > listener.countdown) {
                 return false
             }

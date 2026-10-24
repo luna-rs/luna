@@ -14,6 +14,7 @@ import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
+import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
@@ -33,6 +34,8 @@ import static io.luna.game.model.def.CombatSpellDefinition.NONE;
  * <p>
  * This class provides player-specific combat state and behavior, including prayer handling, weapon state, special
  * attacks, ranged ammunition state, magic state, and attack construction.
+ * Each combat update rechecks target attackability and, for player targets, the attacker's PvP permission before
+ * consulting active controllers.
  *
  * @author lare96
  */
@@ -72,9 +75,40 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * A cached first attack supplied externally, usually by interaction code.
      * <p>
      * When present, this attack is consumed before normal attack selection logic in
-     * {@link CombatContext#getNextAttack(Mob)}.
+     * {@link CombatContext#getNextAttack(Mob)}. A cached attack for a different victim is discarded and a new attack
+     * is selected for the current target. Changes to the weapon, ammunition, style, spellbook, spell selection, or
+     * special-attack selection also invalidate the cached attack.
      */
     private CombatAttack<Player> firstAttack;
+
+    /**
+     * Selection state captured when the first attack is cached, or {@code null} when no attack is cached.
+     */
+    private AttackSelection firstAttackSelection;
+
+    /**
+     * The attack-selection inputs that must remain unchanged before a prepared first attack can be reused.
+     * Item identifiers are copied so replacing a weapon or ammunition invalidates the cache even for the same victim.
+     *
+     * @author lare96
+     */
+    private record AttackSelection(int weaponId, int ammunitionId, CombatStyleDefinition style,
+                                   CombatSpellDefinition selectedSpell, CombatSpellDefinition autocastSpell,
+                                   Spellbook spellbook, boolean autocasting, boolean specialActivated,
+                                   boolean specialForced) {
+    }
+
+    /**
+     * Captures the current equipment and casting inputs used when selecting the next attack.
+     *
+     * @return An immutable selection snapshot, without consuming runes, ammunition, or special energy.
+     */
+    private AttackSelection captureAttackSelection() {
+        return new AttackSelection(player.getEquipment().computeIdForIndex(Equipment.WEAPON),
+                player.getEquipment().computeIdForIndex(Equipment.AMMUNITION), weapon.getStyleDef(),
+                magic.getSelectedSpell(), magic.getAutocastSpell(), player.getSpellbook(), magic.isAutocasting(),
+                specialBar.isActivated(), specialBar.isForced());
+    }
 
     /**
      * Creates a new {@link PlayerCombatContext}.
@@ -95,7 +129,8 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public boolean onCombatProcess(boolean reached) {
         // Handle combat hooks and check controllers to make sure we can attack.
         PlayerCombatHandler.INSTANCE.consumeCombat(player);
-        return target != null && player.getControllers().checkCombat(target);
+        return target != null && target.getCombat().isAttackable() &&
+                (!(target instanceof Player) || isAttackable()) && player.getControllers().checkCombat(target);
     }
 
     @Override
@@ -120,8 +155,11 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         // Handle cached initial attack from interaction code.
         if (firstAttack != null) {
             CombatAttack<Player> nextAttack = firstAttack;
-            firstAttack = null;
-            return nextAttack;
+            boolean selectionUnchanged = captureAttackSelection().equals(firstAttackSelection);
+            setFirstAttack(null);
+            if (nextAttack.getVictim() == victim && selectionUnchanged) {
+                return nextAttack;
+            }
         }
 
         // Combat hooks from scripts always take first priority.
@@ -152,7 +190,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void onCombatFinished() {
-        firstAttack = null;
+        setFirstAttack(null);
     }
 
     @Override
@@ -295,11 +333,13 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     /**
-     * Sets the cached first attack.
+     * Sets the cached first attack and captures the current selection inputs used to validate its reuse.
+     * Clearing the attack also clears its snapshot.
      *
      * @param firstAttack The first attack to cache, or {@code null} to clear it.
      */
     public void setFirstAttack(CombatAttack<Player> firstAttack) {
         this.firstAttack = firstAttack;
+        firstAttackSelection = firstAttack == null ? null : captureAttackSelection();
     }
 }

@@ -77,6 +77,7 @@ class WyvernIcyBreathAttack(npc: Npc, other: Mob) : MagicCombatAttack<Npc>(
     }
 
     override fun onDamageApplied(damage: CombatDamage?) {
+        if (damage != null) super.onDamageApplied(damage)
         val chance = if (protected) 1 of 7 else ALWAYS
         val freeze = if (protected) 5 else 10
 

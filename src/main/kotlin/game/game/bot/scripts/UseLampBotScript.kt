@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
@@ -40,6 +41,7 @@ class UseLampBotScript(
     duration: Duration,
     zones: MutableList<SubZone> = StationaryInventoryBotScript.DEFAULT_ZONES.toMutableList()
 ) : InventoryBotScript(bot, duration, zones) {
+    override val trainingSkill get() = skill.skill
     override val verifiedProductionWithdrawals = true
 
     companion object {
@@ -104,7 +106,7 @@ class UseLampBotScript(
         if (!waitFor(3.seconds) {
                 bot.varpManager.getValue(PersistentVarp.XP_LAMP) == skill.varpValue
             }) return false
-        return isActionSafe() && ExperienceLampInterface::class in bot.overlays &&
+        return BotCombatActionHandler.wantsToTrain(bot, skill.skill) && isActionSafe() && ExperienceLampInterface::class in bot.overlays &&
             bot.output.clickButton(CONFIRM_BUTTON)
     }
 

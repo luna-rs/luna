@@ -29,6 +29,7 @@ import io.luna.game.model.mob.block.Graphic
  * @param incantation What the npc says when it starts casting.
  * @param message The message queued players receive when they land, or `null` for none.
  * @param animate Whether the npc plays the casting animation. Npcs that aren't human-shaped skip it.
+ * @param essenceMine Whether to use the essence mine Curse effects and randomized landing.
  * @author lare96
  */
 class NpcTeleOtherAction(npc: Npc,
@@ -36,7 +37,8 @@ class NpcTeleOtherAction(npc: Npc,
                          val destination: Position,
                          private val incantation: String = "Senventior Disthine Molenko!",
                          private val message: String? = "You are teleported to the Rune Essence Mine.",
-                         private val animate: Boolean = true) : Action<Npc>(npc, ActionType.STRONG) {
+                         private val animate: Boolean = true,
+                         private val essenceMine: Boolean = false) : Action<Npc>(npc, ActionType.STRONG) {
 
     /**
      * The mobs currently waiting to be teleported by this action.
@@ -44,6 +46,11 @@ class NpcTeleOtherAction(npc: Npc,
      * A set is used so the same mob cannot be queued more than once during the same casting sequence.
      */
     private val requests = HashSet<Mob>()
+
+    /**
+     * The execution at which each essence mine request began its effects.
+     */
+    private val requestStarts = HashMap<Mob, Int>()
 
     override fun onSubmit() {
         mob.interact(target)
@@ -64,6 +71,9 @@ class NpcTeleOtherAction(npc: Npc,
     }
 
     override fun run(): Boolean {
+        if (essenceMine) {
+            return runEssenceMine()
+        }
         return when (executions) {
             0 -> {
                 if (animate) {
@@ -113,6 +123,27 @@ class NpcTeleOtherAction(npc: Npc,
     }
 
     /**
+     * Gives each mine request its full effect sequence, including late arrivals.
+     */
+    private fun runEssenceMine(): Boolean {
+        val iterator = requests.iterator()
+        while (iterator.hasNext()) {
+            val target = iterator.next()
+            val start = requestStarts.getOrPut(target) { executions }
+            if (executions == start) {
+                mob.graphic(Graphic(108, 92))
+                EssenceMineTeleport.effects(mob, target, false)
+            } else if (executions - start >= 4) {
+                target.move(EssenceMineTeleport.destination(world))
+                target.unlockMovement()
+                requestStarts.remove(target)
+                iterator.remove()
+            }
+        }
+        return requests.isEmpty()
+    }
+
+    /**
      * Adds [mob] to the current teleport request queue if this action is [ActionState.PROCESSING].
      *
      * If the mob was not already queued, it is locked immediately so late requests behave the same as the initial target.
@@ -129,6 +160,7 @@ class NpcTeleOtherAction(npc: Npc,
      * Locks this mob in place while it waits for an NPC tele-other action to complete.
      */
     private fun Mob.lockMovement() {
+        if (essenceMine) walking.clear()
         if (this is Player) {
             lock()
         } else {

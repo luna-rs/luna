@@ -11,10 +11,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
-import kotlinx.coroutines.future.await
 
 /**
  * Handles bot-driven inventory actions.
@@ -77,11 +75,12 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
 
-            val navigationResult = bot.navigator.navigate(target, true).await()
-            if (navigationResult == NavigationResult.REACHED &&
+            if (handler.interactions.approach(target) &&
                 world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)) {
+                val currentIndex = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else usedIndex
+                if (currentIndex == -1 || bot.inventory[currentIndex]?.id != usedId) return false
                 bot.log("Using ${itemName(usedId)} on $target.")
-                action(index)
+                action(currentIndex)
                 return true
             }
 

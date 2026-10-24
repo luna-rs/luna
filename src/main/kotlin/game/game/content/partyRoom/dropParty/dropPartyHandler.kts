@@ -16,37 +16,10 @@ import io.luna.game.model.mob.overlay.NumberInput
  * Deposits an item into the party chest.
  */
 fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
-    if (DropPartyOption.chest.locked && plr.rights < RIGHTS_ADMIN) {
-        plr.sendMessage("Only staff members can deposit items right now.")
-        return
-    }
-
-    // Deposit-X runs once the amount is entered, and the slot can change before then.
-    val invItem = plr.inventory[event.index] ?: return
-    if (invItem.id != event.itemId || amount < 1) {
-        return
-    }
-    val def = invItem.itemDef
-    if (!def.isTradeable) {
-        plr.sendMessage("Untradeable items cannot be deposited here.")
-        return
-    }
-
-    // remove() reports success even when it takes less than asked, so never ask for more than the inventory holds.
-    var newAmount = minOf(amount, plr.inventory.computeAmountForId(invItem.id))
-    if (newAmount > 8 && !def.isStackable) {
-        newAmount = 8
-    }
-    val removeItem = if (invItem.isDynamic) invItem else invItem.withAmount(newAmount)
-    if (!plr.depositItems.hasSpaceFor(removeItem)) {
-        plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
-        return
-    }
-    if (plr.inventory.remove(removeItem)) {
-        plr.depositItems.add(removeItem)
+    if (!DropPartyOption.stageDeposit(plr, event.itemId, event.index, amount)) {
+        plr.sendMessage("The selected items cannot be deposited into the party chest.")
     }
 }
-
 /**
  * Withdraws an item from the party chest.
  */
@@ -85,8 +58,7 @@ button(2246) {
         if (plr.depositItems.size() == 0) {
             plr.sendMessage("You do not have any items to deposit.")
         } else {
-            DropPartyOption.chest.items.addAll(plr.depositItems)
-            plr.depositItems.clear()
+            DropPartyOption.confirmDeposit(plr)
             for (otherPlr in world.players) {
                 if (DropPartyInterface::class in otherPlr.overlays) {
                     DropPartyOption.chest.items.updatePrimaryWidget(otherPlr)

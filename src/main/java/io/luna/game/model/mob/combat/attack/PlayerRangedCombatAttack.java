@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.LocalProjectile;
+import io.luna.game.model.Position;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
@@ -22,13 +24,43 @@ import java.util.function.BiFunction;
 /**
  * A {@link RangedCombatAttack} implementation for ranged attacks performed by {@link Player}s.
  * <p>
- * This specialization applies player-specific ranged behavior on top of the generic projectile attack flow. Poison
- * handling is performed after the projectile reaches the victim and only after the base ranged-hit behavior has already
- * completed.
+ * This specialization captures the stance and poison source before ammunition is consumed. Experience and poison are
+ * applied when damage is delivered, using the damage capped to the victim's remaining health. Equipment changes during
+ * projectile flight therefore do not change the captured poison source.
  *
  * @author lare96
  */
 public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
+
+    /**
+     * The stance captured at launch for allocating experience when damage is delivered.
+     */
+    private CombatStance attackStance;
+
+    /**
+     * The ammunition or thrown weapon's poison definition captured before consumption, or {@code null} if unpoisoned.
+     */
+    private EquipmentPoisonDefinition poison;
+
+    /**
+     * The ammunition definition captured before consumption, retained for special attacks and delayed secondary hits.
+     */
+    private AmmoDefinition launchedAmmo;
+
+    /**
+     * The visible Ranged level captured before consumption for secondary-hit damage formulas.
+     */
+    private int launchedRangedLevel;
+
+    /**
+     * The ranged offensive roll captured before consumption, including prayer, stance, and equipment bonuses.
+     */
+    private int launchedAttackRoll;
+
+    /**
+     * The primary target's immutable position captured at launch for secondary-hit searches.
+     */
+    private Position launchedTargetPosition;
 
     /**
      * The chance for a successful poisonous ranged hit to apply poison to the victim.
@@ -96,14 +128,42 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
         PlayerCombatContext combat = attacker.getCombat();
+        attackStance = combat.getStance();
+        AmmoDefinition loadedAmmo = combat.getAmmoDef();
+        launchedAmmo = loadedAmmo;
+        launchedRangedLevel = attacker.skill(Skill.RANGED).getLevel();
+        launchedAttackRoll = CombatFormula.calculateRangedAttackRoll(attacker);
+        launchedTargetPosition = victim.getPosition();
+        int poisonSlot = loadedAmmo.isAmmoless() ? Equipment.WEAPON : Equipment.AMMUNITION;
+        int poisonId = attacker.getEquipment().computeIdForIndex(poisonSlot);
+        poison = EquipmentPoisonDefinition.ALL.get(poisonId).orElse(null);
         if (!combat.getRanged().removeAmmo()) {
             // Prevent the attack from continuing if we're lacking arrows or have an incompatible weapon.
             return null;
         }
 
-        int rawAmount = damage.getRawAmount();
+        return damage;
+    }
+
+    @Override
+    public void onDamageApplied(CombatDamage damage) {
+        awardDamageExperience(damage);
+        int rawAmount = Math.max(0, damage.getRawAmount());
+        if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
+            damage.getVictim().getStatus().add(new PoisonStatusEffect(damage.getVictim(), poison.getSeverity()), false);
+        }
+    }
+
+    /**
+     * Awards experience for delivered damage using the stance captured when this attack launched. Secondary hits can
+     * reuse this allocation without repeating poison rolls or special attack arrival callbacks.
+     *
+     * @param damage The applied damage, already capped to the victim's remaining health.
+     */
+    public final void awardDamageExperience(CombatDamage damage) {
+        int rawAmount = Math.max(0, damage.getRawAmount());
         Skill ranged = attacker.skill(Skill.RANGED);
-        if (combat.getStyleDef().getStance() == CombatStance.DEFENSIVE) {
+        if (attackStance == CombatStance.DEFENSIVE) {
             // Defensive ranged shares experience between RANGED and DEFENCE.
             ranged.addExperience(rawAmount * 2);
             attacker.skill(Skill.DEFENCE).addExperience(rawAmount * 2);
@@ -112,29 +172,6 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
             ranged.addExperience(rawAmount * 4);
         }
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
-        return damage;
-    }
-
-    @Override
-    public void onProjectileReached() {
-        super.onProjectileReached(); // Call superclass no matter what.
-
-        int index = -1;
-        if (ammo != null) {
-            index = ammo.isAmmoless() ? Equipment.WEAPON :
-                    ammo.isNeedsWeapon() ? Equipment.AMMUNITION : -1;
-        }
-        if (index == -1) {
-            // No valid poison source could be determined for this ammo configuration.
-            return;
-        }
-
-        // Attempt to poison if our ammo is poisonous and we've dealt damage.
-        int id = attacker.getEquipment().computeIdForIndex(index);
-        EquipmentPoisonDefinition poisonDef = EquipmentPoisonDefinition.ALL.get(id).orElse(null);
-        if (poisonDef != null && nextDamage.getRawAmount() > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
-            victim.getStatus().add(new PoisonStatusEffect(victim, poisonDef.getSeverity()), false);
-        }
     }
 
     /**
@@ -149,5 +186,38 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      */
     public AmmoDefinition getAmmo() {
         return ammo;
+    }
+
+    /**
+     * Gets the ammunition used by this attack before its stack was decremented. Unlike live equipment state, this
+     * snapshot survives firing the last thrown weapon and equipment changes during projectile flight.
+     *
+     * @return The launched ammunition definition, or {@code null} before attack processing begins.
+     */
+    public AmmoDefinition getLaunchedAmmo() {
+        return launchedAmmo;
+    }
+
+    /**
+     * @return The visible Ranged level captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedRangedLevel() {
+        return launchedRangedLevel;
+    }
+
+    /**
+     * @return The ranged offensive roll captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedAttackRoll() {
+        return launchedAttackRoll;
+    }
+
+    /**
+     * Gets the primary target's position before projectile flight. Movement by the target does not move this snapshot.
+     *
+     * @return The target position captured during attack processing, or {@code null} before processing begins.
+     */
+    public Position getLaunchedTargetPosition() {
+        return launchedTargetPosition;
     }
 }

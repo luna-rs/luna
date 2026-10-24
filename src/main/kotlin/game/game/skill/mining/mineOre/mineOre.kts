@@ -22,3 +22,8 @@ fun mineRock(plr: Player, ore: Ore, obj: GameObject) {
 Ore.ROCK_MAP.entries.forEach { (oreId, ore) ->
     object1(oreId) { mineRock(plr, ore, gameObject) }
 }
+
+// A rock whose ore has been mined.
+Ore.EMPTY_ROCKS.filter { it != -1 }.forEach {
+    object1(it) { plr.sendMessage("There is no ore currently available in this rock.") }
+}

@@ -1,6 +1,7 @@
 package api.combat.specialAttack.dsl
 
 import io.luna.game.model.mob.Player
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageType
@@ -25,6 +26,9 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * @property damageBonus A percentage-based modifier applied to the special attack's damage.
  * @property maxHit An optional base max-hit override for this special attack.
  * @property activationOnly `true` if this special only performs activation logic and does not behave like a normal attack.
+ * @property attackRollPercent The integer percentage converted from the configured multiplier at registration.
+ * Combat calculations reuse this value; 100 preserves the ordinary offensive roll.
+ * @property meleeDefenceBonus Optional stab, slash, or crush defence override; the attacker's style is preserved.
  * @author lare96
  */
 class SpecialAttackDataReceiver(
@@ -35,7 +39,9 @@ class SpecialAttackDataReceiver(
     val strengthBonus: Double = 0.0,
     val damageBonus: Double = 0.0,
     val maxHit: Int? = null,
-    val activationOnly: Boolean
+    val activationOnly: Boolean,
+    val attackRollPercent: Int = 100,
+    val meleeDefenceBonus: EquipmentBonus? = null
 ) {
 
     /**

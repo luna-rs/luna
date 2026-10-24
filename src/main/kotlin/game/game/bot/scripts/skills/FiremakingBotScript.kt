@@ -17,8 +17,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.path.Pathfinders
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -352,23 +351,14 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
     }
 
     /**
-     * Walks onto [tile]. Navigating would stop the bot a tile short, so this walks a bot route straight to
-     * the tile, like [api.bot.zone.WalkingTravelStrategy] does.
+     * Walks onto the exact firemaking-lane start through the web, including doors on the approach.
      *
      * @return `true` if the bot is standing on [tile].
      */
-    private suspend fun walkTo(tile: Position): Boolean {
-        if (bot.position == tile) {
-            return true
-        }
-        val path =
-            bot.navigator.findPath(bot.position, tile, Pathfinders.forPlayer(bot), true).await()
-        if (path?.peekLast() != tile) {
-            return false
-        }
-        bot.walking.replacePath(path)
-        return waitFor(30.seconds) { bot.position == tile }
-    }
+    private suspend fun walkTo(tile: Position): Boolean = withTimeoutOrNull(30.seconds) {
+        handler.webWalkToAny(listOf(tile)) && bot.position == tile && bot.walking.isEmpty
+    } == true
+
 
     /**
      * Queues a Woodcutting script so the bot can chop more logs to burn, then stops this script.

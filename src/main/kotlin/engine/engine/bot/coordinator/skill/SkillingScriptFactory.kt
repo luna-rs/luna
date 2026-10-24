@@ -130,7 +130,48 @@ abstract class SkillingScriptFactory(val skillId: Int) {
      * @return The selected activity, or `null` if no activity is available.
      */
     protected fun <E> getBestActivity(bot: Bot, level: Int, levelFunc: (E) -> Int, options: Collection<E>): E? {
-        val activities = getActivities(level, levelFunc, options)
+        val activities = ArrayList<BotSkillingActivity<E>>()
+        for (option in options) {
+            activities.add(BotSkillingActivity(tokens = setOf(option)))
+        }
+        val selected = getBestSkillingActivity(bot, level, levelFunc, activities) ?: return null
+        return selected.tokens.single()
+    }
+
+    /**
+     * Removes locked tokens and empty activities without separating resources from their locations.
+     */
+    protected fun <T> getSkillingActivities(
+        level: Int,
+        levelFunc: (T) -> Int,
+        options: Collection<BotSkillingActivity<T>>
+    ): List<BotSkillingActivity<T>> {
+        val activities = ArrayList<BotSkillingActivity<T>>()
+        for (activity in options) {
+            val tokens = linkedSetOf<T>()
+            for (token in activity.tokens) {
+                if (levelFunc(token) <= level) {
+                    tokens.add(token)
+                }
+            }
+            if (tokens.isNotEmpty()) {
+                activities.add(activity.copy(tokens = tokens))
+            }
+        }
+        activities.sortByDescending { it.tokens.maxOf(levelFunc) }
+        return activities
+    }
+
+    /**
+     * Applies the existing best/worst/random personality choice to complete resource-and-location groups.
+     */
+    protected fun <T> getBestSkillingActivity(
+        bot: Bot,
+        level: Int,
+        levelFunc: (T) -> Int,
+        options: Collection<BotSkillingActivity<T>>
+    ): BotSkillingActivity<T>? {
+        val activities = getSkillingActivities(level, levelFunc, options)
         if (bot.personality.isDextrous || bot.personality.isIntelligent) {
             return activities.firstOrNull()
         } else if (bot.personality.isDumb) {

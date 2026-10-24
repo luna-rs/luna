@@ -292,17 +292,24 @@ object Doors {
      * @return The replacement, or an empty list if [door] is not a wall.
      */
     private fun singleSwaps(door: GameObject, opening: Boolean): List<Swap> {
+        return listOfNotNull(singleSwap(door, typeOf(door)!!, opening))
+    }
+
+    /**
+     * Computes a single door's replacement, including doors with their own conditional script whose
+     * [type] is not loaded from the door files.
+     */
+    internal fun singleSwap(door: GameObject, type: DoorType, opening: Boolean): Swap? {
         val diagonal = when (door.objectType) {
             ObjectType.STRAIGHT_WALL -> false
             ObjectType.DIAGONAL_WALL -> true
-            else -> return emptyList()
+            else -> return null
         }
-        val type = typeOf(door)!!
         val offset = if (opening) openOffset(door.direction, diagonal) else closeOffset(door.direction, diagonal)
-        return listOf(Swap(door,
-                           if (opening) type.open else type.closed,
-                           door.position.translate(offset.first, offset.second),
-                           rotate(door.direction, if (opening) 1 else 3)))
+        return Swap(door,
+                    if (opening) type.open else type.closed,
+                    door.position.translate(offset.first, offset.second),
+                    rotate(door.direction, if (opening) 1 else 3))
     }
 
     /**

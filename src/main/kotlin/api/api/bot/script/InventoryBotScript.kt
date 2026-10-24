@@ -1,5 +1,6 @@
 package api.bot.script
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -24,7 +25,8 @@ import kotlin.time.Duration.Companion.seconds
  * recipe requirements and the normal player interaction. Failure budgets and their legacy JSON fields live here.
  * [verifiedProductionWithdrawals] opts production scripts into bounded unnoted withdrawal verification; existing
  * inventory scripts retain their default withdrawal behavior. Custom stock targets, output space, prerequisites,
- * and completion remain in the activity script.
+ * and completion remain in the activity script. Missing minimum startup supplies use the shared
+ * quantity-aware shop acquisition before an optional activity-specific prerequisite is queued.
  *
  * Subclasses provide the required withdrawal items, the activity-specific execution step, and the condition that decides
  * when another banking trip is needed.
@@ -39,6 +41,20 @@ abstract class InventoryBotScript(
     duration: Duration,
     zones: MutableList<SubZone>
 ) : ZonedBotScript(bot, duration, zones) {
+
+    /**
+     * Optional experience-bearing skill checked before startup and each production cycle.
+     */
+    protected open val trainingSkill: Int? = null
+
+    /**
+     * Stops resumed or active production when its skill no longer fits the account build.
+     */
+    private fun trainingAllowed(): Boolean {
+        if (trainingSkill?.let { BotCombatActionHandler.mayGainExperience(bot, it) } != false) return true
+        stop()
+        return false
+    }
 
     companion object {
         /**
@@ -94,11 +110,16 @@ abstract class InventoryBotScript(
     /** Whether either independent production retry budget has already been exhausted. */
     protected fun productionRetriesExhausted(): Boolean = failures >= maxFailures || bankFailures >= maxFailures
 
+    /** The selected recipe's startup requirements; rebuilt rather than persisted on each resume. */
+    private class StartupSupplies(
+        val items: List<Item>, val allowAcquisition: Boolean, val prepareMissing: () -> Boolean
+    )
+    private var startupSupplies: StartupSupplies? = null
+
     /**
-     * Validates minimum owned supplies, requests missing total stock targets, and forces initial banking.
-     * Tools request a target of three; consumables request 1,000. Optional preparation can queue an
-     * activity-specific prerequisite before requests are added. Nest searching disables requests.
-     * Level eligibility is supplied by the recipe to preserve its existing startup policy.
+     * Plans minimum inputs and tools without ending a session solely because supplies are missing.
+     * Suspending acquisition belongs to onInit. Unbuyable nest/lamp inputs retain requestMissing=false;
+     * levels, safety and exhausted retry budgets still reject before any acquisition.
      */
     protected fun productionWithdraw(
         materials: List<Item>, tools: Set<Int> = emptySet(), levelEligible: Boolean = true,
@@ -108,20 +129,29 @@ abstract class InventoryBotScript(
             stop()
             return emptyList()
         }
+        val items = tools.map { Item(it) } + materials
         if (!bot.ownsProductionSupplies(materials, tools)) {
-            if (prepareMissing()) return emptyList()
-            if (requestMissing) {
-                val missing = materials.filter {
-                    bot.bank.computeAmountForId(it.id).toLong() + bot.inventory.computeAmountForId(it.id) < it.amount
-                }.map { it.id } + tools.filter { !bot.ownsProductionSupplies(emptyList(), setOf(it)) }
-                missing.forEach { bot.preferences.raiseWantedItemTarget(it, if (it in tools) 3 else 1_000) }
+            if (!requestMissing) { stop(); return emptyList() }
+            items.filter { bot.bank.computeAmountForId(it.id).toLong() +
+                    bot.inventory.computeAmountForId(it.id) < it.amount }.forEach {
+                bot.preferences.raiseWantedItemTarget(it.id, if (it.id in tools) 3 else maxOf(1_000, it.amount))
             }
-            stop()
-            return emptyList()
         }
+        startupSupplies = StartupSupplies(items, requestMissing, prepareMissing)
         forceBanking = true
-        return tools.map { Item(it) } + materials
+        return items
     }
+
+    /** Acquires only missing minimum quantities, within one shared deadline and normal non-combat safety. */
+    private suspend fun obtainStartupSupplies(items: List<Item>): Boolean = withTimeoutOrNull(120.seconds) {
+        for (item in items) {
+            if (!awaitActionSafety()) return@withTimeoutOrNull false
+            if (bot.bank.computeAmountForId(item.id).toLong() + bot.inventory.computeAmountForId(item.id) >= item.amount) continue
+            if (!handler.shop.obtainWantedItem(item.id, item.amount)) return@withTimeoutOrNull false
+        }
+        items.all { bot.bank.computeAmountForId(it.id).toLong() +
+                bot.inventory.computeAmountForId(it.id) >= it.amount }
+    } == true
 
     /**
      * Allows banking only when safe and necessary, charging its independent retry budget.
@@ -181,11 +211,25 @@ abstract class InventoryBotScript(
         private set
 
     final override suspend fun onInit(resumed: Boolean): Boolean {
-        if (productionRetriesExhausted()) { stop(); return false }
+        if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
+        startupSupplies = null
         withdraw = withdraw()
-        if (isTerminated()) {
+        if (isTerminated() || isPaused()) return false
+        val startup = startupSupplies
+        val supplied = if (startup?.allowAcquisition == false) {
+            startup.items.all { bot.bank.computeAmountForId(it.id).toLong() +
+                    bot.inventory.computeAmountForId(it.id) >= it.amount }
+        } else obtainStartupSupplies(startup?.items ?: withdraw)
+        if (!supplied) {
+            bot.log("Could not obtain the minimum production supplies.")
+            if (startup != null && isActionSafe() && startup.prepareMissing()) return false
+            stop()
             return false
         }
+        if (!awaitActionSafety() || !trainingAllowed()) return false
+        // Acquisition may suspend through travel/banking. Re-evaluate recipe levels, costs and ownership afterwards.
+        if (startup != null) withdraw = withdraw()
+        if (isTerminated() || isPaused()) return false
         if (!withdraw.all { bot.itemTracker.count(it.id) >= it.amount }) {
             bot.log("Bot does not have required withdraw items. Ending script.")
             return false
@@ -204,6 +248,7 @@ abstract class InventoryBotScript(
     }
 
     final override suspend fun executeInZone(): Boolean {
+        if (!trainingAllowed()) return false
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true

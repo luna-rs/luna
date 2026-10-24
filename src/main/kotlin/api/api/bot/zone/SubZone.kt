@@ -15,8 +15,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
-import kotlinx.coroutines.future.await
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,54 +36,116 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @author lare96
  */
-enum class SubZone(val inside: Position,
-                   val outside: Bot.() -> Position? = { null },
-                   val area: SimpleBoxArea,
-                   val parent: Bot.() -> Zone) {
+enum class SubZone(
+    val inside: Position,
+    val outside: Bot.() -> Position? = { null },
+    val area: SimpleBoxArea,
+    val parent: Bot.() -> Zone,
+    val plane: Int? = null
+) {
+    /**
+     * Turael's Burthorpe house, used for native Slayer assignment dialogue.
+     */
+    TURAEL(
+        inside = Position(2931, 3536),
+        area = SimpleBoxArea.ofRadius(2927, 3533, 9, 8),
+        parent = { BURTHORPE }),
+
+    /**
+     * Supplied Canifis town footprint containing Mazchna's configured spawn.
+     */
+    CANIFIS_MAIN(
+        inside = Position(3494, 3473),
+        area = SimpleBoxArea.ofRadius(3473, 3461, 47, 57),
+        parent = { CANIFIS }),
+
+    /**
+     * Supplied Edgeville Dungeon footprint; the arrival tile is Vannaka's configured spawn.
+     * Existing webwalking and travel fallback handle the dungeon transition.
+     */
+    EDGEVILLE_DUNGEON(
+        inside = Position(3147, 9914),
+        area = SimpleBoxArea.ofRadius(3075, 9816, 77, 185),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Supplied Zanaris town footprint containing Chaeldar's configured spawn.
+     */
+    ZANARIS_MAIN(
+        inside = Position(2387, 4455),
+        area = SimpleBoxArea.ofRadius(2314, 4351, 197, 135),
+        parent = { ZANARIS }),
+
+    /**
+     * Supplied Shilo Village footprint and arrival tile, shared by local gameplay activities.
+     * Duradel is upstairs within this footprint; the webwalker handles his approach.
+     */
+    SHILO_VILLAGE(
+        inside = Position(2852, 2958),
+        area = SimpleBoxArea.ofRadius(2816, 2944, 64, 64),
+        parent = { KARAMJA }),
+
     /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
      * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
      */
-    VARROCK_MARKETPLACE(inside = VARROCK.anchor,
-                        area = SimpleBoxArea.of(3173, 3427, 3197, 3454), parent = { VARROCK }),
-    EDGEVILLE_MARKETPLACE(inside = EDGEVILLE.anchor,
-                          area = SimpleBoxArea.of(3086, 3485, 3098, 3501), parent = { EDGEVILLE }),
-    SEERS_VILLAGE_MARKETPLACE(inside = SEERS_VILLAGE.anchor,
-                              area = SimpleBoxArea.of(2720, 3484, 2729, 3493), parent = { SEERS_VILLAGE }),
-    AL_KHARID_MARKETPLACE(inside = AL_KHARID.anchor,
-                          area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
+    VARROCK_MARKETPLACE(
+        inside = VARROCK.anchor,
+        area = SimpleBoxArea.of(3173, 3427, 3197, 3454), parent = { VARROCK }),
+    EDGEVILLE_MARKETPLACE(
+        inside = EDGEVILLE.anchor,
+        area = SimpleBoxArea.of(3086, 3485, 3098, 3501), parent = { EDGEVILLE }),
+    SEERS_VILLAGE_MARKETPLACE(
+        inside = SEERS_VILLAGE.anchor,
+        area = SimpleBoxArea.of(2720, 3484, 2729, 3493), parent = { SEERS_VILLAGE }),
+    AL_KHARID_MARKETPLACE(
+        inside = AL_KHARID.anchor,
+        area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
+
+    /**
+     * Native Party Room floor and balloon footprint, using Seers Village travel and banking fallback.
+     */
+    PARTY_ROOM(
+        inside = Position(2736, 3475),
+        area = SimpleBoxArea.of(2730, 3463, 2744, 3476), parent = { SEERS_VILLAGE }),
 
     /**
      * Full Gnome course footprint, including the upper platforms used by native obstacles.
      */
-    GNOME_STRONGHOLD_AGILITY(inside = Position(2474, 3437),
-                             area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
-                             parent = { GNOME_STRONGHOLD }),
+    GNOME_STRONGHOLD_AGILITY(
+        inside = Position(2474, 3437),
+        area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
+        parent = { GNOME_STRONGHOLD }),
 
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
-    WATER_OBELISK(inside = Position(2844, 3425),
-                   area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
-                   parent = { CATHERBY }),
+    WATER_OBELISK(
+        inside = Position(2844, 3425),
+        area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
+        parent = { CATHERBY }),
 
     /** Fire-obelisk activity area, using Taverly and the shared travel/banking fallback. */
-    FIRE_OBELISK(inside = Position(2821, 9827),
-                  area = SimpleBoxArea.ofRadius(2814, 9824, 9, 9),
-                  parent = { TAVERLY }),
+    FIRE_OBELISK(
+        inside = Position(2821, 9827),
+        area = SimpleBoxArea.ofRadius(2814, 9824, 9, 9),
+        parent = { TAVERLY }),
 
     /** Air-obelisk activity area, with Edgeville banking and shared travel fallback. */
-    AIR_OBELISK(inside = Position(3089, 3571),
-                 area = SimpleBoxArea.ofRadius(3082, 3564, 12, 13),
-                 parent = { EDGEVILLE }),
+    AIR_OBELISK(
+        inside = Position(3089, 3571),
+        area = SimpleBoxArea.ofRadius(3082, 3564, 12, 13),
+        parent = { EDGEVILLE }),
 
     /** Earth-obelisk activity area, with Edgeville banking and shared travel fallback. */
-    EARTH_OBELISK(inside = Position(3087, 9935),
-                   area = SimpleBoxArea.ofRadius(3081, 9929, 13, 15),
-                   parent = { EDGEVILLE }),
+    EARTH_OBELISK(
+        inside = Position(3087, 9935),
+        area = SimpleBoxArea.ofRadius(3081, 9929, 13, 15),
+        parent = { EDGEVILLE }),
 
-    HAM_CULT(inside = Position(3149, 9652),
-             outside = { Position(3167, 3246) },
-             area = SimpleBoxArea.of(3135, 9606, 3189, 9660),
-             parent = { LUMBRIDGE }) {
+    HAM_CULT(
+        inside = Position(3149, 9652),
+        outside = { Position(3167, 3246) },
+        area = SimpleBoxArea.of(3135, 9606, 3189, 9660),
+        parent = { LUMBRIDGE }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             // TODO Entrance at Lumbridge goblins between Lumbridge and Draynor. Always fallback to teleportation in the meantime.
             return false
@@ -96,16 +156,19 @@ enum class SubZone(val inside: Position,
             return true
         }
     },
-    LUMBRIDGE_CHICKEN_COOP(inside = Position(3233, 3294),
-                           area = SimpleBoxArea.of(3225, 3287, 3236, 3301),
-                           parent = { LUMBRIDGE }),
-    ICE_MOUNTAIN(inside = Position(3025, 3462),
-                 area = SimpleBoxArea.of(2990, 3442, 3033, 3542),
-                 parent = { EDGEVILLE }),
-    DRAYNOR_SEWERS(inside = Position(3117, 9645),
-                   outside = { Position(3085, 3271) },
-                   area = SimpleBoxArea.of(3077, 9641, 3126, 9697),
-                   parent = { DRAYNOR }) {
+    LUMBRIDGE_CHICKEN_COOP(
+        inside = Position(3233, 3294),
+        area = SimpleBoxArea.of(3225, 3287, 3236, 3301),
+        parent = { LUMBRIDGE }),
+    ICE_MOUNTAIN(
+        inside = Position(3025, 3462),
+        area = SimpleBoxArea.of(2990, 3442, 3033, 3542),
+        parent = { EDGEVILLE }),
+    DRAYNOR_SEWERS(
+        inside = Position(3117, 9645),
+        outside = { Position(3085, 3271) },
+        area = SimpleBoxArea.of(3077, 9641, 3126, 9697),
+        parent = { DRAYNOR }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return false // TODO Entrance at draynor. Always fallback to teleportation in meantime.
         }
@@ -115,10 +178,11 @@ enum class SubZone(val inside: Position,
             return true
         }
     },
-    VARROCK_SEWERS(inside = Position(3229, 9904),
-                   outside = { Position(3238, 3458) },
-                   area = SimpleBoxArea.of(3152, 9870, 3245, 9919),
-                   parent = { VARROCK }) {
+    VARROCK_SEWERS(
+        inside = Position(3229, 9904),
+        outside = { Position(3238, 3458) },
+        area = SimpleBoxArea.of(3152, 9870, 3245, 9919),
+        parent = { VARROCK }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return false // TODO Entrance in varrock. Always fallback to teleportation in meantime.
         }
@@ -130,10 +194,11 @@ enum class SubZone(val inside: Position,
     },
 
     //todo SKELETAL_WYVERNS(inside = Position())3060, 9553 |3022, 9537, 3071, 9558
-    KARAMJA_DUNGEON(inside = Position(2856, 9570),
-                    outside = { Position(2857, 3166) },
-                    area = SimpleBoxArea.of(2823, 9539, 2906, 9661),
-                    parent = { KARAMJA }) {
+    KARAMJA_DUNGEON(
+        inside = Position(2856, 9570),
+        outside = { Position(2857, 3166) },
+        area = SimpleBoxArea.of(2823, 9539, 2906, 9661),
+        parent = { KARAMJA }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return false // TODO Entrance in musa point. Always fallback to teleportation in meantime.
         }
@@ -143,9 +208,10 @@ enum class SubZone(val inside: Position,
             return true
         }
     },
-    WHITE_KNIGHTS_CASTLE(inside = Position(2971, 3343),
-                         area = SimpleBoxArea.of(2965, 3337, 2979, 3347),
-                         parent = { FALADOR }),
+    WHITE_KNIGHTS_CASTLE(
+        inside = Position(2971, 3343),
+        area = SimpleBoxArea.of(2965, 3337, 2979, 3347),
+        parent = { FALADOR }),
 
     /**
      * The area east of Draynor where the trapdoor is located. Intended for money-making yew/low-level woodcutters
@@ -155,85 +221,148 @@ enum class SubZone(val inside: Position,
      * - Oak trees
      * - Low level goblins
      */
-    EAST_DRAYNOR_YEWS(inside = Position(3166, 3238),
-                      area = SimpleBoxArea.of(3138, 3202, 3197, 3259),
-                      parent = { DRAYNOR }),
+    EAST_DRAYNOR_YEWS(
+        inside = Position(3166, 3238),
+        area = SimpleBoxArea.of(3138, 3202, 3197, 3259),
+        parent = { DRAYNOR }),
 
     /**
      * The Al-Kharid palace. Used for low-level combat training.
      */
-    AL_KHARID_PALACE(inside = Position(3292, 3176),
-                     area = SimpleBoxArea.of(3282, 3159, 3303, 3177),
-                     parent = { AL_KHARID }),
+    AL_KHARID_PALACE(
+        inside = Position(3292, 3176),
+        area = SimpleBoxArea.of(3282, 3159, 3303, 3177),
+        parent = { AL_KHARID }),
 
     /**
      * Iorwerth camp and its loom in Tirannwn.
      */
-    IORWERTH_CAMP(inside = Position(2204, 3253),
-                   area = SimpleBoxArea.ofRadius(2184, 3239, 30, 27),
-                   parent = { TIRANNWN }),
+    IORWERTH_CAMP(
+        inside = Position(2204, 3253),
+        area = SimpleBoxArea.ofRadius(2184, 3239, 30, 27),
+        parent = { TIRANNWN }),
 
     /** The loom south of Falador, reached through the existing zone travel fallback. */
-    SOUTH_FALADOR_LOOM(inside = Position(3039, 3288),
-                        area = SimpleBoxArea.ofRadius(3038, 3285, 3, 4),
-                        parent = { FALADOR }),
+    SOUTH_FALADOR_LOOM(
+        inside = Position(3039, 3288),
+        area = SimpleBoxArea.ofRadius(3038, 3285, 3, 4),
+        parent = { FALADOR }),
 
     /** The Edgeville monastery, used for low-level to mid-level combat training. */
-    EDGEVILLE_MONASTERY(inside = Position(3051, 3482),
-                        area = SimpleBoxArea.of(3041, 3480, 3062, 3509),
-                        parent = { EDGEVILLE }),
+    EDGEVILLE_MONASTERY(
+        inside = Position(3051, 3482),
+        area = SimpleBoxArea.of(3041, 3480, 3062, 3509),
+        parent = { EDGEVILLE }),
 
     /**
      * The edgeville dark wizards' area. Used for mid-level combat training.
      */
-    VARROCK_DARK_WIZARDS(inside = Position(3292, 3418),
-                         area = SimpleBoxArea.of(3218, 3362, 3237, 3378),
-                         parent = { VARROCK }),
+    VARROCK_DARK_WIZARDS(
+        inside = Position(3292, 3418),
+        area = SimpleBoxArea.of(3218, 3362, 3237, 3378),
+        parent = { VARROCK }),
+
+    /**
+     * The Falador west mine. Intended for low -> mid level miners.
+     * - 2 copper
+     * - 6 tin
+     * - 3 iron
+     * - 2 coal rocks
+     */
+    FALADOR_WEST_MINE(
+        inside = Position(2912, 3355),
+        area = SimpleBoxArea.ofRadius(2898, 3349, 28, 24),
+        parent = { FALADOR }),
+
+    /**
+     * The Dwarven mine under Falador. Intended for low -> high level miners.
+     * - 5 clay
+     * - 11 copper
+     * - 10 tin
+     * - 9 iron
+     * - 11 coal
+     * - 2 gold
+     * - 2 mithril
+     * - 3 adamant
+     */
+    DWARVEN_MINE(
+        inside = Position( 3057, 9767),
+        area = SimpleBoxArea.ofRadius(2959, 9753, 110, 104),
+        parent = { FALADOR }),
+
+    /**
+     * The Mining guild. Intended for high level miners.
+     * - 12 iron
+     * - 57 coal
+     * - 15 mithril
+     * - 10 adamant
+     * - 2 runite
+     */
+    MINING_GUILD(
+        inside = Position(3053, 9743),
+        area = SimpleBoxArea.ofRadius(2994, 9697, 73, 60),
+        parent = { FALADOR }),
+
+    // TODO rimmington mine
 
     /**
      * The wizards' tower area. Intended for low-level combat training.
      * - Low level wizards
      */
-    WIZARDS_TOWER(inside = Position(3113, 3195),
-                  area = SimpleBoxArea.of(3090, 3143, 3127, 3177),
-                  parent = { DRAYNOR }),
+    WIZARDS_TOWER(
+        inside = Position(3113, 3195),
+        area = SimpleBoxArea.of(3090, 3143, 3127, 3177),
+        parent = { DRAYNOR }),
 
     /**
      * The home area, currently Varrock west bank. Intended for smithers, pickpockets, dumb cookers, and low -> average
      * intelligence firemakers.
      */
-    HOME(inside = VARROCK.anchor,
-         area = SimpleBoxArea.of(3171, 3425, 3198, 3451),
-         parent = { VARROCK }),
+    HOME(
+        inside = VARROCK.anchor,
+        area = SimpleBoxArea.of(3171, 3425, 3198, 3451),
+        parent = { VARROCK }),
+
+    /**
+     * The main varrock square containing the fountain water source.
+     */
+    VARROCK_SQUARE(
+        inside = Position(3207, 3428),
+        area = SimpleBoxArea.ofRadius(3205, 3421, 20, 18),
+        parent = { VARROCK }),
 
     /**
      * The deep wilderness area where the 10-coin chest is contained.
      */
-    TEN_COIN_CHEST_HUT(inside = Position(3190, 3959),
-                       area = SimpleBoxArea.of(3184, 3953, 3198, 3965),
-                       parent = { WILDERNESS }),
+    TEN_COIN_CHEST_HUT(
+        inside = Position(3190, 3959),
+        area = SimpleBoxArea.of(3184, 3953, 3198, 3965),
+        parent = { WILDERNESS }),
 
     /**
      * The room with the steel arrowtip chest in Hemenster, south-west of seers' village.
      */
-    HEMENSTER_CHEST_ROOM(inside = Position(2642, 3447),
-                         area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
-                         parent = { SEERS_VILLAGE }),
+    HEMENSTER_CHEST_ROOM(
+        inside = Position(2642, 3447),
+        area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
+        parent = { SEERS_VILLAGE }),
 
 
     /**
      * The chaos druid tower north of Ardougne.
      */
-    CHAOS_DRUID_TOWER(inside = Position(2565, 3355),
-                      area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
-                      parent = { ARDOUGNE }),
+    CHAOS_DRUID_TOWER(
+        inside = Position(2565, 3355),
+        area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
+        parent = { ARDOUGNE }),
 
     /**
      * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
      */
-    ROCK_CRABS(inside = Position(2670, 3715),
-               area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
-               parent = { RELLEKKA }), // todo there's also a mine near here??? coal, silver and gold i think?
+    ROCK_CRABS(
+        inside = Position(2670, 3715),
+        area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
+        parent = { RELLEKKA }), // todo there's also a mine near here??? coal, silver and gold i think?
     // todo or coal tin and clay
 
     /**
@@ -241,10 +370,11 @@ enum class SubZone(val inside: Position,
      * - Ogres
      * - Blood rune thieving chest
      */
-    CHAOS_DRUID_TOWER_DUNGEON(inside = Position(2565, 9753),
-                              outside = { Position(2565, 3355) },
-                              area = SimpleBoxArea.of(2559, 9729, 2594, 9761),
-                              parent = { ARDOUGNE }) {
+    CHAOS_DRUID_TOWER_DUNGEON(
+        inside = Position(2565, 9753),
+        outside = { Position(2565, 3355) },
+        area = SimpleBoxArea.of(2559, 9729, 2594, 9761),
+        parent = { ARDOUGNE }) {
         private val upstairsLadder =
             lazyVal { world.locator.findObjectsOnTile(Position(2562, 3356)) { it.id == 1754 }.first() }
         private val downstairsLadder =
@@ -262,17 +392,19 @@ enum class SubZone(val inside: Position,
     /**
      * The Varrock east-bank. Contains ranges nearby which make it a valid cooking area.
      */
-    VARROCK_EAST_BANK(inside = Position(3253, 3427),
-                      area = SimpleBoxArea.of(3234, 3400, 3261, 3428),
-                      parent = { VARROCK }),
+    VARROCK_EAST_BANK(
+        inside = Position(3253, 3427),
+        area = SimpleBoxArea.of(3234, 3400, 3261, 3428),
+        parent = { VARROCK }),
 
     /**
      * The rune essence mine. Intended for low-level and low-confidence money makers.
      */
-    ESSENCE_MINE(inside = Position(2910, 4832),
-                 outside = { Position(3253, 3401) },
-                 area = SimpleBoxArea.of(2882, 4805, 2939, 4860),
-                 parent = { VARROCK }) {
+    ESSENCE_MINE(
+        inside = Position(2910, 4832),
+        outside = { Position(3253, 3401) },
+        area = SimpleBoxArea.of(2882, 4805, 2939, 4860),
+        parent = { VARROCK }) {
         private val auburyNpc =
             lazyVal { world.locator.findViewableNpcs(Position(3253, 3401)) { it.id == 553 }.first() }
 
@@ -342,10 +474,11 @@ enum class SubZone(val inside: Position,
      * - Net and bait fishing spots
      * - Guards at the jail
      */
-    DRAYNOR_MAIN(inside = DRAYNOR.anchor,
-                 area = SimpleBoxArea.of(3073, 3221, 3134, 3262),
-                 parent =
-                 { DRAYNOR }),
+    DRAYNOR_MAIN(
+        inside = DRAYNOR.anchor,
+        area = SimpleBoxArea.of(3073, 3221, 3134, 3262),
+        parent =
+            { DRAYNOR }),
 
     /**
      * A low-level mining area near Varrock. Intended for low-level miners.
@@ -354,10 +487,11 @@ enum class SubZone(val inside: Position,
      * - 3 silver rocks
      * - 8 tin rocks
      */
-    VARROCK_SW_MINE(inside = Position(3187, 3373),
-                    area = SimpleBoxArea.of(3166, 3360, 3187, 3380),
-                    parent =
-                    { VARROCK }),
+    VARROCK_SW_MINE(
+        inside = Position(3187, 3373),
+        area = SimpleBoxArea.of(3166, 3360, 3187, 3380),
+        parent =
+            { VARROCK }),
     //todo taverly druids circle, level 30+ spot(2926,3490)
     /**
      * A low-level mining area near Varrock. Intended for low-level miners.
@@ -365,10 +499,11 @@ enum class SubZone(val inside: Position,
      * - 6 tin rocks
      * - 4 iron rocks
      */
-    VARROCK_SE_MINE(inside = Position(3284, 3372),
-                    area = SimpleBoxArea.of(3274, 3354, 3300, 3376),
-                    parent =
-                    { VARROCK }),
+    VARROCK_SE_MINE(
+        inside = Position(3284, 3372),
+        area = SimpleBoxArea.of(3274, 3354, 3300, 3376),
+        parent =
+            { VARROCK }),
 
     /**
      * The yew trees around the Lumber Yard north-east of Varrock. Intended for low-level and money making woodcutters.
@@ -376,18 +511,20 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    LUMBER_YARD_YEWS(inside = Position(3287, 3459),
-                     area = SimpleBoxArea.of(3265, 3457, 3309, 3513),
-                     parent =
-                     { VARROCK }),
+    LUMBER_YARD_YEWS(
+        inside = Position(3287, 3459),
+        area = SimpleBoxArea.of(3265, 3457, 3309, 3513),
+        parent =
+            { VARROCK }),
 
     /**
      * The Rogues Den area. Intended for the best cooking training and profit.
      */
-    ROGUES_DEN(inside = Position(3045, 4972, 1),
-               outside = { Position(2906, 3537) },
-               area = SimpleBoxArea.of(3036, 4961, 3067, 4988),
-               parent = { BURTHORPE }) {
+    ROGUES_DEN(
+        inside = Position(3045, 4972, 1),
+        outside = { Position(2906, 3537) },
+        area = SimpleBoxArea.of(3036, 4961, 3067, 4988),
+        parent = { BURTHORPE }) {
 
         private val enterTrapdoor =
             lazyVal { world.locator.findObjectsOnTile(Position(2905, 3537)) { it.id == 7257 }.first() }
@@ -426,10 +563,11 @@ enum class SubZone(val inside: Position,
      * - 1 mithril rock
      * - 2 adamant rocks
      */
-    EDGEVILLE_DUNGEON_MINE(inside = Position(3132, 9874),
-                           outside = { Position(3115, 3448) },
-                           area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
-                           parent = { VARROCK }) {
+    EDGEVILLE_DUNGEON_MINE(
+        inside = Position(3132, 9874),
+        outside = { Position(3115, 3448) },
+        area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
+        parent = { VARROCK }) {
         private val varrockLadder =
             lazyVal { world.locator.findObjectsOnTile(Position(3116, 3452)) { it.id == 1754 }.first() }
         private val dungeonLadder =
@@ -466,10 +604,11 @@ enum class SubZone(val inside: Position,
     /**
      * The Edgeville Dungeon hill giants area. Intended for mid -> high level combat training.
      */
-    EDGEVILLE_DUNGEON_HILL_GIANTS(inside = Position(3117, 9849),
-                                  outside = EDGEVILLE_DUNGEON_MINE.outside,
-                                  area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
-                                  parent = { VARROCK }) {
+    EDGEVILLE_DUNGEON_HILL_GIANTS(
+        inside = Position(3117, 9849),
+        outside = EDGEVILLE_DUNGEON_MINE.outside,
+        area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
+        parent = { VARROCK }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return EDGEVILLE_DUNGEON_MINE.enter(bot, selectedParent, selectedOutside)
         }
@@ -483,10 +622,11 @@ enum class SubZone(val inside: Position,
      * The yew trees north of Varrock Palace. Intended for money making woodcutters.
      * - 3 yew trees
      */
-    VARROCK_PALACE_YEWS(inside = Position(3213, 3501),
-                        area = SimpleBoxArea.of(3201, 3496, 3224, 3508),
-                        parent =
-                        { VARROCK }),
+    VARROCK_PALACE_YEWS(
+        inside = Position(3213, 3501),
+        area = SimpleBoxArea.of(3201, 3496, 3224, 3508),
+        parent =
+            { VARROCK }),
 
     /**
      * The yew trees south of Falador. Intended for low-level and money making woodcutters.
@@ -494,22 +634,42 @@ enum class SubZone(val inside: Position,
      * - Oak trees
      * - Normal trees
      */
-    SOUTH_FALADOR_YEWS(inside = Position(3008, 3314),
-                       area = SimpleBoxArea.of(2991, 3303, 3043, 3327),
-                       parent =
-                       { FALADOR }),
+    SOUTH_FALADOR_YEWS(
+        inside = Position(3008, 3314),
+        area = SimpleBoxArea.of(2991, 3303, 3043, 3327),
+        parent =
+            { FALADOR }),
+
+    /**
+     * The farm south of Falador. Has a water source, cabbage patch, loom, cows, and chickens.
+     */
+    SOUTH_FALADOR_FARM(
+        inside = Position(3008, 3314), // todo add to combat and harvesting
+        area = SimpleBoxArea.ofRadius(3012, 3279, 58, 37),
+        parent =
+            { FALADOR }),
+
+    /**
+     * The main Edgeville area including the bank and water sources.
+     */
+    EDGEVILLE_MAIN(
+        inside = Position(3087, 3494),
+        area = SimpleBoxArea.ofRadius(3074, 3486, 29, 20),
+        parent =
+            { EDGEVILLE }),
 
     /**
      * The Lumbridge river area. Intended for bait drop-fishers and low-level combat.
      * - Goblins
      * - 2 bait fishing spots
      */
-    LUMBRIDGE_RIVER(inside = Position(3249, 3228),
-                    // Wide enough that the target search, a square around the centre, reaches the fishing spot
-                    // tiles at 3238,3254 and 3238,3255 without overlapping the cow pen.
-                    area = SimpleBoxArea.of(3234, 3227, 3265, 3251),
-                    parent =
-                    { LUMBRIDGE }),
+    LUMBRIDGE_RIVER(
+        inside = Position(3249, 3228),
+        // Wide enough that the target search, a square around the centre, reaches the fishing spot
+        // tiles at 3238,3254 and 3238,3255 without overlapping the cow pen.
+        area = SimpleBoxArea.of(3234, 3227, 3265, 3251),
+        parent =
+            { LUMBRIDGE }),
 
     /**
      * The south Lumbridge mine. Intended for smart money-making miners.
@@ -517,23 +677,26 @@ enum class SubZone(val inside: Position,
      * - 5 mithril rocks
      * - 2 adamant rocks
      */
-    SOUTH_LUMBRIDGE_MINE(inside = Position(3233, 3150),
-                         area = SimpleBoxArea.of(3219, 3139, 3248, 3162),
-                         parent = { LUMBRIDGE }),
+    SOUTH_LUMBRIDGE_MINE(
+        inside = Position(3233, 3150),
+        area = SimpleBoxArea.of(3219, 3139, 3248, 3162),
+        parent = { LUMBRIDGE }),
 
     /**
      * The musa point fishing area. Intended for mid-level fishers.
      */
-    MUSA_POINT_FISHING(inside = Position(2924, 3173),
-                       area = SimpleBoxArea.of(2922, 3173, 2928, 3181),
-                       parent = { KARAMJA }),
+    MUSA_POINT_FISHING(
+        inside = Position(2924, 3173),
+        area = SimpleBoxArea.of(2922, 3173, 2928, 3181),
+        parent = { KARAMJA }),
 
     /**
      * The Lumbridge swamp. Intended for low-level combat training.
      */
-    LUMBRIDGE_SWAMP(inside = Position(3229, 3171),
-                    area = SimpleBoxArea.of(3203, 3168, 3231, 3193),
-                    parent = { LUMBRIDGE }),
+    LUMBRIDGE_SWAMP(
+        inside = Position(3229, 3171),
+        area = SimpleBoxArea.of(3203, 3168, 3231, 3193),
+        parent = { LUMBRIDGE }),
 
     /**
      * Also known as the Scorpion Mine, this is a major mining area north of Al Kharid.
@@ -546,20 +709,42 @@ enum class SubZone(val inside: Position,
      * - 2 mithril rocks
      * - 2 adamant rocks
      */
-    AL_KHARID_MINE(inside = Position(3298, 3273),
-                   area = SimpleBoxArea.of(3288, 3271, 3312, 3324),
-                   parent =
-                   { AL_KHARID }),
+    AL_KHARID_MINE(
+        inside = Position(3298, 3273),
+        area = SimpleBoxArea.of(3288, 3271, 3312, 3324),
+        parent =
+            { AL_KHARID }),
 
     /**
      * The flax field south-east of Seers' Village. Intended for money-makers.
      * - flax
      * - spinning wheel
      */
-    SOUTH_SEERS_VILLAGE_FLAX(inside = Position(2735, 3441),
-                             area = SimpleBoxArea.of(2734, 3436, 2751, 3453),
-                             parent =
-                             { SEERS_VILLAGE }),
+    SOUTH_SEERS_VILLAGE_FLAX(
+        inside = Position(2735, 3441),
+        area = SimpleBoxArea.of(2734, 3436, 2751, 3453),
+        parent =
+            { SEERS_VILLAGE }),
+
+    /**
+     * The wheat field beside the Lumbridge windmill. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    LUMBRIDGE_MILL_WHEAT(
+        inside = Position(3158, 3298),
+        area = SimpleBoxArea.of(3152, 3288, 3163, 3306),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * The wheat field south of the windmill north of Ardougne. Intended for flour millers.
+     * - wheat
+     * - flour mill
+     */
+    ARDOUGNE_MILL_WHEAT(
+        inside = Position(2647, 3349),
+        area = SimpleBoxArea.of(2640, 3345, 2655, 3353),
+        parent = { ARDOUGNE }),
 
     /**
      * The yew trees south of Seers' Village. Intended for money-makers and low -> high level dumb woodcutters.
@@ -568,10 +753,11 @@ enum class SubZone(val inside: Position,
      * - Oak trees
      * - Maple trees
      */
-    SOUTH_SEERS_VILLAGE_YEWS(inside = Position(2721, 3460),
-                             area = SimpleBoxArea.of(2688, 3456, 2750, 3476),
-                             parent =
-                             { CATHERBY }),
+    SOUTH_SEERS_VILLAGE_YEWS(
+        inside = Position(2721, 3460),
+        area = SimpleBoxArea.of(2688, 3456, 2750, 3476),
+        parent =
+            { CATHERBY }),
 
     /**
      * The main bank and trees near Seers' Village. Intended for mid-level woodcutters.
@@ -579,10 +765,11 @@ enum class SubZone(val inside: Position,
      * - 6 willow trees
      * - Normal trees
      */
-    SEERS_VILLAGE_MAIN(inside = Position(2723, 3504),
-                       area = SimpleBoxArea.of(2688, 3478, 2740, 3514),
-                       parent =
-                       { SEERS_VILLAGE }),
+    SEERS_VILLAGE_MAIN(
+        inside = Position(2723, 3504),
+        area = SimpleBoxArea.of(2688, 3478, 2740, 3514),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The yew trees west of Catherby. Intended for intelligent money-makers.
@@ -590,10 +777,11 @@ enum class SubZone(val inside: Position,
      * - Willow trees
      * - Normal trees
      */
-    WEST_CATHERBY_YEWS(inside = Position(2763, 3429),
-                       area = SimpleBoxArea.of(2750, 3419, 2774, 3434),
-                       parent =
-                       { CATHERBY }),
+    WEST_CATHERBY_YEWS(
+        inside = Position(2763, 3429),
+        area = SimpleBoxArea.of(2750, 3419, 2774, 3434),
+        parent =
+            { CATHERBY }),
 
     /**
      * The Catherby fishing shore. Intended for low -> mid-range level fishing trainers and money-makers.
@@ -601,25 +789,36 @@ enum class SubZone(val inside: Position,
      * - Harpoon fishing
      * - Lobster pot fishing
      */
-    EAST_CATHERBY_FISHING(inside = Position(2838, 3435),
-                          area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
-                          parent =
-                          { CATHERBY }),
+    EAST_CATHERBY_FISHING(
+        inside = Position(2838, 3435),
+        area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
+        parent =
+            { CATHERBY }),
 
     /**
      * The Piscatoris fishing colony. Intended for the highest level fishers.
      */
-    PISCATORIS_FISHING_COLONY_MAIN(inside = PISCATORIS_FISHING_COLONY.anchor,
-                                   area = SimpleBoxArea.of(2306, 3663, 2363, 3705),
-                                   parent = { PISCATORIS_FISHING_COLONY }),
+    PISCATORIS_FISHING_COLONY_MAIN(
+        inside = PISCATORIS_FISHING_COLONY.anchor,
+        area = SimpleBoxArea.of(2306, 3663, 2363, 3705),
+        parent = { PISCATORIS_FISHING_COLONY }),
+
+    /**
+     * The karambwan spots on northeast Karamja, north of the shipyard.
+     */
+    KARAMJA_KARAMBWAN_FISHING(
+        inside = Position(2905, 3117),
+        area = SimpleBoxArea.of(2895, 3112, 2916, 3121),
+        parent = { KARAMJA }),
 
     /**
      * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
      * Covers both warrior-woman spawns and their five-tile wander range.
      */
-    ARDOUGNE_WARRIOR_THIEVING(inside = Position(2629, 3295),
-                              area = SimpleBoxArea.of(2624, 3290, 2637, 3304),
-                              parent = { ARDOUGNE }),
+    ARDOUGNE_WARRIOR_THIEVING(
+        inside = Position(2629, 3295),
+        area = SimpleBoxArea.of(2624, 3290, 2637, 3304),
+        parent = { ARDOUGNE }),
 
     /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
@@ -630,20 +829,22 @@ enum class SubZone(val inside: Position,
      * - Fur stall
      * - Gem stall
      */
-    ARDOUGNE_SQUARE_THIEVING(inside = Position(2661, 3306),
-                             area = SimpleBoxArea.of(2645, 3290, 2677, 3325),
-                             parent =
-                             { ARDOUGNE }),
+    ARDOUGNE_SQUARE_THIEVING(
+        inside = Position(2661, 3306),
+        area = SimpleBoxArea.of(2645, 3290, 2677, 3325),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The south-east Ardougne mine. Intended for dexterous mining trainers.
      * - 13 iron rocks
      * - 4 coal rocks
      */
-    SOUTH_EAST_ARDOUGNE_MINE(inside = Position(2601, 3240),
-                             area = SimpleBoxArea.of(2579, 3215, 2625, 3240),
-                             parent =
-                             { ARDOUGNE }),
+    SOUTH_EAST_ARDOUGNE_MINE(
+        inside = Position(2601, 3240),
+        area = SimpleBoxArea.of(2579, 3215, 2625, 3240),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The Legends' Guild mine, also known as the East Ardougne Mine. Intended for dexterous mining trainers and
@@ -651,40 +852,44 @@ enum class SubZone(val inside: Position,
      * - 11 iron rocks
      * - 13 coal rocks
      */
-    LEGENDS_GUILD_MINE(inside = Position(2702, 3332),
-                       area = SimpleBoxArea.of(2688, 3326, 2717, 3340),
-                       parent =
-                       { ARDOUGNE }),
+    LEGENDS_GUILD_MINE(
+        inside = Position(2702, 3332),
+        area = SimpleBoxArea.of(2688, 3326, 2717, 3340),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The farming patch located north of Lumbridge. Intended for farmers and low-level thieving trainers.
      * - Hops patch
      * - Level 7 farmer (pickpocketing)
      */
-    NORTH_LUMBRIDGE_FARMING(inside = Position(3229, 3309),
-                            area = SimpleBoxArea.of(3223, 3309, 3242, 3321),
-                            parent =
-                            { LUMBRIDGE }),
+    NORTH_LUMBRIDGE_FARMING(
+        inside = Position(3229, 3309),
+        area = SimpleBoxArea.of(3223, 3309, 3242, 3321),
+        parent =
+            { LUMBRIDGE }),
 
     /**
      * The iconic Lumbridge courtyard. Intended for very low-level thieving trainers.
      * - Various men and women
      * - Hans
      */
-    LUMBRIDGE_COURT_YARD(inside = LUMBRIDGE.anchor,
-                         area = SimpleBoxArea.of(3215, 3205, 3230, 3229),
-                         parent =
-                         { LUMBRIDGE }),
+    LUMBRIDGE_COURT_YARD(
+        inside = LUMBRIDGE.anchor,
+        area = SimpleBoxArea.of(3215, 3205, 3230, 3229),
+        parent =
+            { LUMBRIDGE }),
 
     /**
      * A four-story tower south of Seers' Village.
      * - 4 magic trees
      * - Normal trees
      */
-    SORCERERS_TOWER_MAGICS(inside = Position(2702, 3391),
-                           area = SimpleBoxArea.of(2692, 3389, 2717, 3418),
-                           parent =
-                           { SEERS_VILLAGE }),
+    SORCERERS_TOWER_MAGICS(
+        inside = Position(2702, 3391),
+        area = SimpleBoxArea.of(2692, 3389, 2717, 3418),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The magic trees between the Sorcerer's Tower and the yews south of Seers' Village. Intended for high-level
@@ -693,10 +898,11 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    SOUTH_SEERS_VILLAGE_MAGICS(inside = Position(2691, 3426),
-                               area = SimpleBoxArea.of(2685, 3419, 2710, 3435),
-                               parent =
-                               { SEERS_VILLAGE }),
+    SOUTH_SEERS_VILLAGE_MAGICS(
+        inside = Position(2691, 3426),
+        area = SimpleBoxArea.of(2685, 3419, 2710, 3435),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The maple trees south of the Sorcerer's Tower. Intended for mid-level woodcutters and money-makers.
@@ -704,10 +910,11 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    SOUTH_SORCERERS_TOWER_MAPLES(inside = Position(2713, 3376),
-                                 area = SimpleBoxArea.of(2700, 3360, 2720, 3388),
-                                 parent =
-                                 { SEERS_VILLAGE }),
+    SOUTH_SORCERERS_TOWER_MAPLES(
+        inside = Position(2713, 3376),
+        area = SimpleBoxArea.of(2700, 3360, 2720, 3388),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The maple trees north-west of Seers' Village. Intended for mid-level woodcutters and money-makers.
@@ -715,10 +922,11 @@ enum class SubZone(val inside: Position,
      * - 5 willow trees
      * - Normal trees
      */
-    NORTH_WEST_SEERS_VILLAGE_MAPLES(inside = Position(2668, 3531),
-                                    area = SimpleBoxArea.of(2648, 3515, 2701, 3546),
-                                    parent =
-                                    { SEERS_VILLAGE }),
+    NORTH_WEST_SEERS_VILLAGE_MAPLES(
+        inside = Position(2668, 3531),
+        area = SimpleBoxArea.of(2648, 3515, 2701, 3546),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The maple forest north of Seers' Village. Intended for mid -> high level woodcutters and money-makers.
@@ -726,29 +934,32 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    NORTH_SEERS_VILLAGE_MAPLES(inside = Position(2707, 3563),
-                               area = SimpleBoxArea.of(2660, 3547, 2735, 3592),
-                               parent =
-                               { SEERS_VILLAGE }),
+    NORTH_SEERS_VILLAGE_MAPLES(
+        inside = Position(2707, 3563),
+        area = SimpleBoxArea.of(2660, 3547, 2735, 3592),
+        parent =
+            { SEERS_VILLAGE }),
 
     /**
      * The willow trees on the beach west of the Catherby bank. Intended for dexterous willow trainers.
      * - 3 willow trees
      */
-    CATHERBY_BEACH_WILLOWS(inside = Position(2783, 3428),
-                           area = SimpleBoxArea.of(2775, 3418, 2800, 3434),
-                           parent =
-                           { CATHERBY }),
+    CATHERBY_BEACH_WILLOWS(
+        inside = Position(2783, 3428),
+        area = SimpleBoxArea.of(2775, 3418, 2800, 3434),
+        parent =
+            { CATHERBY }),
 
     /**
      * The trees north of Catherby. Intended for low-level woodcutters.
      * - Normal trees
      * - Oak trees
      */
-    NORTH_CATHERBY_TREES(inside = Position(2783, 3459),
-                         area = SimpleBoxArea.of(2760, 3436, 2805, 3480),
-                         parent =
-                         { CATHERBY }),
+    NORTH_CATHERBY_TREES(
+        inside = Position(2783, 3459),
+        area = SimpleBoxArea.of(2760, 3436, 2805, 3480),
+        parent =
+            { CATHERBY }),
 
     /**
      * The willow trees south of Ardougne. Intended for mid-level woodcutters.
@@ -756,10 +967,11 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    SOUTH_ARDOUGNE_WILLOWS(inside = Position(2654, 3241),
-                           area = SimpleBoxArea.of(2626, 3220, 2680, 3262),
-                           parent =
-                           { ARDOUGNE }),
+    SOUTH_ARDOUGNE_WILLOWS(
+        inside = Position(2654, 3241),
+        area = SimpleBoxArea.of(2626, 3220, 2680, 3262),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The willow trees north of Ardougne, south of Hemenster. Intended for mid-level woodcutters.
@@ -767,10 +979,11 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    NORTH_ARDOUGNE_WILLOWS(inside = Position(2627, 3401),
-                           area = SimpleBoxArea.of(2615, 3380, 2665, 3409),
-                           parent =
-                           { ARDOUGNE }),
+    NORTH_ARDOUGNE_WILLOWS(
+        inside = Position(2627, 3401),
+        area = SimpleBoxArea.of(2615, 3380, 2665, 3409),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The willow trees east of Ardougne, south of the Legends' Guild. Intended for mid-level woodcutters.
@@ -778,20 +991,22 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    EAST_ARDOUGNE_WILLOWS(inside = Position(2711, 3309),
-                          area = SimpleBoxArea.of(2690, 3285, 2725, 3325),
-                          parent =
-                          { ARDOUGNE }),
+    EAST_ARDOUGNE_WILLOWS(
+        inside = Position(2711, 3309),
+        area = SimpleBoxArea.of(2690, 3285, 2725, 3325),
+        parent =
+            { ARDOUGNE }),
 
     /**
      * The willow trees south of Yanille. Intended for mid-level woodcutters.
      * - 5 willow trees
      * - Normal trees
      */
-    SOUTH_YANILLE_WILLOWS(inside = Position(2609, 3060),
-                          area = SimpleBoxArea.of(2598, 3048, 2622, 3070),
-                          parent =
-                          { YANILLE }),
+    SOUTH_YANILLE_WILLOWS(
+        inside = Position(2609, 3060),
+        area = SimpleBoxArea.of(2598, 3048, 2622, 3070),
+        parent =
+            { YANILLE }),
 
     /**
      * The willow trees west of Draynor Village. Intended for dexterous willow trainers.
@@ -799,30 +1014,33 @@ enum class SubZone(val inside: Position,
      * - Normal trees
      * - Oak trees
      */
-    WEST_DRAYNOR_WILLOWS(inside = Position(3059, 3253),
-                         area = SimpleBoxArea.of(3050, 3244, 3072, 3262),
-                         parent =
-                         { DRAYNOR }),
+    WEST_DRAYNOR_WILLOWS(
+        inside = Position(3059, 3253),
+        area = SimpleBoxArea.of(3050, 3244, 3072, 3262),
+        parent =
+            { DRAYNOR }),
 
     /**
      * The trees west of Varrock. Intended for low-level woodcutters.
      * - Normal trees
      * - Oak trees
      */
-    WEST_VARROCK_TREES(inside = Position(3140, 3425),
-                       area = SimpleBoxArea.of(3110, 3395, 3170, 3455),
-                       parent =
-                       { VARROCK }),
+    WEST_VARROCK_TREES(
+        inside = Position(3140, 3425),
+        area = SimpleBoxArea.of(3110, 3395, 3170, 3455),
+        parent =
+            { VARROCK }),
 
     /**
      * The trees east of Edgeville. Intended for low-level woodcutters.
      * - Normal trees
      * - Oak trees
      */
-    EAST_EDGEVILLE_TREES(inside = Position(3145, 3493),
-                         area = SimpleBoxArea.of(3100, 3460, 3170, 3518),
-                         parent =
-                         { EDGEVILLE }),
+    EAST_EDGEVILLE_TREES(
+        inside = Position(3145, 3493),
+        area = SimpleBoxArea.of(3100, 3460, 3170, 3518),
+        parent =
+            { EDGEVILLE }),
 
     /**
      * The iconic barbarian village, intended for low-level combat training, crafting training, and low -> high level
@@ -833,10 +1051,11 @@ enum class SubZone(val inside: Position,
      * - Pottery oven
      * - Potter's wheel
      */
-    BARBARIAN_VILLAGE(inside = Position(3099, 3420),
-                      area = SimpleBoxArea.of(3070, 3402, 3109, 3451),
-                      parent =
-                      { EDGEVILLE }),
+    BARBARIAN_VILLAGE(
+        inside = Position(3099, 3420),
+        area = SimpleBoxArea.of(3070, 3402, 3109, 3451),
+        parent =
+            { EDGEVILLE }),
 
     /**
      * The Al-kharid bank area. Intended for average dexerity/intelligence bots that need to tan, smelt, cook, and do
@@ -846,42 +1065,47 @@ enum class SubZone(val inside: Position,
      * - Kebab shop & range
      * - 2 small net/bait fishing spots
      */
-    AL_KHARID_BANK(inside = Position(3270, 3167),
-                   area = SimpleBoxArea.of(3263, 3138, 3279, 3194),
-                   parent =
-                   { AL_KHARID }),
+    AL_KHARID_BANK(
+        inside = Position(3270, 3167),
+        area = SimpleBoxArea.of(3263, 3138, 3279, 3194),
+        parent =
+            { AL_KHARID }),
 
     /**
      * The goblin village area. Intended for beginner combat training.
      * - Plenty of low level goblins
      * - Infinitely burning fire
      */
-    GOBLIN_VILLAGE(inside = Position(2955, 3502),
-                   area = SimpleBoxArea.of(2944, 3481, 2970, 3518),
-                   parent =
-                   { FALADOR }),
+    GOBLIN_VILLAGE(
+        inside = Position(2955, 3502),
+        area = SimpleBoxArea.of(2944, 3481, 2970, 3518),
+        parent =
+            { FALADOR }),
 
     /**
      * The main flax spinning area inside Thessalia's clothing store.
      */
-    FLAX_SPINNING_MAIN(inside = Position(3207, 3415),
-                       area = SimpleBoxArea.of(3200, 3410, 3210, 3420),
-                       parent = { VARROCK }),
+    FLAX_SPINNING_MAIN(
+        inside = Position(3207, 3415),
+        area = SimpleBoxArea.of(3200, 3410, 3210, 3420),
+        parent = { VARROCK }),
 
     /**
      * The main eastern lumbridge cow pen.
      */
-    LUMBRIDGE_COW_PEN(inside = Position(3257, 3279),
-                      area = SimpleBoxArea.of(3240, 3253, 3265, 3298),
-                      parent = { LUMBRIDGE }),
+    LUMBRIDGE_COW_PEN(
+        inside = Position(3257, 3279),
+        area = SimpleBoxArea.of(3240, 3253, 3265, 3298),
+        parent = { LUMBRIDGE }),
 
     /**
      * The gated cow field north of the Lumbridge windmill.
      */
-    NORTH_LUMBRIDGE_COW_FIELD(inside = Position(3175, 3320),
-                              outside = { Position(3174, 3315) },
-                              area = SimpleBoxArea.of(3153, 3316, 3200, 3352),
-                              parent = { DRAYNOR }) {
+    NORTH_LUMBRIDGE_COW_FIELD(
+        inside = Position(3175, 3320),
+        outside = { Position(3174, 3315) },
+        area = SimpleBoxArea.of(3153, 3316, 3200, 3352),
+        parent = { DRAYNOR }) {
         private val gate = listOf(Position(3174, 3316), Position(3175, 3316))
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
@@ -896,10 +1120,11 @@ enum class SubZone(val inside: Position,
     /**
      * The gated cow field around the Crafting Guild.
      */
-    CRAFTING_GUILD_COW_FIELD(inside = Position(2923, 3289),
-                             outside = { Position(2923, 3293) },
-                             area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
-                             parent = { FALADOR }) {
+    CRAFTING_GUILD_COW_FIELD(
+        inside = Position(2923, 3289),
+        outside = { Position(2923, 3293) },
+        area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
+        parent = { FALADOR }) {
         private val gate = listOf(Position(2923, 3292), Position(2924, 3292))
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
@@ -914,10 +1139,11 @@ enum class SubZone(val inside: Position,
     /**
      * The gated cow field north of East Ardougne.
      */
-    NORTH_ARDOUGNE_COW_FIELD(inside = Position(2671, 3349),
-                             outside = { Position(2676, 3349) },
-                             area = SimpleBoxArea.of(2642, 3340, 2675, 3359),
-                             parent = { ARDOUGNE }) {
+    NORTH_ARDOUGNE_COW_FIELD(
+        inside = Position(2671, 3349),
+        outside = { Position(2676, 3349) },
+        area = SimpleBoxArea.of(2642, 3340, 2675, 3359),
+        parent = { ARDOUGNE }) {
         private val gate = listOf(Position(2675, 3349), Position(2675, 3350))
 
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
@@ -932,13 +1158,15 @@ enum class SubZone(val inside: Position,
     /**
      * The open cow field north of Yanille.
      */
-    NORTH_YANILLE_COW_FIELD(inside = Position(2590, 3117),
-                            area = SimpleBoxArea.of(2576, 3111, 2608, 3126),
-                            parent = { YANILLE }),
+    NORTH_YANILLE_COW_FIELD(
+        inside = Position(2590, 3117),
+        area = SimpleBoxArea.of(2576, 3111, 2608, 3126),
+        parent = { YANILLE }),
 
-    GREEN_DRAGONS(inside = Position(3141, 3690),
-                  area = SimpleBoxArea.of(3120, 3690, 3155, 3721),
-                  parent = { WILDERNESS }),
+    GREEN_DRAGONS(
+        inside = Position(3141, 3690),
+        area = SimpleBoxArea.of(3120, 3690, 3155, 3721),
+        parent = { WILDERNESS }),
 
     /**
      * The Air Altar interior.
@@ -946,10 +1174,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using an air talisman on the outside ruins west of Falador, then leave through the portal inside
      * the altar.
      */
-    AIR_ALTAR(inside = Position(2842, 4832),
-              outside = { Position(2985, 3299) },
-              area = SimpleBoxArea.of(2836, 4825, 2851, 4842),
-              parent = { FALADOR }) {
+    AIR_ALTAR(
+        inside = Position(2842, 4832),
+        outside = { Position(2985, 3299) },
+        area = SimpleBoxArea.of(2836, 4825, 2851, 4842),
+        parent = { FALADOR }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.AIR, selectedOutside)
         }
@@ -966,10 +1195,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a water talisman on the outside ruins south-west of Lumbridge, then leave through the portal
      * inside the altar.
      */
-    WATER_ALTAR(inside = Position(2724, 4833),
-                outside = { Position(3192, 3158) },
-                area = SimpleBoxArea.of(2703, 4817, 2733, 4847),
-                parent = { DRAYNOR }) {
+    WATER_ALTAR(
+        inside = Position(2724, 4833),
+        outside = { Position(3192, 3158) },
+        area = SimpleBoxArea.of(2703, 4817, 2733, 4847),
+        parent = { DRAYNOR }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.WATER, selectedOutside)
         }
@@ -986,10 +1216,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a mind talisman on the outside ruins north of Falador, then leave through the portal inside
      * the altar.
      */
-    MIND_ALTAR(inside = Position(2786, 4839),
-               outside = { Position(2979, 3511) },
-               area = SimpleBoxArea.of(2760, 4818, 2802, 4855),
-               parent = { EDGEVILLE }) {
+    MIND_ALTAR(
+        inside = Position(2786, 4839),
+        outside = { Position(2979, 3511) },
+        area = SimpleBoxArea.of(2760, 4818, 2802, 4855),
+        parent = { EDGEVILLE }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.MIND, selectedOutside)
         }
@@ -1006,10 +1237,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using an earth talisman on the outside ruins north-east of Varrock, then leave through the portal
      * inside the altar.
      */
-    EARTH_ALTAR(inside = Position(2657, 4839),
-                outside = { Position(3305, 3472) },
-                area = SimpleBoxArea.of(2626, 4813, 2685, 4862),
-                parent = { VARROCK }) {
+    EARTH_ALTAR(
+        inside = Position(2657, 4839),
+        outside = { Position(3305, 3472) },
+        area = SimpleBoxArea.of(2626, 4813, 2685, 4862),
+        parent = { VARROCK }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.EARTH, selectedOutside)
         }
@@ -1026,10 +1258,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a fire talisman on the outside ruins north-east of Al Kharid, then leave through the portal
      * inside the altar.
      */
-    FIRE_ALTAR(inside = Position(2584, 4836),
-               outside = { Position(3312, 3253) },
-               area = SimpleBoxArea.of(2560, 4806, 2622, 4863),
-               parent = { AL_KHARID }) {
+    FIRE_ALTAR(
+        inside = Position(2584, 4836),
+        outside = { Position(3312, 3253) },
+        area = SimpleBoxArea.of(2560, 4806, 2622, 4863),
+        parent = { AL_KHARID }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.FIRE, selectedOutside)
         }
@@ -1046,10 +1279,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a body talisman on the outside ruins west of Barbarian Village, then leave through the portal
      * inside the altar.
      */
-    BODY_ALTAR(inside = Position(2522, 4838),
-               outside = { Position(3052, 3443) },
-               area = SimpleBoxArea.of(2506, 4822, 2538, 4856),
-               parent = { EDGEVILLE }) {
+    BODY_ALTAR(
+        inside = Position(2522, 4838),
+        outside = { Position(3052, 3443) },
+        area = SimpleBoxArea.of(2506, 4822, 2538, 4856),
+        parent = { EDGEVILLE }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.BODY, selectedOutside)
         }
@@ -1066,10 +1300,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a cosmic talisman on the outside ruins in Zanaris, then leave through the portal inside the
      * altar.
      */
-    COSMIC_ALTAR(inside = Position(2141, 4831),
-                 outside = { Position(2407, 4375) },
-                 area = SimpleBoxArea.of(2116, 4809, 2165, 4857),
-                 parent = { ZANARIS }) {
+    COSMIC_ALTAR(
+        inside = Position(2141, 4831),
+        outside = { Position(2407, 4375) },
+        area = SimpleBoxArea.of(2116, 4809, 2165, 4857),
+        parent = { ZANARIS }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.COSMIC, selectedOutside)
         }
@@ -1086,10 +1321,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a chaos talisman on the outside ruins in the Wilderness, then leave through the portal inside
      * the altar.
      */
-    CHAOS_ALTAR(inside = Position(2270, 4840),
-                outside = { Position(3059, 3589) },
-                area = SimpleBoxArea.of(2250, 4826, 2294, 4859),
-                parent = { EDGEVILLE }) {
+    CHAOS_ALTAR(
+        inside = Position(2270, 4840),
+        outside = { Position(3059, 3589) },
+        area = SimpleBoxArea.of(2250, 4826, 2294, 4859),
+        parent = { EDGEVILLE }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.CHAOS, selectedOutside)
         }
@@ -1106,10 +1342,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a nature talisman on the outside ruins north of Shilo Village, then leave through the portal
      * inside the altar.
      */
-    NATURE_ALTAR(inside = Position(2399, 4839),
-                 outside = { Position(2868, 3017) },
-                 area = SimpleBoxArea.of(2378, 4814, 2422, 4858),
-                 parent = { KARAMJA }) {
+    NATURE_ALTAR(
+        inside = Position(2399, 4839),
+        outside = { Position(2868, 3017) },
+        area = SimpleBoxArea.of(2378, 4814, 2422, 4858),
+        parent = { KARAMJA }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.NATURE, selectedOutside)
         }
@@ -1126,10 +1363,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a law talisman on the outside ruins on Entrana, then leave through the portal inside the
      * altar.
      */
-    LAW_ALTAR(inside = Position(2463, 4830),
-              outside = { Position(2857, 3379) },
-              area = SimpleBoxArea.of(2443, 4809, 2486, 4854),
-              parent = { ENTRANA }) {
+    LAW_ALTAR(
+        inside = Position(2463, 4830),
+        outside = { Position(2857, 3379) },
+        area = SimpleBoxArea.of(2443, 4809, 2486, 4854),
+        parent = { ENTRANA }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.LAW, selectedOutside)
         }
@@ -1146,10 +1384,11 @@ enum class SubZone(val inside: Position,
      * Bots enter by using a death talisman on the outside ruins in the Temple of Light, then leave through the portal
      * inside the altar.
      */
-    DEATH_ALTAR(inside = Position(2204, 4834),
-                outside = { Position(1859, 4637) },
-                area = SimpleBoxArea.of(2183, 4812, 2231, 4861),
-                parent = { ARDOUGNE }) {
+    DEATH_ALTAR(
+        inside = Position(2204, 4834),
+        outside = { Position(1859, 4637) },
+        area = SimpleBoxArea.of(2183, 4812, 2231, 4861),
+        parent = { ARDOUGNE }) {
         override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
             return enterAltar(bot, Altar.DEATH, selectedOutside)
         }
@@ -1160,16 +1399,18 @@ enum class SubZone(val inside: Position,
         }
     },
 
-    FALADOR_WEST_BANK(inside = Position(2945, 3370),
-                      area = SimpleBoxArea.of(2939, 3355, 2980, 3392),
-                      parent = { FALADOR }),
+    FALADOR_WEST_BANK(
+        inside = Position(2945, 3370),
+        area = SimpleBoxArea.of(2939, 3355, 2980, 3392),
+        parent = { FALADOR }),
 
     /**
      * The Falador east bank and the open square north of its entrance. Intended for firemakers.
      */
-    FALADOR_EAST_BANK(inside = Position(3013, 3360),
-                      area = SimpleBoxArea.of(3000, 3348, 3035, 3370),
-                      parent = { FALADOR }),
+    FALADOR_EAST_BANK(
+        inside = Position(3013, 3360),
+        area = SimpleBoxArea.of(3000, 3348, 3035, 3370),
+        parent = { FALADOR }),
 
     /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
@@ -1180,10 +1421,11 @@ enum class SubZone(val inside: Position,
     // TODO Spawn wines (maybe 2? one on each side of the table?)
     // TODO Make wine pickup dangerous when monks can see the bot.
     // TODO Test bots telegrabbing wines.
-    NORTH_FALADOR_CHAOS_TEMPLE(inside = Position(2934, 3515),
-                               area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
-                               parent =
-                               { FALADOR }),
+    NORTH_FALADOR_CHAOS_TEMPLE(
+        inside = Position(2934, 3515),
+        area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
+        parent =
+            { FALADOR }),
 
     /*
      * TODO@0.5.0 Implement Mining Guild access and routing.
@@ -1192,22 +1434,77 @@ enum class SubZone(val inside: Position,
      * the Mining Guild safely.
      */
 
-    /*
-     * King Black Dragon lair.
-     *
-     * Remaining work:
-     * - Verify the inside/outside coordinates.
-     * - Add KBD combat/bossing support.
-     * - Implement gates.
-     * - Fix simple door handling if required.
-     * - Redo/fix docs after the route is confirmed.
-     * - TODO@1.0 enter(): Implement wilderness dungeon + lever route into the KBD lair.
-     * - TODO@1.0 leave(): Implement lever route out of the KBD lair.
+    /**
+     * King Black Dragon lair, reached through the Wilderness ladder and dungeon lever.
      */
-    KBD_LAIR(inside = Position(2900, 3294),
-             outside = { Position(3004, 3849) },
-             area = SimpleBoxArea.of(2249, 4674, 2291, 4717),
-             parent = { WILDERNESS }),
+    KBD_LAIR(
+        inside = Position(2271, 4680),
+        outside = { Position(3016, 3849) },
+        area = SimpleBoxArea.of(2249, 4674, 2291, 4717),
+        parent = { WILDERNESS }) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val ladder = world.locator.findObjectsOnTile(Position(3017, 3849)) {
+                it.def().name.equals("Ladder", true)
+            }.firstOrNull() ?: return false
+            if (!bot.actionHandler.interactions.interact(1, ladder) ||
+                !waitFor { bot.position.y > 10000 }
+            ) return false
+            val lever = world.locator.findViewableObjects(bot) { it.id == 1816 }.firstOrNull() ?: return false
+            return bot.actionHandler.interactions.interact(1, lever) && waitFor { area.contains(bot) }
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val lever = world.locator.findObjects(inside, 32) { it.id == 1817 }.firstOrNull() ?: return false
+            if (!bot.actionHandler.interactions.interact(1, lever) ||
+                !waitFor { bot.position.y > 10000 }
+            ) return false
+            val ladder = world.locator.findObjectsOnTile(Position(3069, 10256)) {
+                it.def().name.equals("Ladder", true)
+            }.firstOrNull() ?: return false
+            return bot.actionHandler.interactions.interact(1, ladder) && waitFor { bot.position.y < 10000 }
+        }
+    },
+
+    /**
+     * Queen chamber reached through both rope entrances. Existing ropes are reused without consuming stock.
+     * Temporary transitions until the webwalker covers rope attachment and both lair descents.
+     * Remove the overrides and outside anchor after https://github.com/luna-rs/luna/issues/707 has full route coverage.
+     */
+    KALPHITE_QUEEN(
+        inside = Position(3485, 9498),
+        outside = { Position(3226, 3108) },
+        area = SimpleBoxArea.of(3456, 9472, 3519, 9535),
+        parent = { AL_KHARID }, plane = 0) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            suspend fun descend(anchor: Position, bare: Int, tied: Int, arrived: () -> Boolean): Boolean {
+                fun entrance() = world.locator.findObjects(anchor, 8) { it.id == bare || it.id == tied }.firstOrNull()
+                var tunnel = entrance() ?: return false
+                if (tunnel.id == bare) {
+                    if (!bot.inventory.contains(954) || !bot.actionHandler.inventory.useItem(954).onObject(tunnel) ||
+                        !waitFor { entrance()?.id == tied }) return false
+                    tunnel = entrance() ?: return false
+                }
+                return bot.actionHandler.interactions.interact(1, tunnel) && waitFor { arrived() }
+            }
+            // Re-entry can resume on the upper floor after the first descent.
+            if (bot.position.z != 2 || bot.position.y !in 9472..9535) {
+                if (!descend(Position(3226, 3108), 3827, 3828) {
+                    bot.position.z == 2 && bot.position.y in 9472..9535
+                }) return false
+            }
+            bot.combat.prayers.activateIfOff(engine.combat.prayer.CombatPrayer.PROTECT_FROM_MAGIC)
+            return descend(Position(3508, 9497, 2), 3830, 3831) { bot.position.z == 0 && area.contains(bot) }
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val exit = world.locator.findObjects(Position(3508, 9493), 8) { it.id == 3832 }.firstOrNull()
+                ?: return false
+            if (!bot.actionHandler.interactions.interact(1, exit) || !waitFor { bot.position.z == 2 }) return false
+            val upperExit = world.locator.findObjects(Position(3483, 9510, 2), 8) { it.id == 3829 }.firstOrNull()
+                ?: return false
+            return bot.actionHandler.interactions.interact(1, upperExit) && waitFor { bot.position.y < 9000 }
+        }
+    },
 
     /*
      * Level 20 Wilderness chaos temple.
@@ -1218,9 +1515,10 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_20_WILDERNESS_CHAOS_TEMPLE(inside = Position(3239, 3619),
-                                   area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
-                                   parent = { EDGEVILLE }),
+    LVL_20_WILDERNESS_CHAOS_TEMPLE(
+        inside = Position(3239, 3619),
+        area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
+        parent = { EDGEVILLE }),
 
     /*
 
@@ -1236,9 +1534,10 @@ enum class SubZone(val inside: Position,
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_40_WILDERNESS_CHAOS_TEMPLE(inside = Position(2956, 3820),
-                                   area = SimpleBoxArea.ofRadius(2946, 3813, 13, 14),
-                                   parent = { EDGEVILLE });
+    LVL_40_WILDERNESS_CHAOS_TEMPLE(
+        inside = Position(2956, 3820),
+        area = SimpleBoxArea.ofRadius(2946, 3813, 13, 14),
+        parent = { EDGEVILLE });
 
     companion object {
 
@@ -1279,7 +1578,7 @@ enum class SubZone(val inside: Position,
                 // The gate opens on a later tick, and pathing before then finds no way through.
                 waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
             }
-            return bot.navigator.navigate(destination, true).await() == NavigationResult.REACHED
+            return bot.actionHandler.webWalkTo(destination, bank = api.bot.webwalk.plan.BankAccess.NONE)
         }
 
         /**
@@ -1306,9 +1605,9 @@ enum class SubZone(val inside: Position,
         fun updateSubZone(bot: Bot) {
             // TODO Is there a way to do this where it doesn't have to be recalculated every step?
             bot.subZones.clear()
-            if(bot.localSubZones.isNotEmpty()) {
+            if (bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
-                    if (bot in zone.area) {
+                    if (bot in zone.area && (zone.plane == null || bot.position.z == zone.plane)) {
                         bot.subZones.add(zone)
                     }
                 }
