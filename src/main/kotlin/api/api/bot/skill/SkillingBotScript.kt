@@ -146,7 +146,8 @@ abstract class SkillingBotScript<E : Entity>(
         if (toolId != null && !hasCarriedItem(toolId)) {
             val toolItem = Item(toolId)
             bot.log("Withdrawing ${toolItem.name} for this skilling script.")
-            if (!handler.banking.withdraw(toolItem)) {
+            val withdrawalId = toolIds(toolId).firstOrNull { it in bot.bank } ?: toolId
+            if (!handler.banking.withdraw(Item(withdrawalId))) {
                 bot.log("I wasn't able to withdraw the ${toolItem.name}.")
                 return
             }
@@ -217,7 +218,7 @@ abstract class SkillingBotScript<E : Entity>(
     override suspend fun refocus(): Boolean {
         val toolId = tool?.id
         if (toolId != null) {
-            if (toolId !in bot.inventory && toolId !in bot.equipment) {
+            if (!hasCarriedItem(toolId)) {
                 forceBanking = true
                 return true
             }
@@ -333,7 +334,8 @@ abstract class SkillingBotScript<E : Entity>(
         candidates.removeIf { skill.staticLevel < it.skillLevel }
 
         for (candidate in (if (bot.personality.isDumb) candidates.shuffled() else candidates)) {
-            if (handler.has(candidate.id) || handler.shop.obtainWantedItem(candidate.id)) {
+            if (hasCarriedItem(candidate.id) || toolIds(candidate.id).any { handler.has(it) } ||
+                handler.shop.obtainWantedItem(candidate.id)) {
                 bot.log("Resolved skilling tool: ${itemName(candidate.id)}.")
                 return candidate
             }
@@ -356,11 +358,18 @@ abstract class SkillingBotScript<E : Entity>(
      * Checks whether the bot currently carries the specified item.
      *
      * Both inventory and equipment are considered. Items stored exclusively in the bank do not satisfy this check.
+     * Subclasses may also recognize alternate forms of the same carried tool.
      *
      * @param id The item ID to check.
      * @return `true` if the item is equipped or present in inventory, or `false` otherwise.
      */
     private fun hasCarriedItem(id: Int): Boolean {
-        return id in bot.equipment || id in bot.inventory
+        return toolIds(id).any { it in bot.equipment || it in bot.inventory }
     }
+
+    /**
+     * Returns usable forms of a tool in withdrawal preference order. Used consistently for ownership, banking,
+     * and carried-tool checks when an activity transforms its tool.
+     */
+    protected open fun toolIds(id: Int): List<Int> = listOf(id)
 }

@@ -763,6 +763,14 @@ enum class SubZone(
         parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
+     * The karambwan spots on northeast Karamja, north of the shipyard.
+     */
+    KARAMJA_KARAMBWAN_FISHING(
+        inside = Position(2905, 3117),
+        area = SimpleBoxArea.of(2895, 3112, 2916, 3121),
+        parent = { KARAMJA }),
+
+    /**
      * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
      * Covers both warrior-woman spawns and their five-tile wander range.
      */
