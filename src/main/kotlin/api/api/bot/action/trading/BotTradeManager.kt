@@ -7,6 +7,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.math.IntMath
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Item
@@ -193,6 +194,7 @@ object BotTradeManager {
     /**
      * Reserves available payment across wanted items in priority order, using the same whole-item payment
      * rules as negotiation. Unaffordable items are skipped so cheaper needs can still be selected.
+     * Merchant quotes are alternatives: each may use the full budget, with the actual offer capped during negotiation.
      * Call again with actual carried stock after banking, since withdrawals can be limited by capacity.
      */
     internal fun affordablePurchases(candidates: List<BotTradeItem>, payment: List<BotTradeItem>): List<BotTradeItem> {
@@ -206,8 +208,10 @@ object BotTradeManager {
             val exchange = TradeBasket.exchange(demand, demand, prices, prices, remaining, paymentPrices) ?: continue
             selected += BotTradeItem(Item(id, exchange.first.getValue(id)), candidate.price,
                 candidate.purpose, candidate.bot)
-            for ((paymentId, amount) in exchange.second) {
-                remaining[paymentId] = remaining.getValue(paymentId) - amount
+            if (candidate.purpose != BotTradePurpose.MERCHANT_BUY) {
+                for ((paymentId, amount) in exchange.second) {
+                    remaining[paymentId] = remaining.getValue(paymentId) - amount
+                }
             }
         }
         return selected
@@ -281,8 +285,9 @@ object BotTradeManager {
      * Builds candidate wanted items for normal or merchant buying.
      *
      * Normal buying rebalances wanted items and collects every priced item, using the remaining amount
-     * needed to reach its target. Merchant buying selects all wanted items with
-     * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
+     * needed to reach its target. Merchant buying accepts priced, tradeable items regardless of price trends,
+     * paying normal buying quotes for wanted items and half guide price for other stock (at least one coin).
+     * Merchant demand uses [Int.MAX_VALUE] to mark unrestricted quantities.
      *
      * [computeExpected] caps these candidates to available payment. Partner stock is checked during negotiation.
      *
@@ -296,21 +301,16 @@ object BotTradeManager {
         if (purpose == BotTradePurpose.SELL || purpose == BotTradePurpose.MERCHANT_SELL) {
             throw IllegalStateException("Must be a valid BUY based purpose.")
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
-            // Merchant buyers seek wanted items whose prices have recently decreased.
+            // Quote base items once; the trading script normalizes bank notes to these same quotes.
             val candidates = ArrayList<BotTradeItem>()
-            for (item in bot.preferences.wantedItems) {
-                if (item.id == 995) {
-                    continue
-                }
-                val price = world.economy.prices[item.id]
-                if (price != null) {
-                    if (price.price < price.lastPrice) {
-                        candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
-                                                   priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
-                                                   purpose,
-                                                   bot)
-                    }
-                }
+            for (definition in ItemDefinition.ALL.filterNotNull()) {
+                val id = definition.id()
+                if (id == 995 || definition.isNoted || !definition.isTradeable) continue
+                val guide = world.economy.getPrice(id)
+                if (guide <= 0) continue
+                val quote = if (bot.preferences.hasWantedItem(id)) priceStrategy.applyBuy(guide)
+                else guide / 2
+                candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
             }
             return candidates.sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
                 .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 })
