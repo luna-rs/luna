@@ -5,8 +5,10 @@ import api.attr.getValue
 import api.attr.setValue
 import api.bot.zone.SubZone
 import game.skill.magic.Magic.findLandingTile
+import game.skill.magic.teleOther.EssenceMineExitAction
 import game.skill.magic.teleOther.NpcTeleOtherAction
 import io.luna.game.model.Position
+import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 
@@ -53,7 +55,8 @@ object EssenceMine {
         //  completed the Rune Mysteries Quest to use this feature."
         plr.essenceMineExit = type
         teleOther(wizard, plr, SubZone.ESSENCE_MINE.inside) {
-            NpcTeleOtherAction(wizard, plr, SubZone.ESSENCE_MINE.inside, animate = type.animates)
+            NpcTeleOtherAction(wizard, plr, SubZone.ESSENCE_MINE.inside, message = null,
+                               animate = false, essenceMine = true)
         }
     }
 
@@ -93,9 +96,10 @@ object EssenceMine {
      * Returns [plr] through a mine portal to the wizard who sent them.
      *
      * @param plr The player leaving the mine.
+     * @param portal The portal emitting the teleport effect.
      */
-    fun leave(plr: Player) {
+    fun leave(plr: Player, portal: GameObject) {
         val wizard = plr.essenceMineExit ?: EssenceMineWizard.AUBURY
-        plr.move(findLandingTile(wizard.exit, EXIT_RADIUS))
+        plr.submitAction(EssenceMineExitAction(plr, portal, findLandingTile(wizard.exit, EXIT_RADIUS)))
     }
 }

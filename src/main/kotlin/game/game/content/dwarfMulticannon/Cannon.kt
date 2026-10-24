@@ -228,9 +228,8 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
         }.setId(PROJECTILE)
             .setStartHeight(36)
             .setEndHeight(35)
-            // The builder sends ticksToEnd as the client's start cycle and ticksToStart as its end cycle.
-            .setTicksToEnd(0)
-            .setTicksToStart(flight)
+            .setTicksToStart(0)
+            .setTicksToEnd(flight)
             .setInitialSlope(2)
             .build()
             .display()

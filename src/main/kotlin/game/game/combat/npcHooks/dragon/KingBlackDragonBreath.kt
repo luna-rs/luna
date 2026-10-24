@@ -59,7 +59,7 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distan
          */
         private val PROJECTILE: (Mob, Mob) -> LocalProjectile = { attacker, victim ->
             LocalProjectile.followEntity(ctx).setSourceEntity(attacker).setTargetEntity(victim)
-                .setId(54).setTicksToStart(51).setTicksToEnd(16).setStartHeight(92)
+                .setId(54).setTicksToEnd(51).setTicksToStart(16).setStartHeight(92)
                 .setEndHeight(31).setInitialSlope(-5).build()
         }
 
