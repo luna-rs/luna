@@ -14,10 +14,14 @@ val ANIMATION = 923
  */
 val GRAPHIC = Graphic(274, 100, 0)
 
+/**
+ * Impale increases maximum damage by 10 percent while retaining the ordinary accuracy roll.
+ */
+val MAX_HIT_BONUS = 0.10
+
 attack(type = RUNE_CLAWS,
        drain = 25,
-       attackBonus = 0.10,
-       strengthBonus = 0.10) {
+       strengthBonus = MAX_HIT_BONUS) {
 
     attack { melee(ANIMATION) }
 
