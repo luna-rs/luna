@@ -94,6 +94,28 @@ public final class CombatFormula {
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type,
                                           int attackRollPercent) {
+        return calculateHitChance(attacker, victim, type, attackRollPercent, null);
+    }
+
+    /**
+     * Calculates hit probability with an optional melee defence bonus override. The attacker's selected offensive
+     * style and stance still determine the attack roll; only the target's defensive bonus selection is overridden.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The defending mob.
+     * @param type The damage type being checked.
+     * @param attackRollPercent The non-negative offensive roll percentage.
+     * @param meleeDefenceBonus The stab, slash, or crush defence bonus to check, or null for ordinary style matching.
+     * @return The resulting hit probability.
+     */
+    public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type,
+                                          int attackRollPercent, EquipmentBonus meleeDefenceBonus) {
+        if (meleeDefenceBonus != null && (type != CombatDamageType.MELEE ||
+                (meleeDefenceBonus != EquipmentBonus.STAB_DEFENCE &&
+                        meleeDefenceBonus != EquipmentBonus.SLASH_DEFENCE &&
+                        meleeDefenceBonus != EquipmentBonus.CRUSH_DEFENCE))) {
+            throw new IllegalArgumentException("Melee defence override must select stab, slash, or crush defence.");
+        }
         if (attackRollPercent < 0) {
             throw new IllegalArgumentException("Attack roll percentage must be non-negative.");
         }
@@ -104,7 +126,8 @@ public final class CombatFormula {
                 attackRollPercent, 100L);
         double defenceRoll = type == CombatDamageType.MAGIC ?
                 calculateMagicDefenceRoll(victim) :
-                calculatePhysicalDefenceRoll(victim, attackStyleBonus);
+                calculatePhysicalDefenceRoll(victim, meleeDefenceBonus == null ?
+                        attackStyleBonus : meleeDefenceBonus.getOpposite());
         double hitChance;
         if (attackRoll > defenceRoll) {
             hitChance = 1.0 - (defenceRoll + 2.0) / (2.0 * (attackRoll + 1.0));

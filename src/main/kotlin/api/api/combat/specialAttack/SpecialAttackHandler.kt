@@ -6,6 +6,7 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.combat.SpecialAttackType
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import io.luna.game.model.mob.combat.state.PlayerCombatContext
@@ -113,6 +114,7 @@ object SpecialAttackHandler {
      * @param maxHit An optional base max-hit override.
      * @param attackRollMultiplier A finite, non-negative multiplier in whole-percent increments, such as 1.15.
      * Converted once at registration to an integer percentage for allocation-free combat calculations.
+     * @param meleeDefenceBonus Optional stab, slash, or crush defence override for melee attacks.
      * @param action The DSL block used to configure the special attack.
      */
     fun attack(type: SpecialAttackType,
@@ -124,6 +126,7 @@ object SpecialAttackHandler {
                damageBonus: Double = 0.0,
                maxHit: Int? = null,
                attackRollMultiplier: Double = 1.0,
+               meleeDefenceBonus: EquipmentBonus? = null,
                action: SpecialAttackDataReceiver.() -> Unit) {
         val scaledPercent = attackRollMultiplier * 100.0
         require(attackRollMultiplier.isFinite() && attackRollMultiplier >= 0.0 && scaledPercent <= Int.MAX_VALUE) {
@@ -143,7 +146,8 @@ object SpecialAttackHandler {
                                                  damageBonus,
                                                  maxHit,
                                                  false,
-                                                 attackRollPercent)
+                                                 attackRollPercent,
+                                                 meleeDefenceBonus)
         action(receiver)
         specialAttacks[type] = receiver
     }
