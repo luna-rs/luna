@@ -72,6 +72,10 @@ public final class PursuitAction extends Action<Npc> {
 
     @Override
     public void onSubmit() {
+        if (!canPursue(combat.getTarget())) {
+            complete();
+            return;
+        }
         // Cancel any in-progress navigation while pursuing.
         mob.getNavigator().cancel();
         mob.getCombat().resetCombatTimer();
@@ -83,15 +87,27 @@ public final class PursuitAction extends Action<Npc> {
 
     @Override
     public boolean run() {
-        // Cancel any in-progress navigation while pursuing.
-        mob.getNavigator().cancel();
-
         Mob target = combat.getTarget();
-        if (target == null || !mob.isViewableFrom(target)) {
+        if (!canPursue(target)) {
             return true;
         }
+        // Only a valid chase may take control of navigation.
+        mob.getNavigator().cancel();
         mob.interact(target);
         return tryStep();
+    }
+
+    /**
+     * Checks pursuit eligibility before cancelling navigation, refreshing combat time, or queuing movement.
+     * An obsolete chase must leave replacement navigation alone. Dead or disabled attackers and missing,
+     * dead, or out-of-view targets cannot authorize another pursuit step.
+     *
+     * @param target The current combat target, or {@code null} if combat has ended.
+     * @return Whether this NPC may continue pursuing the target.
+     */
+    private boolean canPursue(Mob target) {
+        return mob.isAlive() && !combat.isDisabled() && target != null && target.isAlive() &&
+                mob.isViewableFrom(target);
     }
 
     /**
