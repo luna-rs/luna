@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.SpecialAttackType.RUNE_THROWN_AXE
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack
@@ -56,8 +57,8 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
  * A lightweight [CombatAttack] wrapper used for rune thrownaxe chain hits.
  *
  * Chainhit reuses [CombatDamageAction] to apply delayed rebound damage, but it must not execute the original special
- * attack logic again. This wrapper keeps the original attack context while disabling attack execution and delegated
- * damage calculation. Delivered rebound damage awards experience through the original ranged attack's captured stance,
+ * attack logic again. This wrapper keeps the original attack context while disabling attack execution and resolving
+ * rebound damage with the original ammunition snapshot. Delivered damage awards experience through the captured stance,
  * without calling its special attack arrival callback and starting another chain.
  *
  * @param source The original rune thrownaxe special attack.
@@ -87,7 +88,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
 
     override fun attack() {}
 
-    override fun calculateDamage(other: Mob?): CombatDamage? = null
+    override fun calculateDamage(other: Mob): CombatDamage = calculateChainDamage(source, other)
 
     override fun onDamageApplied(damage: CombatDamage) {
         source.awardDamageExperience(damage)
@@ -99,7 +100,7 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
  * Checks the three-tile search radius and projectile visibility from the chain's original search position.
  * The distance check also rejects different height levels before raycasting against live collision data.
  *
- * @param origin The original target position captured when the chain began.
+ * @param origin The original target position captured when the initial axe was launched.
  * @param target The prospective rebound target.
  * @return Whether the target is within the visible search area.
  */
@@ -109,13 +110,18 @@ fun isVisibleRebound(origin: Position, target: Mob): Boolean =
 /**
  * Resolves a Chainhit strike using its special ranged-level-plus-ten damage cap.
  * Both the initial throw and rebounds use ammunition strength without ordinary stance or ranged prayer bonuses
- * to max hit. Accuracy and protection prayers continue through the standard ranged damage request.
+ * to max hit. The offensive roll and visible Ranged level are captured before launch; equipment, stance, prayer,
+ * and level changes during flight cannot alter them. Each target's defence and protection prayers remain live.
+ * Ammunition strength comes from the original attack's snapshot before consumption, so firing the last axe or
+ * changing equipment during flight cannot substitute another ammunition definition for the launched axe.
  * The rounding offset is added before integer division, with a long intermediate product.
  */
-fun calculateChainDamage(attacker: Player, victim: Mob): CombatDamage {
-    val combatStat = (attacker.ranged.level.toLong() + 10) * (attacker.combat.ammoDef.strength.toLong() + 64)
+fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatDamage {
+    val attacker = source.attacker
+    val combatStat = (source.launchedRangedLevel.toLong() + 10) * (source.launchedAmmo.strength.toLong() + 64)
     val maxHit = ((combatStat + 320) / 640).toInt()
     return CombatDamageRequest.builder(attacker, victim, CombatDamageType.RANGED)
+        .setBaseAccuracy(CombatFormula.calculateRangedHitChance(source.launchedAttackRoll, victim))
         .setBaseMaxHit(maxHit)
         .build().resolve()
 }
@@ -134,6 +140,7 @@ fun calculateChainDamage(attacker: Player, victim: Mob): CombatDamage {
  * Normal completion retains the lock when the next rebound has taken over the chain.
  * A skipped or cancelled delivery ends the chain; continuation uses the delivered hit after defence hooks.
  * Range and visibility are rechecked before paying energy because gathered targets can move between rebounds.
+ * The search centre stays at the initial target's launch-time position, even if that target moves during flight.
  *
  * @param attacker The player performing the special attack.
  * @param origin The fixed search position used for range and visibility checks throughout the chain.
@@ -159,7 +166,7 @@ fun handleChainHit(
             attacker.combat.specialBar.isLocked = false
             return
         }
-        val nextDamage = calculateChainDamage(attacker, nextVictim)
+        val nextDamage = source.calculateDamage(nextVictim)
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {
@@ -192,7 +199,7 @@ attack(type = RUNE_THROWN_AXE,
     }
 
     launched {
-        val initialDamage = calculateChainDamage(attacker, victim)
+        val initialDamage = calculateChainDamage(attack as PlayerRangedCombatAttack, victim)
         attacker.combat.specialBar.isLocked = true
         initialDamage
     }
@@ -204,17 +211,18 @@ attack(type = RUNE_THROWN_AXE,
             return@arrived
         }
         val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(MAX_REBOUNDS)
-        val origin = victim.position
+        val rangedSource = source as PlayerRangedCombatAttack
+        val origin = rangedSource.launchedTargetPosition
         val filter: (Mob) -> Boolean =
             { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
                     isVisibleRebound(origin, it) && attacker.combat.checkMultiCombat(it) }
         val targets = // Gather npc OR player targets.
-            (if (victim is Npc) world.locator.findViewableNpcs(victim, filter)
-            else world.locator.findViewablePlayers(victim, filter)).iterator()
+            (if (victim is Npc) world.locator.findViewableNpcs(origin, filter)
+            else world.locator.findViewablePlayers(origin, filter)).iterator()
 
         if (attacksLeft > 0 && targets.hasNext()) {
             // Use recursion to handle chain hits.
-            handleChainHit(attacker, origin, victim, targets, ChainHitCombatAttack(source as PlayerRangedCombatAttack), attacksLeft)
+            handleChainHit(attacker, origin, victim, targets, ChainHitCombatAttack(rangedSource), attacksLeft)
         } else {
             attacker.combat.specialBar.isLocked = false
         }
