@@ -3,6 +3,7 @@ package game.combat.specialAttacks
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
@@ -31,6 +32,7 @@ val MAX_HIT_BONUS = 0.15
 
 /**
  * Puncture boosts each strike's offensive roll by 15 percent before comparison with the target's defence.
+ * Both strikes retain the selected offensive style but always check the target's slash defence.
  */
 val ATTACK_ROLL_MULTIPLIER = 1.15
 
@@ -56,6 +58,7 @@ fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
 
 attack(type = DRAGON_DAGGER,
        drain = 25,
+       meleeDefenceBonus = EquipmentBonus.SLASH_DEFENCE,
        attackRollMultiplier = ATTACK_ROLL_MULTIPLIER,
        strengthBonus = MAX_HIT_BONUS) {
 
@@ -69,7 +72,8 @@ attack(type = DRAGON_DAGGER,
 
         val secondHit = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE)
             .setPercentBonusStrength(strengthBonus)
-            .setBaseAccuracy(CombatFormula.calculateHitChance(attacker, victim, CombatDamageType.MELEE, attackRollPercent))
+            .setBaseAccuracy(CombatFormula.calculateHitChance(attacker, victim, CombatDamageType.MELEE,
+                attackRollPercent, meleeDefenceBonus))
             .build()
             .resolve()
 
