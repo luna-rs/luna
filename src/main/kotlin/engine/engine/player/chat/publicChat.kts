@@ -4,6 +4,7 @@ import api.predef.*
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.ChatEvent
 import io.luna.game.model.mob.block.Chat
+import io.luna.game.model.mob.bot.Bot
 import io.luna.util.logging.LoggingSettings.FileOutputType
 
 /**
@@ -21,5 +22,6 @@ val chat = FileOutputType.CHAT.level
  */
 on(ChatEvent::class, EventPriority.HIGH) {
     plr.chat(Chat(message, color, plr.rights.clientValue, effect))
+    (plr as? Bot)?.speechStack?.acknowledgeConversation(unpackedMessage)
     logger.log(chat, "{}: {}", plr.username, unpackedMessage)
 }

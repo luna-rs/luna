@@ -5,6 +5,8 @@ import api.bot.action.trading.*
 import api.bot.action.trading.BotTradeManager.tradeRequests
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
+import api.bot.social.BotConversations
+import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -54,7 +56,7 @@ class TradeBotScript(bot: Bot,
                      private val marketplace: BotMarketplace = BotMarketplace.VARROCK,
                      duration: Duration = getPreferenceBasedDuration(bot),
                      zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone)) :
-    ZonedBotScript(bot, duration, zone) {
+    ZonedBotScript(bot, duration, zone), SocialBotScript {
 
     companion object {
 
@@ -102,6 +104,11 @@ class TradeBotScript(bot: Bot,
     /** The offer stage owned by this script, retained for cancellation cleanup. */
     private var activeTrade: BotTradeOfferStage? = null
 
+    /**
+     * Includes the outstanding request and approach before an offer screen exists.
+     */
+    private var negotiating = false
+
     /** The current advertisement, invalidated whenever trade intentions change. */
     private var message: BotTradeMessage? = null
 
@@ -110,9 +117,6 @@ class TradeBotScript(bot: Bot,
 
     /** The bank withdrawal mode to restore when the session finishes or pauses. */
     private var previousBankMode: Int? = null
-
-    /** Whether this script has suppressed unrelated bot speech. */
-    private var speechDisabled = false
 
     /** Whether this purpose acquires wanted items in exchange for coins or surplus payment stock. */
     private val buying: Boolean
@@ -129,8 +133,7 @@ class TradeBotScript(bot: Bot,
         }
         if (!computeOfferAndExpected()) return false
         previousBankMode = bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE)
-        bot.speechStack.setDisableAll(true)
-        speechDisabled = true
+        bot.speechStack.suppressGeneral(this)
         // Zoned scripts skip initial banking on resume; explicitly prepare again in that case.
         forceBanking = resumed
         return true
@@ -177,14 +180,14 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
+        BotConversations.cancel(bot)
         prepared = false
         activeTrade?.decline()
         activeTrade = null
         bot.tradingWith = -1
         previousBankMode?.let { bot.varpManager.setValue(PersistentVarp.WITHDRAW_AS_NOTE, it) }
         previousBankMode = null
-        if (speechDisabled) bot.speechStack.setDisableAll(false)
-        speechDisabled = false
+        bot.speechStack.releaseGeneral(this)
     }
 
     override suspend fun completed() {
@@ -195,6 +198,8 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun executeInZone(): Boolean {
+        BotConversations.tick(bot)
+        if (BotConversations.engaged(bot)) return true
         if (!prepared) {
             forceBanking = true
             return true
@@ -249,6 +254,7 @@ class TradeBotScript(bot: Bot,
      */
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
+            !BotConversations.engaged(other.bot) &&
             buying != other.buying && marketplace.contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
@@ -302,6 +308,7 @@ class TradeBotScript(bot: Bot,
 
     /** Owns request, negotiation, and cleanup for one participant, including every unsuccessful return path. */
     private suspend fun attemptTrade(other: Player) {
+        negotiating = true
         var success = false
         try {
             val existing = bot.overlays[OfferTradeInterface::class]
@@ -324,6 +331,7 @@ class TradeBotScript(bot: Bot,
             }
             activeTrade = null
             if (bot.tradingWith == other.index) bot.tradingWith = -1
+            negotiating = false
         }
     }
 
@@ -474,6 +482,7 @@ class TradeBotScript(bot: Bot,
 
     /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
     private fun canTradeWith(other: Player): Boolean {
+        if (BotConversations.engaged(bot) || other is Bot && BotConversations.engaged(other)) return false
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
@@ -484,6 +493,19 @@ class TradeBotScript(bot: Bot,
 
     /** Exposes the selected scrutiny policy for future personality-specific negotiation behavior. */
     fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
+
+    override fun canSocialize(): Boolean = prepared && !forceBanking && !negotiating && activeTrade == null &&
+        duration > Duration.ZERO && marketplace.contains(bot.position)
+
+    override fun onPaused() {
+        BotConversations.cancel(bot)
+    }
+
+    override suspend fun onBankRequested(initial: Boolean): Boolean {
+        prepared = false
+        BotConversations.cancel(bot)
+        return true
+    }
 
     /** Selects one pricing strategy when intentions are refreshed, rather than repricing during negotiation. */
     fun resolveTradePrice(): BotTradePrice = BotTradePrice.computePriceStrategy(bot)

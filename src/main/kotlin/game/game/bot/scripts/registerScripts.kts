@@ -4,8 +4,10 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript
 import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript.ProgressionData
+import engine.bot.speech.BotConversationPool
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
 import game.bot.scripts.DropPartyBotScript.PartyData
+import game.bot.scripts.IdleBotScript.IdleData
 import game.bot.scripts.skills.AgilityBotScript
 import game.bot.scripts.skills.AgilityBotScript.Companion.AgilityData
 import game.bot.scripts.skills.WeaveTextileBotScript
@@ -103,8 +105,10 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
  * @author lare96
  */
 on(ServerLaunchEvent::class) {
+    BotConversationPool.load()
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
+    scriptManager.addScript<IdleData>(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
     scriptManager.addScript<DonationData>(DepositPartyRoomItemBotScript::class) { bot, data -> DepositPartyRoomItemBotScript(bot, data) }
     scriptManager.addScript<PartyData>(DropPartyBotScript::class) { bot, data -> DropPartyBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
