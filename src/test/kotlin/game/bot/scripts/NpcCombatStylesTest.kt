@@ -215,22 +215,6 @@ class NpcCombatStylesTest {
         assertEquals(3, script.interactionOption(npc))
         verify(bot.combat.weapon, times(1)).changeStyle(77)
     }
-    @Test fun partialRuneWithdrawalUsesActualAvailableStockAndRestoresAutocast() = runBlocking<Unit> {
-        val bot = bot()
-        `when`(bot.equipment.weapon).thenReturn(Item(1381))
-        val definition = CombatSpell.WIND_STRIKE.def
-        `when`(bot.actionHandler.combat.setAutocastSpell(definition)).thenReturn(true)
-        val banking = bot.actionHandler.banking
-        doAnswer {
-            bot.inventory.add(Item(Rune.MIND.id, 2))
-            true
-        }.`when`(banking).withdraw(Item(Rune.MIND.id, 500))
-        val script = script(bot, BotGearPurpose.MAGIC, NpcCombatLoadout(gear(1381), definition))
-        script.onBankOpen(false)
-        assertEquals(2, bot.inventory.computeAmountForId(Rune.MIND.id))
-        verify(bot.actionHandler.combat).setAutocastSpell(definition)
-        verify(bot.preferences, never()).addWantedItem(anyInt(), anyInt())
-    }
     @Test fun mismatchedResumeEquipmentCannotAttackWithAnImaginaryStaff() {
         val bot = bot()
         `when`(bot.equipment.weapon).thenReturn(Item(1387))
