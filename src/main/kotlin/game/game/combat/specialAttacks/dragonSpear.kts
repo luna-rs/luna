@@ -1,11 +1,13 @@
 package game.combat.specialAttacks
 
+import api.combat.player.VoidCombatAttack
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import api.predef.ext.*
 import engine.combat.status.BasicStatusEffect
 import engine.combat.status.StatusEffectType
 import io.luna.game.model.Direction
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_SPEAR
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
@@ -14,6 +16,11 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 val SHOVE_GRAPHIC = Graphic(253, 100, 0)
 val STUNNED_GRAPHIC = Graphic(254, 100, 0)
 val ANIMATION = 1064
+
+/**
+ * Castle Wars barricades for both teams, including burning variants. These cannot receive Shove.
+ */
+val BARRICADE_IDS = setOf(1532, 1533, 1534, 1535)
 
 /**
  * Shove's five-tick stun duration for players and NPCs. The Lost City scripts express this as a delay of four,
@@ -37,11 +44,20 @@ fun applyShoveStun(victim: Mob) {
 /**
  * Shove applies its stun to eligible targets regardless of size. Only one-tile targets can be displaced;
  * larger NPCs still consume the normal special energy and receive the stun without changing position.
+ * Barricades are rejected before energy consumption, visuals, or status effects, and special selection is cleared.
  */
 attack(type = DRAGON_SPEAR,
        drain = 25) {
 
-    attack { melee(ANIMATION) }
+    attack {
+        if (victim is Npc && victim.id in BARRICADE_IDS) {
+            attacker.sendMessage("You can't use this special attack on barricades.")
+            attacker.combat.specialBar.forceOff()
+            VoidCombatAttack(attacker, victim)
+        } else {
+            melee(ANIMATION)
+        }
+    }
 
     launched {
         attacker.graphic(SHOVE_GRAPHIC)
