@@ -13996,5 +13996,6306 @@
       "COMBAT_EQUIPMENT",
       "COSMETIC_EQUIPMENT"
     ]
+  },
+  // Remaining equipment candidates from BotGearSelector, including all progression tiers.
+  {
+    // Khazard helmet
+    "id": 74,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ice arrows
+    "id": 78,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Pendant of lucien
+    "id": 86,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Armadyl pendant
+    "id": 87,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Plague jacket
+    "id": 284,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Plague trousers
+    "id": 285,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Glarial's amulet
+    "id": 295,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Lathas' amulet
+    "id": 421,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Pickaxe handle
+    "id": 466,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Druid's robe
+    "id": 538,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Druid's robe
+    "id": 540,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Monk's robe
+    "id": 542,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Monk's robe
+    "id": 544,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Shade robe
+    "id": 546,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Shade robe
+    "id": 548,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Black robe
+    "id": 581,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Gnome amulet
+    "id": 589,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bronze fire arrows
+    "id": 598,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Robe top
+    "id": 636,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe top
+    "id": 638,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe top
+    "id": 640,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe top
+    "id": 642,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe top
+    "id": 644,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe bottoms
+    "id": 646,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe bottoms
+    "id": 648,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe bottoms
+    "id": 650,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe bottoms
+    "id": 652,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Robe bottoms
+    "id": 654,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hat
+    "id": 656,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hat
+    "id": 658,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hat
+    "id": 660,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hat
+    "id": 662,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hat
+    "id": 664,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue hat
+    "id": 740,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dramen staff
+    "id": 772,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // 'perfect' ring
+    "id": 773,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // 'perfect' necklace
+    "id": 774,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Steel gauntlets
+    "id": 778,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bolts
+    "id": 877,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Bolts(p)
+    "id": 878,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Opal bolts
+    "id": 879,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Pearl bolts
+    "id": 880,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Barbed bolts
+    "id": 881,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Bronze fire arrows
+    "id": 942,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // White apron
+    "id": 1005,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Brass necklace
+    "id": 1009,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Pink skirt
+    "id": 1013,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black skirt
+    "id": 1015,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Wizard hat
+    "id": 1017,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Eye patch
+    "id": 1025,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Bunny ears
+    "id": 1037,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Red partyhat
+    "id": 1038,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Yellow partyhat
+    "id": 1040,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue partyhat
+    "id": 1042,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Green partyhat
+    "id": 1044,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Purple partyhat
+    "id": 1046,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // White partyhat
+    "id": 1048,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Santa hat
+    "id": 1050,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Green h'ween mask
+    "id": 1053,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue h'ween mask
+    "id": 1055,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Red h'ween mask
+    "id": 1057,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Iron chainbody
+    "id": 1101,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bronze chainbody
+    "id": 1103,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Steel chainbody
+    "id": 1105,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Black chainbody
+    "id": 1107,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mithril chainbody
+    "id": 1109,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Adamant chainbody
+    "id": 1111,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Rune chainbody
+    "id": 1113,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Hardleather body
+    "id": 1131,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Iron med helm
+    "id": 1137,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bronze med helm
+    "id": 1139,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Steel med helm
+    "id": 1141,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mithril med helm
+    "id": 1143,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Adamant med helm
+    "id": 1145,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Rune med helm
+    "id": 1147,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Black med helm
+    "id": 1151,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Poisoned dagger(p)
+    "id": 1235,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Klank's gauntlets
+    "id": 1495,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Gas mask
+    "id": 1506,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Gold ring
+    "id": 1635,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Sapphire ring
+    "id": 1637,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Emerald ring
+    "id": 1639,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ruby ring
+    "id": 1641,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Diamond ring
+    "id": 1643,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dragonstone ring
+    "id": 1645,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Sapphire necklace
+    "id": 1656,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Emerald necklace
+    "id": 1658,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ruby necklace
+    "id": 1660,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Sapphire amulet
+    "id": 1694,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Emerald amulet
+    "id": 1696,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ruby amulet
+    "id": 1698,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Diamond amulet
+    "id": 1700,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dragonstone ammy
+    "id": 1702,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Unblessed symbol
+    "id": 1716,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Holy symbol
+    "id": 1718,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Unpowered symbol
+    "id": 1722,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Unholy symbol
+    "id": 1724,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Brown apron
+    "id": 1757,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Silver necklace
+    "id": 1796,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Silver necklace
+    "id": 1797,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert shirt
+    "id": 1833,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert robe
+    "id": 1835,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Slave shirt
+    "id": 1844,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Slave robe
+    "id": 1845,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chef's hat
+    "id": 1949,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue partyhat
+    "id": 2422,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Orbital knife
+    "id": 2425,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Waste disposal
+    "id": 2513,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Iron fire arrows
+    "id": 2532,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Iron fire arrows
+    "id": 2533,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Steel fire arrows
+    "id": 2534,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Steel fire arrows
+    "id": 2535,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Mithril fire arrows
+    "id": 2536,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Mithril fire arrows
+    "id": 2537,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Addy fire arrows
+    "id": 2538,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Addy fire arrows
+    "id": 2539,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Rune fire arrows
+    "id": 2540,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Rune fire arrows
+    "id": 2541,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Ring of dueling(8)
+    "id": 2552,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(7)
+    "id": 2554,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(6)
+    "id": 2556,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(5)
+    "id": 2558,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(4)
+    "id": 2560,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(3)
+    "id": 2562,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(2)
+    "id": 2564,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of dueling(1)
+    "id": 2566,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Robin hood hat
+    "id": 2581,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Highwayman mask
+    "id": 2631,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue beret
+    "id": 2633,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black beret
+    "id": 2635,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // White beret
+    "id": 2637,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tan cavalier
+    "id": 2639,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dark cavalier
+    "id": 2641,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black cavalier
+    "id": 2643,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Red headband
+    "id": 2645,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black headband
+    "id": 2647,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Brown headband
+    "id": 2649,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Pirate's hat
+    "id": 2651,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ogre arrow
+    "id": 2866,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Silver sickle
+    "id": 2961,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Silver sickle(b)
+    "id": 2963,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2978,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2979,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2980,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2981,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2982,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2983,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2984,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2985,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2986,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2987,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2988,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2989,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2990,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2991,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2992,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2993,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2994,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chompy bird hat
+    "id": 2995,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Pirate's hook
+    "id": 2997,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Bronze claws
+    "id": 3095,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Iron claws
+    "id": 3096,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Steel claws
+    "id": 3097,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Black claws
+    "id": 3098,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Mithril claws
+    "id": 3099,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Adamant claws
+    "id": 3100,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Rune claws
+    "id": 3101,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Crystal pendant
+    "id": 3208,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik helm
+    "id": 3748,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Archer helm
+    "id": 3749,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Warrior helm
+    "id": 3753,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Farseer helm
+    "id": 3755,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik shirt
+    "id": 3767,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik shirt
+    "id": 3769,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik shirt
+    "id": 3771,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik shirt
+    "id": 3773,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik shirt
+    "id": 3775,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik robe
+    "id": 3793,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik skirt
+    "id": 3795,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Fremennik hat
+    "id": 3797,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Gloves
+    "id": 3799,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Iron sickle
+    "id": 3899,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // 10th squad sigil
+    "id": 4035,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Saradomin banner
+    "id": 4037,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Zamorak banner
+    "id": 4039,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Hooded cloak
+    "id": 4041,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Hooded cloak
+    "id": 4042,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Decorative helm
+    "id": 4071,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Salve amulet
+    "id": 4081,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mystic hat
+    "id": 4099,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mystic robe top
+    "id": 4111,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mystic robe bottom
+    "id": 4113,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Broad arrows
+    "id": 4160,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Facemask
+    "id": 4164,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Earmuffs
+    "id": 4166,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Nose peg
+    "id": 4168,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Broad arrows
+    "id": 4172,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Broad arrows
+    "id": 4173,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Broad arrows
+    "id": 4174,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Broad arrows
+    "id": 4175,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Olive stuffer
+    "id": 4178,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Coconut bunch
+    "id": 4180,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of charos
+    "id": 4202,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Gloves
+    "id": 4308,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-1 cape
+    "id": 4315,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-2 cape
+    "id": 4317,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-3 cape
+    "id": 4319,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-4 cape
+    "id": 4321,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-5 cape
+    "id": 4323,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-6 cape
+    "id": 4325,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-7 cape
+    "id": 4327,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-8 cape
+    "id": 4329,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-9 cape
+    "id": 4331,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-10 cape
+    "id": 4333,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-11 cape
+    "id": 4335,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-12 cape
+    "id": 4337,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-13 cape
+    "id": 4339,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-14 cape
+    "id": 4341,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-15 cape
+    "id": 4343,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-16 cape
+    "id": 4345,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-17 cape
+    "id": 4347,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-18 cape
+    "id": 4349,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-19 cape
+    "id": 4351,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-20 cape
+    "id": 4353,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-21 cape
+    "id": 4355,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-22 cape
+    "id": 4357,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-23 cape
+    "id": 4359,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-24 cape
+    "id": 4361,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-25 cape
+    "id": 4363,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-26 cape
+    "id": 4365,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-27 cape
+    "id": 4367,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-28 cape
+    "id": 4369,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-29 cape
+    "id": 4371,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-30 cape
+    "id": 4373,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-31 cape
+    "id": 4375,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-32 cape
+    "id": 4377,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-33 cape
+    "id": 4379,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-34 cape
+    "id": 4381,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-35 cape
+    "id": 4383,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-36 cape
+    "id": 4385,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-37 cape
+    "id": 4387,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-38 cape
+    "id": 4389,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-39 cape
+    "id": 4391,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-40 cape
+    "id": 4393,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-41 cape
+    "id": 4395,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-42 cape
+    "id": 4397,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-43 cape
+    "id": 4399,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-44 cape
+    "id": 4401,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-45 cape
+    "id": 4403,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-46 cape
+    "id": 4405,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-47 cape
+    "id": 4407,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-48 cape
+    "id": 4409,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-49 cape
+    "id": 4411,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Team-50 cape
+    "id": 4413,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bearhead
+    "id": 4502,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Decorative helm
+    "id": 4506,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Decorative helm
+    "id": 4511,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Castlewars hood
+    "id": 4513,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Castlewars hood
+    "id": 4515,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Spiny helmet
+    "id": 4551,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Gold helmet
+    "id": 4567,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of visibility
+    "id": 4657,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Catspeak amulet
+    "id": 4677,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Bronze brutal
+    "id": 4773,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Iron brutal
+    "id": 4778,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Steel brutal
+    "id": 4783,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Black brutal
+    "id": 4788,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Mithril brutal
+    "id": 4793,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Adamant brutal
+    "id": 4798,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Rune brutal
+    "id": 4803,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Ahrims hood 100
+    "id": 4856,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims hood 75
+    "id": 4857,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims hood 50
+    "id": 4858,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims hood 25
+    "id": 4859,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims hood 0
+    "id": 4860,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims staff 0
+    "id": 4866,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Ahrims top 100
+    "id": 4868,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims top 75
+    "id": 4869,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims top 50
+    "id": 4870,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims top 25
+    "id": 4871,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims top 0
+    "id": 4872,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims skirt 100
+    "id": 4874,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims skirt 75
+    "id": 4875,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims skirt 50
+    "id": 4876,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims skirt 25
+    "id": 4877,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Ahrims skirt 0
+    "id": 4878,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks helm 100
+    "id": 4880,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks helm 75
+    "id": 4881,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks helm 50
+    "id": 4882,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks helm 25
+    "id": 4883,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks helm 0
+    "id": 4884,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks axe 0
+    "id": 4890,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Dharoks body 100
+    "id": 4892,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks body 75
+    "id": 4893,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks body 50
+    "id": 4894,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks body 25
+    "id": 4895,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks body 0
+    "id": 4896,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks legs 100
+    "id": 4898,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks legs 75
+    "id": 4899,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks legs 50
+    "id": 4900,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks legs 25
+    "id": 4901,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dharoks legs 0
+    "id": 4902,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans helm 100
+    "id": 4904,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans helm 75
+    "id": 4905,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans helm 50
+    "id": 4906,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans helm 25
+    "id": 4907,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans helm 0
+    "id": 4908,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans spear 0
+    "id": 4914,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Guthans body 100
+    "id": 4916,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans body 75
+    "id": 4917,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans body 50
+    "id": 4918,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans body 25
+    "id": 4919,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans body 0
+    "id": 4920,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans skirt 100
+    "id": 4922,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans skirt 75
+    "id": 4923,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans skirt 50
+    "id": 4924,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans skirt 25
+    "id": 4925,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Guthans skirt 0
+    "id": 4926,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils coif 100
+    "id": 4928,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils coif 75
+    "id": 4929,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils coif 50
+    "id": 4930,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils coif 25
+    "id": 4931,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils coif 0
+    "id": 4932,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils x-bow 0
+    "id": 4938,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Karils top 100
+    "id": 4940,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils top 75
+    "id": 4941,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils top 50
+    "id": 4942,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils top 25
+    "id": 4943,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils top 0
+    "id": 4944,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils skirt 100
+    "id": 4946,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils skirt 75
+    "id": 4947,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils skirt 50
+    "id": 4948,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils skirt 25
+    "id": 4949,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Karils skirt 0
+    "id": 4950,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags helm 100
+    "id": 4952,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags helm 75
+    "id": 4953,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags helm 50
+    "id": 4954,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags helm 25
+    "id": 4955,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags helm 0
+    "id": 4956,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags hammer 0
+    "id": 4962,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Torags body 100
+    "id": 4964,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags body 75
+    "id": 4965,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags body 50
+    "id": 4966,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags body 25
+    "id": 4967,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags body 0
+    "id": 4968,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags legs 100
+    "id": 4970,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags legs 75
+    "id": 4971,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags legs 50
+    "id": 4972,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags legs 25
+    "id": 4973,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Torags legs 0
+    "id": 4974,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs helm 100
+    "id": 4976,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs helm 75
+    "id": 4977,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs helm 50
+    "id": 4978,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs helm 25
+    "id": 4979,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs helm 0
+    "id": 4980,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs flail 0
+    "id": 4986,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Veracs top 100
+    "id": 4988,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs top 75
+    "id": 4989,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs top 50
+    "id": 4990,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs top 25
+    "id": 4991,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs top 0
+    "id": 4992,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs skirt 100
+    "id": 4994,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs skirt 75
+    "id": 4995,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs skirt 50
+    "id": 4996,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs skirt 25
+    "id": 4997,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Veracs skirt 0
+    "id": 4998,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Mining helmet
+    "id": 5013,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Mining helmet
+    "id": 5014,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Woven top
+    "id": 5024,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Woven top
+    "id": 5026,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Woven top
+    "id": 5028,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Dwarven battleaxe
+    "id": 5056,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Dwarven battleaxe
+    "id": 5057,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Dwarven battleaxe
+    "id": 5058,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Dwarven battleaxe
+    "id": 5059,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Exquisite boots
+    "id": 5064,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Gardening boots
+    "id": 5345,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Binding necklace
+    "id": 5521,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Air tiara
+    "id": 5527,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Mind tiara
+    "id": 5529,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Water tiara
+    "id": 5531,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Body tiara
+    "id": 5533,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Earth tiara
+    "id": 5535,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Fire tiara
+    "id": 5537,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Cosmic tiara
+    "id": 5539,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Nature tiara
+    "id": 5541,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Chaos tiara
+    "id": 5543,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Law tiara
+    "id": 5545,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Death tiara
+    "id": 5547,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blood tiara
+    "id": 5549,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Soul tiara
+    "id": 5551,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Initiate helm
+    "id": 5574,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Initiate platemail
+    "id": 5575,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Initiate platelegs
+    "id": 5576,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bronze arrow(+)
+    "id": 5616,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Iron arrow(+)
+    "id": 5617,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Steel arrow(+)
+    "id": 5618,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Mithril arrow(+)
+    "id": 5619,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Adamant arrow(+)
+    "id": 5620,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Rune arrow(+)
+    "id": 5621,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Bronze arrow(s)
+    "id": 5622,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Iron arrow(s)
+    "id": 5623,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Steel arrow(s)
+    "id": 5624,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Mithril arrow(s)
+    "id": 5625,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Adamant arrow(s)
+    "id": 5626,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Rune arrow(s)
+    "id": 5627,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Poisoned dagger(+)
+    "id": 5684,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Poisoned dagger(s)
+    "id": 5702,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Amulet of nature
+    "id": 6040,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Emerald amulet
+    "id": 6041,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Bolts(+)
+    "id": 6061,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Bolts(s)
+    "id": 6062,
+    "min": 250,
+    "target": 1500,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    // Fixed device
+    "id": 6082,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Snakeskin body
+    "id": 6322,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Snakeskin chaps
+    "id": 6324,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Snakeskin bandana
+    "id": 6326,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal mask
+    "id": 6335,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal mask
+    "id": 6337,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal mask
+    "id": 6339,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal top
+    "id": 6341,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager robe
+    "id": 6343,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager hat
+    "id": 6345,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager armband
+    "id": 6347,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager sandals
+    "id": 6349,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal top
+    "id": 6351,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager robe
+    "id": 6353,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager hat
+    "id": 6355,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager sandals
+    "id": 6357,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager armband
+    "id": 6359,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal top
+    "id": 6361,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager robe
+    "id": 6363,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager hat
+    "id": 6365,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager sandals
+    "id": 6367,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager armband
+    "id": 6369,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tribal top
+    "id": 6371,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager robe
+    "id": 6373,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager hat
+    "id": 6375,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager sandals
+    "id": 6377,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Villager armband
+    "id": 6379,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Fez
+    "id": 6382,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert top
+    "id": 6384,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert robes
+    "id": 6386,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert top
+    "id": 6388,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Desert legs
+    "id": 6390,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Menaphite top
+    "id": 6394,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Menaphite robe
+    "id": 6396,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Menaphite top
+    "id": 6402,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Menaphite robe
+    "id": 6404,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of charos(u)
+    "id": 6465,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Catspeak amulet(e)
+    "id": 6544,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Doctors hat
+    "id": 6547,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Nurse hat
+    "id": 6548,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Onyx ring
+    "id": 6575,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Onyx amulet
+    "id": 6581,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Ring of stone
+    "id": 6583,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // White claws
+    "id": 6587,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // White chainbody
+    "id": 6615,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White platebody
+    "id": 6617,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White boots
+    "id": 6619,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White med helm
+    "id": 6621,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White full helm
+    "id": 6623,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White platelegs
+    "id": 6625,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // White plateskirt
+    "id": 6627,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Camo top
+    "id": 6654,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Camo bottoms
+    "id": 6655,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Camo helmet
+    "id": 6656,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Mudskipper hat
+    "id": 6665,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Slayer gloves
+    "id": 6720,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Dragon axe
+    "id": 6739,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "TOOL"
+    ]
+  },
+  {
+    // Black desert shirt
+    "id": 6750,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black desert robe
+    "id": 6752,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Torn robe
+    "id": 6788,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Torn robe
+    "id": 6789,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Granite legs
+    "id": 6809,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Bow-sword
+    "id": 6818,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Bobble hat
+    "id": 6856,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Jester hat
+    "id": 6858,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Tri-jester hat
+    "id": 6860,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Woolly hat
+    "id": 6862,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Progress hat
+    "id": 6885,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Progress hat
+    "id": 6886,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Progress hat
+    "id": 6887,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Adamant med helm
+    "id": 6895,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Cape
+    "id": 6959,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Waste disposal
+    "id": 6967,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Camel mask
+    "id": 7003,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Unlit bug lantern
+    "id": 7051,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Lit bug lantern
+    "id": 7053,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Pirate boots
+    "id": 7114,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Slayer boots
+    "id": 7159,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Red boater
+    "id": 7319,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Orange boater
+    "id": 7321,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Green boater
+    "id": 7323,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue boater
+    "id": 7325,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Black boater
+    "id": 7327,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Studded body (g)
+    "id": 7362,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Studded body (t)
+    "id": 7364,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Studded chaps (g)
+    "id": 7366,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Studded chaps (t)
+    "id": 7368,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide body(g)
+    "id": 7370,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide body (t)
+    "id": 7372,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide body (g)
+    "id": 7374,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide body (t)
+    "id": 7376,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide chaps (g)
+    "id": 7378,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide chaps (t)
+    "id": 7380,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide chaps (g)
+    "id": 7382,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // D-hide chaps (t)
+    "id": 7384,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue skirt (g)
+    "id": 7386,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Blue skirt (t)
+    "id": 7388,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Enchanted robe
+    "id": 7398,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Enchanted top
+    "id": 7399,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Enchanted hat
+    "id": 7400,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Kitchen knife
+    "id": 7447,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Fishbowl helmet
+    "id": 7534,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Crab helmet
+    "id": 7539,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Zombie shirt
+    "id": 7592,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Zombie trousers
+    "id": 7593,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Zombie mask
+    "id": 7594,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Zombie gloves
+    "id": 7595,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Zombie boots
+    "id": 7596,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
+  },
+  {
+    // Boxing gloves
+    "id": 7671,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Boxing gloves
+    "id": 7673,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Wooden sword
+    "id": 7675,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "WEAPON"
+    ]
+  },
+  {
+    // Ram skull helm
+    "id": 7917,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_EQUIPMENT"
+    ]
+  },
+  {
+    // Easter ring
+    "id": 7927,
+    "min": 1,
+    "target": 2,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COSMETIC_EQUIPMENT"
+    ]
   }
 ]
