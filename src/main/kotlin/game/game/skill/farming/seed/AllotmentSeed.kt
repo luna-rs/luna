@@ -1,102 +1,120 @@
 package game.skill.farming.seed
 
 import api.predef.*
-import game.skill.farming.*
 import io.luna.game.model.item.Item
 
 /**
- * // todo remove patchtype from this, probably
+ * Data for allotment seeds.
+ *
+ * The [baseDiseaseChance], [chanceToSaveLow] and [chanceToSaveHigh] values are unchecked.
+ *
  * @author lare96
  * @author hydrozoa
  */
-enum class AllotmentSeed(val seed: Int,
-                         val level: Int,
+enum class AllotmentSeed(override val seedId: Int,
+                         override val level: Int,
                          val configIndexOffset: Int,
                          val flowerProtection: Set<String> = emptySet(),
                          val farmerProtection: Item? = null,
-                         val growthStages: Int,
-                         val crop: Item,
-                         val plantXp: Double,
-                         val harvestXp: Double,
-                         val patch: PatchType,
-                         val states: Pair<Int, Int> = Pair(-1, -1)) {
+                         override val stages: Int,
+                         override val produce: Item,
+                         override val plantXp: Double,
+                         override val harvestXp: Double,
+                         override val baseDiseaseChance: Int,
+                         override val chanceToSaveLow: Int,
+                         override val chanceToSaveHigh: Int,
+                         val states: Pair<Int, Int> = Pair(-1, -1)) : Crop {
 
     // Allotment seeds.
-    POTATO(seed = 5318,
+    POTATO(seedId = 5318,
            level = 1,
            configIndexOffset = 5,
            flowerProtection = setOf("Marigold", "White lily"),
            farmerProtection = item("Compost", 2),
-           growthStages = 5,
-           crop = item("Potato"),
+           stages = 5,
+           produce = Item(1942),
            plantXp = 8.0,
            harvestXp = 9.0,
-           patch = PatchType.ALLOTMENT,
+           baseDiseaseChance = 20,
+           chanceToSaveLow = 101,
+           chanceToSaveHigh = 180,
            states = Pair(0x06, 0x0c)),
-    ONION(seed = 5319,
+    ONION(seedId = 5319,
           level = 5,
           configIndexOffset = 12,
           flowerProtection = setOf("Marigold", "White lily"),
           farmerProtection = item("Potatoes(10)"),
-          growthStages = 5,
-          crop = item("Onion"),
+          stages = 5,
+          produce = Item(1957),
           plantXp = 9.5,
           harvestXp = 10.5,
-          patch = PatchType.ALLOTMENT
+          baseDiseaseChance = 20,
+          chanceToSaveLow = 105,
+          chanceToSaveHigh = 180
     ),
-    CABBAGE(seed = 5324,
+    CABBAGE(seedId = 5324,
             level = 7,
             configIndexOffset = 19,
             flowerProtection = setOf("Rosemary", "White lily"),
             farmerProtection = item("Onions(10)"),
-            growthStages = 5,
-            crop = item("Cabbage"),
+            stages = 5,
+            produce = Item(1965),
             plantXp = 10.0,
             harvestXp = 11.5,
-            patch = PatchType.ALLOTMENT
+            baseDiseaseChance = 20,
+            chanceToSaveLow = 107,
+            chanceToSaveHigh = 180
     ),
-    TOMATO(seed = 5322,
+    TOMATO(seedId = 5322,
            level = 12,
            configIndexOffset = 26,
            flowerProtection = setOf("Marigold", "White lily"),
            farmerProtection = item("Cabbages(10)", 2),
-           growthStages = 5,
-           crop = item("Tomato"),
+           stages = 5,
+           produce = Item(1982),
            plantXp = 12.5,
            harvestXp = 14.0,
-           patch = PatchType.ALLOTMENT
+           baseDiseaseChance = 20,
+           chanceToSaveLow = 111,
+           chanceToSaveHigh = 180
     ),
-    SWEETCORN(seed = 5320,
+    SWEETCORN(seedId = 5320,
               level = 20,
               configIndexOffset = 33,
               flowerProtection = setOf("Scarecrow", "White lily"),
               farmerProtection = item("Jute fibre", 10),
-              growthStages = 7,
-              crop = item("Sweetcorn"),
+              stages = 7,
+              produce = Item(5986),
               plantXp = 17.0,
               harvestXp = 19.0,
-              patch = PatchType.ALLOTMENT
+              baseDiseaseChance = 20,
+              chanceToSaveLow = 117,
+              chanceToSaveHigh = 190
     ),
-    STRAWBERRY(seed = 5323,
+    STRAWBERRY(seedId = 5323,
                level = 31,
                configIndexOffset = 42,
                flowerProtection = setOf("White lily"),
                farmerProtection = item("Apples(5)"),
-               growthStages = 7,
-               crop = item("Strawberry"),
+               stages = 7,
+               produce = Item(5504),
                plantXp = 26.0,
                harvestXp = 29.0,
-               patch = PatchType.ALLOTMENT
+               baseDiseaseChance = 20,
+               chanceToSaveLow = 125,
+               chanceToSaveHigh = 200
     ),
-    WATERMELON(seed = 5321,
+    WATERMELON(seedId = 5321,
                level = 47,
                configIndexOffset = 51,
                flowerProtection = setOf("Nasturtiums", "White lily"),
                farmerProtection = item("Curry leaf", 10),
-               growthStages = 9,
-               crop = item("Watermelon"),
+               stages = 9,
+               produce = Item(5982),
                plantXp = 48.5,
                harvestXp = 54.5,
-               patch = PatchType.ALLOTMENT
+               baseDiseaseChance = 20,
+               chanceToSaveLow = 132,
+               chanceToSaveHigh = 215
     )
 }

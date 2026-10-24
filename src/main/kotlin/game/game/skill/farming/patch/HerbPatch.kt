@@ -2,65 +2,33 @@ package game.skill.farming.patch
 
 import game.skill.farming.*
 import game.skill.farming.seed.*
-import io.luna.game.model.item.*
 
 /**
  * Represents any herb patch.
- * Growths stage can go from 0 to 5 for all herbs.
+ * Growths stage can go from 1 to 5 for all herbs.
  *
  * @hydrozoa
  */
-class HerbPatch(val location: HerbPatchLocation) : FarmingPatch() {
+class HerbPatch(location: HerbPatchLocation) : FarmingPatch(location) {
 
-    var plantType: HerbSeed? = null
+    override val cycleMinutes = 20
+    override val crops: List<Crop> = HerbSeed.values().toList()
+    override val patchName = "herb patch"
+    override val harvestAnimation = Farming.PICK_ANIMATION
 
-    override fun getVarpValue(): Int {
-        var varpValue: Int = 3
+    /**
+     * Weeds are 0 (full weeds) to 3 (raked). A herb is drawn as its [HerbSeed.configIndexOffset] plus its stage.
+     * Diseased herbs take three values each from 128, in [HerbSeed] order, and dead herbs share the values 170 to 172.
+     */
+    override fun encode(): Int {
         if (needsRaking()) {
-            varpValue = 3 - weeds
-        } else if (plantType == null) {
-            varpValue = 3
-        } else if (plantType != null)  {
-            varpValue = 3 + growthStage
+            return MAX_WEEDS - weeds
         }
-
-        if (isDiseased) {
-            varpValue += 128
-        } else if (isDead) {
-            varpValue = 169 + growthStage
+        val seed = crop as? HerbSeed ?: return MAX_WEEDS
+        return when {
+            dead -> 170 + stage - 2
+            diseased -> 128 + seed.ordinal * 3 + stage - 2
+            else -> seed.configIndexOffset + stage
         }
-
-        varpValue = varpValue shl location.shifts
-        return varpValue
-    }
-
-    override fun getVarpId(): Int {
-        return Farming.HERB_PATCH_VARP
-    }
-
-    override fun hasPlant(): Boolean {
-        return plantType != null
-    }
-
-    fun plant(seed: HerbSeed): Boolean {
-        if (weeds > 0) {
-            return false
-        }
-        plantType = seed
-        growthStage = 1
-        return true
-    }
-
-    override fun produce(): Item? {
-        return plantType?.crop
-    }
-
-    override fun reset(includeWeeds: Boolean) {
-        super.reset(includeWeeds)
-        plantType = null
-    }
-
-    override fun maxGrowth(): Int {
-        return 5
     }
 }

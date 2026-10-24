@@ -1,63 +1,85 @@
 package game.skill.farming.action
 
-import api.predef.ext.*
-import game.player.*
+import api.predef.*
 import game.skill.farming.*
-import game.skill.farming.Farming.herbPatches
 import game.skill.farming.patch.*
 import io.luna.game.action.*
 import io.luna.game.model.mob.*
 import io.luna.game.model.`object`.*
 
 /**
- * Action that harvests the produce from a farming patch.
+ * Action that harvests the produce from a farming patch. Every cycle harvests one crop and gives its harvest
+ * experience, then rolls to save a harvest life. Once the lives run out the patch is fully harvested, which gives the
+ * crop's planting experience.
+ *
  * @author hydrozoa
  */
 class HarvestAction(plr: Player, private val patchObject: GameObject) : Action<Player>(plr, ActionType.WEAK, true, 4) {
 
-    override fun onSubmit() {
-        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
+    /**
+     * The patch being harvested.
+     */
+    private var patch: FarmingPatch? = null
 
-        if (patch == null) {
-            mob.sendMessage("Unknown patch id="+patchObject.id)
+    override fun onSubmit() {
+        val found = Farming.findPatch(patchObject.id, mob)
+
+        if (found == null) {
+            mob.sendMessage("Unknown patch id=" + patchObject.id)
             complete()
             return
         }
 
-        if (patch.harvestReady() && patch.produceAvailable > 0) {
-            mob.sendMessage("You begin harvesting...")
+        patch = found
+        if (found.harvestReady()) {
+            if (!hasTool(found)) {
+                complete()
+                return
+            }
+            mob.sendMessage("You begin to harvest the ${found.patchName}.")
         }
     }
 
     override fun run(): Boolean {
-        var patch: FarmingPatch? = Farming.findPatch(patchObject.id, mob)
+        val patch = patch ?: return true
+        val crop = patch.crop
 
-        if (patch == null) {
-            mob.sendMessage("Unknown patch id="+patchObject.id)
+        if (crop == null || !patch.harvestReady()) {
+            mob.sendMessage("This patch is not ready to be harvested.")
             return true
         }
 
-        if (!patch.harvestReady()) {
-            mob.sendMessage("Not ready for harvest")
+        if (!hasTool(patch)) {
             return true
         }
 
-        if (patch.produceAvailable <= 0) {
-            mob.sendMessage("Nothing to harvest")
+        if (!mob.inventory.hasSpaceFor(crop.produce)) {
+            mob.sendMessage("You don't have enough inventory space.")
             return true
         }
 
-        // todo change to correct animation
-        mob.animation(Animations.SUPERHEAT) // dummy just for visual feedback, remove once correct anim is found
+        mob.animation(patch.harvestAnimation)
+        mob.inventory.add(crop.produce)
+        mob.farming.addExperience(crop.harvestXp)
 
-        // todo give exp
-
-        var harvestResult = patch.harvest(mob)
-        if (harvestResult) {
-            Farming.sendHerbState(mob)
-            Farming.sendAllotmentState(mob)
-            return true
+        val emptied = patch.harvest(rand(patch.chanceToSave(mob.farming.level)))
+        if (emptied) {
+            mob.farming.addExperience(crop.plantXp)
+            mob.sendMessage("The ${patch.patchName} is now empty.")
         }
-        return false
+        Farming.commit(mob)
+        return emptied
+    }
+
+    /**
+     * Checks if the player has the tool needed to harvest [patch], telling them which one they need if not.
+     */
+    private fun hasTool(patch: FarmingPatch): Boolean {
+        val tool = patch.harvestTool
+        if (tool != null && !mob.inventory.contains(tool)) {
+            mob.sendMessage("You need a ${itemName(tool).lowercase()} to harvest this patch.")
+            return false
+        }
+        return true
     }
 }

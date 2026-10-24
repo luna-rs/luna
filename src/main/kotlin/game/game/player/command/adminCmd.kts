@@ -4,7 +4,6 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.primitives.Ints
 import game.skill.farming.*
-import game.skill.farming.Farming.herbPatches
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.Position
 import io.luna.game.model.Region

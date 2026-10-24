@@ -2,67 +2,38 @@ package game.skill.farming.patch
 
 import game.skill.farming.*
 import game.skill.farming.seed.*
-import io.luna.game.model.item.*
 
 /**
  * Represents any allotment patch.
  * Uses varps [Farming.ALLOTMENT_VARP_1] and [Farming.ALLOTMENT_VARP_2]
  *
- * todo finish
- *
  * @author hydrozoa
  */
-class AllotmentPatch(val location: AllotmentPatchLocation) : FarmingPatch() {
+class AllotmentPatch(location: AllotmentPatchLocation) : FarmingPatch(location) {
 
-    private var plantType: AllotmentSeed? = null
+    override val cycleMinutes = 10
+    override val crops: List<Crop> = AllotmentSeed.values().toList()
+    override val patchName = "allotment"
+    override val harvestAnimation = Farming.DIG_ANIMATION
+    override val harvestTool = Farming.SPADE
+    override val seedsRequired = 3
+    override val canBeWatered = true
 
-    override fun getVarpValue(): Int {
-        var varpValue: Int = 3
+    /**
+     * Weeds are 0 (full weeds) to 3 (raked). A crop is its [AllotmentSeed.configIndexOffset] plus its stage,
+     * plus 64 when watered, 128 when diseased, or 192 when dead.
+     */
+    override fun encode(): Int {
         if (needsRaking()) {
-            varpValue = 3 - weeds
-        } else if (plantType == null) {
-            varpValue = 3
-        } else if (plantType != null) {
-            varpValue = plantType!!.configIndexOffset + growthStage
-
-            if (isDiseased) {
-                varpValue += 128
-            } else if (isDead) {
-                varpValue += 192
-            }
+            return MAX_WEEDS - weeds
         }
-
-        varpValue = varpValue shl location.shifts
-        return varpValue
-    }
-
-    fun plant(seed: AllotmentSeed): Boolean {
-        if (weeds > 0) {
-            return false
+        val seed = crop as? AllotmentSeed ?: return MAX_WEEDS
+        val value = seed.configIndexOffset + stage
+        return when {
+            dead -> value + 192
+            diseased -> value + 128
+            watered -> value + 64
+            else -> value
         }
-        plantType = seed
-        growthStage = 1
-        return true
-    }
-
-    override fun getVarpId(): Int {
-        return location.config
-    }
-
-    override fun hasPlant(): Boolean {
-        return plantType != null
-    }
-
-    override fun produce(): Item? {
-        return plantType?.crop
-    }
-
-    override fun reset(includeWeeds: Boolean) {
-        super.reset(includeWeeds)
-        plantType = null
-    }
-
-    override fun maxGrowth(): Int? {
-        return plantType?.growthStages
     }
 }
