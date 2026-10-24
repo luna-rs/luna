@@ -24,6 +24,7 @@ object MiningGuild {
 
     const val DWARF = 382
     const val DOOR = 2112
+    const val REQUIRED_LEVEL = 60
 
     /**
      * The conditional door is owned by this script, rather than registered as a freely opening door.
@@ -39,7 +40,7 @@ object MiningGuild {
      * Checks the current Mining level, including boosts and drains, at either entrance.
      */
     fun checkAccess(plr: Player): Boolean {
-        if (plr.skill(Skill.MINING).level >= 60) {
+        if (plr.skill(Skill.MINING).level >= REQUIRED_LEVEL) {
             return true
         }
         plr.newDialogue()
