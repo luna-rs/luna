@@ -75,6 +75,14 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
+    public void reset() {
+        super.reset();
+        retreatPolicy = RetreatPolicy.NONE;
+        attackBonusType = null;
+        maxHit = -1;
+    }
+
+    @Override
     public int getDefaultMaxHit(CombatDamageType type) {
         return maxHit >= 0 ? maxHit : mob.combatDef().getMaximumHit();
     }
