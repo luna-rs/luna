@@ -29,9 +29,9 @@ public final class PursuitAction extends Action<Npc> {
     private final CombatContext<?> combat;
 
     /**
-     * The interaction policy that determines when the target is considered reached.
+     * The current attack's interaction policy, refreshed by the combat loop before pursuit executes.
      */
-    private final InteractionPolicy policy;
+    private InteractionPolicy policy;
 
     /**
      * Creates a new {@link PursuitAction}.
@@ -43,6 +43,16 @@ public final class PursuitAction extends Action<Npc> {
         super(npc, ActionType.WEAK);
         this.policy = policy;
         combat = npc.getCombat();
+    }
+
+    /**
+     * Updates pursuit to use the attack already selected by the combat loop.
+     * This preserves queued movement and avoids invoking NPC attack-selection hooks a second time.
+     *
+     * @param policy The selected attack's current reach rules.
+     */
+    public void setPolicy(InteractionPolicy policy) {
+        this.policy = policy;
     }
 
     /**

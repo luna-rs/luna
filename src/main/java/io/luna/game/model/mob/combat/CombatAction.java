@@ -105,6 +105,8 @@ public final class CombatAction extends Action<Mob> {
 
         if (mob instanceof Player) {
             updatePlayerPursuit(target, policy, reached);
+        } else if (mob instanceof Npc) {
+            updateNpcPursuit(policy, reached);
         }
 
         // Continue pursuing until the target is inside interaction range.
@@ -161,6 +163,26 @@ public final class CombatAction extends Action<Mob> {
         if (!navigator.isFollowing(target, policy)) {
             var request = NavigationRequest.builder(mob).policy(policy).continuous(true).target(target).build();
             navigator.submit(request);
+        }
+    }
+
+    /**
+     * Refreshes an existing NPC chase with the selected attack's reach rules.
+     * Movement is retained while out of range. Once in range, finishing pursuit prevents another queued
+     * execution from adding a step, and clearing its walking steps stops the old chase.
+     *
+     * @param policy The selected attack's reach rules.
+     * @param reached Whether the selected attack can already reach the target.
+     */
+    private void updateNpcPursuit(InteractionPolicy policy, boolean reached) {
+        PursuitAction pursuit = mob.getActions().first(PursuitAction.class);
+        if (pursuit != null) {
+            if (reached) {
+                pursuit.complete();
+                mob.getWalking().clear();
+            } else {
+                pursuit.setPolicy(policy);
+            }
         }
     }
 
