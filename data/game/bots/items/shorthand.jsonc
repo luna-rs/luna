@@ -1,0 +1,143 @@
+/*
+ * Word-level shorthand that players type in trade chat, used by bots to understand item names.
+ *
+ * Each key is one typed word and maps to the words it can stand for in cache item names. "addy plate" tries
+ * "adamant platebody" and "adamantite platebody", and keeps whichever names a real item. When two different items
+ * match, the phrase is treated as unknown.
+ *
+ * Keys with a space are rewrites applied before any other lookup ("d hide" is always read as "dhide"). A word
+ * starting with "d" or "r" followed by a key here is split in two, so "dmed" and "rpb" need no entries.
+ *
+ * Whole-item nicknames ("dds", "whip", "phat") belong in nicknames.jsonc, which bots also use when they talk.
+ * Plurals need no entries: "lobs", "nats" and "d longs" lose their trailing "s" before lookup.
+ */
+{
+  // Metals and materials.
+  "d": ["dragon"],
+  "drag": ["dragon"],
+  "r": ["rune"],
+  "rune": ["runite"],
+  "addy": ["adamant", "adamantite"],
+  "adam": ["adamant", "adamantite"],
+  "adamant": ["adamantite"],
+  "mith": ["mithril"],
+  "zammy": ["zamorak"],
+  "sara": ["saradomin"],
+  "guth": ["guthix"],
+  "obby": ["obsidian"],
+  "zerker": ["berserker"],
+
+  // Weapons and armour pieces.
+  "2h": ["2h sword"],
+  "baxe": ["battleaxe"],
+  "hally": ["halberd"],
+  "long": ["longsword", "longbow"],
+  "short": ["shortsword", "shortbow"],
+  "scim": ["scimitar"],
+  "scimmy": ["scimitar"],
+  "plate": ["platebody"],
+  "pl8": ["platebody"],
+  "pb": ["platebody"],
+  "body": ["platebody", "body rune"],
+  "legs": ["platelegs"],
+  "skirt": ["plateskirt"],
+  "chain": ["chainbody"],
+  "med": ["med helm"],
+  "mh": ["med helm"],
+  "large": ["full helm"],
+  "full": ["full helm"],
+  "fullhelm": ["full helm"],
+  "fh": ["full helm"],
+  "sq": ["sq shield"],
+  "kite": ["kiteshield"],
+  "pick": ["pickaxe"],
+  "hatchet": ["axe"],
+  "vambs": ["vambraces"],
+  "xbow": ["crossbow"],
+  "dhide": ["dragonhide"],
+  "d hide": ["dhide"],
+
+  // Jewellery, potions and gems.
+  "ammy": ["amulet"],
+  "ammie": ["amulet"],
+  "glory": ["amulet of glory"],
+  "fury": ["amulet of fury"],
+  "rol": ["ring of life"],
+  "recoil": ["ring of recoil"],
+  "duel": ["ring of dueling"],
+  "duel ring": ["ring of dueling"],
+  "dueling ring": ["ring of dueling"],
+  "games": ["games necklace"],
+  "games neck": ["games necklace"],
+  "salve": ["salve amulet"],
+  "seers": ["seers ring"],
+  "archers": ["archers ring"],
+  "tally": ["talisman"],
+  "pot": ["potion"],
+  "ppot": ["prayer potion"],
+  "pray": ["prayer"],
+  "str": ["strength"],
+  "att": ["attack"],
+  "atk": ["attack"],
+  "def": ["defence"],
+  "range": ["ranging"],
+  "anti": ["antipoison"],
+  "brew": ["saradomin brew"],
+  "super anti": ["superantipoison"],
+  "saph": ["sapphire"],
+  "emmy": ["emerald"],
+  "dstone": ["dragonstone"],
+
+  // Rares.
+  "phat": ["partyhat"],
+  "hween": ["hween mask"],
+  "halloween": ["hween"],
+  "santa": ["santa hat"],
+  "ranger": ["ranger boots"],
+  "robin": ["robin hood hat"],
+
+  // Runes and essence.
+  "nat": ["nature rune"],
+  "nature": ["nature rune"],
+  "law": ["law rune"],
+  "death": ["death rune"],
+  "blood": ["blood rune"],
+  "soul": ["soul rune"],
+  "cosmic": ["cosmic rune"],
+  "chaos": ["chaos rune"],
+  "fire": ["fire rune"],
+  "water": ["water rune"],
+  "air": ["air rune"],
+  "earth": ["earth rune"],
+  "mind": ["mind rune"],
+  "mud": ["mud rune"],
+  "dust": ["dust rune"],
+  "mist": ["mist rune"],
+  "smoke": ["smoke rune"],
+  "steam": ["steam rune"],
+  "lava": ["lava rune"],
+  "ess": ["rune essence", "essence"],
+  "pess": ["pure essence"],
+
+  // Logs, food and other resources.
+  "yew": ["yew logs"],
+  "magic": ["magic logs"],
+  "maple": ["maple logs"],
+  "willow": ["willow logs"],
+  "oak": ["oak logs"],
+  "lob": ["lobster"],
+  "lobby": ["lobster"],
+  "swordy": ["swordfish"],
+  "swordie": ["swordfish"],
+  "monk": ["monkfish"],
+  "manta": ["manta ray"],
+  "turtle": ["sea turtle"],
+  "karam": ["cooked karambwan"],
+  "karambwan": ["cooked karambwan"],
+  "bwan": ["cooked karambwan"],
+  "limp": ["limpwurt root"],
+  "bbone": ["big bones"],
+  "dbone": ["dragon bones"],
+  "b bone": ["big bone"],
+  "d bone": ["dragon bone"]
+}

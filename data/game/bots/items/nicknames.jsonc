@@ -1244,5 +1244,288 @@
       "enchanted top",
       "ench top"
     ]
+  },
+  {
+    "ids": [
+      1215
+    ],
+    "nicknames": [
+      "dd",
+      "d dagger",
+      "dragon dagger",
+      "drag dagger"
+    ]
+  },
+  {
+    "ids": [
+      1231
+    ],
+    "nicknames": [
+      "ddp",
+      "dd p",
+      "d dagger p",
+      "dragon dagger p",
+      "dragon dagger(p)"
+    ]
+  },
+  {
+    "ids": [
+      5680
+    ],
+    "nicknames": [
+      "dd+",
+      "ddp+",
+      "d dagger+",
+      "dragon dagger+",
+      "dragon dagger(+)"
+    ]
+  },
+  {
+    "ids": [
+      6737
+    ],
+    "nicknames": [
+      "b ring",
+      "zerker ring",
+      "berserker ring"
+    ]
+  },
+  {
+    "ids": [
+      6585
+    ],
+    "nicknames": [
+      "fury",
+      "fury ammy",
+      "amulet of fury"
+    ]
+  },
+  {
+    "ids": [
+      1725
+    ],
+    "nicknames": [
+      "str ammy",
+      "strength ammy",
+      "ammy of str",
+      "amulet of strength"
+    ]
+  },
+  {
+    "ids": [
+      1731
+    ],
+    "nicknames": [
+      "power ammy",
+      "ammy of power",
+      "amulet of power"
+    ]
+  },
+  {
+    "ids": [
+      1712
+    ],
+    "nicknames": [
+      "glory",
+      "glory(4)",
+      "glory 4",
+      "amulet of glory(4)"
+    ]
+  },
+  {
+    "ids": [
+      249
+    ],
+    "nicknames": [
+      "guam",
+      "guam leaf"
+    ]
+  },
+  {
+    "ids": [
+      257
+    ],
+    "nicknames": [
+      "ranarr",
+      "ranarr weed"
+    ]
+  },
+  {
+    "ids": [
+      259
+    ],
+    "nicknames": [
+      "irit",
+      "irit leaf"
+    ]
+  },
+  {
+    "ids": [
+      3000
+    ],
+    "nicknames": [
+      "snap",
+      "snapdragon"
+    ]
+  },
+  {
+    "ids": [
+      1038,
+      1040,
+      1042,
+      1044,
+      1046,
+      1048
+    ],
+    "nicknames": [
+      "phat",
+      "partyhat",
+      "party hat"
+    ]
+  },
+  {
+    "ids": [
+      1053,
+      1055,
+      1057
+    ],
+    "nicknames": [
+      "hween",
+      "hween mask",
+      "h'ween mask",
+      "halloween mask"
+    ]
+  },
+  {
+    "ids": [
+      1050
+    ],
+    "nicknames": [
+      "santa",
+      "santa hat"
+    ]
+  },
+  {
+    "ids": [
+      1381
+    ],
+    "nicknames": [
+      "air staff",
+      "staff of air"
+    ]
+  },
+  {
+    "ids": [
+      1383
+    ],
+    "nicknames": [
+      "water staff",
+      "staff of water"
+    ]
+  },
+  {
+    "ids": [
+      1385
+    ],
+    "nicknames": [
+      "earth staff",
+      "staff of earth"
+    ]
+  },
+  {
+    "ids": [
+      1387
+    ],
+    "nicknames": [
+      "fire staff",
+      "staff of fire"
+    ]
+  },
+  {
+    "ids": [
+      1777
+    ],
+    "nicknames": [
+      "bowstring",
+      "bow string"
+    ]
+  },
+  {
+    "ids": [
+      1993
+    ],
+    "nicknames": [
+      "wine",
+      "jug of wine"
+    ]
+  },
+  {
+    "ids": [
+      861
+    ],
+    "nicknames": [
+      "msb",
+      "magic short",
+      "magic shortbow"
+    ]
+  },
+  {
+    "ids": [
+      4698
+    ],
+    "nicknames": [
+      "muds",
+      "mud rune"
+    ]
+  },
+  {
+    "ids": [
+      6524
+    ],
+    "nicknames": [
+      "obby shield",
+      "obsidian shield",
+      "toktz-ket-xil"
+    ]
+  },
+  {
+    "ids": [
+      6523
+    ],
+    "nicknames": [
+      "obby sword",
+      "obsidian sword",
+      "toktz-xil-ak"
+    ]
+  },
+  {
+    "ids": [
+      6525
+    ],
+    "nicknames": [
+      "obby knife",
+      "obsidian knife",
+      "toktz-xil-ek"
+    ]
+  },
+  {
+    "ids": [
+      6526
+    ],
+    "nicknames": [
+      "obby staff",
+      "obsidian staff",
+      "toktz-mej-tal"
+    ]
+  },
+  {
+    "ids": [
+      6527
+    ],
+    "nicknames": [
+      "obby mace",
+      "obsidian mace",
+      "tzhaar-ket-em"
+    ]
   }
 ]
