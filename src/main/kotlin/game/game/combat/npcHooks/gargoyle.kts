@@ -76,12 +76,18 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
         }
     }
 
-    // A validated smash delivers attributed damage without re-entering this finishing hook.
+    /**
+     * Keeps the stone gargoyle alive until a validated hammer smash delivers the finishing blow.
+     * Ordinary hits already queued before transformation may still arrive, but must leave at least one hitpoint.
+     * The smash delivers attributed damage without re-entering this finishing hook.
+     */
     combat(1611) {
         defend {
             if (source is GargoyleSmashAttack) {
                 damage = null
                 npc.combat.finishExecution(source)
+            } else {
+                damage = damage?.cappedAt(npc.health - 1)
             }
         }
     }
