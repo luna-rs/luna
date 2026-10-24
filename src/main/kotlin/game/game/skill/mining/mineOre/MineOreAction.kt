@@ -19,7 +19,7 @@ import java.util.WeakHashMap
 /**
  * An [InventoryAction] that will enable the mining of rocks. The swing comes on the tick after the click and the first
  * roll two ticks before one [Pickaxe.speed] has passed, then one roll every [Pickaxe.speed] ticks, each restarting the
- * animation. Every ore but iron arrives one tick after the roll that finds it.
+ * animation.
  *
  * @author lare96
  */
@@ -50,11 +50,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     private var gem: Int? = null
 
     /**
-     * If the last roll found ore that arrives on this execution.
-     */
-    private var oreDue = false
-
-    /**
      * If the last free inventory slot was just filled, so that mining stops on the next tick.
      */
     private var stopFull = false
@@ -79,9 +74,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             false
         }
         // Check if rock isn't already mined, unless this player found ore on the same tick as the one who emptied it.
-        rockObj.state == EntityState.INACTIVE && !oreDue && emptiedOn[rockObj] != world.currentTick -> false
+        rockObj.state == EntityState.INACTIVE && emptiedOn[rockObj] != world.currentTick -> false
         else -> {
-            if (!start && !oreDue) {
+            if (!start) {
                 delay = pick.speed
                 swing()
             }
@@ -132,11 +127,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun add(): List<Item> {
-        if (oreDue) {
-            oreDue = false
-            delay = pick.speed
-            return listOf(Item(ore.item))
-        }
         if (ore != RUNE_ESSENCE) {
             // The gem roll comes before the ore roll.
             gem = Mining.rollGem(mob)
@@ -152,14 +142,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
             Skills.success(low, high, mob.mining.level) -> {
                 successTick = world.currentTick
-                if (ore == Ore.IRON) {
-                    listOf(Item(ore.item))
-                } else {
-                    // Every ore but iron arrives on the next tick.
-                    oreDue = true
-                    delay = 1
-                    emptyList()
-                }
+                listOf(Item(ore.item))
             }
 
             else -> emptyList()
