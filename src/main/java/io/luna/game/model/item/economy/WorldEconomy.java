@@ -87,6 +87,19 @@ public final class WorldEconomy extends AbstractScheduledService {
     private final Queue<CompletedTradeData> trades = new ConcurrentLinkedQueue<>();
 
     /**
+     * Completed bot purchases waiting for the economy service to process them.
+     */
+    private final Queue<ShopPurchase> shopPurchases = new ConcurrentLinkedQueue<>();
+
+    /**
+     * An immutable snapshot of the items received and coins actually paid at a shop.
+     *
+     * @author lare96
+     */
+    private record ShopPurchase(Item item, Item coins) {
+    }
+
+    /**
      * Active price snapshots that need to be persisted.
      * <p>
      * SQL batch update tasks consume entries from this map as they build their batch. The map is keyed by item id so
@@ -152,7 +165,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      * <p>
      * Trades are classified by offer shape:
      * <ul>
-     *     <li>One item stack for coins is handled by {@link #itemForCoins(Item, Item)}.</li>
+     *     <li>One item stack for coins is handled by {@link #itemForCoins(Item, Item, SampleType)}.</li>
      *     <li>One item stack for one other item stack is handled by {@link #itemForItem(Item, Item)}.</li>
      *     <li>Multiple item stacks for coins are handled by {@link #multiItemForCoins(List, double)}.</li>
      *     <li>All other mixed trades are handled by {@link #bartering(List, List)}.</li>
@@ -163,7 +176,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      */
     @Override
     protected void runOneIteration() throws Exception {
-        if (trades.isEmpty() && prices.size() == lastPricesAmount) {
+        if (trades.isEmpty() && shopPurchases.isEmpty() && prices.size() == lastPricesAmount) {
             return;
         }
 
@@ -189,7 +202,7 @@ public final class WorldEconomy extends AbstractScheduledService {
                 }
 
                 if (itemA.getId() == 995 || itemB.getId() == 995) {
-                    itemForCoins(itemA, itemB);
+                    itemForCoins(itemA, itemB, SampleType.ITEM_FOR_COINS);
                 } else {
                     itemForItem(itemA, itemB);
                 }
@@ -207,6 +220,10 @@ public final class WorldEconomy extends AbstractScheduledService {
             } else {
                 bartering(sideA, sideB);
             }
+        }
+
+        for (ShopPurchase purchase; (purchase = shopPurchases.poll()) != null; ) {
+            itemForCoins(purchase.item(), purchase.coins(), SampleType.SHOP_PURCHASE);
         }
 
         lastPricesAmount = prices.size();
@@ -229,6 +246,18 @@ public final class WorldEconomy extends AbstractScheduledService {
      */
     public void addTrade(CompletedTradeData entry) {
         trades.add(entry);
+    }
+
+    /**
+     * Queues a successful bot purchase paid in coins for the next economy update.
+     *
+     * @param item The actual purchased stack after stock, funds, and inventory limits.
+     * @param coins The actual total coin payment.
+     */
+    public void addShopPurchase(Item item, Item coins) {
+        if (item.getId() != 995 && item.getAmount() > 0 && coins.getId() == 995 && coins.getAmount() > 0) {
+            shopPurchases.add(new ShopPurchase(item, coins));
+        }
     }
 
     /**
@@ -316,8 +345,9 @@ public final class WorldEconomy extends AbstractScheduledService {
      *
      * @param itemA The first trade offer.
      * @param itemB The second trade offer.
+     * @param type The source of the observed coin payment.
      */
-    private void itemForCoins(Item itemA, Item itemB) {
+    private void itemForCoins(Item itemA, Item itemB, SampleType type) {
         Item tradedItem = itemA.getId() != 995 ? itemA : itemB;
         Item coins = itemA.getId() == 995 ? itemA : itemB;
         double offerPrice = (double) coins.getAmount() / (double) tradedItem.getAmount();
@@ -332,7 +362,7 @@ public final class WorldEconomy extends AbstractScheduledService {
             return;
         }
 
-        ItemPriceData newData = data.setCalculatedPrice(offerPrice, SampleType.ITEM_FOR_COINS, tradedItem);
+        ItemPriceData newData = data.setCalculatedPrice(offerPrice, type, tradedItem);
         if (newData != data) {
             prices.put(data.id, newData);
             priceUpdates.put(data.id, newData);

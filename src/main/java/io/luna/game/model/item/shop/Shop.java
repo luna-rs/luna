@@ -305,11 +305,16 @@ public final class Shop {
 
         if (inventory.remove(currencyItem) && inventory.add(buyItem)) {
             if (amountMap[index].isEmpty()) {
-                return items.remove(index, buyItem);
+                if (!items.remove(index, buyItem)) {
+                    return false;
+                }
             } else {
                 items.set(index, shopItem.addAmount(-buyAmount));
-                return true;
             }
+            if (player instanceof Bot && currency == Currency.COINS) {
+                world.getEconomy().addShopPurchase(buyItem, currencyItem);
+            }
+            return true;
         }
         return false;
     }

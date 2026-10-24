@@ -204,6 +204,7 @@ public final class ItemPriceData {
             int minimumPrice = stackable ? Luna.settings().economy().minimumStackablePrice() :
                     Luna.settings().economy().minimumPrice();
             double newPrice = Math.max(minimumPrice, calculatedPrice);
+            newPrice = price + (newPrice - price) * type.getMovementMultiplier();
             return new ItemPriceData(id, newPrice, price, samples + effectiveSamples, samples);
         }
         return this;
