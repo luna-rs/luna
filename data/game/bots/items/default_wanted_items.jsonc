@@ -20297,5 +20297,3251 @@
     "tags": [
       "COSMETIC_EQUIPMENT"
     ]
+  },
+  // Skilling ingredients, intermediate products, and finished consumables.
+  {
+    "id": 199,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 201,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 203,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 205,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 207,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3049,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 209,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 211,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 213,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3051,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 215,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2485,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 217,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 219,
+    // Herb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 91,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 93,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 95,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 97,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 99,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3002,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 101,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 103,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 105,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3004,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 107,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2483,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 109,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 111,
+    // Unfinished potion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1581,
+    // Blamish snail slime
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2152,
+    // Toad's legs
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5075,
+    // Bird nest
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2450,
+    // Zamorak brew(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 189,
+    // Zamorak brew(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 191,
+    // Zamorak brew(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 193,
+    // Zamorak brew(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6685,
+    // Saradomin brew(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6687,
+    // Saradomin brew(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6689,
+    // Saradomin brew(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6691,
+    // Saradomin brew(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3032,
+    // Agility potion(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3034,
+    // Agility potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3036,
+    // Agility potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3038,
+    // Agility potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2438,
+    // Fishing potion(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 151,
+    // Fishing potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 153,
+    // Fishing potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 155,
+    // Fishing potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 169,
+    // Ranging potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 171,
+    // Ranging potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 173,
+    // Ranging potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3042,
+    // Magic potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3044,
+    // Magic potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3046,
+    // Magic potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 133,
+    // Defence potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 135,
+    // Defence potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 137,
+    // Defence potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 115,
+    // Strength potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 117,
+    // Strength potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 119,
+    // Strength potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 121,
+    // Attack potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 123,
+    // Attack potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 125,
+    // Attack potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 163,
+    // Super defence(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 165,
+    // Super defence(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 167,
+    // Super defence(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 145,
+    // Super attack(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 147,
+    // Super attack(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 149,
+    // Super attack(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 157,
+    // Super strength(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 159,
+    // Super strength(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 161,
+    // Super strength(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3008,
+    // Energy potion(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3010,
+    // Energy potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3012,
+    // Energy potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3014,
+    // Energy potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3016,
+    // Super energy(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3018,
+    // Super energy(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3020,
+    // Super energy(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3022,
+    // Super energy(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 175,
+    // Antipoison(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 177,
+    // Antipoison(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 179,
+    // Antipoison(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 181,
+    // Superantipoison(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 183,
+    // Superantipoison(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 185,
+    // Superantipoison(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5943,
+    // Antidote+(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5945,
+    // Antidote+(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5947,
+    // Antidote+(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5949,
+    // Antidote+(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5952,
+    // Antidote++(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5954,
+    // Antidote++(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5956,
+    // Antidote++(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5958,
+    // Antidote++(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 139,
+    // Prayer potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 141,
+    // Prayer potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 143,
+    // Prayer potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2454,
+    // Antifire potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2456,
+    // Antifire potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2458,
+    // Antifire potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3026,
+    // Super restore(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3028,
+    // Super restore(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3030,
+    // Super restore(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3410,
+    // Serum 207 (3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 127,
+    // Restore potion(3)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1582,
+    // Blamish oil
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3408,
+    // Serum 207 (4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3412,
+    // Serum 207 (2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3414,
+    // Serum 207 (1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 129,
+    // Restore potion(2)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 131,
+    // Restore potion(1)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2430,
+    // Restore potion(4)
+    "min": 10,
+    "target": 60,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5974,
+    // Coconut
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5976,
+    // Coconut
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 434,
+    // Clay
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 442,
+    // Silver ore
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 444,
+    // Gold ore
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2862,
+    // Achey tree logs
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3239,
+    // Bark
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6573,
+    // Onyx
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7801,
+    // Snake hide
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6289,
+    // Snakeskin
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6287,
+    // Snake hide
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 50,
+    // Shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 48,
+    // Longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 54,
+    // Oak shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 56,
+    // Oak longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 60,
+    // Willow shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 58,
+    // Willow longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 64,
+    // Maple shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 62,
+    // Maple longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 68,
+    // Yew shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 66,
+    // Yew longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 72,
+    // Magic shortbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 70,
+    // Magic longbow (u)
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 571,
+    // Water orb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 575,
+    // Earth orb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 569,
+    // Fire orb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 573,
+    // Air orb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1787,
+    // Unfired pot
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1789,
+    // Unfired pie dish
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1791,
+    // Unfired bowl
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5352,
+    // Unfired plant pot
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5354,
+    // Plant pot
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4438,
+    // Unfired pot lid
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4440,
+    // Pot lid
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4527,
+    // Candle lantern
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4522,
+    // Oil lamp
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6667,
+    // Fishbowl
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 567,
+    // Unpowered orb
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4542,
+    // Lantern lens
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3224,
+    // Cloth
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5931,
+    // Jute fibre
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5933,
+    // Willow branch
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1673,
+    // Gold amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1675,
+    // Sapphire amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1677,
+    // Emerald amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1679,
+    // Ruby amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1681,
+    // Diamond amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1683,
+    // Dragonstone ammy
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6579,
+    // Onyx amulet
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1714,
+    // Unstrung symbol
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5525,
+    // Tiara
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 6748,
+    // Demonic sigil
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1720,
+    // Unstrung emblem
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4201,
+    // Conductor
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7620,
+    // Silvthrill rod
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4535,
+    // Oil lantern
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4540,
+    // Oil lantern frame
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2309,
+    // Bread
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 401,
+    // Seaweed
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 403,
+    // Edible seaweed
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2142,
+    // Cooked meat
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2140,
+    // Cooked chicken
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 347,
+    // Herring
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 355,
+    // Mackerel
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 339,
+    // Cod
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 351,
+    // Pike
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 365,
+    // Bass
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1863,
+    // Pitta dough
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1865,
+    // Pitta bread
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7946,
+    // Monkfish
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 391,
+    // Manta ray
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2321,
+    // Uncooked berry pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2325,
+    // Redberry pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2319,
+    // Uncooked meat pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2327,
+    // Meat pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2317,
+    // Uncooked apple pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2323,
+    // Apple pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2287,
+    // Uncooked pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2289,
+    // Plain pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1889,
+    // Uncooked cake
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1891,
+    // Cake
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4237,
+    // Nettle-water
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4239,
+    // Nettle tea
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE",
+      "COMBAT_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1953,
+    // Pastry dough
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2315,
+    // Pie shell
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7164,
+    // Part mud pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7166,
+    // Part mud pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7168,
+    // Raw mud pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7172,
+    // Part garden pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7174,
+    // Part garden pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7176,
+    // Raw garden pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7182,
+    // Part fish pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7184,
+    // Part fish pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7186,
+    // Raw fish pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7192,
+    // Part admiral pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7194,
+    // Part admiral pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7196,
+    // Raw admiral pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7212,
+    // Part summer pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7214,
+    // Part summer pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 7216,
+    // Raw summer pie
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1997,
+    // Incomplete stew
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1921,
+    // Bowl of water
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1999,
+    // Incomplete stew
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2001,
+    // Uncooked stew
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2009,
+    // Uncooked curry
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4240,
+    // Nettle tea
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4242,
+    // Cup of tea
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4243,
+    // Cup of tea
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2285,
+    // Incomplete pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2293,
+    // Meat pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2297,
+    // Anchovy pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2301,
+    // Pineapple pizza
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1897,
+    // Chocolate cake
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1995,
+    // Unfermented wine
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2118,
+    // Pineapple ring
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2114,
+    // Pineapple
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1951,
+    // Redberries
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1955,
+    // Cooking apple
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1982,
+    // Tomato
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1957,
+    // Onion
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1965,
+    // Cabbage
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1942,
+    // Potato
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5504,
+    // Strawberry
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5982,
+    // Watermelon
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5970,
+    // Curry leaf
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2007,
+    // Spice
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4241,
+    // Nettles
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 407,
+    // Oyster
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3379,
+    // Slimy eel
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5001,
+    // Raw cave eel
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2148,
+    // Raw lava eel
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3142,
+    // Raw karambwan
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 4458,
+    // Cup of water
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 1993,
+    // Jug of wine
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 2859,
+    // Wolf bones
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 3179,
+    // Monkey bones
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 530,
+    // Bat bones
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 534,
+    // Babydragon bones
+    "min": 40,
+    "target": 250,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5317,
+    // Spirit seed
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5370,
+    // Oak sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5371,
+    // Willow sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5372,
+    // Maple sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5373,
+    // Yew sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5374,
+    // Magic sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5375,
+    // Spirit sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5496,
+    // Apple sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5497,
+    // Banana sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5498,
+    // Orange sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5499,
+    // Curry sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5500,
+    // Pineapple sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5501,
+    // Papaya sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5502,
+    // Palm sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5503,
+    // Calquat sapling
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5438,
+    // Potatoes(10)
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5458,
+    // Onions(10)
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5478,
+    // Cabbages(10)
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5986,
+    // Sweetcorn
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
+  },
+  {
+    "id": 5386,
+    // Apples(5)
+    "min": 10,
+    "target": 75,
+    "skill": -1,
+    "max_level": -1,
+    "priority": "STANDARD",
+    "tags": [
+      "SKILLING_CONSUMABLE"
+    ]
   }
 ]
