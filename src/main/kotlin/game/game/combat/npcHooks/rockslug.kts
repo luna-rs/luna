@@ -11,9 +11,9 @@ import io.luna.game.model.mob.block.Graphic
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
     /**
-     * The lowest health a rockslug can be reduced to through normal damage.
+     * The highest remaining health eligible for a salt finish, inclusive.
      */
-    val HITPOINTS_THRESHOLD = 5
+    val HITPOINTS_THRESHOLD = 4
 
     /**
      * The bag of salt item id.

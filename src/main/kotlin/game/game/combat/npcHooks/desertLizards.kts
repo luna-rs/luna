@@ -12,7 +12,10 @@ import io.luna.game.model.mob.block.Graphic
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
-    val HITPOINTS_THRESHOLD = 5
+    /**
+     * The highest remaining health eligible for an ice-cooler finish, inclusive.
+     */
+    val HITPOINTS_THRESHOLD = 4
     val ICE_COOLER = 6696
     val ANIMATION = Animation(1574)
     val GRAPHIC = Graphic(456, 0, 0)

@@ -20,9 +20,9 @@ import io.luna.game.model.mob.interact.InteractionType
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
     /**
-     * If the hitpoints fall below this amount, the gargoyle will turn to stone.
+     * The highest remaining health eligible for a hammer finish, inclusive.
      */
-    val HITPOINTS_THRESHOLD = 9
+    val HITPOINTS_THRESHOLD = 8
 
     /**
      * The rock hammer item ID.
