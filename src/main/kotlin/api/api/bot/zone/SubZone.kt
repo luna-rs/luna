@@ -1229,6 +1229,22 @@ enum class SubZone(
         parent = { WILDERNESS }),
 
     /**
+     * The Wilderness Mage of Zamorak's roaming area, used before native Abyss entry.
+     */
+    ABYSS_ENTRY_MAGE(
+        inside = Position(3107, 3557),
+        area = SimpleBoxArea.of(3102, 3552, 3112, 3562),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Both Abyss rings. Runecrafting scripts use native mage, obstacle and rift interactions inside this footprint.
+     */
+    ABYSS(
+        inside = Position(3039, 4856),
+        area = SimpleBoxArea.ofRadius(3010, 4802, 61, 62),
+        parent = { EDGEVILLE }),
+
+    /**
      * The Air Altar interior.
      *
      * Bots enter by using an air talisman on the outside ruins west of Falador, then leave through the portal inside

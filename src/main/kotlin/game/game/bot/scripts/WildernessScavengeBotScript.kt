@@ -58,6 +58,8 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
 
     override val actionSafety = ActionSafety.COMBAT
 
+    override val allowsCombatResponse = false
+
     /**
      * The current walking goal survives reflex pauses and relogging.
      */

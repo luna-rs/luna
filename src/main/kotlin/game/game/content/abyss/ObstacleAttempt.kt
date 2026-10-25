@@ -6,6 +6,7 @@ import game.content.abyss.Abyss.abyssLayout
 import game.content.abyss.Abyss.showLayout
 import game.player.Sound
 import game.skill.Skills
+import game.skill.firemaking.Firemaking
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.action.impl.LockedAction
@@ -34,7 +35,7 @@ abstract class ObstacleAttempt(val plr: Player, val passage: AbyssPassage, val o
         /**
          * The tinderbox, for burning down boils.
          */
-        const val TINDERBOX = 1590
+        const val TINDERBOX = Firemaking.TINDERBOX
 
         /**
          * The animations a player distracts the eyes with.
