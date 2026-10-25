@@ -17804,8 +17804,28 @@
   },
   {
     "ids": [
-      1020, // Earth elemental
-      1023 // Earth elemental
+      1023 // Earth elemental (from an elemental rock)
+    ],
+    "drops": [
+      {
+        "id": 1480, // Rock
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 2892, // Elemental ore
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [
+      1020 // Earth elemental
     ],
     "rare": "RARE",
     "drops": [
@@ -17898,13 +17918,6 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.015625,
-        "table": 1
-      },
-      {
-        "id": 2892, // Elemental ore
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
         "table": 1
       },
       {
