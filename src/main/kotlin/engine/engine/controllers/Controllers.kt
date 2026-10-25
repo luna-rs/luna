@@ -2,6 +2,7 @@ package engine.controllers
 
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.content.fishingTrawler.TrawlerAreaListener
+import game.content.gamesRoom.GamesRoomAreaListener
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 
@@ -14,7 +15,8 @@ object Controllers {
     val GLOBAL_LOCATABLE_CONTROLLERS = listOf(
         MultiCombatAreaListener,
         WildernessLocatableController,
-        TrawlerAreaListener
+        TrawlerAreaListener,
+        GamesRoomAreaListener
     )
 
     /**
