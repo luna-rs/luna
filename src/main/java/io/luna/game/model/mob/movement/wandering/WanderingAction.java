@@ -3,6 +3,7 @@ package io.luna.game.model.mob.movement.wandering;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 
 /**
  * An {@link Action} that drives passive wandering behaviour for a {@link Mob}.
@@ -46,6 +47,9 @@ public abstract class WanderingAction extends Action<Mob> {
 
     @Override
     public final boolean run() {
+        if (mob instanceof Npc npc && npc.getCombat().isRetreating()) {
+            return false;
+        }
         if (!mob.isWandering()) {
             return true;
         } else if (!mob.getCombat().inCombat() && mob.getCombat().getTarget() == null && mob.getWalking().isEmpty() &&

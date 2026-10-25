@@ -6,6 +6,7 @@ import engine.controllers.MultiCombatAreaListener;
 import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
@@ -191,6 +192,10 @@ public abstract class CombatContext<T extends Mob> {
         if (enemy == null || enemy == mob || !mob.isAlive() || !enemy.isAlive()) {
             return;
         }
+        if (mob instanceof Npc npc && (npc.getCombat().isRetreating() ||
+                !npc.getCombat().isWithinLeash(enemy))) {
+            return;
+        }
         if (mob instanceof Player) {
             Player player = (Player) mob;
             if (!player.getControllers().checkCombat(enemy)) {
@@ -199,6 +204,15 @@ public abstract class CombatContext<T extends Mob> {
         }
         target = enemy;
         mob.getActions().submitIfAbsent(new CombatAction(mob));
+    }
+
+    /**
+     * Responds to an incoming attack. NPCs may replace retaliation with escape behavior.
+     *
+     * @param enemy The attacker to retaliate against.
+     */
+    public void retaliate(Mob enemy) {
+        attack(enemy);
     }
 
     /**

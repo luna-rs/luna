@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.damage;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 
@@ -14,6 +15,7 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
  * <ul>
  *     <li>Applies the resolved hit if the victim is still alive.</li>
  *     <li>Retaliates against a living attacker when enabled and no active engagement with a living target remains.</li>
+ *     <li>Checks NPC escape thresholds after each incoming hit, including during an existing engagement.</li>
  * </ul>
  * This action completes after a single execution.
  *
@@ -82,9 +84,10 @@ public final class CombatDamageAction extends Action<Mob> {
 
             // Determine whether the victim should retaliate.
             if (victim.isAlive() && attacker.isAlive() && victim.getCombat().isAutoRetaliate()) {
-                if (victim.getCombat().getTarget() == null || !victim.getCombat().getTarget().isAlive() ||
+                if (victim instanceof Npc || victim.getCombat().getTarget() == null ||
+                        !victim.getCombat().getTarget().isAlive() ||
                         !victim.getActions().contains(CombatAction.class)) {
-                    victim.getCombat().attack(attacker);
+                    victim.getCombat().retaliate(attacker);
                 }
             }
         }

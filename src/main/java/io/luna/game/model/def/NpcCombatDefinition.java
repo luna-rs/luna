@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.NpcAggressionProfile;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * A definition containing all combat-related data for an attackable {@link Npc}.
@@ -125,6 +126,11 @@ public final class NpcCombatDefinition implements Definition {
     private final int[] bonuses;
 
     /**
+     * The spawn-relative combat movement rules.
+     */
+    private final NpcCombatMovement movement;
+
+    /**
      * Creates a new {@link NpcCombatDefinition}.
      *
      * @param id The NPC id this definition belongs to.
@@ -162,6 +168,52 @@ public final class NpcCombatDefinition implements Definition {
             int[] skills,
             int[] bonuses
     ) {
+        this(id, respawnTime, aggression, poisonous, immunePoison, hitpoints, maximumHit, attackSpeed,
+                attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus, rangedBonus,
+                skills, bonuses, NpcCombatMovement.DEFAULT);
+    }
+
+    /**
+     * Creates a new {@link NpcCombatDefinition}.
+     *
+     * @param id The NPC id this definition belongs to.
+     * @param respawnTime The respawn delay, in ticks.
+     * @param aggression The aggression profile for this NPC, or {@code null} if none is configured.
+     * @param poisonous Whether this NPC can poison targets.
+     * @param immunePoison Whether this NPC is immune to poison.
+     * @param hitpoints The NPC's hitpoints value.
+     * @param maximumHit The maximum damage this NPC can deal.
+     * @param attackSpeed The delay, in ticks, between attacks.
+     * @param attackAnimation The attack animation id.
+     * @param defenceAnimation The defence animation id.
+     * @param deathAnimation The death animation id.
+     * @param attackBonus The generic attack bonus value.
+     * @param magicBonus The magic attack bonus value.
+     * @param rangedBonus The ranged attack bonus value.
+     * @param skills The combat skill level array. This array is defensively copied.
+     * @param movement The combat leash and escape configuration.
+     * @param bonuses The defensive and strength bonus array. This array is defensively copied.
+     */
+    public NpcCombatDefinition(
+            int id,
+            int respawnTime,
+            NpcAggressionProfile aggression,
+            boolean poisonous,
+            boolean immunePoison,
+            int hitpoints,
+            int maximumHit,
+            int attackSpeed,
+            int attackAnimation,
+            int defenceAnimation,
+            int deathAnimation,
+            int attackBonus,
+            int magicBonus,
+            int rangedBonus,
+            int[] skills,
+            int[] bonuses,
+            NpcCombatMovement movement
+    ) {
+        this.movement = Objects.requireNonNull(movement);
         this.id = id;
         this.respawnTime = respawnTime;
         this.aggression = aggression;
@@ -178,6 +230,13 @@ public final class NpcCombatDefinition implements Definition {
         this.rangedBonus = rangedBonus;
         this.skills = Arrays.copyOf(skills, skills.length);
         this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
+    }
+
+    /**
+     * @return The combat leash and escape configuration.
+     */
+    public NpcCombatMovement getMovement() {
+        return movement;
     }
 
     @Override

@@ -4,6 +4,7 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
@@ -26,7 +27,7 @@ import io.luna.util.Rational;
 public final class DumbWanderingAction extends WanderingAction {
 
     /**
-     * The allowed wander area. The mob will never intentionally step outside this area.
+     * The allowed wander area. Displaced NPCs step back toward this area before resuming local wandering.
      */
     private final Area area;
 
@@ -46,6 +47,10 @@ public final class DumbWanderingAction extends WanderingAction {
     public void wander() {
         Rational chance = frequency.getChance();
         if (RandomUtils.roll(chance)) {
+            if (mob instanceof Npc && !area.contains(mob.getPosition())) {
+                returnToWanderArea();
+                return;
+            }
             // Try a few times to find a valid 1-tile step without over-spending CPU.
             for (int loop = 0; loop < 5; loop++) {
                 Direction nextDirection = Direction.random();
@@ -56,6 +61,28 @@ public final class DumbWanderingAction extends WanderingAction {
                     break;
                 }
             }
+        }
+    }
+
+    /**
+     * Takes one collision-checked step toward a spawn-area destination, following Lost City's wander recovery.
+     * A displaced NPC must be allowed to cross tiles outside its wander area to reach it again.
+     */
+    private void returnToWanderArea() {
+        Position destination = area.randomPosition();
+        Position position = mob.getPosition();
+        if (position.getZ() != destination.getZ()) {
+            return;
+        }
+        Direction direction = Direction.between(position, destination);
+        if (mob.getNavigator().step(direction) || !direction.isDiagonal()) {
+            return;
+        }
+        // Match naive NPC movement: try the horizontal component before the vertical component.
+        Direction horizontal = direction.getTranslateX() > 0 ? Direction.EAST : Direction.WEST;
+        Direction vertical = direction.getTranslateY() > 0 ? Direction.NORTH : Direction.SOUTH;
+        if (!mob.getNavigator().step(horizontal)) {
+            mob.getNavigator().step(vertical);
         }
     }
 }

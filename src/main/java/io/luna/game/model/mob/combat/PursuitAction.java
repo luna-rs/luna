@@ -107,7 +107,8 @@ public final class PursuitAction extends Action<Npc> {
      */
     private boolean canPursue(Mob target) {
         return mob.isAlive() && !combat.isDisabled() && target != null && target.isAlive() &&
-                mob.isViewableFrom(target);
+                mob.isViewableFrom(target) && mob.getCombat().isWithinLeash(target) &&
+                !mob.getCombat().isRetreating();
     }
 
     /**

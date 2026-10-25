@@ -242,6 +242,13 @@ public final class CombatAction extends Action<Mob> {
      * @return {@code true} if the action should finish now, otherwise {@code false}.
      */
     private boolean clearTarget() {
+        if (mob instanceof Npc) {
+            PursuitAction pursuit = mob.getActions().first(PursuitAction.class);
+            if (pursuit != null && !pursuit.isFinished()) {
+                pursuit.complete();
+                mob.getWalking().clear();
+            }
+        }
         combat.setTarget(null);
         return !combat.inCombat();
     }
