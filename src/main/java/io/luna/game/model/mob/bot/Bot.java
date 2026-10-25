@@ -335,6 +335,9 @@ public final class Bot extends Player {
      */
     private ImmutableSet<SubZone> localSubZones = ImmutableSet.of();
 
+    /**
+     * Locally scoped ground items tracked for this bot by the item activation and deactivation callbacks.
+     */
     private final Set<GroundItem> viewableItems = new HashSet<>();
 
     /**
@@ -770,8 +773,15 @@ public final class Bot extends Player {
         this.localSubZones = localSubZones;
     }
 
-    // todo test, docs
-    public Set<GroundItem> getViewableItems() { // faster than using the locator
+    /**
+     * Returns the live, mutable set of locally scoped ground items tracked for this bot.
+     * <p>
+     * Ground-item lifecycle callbacks maintain this set. Looting scripts use it as a source of candidates and must
+     * still check each item's current state, visibility and distance before attempting to take it.
+     *
+     * @return The tracked ground-item set, not a snapshot or a complete locator search result.
+     */
+    public Set<GroundItem> getViewableItems() {
         return viewableItems;
     }
 }
