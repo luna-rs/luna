@@ -15,6 +15,7 @@ import engine.combat.prayer.CombatPrayer
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -125,6 +126,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private var previousShield: Int? = null
 
+    /**
+     * The life of [focus] when it was given, for an NPC. A respawned NPC is the same object on its next life, and
+     * this script does not follow it there.
+     */
+    private var focusSpawn = (focus as? Npc)?.spawnCount
+
     override suspend fun init(resumed: Boolean): Boolean {
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
@@ -133,6 +140,10 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
         when (initialState) {
             InitialState.ATTACK -> {
+                // A resumed script may find its focus dead, or an NPC on its next life: nothing to attack then.
+                if (focusAlive()) {
+                    bot.combat.attack(focus)
+                }
                 bot.speechStack.setDisableGeneral(true)
                 if (!prepareAttack()) return isTerminated()
                 if (!targetAllowed()) return true
@@ -220,7 +231,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * is dead, unreachable, out of view, or no longer valid for multi-combat, the bot looks for nearby loot instead.
      */
     private suspend fun targetEnemy() {
-        if (focus.isAlive && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
+        if (focusAlive() && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
             if (focus is Player && !usesPkSwitching && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
                     bot.combat.checkMultiCombat(it) &&
@@ -230,6 +241,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
                 if (local.size > 0) {
                     focus = local.first()
+                    focusSpawn = null
                 }
             }
 
@@ -243,6 +255,14 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
 
         lootItems()
+    }
+
+    /**
+     * Whether [focus] is alive and, for an NPC, still on the life this script was given.
+     */
+    private fun focusAlive(): Boolean {
+        val current = focus
+        return current.isAlive && (current !is Npc || current.spawnCount == focusSpawn)
     }
 
     /**

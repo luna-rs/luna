@@ -97,7 +97,8 @@
       "d spear",
       "dspear",
       "dragon spear",
-      "drag spear"
+      "drag spear",
+      "ds"
     ]
   },
   {
@@ -110,7 +111,8 @@
       "dragon spear p",
       "dragon spear(p)",
       "d spear(p)",
-      "drag spear(p)"
+      "drag spear(p)",
+      "dsp"
     ]
   },
   {
@@ -149,7 +151,8 @@
       "dragon baxe",
       "dragon battleaxe",
       "d battleaxe",
-      "drag battleaxe"
+      "drag battleaxe",
+      "dba"
     ]
   },
   {
@@ -484,8 +487,7 @@
     ],
     "nicknames": [
       "gilded platelegs",
-      "gilded legs",
-      "g legs"
+      "gilded legs"
     ]
   },
   {
@@ -669,7 +671,10 @@
       "dharok axe",
       "dharok greataxe",
       "dharoks axe",
-      "dharoks greataxe"
+      "dharoks greataxe",
+      "g axe",
+      "gr8 ax",
+      "gr8 axe"
     ]
   },
   {
@@ -721,7 +726,8 @@
       "guthans spear",
       "guthans warspear",
       "guth spear",
-      "guth warspear"
+      "guth warspear",
+      "g spear"
     ]
   },
   {
@@ -764,7 +770,9 @@
       "karils crossbow",
       "karils xbow",
       "karils x-bow",
-      "karils cbow"
+      "karils cbow",
+      "k bow",
+      "karil bow"
     ]
   },
   {
@@ -852,7 +860,9 @@
       "veracs brassard",
       "veracs top",
       "v brassard",
-      "v top"
+      "v top",
+      "brassy",
+      "v brassy"
     ]
   },
   {
@@ -1105,7 +1115,8 @@
       "dragon spear+",
       "dragon spear(+)",
       "d spear(+)",
-      "drag spear(+)"
+      "drag spear(+)",
+      "ds+"
     ]
   },
   {
@@ -1118,7 +1129,8 @@
       "dragon spear s",
       "dragon spear(s)",
       "d spear(s)",
-      "drag spear(s)"
+      "drag spear(s)",
+      "dss"
     ]
   },
   {
@@ -1166,7 +1178,8 @@
     ],
     "nicknames": [
       "obby cape",
-      "obsidian cape"
+      "obsidian cape",
+      "ob cape"
     ]
   },
   {
@@ -1243,6 +1256,1159 @@
     "nicknames": [
       "enchanted top",
       "ench top"
+    ]
+  },
+  {
+    "ids": [
+      1215
+    ],
+    "nicknames": [
+      "dd",
+      "d dagger",
+      "dragon dagger",
+      "drag dagger",
+      "dragon dag"
+    ]
+  },
+  {
+    "ids": [
+      1231
+    ],
+    "nicknames": [
+      "ddp",
+      "dd p",
+      "d dagger p",
+      "dragon dagger p",
+      "dragon dagger(p)"
+    ]
+  },
+  {
+    "ids": [
+      5680
+    ],
+    "nicknames": [
+      "dd+",
+      "ddp+",
+      "d dagger+",
+      "dragon dagger+",
+      "dragon dagger(+)"
+    ]
+  },
+  {
+    "ids": [
+      6737
+    ],
+    "nicknames": [
+      "b ring",
+      "zerker ring",
+      "berserker ring"
+    ]
+  },
+  {
+    "ids": [
+      6585
+    ],
+    "nicknames": [
+      "fury",
+      "fury ammy",
+      "amulet of fury",
+      "fury amulet"
+    ]
+  },
+  {
+    "ids": [
+      1725
+    ],
+    "nicknames": [
+      "str ammy",
+      "strength ammy",
+      "ammy of str",
+      "amulet of strength",
+      "str amulet",
+      "strength amulet"
+    ]
+  },
+  {
+    "ids": [
+      1731
+    ],
+    "nicknames": [
+      "power ammy",
+      "ammy of power",
+      "amulet of power",
+      "power amulet"
+    ]
+  },
+  {
+    "ids": [
+      1712
+    ],
+    "nicknames": [
+      "glory",
+      "glory(4)",
+      "glory 4",
+      "amulet of glory(4)",
+      "glory ammy"
+    ]
+  },
+  {
+    "ids": [
+      249
+    ],
+    "nicknames": [
+      "guam",
+      "guam leaf"
+    ]
+  },
+  {
+    "ids": [
+      257
+    ],
+    "nicknames": [
+      "ranarr",
+      "ranarr weed"
+    ]
+  },
+  {
+    "ids": [
+      259
+    ],
+    "nicknames": [
+      "irit",
+      "irit leaf"
+    ]
+  },
+  {
+    "ids": [
+      3000
+    ],
+    "nicknames": [
+      "snap",
+      "snapdragon"
+    ]
+  },
+  {
+    "ids": [
+      1038,
+      1040,
+      1042,
+      1044,
+      1046,
+      1048
+    ],
+    "nicknames": [
+      "phat",
+      "partyhat",
+      "party hat"
+    ]
+  },
+  {
+    "ids": [
+      1053,
+      1055,
+      1057
+    ],
+    "nicknames": [
+      "hween",
+      "hween mask",
+      "h'ween mask",
+      "halloween mask"
+    ]
+  },
+  {
+    "ids": [
+      1050
+    ],
+    "nicknames": [
+      "santa",
+      "santa hat"
+    ]
+  },
+  {
+    "ids": [
+      1381
+    ],
+    "nicknames": [
+      "air staff",
+      "staff of air"
+    ]
+  },
+  {
+    "ids": [
+      1383
+    ],
+    "nicknames": [
+      "water staff",
+      "staff of water"
+    ]
+  },
+  {
+    "ids": [
+      1385
+    ],
+    "nicknames": [
+      "earth staff",
+      "staff of earth"
+    ]
+  },
+  {
+    "ids": [
+      1387
+    ],
+    "nicknames": [
+      "fire staff",
+      "staff of fire"
+    ]
+  },
+  {
+    "ids": [
+      1777
+    ],
+    "nicknames": [
+      "bowstring",
+      "bow string",
+      "bs"
+    ]
+  },
+  {
+    "ids": [
+      1993
+    ],
+    "nicknames": [
+      "wine",
+      "jug of wine"
+    ]
+  },
+  {
+    "ids": [
+      861
+    ],
+    "nicknames": [
+      "msb",
+      "magic short",
+      "magic shortbow",
+      "mage short"
+    ]
+  },
+  {
+    "ids": [
+      4698
+    ],
+    "nicknames": [
+      "muds",
+      "mud rune"
+    ]
+  },
+  {
+    "ids": [
+      6524
+    ],
+    "nicknames": [
+      "obby shield",
+      "obsidian shield",
+      "toktz-ket-xil",
+      "ob shield"
+    ]
+  },
+  {
+    "ids": [
+      6523
+    ],
+    "nicknames": [
+      "obby sword",
+      "obsidian sword",
+      "toktz-xil-ak"
+    ]
+  },
+  {
+    "ids": [
+      6525
+    ],
+    "nicknames": [
+      "obby knife",
+      "obsidian knife",
+      "toktz-xil-ek"
+    ]
+  },
+  {
+    "ids": [
+      6526
+    ],
+    "nicknames": [
+      "obby staff",
+      "obsidian staff",
+      "toktz-mej-tal"
+    ]
+  },
+  {
+    "ids": [
+      6527
+    ],
+    "nicknames": [
+      "obby mace",
+      "obsidian mace",
+      "tzhaar-ket-em"
+    ]
+  },
+  {
+    "ids": [
+      6739
+    ],
+    "nicknames": [
+      "d axe",
+      "daxe",
+      "drag axe",
+      "dragon axe"
+    ]
+  },
+  {
+    "ids": [
+      1317
+    ],
+    "nicknames": [
+      "a2h",
+      "addy 2h",
+      "adamant 2h sword"
+    ]
+  },
+  {
+    "ids": [
+      1373
+    ],
+    "nicknames": [
+      "rba",
+      "rune baxe",
+      "rune battleaxe"
+    ]
+  },
+  {
+    "ids": [
+      1347
+    ],
+    "nicknames": [
+      "rwh",
+      "rune hammer",
+      "rune warhammer"
+    ]
+  },
+  {
+    "ids": [
+      837
+    ],
+    "nicknames": [
+      "x-bow",
+      "xbow",
+      "crossbow"
+    ]
+  },
+  {
+    "ids": [
+      859
+    ],
+    "nicknames": [
+      "mage long",
+      "magic long",
+      "magic longbow"
+    ]
+  },
+  {
+    "ids": [
+      855
+    ],
+    "nicknames": [
+      "ylb",
+      "yew long",
+      "yew longbow"
+    ]
+  },
+  {
+    "ids": [
+      3053
+    ],
+    "nicknames": [
+      "lava staff",
+      "lava bstaff",
+      "lava battlestaff"
+    ]
+  },
+  {
+    "ids": [
+      6562
+    ],
+    "nicknames": [
+      "mud staff",
+      "mud bstaff",
+      "mud battlestaff"
+    ]
+  },
+  {
+    "ids": [
+      6522
+    ],
+    "nicknames": [
+      "obby rings",
+      "obsidian rings",
+      "toktz-xil-ul"
+    ]
+  },
+  {
+    "ids": [
+      4714
+    ],
+    "nicknames": [
+      "ahrim skirt",
+      "ahrims skirt",
+      "ahrims robeskirt"
+    ]
+  },
+  {
+    "ids": [
+      4738
+    ],
+    "nicknames": [
+      "karil skirt",
+      "karils skirt",
+      "karils leatherskirt"
+    ]
+  },
+  {
+    "ids": [
+      4093,
+      4103,
+      4113
+    ],
+    "nicknames": [
+      "mystic bottoms",
+      "mystic bottom",
+      "mystic legs",
+      "mystic robe bottom"
+    ]
+  },
+  {
+    "ids": [
+      6920
+    ],
+    "nicknames": [
+      "inf boots",
+      "infinity boots"
+    ]
+  },
+  {
+    "ids": [
+      3840
+    ],
+    "nicknames": [
+      "sara book",
+      "holy book"
+    ]
+  },
+  {
+    "ids": [
+      3842
+    ],
+    "nicknames": [
+      "zammy book",
+      "zam book",
+      "unholy book"
+    ]
+  },
+  {
+    "ids": [
+      3844
+    ],
+    "nicknames": [
+      "guthix book",
+      "balance book",
+      "book of balance"
+    ]
+  },
+  {
+    "ids": [
+      1702
+    ],
+    "nicknames": [
+      "dstone ammy",
+      "dragonstone amulet",
+      "dragonstone ammy"
+    ]
+  },
+  {
+    "ids": [
+      1664
+    ],
+    "nicknames": [
+      "dstone neck",
+      "dstone necklace",
+      "dragonstone necklace",
+      "dragon necklace"
+    ]
+  },
+  {
+    "ids": [
+      2572
+    ],
+    "nicknames": [
+      "row",
+      "wealth",
+      "ring of wealth"
+    ]
+  },
+  {
+    "ids": [
+      2550
+    ],
+    "nicknames": [
+      "ror",
+      "recoil ring",
+      "ring of recoil"
+    ]
+  },
+  {
+    "ids": [
+      2568
+    ],
+    "nicknames": [
+      "forging ring",
+      "ring of forging"
+    ]
+  },
+  {
+    "ids": [
+      2570
+    ],
+    "nicknames": [
+      "rol",
+      "life",
+      "life ring",
+      "ring of life"
+    ]
+  },
+  {
+    "ids": [
+      1615
+    ],
+    "nicknames": [
+      "dstone",
+      "dragonstone"
+    ]
+  },
+  {
+    "ids": [
+      1631
+    ],
+    "nicknames": [
+      "uncut dstone",
+      "uncut dragonstone"
+    ]
+  },
+  {
+    "ids": [
+      2639
+    ],
+    "nicknames": [
+      "tan cav",
+      "tan cavalier"
+    ]
+  },
+  {
+    "ids": [
+      2641
+    ],
+    "nicknames": [
+      "dark cav",
+      "dark cavalier"
+    ]
+  },
+  {
+    "ids": [
+      2643
+    ],
+    "nicknames": [
+      "black cav",
+      "black cavalier"
+    ]
+  },
+  {
+    "ids": [
+      962
+    ],
+    "nicknames": [
+      "cracker",
+      "xmas cracker",
+      "christmas cracker"
+    ]
+  },
+  {
+    "ids": [
+      1989
+    ],
+    "nicknames": [
+      "half wine",
+      "half jug",
+      "half full wine jug"
+    ]
+  },
+  {
+    "ids": [
+      981
+    ],
+    "nicknames": [
+      "disk",
+      "dor",
+      "disk of returning"
+    ]
+  },
+  {
+    "ids": [
+      199
+    ],
+    "nicknames": [
+      "unid guam"
+    ]
+  },
+  {
+    "ids": [
+      201
+    ],
+    "nicknames": [
+      "unid marrentill"
+    ]
+  },
+  {
+    "ids": [
+      203
+    ],
+    "nicknames": [
+      "unid tarromin"
+    ]
+  },
+  {
+    "ids": [
+      205
+    ],
+    "nicknames": [
+      "unid harralander"
+    ]
+  },
+  {
+    "ids": [
+      207
+    ],
+    "nicknames": [
+      "unid ranarr"
+    ]
+  },
+  {
+    "ids": [
+      209
+    ],
+    "nicknames": [
+      "unid irit"
+    ]
+  },
+  {
+    "ids": [
+      211
+    ],
+    "nicknames": [
+      "unid avantoe"
+    ]
+  },
+  {
+    "ids": [
+      213
+    ],
+    "nicknames": [
+      "unid kwuarm"
+    ]
+  },
+  {
+    "ids": [
+      215
+    ],
+    "nicknames": [
+      "unid cadantine"
+    ]
+  },
+  {
+    "ids": [
+      217
+    ],
+    "nicknames": [
+      "unid dwarf weed"
+    ]
+  },
+  {
+    "ids": [
+      219
+    ],
+    "nicknames": [
+      "unid torstol"
+    ]
+  },
+  {
+    "ids": [
+      2485
+    ],
+    "nicknames": [
+      "unid lantadyme"
+    ]
+  },
+  {
+    "ids": [
+      3049
+    ],
+    "nicknames": [
+      "unid toadflax"
+    ]
+  },
+  {
+    "ids": [
+      3051
+    ],
+    "nicknames": [
+      "unid snapdragon"
+    ]
+  },
+  {
+    "ids": [
+      2434
+    ],
+    "nicknames": [
+      "ppot",
+      "ppots",
+      "pray pot",
+      "prayer pot",
+      "prayer potion"
+    ]
+  },
+  {
+    "ids": [
+      2436
+    ],
+    "nicknames": [
+      "super att",
+      "sap",
+      "super attack"
+    ]
+  },
+  {
+    "ids": [
+      2440
+    ],
+    "nicknames": [
+      "super str",
+      "ssp",
+      "super str pot",
+      "super strength"
+    ]
+  },
+  {
+    "ids": [
+      2442
+    ],
+    "nicknames": [
+      "super def",
+      "sdp",
+      "super def pot",
+      "super defence"
+    ]
+  },
+  {
+    "ids": [
+      2444
+    ],
+    "nicknames": [
+      "range pot",
+      "ranging pot",
+      "ranging potion"
+    ]
+  },
+  {
+    "ids": [
+      113
+    ],
+    "nicknames": [
+      "str pot",
+      "strength pot",
+      "strength potion"
+    ]
+  },
+  {
+    "ids": [
+      2428
+    ],
+    "nicknames": [
+      "att pot",
+      "attack pot",
+      "attack potion"
+    ]
+  },
+  {
+    "ids": [
+      2432
+    ],
+    "nicknames": [
+      "def pot",
+      "defence pot",
+      "defence potion"
+    ]
+  },
+  {
+    "ids": [
+      2446
+    ],
+    "nicknames": [
+      "anti",
+      "antis",
+      "anti-p",
+      "antipoison"
+    ]
+  },
+  {
+    "ids": [
+      2448
+    ],
+    "nicknames": [
+      "super anti",
+      "superantipoison"
+    ]
+  },
+  {
+    "ids": [
+      2452
+    ],
+    "nicknames": [
+      "antifire",
+      "anti fire",
+      "antifire pot",
+      "anti fire pot",
+      "antifire potion"
+    ]
+  },
+  {
+    "ids": [
+      2450
+    ],
+    "nicknames": [
+      "zammy brew",
+      "zam brew",
+      "zamorak brew"
+    ]
+  },
+  {
+    "ids": [
+      6685
+    ],
+    "nicknames": [
+      "sara brew",
+      "brew",
+      "saradomin brew"
+    ]
+  },
+  {
+    "ids": [
+      3024
+    ],
+    "nicknames": [
+      "super restore"
+    ]
+  },
+  {
+    "ids": [
+      2430
+    ],
+    "nicknames": [
+      "restore pot",
+      "restore potion"
+    ]
+  },
+  {
+    "ids": [
+      3008
+    ],
+    "nicknames": [
+      "energy pot",
+      "energy potion"
+    ]
+  },
+  {
+    "ids": [
+      3016
+    ],
+    "nicknames": [
+      "super energy"
+    ]
+  },
+  {
+    "ids": [
+      3040
+    ],
+    "nicknames": [
+      "magic pot",
+      "magic potion"
+    ]
+  },
+  {
+    "ids": [
+      3032
+    ],
+    "nicknames": [
+      "agil pot",
+      "agility pot",
+      "agility potion"
+    ]
+  },
+  {
+    "ids": [
+      245
+    ],
+    "nicknames": [
+      "zammy wine",
+      "wine of zammy",
+      "wine of zamorak"
+    ]
+  },
+  {
+    "ids": [
+      561
+    ],
+    "nicknames": [
+      "nats",
+      "nature rune"
+    ]
+  },
+  {
+    "ids": [
+      563
+    ],
+    "nicknames": [
+      "laws",
+      "law rune"
+    ]
+  },
+  {
+    "ids": [
+      565
+    ],
+    "nicknames": [
+      "bloods",
+      "blood rune"
+    ]
+  },
+  {
+    "ids": [
+      564
+    ],
+    "nicknames": [
+      "cosmics",
+      "cosmic rune"
+    ]
+  },
+  {
+    "ids": [
+      560
+    ],
+    "nicknames": [
+      "deaths",
+      "death rune"
+    ]
+  },
+  {
+    "ids": [
+      566
+    ],
+    "nicknames": [
+      "souls",
+      "soul rune"
+    ]
+  },
+  {
+    "ids": [
+      554
+    ],
+    "nicknames": [
+      "fires",
+      "fire rune"
+    ]
+  },
+  {
+    "ids": [
+      2
+    ],
+    "nicknames": [
+      "cball",
+      "c ball",
+      "cannon ball",
+      "cannonball"
+    ]
+  },
+  {
+    "ids": [
+      379
+    ],
+    "nicknames": [
+      "lobs",
+      "lobby",
+      "lobster"
+    ]
+  },
+  {
+    "ids": [
+      385
+    ],
+    "nicknames": [
+      "sharks",
+      "shark"
+    ]
+  },
+  {
+    "ids": [
+      373
+    ],
+    "nicknames": [
+      "swordies",
+      "swordfish"
+    ]
+  },
+  {
+    "ids": [
+      391
+    ],
+    "nicknames": [
+      "mantas",
+      "manta ray"
+    ]
+  },
+  {
+    "ids": [
+      2363
+    ],
+    "nicknames": [
+      "rune bar",
+      "runite bar"
+    ]
+  },
+  {
+    "ids": [
+      2361
+    ],
+    "nicknames": [
+      "addy bar",
+      "adamantite bar"
+    ]
+  },
+  {
+    "ids": [
+      2359
+    ],
+    "nicknames": [
+      "mith bar",
+      "mithril bar"
+    ]
+  },
+  {
+    "ids": [
+      451
+    ],
+    "nicknames": [
+      "rune ore",
+      "runite ore"
+    ]
+  },
+  {
+    "ids": [
+      449
+    ],
+    "nicknames": [
+      "addy ore",
+      "adamantite ore"
+    ]
+  },
+  {
+    "ids": [
+      447
+    ],
+    "nicknames": [
+      "mith ore",
+      "mithril ore"
+    ]
+  },
+  {
+    "ids": [
+      536
+    ],
+    "nicknames": [
+      "dbones",
+      "d bones",
+      "dragon bones"
+    ]
+  },
+  {
+    "ids": [
+      532
+    ],
+    "nicknames": [
+      "b bones",
+      "big bones"
+    ]
+  },
+  {
+    "ids": [
+      534
+    ],
+    "nicknames": [
+      "baby dragon bones",
+      "babydragon bones",
+      "baby dbones"
+    ]
+  },
+  {
+    "ids": [
+      7936
+    ],
+    "nicknames": [
+      "pess",
+      "p ess",
+      "pure ess",
+      "pure essence"
+    ]
+  },
+  {
+    "ids": [
+      1436
+    ],
+    "nicknames": [
+      "ess",
+      "rune ess",
+      "rune essence"
+    ]
+  },
+  {
+    "ids": [
+      1515
+    ],
+    "nicknames": [
+      "yews",
+      "yew logs"
+    ]
+  },
+  {
+    "ids": [
+      1513
+    ],
+    "nicknames": [
+      "magic logs",
+      "mage logs"
+    ]
+  },
+  {
+    "ids": [
+      225
+    ],
+    "nicknames": [
+      "limps",
+      "limpwurt root"
     ]
   }
 ]

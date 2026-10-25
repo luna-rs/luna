@@ -357,6 +357,35 @@ enum class SubZone(
         parent = { ARDOUGNE }),
 
     /**
+     * The southern chaos druids in Yanille dungeon, reached from the stairs south of the bank.
+     * Includes the entrance landing and exit stairs without crossing the deeper dungeon obstacles.
+     */
+    YANILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2611, 9485),
+        outside = { Position(2606, 3078) },
+        area = SimpleBoxArea.ofRadius(2595, 9475, 27, 26),
+        parent = { YANILLE }),
+
+    /**
+     * Chaos druids in the Wilderness section of Edgeville Dungeon.
+     */
+    EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(3110, 9937),
+        outside = { Position(3096, 3468) },
+        area = SimpleBoxArea.ofRadius(3102, 9922, 24, 23),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Chaos druids in the eastern part of Taverley Dungeon, before the dusty-key door.
+     * The entrance ladder is at (2884, 3397), paired with the ladder at (2884, 9797).
+     */
+    TAVERLEY_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2933, 9849),
+        outside = { Position(2885, 3397) },
+        area = SimpleBoxArea.ofRadius(2926, 9843, 15, 13),
+        parent = { TAVERLY }),
+
+    /**
      * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
      */
     ROCK_CRABS(

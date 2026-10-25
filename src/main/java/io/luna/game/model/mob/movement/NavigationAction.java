@@ -180,9 +180,10 @@ final class NavigationAction extends Action<Mob> {
 
         // Re-path to target if needed.
         if (current == null) {
-            if (target instanceof GameObject object && request.getPolicy().getType() == InteractionType.SIZE &&
+            if ((target instanceof GameObject || (isTargetMob && request.getOffsetDir().isEmpty())) &&
+                    request.getPolicy().getType() == InteractionType.SIZE &&
                     request.getPolicy().getDistance() == 1) {
-                current = navigator.walkToObject(object, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
+                current = navigator.walkToInteraction((Entity) target, request.getOffsetDir(), request.getPathfinder(), request.isAsync());
             } else {
                 current = isTargetMob ?
                     navigator.walk(navigator.computeOffsetPosition((Entity) request.getTarget(), request.getOffsetDir()), request.getPathfinder(), request.isAsync()) :

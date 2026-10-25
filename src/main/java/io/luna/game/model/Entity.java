@@ -33,7 +33,8 @@ import static com.google.common.base.Preconditions.checkState;
  * <ul>
  *   <li>{@link EntityState#NEW}: freshly constructed, not yet registered in world/chunks.</li>
  *   <li>{@link EntityState#ACTIVE}: registered; chunk/collision tracking is active.</li>
- *   <li>{@link EntityState#INACTIVE}: unregistered; cannot transition to another state.</li>
+ *   <li>{@link EntityState#INACTIVE}: out of the world. Final, unless {@link #canReactivate()} allows a return to
+ *   {@link EntityState#ACTIVE}, as it does for an NPC that is dead and will respawn.</li>
  * </ul>
  * <p>
  * <b>Important:</b> Do not call {@link #setState(EntityState)} directly unless you are working inside the internal
@@ -189,13 +190,21 @@ public abstract class Entity implements Attributable, Locatable {
     }
 
     /**
+     * Whether this entity may become {@link EntityState#ACTIVE} again once it is {@link EntityState#INACTIVE}. Only an
+     * NPC that is dead and will respawn may, so the default is {@code false}.
+     */
+    protected boolean canReactivate() {
+        return false;
+    }
+
+    /**
      * Transitions this entity to a new lifecycle state and runs the appropriate hooks.
      * <p>
      * Registration rules:
      * <ul>
      *   <li>Cannot transition to {@link EntityState#NEW}.</li>
      *   <li>Cannot transition to the same state.</li>
-     *   <li>{@link EntityState#INACTIVE} is terminal.</li>
+     *   <li>{@link EntityState#INACTIVE} is terminal, unless {@link #canReactivate()}.</li>
      * </ul>
      * <p>
      * When becoming {@link EntityState#ACTIVE}, this ensures a valid position, assigns chunk membership, updates
@@ -209,14 +218,16 @@ public abstract class Entity implements Attributable, Locatable {
     public final void setState(EntityState newState) {
         checkArgument(newState != EntityState.NEW, "Cannot set state to NEW.");
         checkArgument(newState != state, "State already equal to " + newState + ".");
-        checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");
+        checkArgument(state != EntityState.INACTIVE || canReactivate(), "INACTIVE state cannot be changed.");
 
         state = newState;
         switch (state) {
             case ACTIVE:
                 checkState(position != null, this + " cannot be registered until its position is set.");
 
-                // Collision goes in before onActive() so that moves made by it are tracked.
+                // Collision goes in before onActive() so that moves made by it are tracked. An entity that was
+                // INACTIVE still points at the chunk it left, so it enters the chunk of its position afresh.
+                chunkRepository = null;
                 setCurrentChunk();
                 world.getCollisionManager().updateEntity(this, false);
                 onActive();
