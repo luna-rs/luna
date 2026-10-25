@@ -30,7 +30,7 @@ public final class ItemEconomyDefinitionFileParser extends JsonFileParser<ItemEc
      * Creates the parser for economy item definitions.
      */
     public ItemEconomyDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "items", "item_economy.jsonc"));
+        super(Paths.get("data", "game", "def", "items", "economy_seed.json"));
     }
 
     @Override
