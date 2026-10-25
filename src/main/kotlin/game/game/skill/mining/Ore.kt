@@ -117,8 +117,8 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
               chance = 95 to 350) {
 
         /**
-         * Each limestone mined shrinks the rock by one stage. It grows back to the rock placed in the map 39 ticks
-         * after its first stage is mined, 19 after its second and 9 after its last.
+         * Each limestone mined shrinks the rock by one stage. On a full world it grows back to the rock placed in the
+         * map 39 ticks after its first stage is mined, 19 after its second and 9 after its last.
          */
         override fun respawnTicks(rock: Int) = when (rock) {
             4027 -> 39
@@ -300,7 +300,8 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     val typeName = name ?: itemName(item).replace("ore", "").replace("Rune essence", "essence").trim()
 
     /**
-     * The ticks until [rock], once mined, turns back into the rock placed in the map, or `null` if it never does.
+     * The ticks until [rock], once mined, turns back into the rock placed in the map on a full world, or `null` if it
+     * never does. Emptier worlds take longer (see [Mining.scaleRespawn]).
      */
     open fun respawnTicks(rock: Int) = respawnTicks
 

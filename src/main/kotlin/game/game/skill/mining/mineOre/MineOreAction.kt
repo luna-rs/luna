@@ -199,7 +199,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         val minedRock = minedRocks.getOrPut(tile) { MinedRock(rockObj.id) }
         val timesMined = ++minedRock.timesMined
         world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
-        val respawn = ore.respawnTicks(rockObj.id) ?: return
+        val respawn = Mining.scaleRespawn(ore.respawnTicks(rockObj.id) ?: return, world.players.size())
         world.scheduleOnce(respawn) {
             if (minedRock.timesMined == timesMined) {
                 minedRocks.remove(tile)
