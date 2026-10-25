@@ -34,6 +34,29 @@ object CombatSpellHandler {
     private val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
 
     /**
+     * Applies a standard stat-draining curse after an accurate hit has been delivered.
+     *
+     * Eligibility is checked again at impact because another hit may have drained the stat during flight.
+     * Lost City's standard curses subtract one plus the percentage: players use their current level, while NPCs
+     * use their base level for the percentage. The amount is subtracted from the current level in both cases,
+     * preserving any remaining boost instead of forcing the stat below its base level.
+     *
+     * @param mob The surviving recipient of the spell.
+     * @param skill The affected combat skill.
+     * @param percent The drain fraction, either 0.05 or 0.10 for the standard curses.
+     */
+    fun drainCurse(mob: Mob, skill: Skill, percent: Double) {
+        if (!mob.isAlive || skill.level < skill.staticLevel) return
+        val oldLevel = skill.level
+        val percentageLevel = if (mob is Player) oldLevel else skill.staticLevel
+        val amount = 1 + floor(percentageLevel * percent).toInt()
+        skill.adjustLevel(-amount)
+        if (mob is Player && skill.level < oldLevel) {
+            mob.sendMessage("You have been weakened!")
+        }
+    }
+
+    /**
      * Applies a weakening effect to a mob's skill level.
      *
      * If the target is a [Player] and the skill is successfully reduced, the standard weakened message is sent
