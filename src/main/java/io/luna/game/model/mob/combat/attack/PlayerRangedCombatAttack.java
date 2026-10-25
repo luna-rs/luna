@@ -126,6 +126,11 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
     }
 
     @Override
+    protected boolean usesProjectileTiming() {
+        return ammo != null;
+    }
+
+    @Override
     public CombatDamage onAttack(CombatDamage damage) {
         PlayerCombatContext combat = attacker.getCombat();
         attackStance = combat.getStance();
