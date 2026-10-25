@@ -10,7 +10,7 @@ import game.skill.agility.AgilityObstacle
 import game.skill.agility.AgilityObstacle.*
 import io.luna.game.model.`object`.GameObject
 import com.google.gson.JsonObject
-import game.skill.agility.Agility.completedObstacles
+import game.skill.agility.Agility.courseProgress
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -24,8 +24,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The shared zoned lifecycle supplies session expiry and travel fallback. Agility requires no banking
  * or production supplies. Only arrival at the expected landing tile after the native action unlocks
- * advances the lap: native handlers award XP and mark obstacles when submitting an action, which is
- * too early to prove traversal. Missing objects, failed approaches and unconfirmed landings share
+ * advances the lap. Native handlers award XP and checkpoint progress after traversal finishes.
+ * Missing objects, failed approaches and unconfirmed landings share
  * three consecutive attempts before this course is rejected.
  *
  * Snapshots retain the next obstacle, a pending landing and the failure count. A paused or restored
@@ -123,8 +123,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             step = 0
             landing = null
         }
-        bot.completedObstacles.removeAll(course.course)
-        course.steps.take(step).forEach { bot.completedObstacles.put(course.course, it.obstacle) }
+        bot.courseProgress[course.course] = step
         return true
     }
 
@@ -175,9 +174,8 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         if (!hasLanded()) return failedAttempt()
         landing = null
         failures = 0
-        bot.completedObstacles.put(course.course, course.steps[step].obstacle)
         step = (step + 1) % course.steps.size
-        if (step == 0) bot.completedObstacles.removeAll(course.course)
+        if (step == 0) bot.courseProgress.remove(course.course)
         return true
     }
 
@@ -227,16 +225,18 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
         AgilityStep(GNOME_OBSTACLE_NET, 0, setOf(2285),
             approach = { it.position.translate(0, 1, 0) }, destination = { _, start -> start.translate(0, -2, 1) }),
         AgilityStep(GNOME_TREE_BRANCH, 1, setOf(2313),
+            approach = { Position(2473, 3423, 1) },
             destination = { _, _ -> Position(2473, 3420, 2) }),
         AgilityStep(GNOME_BALANCING_ROPE, 2, setOf(2312),
+            approach = { Position(2477, 3420, 2) },
             destination = { _, _ -> Position(2483, 3420, 2) }),
         AgilityStep(GNOME_TREE_BRANCH_2, 2, setOf(2314, 2315),
-            destination = { obj, _ -> if (obj.id == 2314) Position(2486, 3419) else Position(2487, 3420) }),
+            destination = { _, _ -> Position(2487, 3420) }),
         AgilityStep(GNOME_OBSTACLE_NET_2, 0, setOf(2286),
             approach = { it.position.translate(0, -1, 0) }, destination = { _, start -> start.translate(0, 2, 0) }),
         AgilityStep(GNOME_OBSTACLE_PIPE, 0, setOf(154, 4058),
             approach = { Position(if (it.id == 154) 2484 else 2487, 3430) },
-            destination = { obj, _ -> Position(if (obj.id == 154) 2484 else 2487, 3437) })
+            destination = { obj, _ -> Position(if (obj.id == 154) 2487 else 2484, 3437) })
     ))
 }
 

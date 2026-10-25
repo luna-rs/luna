@@ -1,81 +1,42 @@
 package game.skill.agility.course
 
+import api.predef.*
+import game.skill.agility.*
 import game.skill.agility.Agility.course
 import game.skill.agility.AgilityCourse.WILDERNESS
 import game.skill.agility.AgilityObstacle.*
-import io.luna.game.action.impl.ClimbAction
-import io.luna.game.action.impl.ExactMovementAction
-import io.luna.game.model.Direction
 import io.luna.game.model.Position
-import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.block.Animation.AnimationPriority
-import io.luna.game.model.mob.block.ExactMovement
 
-/**
- * The wilderness agility course.
- */
 course(WILDERNESS) {
-    obstacle(id = 2288,
-             type = WILDERNESS_OBSTACLE_PIPE,
-             action = {
-                 object : ExactMovementAction(this, ExactMovement.to(this, Position(3004, 3950)), 844) {
-                     override fun onStart() {
-                         mob.animation(Animation(749, AnimationPriority.HIGH))
-                     }
-
-                     override fun onMoveStart() {
-                         sendMessage("You climb through the obstacle pipe.")
-                     }
-
-                     override fun onMoveEnd() {
-                         mob.animation(Animation(748, AnimationPriority.HIGH))
-                     }
-                 }
-             })
-    obstacle(id = 2283,
-             type = WILDERNESS_ROPESWING,
-             action = {
-                 object : ExactMovementAction(this, ExactMovement.to(this, Position(3005, 3958)), 3067) {
-                     override fun onStart() {
-                         face(Direction.NORTH)
-                         mob.animation(Animation(751, AnimationPriority.HIGH))
-                     }
-
-                     override fun onMoveStart() {
-                         it.animate()
-                         sendMessage("You swing across the pit.")
-                     }
-                 }
-             })
-    obstacle(id = 2311,
-             type = WILDERNESS_STEPPING_STONE,
-             action = { steppingStone(this) })
-    obstacle(id = 2297,
-             type = WILDERNESS_LOG_BALANCE,
-             action = {
-                 movementAction(this, Position(2994, 3945), 762, "You walk across the balancing ledge.")
-             })
-    obstacle(id = 2328,
-             type = WILDERNESS_ROCKS,
-             action = { ClimbAction(this, Position(2995, 3933), Direction.SOUTH, "You climb up the rocks.") })
+    obstacle(2288, WILDERNESS_OBSTACLE_PIPE) {
+        AgilityAction(this, listOf(
+            AgilityStep(Position(3004, 3940), 4, animation = 749),
+            AgilityStep(Position(3004, 3947), 1, jump = true),
+            AgilityStep(Position(3004, 3950), 4, animation = 749)
+        ), "You climb through the obstacle pipe.")
+    }
+    obstacle(2283, WILDERNESS_ROPESWING) { rope ->
+        AgilityAction(this, listOf(AgilityStep(Position(3005, 3958), 3, animation = 751)),
+            "You swing across the pit.", { rope.animate() })
+    }
+    obstacle(2311, WILDERNESS_STEPPING_STONE) {
+        AgilityAction(this, (3001 downTo 2996).map {
+            AgilityStep(Position(it, 3960), 2, animation = 741)
+        }, "You carefully start crossing the stepping stones.")
+    }
+    obstacle(2297, WILDERNESS_LOG_BALANCE) {
+        movementAction(this, Position(2994, 3945), 762, "You walk across the log balance.")
+    }
+    obstacle(2328, WILDERNESS_ROCKS) { rocks ->
+        AgilityAction(this, listOf(
+            AgilityStep(rocks.position, 1, walkingAnimation = 737),
+            AgilityStep(rocks.position.translate(0, -3), 3, walkingAnimation = 737)
+        ), "You climb up the rocks.")
+    }
 }
 
-/**
- * Returns an action that starts the last 6 stepping stones.
- */
-fun steppingStone(plr: Player, loop: Int = 0): ExactMovementAction {
-    return object : ExactMovementAction(plr, ExactMovement.to(plr, plr.position.translate(-1, 0)), 1604) {
-        override fun onStart() {
-            if (plr.position.x <= 2996) { // Climbed the last stepping stone.
-                interrupt()
-                plr.unlock()
-            }
-        }
-
-        override fun onMoveEnd() {
-            // Submit the same action again, up to 6 times for each stepping stone.
-            mob.submitAction(steppingStone(plr, loop + 1))
-        }
+for (id in listOf(2309, 2307, 2308)) {
+    object1(id) {
+        AgilityEntrances.wildernessRidge(plr, entering = id == 2309)?.let { plr.submitAction(it) }
     }
 }
