@@ -473,8 +473,6 @@ public final class World {
 
                 if(player.isBot()) {
                     // Bots don't need player updating.
-                    // TODO Add toggle for this, we can enable bot player updating to simulate the engine handling
-                    //  more realistic players. While ON = greatly increases CPU usage and decreases performance.
                     synchronizer.arriveAndDeregister();
                     continue;
                 }
