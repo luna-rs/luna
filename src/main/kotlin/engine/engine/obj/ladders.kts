@@ -103,6 +103,8 @@ fun handleIndex(id: Int, index: Int, name: String) {
 
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
+        // Castle Wars ladders enforce team and carried-standard restrictions in the minigame plugin.
+        if (def.id() in setOf(4911, 4912, 6280, 6281)) continue
         if (def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER) {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id(), index, name) }
         }
