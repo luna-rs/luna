@@ -529,6 +529,10 @@ class BotActionHandler(val bot: Bot) {
     suspend fun webWalk(dest: Position, radius: Int = 0, attempts: Int = 1, bank: BankAccess = BankAccess.ALL): WebWalkResult =
         WebWalker.webWalk(bot, dest, radius, attempts, bank)
 
+    /** Routes to one of the caller's verified stands, using carried resources without a bank detour. */
+    suspend fun webWalkToAny(destinations: Collection<Position>): Boolean =
+        WebWalker.webWalkToAny(bot, destinations).success
+
     /**
      * Walks this bot to the nearest bank with the web-walker, in one call from a script:
      * ```

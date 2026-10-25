@@ -14,6 +14,12 @@ import io.luna.game.model.mob.combat.attack.CombatAttack
 class NpcCombatReceiver {
 
     /**
+     * Whether poison may deal the killing blow. Finishing-item creatures disable this so damage outside their
+     * ordinary defence hook cannot bypass the required execution item. Ordinary NPCs retain lethal poison.
+     */
+    var poisonCanKill: Boolean = true
+
+    /**
      * Attack hook callback.
      *
      * Defaults to the NPC's standard combat attack when no custom attack hook is registered.

@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.LocalProjectile;
+import io.luna.game.model.Position;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
@@ -39,6 +41,26 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      * The ammunition or thrown weapon's poison definition captured before consumption, or {@code null} if unpoisoned.
      */
     private EquipmentPoisonDefinition poison;
+
+    /**
+     * The ammunition definition captured before consumption, retained for special attacks and delayed secondary hits.
+     */
+    private AmmoDefinition launchedAmmo;
+
+    /**
+     * The visible Ranged level captured before consumption for secondary-hit damage formulas.
+     */
+    private int launchedRangedLevel;
+
+    /**
+     * The ranged offensive roll captured before consumption, including prayer, stance, and equipment bonuses.
+     */
+    private int launchedAttackRoll;
+
+    /**
+     * The primary target's immutable position captured at launch for secondary-hit searches.
+     */
+    private Position launchedTargetPosition;
 
     /**
      * The chance for a successful poisonous ranged hit to apply poison to the victim.
@@ -108,6 +130,10 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         PlayerCombatContext combat = attacker.getCombat();
         attackStance = combat.getStance();
         AmmoDefinition loadedAmmo = combat.getAmmoDef();
+        launchedAmmo = loadedAmmo;
+        launchedRangedLevel = attacker.skill(Skill.RANGED).getLevel();
+        launchedAttackRoll = CombatFormula.calculateRangedAttackRoll(attacker);
+        launchedTargetPosition = victim.getPosition();
         int poisonSlot = loadedAmmo.isAmmoless() ? Equipment.WEAPON : Equipment.AMMUNITION;
         int poisonId = attacker.getEquipment().computeIdForIndex(poisonSlot);
         poison = EquipmentPoisonDefinition.ALL.get(poisonId).orElse(null);
@@ -160,5 +186,38 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      */
     public AmmoDefinition getAmmo() {
         return ammo;
+    }
+
+    /**
+     * Gets the ammunition used by this attack before its stack was decremented. Unlike live equipment state, this
+     * snapshot survives firing the last thrown weapon and equipment changes during projectile flight.
+     *
+     * @return The launched ammunition definition, or {@code null} before attack processing begins.
+     */
+    public AmmoDefinition getLaunchedAmmo() {
+        return launchedAmmo;
+    }
+
+    /**
+     * @return The visible Ranged level captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedRangedLevel() {
+        return launchedRangedLevel;
+    }
+
+    /**
+     * @return The ranged offensive roll captured during attack processing before ammunition consumption.
+     */
+    public int getLaunchedAttackRoll() {
+        return launchedAttackRoll;
+    }
+
+    /**
+     * Gets the primary target's position before projectile flight. Movement by the target does not move this snapshot.
+     *
+     * @return The target position captured during attack processing, or {@code null} before processing begins.
+     */
+    public Position getLaunchedTargetPosition() {
+        return launchedTargetPosition;
     }
 }

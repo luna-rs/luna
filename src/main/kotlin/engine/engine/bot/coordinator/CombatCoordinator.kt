@@ -7,6 +7,7 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.KalphiteQueenTrip
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -41,6 +42,9 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.AL_KHARID_PALACE, 15, setOf("Al-Kharid warrior")),
             Camp(SubZone.BARBARIAN_VILLAGE, 20, setOf("Barbarian")),
             Camp(SubZone.CHAOS_DRUID_TOWER, 25, setOf("Chaos druid"), true),
+            Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
+            Camp(SubZone.EDGEVILLE_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
+            Camp(SubZone.TAVERLEY_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
             Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
             Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
             Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak")),
@@ -49,7 +53,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
-            Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true)
+            Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
+            Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
         // TODO Add Fire Giant and Blue Dragon camps when lare96 supplies subzone data.
         // Camp(SubZone.FIRE_GIANT_CAMP, 65, setOf("Fire giant"), true)
@@ -65,10 +70,13 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return minOf(bot.combatLevel, offensive * 2 + 3)
         }
 
-        /** Restricts camps by offensive readiness, profit intent and dragon-shield compatibility. */
+        /**
+         * Restricts camps by offensive readiness, profit intent and boss equipment and supply requirements.
+         */
         internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
-                                   hasDragonShield: Boolean): List<Camp> {
+                                   hasDragonShield: Boolean, queenReady: Boolean = false): List<Camp> {
             val eligible = camps.filter { it.minimum <= level &&
+                (it.zone != SubZone.KALPHITE_QUEEN || (!training && purpose == BotGearPurpose.MELEE && queenReady)) &&
                 (it.zone !in NpcCombatScript.DRAGON_ZONES ||
                     (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
@@ -87,8 +95,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             .mapNotNull { purpose -> CombatLoadout.find(bot, purpose)?.let { purpose to it } }
         val (purpose, loadout) = ready.randomOrNull() ?: return
         val level = combatReadiness(bot, purpose)
-        val selected = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
-            loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true).shuffled().take(4)
+        val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
+            loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
+            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)).shuffled()
+        // Queen trips have their own supplies and must not inherit a dragon camp's shield requirement.
+        val selected = if (candidates.firstOrNull()?.zone == SubZone.KALPHITE_QUEEN) candidates.take(1)
+            else candidates.filter { it.zone != SubZone.KALPHITE_QUEEN }.take(4)
         if (selected.isEmpty()) return
         val names = HashMultimap.create<SubZone, String>()
         selected.forEach { names.putAll(it.zone, it.names) }

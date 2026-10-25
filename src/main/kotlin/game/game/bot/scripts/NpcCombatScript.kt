@@ -16,6 +16,11 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.slayer.Slayer.activeSlayerTask
+import game.skill.slayer.SlayerMaster
+import game.skill.slayer.SlayerTaskType
+import engine.combat.prayer.CombatPrayer
+import io.luna.game.model.EntityState
 import game.skill.fishing.catchFish.Fish
 import game.skill.herblore.identifyHerb.Herb
 import game.skill.magic.Magic
@@ -55,6 +60,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
+ * @property slayerTask Optional native assignment restricting this session to exact task NPC IDs.
+ * @property slayerMaster The original assignee; an assignment change ends this combat session.
  * @author lare96
  */
 open class NpcCombatScript(bot: Bot,
@@ -62,7 +69,9 @@ open class NpcCombatScript(bot: Bot,
                            zones: MutableList<SubZone>,
                            private val names: SetMultimap<SubZone, String> = ImmutableSetMultimap.of(),
                            val purpose: BotGearPurpose = BotGearPurpose.MELEE,
-                           private var spell: CombatSpell? = null) :
+                           private var spell: CombatSpell? = null,
+                           private val slayerTask: SlayerTaskType? = null,
+                           private val slayerMaster: SlayerMaster? = null) :
     TargetingZonedBotScript<Npc>(bot, duration, zones) {
 
     override val actionSafety = ActionSafety.COMBAT
@@ -86,8 +95,19 @@ open class NpcCombatScript(bot: Bot,
             /** Optional elemental autocast spell; absent in older melee sessions. */
             var spell: CombatSpell? = null
 
+            /**
+             * Optional native Slayer restriction; absent from legacy ordinary combat sessions.
+             */
+            var slayerTask: SlayerTaskType? = null
+            /**
+             * Master that assigned the saved task, used to reject a changed assignment on restoration.
+             */
+            var slayerMaster: SlayerMaster? = null
+
             override fun load(data: JsonObject) {
                 super.load(data)
+                slayerTask = data.get("slayerTask")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerTaskType::valueOf)
+                slayerMaster = data.get("slayerMaster")?.takeUnless { it.isJsonNull }?.asString?.let(SlayerMaster::valueOf)
                 purpose = data.get("purpose")?.asString?.let(BotGearPurpose::valueOf) ?: BotGearPurpose.MELEE
                 spell = data.get("spell")?.takeUnless { it.isJsonNull }?.asString?.let(CombatSpell::valueOf)
                 val builder = ImmutableSetMultimap.builder<SubZone, String>()
@@ -100,6 +120,8 @@ open class NpcCombatScript(bot: Bot,
 
             override fun save(data: JsonObject) {
                 super.save(data)
+                slayerTask?.let { data.addProperty("slayerTask", it.name) }
+                slayerMaster?.let { data.addProperty("slayerMaster", it.name) }
                 data.addProperty("purpose", purpose.name)
                 spell?.let { data.addProperty("spell", it.name) }
                 val savedNames = JsonObject()
@@ -137,12 +159,35 @@ open class NpcCombatScript(bot: Bot,
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones,
                                                            (data as? NpcCombatData)?.names ?: ImmutableSetMultimap.of(),
                                                            (data as? NpcCombatData)?.purpose ?: BotGearPurpose.MELEE,
-                                                           (data as? NpcCombatData)?.spell)
+                                                           (data as? NpcCombatData)?.spell,
+                                                           (data as? NpcCombatData)?.slayerTask,
+                                                           (data as? NpcCombatData)?.slayerMaster)
+
+    /**
+     * Runtime identity rejects a replaced task even when its type and master happen to match.
+     * Restored scripts bind to the independently persisted native assignment and validate its metadata.
+     */
+    private val assignment = if (slayerTask == null) null else bot.activeSlayerTask
+
+    /**
+     * Checks live assignment state without awarding credit or altering the native task.
+     */
+    internal fun assignmentActive(): Boolean = slayerTask == null ||
+        (assignment != null && bot.activeSlayerTask === assignment && assignment.task == slayerTask &&
+            assignment.assignee == slayerMaster && assignment.remaining > 0 && bot.slayer.level >= slayerTask.level)
+
+    /**
+     * Keeps task NPC IDs authoritative even when several monsters share a camp or display name.
+     */
+    internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
+        (slayerTask == null || npc.id in slayerTask.npcs)
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
+
+    private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     override suspend fun equipment(): BotGearLocator = BotGearLocator(bot, loadout!!.gear)
 
@@ -154,6 +199,7 @@ open class NpcCombatScript(bot: Bot,
         // Gear selection and banking can suspend waiting for combat to end. Keep the normal
         // combat response available until this script is ready to handle an actual engagement.
         bot.reflex.isDisableCombatReflex = false
+        if (!assignmentActive()) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
             handler.combat.fleeCombat()
@@ -163,6 +209,9 @@ open class NpcCombatScript(bot: Bot,
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
         loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
+        if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
+                !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
+                (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
         if (SubZone.KBD_LAIR in originalZones) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
             if (bot.combatLevel < 100 || purpose != BotGearPurpose.MELEE ||
@@ -177,6 +226,7 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun finish() {
         bot.reflex.isDisableCombatReflex = false
+        if (queenTrip && !bot.combat.inCombat()) bot.combat.prayers.deactivateAll()
         // Keep the spell through a pause, so the combat reflex can finish the fight with it.
         if (!isPaused()) {
             clearMagic()
@@ -186,8 +236,10 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         eatFood()
         if (!prepareCombat()) return mutableListOf()
-        if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc) {
-            return mutableListOf(bot.combat.lastCombatWith as Npc)
+        if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc &&
+            (!queenTrip || canAttack(bot.combat.lastCombatWith as Npc))) {
+            return (bot.combat.lastCombatWith as Npc).takeIf { acceptsAssignment(it) }
+                ?.let { mutableListOf(it) } ?: mutableListOf()
         }
         val options = world.locator.findNpcs(searchBase, searchRadius, true) {
             canAttack(it) && it.combat.isAttackable
@@ -252,6 +304,17 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        if (queenTrip) {
+            for ((id, amount) in KalphiteQueenTrip.supplies) {
+                if (!handler.banking.withdraw(Item(id, amount)) || bot.inventory.computeAmountForId(id) < amount) {
+                    bot.preferences.addWantedItem(id, amount)
+                    stop()
+                    return
+                }
+            }
+            if (!KalphiteQueenTrip.equipped(bot)) stop()
+            return
+        }
         if (!handler.inventory.hasAnyFood()) {
             // todo change minimum heal scaling to combat level
             val kbd = SubZone.KBD_LAIR in originalZones
@@ -281,10 +344,17 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun onExecuteInZone(searching: Boolean) {
         if (!prepareCombat()) return
         eatFood()
-        if (bot.combat.lastCombatWith?.isAlive == true && bot.combat.inCombat() &&
+        if (queenTrip && (forceBanking || waitingForQueen())) return
+        if (bot.combat.lastCombatWith?.isAlive == true &&
+            (!queenTrip || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
             !bot.actions.contains(CombatAction::class.java)
         ) {
-            handler.interactions.interact(3, bot.combat.lastCombatWith)
+            val opponent = bot.combat.lastCombatWith
+            if (slayerTask == null) {
+                handler.interactions.interact(3, opponent)
+            } else if (opponent is Npc && acceptsAssignment(opponent)) {
+                interactWithTarget(3, opponent)
+            }
             bot.naturalDelay()
         } else if (focus?.isAlive != true) {
             lootItems()
@@ -294,7 +364,8 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) return true
         eatFood()
-        if (focus?.isAlive != true) {
+        if (queenTrip && (forceBanking || waitingForQueen())) return false
+        if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
             lootItems()
             return true
         }
@@ -303,7 +374,8 @@ open class NpcCombatScript(bot: Bot,
         }
         if (!bot.combat.checkMultiCombat(focus)) {
             lastOptions.clear()
-            if (bot.combat.lastCombatWith is Npc && bot.combat.inCombat()) {
+            if (bot.combat.lastCombatWith is Npc && bot.combat.inCombat() &&
+                (!queenTrip || canAttack(bot.combat.lastCombatWith as Npc))) {
                 lastOptions += bot.combat.lastCombatWith as Npc
             } else {
                 handler.combat.fleeCombat()
@@ -311,11 +383,12 @@ open class NpcCombatScript(bot: Bot,
             return true
         }
         // Retry the current target through the same click path as a human, and abandon it on failure.
-        return !handler.interactions.interact(3, focus)
+        return !interactWithTarget(3, focus!!)
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
-        val allowed = bot.combat.checkMultiCombat(newFocus)
+        if (queenTrip && !canAttack(newFocus)) return false
+        val allowed = acceptsAssignment(newFocus) && bot.combat.checkMultiCombat(newFocus)
         if (!allowed) {
             bot.log("Rejected combat target id=${newFocus.id} at ${newFocus.position}: multi-combat check failed.")
         }
@@ -326,7 +399,14 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun interactionOption(target: Npc): Int? {
         eatFood()
-        return if (prepareCombat()) 3 else null
+        return if (prepareCombat() && acceptsAssignment(target)) 3 else null
+    }
+
+    override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
+        if (slayerTask == null) return super.interactWithTarget(option, target)
+        return handler.interactions.interact(option, target) {
+            isActionSafe() && acceptsAssignment(target) && prepareCombat()
+        }
     }
 
     override fun snapshot(): NpcCombatData {
@@ -336,11 +416,15 @@ open class NpcCombatScript(bot: Bot,
         data.names = ImmutableSetMultimap.copyOf(names)
         data.purpose = purpose
         data.spell = spell
+        data.slayerTask = slayerTask
+        data.slayerMaster = slayerMaster
         return data
     }
 
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
+        if (!acceptsAssignment(npc)) return false
+        if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
         if (npc.id == 50) {
             return activeZone == SubZone.KBD_LAIR && bot.combatLevel >= 100 &&
                 bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null && handler.inventory.hasAnyFood()
@@ -368,6 +452,7 @@ open class NpcCombatScript(bot: Bot,
 
     private suspend fun lootItems() {
         eatFood()
+        if (queenTrip && forceBanking) return
         delay(2.seconds, 4.seconds)
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
         for (item in groundItems) {
@@ -379,6 +464,7 @@ open class NpcCombatScript(bot: Bot,
             handler.interactions.interact(1, item)
             waitFor { countBefore < bot.itemTracker.count(inventoryItem.id) }
             eatFood()
+            if (queenTrip && forceBanking) return
             bot.naturalDelay()
         }
         for ((index, item) in bot.inventory.withIndex()) {
@@ -390,6 +476,11 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private suspend fun eatFood() {
+        if (queenTrip) {
+            if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
+            if (!KalphiteQueenTrip.canContinue(bot)) forceBanking = true
+            return
+        }
         if (activeZone == SubZone.KBD_LAIR &&
             (bot.equipment.shield?.id != 1540 || !handler.inventory.hasAnyFood())) {
             forceBanking = true
@@ -398,6 +489,42 @@ open class NpcCombatScript(bot: Bot,
             forceBanking = true
         }
     }
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (!assignmentActive()) {
+            bot.combat.target = null
+            stop()
+            return true
+        }
+        if (!queenTrip) return false
+        val inChamber = bot.position.z == 0 && SubZone.KALPHITE_QUEEN.area.contains(bot)
+        bot.reflex.isDisableCombatReflex = inChamber
+        if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
+        if (bot.prayer.level <= 30) {
+            val potion = KalphiteQueenTrip.prayerPotions.firstOrNull { bot.inventory.contains(it) }
+            if (potion != null) handler.inventory.clickItem(1, potion)
+        }
+        if (!KalphiteQueenTrip.canContinue(bot) || bot.inventory.isFull) forceBanking = true
+        if (forceBanking) {
+            bot.combat.target = null
+            if (inChamber) {
+                // Use the same home command as ordinary bot escape; do not re-engage while waiting to leave.
+                bot.output.sendCommand("home")
+                if (waitFor(6.seconds) { bot.position.y < 9000 }) bot.combat.prayers.deactivateAll()
+                return true
+            }
+            return false
+        }
+        if (inChamber) bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_FROM_MAGIC)
+        return inChamber && waitingForQueen()
+    }
+
+    /**
+     * Retains the same NPC through its first death animation instead of treating it as a completed kill.
+     */
+    private fun waitingForQueen(): Boolean = focus?.let {
+        it.id == 1158 && it.state == EntityState.ACTIVE && !it.isAlive
+    } == true
 
     /** Clears pending manual spells and autocast so another script cannot inherit this session's spell. */
     private fun clearMagic() {
@@ -409,7 +536,27 @@ open class NpcCombatScript(bot: Bot,
 
     /** Validates actual equipment and one attack's supplies before permitting any attack click. */
     internal fun prepareCombat(): Boolean {
+        if (!assignmentActive()) {
+            bot.combat.target = null
+            clearMagic()
+            bot.reflex.isDisableCombatReflex = false
+            stop()
+            return false
+        }
+        val opponent = bot.combat.lastCombatWith
+        if (slayerTask != null && bot.combat.inCombat() && opponent != null &&
+            (opponent !is Npc || !acceptsAssignment(opponent))) {
+            // Unrelated aggression belongs to the normal defensive reflex, not task target selection.
+            bot.reflex.isDisableCombatReflex = false
+            return false
+        }
         if (bot.preferences.isSkiller) return false
+        if (queenTrip && (forceBanking || !KalphiteQueenTrip.canContinue(bot))) {
+            bot.combat.target = null
+            forceBanking = true
+            bot.reflex.isDisableCombatReflex = true
+            return false
+        }
         val ready = configureCombat()
         // A missing weapon, ammunition or spell cost sends us to a non-combat bank operation.
         // Let the existing combat reflex take over if we are attacked during that preparation.
@@ -478,6 +625,10 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private fun selectCombatStyle(styles: List<CombatStyleDefinition>): CombatStyleDefinition {
+        if (queenTrip) {
+            val weapon = bot.equipment.weapon?.id?.let(::equipDef)
+            return styles.maxBy { weapon?.getBonus(it.bonus.index) ?: 0 }
+        }
         if (purpose == BotGearPurpose.RANGED) {
             return styles.firstOrNull { Skill.RANGED in it.exp } ?: styles.first()
         }

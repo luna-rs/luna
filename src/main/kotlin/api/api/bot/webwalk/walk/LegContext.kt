@@ -11,6 +11,7 @@ import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -73,9 +74,20 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
      */
     suspend fun walk(target: Position, slack: Int, stopWhen: () -> Boolean = { false }): String? {
         val future: CompletableFuture<NavigationResult> = bot.navigator.navigate(target, true)
-        val finished = waitFor(WALK_TIMEOUT) { future.isDone || (slack > 0 && near(target, slack)) || stopWhen() }
+        val finished = try {
+            waitFor(WALK_TIMEOUT) { future.isDone || (slack > 0 && near(target, slack)) || stopWhen() }
+        } catch (e: CancellationException) {
+            if (bot.navigator.currentPending === future) {
+                bot.navigator.cancel()
+                bot.walking.clear()
+            }
+            throw e
+        }
         if (!finished) {
-            bot.navigator.cancel()
+            if (bot.navigator.currentPending === future) {
+                bot.navigator.cancel()
+                bot.walking.clear()
+            }
             return "timed out walking to $target from ${bot.position}"
         }
         if (!future.isDone) {

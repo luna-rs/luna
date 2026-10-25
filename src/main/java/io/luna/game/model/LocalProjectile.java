@@ -63,7 +63,7 @@ public class LocalProjectile extends LocalEntity {
         private int ticksToStart;
 
         /**
-         * Client ticks (20ms) until the projectile ends (duration / travel time).
+         * Client ticks (20ms) from creation until the projectile ends.
          */
         private int ticksToEnd;
 
@@ -118,9 +118,9 @@ public class LocalProjectile extends LocalEntity {
         }
 
         /**
-         * Sets the projectile duration/travel time, in <em>client ticks</em> (20ms).
+         * Sets the end time relative to creation, in <em>client ticks</em> (20ms).
          *
-         * @param ticksToEnd Duration in client ticks.
+         * @param ticksToEnd End time in client ticks, measured from creation.
          */
         public TargetBuilder setTicksToEnd(int ticksToEnd) {
             this.ticksToEnd = ticksToEnd;
@@ -367,7 +367,7 @@ public class LocalProjectile extends LocalEntity {
     private final int ticksToStart;
 
     /**
-     * The projectile duration/travel time, in client ticks (20ms).
+     * The end time relative to creation, in client ticks (20ms).
      */
     private final int ticksToEnd;
 
@@ -392,7 +392,7 @@ public class LocalProjectile extends LocalEntity {
      * @param startHeight The starting height.
      * @param endHeight The ending height.
      * @param ticksToStart Delay before start (client ticks).
-     * @param ticksToEnd Duration/travel time (client ticks).
+     * @param ticksToEnd End time relative to creation (client ticks).
      * @param initialSlope Arc slope/angle.
      * @param distanceFromSource Distance-from-source parameter.
      * @param view Who can see this projectile.
@@ -423,8 +423,8 @@ public class LocalProjectile extends LocalEntity {
                 targetIndex.orElse(0),
                 startHeight,
                 endHeight,
-                ticksToEnd,
                 ticksToStart,
+                ticksToEnd,
                 initialSlope,
                 distanceFromSource
         );

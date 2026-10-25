@@ -18,7 +18,7 @@ public enum EntityState {
     ACTIVE,
 
     /**
-     * An entity has been unregistered.
+     * An entity is out of the world: unregistered, or an NPC that is dead and waiting to respawn.
      */
     INACTIVE
 }

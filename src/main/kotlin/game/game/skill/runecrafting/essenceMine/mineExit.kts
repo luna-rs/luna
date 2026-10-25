@@ -7,7 +7,7 @@ import io.luna.game.event.impl.LoginEvent
  * Returns players through the mine's portals to the wizard who sent them.
  */
 object1(EssenceMine.PORTAL) {
-    EssenceMine.leave(plr)
+    EssenceMine.leave(plr, gameObject)
 }
 
 on(LoginEvent::class) {

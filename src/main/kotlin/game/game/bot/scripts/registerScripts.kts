@@ -1,6 +1,8 @@
 package game.bot.scripts
 
 import game.bot.scripts.combat.PkBotScript
+import game.bot.scripts.skills.SlayerBotScript
+import game.bot.scripts.skills.SlayerBotScript.SlayerData
 import game.bot.scripts.combat.PkBotScript.Companion.PkData
 
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -96,6 +98,8 @@ import game.bot.scripts.FillWaterBotScript.Companion.FillWaterData
 import game.bot.scripts.MakeCrystalKeyBotScript.Companion.CrystalKeyData
 import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
+import game.bot.scripts.skills.HerbGatheringScript
+import game.bot.scripts.skills.HerbGatheringScript.Companion.GatheringData
 import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
@@ -112,6 +116,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }
     scriptManager.addScript<PkData>(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
     scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
     scriptManager.addScript<IdleData>(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
@@ -158,6 +163,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
+    scriptManager.addScript<SlayerData>(SlayerBotScript::class) { bot, data -> SlayerBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }

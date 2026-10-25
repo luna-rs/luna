@@ -25,6 +25,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      * Once the water has been thrown, its delayed finish may still land after the player's death.
      */
     combat(2804, 2805, 2806) {
+        poisonCanKill = false
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {

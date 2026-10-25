@@ -15,8 +15,6 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.movement.NavigationResult
-import kotlinx.coroutines.future.await
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,8 +40,51 @@ enum class SubZone(
     val inside: Position,
     val outside: Bot.() -> Position? = { null },
     val area: SimpleBoxArea,
-    val parent: Bot.() -> Zone
+    val parent: Bot.() -> Zone,
+    val plane: Int? = null
 ) {
+    /**
+     * Turael's Burthorpe house, used for native Slayer assignment dialogue.
+     */
+    TURAEL(
+        inside = Position(2931, 3536),
+        area = SimpleBoxArea.ofRadius(2927, 3533, 9, 8),
+        parent = { BURTHORPE }),
+
+    /**
+     * Supplied Canifis town footprint containing Mazchna's configured spawn.
+     */
+    CANIFIS_MAIN(
+        inside = Position(3494, 3473),
+        area = SimpleBoxArea.ofRadius(3473, 3461, 47, 57),
+        parent = { CANIFIS }),
+
+    /**
+     * Supplied Edgeville Dungeon footprint; the arrival tile is Vannaka's configured spawn.
+     * Existing webwalking and travel fallback handle the dungeon transition.
+     */
+    EDGEVILLE_DUNGEON(
+        inside = Position(3147, 9914),
+        area = SimpleBoxArea.ofRadius(3075, 9816, 77, 185),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Supplied Zanaris town footprint containing Chaeldar's configured spawn.
+     */
+    ZANARIS_MAIN(
+        inside = Position(2387, 4455),
+        area = SimpleBoxArea.ofRadius(2314, 4351, 197, 135),
+        parent = { ZANARIS }),
+
+    /**
+     * Supplied Shilo Village footprint and arrival tile, shared by local gameplay activities.
+     * Duradel is upstairs within this footprint; the webwalker handles his approach.
+     */
+    SHILO_VILLAGE(
+        inside = Position(2852, 2958),
+        area = SimpleBoxArea.ofRadius(2816, 2944, 64, 64),
+        parent = { KARAMJA }),
+
     /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
      * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
@@ -245,7 +286,7 @@ enum class SubZone(
      * - 3 adamant
      */
     DWARVEN_MINE(
-        inside = Position( 3057, 9767),
+        inside = Position(3058, 9776),
         area = SimpleBoxArea.ofRadius(2959, 9753, 110, 104),
         parent = { FALADOR }),
 
@@ -314,6 +355,35 @@ enum class SubZone(
         inside = Position(2565, 3355),
         area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
         parent = { ARDOUGNE }),
+
+    /**
+     * The southern chaos druids in Yanille dungeon, reached from the stairs south of the bank.
+     * Includes the entrance landing and exit stairs without crossing the deeper dungeon obstacles.
+     */
+    YANILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2611, 9485),
+        outside = { Position(2606, 3078) },
+        area = SimpleBoxArea.ofRadius(2595, 9475, 27, 26),
+        parent = { YANILLE }),
+
+    /**
+     * Chaos druids in the Wilderness section of Edgeville Dungeon.
+     */
+    EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(3110, 9937),
+        outside = { Position(3096, 3468) },
+        area = SimpleBoxArea.ofRadius(3102, 9922, 24, 23),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Chaos druids in the eastern part of Taverley Dungeon, before the dusty-key door.
+     * The entrance ladder is at (2884, 3397), paired with the ladder at (2884, 9797).
+     */
+    TAVERLEY_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2933, 9849),
+        outside = { Position(2885, 3397) },
+        area = SimpleBoxArea.ofRadius(2926, 9843, 15, 13),
+        parent = { TAVERLY }),
 
     /**
      * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
@@ -761,6 +831,14 @@ enum class SubZone(
         inside = PISCATORIS_FISHING_COLONY.anchor,
         area = SimpleBoxArea.of(2306, 3663, 2363, 3705),
         parent = { PISCATORIS_FISHING_COLONY }),
+
+    /**
+     * The karambwan spots on northeast Karamja, north of the shipyard.
+     */
+    KARAMJA_KARAMBWAN_FISHING(
+        inside = Position(2905, 3117),
+        area = SimpleBoxArea.of(2895, 3112, 2916, 3121),
+        parent = { KARAMJA }),
 
     /**
      * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
@@ -1416,6 +1494,47 @@ enum class SubZone(
         }
     },
 
+    /**
+     * Queen chamber reached through both rope entrances. Existing ropes are reused without consuming stock.
+     * Temporary transitions until the webwalker covers rope attachment and both lair descents.
+     * Remove the overrides and outside anchor after https://github.com/luna-rs/luna/issues/707 has full route coverage.
+     */
+    KALPHITE_QUEEN(
+        inside = Position(3485, 9498),
+        outside = { Position(3226, 3108) },
+        area = SimpleBoxArea.of(3456, 9472, 3519, 9535),
+        parent = { AL_KHARID }, plane = 0) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            suspend fun descend(anchor: Position, bare: Int, tied: Int, arrived: () -> Boolean): Boolean {
+                fun entrance() = world.locator.findObjects(anchor, 8) { it.id == bare || it.id == tied }.firstOrNull()
+                var tunnel = entrance() ?: return false
+                if (tunnel.id == bare) {
+                    if (!bot.inventory.contains(954) || !bot.actionHandler.inventory.useItem(954).onObject(tunnel) ||
+                        !waitFor { entrance()?.id == tied }) return false
+                    tunnel = entrance() ?: return false
+                }
+                return bot.actionHandler.interactions.interact(1, tunnel) && waitFor { arrived() }
+            }
+            // Re-entry can resume on the upper floor after the first descent.
+            if (bot.position.z != 2 || bot.position.y !in 9472..9535) {
+                if (!descend(Position(3226, 3108), 3827, 3828) {
+                    bot.position.z == 2 && bot.position.y in 9472..9535
+                }) return false
+            }
+            bot.combat.prayers.activateIfOff(engine.combat.prayer.CombatPrayer.PROTECT_FROM_MAGIC)
+            return descend(Position(3508, 9497, 2), 3830, 3831) { bot.position.z == 0 && area.contains(bot) }
+        }
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
+            val exit = world.locator.findObjects(Position(3508, 9493), 8) { it.id == 3832 }.firstOrNull()
+                ?: return false
+            if (!bot.actionHandler.interactions.interact(1, exit) || !waitFor { bot.position.z == 2 }) return false
+            val upperExit = world.locator.findObjects(Position(3483, 9510, 2), 8) { it.id == 3829 }.firstOrNull()
+                ?: return false
+            return bot.actionHandler.interactions.interact(1, upperExit) && waitFor { bot.position.y < 9000 }
+        }
+    },
+
     /*
      * Level 20 Wilderness chaos temple.
      *
@@ -1488,7 +1607,7 @@ enum class SubZone(
                 // The gate opens on a later tick, and pathing before then finds no way through.
                 waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
             }
-            return bot.navigator.navigate(destination, true).await() == NavigationResult.REACHED
+            return bot.actionHandler.webWalkTo(destination, bank = api.bot.webwalk.plan.BankAccess.NONE)
         }
 
         /**
@@ -1517,7 +1636,7 @@ enum class SubZone(
             bot.subZones.clear()
             if (bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
-                    if (bot in zone.area) {
+                    if (bot in zone.area && (zone.plane == null || bot.position.z == zone.plane)) {
                         bot.subZones.add(zone)
                     }
                 }

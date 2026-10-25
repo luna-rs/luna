@@ -310,7 +310,7 @@ public final class CombatDamageRequest {
          * Sets a percentage-based damage modifier.
          * <p>
          * Positive values increase rolled damage, while negative values reduce it. This modifier is applied after
-         * damage is rolled, before protection prayer mitigation.
+         * damage is rolled from the prayer-adjusted max hit.
          *
          * @param percentAmount The percentage-based damage modifier to apply.
          * @return This builder.
@@ -334,8 +334,8 @@ public final class CombatDamageRequest {
         /**
          * Sets a flat damage modifier.
          * <p>
-         * This value is applied after damage is rolled and after any percentage-based adjustment, but before
-         * protection prayer mitigation.
+         * This value is separately reduced by protection prayers, then applied after damage is rolled and after
+         * any percentage-based adjustment.
          *
          * @param flatAmount The flat damage modifier to apply.
          * @return This builder.
@@ -423,8 +423,9 @@ public final class CombatDamageRequest {
      *     <li>Flat bonus accuracy is applied.</li>
      *     <li>If the hit is inaccurate, magic splashes and all other styles resolve as zero damage.</li>
      *     <li>If the hit is accurate and damage is disabled, a special non-damaging hit marker is produced.</li>
-     *     <li>Otherwise, base max hit is resolved, flat max-hit bonuses are applied, and damage is rolled.</li>
-     *     <li>Percentage and flat damage bonuses are applied before final protection prayer mitigation.</li>
+     *     <li>Otherwise, base max hit is resolved and max-hit and strength bonuses are applied.</li>
+     *     <li>Protection prayers reduce this max hit before damage is rolled uniformly from zero to the cap.</li>
+     *     <li>Percentage damage bonuses and separately prayer-adjusted flat damage bonuses are applied.</li>
      * </ul>
      *
      * @return The fully resolved combat damage.
@@ -442,6 +443,7 @@ public final class CombatDamageRequest {
                 int baseMaxHit = maxHit.orElseGet(() -> attacker.getCombat().getDefaultMaxHit(type));
                 baseMaxHit += flatBonusMaxHit;
                 baseMaxHit += (int) Math.floor(baseMaxHit * percentBonusStrength);
+                baseMaxHit = applyPrayer(baseMaxHit);
 
                 int damage = baseMaxHit < 1 ? 0 : RandomUtils.inclusive(baseMaxHit);
                 int damageMod = percentBonusDamage != 0.0 ? (int) Math.floor(damage * Math.abs(percentBonusDamage)) : 0;
@@ -450,8 +452,10 @@ public final class CombatDamageRequest {
                 } else if (percentBonusDamage < 0.0) {
                     damage -= damageMod;
                 }
-                damage += flatBonusDamage;
-                computedDamage = OptionalInt.of(applyPrayer(Math.max(0, damage)));
+                if (flatBonusDamage != 0) {
+                    damage += applyPrayer(flatBonusDamage);
+                }
+                computedDamage = OptionalInt.of(Math.max(0, damage));
             }
         } else if (type == CombatDamageType.MAGIC) {
             computedDamage = OptionalInt.empty();
@@ -462,7 +466,7 @@ public final class CombatDamageRequest {
     }
 
     /**
-     * Applies protection prayer mitigation to a resolved non-splash damage value.
+     * Applies protection prayer mitigation to a max hit or a flat damage modifier.
      * <p>
      * Protection prayers only affect {@link Player} victims and are only applied when they are not being ignored
      * for this hit. If the victim has the matching protection prayer active for this combat style:
@@ -471,15 +475,15 @@ public final class CombatDamageRequest {
      *     <li>Non-NPC attackers are reduced to {@code 60%} of the original damage.</li>
      * </ul>
      *
-     * @param oldDamage The previously resolved damage amount.
-     * @return The final damage amount after any prayer mitigation.
+     * @param oldDamage The max hit or flat damage modifier before mitigation.
+     * @return The amount after any prayer mitigation.
      */
     private int applyPrayer(int oldDamage) {
         if (!ignoreProtectionPrayers && victim instanceof Player) {
             Player victimPlr = victim.asPlr();
             CombatPrayer prayer = getPrayerForType(type);
             if (prayer != null && victimPlr.getCombat().getPrayers().isActive(prayer)) {
-                return attacker instanceof Npc ? 0 : (int) Math.floor(oldDamage * 0.6);
+                return attacker instanceof Npc ? 0 : (int) Math.floorDiv(oldDamage * 60L, 100L);
             }
         }
         return oldDamage;

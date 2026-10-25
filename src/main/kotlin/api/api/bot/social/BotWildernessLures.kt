@@ -29,7 +29,7 @@ import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Bot-only Wilderness invitations with native following and delivered travel conversations. The lurer may fight
+ * Bot-only Wilderness invitations with web-walker following and delivered travel conversations. The lurer may fight
  * personally or recruit a prepared, idle PK patrol. Victims retain their carried kit and all native combat reflexes.
  * No travel step withdraws valuables, suppresses escape, changes a saved PK identity or transfers death items.
  *
@@ -172,6 +172,7 @@ object BotWildernessLures {
         private val deadline = System.currentTimeMillis() + 10 * 60_000
         private var travelling = false
         private var following = false
+        private var victimApproaching = false
         private var walking = false
         private var ended = false
         private var arrived = false
@@ -204,9 +205,11 @@ object BotWildernessLures {
             if (bot === victim) {
                 if (!willingToRisk(victim)) { close(); return }
                 if (!following) {
-                    following = victim.actionHandler.interactions.interact(3, actor)
+                    following = followActor()
                     if (!following || !valid()) { close(); return }
                 }
+                if (!actor.isWithinDistance(victim, 2) &&
+                    !followActor()) { close(); return }
                 if (arrived && actor.isWithinDistance(victim, 2)) ambush()
             } else if (bot === actor && following && !travelling) {
                 travelling = true
@@ -222,6 +225,13 @@ object BotWildernessLures {
                     BotConversations.start(actor, victim, it, allowMovement = true, interaction = this)?.let { next -> speech = next }
                 }
             }
+        }
+
+        private suspend fun followActor(): Boolean {
+            victimApproaching = true
+            return try {
+                victim.actionHandler.interactions.approach(actor) { valid() }
+            } finally { victimApproaching = false }
         }
 
         /**
@@ -255,7 +265,7 @@ object BotWildernessLures {
                 if (travelling) { actor.navigator.cancel(); actor.walking.clear() }
                 actor.walking.isRunning = originalRun
             }
-            if (following && victim.navigator.currentTarget === actor) {
+            if (victimApproaching && victim.scriptStack.current() === scripts[1]) {
                 victim.navigator.cancel()
                 victim.walking.clear()
             }

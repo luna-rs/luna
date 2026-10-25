@@ -4,6 +4,9 @@ import api.bot.SuspendableCondition
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.Entity
+import io.luna.game.model.EntityState
+import io.luna.game.model.Position
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.LocalEntity
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
@@ -17,6 +20,15 @@ import io.luna.net.msg.`in`.NpcClickMessageReader
 import io.luna.net.msg.`in`.ObjectClickMessageReader
 import io.luna.net.msg.`in`.PlayerClickMessageReader
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Handles bot-driven entity interaction actions.
@@ -24,7 +36,7 @@ import kotlinx.coroutines.future.await
  * This action handler is responsible for making a [Bot] interact with players, NPCs, game objects, and ground items
  * using the same packet path that a real client click would normally use.
  *
- * If the target is not currently reachable, the handler first asks the bot navigator to move within interaction
+ * If the target is not currently reachable, the handler first uses the web-walker to reach a collision-checked interaction
  * distance. Once movement has completed, the correct interaction packet is sent based on the runtime type of the target.
  *
  * @param bot The bot that will perform the interactions.
@@ -34,10 +46,71 @@ import kotlinx.coroutines.future.await
 class BotInteractionActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
+     * Valid stand tiles, checked with exactly the policy used by the eventual player packet.
+     * The square covers both orientations of a rectangular object; collision selects its usable faces.
+     */
+    internal fun interactionStands(target: Entity, policy: InteractionPolicy): List<Position> {
+        val anchor = target.position
+        if (policy.distance == 0) return listOf(anchor)
+        val size = maxOf(1, target.sizeX(), target.sizeY())
+        return buildList {
+            for (x in anchor.x - 1..anchor.x + size) for (y in anchor.y - 1..anchor.y + size) {
+                val stand = Position(x, y, anchor.z)
+                if (world.collisionManager.reached(stand, target, policy)) add(stand)
+            }
+        }
+    }
+
+    /**
+     * Approaches through the web, then confirms native collision reach. Moving targets are replanned
+     * at most three times within one deadline. Target loss, caller safety, cancellation and locks
+     * abort the trip; approaches cannot acquire bank supplies or disable those caller checks.
+     */
+    suspend fun approach(target: Entity, policy: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
+                         timeout: Duration = 30.seconds, allowOutOfView: Boolean = false,
+                         canContinue: () -> Boolean = { true }): Boolean = withTimeoutOrNull(timeout) {
+        fun eligible(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive && !bot.isLocked &&
+                !bot.walking.isLocked && target.state == EntityState.ACTIVE && canContinue() &&
+                (target !is Mob || target.isAlive && (allowOutOfView || target.isViewableFrom(bot)))
+        repeat(3) {
+            if (!eligible()) return@withTimeoutOrNull false
+            if (world.collisionManager.reached(bot, target, policy) && bot.walking.isEmpty) {
+                return@withTimeoutOrNull true
+            }
+            val anchor = target.position
+            val stands = interactionStands(target, policy)
+            if (stands.isEmpty()) return@withTimeoutOrNull false
+            val walked = coroutineScope {
+                val walk = async(start = CoroutineStart.UNDISPATCHED) { handler.webWalkToAny(stands) }
+                try {
+                    while (!walk.isCompleted) {
+                        if (!eligible()) { walk.cancelAndJoin(); return@coroutineScope false }
+                        delay(100)
+                    }
+                    walk.await()
+                } finally { walk.cancel() }
+            }
+            if (!walked || !eligible()) return@withTimeoutOrNull false
+            if (world.collisionManager.reached(bot, target, policy) && bot.walking.isEmpty) {
+                return@withTimeoutOrNull true
+            }
+            if (target.position == anchor) return@withTimeoutOrNull false
+        }
+        false
+    } == true
+
+    /**
+     * Primitive used only while WebWalker is already executing a door/crossing/ship leg.
+     * Starting a new web trip here would recursively plan the very obstacle being opened.
+     */
+    internal suspend fun interactOnLeg(option: Int, target: Entity?): Boolean =
+        withTimeoutOrNull(10.seconds) { interact(option, target, onWebWalkLeg = true) } == true
+
+    /**
      * Attempts to make this bot interact with [target] using [option].
      *
-     * The bot will first attempt to navigate close enough to the target for a standard interaction. After navigation
-     * completes, a short natural micro delay is applied before the appropriate interaction packet is sent.
+     * The bot first uses the web-walker to reach an allowed stand, then sends the native interaction packet.
+     * Door and crossing legs use a separate primitive to avoid recursively planning the same obstacle.
      *
      * The packet sent depends on the concrete type of [target]:
      * - [Player] targets use [PlayerClickMessageReader] handling.
@@ -56,8 +129,18 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * or a condition timeout.
      * @throws IllegalStateException If [target] is an entity type that this handler does not know how to interact with.
      */
-    suspend fun interact(option: Int, target: Entity?): Boolean {
-        if (target == null) {
+    suspend fun interact(option: Int, target: Entity?): Boolean = interact(option, target, onWebWalkLeg = false)
+
+    /**
+     * Rechecks script-specific permission throughout the web approach and before sending the click.
+     * This prevents an assignment that expires during an approach from authorizing a stale attack.
+     */
+    suspend fun interact(option: Int, target: Entity?, allowed: () -> Boolean): Boolean =
+        interact(option, target, onWebWalkLeg = false, allowed = allowed)
+
+    private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean,
+                                 allowed: () -> Boolean = { true }): Boolean {
+        if (target == null || !allowed()) {
             return false
         }
 
@@ -72,22 +155,26 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         }")
 
-        // Wait for current non-continuous pending navigation to complete first.
-        if(!bot.navigator.isCurrentContinuous) {
-            bot.navigator.currentPending?.await()
-        }
-        // The pickup handler only runs from the item's own tile, so stopping beside it fails with "I can't reach that!".
         val policy = if (target is GroundItem && option == 1) InteractionPolicy.EQUAL_POSITION
         else InteractionPolicy.STANDARD_SIZE
-        val request = NavigationRequest.builder(bot)
-            .async(true)
-            .continuous(false)
-            .policy(policy)
-            .target(target)
-        if (bot.navigator.submit(request.build()).await() != NavigationResult.REACHED) {
-            bot.log("Interaction failed: navigation did not reach the target.")
+        val reached = if (onWebWalkLeg) {
+            val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
+            val pending = bot.navigator.submit(request.build())
+            try {
+                pending.await() == NavigationResult.REACHED && world.collisionManager.reached(bot, target, policy)
+            } catch (e: CancellationException) {
+                if (bot.navigator.currentPending === pending) {
+                    bot.navigator.cancel()
+                    bot.walking.clear()
+                }
+                throw e
+            }
+        } else approach(target, policy, canContinue = allowed)
+        if (!reached) {
+            bot.log("Interaction failed: web approach did not reach the target.")
             return false
         }
+        if (!allowed()) return false
         val previousAttack = bot.combat.lastAttackSent
         val npcAttack = target is Npc && option == 3
         val cond = SuspendableCondition {

@@ -93,6 +93,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param end The ending graphic shown when the attack arrives.
      * @param speed The attack speed in ticks.
      * @param range The maximum attack range.
+     * @param projectileDiscarded Cleanup when the initial projectile is interrupted or finishes without delivering
+     * a hit. Delivered misses and zero hits still run the ordinary arrival callback instead.
      * @return A configured ranged combat attack instance.
      */
     fun ranged(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.RANGED),
@@ -100,9 +102,15 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                projectileFunction: BiFunction<Mob, Mob, LocalProjectile> = atkCombat.ammoDef.projectile,
                end: Graphic? = atkCombat.ammoDef.endGraphic,
                speed: Int = atkCombat.weapon.speed,
-               range: Int = atkCombat.weapon.range): PlayerRangedCombatAttack {
+               range: Int = atkCombat.weapon.range,
+               projectileDiscarded: () -> Unit = {}): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
                                                  speed, range) {
+            /**
+             * Whether the initial projectile delivered a hit, including an inaccurate or zero-damage hit.
+             */
+            private var delivered = false
+
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -111,7 +119,14 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.RANGED)
             }
 
+            override fun onProjectileFinished(interrupted: Boolean) {
+                if (interrupted || !delivered) {
+                    projectileDiscarded()
+                }
+            }
+
             override fun onDamageApplied(damage: CombatDamage) {
+                delivered = true
                 super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }

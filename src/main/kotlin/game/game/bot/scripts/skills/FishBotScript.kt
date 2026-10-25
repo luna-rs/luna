@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -10,6 +11,7 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
 import io.luna.game.action.ActionType
@@ -141,12 +143,27 @@ class FishBotScript(
      */
     private var spotClicks = 0
 
+    /**
+     * Vessel bait is loaded before casting, rather than consumed by the catch action.
+     */
+    private val baitId = if (selectedTool == Tool.KARAMBWAN_VESSEL) Fish.KARAMBWANJI.id else selectedTool.bait
+
+    /**
+     * Acquire an empty vessel; its loaded form is temporary and must not be provisioned as a replacement tool.
+     */
+    private val toolId = if (selectedTool == Tool.KARAMBWAN_VESSEL) Tool.EMPTY_KARAMBWAN_VESSEL else selectedTool.id
+
+    override fun toolIds(id: Int): List<Int> {
+        return if (selectedTool == Tool.KARAMBWAN_VESSEL && id == Tool.EMPTY_KARAMBWAN_VESSEL)
+            listOf(id, Tool.KARAMBWAN_VESSEL.id) else super.toolIds(id)
+    }
+
     override fun requirements(): Boolean {
         return fishingSpotIds.value.isNotEmpty()
     }
 
     override suspend fun onBankOpenSkilling(initial: Boolean) {
-        val baitId = selectedTool.bait ?: return
+        val baitId = baitId ?: return
 
         if (baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
@@ -160,8 +177,9 @@ class FishBotScript(
     }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {
-       val bait = selectedTool.bait
-        if(bait != null && bait !in bot.inventory) {
+        val bait = baitId
+        if (bait != null && bait !in bot.inventory &&
+            !(selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id in bot.inventory)) {
             forceBanking = true
         }
     }
@@ -175,14 +193,22 @@ class FishBotScript(
     override val targetSearchTimeout: Duration = 180.seconds
 
     override fun tools(): SortedSet<SkillingTool> {
-        return sortedSetOf(SkillingTool(selectedTool.id, selectedTool.level))
+        return sortedSetOf(SkillingTool(toolId, selectedTool.level))
     }
 
     override fun emergencyTool(): SkillingTool {
-        return SkillingTool(selectedTool.id, selectedTool.level)
+        return SkillingTool(toolId, selectedTool.level)
     }
 
-    override suspend fun interactionOption(target: Npc): Int {
+    override suspend fun interactionOption(target: Npc): Int? {
+        if (selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id !in bot.inventory) {
+            if (Fish.KARAMBWANJI.id !in bot.inventory || Tool.EMPTY_KARAMBWAN_VESSEL !in bot.inventory) {
+                forceBanking = true
+                return null
+            }
+            if (!handler.inventory.useItem(Fish.KARAMBWANJI.id).onItem(Tool.EMPTY_KARAMBWAN_VESSEL)) return null
+            if (!waitFor(3.seconds) { selectedTool.id in bot.inventory }) return null
+        }
         if (target.id in SECOND_CLICK_SPOTS[selectedTool]) {
             return 2
         }

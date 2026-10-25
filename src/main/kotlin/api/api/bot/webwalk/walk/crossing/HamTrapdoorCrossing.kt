@@ -59,7 +59,7 @@ object HamTrapdoorCrossing : CrossingHandler {
 
         var attempts = 0
         while (!HamTrapdoor.isOpen(bot) && attempts < ATTEMPTS) {
-            if (!context.handler.interactions.interact(PICK_OPTION, trapdoor)) {
+            if (!context.handler.interactions.interactOnLeg(PICK_OPTION, trapdoor)) {
                 return "could not reach the trapdoor at ${HamTrapdoor.POSITION}"
             }
             attempts++
@@ -74,7 +74,7 @@ object HamTrapdoorCrossing : CrossingHandler {
             return "could not pick the lock of the trapdoor in $ATTEMPTS attempts (Thieving ${bot.thieving.level})"
         }
 
-        if (!context.handler.interactions.interact(CLIMB_OPTION, trapdoor)) {
+        if (!context.handler.interactions.interactOnLeg(CLIMB_OPTION, trapdoor)) {
             return "could not reach the open trapdoor at ${HamTrapdoor.POSITION}"
         }
         return if (context.awaitArrival(leg)) null else "the bot did not arrive near ${leg.to}, it is at ${bot.position}"
