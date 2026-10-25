@@ -2,6 +2,7 @@ package game.skill.mining.mineOre
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Sound
 import game.skill.mining.Mining
 import game.skill.mining.Ore
 import game.skill.mining.Ore.PURE_ESSENCE
@@ -71,7 +72,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      */
     private var stopFull = false
 
-        // TODO@0.5.0 Implement correct sounds: MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5.
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
             // No inventory space.
@@ -111,6 +111,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             swung = true
             mob.sendMessage("You swing your pick at the rock.")
             swing()
+        } else {
+            // The quick mining sound plays on every tick after the swing.
+            mob.playSound(Sound.MINE_QUICK)
         }
     }
 
@@ -138,7 +141,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             val mined = currentAdd.first().id
             mob.sendMessage(ore.minedMessage(mined))
             mob.mining.addExperience(ore.exp(mined))
-          //  mob.playSound(Sound.MINING_COMPLETED)
+            mob.playSound(if (ore == Ore.GEM_ROCK) Sound.FOUND_GEM else Sound.MINE)
             if (Ore.ORE_TO_EMPTY[rockObj.id] == -1) {
                 // A rock with no empty rock never runs out: mine until the inventory is full.
                 if (mob.inventory.isFull) {

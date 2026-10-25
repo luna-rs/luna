@@ -1,6 +1,7 @@
 package game.skill.mining.mineOre
 
 import api.predef.*
+import game.player.Sound
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
 import io.luna.game.model.mob.Player
@@ -28,5 +29,6 @@ Ore.EMPTY_ROCKS.filter { it != -1 }.forEach {
     object1(it) {
         plr.sendMessage(if (gameObject.id == 4030) "There are no minerals currently available in this rock."
                         else "There is no ore currently available in this rock.")
+        plr.playSound(Sound.PROSPECT)
     }
 }
