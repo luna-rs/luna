@@ -10,7 +10,8 @@ import io.luna.game.model.mob.Skill
  * Base [Action] for prayers that periodically restore stats (e.g., rapid heal/restore).
  *
  * This action runs every game tick but only performs its restoration effect every 100 executions (see [run]). It
- * automatically stops when the associated [prayer] is no longer active.
+ * automatically stops before restoring when the associated [prayer] is no longer active or the player is dead.
+ * In particular, Rapid Heal cannot raise zero hitpoints during the pending death sequence.
  *
  * @param player The mob whose stats may be restored.
  * @param prayer The prayer that must remain active for this action to keep running.
@@ -60,12 +61,14 @@ abstract class PrayerRestorationAction(private val player: Player, private val p
     }
 
     override fun run(): Boolean {
+        if (!mob.isAlive || !mob.combat.prayers.isActive(prayer)) {
+            return true
+        }
         if (executions > 0 && executions % 100 == 0) {
             // Run restoration effect every 100 ticks.
             execute()
         }
-        // Stop if prayer off.
-        return !mob.combat.prayers.isActive(prayer)
+        return false
     }
 
     /**

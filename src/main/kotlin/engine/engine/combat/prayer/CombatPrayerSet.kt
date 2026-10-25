@@ -124,6 +124,7 @@ class CombatPrayerSet(private val player: Player) {
      *
      * This also clears the prayer varp and (if applicable) removes the head icon. If [silent] is `false`, the standard
      * deactivation sound is played.
+     * Rapid-prayer restoration is interrupted immediately, so reactivation starts a fresh timer.
      *
      * @param prayer The prayer to deactivate.
      * @param silent If `true`, no deactivation sound is played (useful for auto-deactivations within a group).
@@ -132,6 +133,11 @@ class CombatPrayerSet(private val player: Player) {
     fun deactivate(prayer: CombatPrayer, silent: Boolean): Boolean {
         val removed = activePrayers.remove(prayer)
         if (removed) {
+            when (prayer) {
+                CombatPrayer.RAPID_HEAL -> player.actions.first(RapidHealAction::class.java)?.interrupt()
+                CombatPrayer.RAPID_RESTORE -> player.actions.first(RapidRestoreAction::class.java)?.interrupt()
+                else -> Unit
+            }
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
                 player.playSound(Sound.CANCEL_PRAYER)
@@ -149,13 +155,16 @@ class CombatPrayerSet(private val player: Player) {
     /**
      * Deactivates all prayers for this set.
      *
-     * This also clears all prayer varps, the drain remainder and timer, and any active head icon.
+     * This also clears all prayer varps, the drain remainder and timer, rapid-prayer restoration timers,
+     * and any active head icon.
      */
     fun deactivateAll() {
         CombatPrayer.VALUES.forEach { player.sendVarp(Varp(it.varp, 0)) }
         player.prayerIcon = PrayerIcon.NONE
         activePrayers.clear()
         drainCounter = 0
+        player.actions.first(RapidHealAction::class.java)?.interrupt()
+        player.actions.first(RapidRestoreAction::class.java)?.interrupt()
         player.actions.first(CombatPrayerDrainAction::class.java)?.interrupt()
     }
 

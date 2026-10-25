@@ -12,7 +12,8 @@ import io.luna.game.action.ActionType;
  * <p>
  * Prayer is excluded from this restoration flow because it is handled separately by its own mechanics.
  * <p>
- * The action finishes once all eligible skills match their static levels.
+ * The action finishes once all eligible skills match their static levels or the mob is no longer alive. Restoration
+ * must not raise zero hitpoints while a death action is pending, since that would make the victim alive again.
  *
  * @author lare96
  */
@@ -35,6 +36,9 @@ public final class SkillRestorationAction extends Action<Mob> {
 
     @Override
     public boolean run() {
+        if (!mob.isAlive()) {
+            return true;
+        }
         boolean done = true;
         for (Skill nextSkill : skills) {
             if (nextSkill.getId() == Skill.PRAYER) {
