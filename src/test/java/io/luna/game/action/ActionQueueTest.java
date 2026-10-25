@@ -95,6 +95,98 @@ class ActionQueueTest {
                 () -> queue.submitIfAbsent(action(actor, ActionType.SOFT, () -> {})));
     }
 
+    @Test void clearInterruptsActiveActionsAndDoesNotRepeatFinishedCallbacks() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        List<String> finished = new ArrayList<>();
+        Action<Mob> active = trackedAction(mob, ActionType.SOFT, () -> finished.add("active"));
+        Action<Mob> completed = trackedAction(mob, ActionType.NORMAL, () -> finished.add("completed"));
+        Action<Mob> interrupted = trackedAction(mob, ActionType.WEAK, () -> finished.add("interrupted"));
+        queue.submit(active);
+        queue.submit(completed);
+        queue.submit(interrupted);
+        completed.complete();
+        interrupted.interrupt();
+
+        queue.clear();
+        queue.clear();
+
+        assertEquals(ActionState.INTERRUPTED, active.getState());
+        assertEquals(ActionState.COMPLETED, completed.getState());
+        assertEquals(ActionState.INTERRUPTED, interrupted.getState());
+        assertEquals(List.of("completed", "interrupted", "active"), finished);
+        assertEquals(0, queue.size());
+        for (ActionType type : ActionType.values()) assertEquals(0, queue.size(type));
+        assertNull(queue.first(Action.class));
+    }
+
+    @Test void clearDuringExecutionDiscardsPendingActionsAndAcceptsReplacement() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        List<String> ran = new ArrayList<>();
+        Action<Mob> replacement = action(mob, ActionType.SOFT, () -> ran.add("replacement"));
+        Action<Mob> clearing = action(mob, ActionType.SOFT, () -> {
+            ran.add("clear");
+            queue.clear();
+            assertEquals(0, queue.size());
+            queue.submit(replacement);
+        });
+        Action<Mob> pending = action(mob, ActionType.SOFT, () -> ran.add("pending"));
+        queue.submit(clearing);
+        queue.submit(pending);
+
+        queue.process();
+        queue.normalize();
+
+        assertEquals(List.of("clear"), ran);
+        assertEquals(ActionState.INTERRUPTED, clearing.getState());
+        assertEquals(ActionState.INTERRUPTED, pending.getState());
+        assertSame(replacement, queue.first(Action.class));
+        assertEquals(1, queue.size());
+        queue.process();
+        queue.normalize();
+        assertEquals(List.of("clear", "replacement"), ran);
+        assertEquals(0, queue.size());
+    }
+
+    @Test void countsExcludeFinishedActionsAndDoNotDoubleCountExecutionQueue() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        Action<Mob> completed = action(mob, ActionType.SOFT, () -> {});
+        Action<Mob> interrupted = action(mob, ActionType.NORMAL, () -> {});
+        queue.submit(completed);
+        queue.submit(interrupted);
+        completed.complete();
+        interrupted.interrupt();
+        queue.submit(action(mob, ActionType.SOFT, () -> {
+            assertEquals(3, queue.size());
+            assertEquals(2, queue.size(ActionType.SOFT));
+            assertEquals(1, queue.size(ActionType.NORMAL));
+        }));
+        queue.submit(action(mob, ActionType.SOFT, () -> {}));
+        Action<Mob> normal = trackedAction(mob, ActionType.NORMAL, () -> {});
+        queue.submit(normal);
+
+        assertEquals(3, queue.size());
+        assertEquals(2, queue.size(ActionType.SOFT));
+        assertEquals(1, queue.size(ActionType.NORMAL));
+        assertEquals(0, queue.size(ActionType.WEAK));
+        assertEquals(0, queue.size(ActionType.STRONG));
+        queue.process();
+        assertEquals(1, queue.size());
+        assertEquals(1, queue.size(ActionType.NORMAL));
+        normal.interrupt();
+        assertEquals(0, queue.size());
+        for (ActionType type : ActionType.values()) assertEquals(0, queue.size(type));
+    }
+
+    private Action<Mob> trackedAction(Mob mob, ActionType type, Runnable finished) {
+        return new Action<>(mob, type) {
+            @Override public boolean run() { return false; }
+            @Override public void onFinished() { finished.run(); }
+        };
+    }
+
     private ActionQueue queue(Mob mob) {
         ActionQueue queue = new ActionQueue(mob);
         when(mob.getActions()).thenReturn(queue);

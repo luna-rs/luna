@@ -294,18 +294,25 @@ public final class ActionQueue {
     }
 
     /**
-     * Interrupts every action and empties this queue at once, instead of on the next {@link #process()}, so the same
-     * actions can be submitted again straight away. Safe to call from a running action.
+     * Interrupts all unfinished actions and immediately empties the processing and execution queues.
+     * <p>
+     * Each interrupted action receives its {@link Action#onFinished()} callback. Actions that have already completed
+     * or been interrupted are removed without invoking their callbacks again.
+     * <p>
+     * This method may be called from {@link Action#run()}. Remaining actions will not execute during that cycle,
+     * and new actions may be submitted without waiting for the next {@link #process()} call.
      */
     public void clear() {
         interruptAll();
         processing.clear();
         executing.clear();
     }
-    //todo docs, testing
 
     /**
-     * Returns the number of unfinished actions with the {@link ActionType} {@code type}.
+     * Returns the number of actions in {@link ActionState#PROCESSING} with the supplied {@link ActionType}.
+     * <p>
+     * Completed and interrupted actions are excluded even if they have not yet been removed from the queue.
+     * Actions awaiting execution during the current cycle are counted once.
      *
      * @param type The action type.
      * @return The active action count for {@code type}.
@@ -321,8 +328,10 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns the number of unfinished actions. Finished actions stay queued until the next cycle, so they are not
-     * counted.
+     * Returns the number of actions in {@link ActionState#PROCESSING}, regardless of {@link ActionType}.
+     * <p>
+     * Completed and interrupted actions are excluded even if they have not yet been removed from the queue.
+     * Actions awaiting execution during the current cycle are counted once.
      *
      * @return The active action count.
      */
