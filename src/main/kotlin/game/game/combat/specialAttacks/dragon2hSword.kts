@@ -51,13 +51,16 @@ fun findOtherTargets(attacker: Player, victim: Mob): List<Mob> {
  * Applies the Dragon 2h sword special attack's secondary hit to a nearby target.
  *
  * A melee damage roll is resolved immediately and submitted as a [CombatDamageAction].
+ * Living secondary targets enter combat before delivery, even when the hit misses or auto-retaliate is disabled.
  *
  * @param attacker The player performing the special attack.
  * @param victim The nearby mob being hit.
  * @param attack The parent combat attack associated with the special attack.
  */
 fun sendHit(attacker: Player, victim: Mob, attack: CombatAttack<Player>?) {
+    if (!victim.isAlive) return
     val otherDamage = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).build().resolve()
+    victim.combat.markAttackedBy(attacker)
     victim.submitAction(CombatDamageAction(otherDamage, attack, true))
 }
 

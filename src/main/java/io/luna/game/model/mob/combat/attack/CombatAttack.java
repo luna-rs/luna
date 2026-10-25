@@ -130,8 +130,7 @@ public abstract class CombatAttack<T extends Mob> {
         }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
-        victim.getCombat().setLastCombatWith(attacker);
-        victim.getCombat().resetCombatTimer(); // Once targeted and engaged, cannot safely log out or attack anyone else.
+        victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         attack();
     }
