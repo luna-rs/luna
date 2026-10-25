@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
+import io.luna.game.action.Action;
+import io.luna.game.action.ActionType;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -52,6 +54,11 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
     private final Graphic end;
 
     /**
+     * The arrival delay captured from the projectile sent during this attack.
+     */
+    private int projectileHitDelay = 2;
+
+    /**
      * Creates a new {@link RangedCombatAttack}.
      *
      * @param attacker The mob performing the ranged attack.
@@ -95,7 +102,25 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(0, 2);
+        if (usesProjectileTiming()) {
+            onProjectileLaunched();
+            attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, projectileHitDelay) {
+                @Override
+                public boolean run() {
+                    onProjectileReached();
+                    return true;
+                }
+            });
+        } else {
+            launchProjectile(0, 2);
+        }
+    }
+
+    /**
+     * @return Whether to send the projectile with the firing animation and derive hit timing from its arrival cycle.
+     */
+    protected boolean usesProjectileTiming() {
+        return false;
     }
 
     @Override
@@ -109,6 +134,8 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         // Launch the ranged projectile.
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
+            // Thirty client cycles make one server tick. Deliver on the following tick, including exact boundaries.
+            projectileHitDelay = projectile.getEndCycle() / 30 + 1;
             projectile.display();
         }
     }
