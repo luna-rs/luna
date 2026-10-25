@@ -368,7 +368,7 @@ class TradeBotScript(bot: Bot,
     private fun sendMessage() {
         if (message == null) {
             val item = if (purpose == BotTradePurpose.BUY) expected.firstOrNull()
-            else if (purpose == BotTradePurpose.SELL) offering.randomOrNull() else null
+            else if (purpose == BotTradePurpose.SELL) BotTradeSelection.order(offering).firstOrNull() else null
             if ((purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.SELL) && item == null) return
             message = BotTradeManager.advertiseTrade(bot, item, purpose)
             messageCooldown = when {
