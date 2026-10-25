@@ -7,6 +7,7 @@ import api.bot.social.BotWildernessLures
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
+import game.bot.scripts.DeathReflexScript.Companion.lastKiller
 import game.player.Animations
 import game.player.Jingles
 import game.skill.runecrafting.essencePouch.EssencePouch
@@ -16,6 +17,7 @@ import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation.AnimationPriority
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * Builds and registers the default death hook for all players.
@@ -26,6 +28,13 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
         BotReactions.reactToOtherDied(source, victim)
+        if (victim is Bot) {
+            // The damage stack only counts players, so an NPC killer is the attacker of the last hit.
+            val killer = source ?: victim.combat.lastDamageReceived?.attacker?.takeIf { it != victim }
+            victim.lastKiller = killer
+            if (killer != null) BotReactions.reactToDied(victim, killer)
+        }
+        if (source is Bot) BotReactions.reactToKill(source, victim)
     }
 
     death {

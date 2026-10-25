@@ -15,6 +15,7 @@ import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
+import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.LootItemReflexScript
@@ -453,7 +454,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 running = true
             }
         } else if (nervous) {
+            val inWilderness = bot.inWilderness()
             handler.combat.fleeCombat()
+            if (inWilderness && !bot.inWilderness()) BotReactions.reactToEscape(bot)
             if (usesPkSwitching) stop()
         }
     }
@@ -521,7 +524,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * there until the combat timer runs out and the attacker drops it. In the Wilderness, or when nearly dead, the bot
      * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
      * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
-     * up on the fight; otherwise it teleports home.
+     * up on the fight; otherwise it teleports home. A bot that gets away reacts to it ([BotReactions.reactToEscape]).
      *
      * @return `true` once the bot is out of combat.
      */
@@ -530,10 +533,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
             (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
+            BotReactions.reactToEscape(bot)
             return true
         }
         if (bot.inWilderness()) {
             handler.combat.fleeCombat()
+            if (!bot.inWilderness()) BotReactions.reactToEscape(bot)
             return true
         }
         // Auto retaliate would turn the bot back toward whatever hits it.

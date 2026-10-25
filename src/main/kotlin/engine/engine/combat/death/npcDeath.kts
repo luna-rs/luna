@@ -2,12 +2,14 @@ package engine.combat.death
 
 import api.combat.death.DeathHookHandler
 import api.predef.*
+import engine.bot.speech.BotReactions
 import game.skill.slayer.Slayer
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
+import io.luna.game.model.mob.bot.Bot
 
 /**
  * Builds and registers the default death hook for all NPCs.
@@ -21,6 +23,7 @@ DeathHookHandler.setDefaultHook(Npc::class) {
         if (source is Player) {
             Slayer.record(source, victim.id)
         }
+        if (source is Bot) BotReactions.reactToKill(source, victim)
         drop()
         victim.move(Position(1, 1))
     }
