@@ -81,13 +81,13 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
         mob.mining.level < ore.level -> {
             // Check if we have required level.
-            mob.sendMessage("You need a Mining level of ${ore.level} to mine this.")
+            mob.newDialogue().text("You need a Mining level of ${ore.level} to mine this rock.").open()
             false
         }
 
         !Pickaxe.hasPick(mob, pick) -> {
             // Check if we still have a pickaxe.
-            mob.sendMessage("You need a pickaxe to mine ores.")
+            Pickaxe.sendNoPickaxeMessage(mob)
             false
         }
         // Check if rock isn't already mined, unless this player found ore on the same tick as the one who emptied it.

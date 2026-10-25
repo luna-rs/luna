@@ -14,7 +14,7 @@ fun mineRock(plr: Player, ore: Ore, obj: GameObject) {
     if (pick != null) {
         plr.submitAction(MineOreAction(plr, pick, ore, obj))
     } else {
-        plr.sendMessage("You need a pickaxe to mine ores.")
+        Pickaxe.sendNoPickaxeMessage(plr)
     }
 }
 
