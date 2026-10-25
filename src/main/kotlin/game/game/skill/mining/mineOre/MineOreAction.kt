@@ -135,9 +135,17 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 return
             }
             // Ore roll was successful.
-            mob.sendMessage(ore.minedMessage(currentAdd.first().id))
-            mob.mining.addExperience(ore.exp)
+            val mined = currentAdd.first().id
+            mob.sendMessage(ore.minedMessage(mined))
+            mob.mining.addExperience(ore.exp(mined))
           //  mob.playSound(Sound.MINING_COMPLETED)
+            if (Ore.ORE_TO_EMPTY[rockObj.id] == -1) {
+                // A rock with no empty rock never runs out: mine until the inventory is full.
+                if (mob.inventory.isFull) {
+                    stopFull = true
+                }
+                return
+            }
             deleteAndRespawnRock()
             complete()
         }

@@ -12,6 +12,8 @@ import io.luna.game.model.`object`.GameObject
  *
  * @param name The name of the ore in messages, if not the name of [item].
  * @param rollsGems If each attempt is preceded by the gem roll.
+ * @param sizes The sizes the rock gives, rolled from the first to the last until one succeeds, in place of [item],
+ * [exp] and [chance].
  * @author lare96
  */
 enum class Ore(val rocks: List<Pair<Int, Int>>,
@@ -21,7 +23,8 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
                val exp: Double,
                val chance: Pair<Int, Int>,
                name: String? = null,
-               val rollsGems: Boolean = true) {
+               val rollsGems: Boolean = true,
+               val sizes: List<OreSize> = emptyList()) {
     RUNE_ESSENCE(rocks = listOf(2491 to -1),
                  level = 1,
                  item = 1436,
@@ -122,6 +125,29 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
             else -> 9
         }
     },
+    SANDSTONE(rocks = listOf(10946 to -1),
+              level = 35,
+              item = 6971,
+              respawnTicks = null,
+              exp = 30.0,
+              chance = 25 to 200,
+              name = "sandstone",
+              rollsGems = false,
+              sizes = listOf(OreSize(item = 6977, exp = 60.0, chance = 4 to 50),
+                             OreSize(item = 6975, exp = 50.0, chance = 8 to 75),
+                             OreSize(item = 6973, exp = 40.0, chance = 16 to 100),
+                             OreSize(item = 6971, exp = 30.0, chance = 25 to 200))),
+    GRANITE(rocks = listOf(10947 to -1),
+            level = 45,
+            item = 6979,
+            respawnTicks = null,
+            exp = 50.0,
+            chance = 16 to 100,
+            name = "granite",
+            rollsGems = false,
+            sizes = listOf(OreSize(item = 6983, exp = 75.0, chance = 6 to 64),
+                           OreSize(item = 6981, exp = 60.0, chance = 8 to 75),
+                           OreSize(item = 6979, exp = 50.0, chance = 16 to 100))),
     IRON(rocks = listOf(2092 to 450,
                         2093 to 451,
                         6943 to 6947,
@@ -275,7 +301,16 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
      *
      * @return The item mined, or `null` if the attempt failed.
      */
-    open fun mine(plr: Player, rock: GameObject): Int? = if (Skills.success(chance, plr.mining.level)) item else null
+    open fun mine(plr: Player, rock: GameObject): Int? = when {
+        sizes.isNotEmpty() -> sizes.firstOrNull { Skills.success(it.chance, plr.mining.level) }?.item
+        Skills.success(chance, plr.mining.level) -> item
+        else -> null
+    }
+
+    /**
+     * The experience for mining [item] from this rock.
+     */
+    fun exp(item: Int) = sizes.firstOrNull { it.item == item }?.exp ?: exp
 
     /**
      * The message for mining [item] from this rock.
@@ -319,3 +354,12 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
         }
     }
 }
+
+/**
+ * One size of granite or sandstone.
+ *
+ * @param item The item for this size.
+ * @param exp The experience for mining it.
+ * @param chance The chance of getting this size, once every larger size has failed.
+ */
+class OreSize(val item: Int, val exp: Double, val chance: Pair<Int, Int>)
