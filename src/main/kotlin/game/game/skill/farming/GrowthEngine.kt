@@ -14,7 +14,7 @@ import game.skill.farming.patch.*
 object GrowthEngine {
 
     /**
-     * How many minutes it takes for one weed to grow back on an empty patch (wiki).
+     * How many minutes it takes for one weed to grow back on an empty patch.
      */
     const val WEED_CYCLE_MINUTES = 5
 

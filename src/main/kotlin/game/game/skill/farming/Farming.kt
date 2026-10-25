@@ -2,8 +2,18 @@ package game.skill.farming
 
 import api.attr.*
 import com.google.gson.JsonObject
+import game.skill.farming.allotment.*
+import game.skill.farming.bush.*
+import game.skill.farming.compostBin.*
+import game.skill.farming.flower.*
+import game.skill.farming.fruitTree.*
+import game.skill.farming.herb.*
+import game.skill.farming.hops.*
 import game.skill.farming.patch.*
-import game.skill.farming.seed.*
+import game.skill.farming.seedling.*
+import game.skill.farming.special.*
+import game.skill.farming.toolLeprechaun.*
+import game.skill.farming.tree.*
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.*
 import io.luna.game.model.mob.block.Animation
@@ -17,20 +27,7 @@ import io.luna.game.model.mob.varp.*
  */
 object Farming {
 
-    /**
-     * The varp holding the state of the Falador and Catherby allotment patches.
-     */
-    const val ALLOTMENT_VARP_1 = 504
-
-    /**
-     * The varp holding the state of the Ardougne and Port Phasmatys allotment patches.
-     */
-    const val ALLOTMENT_VARP_2 = 505
-
-    /**
-     * The varp holding the state of all herb patches.
-     */
-    const val HERB_PATCH_VARP = 515
+    // Varps, in id order.
 
     /**
      * The varp holding the state of the Taverley, Falador, Varrock and Lumbridge tree patches.
@@ -42,6 +39,16 @@ object Farming {
      * patches.
      */
     const val FRUIT_TREE_PATCH_VARP = 503
+
+    /**
+     * The varp holding the state of the Falador and Catherby allotment patches.
+     */
+    const val ALLOTMENT_VARP_1 = 504
+
+    /**
+     * The varp holding the state of the Ardougne and Port Phasmatys allotment patches.
+     */
+    const val ALLOTMENT_VARP_2 = 505
 
     /**
      * The varp holding the state of the Yanille, Entrana, Lumbridge and McGrubor's Wood hops patches.
@@ -69,9 +76,16 @@ object Farming {
     const val SPECIAL_PATCH_VARP = 512
 
     /**
+     * The varp holding the state of all herb patches.
+     */
+    const val HERB_PATCH_VARP = 515
+
+    /**
      * The varp holding the tools stored with tool leprechauns. See [StorableTool].
      */
     const val TOOLS_VARP = 615
+
+    // Tools.
 
     /**
      * The rake item id.
@@ -89,9 +103,9 @@ object Farming {
     const val SPADE = 952
 
     /**
-     * The scarecrow item id, placed in a flower patch.
+     * The gardening trowel item id.
      */
-    const val SCARECROW = 6059
+    const val GARDENING_TROWEL = 5325
 
     /**
      * The secateurs item id.
@@ -102,6 +116,18 @@ object Farming {
      * The magic secateurs item id.
      */
     const val MAGIC_SECATEURS = 7409
+
+    /**
+     * The empty watering can item id.
+     */
+    const val EMPTY_WATERING_CAN = 5331
+
+    /**
+     * The watering can item ids, from 1 dose of water to 8.
+     */
+    val WATERING_CANS = listOf(5333, 5334, 5335, 5336, 5337, 5338, 5339, 5340)
+
+    // Other items.
 
     /**
      * The empty plant pot item id, left over after planting a sapling.
@@ -120,19 +146,9 @@ object Farming {
     val FILLED_PLANT_POTS = listOf(FILLED_PLANT_POT, 5356)
 
     /**
-     * The gardening trowel item id.
+     * The scarecrow item id, placed in a flower patch.
      */
-    const val GARDENING_TROWEL = 5325
-
-    /**
-     * The empty watering can item id.
-     */
-    const val EMPTY_WATERING_CAN = 5331
-
-    /**
-     * The watering can item ids, from 1 dose of water to 8.
-     */
-    val WATERING_CANS = listOf(5333, 5334, 5335, 5336, 5337, 5338, 5339, 5340)
+    const val SCARECROW = 6059
 
     /**
      * The plant cure item id.
@@ -153,6 +169,8 @@ object Farming {
      * The weeds item id, given when raking.
      */
     const val WEEDS = 6055
+
+    // Animations.
 
     /**
      * The raking animation.
@@ -209,6 +227,8 @@ object Farming {
      */
     val PICK_FRUIT_ANIMATION = Animation(2281)
 
+    // Experience.
+
     /**
      * The experience given for each weed raked. An unchecked placeholder, it is not from the wiki.
      */
@@ -223,6 +243,8 @@ object Farming {
      * The experience given for curing a diseased crop. An unchecked placeholder, it is not from the wiki.
      */
     const val CURE_XP = 0.0
+
+    // Patches and player state.
 
     /**
      * The location of every farming patch.

@@ -1,5 +1,8 @@
 package game.skill.farming.patch
 
+import game.skill.farming.bush.*
+import game.skill.farming.special.*
+
 /**
  * A patch whose fully grown crop must have its health checked before it can be picked from, such as a [CactusPatch] or
  * a [BushPatch].
