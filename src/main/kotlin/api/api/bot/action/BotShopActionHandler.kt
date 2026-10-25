@@ -3,10 +3,15 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.zone.SubZone
+import api.bot.script.BotScript.ActionSafety
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.ShopInterface
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A [BotActionHandler] implementation for shop related actions.
@@ -111,5 +116,71 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         }
         val soldItemCond = SuspendableCondition { bot.inventory.computeAmountForId(id) < amountBefore }
         return soldItemCond.submit(5) // Unsuspend when the inventory amount decreases.
+    }
+
+    /** Keeps the one-item acquisition API used by tool selection. */
+    suspend fun obtainWantedItem(id: Int): Boolean = obtainWantedItem(id, 1)
+
+    /**
+     * Obtains the minimum carried quantity through owned bank stock and normal shop purchases.
+     * Each purchase rechecks access, stock, price, funds, capacity and actual inventory progress.
+     * Partial purchases remain owned on failure; no items or currency are generated. The whole attempt
+     * has one two-minute deadline, including banking, travel and every purchase.
+     */
+    suspend fun obtainWantedItem(id: Int, amount: Int): Boolean {
+        require(amount > 0)
+        fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
+        if (carried() >= amount) return true
+        return withTimeoutOrNull(120.seconds) {
+            try {
+                if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
+                if (bot.bank.contains(id)) {
+                    if (!handler.banking.travelToBankOpen()) return@withTimeoutOrNull false
+                    handler.banking.clickBankingMode(false)
+                    val banked = minOf(bot.bank.computeAmountForId(id).toLong(), amount - carried()).toInt()
+                    if (banked > 0) {
+                        if (!bot.inventory.hasSpaceFor(Item(id, banked)) &&
+                            !handler.banking.depositInventory(setOf(id))) return@withTimeoutOrNull false
+                        if (!handler.banking.withdraw(Item(id, banked))) return@withTimeoutOrNull false
+                    }
+                }
+                if (carried() >= amount) return@withTimeoutOrNull true
+                val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
+                if (shops.isEmpty()) return@withTimeoutOrNull false
+                bot.actions.interruptWeak()
+                bot.overlays.closeWindows()
+                for (shop in shops) {
+                    while (carried() < amount) {
+                        if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
+                        if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
+                        val price = shop.computeBuyValue(id, 1).orElse(-1)
+                        if (price < 0) break
+                        val currency = shop.currency.id
+                        val heldCoins = bot.inventory.computeAmountForId(currency)
+                        if (heldCoins.toLong() + bot.bank.computeAmountForId(currency) < price) break
+                        if (heldCoins < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                            if (!handler.banking.travelToBankOpen()) break
+                            if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(currency, maxOf(1, price))))) {
+                                if (!handler.banking.depositInventory(setOf(currency, id))) break
+                            }
+                            val missing = price - bot.inventory.computeAmountForId(currency)
+                            if (missing > 0 && !handler.banking.withdraw(Item(currency, missing))) break
+                        }
+                        if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
+                        bot.overlays.closeWindows()
+                        if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) break
+                        if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
+                        bot.overlays.open(ShopInterface(shop))
+                        val before = carried()
+                        if (bot.overlays[ShopInterface::class]?.shop !== shop || !buy1(id).await() ||
+                            carried() <= before) break
+                    }
+                    if (carried() >= amount) return@withTimeoutOrNull true
+                }
+                false
+            } finally {
+                bot.overlays.closeWindows()
+            }
+        } == true
     }
 }

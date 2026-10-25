@@ -82,19 +82,15 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             getProductionScript(bot, level, true)?.let { return it }
         }
 
-        val hides = getUntannedHides(bot)
         val craftable = getActivities(level, { it.level }, HideArmor.ALL)
             .filter { CraftArmorBotScript.hasSupplies(bot, it) }
 
-        // Hides alongside craftable leather means tanning was cut short, so it finishes before any crafting.
-        if (hides >= CollectHidesBotScript.hideTarget(bot) || (hides > 0 && craftable.isNotEmpty())) {
-            return TanHideBotScript(bot, getDuration(bot))
-        }
+        // Use ready leather before spending more coins on unfinished hides.
         val craftArmor = getBestActivity(bot, level, { it.level }, craftable)
         if (craftArmor != null) {
             return CraftArmorBotScript(bot, craftArmor, getDuration(bot))
         }
-        return getCollectHidesScript(bot, zones)
+        return TanHideBotScript(bot, getDuration(bot))
     }
 
     override fun getProfitScript(
@@ -109,11 +105,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
             zones += SubZone.FLAX_SPINNING_MAIN
             return SpinTextileBotScript(bot, getDuration(bot))
         }
-        if (getUntannedHides(bot) >= CollectHidesBotScript.hideTarget(bot)) {
+        if (getUntannedHides(bot) > 0 || randBoolean()) {
             return TanHideBotScript(bot, getDuration(bot))
-        }
-        if (randBoolean()) {
-            return getCollectHidesScript(bot, zones)
         }
         zones += SubZone.SOUTH_SEERS_VILLAGE_FLAX
         return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
@@ -138,11 +131,13 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @param zones The mutable zone list to populate with cow fields.
      * @return The script.
      */
-    private fun getCollectHidesScript(bot: Bot, zones: MutableList<SubZone>): CollectHidesBotScript {
+    internal fun getCollectHidesScript(
+        bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null
+    ): CollectHidesBotScript {
         // TODO Skillers that never train combat should pick up hides other players leave instead of fighting.
         zones += if (bot.personality.isIntelligent) NEAR_BANK_COW_FIELDS else ALL_COW_FIELDS
-        val pickUpHides = !bot.personality.isDumb || !roll(1 of 3)
-        return CollectHidesBotScript(bot, getDuration(bot), zones, pickUpHides)
+        val collect = pickUpHides ?: (!bot.personality.isDumb || !roll(1 of 3))
+        return CollectHidesBotScript(bot, getDuration(bot), zones, collect)
     }
 
     /**
@@ -151,9 +146,11 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * @param bot The bot that will run the script.
      * @return The basic armour-crafting activity.
      */
-    fun getBasicScript(bot: Bot): CraftArmorBotScript {
-        return CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot))
-    }
+    fun getBasicScript(bot: Bot): CraftArmorBotScript = getBasicScript(bot, Textile.BOWSTRING.level)
+
+    /** Trains only through the existing glove recipe until the pending activity's real level gate is reached. */
+    fun getBasicScript(bot: Bot, targetLevel: Int): CraftArmorBotScript =
+        CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot), targetLevel = targetLevel)
 
     /**
      * Selects an owned Crafting production recipe or non-training soft-clay preparation activity.

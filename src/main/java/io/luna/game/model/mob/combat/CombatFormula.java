@@ -17,6 +17,9 @@ import io.luna.util.RandomUtils;
  * <p>
  * This class centralizes the common roll, stance, prayer, and equipment-bonus calculations used by combat accuracy and
  * physical max-hit logic.
+ * Player effective strength includes eight base levels and the appropriate stance bonus. Magic uses its own equipment
+ * bonus and fixed attack stance, while NPC accuracy and defence include nine effective levels. Player magic defence
+ * rounds the combined weighted Defence and Magic levels once.
  *
  * @author lare96
  * @see <a href="https://rune-server.org/threads/archive-combat-formulas.688072/">
@@ -74,13 +77,91 @@ public final class CombatFormula {
      * @return The hit chance percentage.
      */
     public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type) {
+        return calculateHitChance(attacker, victim, type, 100);
+    }
+
+    /**
+     * Calculates hit chance after multiplying the offensive roll, before comparing it with the defensive roll.
+     * Special attack accuracy bonuses modify this roll rather than adding percentage points to final hit chance.
+     * Integer percentage scaling avoids floating-point rounding errors and temporary decimal objects. A long
+     * intermediate safely holds the product of the integer base roll and percentage before division by 100.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The defending mob.
+     * @param type The damage type being checked.
+     * @param attackRollPercent A non-negative percentage; {@code 100} preserves the ordinary roll.
+     * @return The resulting hit probability.
+     */
+    public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type,
+                                          int attackRollPercent) {
+        return calculateHitChance(attacker, victim, type, attackRollPercent, null);
+    }
+
+    /**
+     * Calculates hit probability with an optional melee defence bonus override. The attacker's selected offensive
+     * style and stance still determine the attack roll; only the target's defensive bonus selection is overridden.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The defending mob.
+     * @param type The damage type being checked.
+     * @param attackRollPercent The non-negative offensive roll percentage.
+     * @param meleeDefenceBonus The stab, slash, or crush defence bonus to check, or null for ordinary style matching.
+     * @return The resulting hit probability.
+     */
+    public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type,
+                                          int attackRollPercent, EquipmentBonus meleeDefenceBonus) {
+        if (meleeDefenceBonus != null && (type != CombatDamageType.MELEE ||
+                (meleeDefenceBonus != EquipmentBonus.STAB_DEFENCE &&
+                        meleeDefenceBonus != EquipmentBonus.SLASH_DEFENCE &&
+                        meleeDefenceBonus != EquipmentBonus.CRUSH_DEFENCE))) {
+            throw new IllegalArgumentException("Melee defence override must select stab, slash, or crush defence.");
+        }
+        if (attackRollPercent < 0) {
+            throw new IllegalArgumentException("Attack roll percentage must be non-negative.");
+        }
         // An NPC's attack style bonus describes its melee attack, so its ranged attacks need their own.
-        EquipmentBonus attackStyleBonus = attacker instanceof Npc && type == CombatDamageType.RANGED ?
-                EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
-        double attackRoll = calculateAttackRoll(attacker, attackStyleBonus, type);
+        EquipmentBonus attackStyleBonus = type == CombatDamageType.MAGIC ? EquipmentBonus.MAGIC_ATTACK :
+                type == CombatDamageType.RANGED ? EquipmentBonus.RANGED_ATTACK : attacker.getCombat().getAttackStyleBonus();
+        double attackRoll = Math.floorDiv((long) calculateAttackRoll(attacker, attackStyleBonus, type) *
+                attackRollPercent, 100L);
         double defenceRoll = type == CombatDamageType.MAGIC ?
                 calculateMagicDefenceRoll(victim) :
-                calculatePhysicalDefenceRoll(victim, attackStyleBonus);
+                calculatePhysicalDefenceRoll(victim, meleeDefenceBonus == null ?
+                        attackStyleBonus : meleeDefenceBonus.getOpposite());
+        return calculateHitChanceFromRolls(attackRoll, defenceRoll);
+    }
+
+    /**
+     * Captures a player's ranged offensive roll, including current level, prayer, stance, and equipment bonuses.
+     * Delayed secondary attacks can retain this value without reading equipment changed after launch.
+     *
+     * @param attacker The attacking player.
+     * @return The ranged offensive roll before any special attack multiplier.
+     */
+    public static int calculateRangedAttackRoll(Player attacker) {
+        return calculateAttackRoll(attacker, EquipmentBonus.RANGED_ATTACK, CombatDamageType.RANGED);
+    }
+
+    /**
+     * Calculates ranged hit probability using a captured offensive roll and the victim's current defence.
+     *
+     * @param attackRoll The ranged offensive roll captured before launch.
+     * @param victim The target of this hit.
+     * @return The resulting hit probability.
+     */
+    public static double calculateRangedHitChance(int attackRoll, Mob victim) {
+        return calculateHitChanceFromRolls(attackRoll,
+                calculatePhysicalDefenceRoll(victim, EquipmentBonus.RANGED_ATTACK));
+    }
+
+    /**
+     * Converts offensive and defensive roll limits into the shared hit probability.
+     *
+     * @param attackRoll The offensive roll limit.
+     * @param defenceRoll The defensive roll limit.
+     * @return The resulting hit probability.
+     */
+    private static double calculateHitChanceFromRolls(double attackRoll, double defenceRoll) {
         double hitChance;
         if (attackRoll > defenceRoll) {
             hitChance = 1.0 - (defenceRoll + 2.0) / (2.0 * (attackRoll + 1.0));
@@ -133,12 +214,12 @@ public final class CombatFormula {
 
         int level = attacker.getSkills().getSkill(skill).getLevel();
         if (attacker instanceof Npc) {
-            return (level + 8) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
+            return (level + 9) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
         }
 
         Player player = attacker.asPlr();
         return (int) (Math.floor(level * getAttackRollPrayerMultiplier(player, type))
-                + getAttackRollStanceBonus(player) + 8)
+                + (type == CombatDamageType.MAGIC ? 1 : getAttackRollStanceBonus(player)) + 8)
                 * (getOffensiveAccuracyBonus(player, attackStyleBonus) + 64);
     }
 
@@ -155,7 +236,7 @@ public final class CombatFormula {
     private static int calculatePhysicalDefenceRoll(Mob victim, EquipmentBonus attackStyleBonus) {
         int level = victim.getSkills().getSkill(Skill.DEFENCE).getLevel();
         if (victim instanceof Npc) {
-            return level * (getMatchingPhysicalDefenceBonus(victim, attackStyleBonus) + 64);
+            return (level + 9) * (getMatchingPhysicalDefenceBonus(victim, attackStyleBonus) + 64);
         }
 
         Player victimPlr = victim.asPlr();
@@ -177,17 +258,16 @@ public final class CombatFormula {
     private static int calculateMagicDefenceRoll(Mob victim) {
         if (victim instanceof Player) {
             Player player = victim.asPlr();
-            int effectiveDefence = (int) Math.floor(
-                    Math.floor(player.getSkills().getSkill(Skill.DEFENCE).getLevel() *
-                            getDefenceRollPrayerMultiplier(player)) * 0.3
-            );
-            int effectiveMagic = (int) Math.floor(victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7);
+            double effectiveDefence = Math.floor(player.getSkills().getSkill(Skill.DEFENCE).getLevel() *
+                    getDefenceRollPrayerMultiplier(player));
+            int effectiveMagicDefence = (int) Math.floor(effectiveDefence * 0.3 +
+                    victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7);
             int magicDefenceBonus = player.getEquipment().getBonus(EquipmentBonus.MAGIC_DEFENCE);
-            return (effectiveDefence + effectiveMagic + 8) * (magicDefenceBonus + 64);
+            return (effectiveMagicDefence + 8) * (magicDefenceBonus + 64);
         }
 
         Npc npc = victim.asNpc();
-        return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 8) *
+        return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 9) *
                 (npc.combatDef().getMagicDefenceBonus() + 64);
     }
 
@@ -207,7 +287,7 @@ public final class CombatFormula {
                 CombatDamageType.RANGED : CombatDamageType.MELEE);
         int stanceBonus = getPhysicalStrengthStanceBonus(player, type);
 
-        return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus;
+        return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus + 8;
     }
 
     /**
@@ -225,7 +305,8 @@ public final class CombatFormula {
             return attacker.asPlr().getEquipment().getBonus(attackStyleBonus);
         }
         NpcCombatDefinition def = attacker.asNpc().combatDef();
-        return attackStyleBonus == EquipmentBonus.RANGED_ATTACK ? def.getRangedBonus() : def.getAttackBonus();
+        return attackStyleBonus == EquipmentBonus.MAGIC_ATTACK ? def.getMagicBonus() :
+                attackStyleBonus == EquipmentBonus.RANGED_ATTACK ? def.getRangedBonus() : def.getAttackBonus();
     }
 
     /**
@@ -312,7 +393,7 @@ public final class CombatFormula {
         }
 
         switch (stance) {
-            case ACCURATE:
+            case AGGRESSIVE:
                 return 3;
             case CONTROLLED:
                 return 1;

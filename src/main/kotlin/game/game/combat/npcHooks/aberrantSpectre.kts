@@ -40,8 +40,8 @@ val MAGIC_PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
         .setSourceEntity(mob)
         .setTargetEntity(other)
         .setId(335)
-        .setTicksToStart(44)
-        .setTicksToEnd(3)
+        .setTicksToEnd(44)
+        .setTicksToStart(3)
         .setStartHeight(43)
         .setEndHeight(31)
         .setInitialSlope(0)
@@ -58,6 +58,7 @@ val END_GRAPHIC = Graphic(336, 500, 0)
  *
  * Victims wearing a nose peg take a normal magic hit. Victims without a nose peg take a magic hit that ignores
  * protection prayers, and may also have one or more combat-related skills reduced when the projectile lands.
+ * Delivered hits retain the shared magic impact graphics and sound before applying the stat drain.
  *
  * @author lare96
  */
@@ -92,6 +93,7 @@ class AberrantSpectreMagicAttack(attacker: Npc, victim: Mob) : MagicCombatAttack
     }
 
     override fun onDamageApplied(damage: CombatDamage?) {
+        if (damage != null) super.onDamageApplied(damage)
         // Weakens the player when not wearing a nose peg.
         if (!protected && victim is Player) {
             if (randBoolean()) {

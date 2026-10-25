@@ -1,6 +1,7 @@
 package engine.obj
 
 import api.predef.*
+import game.content.miningGuild.MiningGuild
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
@@ -46,8 +47,7 @@ fun climb(plr: Player, ladder: GameObject, up: Boolean) {
         plr.sendMessage(refusal)
         return
     }
-    if (ladder.id == MINING_GUILD_LADDER && plr.mining.level < 60) {
-        plr.sendMessage("You need a Mining level of 60 to access the Mining Guild.")
+    if (ladder.id == MINING_GUILD_LADDER && !MiningGuild.checkAccess(plr)) {
         return
     }
     val destination = LadderDestination.destination(ladder, plr.position, up)

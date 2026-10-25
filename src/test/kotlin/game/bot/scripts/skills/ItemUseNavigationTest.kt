@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
-import java.util.concurrent.CompletableFuture
 
 class ItemUseNavigationTest {
     companion object {
@@ -32,9 +31,10 @@ class ItemUseNavigationTest {
         val target = mock(GameObject::class.java)
         `when`(bot.inventory.computeIndexForId(436)).thenReturn(0)
         `when`(bot.inventory[0]).thenReturn(Item(436))
-        val handler = BotInventoryActionHandler(bot, mock(BotActionHandler::class.java))
+        val actions = mock(BotActionHandler::class.java, RETURNS_DEEP_STUBS)
+        val handler = BotInventoryActionHandler(bot, actions)
         for (result in listOf(NavigationResult.DIDNT_REACH, NavigationResult.NO_VALID_PATH, null)) {
-            `when`(bot.navigator.navigate(target, true)).thenReturn(CompletableFuture.completedFuture(result))
+            `when`(actions.interactions.approach(target)).thenReturn(result == NavigationResult.REACHED)
             assertFalse(handler.useItem(436).onObject(target))
         }
         verify(bot.output, never()).useItemOnObject(anyInt(), anyInt(), any(GameObject::class.java))
@@ -46,8 +46,9 @@ class ItemUseNavigationTest {
         val target = mock(GameObject::class.java)
         `when`(bot.inventory.computeIndexForId(436)).thenReturn(0)
         `when`(bot.inventory[0]).thenReturn(Item(436))
-        `when`(bot.navigator.navigate(target, true)).thenReturn(CompletableFuture.completedFuture(NavigationResult.REACHED))
-        val handler = BotInventoryActionHandler(bot, mock(BotActionHandler::class.java))
+        val actions = mock(BotActionHandler::class.java, RETURNS_DEEP_STUBS)
+        val handler = BotInventoryActionHandler(bot, actions)
+        `when`(actions.interactions.approach(target)).thenReturn(true)
         `when`(world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)).thenReturn(false)
         assertFalse(handler.useItem(436).onObject(target))
         verify(bot.output, never()).useItemOnObject(anyInt(), anyInt(), any(GameObject::class.java))

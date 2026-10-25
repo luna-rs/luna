@@ -12,7 +12,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     /**
      * The wearable facemask item id.
      */
-    val FACEMASK = 4166
+    val FACEMASK = 4164
 
     combat(1624, 1625) {
         attack {

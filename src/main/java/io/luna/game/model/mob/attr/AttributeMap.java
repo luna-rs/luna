@@ -31,7 +31,15 @@ public final class AttributeMap {
     /**
      * Attributes loaded from disk or deserialization that await activation.
      */
-    private final Map<String, Object> loadedAttributes = new HashMap<>();
+    private final Map<String, LoadedAttribute> loadedAttributes = new HashMap<>();
+
+    /**
+     * An unread value and its original serialized key, including the declared type.
+     *
+     * @author lare96
+     */
+    private record LoadedAttribute(String key, Object value) {
+    }
 
     /**
      * Live attribute values mapped by identity
@@ -56,6 +64,8 @@ public final class AttributeMap {
     public void load(Map<String, Object> loadedAttributeMap) {
         attributes.clear();
         loadedAttributes.clear();
+        lastKey = null;
+        lastValue = null;
         loadedAttributeMap.forEach((String key, Object value) -> {
             // First retrieve the runtime type.
             String[] tokens = key.split("@");
@@ -72,7 +82,7 @@ public final class AttributeMap {
                 // Convert from JsonElement -> typeClass using type adapters.
                 Object convertedValue = Attribute.getGsonInstance().
                         fromJson(Attribute.getGsonInstance().toJsonTree(value), typeClass);
-                checkState(loadedAttributes.put(name, convertedValue) == null,
+                checkState(loadedAttributes.put(name, new LoadedAttribute(key, convertedValue)) == null,
                         "Duplicate persistent attribute key {%s}.", key);
             } catch (ClassNotFoundException e) {
                 logger.catching(e);
@@ -87,6 +97,7 @@ public final class AttributeMap {
      */
     public LinkedHashMap<String, Object> save() {
         LinkedHashMap<String, Object> save = new LinkedHashMap<>();
+        loadedAttributes.values().forEach(loaded -> save.put(loaded.key(), loaded.value()));
         attributes.forEach((Attribute<?> key, Object value) -> {
             // Persist all necessary attributes.
             if (key.isPersistent()) {
@@ -135,8 +146,8 @@ public final class AttributeMap {
         if (value == null) {
             if (attr.isPersistent()) {
                 // Attribute persistent, load it from saved data or load it's initial value.
-                Object loadedValue = loadedAttributes.remove(attr.getPersistenceKey());
-                value = loadedValue == null ? attr.getDefaultValueSupplier().get() : loadedValue;
+                LoadedAttribute loadedValue = loadedAttributes.remove(attr.getPersistenceKey());
+                value = loadedValue == null ? attr.getDefaultValueSupplier().get() : loadedValue.value();
             } else {
                 // Attribute not persistent, load it's initial value.
                 value = attr.getDefaultValueSupplier().get();

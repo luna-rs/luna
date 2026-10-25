@@ -240,7 +240,7 @@
   {
     "opcode": 55,
     "size": 6,
-    "payload": "DebugMessageReader"
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 56,
@@ -586,7 +586,7 @@
   {
     "opcode": 136,
     "size": 6,
-    "payload": "DebugMessageReader"
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 137,

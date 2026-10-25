@@ -16,7 +16,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
 import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
-import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -95,6 +94,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      */
     private var timestamp = 0L
 
+    /** A paused initializer must finish its gear and banking work before a resumed session can run. */
+    private var initialPreparationComplete = false
+
     /**
      * The bank object currently cached for the selected active zone.
      *
@@ -153,7 +155,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!awaitActionSafety()) return true
         timestamp = System.currentTimeMillis()
 
-        if (!resumed) {
+        if (!resumed || !initialPreparationComplete) {
+            initialPreparationComplete = false
             bot.log("Initial setup complete. Equipping required gear. candidateZones=${zones.size}")
             val equipmentLocator = equipment()
             if (!awaitActionSafety()) return true
@@ -181,6 +184,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
 
             zones.shuffle()
+            initialPreparationComplete = true
         }
 
         bot.log("Initialization complete.")
@@ -199,6 +203,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         if (!checkDuration()) {
             return true
+        }
+
+        if (beforeZoneWork()) {
+            bot.naturalMicroDelay()
+            return false
         }
 
         // A failed banking attempt keeps forceBanking set. Retry it from here instead of travelling
@@ -271,6 +280,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * @return `true` if {@code zone} is still usable, or `false` to reject it.
      */
     abstract suspend fun executeInZone(): Boolean
+
+    /**
+     * Services an activity-owned interlude before banking or returning to a work zone. Returning true consumes this
+     * cycle while retaining normal safety, duration and pause handling. Ordinary zoned activities bypass this hook.
+     */
+    protected open suspend fun beforeZoneWork(): Boolean = false
 
     /**
      * Rejoins a precise marketplace work tile after initial travel, banking or displacement.
@@ -514,17 +529,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         val bank = cachedBank
         if (bank != null && !bot.bank.isOpen) {
-            val origin = bot.position
             val targetPosition = bank.position
-            val reachable = bot.navigator.canReachForInteraction(bank).await()
+            val reachable = handler.interactions.approach(bank) {
+                ActionSafety.NON_COMBAT.allows(bot)
+            }
             if (!awaitActionSafety()) return
             // An async result belongs to its original positions. Retry rather than route on a stale result.
-            if (bot.position != origin || bank.position != targetPosition) {
+            if (bank.position != targetPosition) {
                 forceBanking = true
                 return
             }
             if (!reachable) {
-                bot.log("No complete walking route confirmed to cached bank. Resolving parent/home route. cachedBank=$bank")
+                bot.log("No web approach confirmed to cached bank. Resolving parent/home route. cachedBank=$bank")
                 cachedBank = null
             }
         }

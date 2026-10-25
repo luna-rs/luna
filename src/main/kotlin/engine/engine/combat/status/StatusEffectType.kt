@@ -52,7 +52,7 @@ enum class StatusEffectType(val loadFunction: (Player) -> StatusEffect<out Mob>?
     ANTIFIRE({ PotionStatusEffect(it, ANTIFIRE) }),
 
     /**
-     * Marks the player as prayer-disabled from a dragon scimitar special attack.
+     * Prevents protection prayer activation after an accurate dragon scimitar special attack.
      */
     DRAGON_SCIMITAR({ DragonScimitar.DragonScimitarStatusEffect(it) }),
 

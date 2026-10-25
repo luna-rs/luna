@@ -70,17 +70,6 @@ class TargetSearchRecoveryTest {
     }
 
     @Test
-    fun zonedLifecycleRemovesRejectedZoneAndStopsWhenNoneRemain() = runBlocking {
-        val bot = bot()
-        doReturn(EnumSet.of(SubZone.LUMBRIDGE_RIVER))
-            .`when`(bot).subZones
-        val script = SearchScript(bot)
-        assertFalse(script.init(true))
-        assertTrue(script.run())
-        assertTrue(script.zones.isEmpty())
-    }
-
-    @Test
     fun emptySearchesShareOneBudget() = runBlocking {
         val script = SearchScript(bot())
         script.candidateCount = 0

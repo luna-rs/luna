@@ -346,6 +346,20 @@ public class WalkingNavigator {
     }
 
     /**
+     * Checks whether continuous navigation already follows a target with the requested reach rules.
+     * Policy values are compared because separate attacks can create equivalent policy instances.
+     *
+     * @param target The target to follow.
+     * @param policy The required interaction type and distance.
+     * @return Whether the active continuous request matches both the target and reach rules.
+     */
+    public boolean isFollowing(Locatable target, InteractionPolicy policy) {
+        return isActive() && active.isContinuous() && active.getTarget().equals(target) &&
+                active.getPolicy().getType() == policy.getType() &&
+                active.getPolicy().getDistance() == policy.getDistance();
+    }
+
+    /**
      * @return {@code true} if there is currently active continuous navigation in-progress.
      */
     public boolean isCurrentContinuous() {

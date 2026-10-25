@@ -37,6 +37,25 @@ public final class BotSpeech {
     int delay;
 
     /**
+     * Whether the public-chat handler acknowledged this conversation request.
+     */
+    private boolean delivered;
+
+    /**
+     * Returns actual chat acknowledgement, rather than simulated-packet queue acceptance.
+     */
+    public boolean isDelivered() {
+        return delivered;
+    }
+
+    /**
+     * Marks a reserved request after its public-chat update has been applied.
+     */
+    void acknowledge() {
+        delivered = true;
+    }
+
+    /**
      * Creates a new {@link BotSpeech} with a specified delay.
      *
      * @param text The text.

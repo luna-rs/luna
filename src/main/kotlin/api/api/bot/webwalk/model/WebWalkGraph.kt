@@ -1,5 +1,6 @@
 package api.bot.webwalk.model
 
+import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
 
 /**
@@ -86,8 +87,9 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     ENTRANCE(false),
 
     /**
-     * A crossing between two nearby tiles that needs more than a click on an object, such as a gate that charges a toll. The
-     * [EdgeAction.handler] of the edge says how it is crossed.
+     * A crossing that needs more than a click on an object, either between two nearby tiles, such as a gate that charges a
+     * toll, or into another place, such as a trapdoor whose lock is picked. The [EdgeAction.handler] of the edge says how it
+     * is crossed.
      */
     CROSSING(true),
 
@@ -108,7 +110,8 @@ enum class EdgeType(val bidirectionalByDefault: Boolean) {
     FAIRY_RING(false);
 
     /**
-     * @return `true` if this is a door, gate, curtain or crossing, which are steps between two nearby tiles on one plane.
+     * @return `true` if this is a door, gate, curtain or crossing, which a walk must not pass through as if it were open.
+     * Doors, gates and curtains are steps between two nearby tiles on one plane, and so are most crossings.
      */
     val isDoorLike: Boolean
         get() = this == DOOR || this == GATE || this == CURTAIN || this == CROSSING
@@ -135,20 +138,7 @@ data class WebWalkNode(val id: String,
                        val position: Position,
                        val kind: NodeKind,
                        val tags: Set<String> = emptySet(),
-                       val wildernessLevel: Int = wildernessLevelOf(position)) {
-
-    companion object {
-
-        /**
-         * The wilderness level at a position, which is `0` outside the wilderness. This mirrors the area and the formula
-         * of `WildernessController`.
-         */
-        fun wildernessLevelOf(position: Position): Int {
-            val inWilderness = position.x in 2944..3392 && position.y in 3519..3966
-            return if (inWilderness) ((position.y - 3520) / 8) + 1 else 0
-        }
-    }
-}
+                       val wildernessLevel: Int = WildernessLocatableController.levelAt(position))
 
 /**
  * What the executor does to cross an edge, beyond walking to its start.

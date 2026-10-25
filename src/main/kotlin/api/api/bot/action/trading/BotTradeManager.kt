@@ -7,6 +7,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.math.IntMath
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Item
@@ -172,7 +173,8 @@ object BotTradeManager {
                         offering: List<BotTradeItem>): List<BotTradeItem> {
         return when (purpose) {
             // Buyers expect whatever they're buying.
-            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> computeBuyItems(bot, priceStrategy, purpose)
+            BotTradePurpose.BUY, BotTradePurpose.MERCHANT_BUY -> affordablePurchases(
+                computeBuyItems(bot, priceStrategy, purpose), offering)
             BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> {
                 // Sellers only expect gold value equivalent to what they're offering.
                 // This will later be interpreted as "general value" when trading.
@@ -190,9 +192,35 @@ object BotTradeManager {
     }
 
     /**
+     * Reserves available payment across wanted items in priority order, using the same whole-item payment
+     * rules as negotiation. Unaffordable items are skipped so cheaper needs can still be selected.
+     * Merchant quotes are alternatives: each may use the full budget, with the actual offer capped during negotiation.
+     * Call again with actual carried stock after banking, since withdrawals can be limited by capacity.
+     */
+    internal fun affordablePurchases(candidates: List<BotTradeItem>, payment: List<BotTradeItem>): List<BotTradeItem> {
+        val remaining = payment.associate { it.item.id to it.item.amount }.toMutableMap()
+        val paymentPrices = payment.associate { it.item.id to it.price }
+        val selected = ArrayList<BotTradeItem>()
+        for (candidate in candidates) {
+            val id = candidate.item.id
+            val demand = mapOf(id to candidate.item.amount)
+            val prices = mapOf(id to candidate.price)
+            val exchange = TradeBasket.exchange(demand, demand, prices, prices, remaining, paymentPrices) ?: continue
+            selected += BotTradeItem(Item(id, exchange.first.getValue(id)), candidate.price,
+                candidate.purpose, candidate.bot)
+            if (candidate.purpose != BotTradePurpose.MERCHANT_BUY) {
+                for ((paymentId, amount) in exchange.second) {
+                    remaining[paymentId] = remaining.getValue(paymentId) - amount
+                }
+            }
+        }
+        return selected
+    }
+
+    /**
      * Builds candidate sale items for normal or merchant selling.
      *
-     * Normal selling selects at most one priced, unrestricted surplus item when its unnoted stock
+     * Normal selling collects every priced, unrestricted surplus item when its unnoted stock
      * reaches [SURPLUS_SELL_RATIO] times the wanted target. The proposed amount comes from the
      * wanted-item surplus calculation, which can include ownership beyond the unnoted stock.
      *
@@ -202,7 +230,7 @@ object BotTradeManager {
      * @param bot The bot selecting items to sell.
      * @param priceStrategy The strategy used to calculate sale prices.
      * @param purpose The selling purpose, either [BotTradePurpose.SELL] or [BotTradePurpose.MERCHANT_SELL].
-     * @return Candidate items to sell, with at most one item for ordinary selling.
+     * @return All eligible items to sell; the trading script selects the session stock.
      * @throws IllegalStateException If a buying purpose is supplied.
      */
     private fun computeSellItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
@@ -245,7 +273,6 @@ object BotTradeManager {
                                                    priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
                                                    purpose,
                                                    bot)
-                        break
                     }
                 }
             }
@@ -257,39 +284,36 @@ object BotTradeManager {
     /**
      * Builds candidate wanted items for normal or merchant buying.
      *
-     * Normal buying rebalances wanted items and selects at most one priced item, using the remaining amount
-     * needed to reach its target. Merchant buying selects all wanted items with
-     * decreased economy prices and uses [Int.MAX_VALUE] to mark unrestricted demand.
+     * Normal buying rebalances wanted items and collects every priced item, using the remaining amount
+     * needed to reach its target. Merchant buying accepts priced, tradeable items regardless of price trends,
+     * paying normal buying quotes for wanted items and half guide price for other stock (at least one coin).
+     * Merchant demand uses [Int.MAX_VALUE] to mark unrestricted quantities.
      *
-     * Neither path reserves payment or checks whether the other participant can supply the quantity.
+     * [computeExpected] caps these candidates to available payment. Partner stock is checked during negotiation.
      *
      * @param bot The bot selecting items to buy.
      * @param priceStrategy The strategy used to calculate purchase prices.
      * @param purpose The buying purpose, either [BotTradePurpose.BUY] or [BotTradePurpose.MERCHANT_BUY].
-     * @return Candidate items to buy, with at most one item for ordinary buying.
+     * @return All eligible items to buy; the trading script selects the session demand.
      * @throws IllegalStateException If a selling purpose is supplied.
      */
     private fun computeBuyItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
         if (purpose == BotTradePurpose.SELL || purpose == BotTradePurpose.MERCHANT_SELL) {
             throw IllegalStateException("Must be a valid BUY based purpose.")
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
-            // Merchant buyers seek wanted items whose prices have recently decreased.
+            // Quote base items once; the trading script normalizes bank notes to these same quotes.
             val candidates = ArrayList<BotTradeItem>()
-            for (item in bot.preferences.wantedItems) {
-                if (item.id == 995) {
-                    continue
-                }
-                val price = world.economy.prices[item.id]
-                if (price != null) {
-                    if (price.price < price.lastPrice) {
-                        candidates += BotTradeItem(Item(item.id, Int.MAX_VALUE),
-                                                   priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
-                                                   purpose,
-                                                   bot)
-                    }
-                }
+            for (definition in ItemDefinition.ALL.filterNotNull()) {
+                val id = definition.id()
+                if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
+                val guide = world.economy.getPrice(id)
+                if (guide <= 0) continue
+                val quote = if (bot.preferences.hasWantedItem(id)) priceStrategy.applyBuy(guide)
+                else guide / 2
+                candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
             }
-            return candidates
+            return candidates.sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
+                .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 })
         }
 
         // Otherwise, buy any wanted items we need to acquire.
@@ -314,7 +338,6 @@ object BotTradeManager {
                                                priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
                                                purpose,
                                                bot)
-                    break
                 }
             }
             return candidates

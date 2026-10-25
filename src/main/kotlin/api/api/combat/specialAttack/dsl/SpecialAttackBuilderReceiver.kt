@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.CombatSpell
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack
 import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack
@@ -25,6 +26,7 @@ import java.util.function.BiFunction
  *
  * This receiver exposes helper methods for constructing melee, ranged, and magic combat attacks that automatically
  * integrate special attack launch handling, custom damage calculation, and arrival callbacks.
+ * Applied damage first runs the base attack's experience and poison handling, then the special arrival callback.
  *
  * The receiver is created for a single attacker, victim, and special attack configuration.
  *
@@ -71,6 +73,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -90,6 +93,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param end The ending graphic shown when the attack arrives.
      * @param speed The attack speed in ticks.
      * @param range The maximum attack range.
+     * @param projectileDiscarded Cleanup when the initial projectile is interrupted or finishes without delivering
+     * a hit. Delivered misses and zero hits still run the ordinary arrival callback instead.
      * @return A configured ranged combat attack instance.
      */
     fun ranged(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.RANGED),
@@ -97,9 +102,15 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                projectileFunction: BiFunction<Mob, Mob, LocalProjectile> = atkCombat.ammoDef.projectile,
                end: Graphic? = atkCombat.ammoDef.endGraphic,
                speed: Int = atkCombat.weapon.speed,
-               range: Int = atkCombat.weapon.range): PlayerRangedCombatAttack {
+               range: Int = atkCombat.weapon.range,
+               projectileDiscarded: () -> Unit = {}): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
                                                  speed, range) {
+            /**
+             * Whether the initial projectile delivered a hit, including an inaccurate or zero-damage hit.
+             */
+            private var delivered = false
+
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -108,7 +119,15 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                 return calculateDamage(other, CombatDamageType.RANGED)
             }
 
+            override fun onProjectileFinished(interrupted: Boolean) {
+                if (interrupted || !delivered) {
+                    projectileDiscarded()
+                }
+            }
+
             override fun onDamageApplied(damage: CombatDamage) {
+                delivered = true
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -152,6 +171,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onDamageApplied(damage: CombatDamage) {
+                super.onDamageApplied(damage)
                 attackArrived(damage, this)
             }
         }
@@ -175,7 +195,8 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * - Special attack energy is drained.
      * - The launch callback is executed.
      *
-     * Instant special attacks also have their delay forced to `0` so they do not reset the normal combat timer.
+     * Non-instant attacks check energy before normal processing can consume ammunition or runes. Instant attacks
+     * have already handled their energy cost and clear the forced special selection here.
      *
      * @param attack The combat attack being processed.
      * @param damage The current damage result, if already resolved.
@@ -186,13 +207,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                          damage: CombatDamage?,
                          action: (CombatDamage?) -> CombatDamage?): CombatDamage? {
 
+        if (!receiver.instant && !attacker.combat.specialBar.checkEnergy(receiver.drain)) {
+            return null
+        }
         var newDamage = action(damage)
         if (newDamage != null) {
             // Attack can go through, drain special attack energy, run launch listener.
             if(!receiver.instant) {
-                if(!attacker.combat.specialBar.checkEnergy(receiver.drain)) {
-                    return null
-                }
                 attacker.combat.specialBar.drain(receiver.drain, true)
             } else {
                 attacker.specialBarClicks = 0
@@ -209,7 +230,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * Resolves combat damage for this special attack using the configured bonuses and optional max-hit override.
      *
      * Damage is calculated using the standard combat damage pipeline, with the special attack's accuracy bonus,
-     * optional base max hit, and damage bonus applied on top.
+     * optional base max hit, strength bonus to maximum damage, and damage bonus applied on top.
+     * An integer offensive roll percentage is applied before hit probability is calculated; flat accuracy is added afterward.
+     * Melee specials may override the target's defence bonus without changing the attacker's offensive style.
      *
      * @param other The mob receiving the damage.
      * @param type The combat damage type to resolve.
@@ -219,8 +242,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
         val request = CombatDamageRequest.Builder(attacker, other, type)
             .setFlatBonusAccuracy(receiver.attackBonus)
             .setPercentBonusDamage(receiver.damageBonus)
+            .setPercentBonusStrength(receiver.strengthBonus)
         if (receiver.maxHit != null) {
             request.setBaseMaxHit(receiver.maxHit)
+        }
+        if (receiver.attackRollPercent != 100 || receiver.meleeDefenceBonus != null) {
+            request.setBaseAccuracy(CombatFormula.calculateHitChance(attacker, other, type,
+                receiver.attackRollPercent, receiver.meleeDefenceBonus))
         }
         return request.build().resolve()
     }

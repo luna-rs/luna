@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
+import static api.predef.ext.BotPreferenceExtKt.totalItemAmount;
 import static io.luna.game.model.def.WantedItemDefinition.DEFAULT;
 import static io.luna.game.model.def.WantedItemDefinition.DEFAULT_TAGS;
 import static io.luna.util.RandomUtils.randomFrom;
@@ -58,6 +59,16 @@ public final class BotPreference {
         private final Map<Integer, WantedItemDefinition> wantedItems = new HashMap<>();
         private final Set<BotGearSet> gear = new HashSet<>();
         private final Map<String, Double> playerFeelings = new HashMap<>();
+
+        private BotPkPreference pk;
+
+        /**
+         * Supplies a permanent PK identity for explicitly configured bot builds.
+         */
+        public Builder setPk(BotPkPreference pk) {
+            this.pk = java.util.Objects.requireNonNull(pk);
+            return this;
+        }
 
         private final double intelligence;
         private final double kindness;
@@ -342,12 +353,25 @@ public final class BotPreference {
          * @return A new {@link BotPreference} instance.
          */
         public BotPreference build() {
-            return new BotPreference(
+            boolean skiller = personality.getType() == PersonalityTemplateType.SKILLER;
+            if (skiller) {
+                activities.put(BotActivity.PKING, 0.0);
+                activities.put(BotActivity.TRAINING_COMBAT, 0.0);
+                activities.put(BotActivity.PROFIT_COMBAT, 0.0);
+            }
+            BotPreference preference = new BotPreference(
                     new HashMap<>(activities),
                     new HashSet<>(generateSkills()),
                     new HashMap<>(wantedItems),
                     new HashSet<>(generateGear()),
                     new HashMap<>(playerFeelings));
+            preference.pk = skiller ? null : pk != null ? pk :
+                    personality.getType() == PersonalityTemplateType.PKER ||
+                    preference.likesActivity(BotActivity.PKING) ? BotPkPreference.generate(null) : null;
+            if (skiller) preference.skills.removeIf(Skill::isCombatSkill);
+            else if (preference.pk != null) preference.skills.removeIf(id ->
+                    Skill.isCombatSkill(id) && preference.pk.build().targetLevel(id) == 1);
+            return preference;
         }
     }
 
@@ -355,6 +379,40 @@ public final class BotPreference {
      * The bot associated with this preference profile, if one has been assigned.
      */
     private Bot bot;
+
+    /**
+     * Permanent PK purpose, style combination and build; absent for bots without a PK preference.
+     * Saved identities replace the builder's provisional identity when an account is restored.
+     */
+    private BotPkPreference pk;
+
+    /**
+     * Returns the permanent PK identity, or {@code null} when PKing is not desired.
+     */
+    public BotPkPreference getPk() {
+        return pk;
+    }
+
+    /**
+     * Applies the skiller invariant even when activity weights were edited directly or loaded from old saves.
+     */
+    public boolean canChooseActivity(BotActivity activity) {
+        return !isSkiller() || (activity != BotActivity.PKING &&
+                activity != BotActivity.TRAINING_COMBAT && activity != BotActivity.PROFIT_COMBAT);
+    }
+
+    /**
+     * Normalizes a bound skiller after construction or save restoration.
+     */
+    private void enforceSkiller() {
+        if (isSkiller()) {
+            pk = null;
+            activities.put(BotActivity.PKING, 0.0);
+            activities.put(BotActivity.TRAINING_COMBAT, 0.0);
+            activities.put(BotActivity.PROFIT_COMBAT, 0.0);
+            skills.removeIf(id -> Skill.isCombatSkill(id));
+        }
+    }
 
     /**
      * The mutable activity preference weights, keyed by activity.
@@ -475,6 +533,7 @@ public final class BotPreference {
             playerFeelingsJson.add(feelingsJson);
         }
         preferences.add("player_feelings", playerFeelingsJson);
+        preferences.add("pk", pk == null ? com.google.gson.JsonNull.INSTANCE : pk.save());
         return preferences;
     }
 
@@ -518,6 +577,14 @@ public final class BotPreference {
             JsonObject feelingsJson = it.getAsJsonObject();
             playerFeelings.put(feelingsJson.get("username").getAsString(), feelingsJson.get("feeling").getAsDouble());
         });
+        // load() runs after PlayerData restores the actual personality and skills.
+        if (object.has("pk")) {
+            pk = object.get("pk").isJsonNull() ? null : BotPkPreference.load(object.getAsJsonObject("pk"));
+        } else {
+            pk = !isSkiller() && (isPker() || likesActivity(BotActivity.PKING)) ?
+                    BotPkPreference.generate(bot) : null;
+        }
+        enforceSkiller();
     }
 
     /**
@@ -567,6 +634,19 @@ public final class BotPreference {
      */
     public boolean hasWantedItem(int id) {
         return wantedItems.containsKey(toUnnotedId(id));
+    }
+
+    /**
+     * Checks whether a wanted item exists and the bot owns less than its target.
+     *
+     * @param id The item id to check, normalized before lookup.
+     * @return {@code true} if the bot still needs more of the wanted item.
+     */
+    public boolean needsWantedItem(int id) {
+        WantedItemDefinition wanted = getWantedItem(id);
+        return bot != null
+                && wanted != null
+                && totalItemAmount(bot, wanted.id()) < wanted.target();
     }
 
     /**
@@ -715,7 +795,7 @@ public final class BotPreference {
      * @return {@code true} if the stored weight is above {@code 0.75}.
      */
     public boolean lovesActivity(BotActivity activity) {
-        return activities.getOrDefault(activity, 0.0) > 0.75;
+        return canChooseActivity(activity) && activities.getOrDefault(activity, 0.0) > 0.75;
     }
 
     /**
@@ -725,7 +805,7 @@ public final class BotPreference {
      * @return {@code true} if the stored weight is above {@code 0.60}.
      */
     public boolean likesActivity(BotActivity activity) {
-        return activities.getOrDefault(activity, 0.0) > 0.60;
+        return canChooseActivity(activity) && activities.getOrDefault(activity, 0.0) > 0.60;
     }
 
     /**
@@ -753,13 +833,12 @@ public final class BotPreference {
     /**
      * Determines whether the bot qualifies as a skiller.
      * <p>
-     * Requires the {@link PersonalityTemplateType#SKILLER} template and a PKing preference
-     * no higher than {@code 0.60}. Activity preferences alone do not qualify a bot as a skiller.
+     * The skiller personality always takes precedence over randomized or saved combat weights.
      *
-     * @return {@code true} if the bot has the skiller template and does not like PKing.
+     * @return {@code true} if the bot has the skiller template.
      */
     public boolean isSkiller() {
-        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER) && !likesActivity(BotActivity.PKING) && !isCombatant();
+        return hasPersonalityTemplate(PersonalityTemplateType.SKILLER);
     }
 
     /**
@@ -928,5 +1007,6 @@ public final class BotPreference {
      */
     public void setBot(Bot bot) {
         this.bot = bot;
+        enforceSkiller();
     }
 }

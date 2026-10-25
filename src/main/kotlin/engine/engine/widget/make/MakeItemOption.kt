@@ -9,7 +9,7 @@ import io.luna.game.model.mob.overlay.NumberInput
  *
  * @author lare96
  */
-class MakeItemOption(val amount: Int, var index: Int) {
+class MakeItemOption(val amount: Int, val index: Int) {
     fun run(plr: Player, inter: MakeItemDialogue) {
         if (amount == -1) {
             // Make <x> option.

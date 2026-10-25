@@ -11,6 +11,12 @@
  *
  * GEAR:
  * Lines for fake gear trimming, gear upgrading, gear duplication, or gear enhancement scams.
+ *
+ * DOUBLING_ADVERT / TRIMMING_ADVERT are single-line advertisements for the supported trust trades.
+ * The corresponding PITCH and SUCCESS pools contain complete alternating conversations, actor first.
+ * SUCCESS means the actor kept the items after a native completed trade; it never means a real trim or doubling.
+ * REFUSAL contains paired exchanges for victims who decide against trading. Keep every exchange even in length.
+ * LURE_PITCH and LURE_TRAVEL contain complete actor/victim exchanges; LURE_ADVERT contains invitation lines.
  */
 {
   "GOLD": [
@@ -2718,5 +2724,431 @@
     "upgrading gear, first person only",
     "first person only, upgrading gear",
     "upgrading gear for free"
+  ],
+  "DOUBLING_ADVERT": [
+    "Doubling money! One trade in, twice the coins back.",
+    "Testing my luck today. Doubling coins at the bank!",
+    "Got spare gold? I can turn a small pile into a bigger one.",
+    "Double your coins while you wait. Ask me how!",
+    "Helping people get rich today! Money doubling here.",
+    "Your coins deserve a friend. Send them over and I will double them.",
+    "No training, no mining. Just double money!",
+    "One lucky customer at a time. Doubling gold!"
+  ],
+  "TRIMMING_ADVERT": [
+    "Trimming armour! Bring your plain metal gear over.",
+    "Plain rune looking a bit dull? I can add a trim!",
+    "Free armour trimming today. Taking one set at a time.",
+    "Fresh trims for bronze through rune. Ask me!",
+    "Fancy armour without the treasure trail? Talk to me.",
+    "Give your old platebody a new look. Trimming here!",
+    "Armour looking boring? I know a little trick.",
+    "Polishing and trimming metal armour. No charge!"
+  ],
+  "DOUBLING_PITCH": [
+    [
+      "Hey, want me to double those spare coins?",
+      "How does that work?",
+      "You trade them over, I trade back twice as much.",
+      "That sounds a little too easy."
+    ],
+    [
+      "Long day at the bank?",
+      "Just taking a break.",
+      "I am doubling gold while people wait.",
+      "What is the catch?"
+    ],
+    [
+      "You saving for anything nice?",
+      "Maybe a better weapon.",
+      "Let me double some gold and get you closer.",
+      "You really give it back?"
+    ],
+    [
+      "I have a little money making trick.",
+      "Go on then.",
+      "Trade me your coins and I will send back double.",
+      "Why not just keep your own money?"
+    ],
+    [
+      "Ever had your money doubled?",
+      "Only when I earn it.",
+      "Try a trade with me. It is quicker.",
+      "You make it sound very simple."
+    ],
+    [
+      "Fancy trying something lucky?",
+      "Depends what it costs.",
+      "Trade some coins and I will double them for you.",
+      "Luck usually costs me money."
+    ],
+    [
+      "You are not scared of a little trade, are you?",
+      "I am not scared. Just careful.",
+      "Fair enough. I promise to return double your coins.",
+      "Promises are easy to make."
+    ],
+    [
+      "Want a hand with that gold pile?",
+      "What sort of hand?",
+      "A doubling hand. Trade it and get twice as much back.",
+      "Is this one of those scams?"
+    ],
+    [
+      "Got a minute before you head off?",
+      "Yes, why?",
+      "I am doubling money for people who trust me.",
+      "That is a big thing to ask."
+    ],
+    [
+      "You look like someone with good luck.",
+      "Not usually.",
+      "Maybe today is different. I can double your coins.",
+      "Or make them disappear?"
+    ],
+    [
+      "I can help you afford that next upgrade.",
+      "By doing what?",
+      "Doubling your money after a quick trade.",
+      "I would want to see it come back."
+    ],
+    [
+      "A little trust goes a long way.",
+      "That depends who is asking.",
+      "Trade me some gold. I will give you twice as much.",
+      "I will think about that."
+    ]
+  ],
+  "TRIMMING_PITCH": [
+    [
+      "Nice armour. Ever thought about adding a trim?",
+      "Can you do that?",
+      "Sure. Trade the plain pieces and I will trim them.",
+      "I thought trims came from clues."
+    ],
+    [
+      "Your platebody could use a little shine.",
+      "It works fine.",
+      "I can give it a fancy trim for free.",
+      "Free? That is unusual."
+    ],
+    [
+      "I know a trick for trimming metal armour.",
+      "What trick?",
+      "Let me hold the pieces for a moment and I will show you.",
+      "You need to hold them?"
+    ],
+    [
+      "Looking for an armour upgrade?",
+      "Not buying right now.",
+      "No charge. I can add a trim to what you already have.",
+      "How would you manage that?"
+    ],
+    [
+      "Want your helm to match a fancy set?",
+      "Maybe one day.",
+      "Trade it to me and I can do the trim today.",
+      "That sounds suspiciously convenient."
+    ],
+    [
+      "I have been working on armour finishes.",
+      "Like a smith?",
+      "Exactly. Give me a plain metal piece and I will trim it.",
+      "Where are your tools?"
+    ],
+    [
+      "Plain armour gets boring after a while.",
+      "It keeps me alive.",
+      "It can look good too. I can trim it for you.",
+      "As long as I get it back."
+    ],
+    [
+      "Ever wanted a fancy kiteshield?",
+      "They cost a bit.",
+      "I can trim your plain one instead.",
+      "Why does nobody else offer that?"
+    ],
+    [
+      "I can make those legs look expensive.",
+      "They already were expensive.",
+      "Then a free trim will make them even better.",
+      "You are not going to run off, are you?"
+    ],
+    [
+      "Want to stand out at the bank?",
+      "I am fine standing here.",
+      "Trade me your metal armour. A trim will turn heads.",
+      "So would losing all my armour."
+    ],
+    [
+      "I am practising armour trimming.",
+      "On other people's armour?",
+      "Only willing customers. I return it with a nice border.",
+      "And you promise it is safe?"
+    ],
+    [
+      "That plain set could look a lot fancier.",
+      "What do you suggest?",
+      "Let me add a trim. Just hand the pieces over.",
+      "I have heard that line before."
+    ]
+  ],
+  "REFUSAL": [
+    [
+      "So, shall we give it a try?",
+      "No thanks. I will keep my things."
+    ],
+    [
+      "It only takes a quick trade.",
+      "I am not handing anything over."
+    ],
+    [
+      "You can trust me on this.",
+      "I would rather not test that."
+    ],
+    [
+      "Last chance before I go!",
+      "Then I will let the chance go."
+    ],
+    [
+      "No need to worry.",
+      "That is exactly when I start worrying."
+    ],
+    [
+      "Are you sure?",
+      "Yes. Find someone else."
+    ],
+    [
+      "Could be your lucky day.",
+      "Keeping my items is lucky enough."
+    ],
+    [
+      "Just a little trust?",
+      "Not with my belongings."
+    ]
+  ],
+  "DOUBLING_SUCCESS": [
+    [
+      "Thanks for the trade.",
+      "Where is the double money?",
+      "Ah. About that...",
+      "You took it, didn't you?"
+    ],
+    [
+      "Pleasure doing business.",
+      "We are only halfway done.",
+      "I think I am finished.",
+      "I want my coins back."
+    ],
+    [
+      "That went smoothly.",
+      "Now send the gold back.",
+      "I did not say when.",
+      "I should have known better."
+    ],
+    [
+      "I will be heading off.",
+      "Wait, what about my money?",
+      "Maybe your luck will improve next time.",
+      "Do not ask me for another trade."
+    ],
+    [
+      "Thanks for trusting me.",
+      "You said you would double it.",
+      "I say lots of things.",
+      "I will remember your name."
+    ],
+    [
+      "Lovely pile of coins.",
+      "My pile of coins.",
+      "It is in my bag now.",
+      "That was a scam."
+    ],
+    [
+      "All done!",
+      "I have less money than before.",
+      "Funny how that happens.",
+      "I am not falling for that again."
+    ],
+    [
+      "Nice trading with you.",
+      "Give me my gold back.",
+      "Sorry, no returns today.",
+      "You are not getting another coin from me."
+    ]
+  ],
+  "TRIMMING_SUCCESS": [
+    [
+      "Thanks for the armour.",
+      "When do I get it back?",
+      "I might keep it a while.",
+      "You cannot even trim armour, can you?"
+    ],
+    [
+      "That looks better already.",
+      "I cannot see it. You have it.",
+      "Exactly. Much better for me.",
+      "I want my gear back."
+    ],
+    [
+      "Lovely workmanship on these pieces.",
+      "You were meant to improve them.",
+      "I think I will keep them plain.",
+      "You lied to me."
+    ],
+    [
+      "Thanks for the donation.",
+      "It was not a donation!",
+      "Oh. Awkward.",
+      "I will remember this."
+    ],
+    [
+      "Time for me to get going.",
+      "Not with my armour!",
+      "It fits my plans very nicely.",
+      "You are a thief."
+    ],
+    [
+      "Another happy customer.",
+      "I do not have my armour!",
+      "Happy is a matter of perspective.",
+      "Do not speak to me again."
+    ],
+    [
+      "Looks like a good trade to me.",
+      "You offered absolutely nothing.",
+      "A very generous price.",
+      "I should have listened to my doubts."
+    ],
+    [
+      "Thanks for trusting an expert.",
+      "An expert at what?",
+      "Getting free armour, apparently.",
+      "I am never doing this again."
+    ]
+  ],
+  "LURE_ADVERT": [
+    "Anyone fancy a short walk? I know a quiet money spot.",
+    "Got a little time? Come see a spot I found.",
+    "Looking for company. I can show you something interesting.",
+    "Taking a break? There is something I want to show you."
+  ],
+  "LURE_PITCH": [
+    [
+      "Taking a break from trading?",
+      "For a little while.",
+      "Come for a walk. I found a quiet spot nearby.",
+      "What sort of spot?"
+    ],
+    [
+      "Fancy a bit of exploring?",
+      "I have a few minutes.",
+      "Follow me north. I will show you where I make my money.",
+      "North sounds suspicious."
+    ],
+    [
+      "I could use some company.",
+      "Where are you going?",
+      "Just past the bank. There is something worth seeing.",
+      "Is it far?"
+    ],
+    [
+      "You look bored standing here.",
+      "Maybe a little.",
+      "Come along. I know somewhere more interesting.",
+      "You had better know the way."
+    ],
+    [
+      "Ever wondered what is north of here?",
+      "Mostly trouble, I thought.",
+      "Not if you know a quiet place. Follow me.",
+      "I am not sure about that."
+    ],
+    [
+      "Want to see a secret spot?",
+      "Why tell me?",
+      "It gets lonely walking there alone.",
+      "That is quite an invitation."
+    ],
+    [
+      "How is the trading going?",
+      "Nothing much happening.",
+      "Come take a walk with me instead.",
+      "Where would we end up?"
+    ],
+    [
+      "There is something I want to show you.",
+      "What is it?",
+      "Easier to show you. Follow me north for a bit.",
+      "That does sound rather mysterious."
+    ]
+  ],
+  "LURE_TRAVEL": [
+    [
+      "Nice to get away from the bank for a bit.",
+      "I suppose it is."
+    ],
+    [
+      "Not much farther now.",
+      "You said that a minute ago."
+    ],
+    [
+      "Quiet up here, is it not?",
+      "A little too quiet."
+    ],
+    [
+      "You are keeping up nicely.",
+      "I am keeping an eye on you, actually."
+    ],
+    [
+      "You will like the spot when we get there.",
+      "It had better be worth the walk."
+    ],
+    [
+      "No need to look so nervous.",
+      "You are not going to scam me, are you?",
+      "Me? Pfft, no.",
+      "That answer did not help much."
+    ],
+    [
+      "I come this way all the time.",
+      "Do you usually bring strangers?"
+    ],
+    [
+      "Nearly there. Just keep following.",
+      "I still want to know what we are looking for."
+    ],
+    [
+      "Anything good happen today?",
+      "I will let you know when this walk is over."
+    ],
+    [
+      "Lovely weather for a walk.",
+      "That does not make the Wilderness any safer."
+    ],
+    [
+      "Trust me, I know this place.",
+      "Those words make me nervous."
+    ],
+    [
+      "You have been very good company.",
+      "Do not make me regret following you."
+    ],
+    [
+      "Did you bring anything to eat?",
+      "I was not planning a long trip."
+    ],
+    [
+      "There is usually nobody around here.",
+      "I would prefer it stayed that way."
+    ],
+    [
+      "A little adventure never hurt anyone.",
+      "That is plainly not true."
+    ],
+    [
+      "Just a few more steps.",
+      "I am starting to wish I stayed at the bank."
+    ]
   ]
 }

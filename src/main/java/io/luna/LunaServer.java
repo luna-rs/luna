@@ -39,10 +39,12 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -71,6 +73,12 @@ public final class LunaServer {
      * Async logger.
      */
     private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * How long the shutdown hook waits for the graceful shutdown. That normally takes seconds, so this only matters
+     * when the game thread is stuck.
+     */
+    private static final Duration SHUTDOWN_TIMEOUT = Duration.ofMinutes(1);
 
     /**
      * Owning context (cache/world/services/plugins).
@@ -119,6 +127,7 @@ public final class LunaServer {
 
             // We're ready to accept logins.
             initNetwork();
+            initShutdownHook(game);
 
             long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
             logger.info("Luna is now online on port {} (took {}s).",
@@ -162,6 +171,31 @@ public final class LunaServer {
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
         bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
+    }
+
+    /**
+     * Adds a shutdown hook that runs the graceful shutdown when the JVM is stopped some other way, such as by Ctrl+C,
+     * {@code kill} or closing the terminal, so that players are still saved. A shutdown that already started is waited
+     * for.
+     *
+     * @param game The game service.
+     */
+    private void initShutdownHook(GameService game) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Only stop a running service: stopping a NEW one would run its exit listener here and hang the JVM.
+            if (game.isRunning()) {
+                game.stopAsync();
+            }
+            try {
+                game.awaitTerminated(SHUTDOWN_TIMEOUT);
+            } catch (TimeoutException e) {
+                logger.fatal("The graceful shutdown did not finish within {}s, exiting anyway.",
+                        box(SHUTDOWN_TIMEOUT.toSeconds()));
+            } catch (IllegalStateException e) {
+                // The game service failed, and its listener has logged why.
+            }
+            LogManager.shutdown();
+        }, "ShutdownHookThread"));
     }
 
     /**

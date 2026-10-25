@@ -77,8 +77,8 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
      * Expected fields:
      * <ul>
      *     <li>{@code id} - projectile graphic id</li>
-     *     <li>{@code delay} - value passed to {@link TargetBuilder#setTicksToEnd(int)}</li>
-     *     <li>{@code speed} - value passed to {@link TargetBuilder#setTicksToStart(int)}</li>
+     *     <li>{@code delay} - legacy end cycle passed to {@link TargetBuilder#setTicksToEnd(int)}</li>
+     *     <li>{@code speed} - legacy start cycle passed to {@link TargetBuilder#setTicksToStart(int)}</li>
      *     <li>{@code start_height} - launch height</li>
      *     <li>{@code end_height} - impact height</li>
      *     <li>{@code curve} - initial slope</li>
@@ -102,8 +102,8 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
                         .setSourceEntity(source)
                         .setTargetEntity(target)
                         .setId(id)
-                        .setTicksToStart(delay)
-                        .setTicksToEnd(speed)
+                        .setTicksToEnd(delay)
+                        .setTicksToStart(speed)
                         .setStartHeight(startHeight)
                         .setEndHeight(endHeight)
                         .setInitialSlope(curve)

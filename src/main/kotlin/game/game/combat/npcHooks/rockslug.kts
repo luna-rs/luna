@@ -7,14 +7,13 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
     /**
-     * The lowest health a rockslug can be reduced to through normal damage.
+     * The highest remaining health eligible for a salt finish, inclusive.
      */
-    val HITPOINTS_THRESHOLD = 5
+    val HITPOINTS_THRESHOLD = 4
 
     /**
      * The bag of salt item id.
@@ -34,35 +33,46 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     /*
      * Handles rockslug finishing behaviour.
      *
-     * When an incoming hit would reduce a rockslug to or below the finishing threshold, the normal damage is cancelled and
-     * the slug is left at 1 hitpoint. If the attacker is a player carrying a bag of salt, the player performs the
-     * salting sequence and the slug is killed shortly after.
+     * When an incoming hit would reduce a rockslug to or below the finishing threshold, the hit is capped to leave at least
+     * one hitpoint and still delivered for damage credit and experience. If the attacker carries a bag of salt,
+     * the player performs the salting sequence and the slug is killed shortly after.
      *
-     * If the player does not have salt, they will always hit 0.
+     * Without salt, the slug remains prepared for execution and cannot be reduced below one hitpoint by these hits.
+     * The salting sequence cannot start after either participant dies or leaves the world. Once salt has been
+     * applied, its delayed finish may still land after the player's death.
      */
     combat(1622, 1623) {
+        poisonCanKill = false
         defend {
             val damageAmount = damage?.rawAmount ?: 0
             if (other is Player && npc.health - damageAmount <= HITPOINTS_THRESHOLD) {
+                damage = damage?.cappedAt(npc.health - 1)
                 npc.combat.prepareForExecution()
-                if (other.inventory.remove(BAG_OF_SALT)) {
-                    damage = null
-                    other.submitAction(object : LockedAction(other, false, 1) {
+                if (!npc.combat.isExecutionPending && other.inventory.remove(BAG_OF_SALT)) {
+                    val finishingAttack = source
+                    val finishingAction = object : LockedAction(other, false, 1) {
+                        override fun onUnlock() {
+                            npc.combat.clearExecution(this)
+                        }
+
                         override fun run(): Boolean {
+                            if (!npc.isAlive || (executions == 0 && !other.isAlive)) {
+                                return true
+                            }
                             if (executions == 0) {
                                 other.animation(SALT_ANIMATION)
                                 npc.graphic(SALT_GRAPHIC)
                                 other.sendMessage("You pour some salt on the Rockslug.")
                                 npc.animation(Animation(npc.combatDef().deathAnimation, AnimationPriority.HIGH))
                             } else if (executions == 1) {
-                                npc.health = 0
+                                npc.combat.finishExecution(finishingAttack)
                                 return true
                             }
                             return false
                         }
-                    })
-                } else {
-                    damage = CombatDamageRequest.zero(other, npc).resolve()
+                    }
+                    npc.combat.trackExecution(finishingAction)
+                    other.submitAction(finishingAction)
                 }
             }
         }

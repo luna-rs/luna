@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import api.bot.action.BotCombatActionHandler
 import api.attr.Attr
 import api.bot.zone.SubZone
 import io.luna.game.model.mob.bot.Bot
@@ -95,13 +96,17 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         MagicScriptFactory,
         RunecraftingScriptFactory,
         PrayerScriptFactory,
-        AgilityScriptFactory
+        AgilityScriptFactory,
+        SlayerScriptFactory
     ).associateBy { it.skillId }
 
     override fun accept(bot: Bot) {
         val weights = HashMap<Int, Double>()
+        fun eligible(skill: Int) = if (training) BotCombatActionHandler.wantsToTrain(bot, skill)
+            else BotCombatActionHandler.mayGainExperience(bot, skill)
 
         for (skill in bot.skills) {
+            if (!eligible(skill.id)) continue
             // In training mode, low level skills are more likely to be selected. In profit mode, the inverse applies.
             val levelFactor = if (training) 1.0 - (skill.staticLevel / 100.0) else skill.staticLevel / 100.0
             weights[skill.id] = (levelFactor * LEVEL_WEIGHT) + 0.10
@@ -120,7 +125,8 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
             var script = factories[selectedSkill]?.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
 
             if (script == null) {
-                val factory = factories.values.random()
+                val factory = factories.values.filter { eligible(it.skillId) }
+                    .randomOrNull() ?: return@run null
                 script = factory.getScript(bot, bot.skill(factory.skillId).staticLevel, zones, training)
             }
 

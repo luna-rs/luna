@@ -4,6 +4,7 @@ import api.bot.script.BotScript;
 import api.bot.script.BotScriptData;
 import io.luna.game.model.mob.bot.Bot;
 import kotlin.reflect.KClass;
+import kotlin.jvm.JvmClassMappingKt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,7 +58,7 @@ public final class BotScriptManager {
      * @param <T> The type of data used to initialize the script.
      */
     public <T extends BotScriptData> void addScript(KClass<? extends BotScript> type, ScriptSupplier<T> newScript) {
-        scriptMap.put(type.getQualifiedName(), newScript);
+        scriptMap.put(JvmClassMappingKt.getJavaClass(type).getName(), newScript);
     }
 
     /**

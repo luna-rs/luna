@@ -22,10 +22,18 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
     /**
      * Resets the victim’s state after death. This ensures that both players and NPCs transition smoothly from the
      * dead state back into an active, functional state within the world.
+     * Player reset clears active prayers and their drain state, the manually selected spell, combat and retaliation
+     * targets, the last opponent, and the combat timer before restoring skills and removing the skull.
      */
     fun reset() {
         val victim = receiver.victim
         if (victim is Player) {
+            victim.combat.prayers.deactivateAll()
+            victim.combat.magic.selectedSpell = io.luna.game.model.def.CombatSpellDefinition.NONE
+            victim.combat.target = null
+            victim.combat.autoRetaliateTarget = null
+            victim.combat.lastCombatWith = null
+            victim.combat.timer.reset()
             victim.animation(Animation.CANCEL)
             victim.skills.resetAll()
             victim.status.remove(StatusEffectType.SKULLED)

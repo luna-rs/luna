@@ -3,6 +3,7 @@ package io.luna.game.model.mob.block;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
@@ -45,22 +46,24 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
     /**
      * Adds the encoded block set to the main updating buffer. This method is responsible for writing the update mask
-     * and then calling {@link #encodeBlock(Mob, UpdateBlock, ByteMessage)} for each active block.
+     * and then calling {@link #encodeBlock(Mob, UpdateBlock, ByteMessage, Player)} for each active block.
      *
      * @param mob The mob whose update is being encoded.
      * @param msg The main updating buffer.
+     * @param viewer The player receiving the packet.
      * @param state The update state (e.g., {@code ADD_LOCAL}, {@code UPDATE_SELF}).
      */
-    public abstract void addBlockSet(E mob, ByteMessage msg, UpdateState state);
+    public abstract void addBlockSet(E mob, ByteMessage msg, UpdateState state, Player viewer);
 
     /**
      * Encodes an individual {@link UpdateBlock} for a mob.
      *
      * @param mob The mob whose block is being encoded.
+     * @param viewer The player receiving the packet.
      * @param block The update block definition.
      * @param blockMsg The temporary block buffer.
      */
-    public abstract void encodeBlock(E mob, UpdateBlock block, ByteMessage blockMsg);
+    public abstract void encodeBlock(E mob, UpdateBlock block, ByteMessage blockMsg, Player viewer);
 
     /**
      * Computes the immutable ordered list of {@link UpdateBlock}s that can be used for this mob type. This is called
@@ -76,9 +79,10 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
      *
      * @param mob The mob being updated.
      * @param blockMsg The target buffer for the update mask and block data.
+     * @param viewer The player receiving the packet.
      * @param state The update state.
      */
-    final void encodeBlockSet(E mob, ByteMessage blockMsg, UpdateState state) {
+    final void encodeBlockSet(E mob, ByteMessage blockMsg, UpdateState state, Player viewer) {
         List<UpdateBlock> encodeBlocks = new ArrayList<>(updateBlocks.size());
         int mask = 0;
 
@@ -117,7 +121,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
             // Encode all active blocks in order.
             for (UpdateBlock block : encodeBlocks) {
-                encodeBlock(mob, block, blockMsg);
+                encodeBlock(mob, block, blockMsg, viewer);
             }
         }
     }
@@ -128,11 +132,12 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
      *
      * @param mob The mob whose updates are being processed.
      * @param msg The main updating buffer.
+     * @param viewer The player receiving the packet.
      * @param state The current update state.
      */
-    public void encode(E mob, ByteMessage msg, UpdateState state) {
+    public void encode(E mob, ByteMessage msg, UpdateState state, Player viewer) {
         if (!mob.getFlagData().isEmpty() || state == ADD_LOCAL) {
-            addBlockSet(mob, msg, state);
+            addBlockSet(mob, msg, state, viewer);
         }
     }
 }

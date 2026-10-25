@@ -88,6 +88,7 @@ class BotActionHandler(val bot: Bot) {
      * @return `true` if the item exists in equipment, inventory, or bank storage.
      */
     fun has(item: Item): Boolean {
+        // todo replace with item tracker?
         if (bot.equipment.contains(item)) {
             return true
         } else if (bot.inventory.contains(item)) {
@@ -527,6 +528,10 @@ class BotActionHandler(val bot: Bot) {
      */
     suspend fun webWalk(dest: Position, radius: Int = 0, attempts: Int = 1, bank: BankAccess = BankAccess.ALL): WebWalkResult =
         WebWalker.webWalk(bot, dest, radius, attempts, bank)
+
+    /** Routes to one of the caller's verified stands, using carried resources without a bank detour. */
+    suspend fun webWalkToAny(destinations: Collection<Position>): Boolean =
+        WebWalker.webWalkToAny(bot, destinations).success
 
     /**
      * Walks this bot to the nearest bank with the web-walker, in one call from a script:

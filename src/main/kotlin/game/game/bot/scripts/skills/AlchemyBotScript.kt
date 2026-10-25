@@ -1,5 +1,6 @@
 package game.bot.scripts.skills
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
@@ -236,6 +237,7 @@ class AlchemyBotScript(
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
         if (bot.spellbook != Spellbook.REGULAR) {
             bot.log("Alchemy requires the regular spellbook.")
             return false
@@ -340,6 +342,7 @@ class AlchemyBotScript(
     }
 
     override suspend fun executeInZone(): Boolean {
+        if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) { stop(); return false }
         val target = currentInventoryTarget()
 
         if (target == null) {

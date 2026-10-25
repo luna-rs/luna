@@ -1,8 +1,11 @@
 package io.luna.game.model.mob.combat.attack;
 
+import api.bot.action.BotCombatActionHandler;
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -106,6 +109,7 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This method calculates the base damage, passes it through {@link #onAttack(CombatDamage)} to allow subclasses
      * to modify or cancel the result, then applies the standard combat delay and timer updates before invoking {@link #attack()}.
+     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -118,7 +122,12 @@ public abstract class CombatAttack<T extends Mob> {
             attacker.getCombat().setTarget(null);
             return;
         }
-        attacker.getCombat().setAttackDelay(delay);
+        if (attacker instanceof Player && victim instanceof Player) {
+            BotCombatActionHandler.observePvpAttack((Player) attacker, (Player) victim);
+        }
+        if (!ignoreAttackDelay) {
+            attacker.getCombat().setAttackDelay(delay);
+        }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().setLastCombatWith(attacker);
@@ -168,6 +177,16 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
+     * Called when the projectile timing action finishes, including interruption before arrival.
+     * Normal completion follows the arrival callback and does not imply that damage was delivered.
+     *
+     * @param interrupted Whether the timing action was interrupted rather than completed normally.
+     */
+    public void onProjectileFinished(boolean interrupted) {
+
+    }
+
+    /**
      * Starts a simple projectile timing action for this attack.
      * <p>
      * This helper invokes {@link #onProjectileLaunched()} on the first action execution and {@link #onProjectileReached()}
@@ -187,6 +206,11 @@ public abstract class CombatAttack<T extends Mob> {
                     return true;
                 }
                 return false;
+            }
+
+            @Override
+            public void onFinished() {
+                onProjectileFinished(getState() == ActionState.INTERRUPTED);
             }
         });
     }

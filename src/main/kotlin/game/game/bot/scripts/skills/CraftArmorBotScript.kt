@@ -9,6 +9,7 @@ import api.bot.script.productionBatch
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
+import engine.bot.coordinator.skill.CraftingScriptFactory
 import com.google.gson.JsonObject
 import game.skill.crafting.armorCrafting.CraftArmorActionItem
 import game.skill.crafting.armorCrafting.CraftArmorActionItem.Companion.NEEDLE_ID
@@ -36,14 +37,18 @@ import kotlin.time.Duration.Companion.seconds
  * @property armor The existing armour recipe to produce.
  * @param duration The production session duration.
  * @param zones Existing processing zones with banking and travel support.
+ * @property targetLevel Optional earned Crafting goal for a pending activity; ordinary sessions retain no goal.
  * @author lare96
  */
 class CraftArmorBotScript(
     bot: Bot,
     val armor: HideArmor,
     duration: Duration,
-    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_CRAFTING)
+    zones: MutableList<SubZone> = StationaryInventoryBotScript.zonesForSkill(SKILL_CRAFTING),
+    val targetLevel: Int? = null
 ) : InventoryBotScript(bot, duration, zones) {
+    init { require(targetLevel == null || targetLevel in 1..99) }
+
     override val verifiedProductionWithdrawals = true
 
     companion object {
@@ -51,15 +56,18 @@ class CraftArmorBotScript(
         class CraftArmorData : InventoryScriptData() {
             /** Armour enum retained for compatibility with existing snapshots. */
             var armor: HideArmor = HideArmor.LEATHER_GLOVES
+            var targetLevel: Int? = null
 
             override fun load(data: JsonObject) {
                 super.load(data)
                 armor = HideArmor.valueOf(data.get("armor").asString)
+                targetLevel = data.get("target_level")?.takeUnless { it.isJsonNull }?.asInt
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("armor", armor.name)
+                targetLevel?.let { data.addProperty("target_level", it) }
             }
         }
 
@@ -87,7 +95,7 @@ class CraftArmorBotScript(
     private val requiredTools = tools(armor)
 
     /** Restores existing armour snapshots, including saved zones and shared retry counters. */
-    constructor(bot: Bot, data: CraftArmorData) : this(bot, data.armor, data.duration, data.zones) {
+    constructor(bot: Bot, data: CraftArmorData) : this(bot, data.armor, data.duration, data.zones, data.targetLevel) {
         restoreInventoryState(data)
     }
 
@@ -109,8 +117,41 @@ class CraftArmorBotScript(
         return listOf(Item(NEEDLE_ID), Item(hides.id, hides.amount * amount), Item(THREAD_ID, amount))
     }
 
-    override fun withdraw(): List<Item> = productionWithdraw(materials, requiredTools,
-        levelEligible = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel)
+    override fun withdraw(): List<Item> {
+        if (trainingGoalReached()) { stop(); return emptyList() }
+        return productionWithdraw(materials, requiredTools,
+            levelEligible = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel,
+            prepareMissing = { prepareLeather() })
+    }
+
+    /** A level prerequisite ends through ordinary XP progression, without granting levels or extending its session. */
+    private fun trainingGoalReached() = targetLevel?.let { bot.crafting.staticLevel >= it } == true
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (!trainingGoalReached()) return false
+        stop()
+        return true
+    }
+
+    /** Unavailable soft leather can be prepared from owned hides, or ordinary cow collection for combat-capable bots. */
+    private fun prepareLeather(): Boolean {
+        if (armor.hides?.first != Hide.SOFT_LEATHER ||
+            bot.ownsProductionSupplies(listOf(armor.hidesItem!!)) ||
+            !bot.ownsProductionSupplies(listOf(Item(THREAD_ID)), setOf(NEEDLE_ID))) return false
+        val hides = bot.bank.computeAmountForId(CollectHidesBotScript.COWHIDE).toLong() +
+                bot.inventory.computeAmountForId(CollectHidesBotScript.COWHIDE)
+        val preparation = if (hides > 0) {
+            val coins = bot.bank.computeAmountForId(995).toLong() + bot.inventory.computeAmountForId(995)
+            if (coins < Hide.SOFT_LEATHER.cost) return false
+            TanHideBotScript(bot, duration)
+        } else {
+            if (bot.preferences.isSkiller) return false
+            CraftingScriptFactory.getCollectHidesScript(bot, mutableListOf(), pickUpHides = true)
+        }
+        bot.scriptStack.softPushHead(preparation)
+        stop()
+        return true
+    }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also { if (it.isEmpty()) stop() }
 
@@ -136,7 +177,7 @@ class CraftArmorBotScript(
             output.clickButton(if (amount >= 10) buttons.first else if (amount >= 5) buttons.second else buttons.third)
         } else {
             if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
-            val index = HideArmor.HIDE_TO_ARMOR[armor.hides.first]?.indexOf(armor.id) ?: return false
+            val index = HideArmor.HIDE_TO_ARMOR[armor.hides!!.first]?.indexOf(armor.id) ?: return false
             if (index < 0) return false
             handler.widgets.clickMakeItem(index, amount)
         }
@@ -150,6 +191,7 @@ class CraftArmorBotScript(
 
     override fun snapshot(): CraftArmorData = CraftArmorData().also {
         it.armor = armor
+        it.targetLevel = targetLevel
         saveInventoryState(it)
     }
 }

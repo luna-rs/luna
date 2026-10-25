@@ -31,7 +31,7 @@ val GRAPHIC = Graphic(559, 0, 0)
  * Finds the other mobs hit by the Dragon 2h sword special attack.
  *
  * Other mobs are only hit in multi-combat areas. They must be the same type of mob as [victim] (players or NPCs),
- * stand within one tile of [attacker], and be attackable.
+ * stand within one tile of [attacker], be attackable, and pass the attacker's controller checks.
  *
  * @param attacker The player performing the special attack.
  * @param victim The primary target of the special attack.
@@ -43,7 +43,7 @@ fun findOtherTargets(attacker: Player, victim: Mob): List<Mob> {
     }
     return world.locator.findViewable<Mob>(victim.type, attacker) {
         it != attacker && it != victim && it.isWithinDistance(attacker, 1) &&
-                it.inMultiArea() && it.combat.isAttackable
+                it.inMultiArea() && it.combat.isAttackable && attacker.controllers.checkCombat(it)
     }.take(MAX_TARGETS - 1)
 }
 

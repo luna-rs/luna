@@ -10,9 +10,11 @@ import engine.combat.status.hooks.TeleBlockStatusEffect
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatSpell
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
- * The duration of a standard Tele Block spell effect.
+ * The standard Tele Block duration in minutes. Converted to seconds for the status effect and halved when the
+ * victim has Protect from Magic active at impact.
  */
 val TELE_BLOCK_MINUTES = 5
 
@@ -49,9 +51,9 @@ spell(CombatSpell.ENTANGLE) {
 
 // Teleblock curse spell.
 spell(CombatSpell.TELEBLOCK) {
-    if (victim is Player) {
+    if (victim is Player && victim.isAlive) {
         val plr = victim.asPlr()
-        var duration = TELE_BLOCK_MINUTES.seconds.inWholeSeconds.toInt()
+        var duration = TELE_BLOCK_MINUTES.minutes.inWholeSeconds.toInt()
         if (plr.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) {
             duration /= 2
         }

@@ -14,7 +14,8 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
      */
     val MIRROR_SHIELD = 4156
 
-    combat(1608, 1609, 1616, 1617) {
+    // Basilisk and cockatrice variants require a mirror shield; kurasks use their own combat hook.
+    combat(1616, 1617, 1620, 1621) {
         attack {
             melee {
                 if (other is Player && other.equipment.shield?.id != MIRROR_SHIELD) {

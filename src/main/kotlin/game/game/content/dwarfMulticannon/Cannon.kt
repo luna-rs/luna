@@ -21,7 +21,6 @@ import io.luna.game.model.`object`.GameObject
 import io.luna.game.task.Task
 import java.util.OptionalInt
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * A Dwarf multicannon set up in the world. It decays after [DECAY_TICKS], and fires while its owner is online.
@@ -229,9 +228,8 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
         }.setId(PROJECTILE)
             .setStartHeight(36)
             .setEndHeight(35)
-            // The builder sends ticksToEnd as the client's start cycle and ticksToStart as its end cycle.
-            .setTicksToEnd(0)
-            .setTicksToStart(flight)
+            .setTicksToStart(0)
+            .setTicksToEnd(flight)
             .setInitialSlope(2)
             .build()
             .display()
@@ -240,9 +238,6 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
 
         val attack = CannonAttack(plr, npc)
         val damage = attack.calculateDamage(npc)
-        if (damage.rawAmount > 0) {
-            plr.ranged.addExperience(2.0 * min(damage.rawAmount, npc.hitpoints.level))
-        }
         npc.combat.lastCombatWith = plr
         npc.combat.resetCombatTimer()
         world.scheduleOnce(flight / 30) {

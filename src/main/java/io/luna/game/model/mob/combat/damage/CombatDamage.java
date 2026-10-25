@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.combat.damage;
 
+import io.luna.game.event.impl.CombatDamageReceivedEvent;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 
 import java.util.OptionalInt;
@@ -46,6 +48,11 @@ public final class CombatDamage {
      */
     private final OptionalInt amount;
 
+    /**
+     * Whether the accuracy roll succeeded, independently of the resolved damage amount.
+     */
+    private final boolean accurate;
+
     // todo docs, the source, can be null
    // private final CombatAttack<?> source;
 
@@ -58,35 +65,75 @@ public final class CombatDamage {
      * @param amount The resolved damage amount.
      */
     CombatDamage(Mob attacker, Mob victim, CombatDamageType type, OptionalInt amount) {
+        this(attacker, victim, type, amount, amount.isPresent());
+    }
+
+    /**
+     * Creates a resolved hit with an explicit accuracy result, allowing accurate zero hits to differ from misses.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The defending mob.
+     * @param type The combat damage type.
+     * @param amount The damage amount, {@code -1} for an effect-only hit, or empty for a magic splash.
+     * @param accurate Whether the accuracy roll succeeded.
+     */
+    CombatDamage(Mob attacker, Mob victim, CombatDamageType type, OptionalInt amount, boolean accurate) {
         this.attacker = attacker;
         this.victim = victim;
         this.type = type;
         this.amount = amount;
+        this.accurate = accurate;
        // this.source = source;
     }
 
     /**
      * Applies this resolved combat hit to the victim.
      * <p>
-     * If this hit is a splash, no numeric damage is dealt. If the amount is {@code -1}, the hit represents a special
-     * non-damaging combat effect and exits without applying damage or pushing to the damage stack. Otherwise, the
-     * numeric damage is applied and this hit is pushed onto the victim's damage stack.
+     * Splashes and effect-only hits do not deal numeric damage. Other hits are capped to remaining health and recorded
+     * before damage is applied. Events, callbacks and history receive the applied hit, including effect-only hits.
+     * Hits against victims that are already dead are discarded without invoking callbacks.
+     *
+     * @param source The attack notified after damage is applied.
      */
-    public void apply(CombatAttack<?> source) { // todo redo docs
+    public void apply(CombatAttack<?> source) {
+        if (!victim.isAlive()) {
+            return;
+        }
+        CombatDamage applied = this;
         if (amount.isPresent()) {
             int rawAmount = amount.getAsInt();
-            if (rawAmount == -1) {
-                // Normal spellbook curse spell like weaken, etc.
-                return;
+            if (rawAmount >= 0) {
+                int actualAmount = Math.min(rawAmount, victim.getHealth());
+                applied = new CombatDamage(attacker, victim, type, OptionalInt.of(actualAmount), accurate);
+                // Record the killing hit before reducing health.
+                victim.getCombat().getDamageStack().push(applied);
+                victim.damage(actualAmount);
             }
-            victim.damage(rawAmount);
         }
         // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync
-        victim.getCombat().getDamageStack().push(this);
-        source.onDamageApplied(this);
+        if (victim instanceof Player && victim != attacker) {
+            victim.getPlugins().post(new CombatDamageReceivedEvent((Player) victim, applied));
+        }
+        source.onDamageApplied(applied);
         attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
-        victim.getCombat().setLastDamageReceived(this);
+        victim.getCombat().setLastDamageReceived(applied);
+    }
+
+    /**
+     * Caps numeric damage while retaining its participants, damage type, and original accuracy result.
+     * Splashes and effect-only hits are returned unchanged.
+     *
+     * @param maximum The largest permitted numeric hit; negative values are treated as zero.
+     * @return This hit if already within the cap, otherwise a capped copy.
+     */
+    public CombatDamage cappedAt(int maximum) {
+        if (amount.isEmpty() || amount.getAsInt() < 0) {
+            return this;
+        }
+        int capped = Math.min(amount.getAsInt(), Math.max(0, maximum));
+        return capped == amount.getAsInt() ? this :
+                new CombatDamage(attacker, victim, type, OptionalInt.of(capped), accurate);
     }
 
     /**
@@ -122,5 +169,14 @@ public final class CombatDamage {
      */
     public int getRawAmount() {
         return amount.orElse(0);
+    }
+
+    /**
+     * Distinguishes a successful zero-damage roll from a physical miss.
+     *
+     * @return Whether the accuracy check succeeded.
+     */
+    public boolean isAccurate() {
+        return accurate;
     }
 }

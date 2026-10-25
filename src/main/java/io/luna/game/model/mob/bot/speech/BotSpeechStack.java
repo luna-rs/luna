@@ -5,10 +5,16 @@ import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.GeneralSpeech;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
+import io.luna.util.StringUtils;
+import io.luna.net.codec.ByteMessage;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BooleanSupplier;
 
 /**
  * A buffer of {@link BotSpeech} requests that manages when and how bots speak.
@@ -69,9 +75,121 @@ public final class BotSpeechStack {
     private boolean disableGeneral;
 
     /**
+     * Activity-owned filler suppression, independent of the external general-speech setting.
+     */
+    private final Set<Object> generalSuppressors = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    /**
+     * Suppresses filler for one activity without overwriting another activity or an external mute.
+     */
+    public void suppressGeneral(Object owner) {
+        if (owner != null) generalSuppressors.add(owner);
+    }
+
+    /**
+     * Releases only this activity's filler suppression.
+     */
+    public void releaseGeneral(Object owner) {
+        generalSuppressors.remove(owner);
+    }
+
+    /**
      * If this bot should stop talking completely.
      */
     private boolean disableAll;
+
+    /**
+     * Exclusive conversation ownership and its live eligibility check, confined to the game thread.
+     */
+    private Object conversationOwner;
+    private BooleanSupplier conversationValid;
+
+    /**
+     * The single reserved turn, retained until acknowledged or cancelled.
+     */
+    private BotSpeech conversationSpeech;
+    private String conversationText;
+    private boolean conversationSent;
+
+    /**
+     * Claims conversational speech without changing existing mute flags or discarding ordinary queued speech.
+     */
+    public boolean reserveConversation(Object owner, BooleanSupplier valid) {
+        if (owner == null || valid == null || disableAll || conversationOwner != null) return false;
+        conversationOwner = owner;
+        conversationValid = valid;
+        return true;
+    }
+
+    /**
+     * Tests ownership and current eligibility before another line can be queued.
+     */
+    public boolean ownsConversation(Object owner) {
+        return conversationOwner == owner && owner != null && !disableAll && conversationValid.getAsBoolean();
+    }
+
+    /**
+     * Queues exactly one bounded-delay turn. Ordinary requests wait until the conversation releases its reservation.
+     */
+    public boolean speakConversation(Object owner, BotSpeech speech) {
+        if (!ownsConversation(owner) || conversationSpeech != null || speech.getDelay() < 0 ||
+                speech.getDelay() > 30 || speech.isDelivered()) return false;
+        conversationSpeech = speech;
+        conversationText = normalizeChat(speech.getText());
+        conversationSent = false;
+        return true;
+    }
+
+    /**
+     * Releases only the matching conversation, preserving normal queued requests and external speech settings.
+     */
+    public void releaseConversation(Object owner) {
+        if (conversationOwner != owner) return;
+        conversationOwner = null;
+        conversationValid = null;
+        conversationSpeech = null;
+        conversationText = null;
+        conversationSent = false;
+    }
+
+    /**
+     * Acknowledges a matching turn only after the normal public-chat handler publishes it.
+     */
+    public void acknowledgeConversation(String text) {
+        if (conversationSpeech != null && conversationSent && ownsConversation(conversationOwner) &&
+                conversationText.equals(text.trim())) {
+            conversationSpeech.acknowledge();
+            conversationSpeech = null;
+            conversationSent = false;
+        }
+    }
+
+    /**
+     * Uses the native 80-character codec so case, unsupported characters and packing padding match received chat.
+     */
+    public static String normalizeChat(String text) {
+        ByteMessage bytes = ByteMessage.raw();
+        try {
+            StringUtils.packText(text, bytes);
+            return StringUtils.unpackText(bytes.getBytes(bytes.content().readableBytes())).trim();
+        } finally {
+            bytes.releaseAll();
+        }
+    }
+
+    /**
+     * Reports effective general-speech suppression from external settings and active activities.
+     */
+    public boolean isGeneralDisabled() {
+        return disableGeneral || !generalSuppressors.isEmpty();
+    }
+
+    /**
+     * Exposes external all-speech suppression; conversations must respect it.
+     */
+    public boolean isAllDisabled() {
+        return disableAll;
+    }
 
     /**
      * Creates a new {@link BotSpeechStack}.
@@ -92,7 +210,24 @@ public final class BotSpeechStack {
     public void process() {
         if (disableAll) {
             buffer.clear();
+            releaseConversation(conversationOwner);
             return;
+        }
+        if (conversationOwner != null) {
+            if (!conversationValid.getAsBoolean()) {
+                releaseConversation(conversationOwner);
+            } else {
+                if (conversationSpeech != null && !conversationSent) {
+                    if (conversationSpeech.delay > 0) {
+                        conversationSpeech.delay--;
+                    } else {
+                        conversationSent = true;
+                        if (!bot.getOutput().chat(conversationSpeech.getText(), conversationSpeech.getColor(),
+                                conversationSpeech.getEffect())) releaseConversation(conversationOwner);
+                    }
+                }
+                return;
+            }
         }
         maybePushFiller();
 
@@ -168,7 +303,7 @@ public final class BotSpeechStack {
      * Does nothing if {@link #disableGeneral} is true or if no humans are near.
      */
     public void maybePushFiller() {
-        if (disableGeneral || bot.getLocalHumans().isEmpty()) {
+        if (isGeneralDisabled() || bot.getLocalHumans().isEmpty()) {
             return;
         }
         // Scale filler ratio to social score.
@@ -189,7 +324,7 @@ public final class BotSpeechStack {
      * These are idle, general phrases unrelated to specific contexts.
      */
     public void pushFiller() {
-        if (!disableGeneral) {
+        if (!isGeneralDisabled()) {
             String phrase = bot.getManager().getGeneralPool().take(bot, GeneralSpeech.selectContextFor(bot));
             push(new BotSpeech(phrase));
         }
@@ -212,7 +347,7 @@ public final class BotSpeechStack {
     private void rebuild() {
         // Only rebuild stack if real players are nearby.
         BotPersonality personality = bot.getPersonality();
-        if (!bot.getLocalHumans().isEmpty() && !disableGeneral) {
+        if (!bot.getLocalHumans().isEmpty() && !isGeneralDisabled()) {
             // Scale initial stack requests to social score.
             int maxLoops = Math.max((int) (MAX_LENGTH * personality.getSocial()), 1);
             for (int loops = 0; loops < maxLoops; loops++) {

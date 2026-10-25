@@ -102,6 +102,7 @@ class DragonFireCombatAttack(
     }
 
     override fun onDamageApplied(damage: CombatDamage?) {
+        if (damage != null) super.onDamageApplied(damage)
         if (damage != null && damage.amount.isPresent && victim is Player) {
             if (protection >= 0.8) {
                 victim.sendMessage("Your shield absorbs most of the dragon fire!")

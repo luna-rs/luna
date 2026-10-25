@@ -14,12 +14,21 @@ val ANIMATION = 923
  */
 val GRAPHIC = Graphic(274, 100, 0)
 
+/**
+ * Impale increases maximum damage by 10 percent while retaining the ordinary accuracy roll.
+ */
+val MAX_HIT_BONUS = 0.10
+
+/**
+ * Impale adds one recovery tick to the weapon's normal attack delay before the attacker can strike again.
+ */
+val EXTRA_ATTACK_DELAY = 1
+
 attack(type = RUNE_CLAWS,
        drain = 25,
-       attackBonus = 0.10,
-       strengthBonus = 0.10) {
+       strengthBonus = MAX_HIT_BONUS) {
 
-    attack { melee(ANIMATION) }
+    attack { melee(ANIMATION, speed = atkCombat.weapon.speed + EXTRA_ATTACK_DELAY) }
 
     launched { attacker.graphic(GRAPHIC); damage }
 }

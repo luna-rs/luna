@@ -56,12 +56,13 @@ object DeathHookHandler {
     var defaultNpcHook: DeathHook<Npc>? = null
     /**
      * Registers a player death hook.
+     * Accepts controller subclasses so their registered death behavior can replace the default player death hook.
      *
      * @param key The class type identifying the controlling system or zone that owns this hook.
      * @param hook The callback executed during the death sequence.
      */
     fun addPlayerHook(key: Class<out PlayerController>, hook: DeathHook<Player>) {
-        if(key.isAssignableFrom(PlayerController::class.java)) {
+        if (PlayerController::class.java.isAssignableFrom(key)) {
             playerHooks[key] = hook
         }
     }

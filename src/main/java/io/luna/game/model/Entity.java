@@ -42,8 +42,7 @@ import static com.google.common.base.Preconditions.checkState;
  * so invariants are respected.
  *
  * <h3>Equality</h3>
- * Implementations must define stable {@link #equals(Object)} and {@link #hashCode()} semantics appropriate for their
- * identity (commonly an index for mobs, or identity for ephemeral types).
+ * An entity equals only itself, unless a subclass defines otherwise ({@link Player} compares by username).
  *
  * @author lare96
  */
@@ -128,12 +127,6 @@ public abstract class Entity implements Attributable, Locatable {
         service = context.getGame();
         world = context.getWorld();
     }
-
-    @Override
-    public abstract int hashCode();
-
-    @Override
-    public abstract boolean equals(Object obj);
 
     @Override
     public abstract String toString();

@@ -23,8 +23,9 @@ attack(type = DARKLIGHT, drain = 50) {
     launched { attacker.graphic(GRAPHIC); damage }
 
     arrived {
-        if (damage.amount.isPresent) {
-            // If attack landed reduce victim's stats by 5% (double if used against demons).
+        if (damage.isAccurate) {
+            // Accurate zero-damage hits can weaken stats; missed accuracy rolls cannot.
+            // Reduce stats by 5%, doubled against demons.
             val reduceBy = if (victim is Npc && victim.def().name.contains("demon", true)) 0.10 else 0.05
             val attackWeaken = floor(victim.attack.staticLevel * reduceBy).toInt()
             val strengthWeaken = floor(victim.strength.staticLevel * reduceBy).toInt()

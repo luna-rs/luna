@@ -1,137 +1,88 @@
 package io.luna.game.model.mob.combat.damage;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multiset.Entry;
-import io.luna.game.event.impl.CombatDamageReceivedEvent;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Tracks combat damage dealt to a single {@link Mob}, grouped by damage source.
+ * Records how much damage each player has dealt to a single {@link Mob}, to decide who killed it.
  * <p>
- * This stack buffers {@link CombatDamage} entries per attacker and can be queried for per-source totals, individual
- * hit lists, or the source that has dealt the highest total amount of damage.
+ * Only players are recorded, by username hash, so no other mob is kept alive by this record and a player who logs back
+ * in keeps their progress towards the kill. Each hit counts up to the hitpoints the mob had left. The record is cleared
+ * when the mob dies and whenever its hitpoints are back to full.
  *
  * @author lare96
  */
 public final class CombatDamageStack {
 
     /**
-     * Buffered damage entries, grouped by attacking {@link Mob}.
-     */
-    private final ListMultimap<Mob, CombatDamage> buffer = ArrayListMultimap.create();
-
-    /**
-     * The mob this damage stack belongs to.
+     * The mob this record belongs to.
      */
     private final Mob mob;
 
     /**
+     * The damage dealt by each player, by username hash, in the order they first hit the mob. Created by the first
+     * hit and dropped when cleared, so a mob that is not being attacked holds no record. Most mobs die to one player,
+     * so it starts small.
+     */
+    private Map<Long, Integer> damageByPlayer;
+
+    /**
      * Creates a new {@link CombatDamageStack}.
      *
-     * @param mob The mob this damage stack belongs to.
+     * @param mob The mob this record belongs to.
      */
     public CombatDamageStack(Mob mob) {
         this.mob = mob;
     }
 
     /**
-     * Pushes a new {@link CombatDamage} entry from {@code source} into this stack.
+     * Records {@code damage} if a player dealt it. Called before the damage is applied, so the killing hit counts.
      *
-     * @param damage The damage entry to buffer.
+     * @param damage The hit about to be applied to the mob.
      */
     public void push(CombatDamage damage) {
         Mob attacker = damage.getAttacker();
-        if (attacker != null && !mob.equals(attacker)) {
-            buffer.put(attacker, damage);
-            if(mob instanceof Player) {
-                mob.getPlugins().post(new CombatDamageReceivedEvent((Player) mob, damage));
-            }
+        if (!(attacker instanceof Player) || attacker == mob) {
+            return;
         }
-    }
-
-    /**
-     * Determines whether this damage stack is currently tracking damage for a mob.
-     *
-     * @param mob The mob to check.
-     * @return {@code true} if this stack contains damage entries for {@code mob}, otherwise {@code false}.
-     */
-    public boolean contains(Mob mob) {
-        return buffer.containsKey(mob);
-    }
-
-    /**
-     * Returns the total buffered damage dealt by {@code mob}.
-     *
-     * @param mob The source mob to total damage for.
-     * @return The total buffered damage.
-     */
-    public int getTotal(Mob mob) {
-        int total = 0;
-        for (CombatDamage damage : buffer.get(mob)) {
-            total += damage.getRawAmount();
+        int amount = Math.min(damage.getRawAmount(), mob.getHealth());
+        if (amount < 1) {
+            return;
         }
-        return total;
+        if (damageByPlayer == null) {
+            damageByPlayer = new LinkedHashMap<>(4);
+        }
+        damageByPlayer.merge(attacker.asPlr().getUsernameHash(), amount, Integer::sum);
     }
 
     /**
-     * Returns an immutable view of all buffered hits dealt by {@code mob}.
-     *
-     * @param mob The source mob to get hits for.
-     * @return The buffered hits for that mob.
-     */
-    public List<CombatDamage> getHits(Mob mob) {
-        return Collections.unmodifiableList(buffer.get(mob));
-    }
-
-    /**
-     * Clears all buffered damage entries for {@code mob}.
-     *
-     * @param mob The source mob whose hits will be cleared.
-     */
-    public void clear(Mob mob) {
-        buffer.removeAll(mob);
-    }
-
-    /**
-     * Clears all buffered damage entries from this stack.
+     * Clears every recorded player.
      */
     public void clear() {
-        buffer.clear();
+        damageByPlayer = null;
     }
 
     /**
-     * Returns the source mob that has dealt the highest total buffered damage.
+     * Returns the player who has dealt the most damage, if they are still online. On a tie, the player who hit the mob
+     * first wins.
      *
-     * @return The highest-damaging source mob, or {@code null} if this stack is empty.
+     * @return The player, or {@code null} if no player has damaged the mob or that player is offline.
      */
-    public Mob getHighestDamage() {
-        if (!buffer.isEmpty()) {
-            Multiset<Mob> totals = HashMultiset.create();
-            for (Map.Entry<Mob, Collection<CombatDamage>> entry : buffer.asMap().entrySet()) {
-                for (CombatDamage damage : entry.getValue()) {
-                    totals.add(entry.getKey(), damage.getRawAmount());
-                }
-            }
-            Mob lastMob = null;
-            int lastTotalDamage = -1;
-            for (Entry<Mob> mobEntry : totals.entrySet()) {
-                int totalDamage = mobEntry.getCount();
-                if (totalDamage > lastTotalDamage) {
-                    lastMob = mobEntry.getElement();
-                    lastTotalDamage = totalDamage;
-                }
-            }
-            return lastMob;
+    public Player getHighestDamage() {
+        if (damageByPlayer == null) {
+            return null;
         }
-        return null;
+        long highest = 0;
+        int highestDamage = 0;
+        for (Map.Entry<Long, Integer> entry : damageByPlayer.entrySet()) {
+            if (entry.getValue() > highestDamage) {
+                highest = entry.getKey();
+                highestDamage = entry.getValue();
+            }
+        }
+        return highestDamage == 0 ? null : mob.getWorld().getPlayer(highest).orElse(null);
     }
 }

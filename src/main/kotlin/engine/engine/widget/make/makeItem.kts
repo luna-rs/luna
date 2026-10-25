@@ -35,18 +35,18 @@ val buttonMap = buttonList.flatMap { it.options() }.toMap()
  */
 fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogue, action: MakeItemOption) {
 
-    // Because 1 and 3 use the same interface, but different indexes.
-    fun checkLength() {
-        when (inter.length) {
-            1 -> action.index = 0
-            3 -> action.index = 1
+    // One- and three-item dialogues share buttons. Resolve a fresh action for this click:
+    // Make X opens a delayed callback, so another player's click must not change its index.
+    val index = when (msg.id) {
+        8893, 8892, 8891, 8890 -> when (inter.length) {
+            1 -> 0
+            3 -> 1
+            else -> action.index
         }
+        else -> action.index
     }
-
-    when (msg.id) {
-        8893, 8892, 8891, 8890 -> checkLength()
-    }
-    action.run(msg.plr, inter)
+    if (index !in 0 until inter.length) return
+    MakeItemOption(action.amount, index).run(msg.plr, inter)
 }
 
 /**

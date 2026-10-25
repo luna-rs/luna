@@ -18,7 +18,8 @@ import io.luna.util.Rational;
  * A {@link MeleeCombatAttack} implementation for player-performed melee attacks.
  * <p>
  * This type adds player-specific melee behavior on top of the generic melee attack flow, including poisoned weapon
- * checks and combat experience rewards based on the active melee stance.
+ * checks and combat experience rewards based on the stance captured when the attack begins. Rewards and poison are
+ * applied only after damage is delivered and capped to the victim's remaining health.
  * <p>
  * If the equipped weapon has a matching {@link EquipmentPoisonDefinition}, successful melee hits may apply poison to
  * the victim.
@@ -26,6 +27,16 @@ import io.luna.util.Rational;
  * @author lare96
  */
 public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
+
+    /**
+     * The stance captured at attack time for allocating experience when damage is delivered.
+     */
+    private CombatStance attackStance;
+
+    /**
+     * The weapon's poison definition captured at attack time, or {@code null} for an unpoisoned weapon.
+     */
+    private EquipmentPoisonDefinition poison;
 
     /**
      * The chance for a successful melee hit from a poisonous weapon to apply poison.
@@ -70,18 +81,24 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
 
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
+        attackStance = attacker.getCombat().getStance();
+        int weaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        poison = EquipmentPoisonDefinition.ALL.get(weaponId).orElse(null);
+        return damage;
+    }
+
+    @Override
+    public void onDamageApplied(CombatDamage damage) {
 
         // Attempt to poison if our equipped weapon is poisonous and we've dealt damage.
-        int rawAmount = damage.getRawAmount();
-        int weaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
-        EquipmentPoisonDefinition poisonDef = EquipmentPoisonDefinition.ALL.get(weaponId).orElse(null);
-        if (poisonDef != null && rawAmount > 0 && RandomUtils.roll(MELEE_POISON_CHANCE)) {
-            victim.getStatus().add(new PoisonStatusEffect(victim, poisonDef.getSeverity()), false);
+        int rawAmount = Math.max(0, damage.getRawAmount());
+        if (poison != null && rawAmount > 0 && RandomUtils.roll(MELEE_POISON_CHANCE)) {
+            damage.getVictim().getStatus().add(new PoisonStatusEffect(damage.getVictim(), poison.getSeverity()), false);
         }
 
         // Award XP depending on the combat stance.
         double hitpointsXp = rawAmount * 1.33;
-        CombatStance stance = attacker.getCombat().getStance();
+        CombatStance stance = attackStance;
 
         Skill attack = attacker.skill(Skill.ATTACK);
         Skill strength = attacker.skill(Skill.STRENGTH);
@@ -103,6 +120,5 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
         }
         // Award hitpoints XP regardless.
         attacker.skill(Skill.HITPOINTS).addExperience(hitpointsXp);
-        return damage;
     }
 }
