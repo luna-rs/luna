@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
+import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat;
 
@@ -23,6 +24,9 @@ import java.util.function.BiFunction;
  * Ordinary spellbook casts use the same five-tick attack delay for manual casting and autocasting.
  * Base spell experience is awarded when casting; damage experience is awarded after the hit is delivered and capped
  * to the victim's remaining health.
+ * Defensive casts award 1.33 Magic and 1 Defence experience per damage instead of the ordinary 2 Magic experience.
+ * The casting stance is retained for every hit from the spell, including secondary targets and equipment changes
+ * during flight. Base spell experience and Hitpoints experience are unaffected by the stance.
  *
  * @author lare96
  */
@@ -32,6 +36,11 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
      * The player's magic combat state.
      */
     protected final PlayerMagicCombat magic;
+
+    /**
+     * Whether defensive casting was selected when this spell was successfully cast.
+     */
+    private boolean defensiveCasting;
 
     /**
      * Creates a new {@link PlayerMagicCombatAttack} from a spell definition.
@@ -85,6 +94,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
             // Cancel attack, we don't meet requirements.
             return null;
         }
+        defensiveCasting = attacker.getCombat().getStance() == CombatStance.DEFENSIVE;
 
         if (magic.getSelectedSpell() != CombatSpellDefinition.NONE) {
             // Remove target so we don't automatically keep attacking (how it functions on OSRS).
@@ -101,7 +111,12 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
     public void onDamageApplied(CombatDamage damage) {
         super.onDamageApplied(damage);
         int rawAmount = Math.max(0, damage.getRawAmount());
-        attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
+        if (defensiveCasting) {
+            attacker.skill(Skill.MAGIC).addExperience(rawAmount * 1.33);
+            attacker.skill(Skill.DEFENCE).addExperience(rawAmount);
+        } else {
+            attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
+        }
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
     }
 
