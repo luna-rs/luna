@@ -402,6 +402,10 @@ public final class World {
 
         // Then, pre-process NPC walking and action queues.
         for (Npc npc : npcList) {
+            if (npc.getState() != EntityState.ACTIVE) {
+                // Dead and waiting to respawn, nothing to process.
+                continue;
+            }
             try {
                 npc.getAggression().process();
                 npc.getCombat().processAttackDelay();

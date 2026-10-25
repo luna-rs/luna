@@ -3,7 +3,6 @@ package api.combat.death.dsl
 import api.predef.*
 import api.predef.ext.*
 import engine.combat.status.StatusEffectType
-import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.SkullIcon
@@ -40,13 +39,12 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
             victim.status.remove(StatusEffectType.SKULLED)
             victim.skullIcon = SkullIcon.NONE
         } else if (victim is Npc) {
-            world.npcs.remove(victim)
-            if (victim.respawnTicks > 0 && victim.state == EntityState.INACTIVE) {
-                world.scheduleOnce(victim.respawnTicks) {
-                    val respawnNpc = Npc(ctx, victim.baseId, victim.basePosition)
-                    respawnNpc.respawnTicks = victim.respawnTicks
-                    world.npcs.add(respawnNpc)
-                }
+            if (victim.respawnTicks > 0) {
+                // Out of the world but keeping its index, and back as the same NPC.
+                victim.despawn()
+                world.scheduleOnce(victim.respawnTicks) { victim.respawn() }
+            } else {
+                world.npcs.remove(victim)
             }
         }
     }

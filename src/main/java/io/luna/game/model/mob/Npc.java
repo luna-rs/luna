@@ -2,10 +2,12 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
+import engine.combat.status.StatusEffectType;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
@@ -85,6 +87,12 @@ public class Npc extends Mob {
      * A value of {@code -1} usually indicates no respawn time or that respawning is handled elsewhere.
      */
     private int respawnTicks;
+
+    /**
+     * How many times this NPC has entered the world: 1 after its first spawn, one more for each respawn. Code that
+     * keeps a reference across a death compares it to tell a new life from the one it saw die.
+     */
+    private int spawnCount;
 
     /**
      * The set of human players that currently have this NPC in their local view.
@@ -228,15 +236,66 @@ public class Npc extends Mob {
 
     @Override
     protected final void onActive() {
+        spawnCount++;
         status.load();
         onSpawn();
     }
 
+    @Override
+    protected boolean canReactivate() {
+        // Dead and waiting to respawn while it keeps its index, gone for good once it has none.
+        return getIndex() != -1;
+    }
+
     /**
-     * Run once the NPC has been spawned into the game world.
+     * Run each time the NPC is spawned into the game world, including when it respawns.
      */
     public void onSpawn() {
 
+    }
+
+    /**
+     * Takes this NPC out of the world until it {@link #respawn()}s: it becomes {@link EntityState#INACTIVE} but keeps
+     * its index, and its actions are dropped so nothing from its last life runs while it is dead. NPCs that don't
+     * respawn are removed with {@link MobList#remove(Mob)} instead.
+     */
+    public void despawn() {
+        if (getState() != EntityState.ACTIVE) {
+            return;
+        }
+        actions.clear();
+        setState(EntityState.INACTIVE);
+    }
+
+    /**
+     * Brings this NPC back after {@link #despawn()}, as it was first spawned: at its base position, untransformed,
+     * with its combat levels restored and nothing left over from its last life. Does nothing if the NPC was removed
+     * from the world while it was dead.
+     */
+    public void respawn() {
+        if (getState() != EntityState.INACTIVE || getIndex() == -1) {
+            return;
+        }
+        for (StatusEffectType type : StatusEffectType.values()) {
+            status.remove(type);
+        }
+        combat.reset();
+        getAttributes().clear();
+        navigator.cancel();
+        walking.clear();
+        walking.setLocked(false);
+        walking.setRunning(false);
+        unlock();
+        interact(null);
+        setLastDirection(Direction.SOUTH);
+
+        definition = NpcDefinition.ALL.retrieve(id);
+        combatDefinition = NpcCombatDefinition.ALL.get(id);
+        transformId = -1;
+        setSkills();
+
+        setPosition(basePosition);
+        setState(EntityState.ACTIVE);
     }
 
     /**
@@ -403,6 +462,13 @@ public class Npc extends Mob {
      */
     public void setRespawnTicks(int respawnTicks) {
         this.respawnTicks = respawnTicks;
+    }
+
+    /**
+     * @return How many times this NPC has entered the world, one more for each respawn.
+     */
+    public int getSpawnCount() {
+        return spawnCount;
     }
 
     /**

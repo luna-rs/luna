@@ -1,6 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.UseItemEvent.ItemOnNpcEvent;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
@@ -31,7 +32,8 @@ public final class ItemOnNpcMessageReader extends GameMessageReader<ItemOnNpcEve
         if (event.getUsedItemInterface() < 1 ||
                 event.getUsedItemIndex() < 0 ||
                 !ItemDefinition.isIdValid(event.getUsedItemId()) ||
-                event.getTargetNpc() == null) {
+                event.getTargetNpc() == null ||
+                event.getTargetNpc().getState() != EntityState.ACTIVE) {
             return false;
         }
         if(event.getUsedItemInterface() == 3214) {

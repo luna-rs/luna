@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.action.ActionQueue;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
@@ -29,6 +30,6 @@ public final class MagicOnNpcMessageReader extends GameMessageReader<MagicOnNpcE
 
     @Override
     public boolean validate(Player player, MagicOnNpcEvent event) {
-        return event.getTargetNpc() != null;
+        return event.getTargetNpc() != null && event.getTargetNpc().getState() == EntityState.ACTIVE;
     }
 }
