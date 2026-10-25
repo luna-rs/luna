@@ -7,34 +7,25 @@ import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Player
 
 /**
- * A [LockedAction] that performs ore prospecting for a player.
+ * A [LockedAction] that performs ore prospecting for a player. The prospecting sound plays on the tick after the
+ * player starts examining the rock, and the rock's ore is named two ticks later.
  *
  * @author lare96
  */
 class ProspectOreAction(plr: Player, private val ore: Ore?) : LockedAction(plr) {
 
-    /**
-     * When the player will finish prospecting.
-     */
-    private val end = rand(1, 3)
-
     override fun run(): Boolean {
-        return when (executions) {
-            0 -> {
-                mob.sendMessage("You examine the rock for ores...")
-                false
-            }
-
-            end -> {
+        when (executions) {
+            0 -> mob.sendMessage("You examine the rock for ores...")
+            1 -> mob.playSound(Sound.PROSPECT)
+            3 -> {
                 when (ore) {
                     null -> mob.sendMessage("There is no ore left in the rock.")
                     else -> mob.sendMessage("This rock contains ${ore.typeName.lowercase()}.")
                 }
-                mob.playSound(Sound.PROSPECT) // TODO@0.5.0 Verify if this is the correct sound.
-                true
+                return true
             }
-
-            else -> false
         }
+        return false
     }
 }
