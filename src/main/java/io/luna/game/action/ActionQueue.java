@@ -7,10 +7,8 @@ import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -61,14 +59,6 @@ public final class ActionQueue {
     private final Queue<Action<?>> executing = new ArrayDeque<>();
 
     /**
-     * Fast-membership set of action classes currently present in this queue.
-     * <p>
-     * This set exists purely as an O(1) {@link #contains(Class)} shortcut for "is an action of type X currently
-     * queued?", avoiding a linear scan across {@link #processing} and {@link #executing}.
-     */
-    private final Set<String> types = new HashSet<>();
-
-    /**
      * If actions are currently being run. Used to normalize processing delays when actions are scheduled within
      * actions.
      */
@@ -95,7 +85,6 @@ public final class ActionQueue {
         action.setState(ActionState.PROCESSING);
         action.onSubmit();
         if (!action.isFinished()) {
-            types.add(action.getClass().getName());
             processing.put(action.actionType, action);
         }
     }
@@ -103,23 +92,23 @@ public final class ActionQueue {
     /**
      * Submits {@code action} only if no other action of the same concrete type is currently being processed.
      * <p>
-     * This method uses the action's runtime class as a uniqueness key. If that type has not already been registered,
-     * the action is submitted as normal.
+     * Only unfinished actions of the same exact runtime class prevent submission. Completed or interrupted
+     * actions may remain queued until the next cycle, but do not prevent a replacement from being submitted.
      * <p>
      * If an action of the same class is already present, this method does nothing.
      *
      * @param action The action to submit if its concrete type is not already active.
      * @return {@code true} if the action was not already active, and therefore submitted.
      */
-    @Deprecated // TODO@0.5.0 Remove, actions should monitor their own lifecycle.
     public boolean submitIfAbsent(Action<?> action) {
         checkState(!action.getClass().isAnonymousClass(), "Anonymous classes cannot be used with submitIfAbsent.");
-        String type = action.getClass().getName();
-        if (!types.contains(type)) {
-            submit(action);
-            return true;
+        for (Action<?> active : processing.values()) {
+            if (active.getState() == ActionState.PROCESSING && active.getClass() == action.getClass()) {
+                return false;
+            }
         }
-        return false;
+        submit(action);
+        return true;
     }
 
     /**
@@ -284,13 +273,6 @@ public final class ActionQueue {
     }
 
     /**
-     * Intended for internal use, removes the specified action type from the cache.
-     */
-    void removeType(Action<?> action) {
-        types.remove(action.getClass().getName());
-    }
-
-    /**
      * Interrupts all {@link ActionType#WEAK} actions immediately.
      * <p>
      * This is also invoked automatically during {@link #process()} when any strong action is present.
@@ -319,7 +301,6 @@ public final class ActionQueue {
         interruptAll();
         processing.clear();
         executing.clear();
-        types.clear();
     }
     //todo docs, testing
 

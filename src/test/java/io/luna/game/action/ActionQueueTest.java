@@ -11,6 +11,90 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ActionQueueTest {
+    private static class PersistentAction extends Action<Mob> {
+        private int submissions;
+
+        PersistentAction(Mob mob) {
+            super(mob, ActionType.SOFT);
+        }
+
+        @Override public void onSubmit() { submissions++; }
+        @Override public boolean run() { return false; }
+    }
+
+    @Test void duplicateSubmissionDoesNotInvokeSetup() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        PersistentAction first = new PersistentAction(actor);
+        PersistentAction duplicate = new PersistentAction(actor);
+        assertTrue(queue.submitIfAbsent(first));
+        assertFalse(queue.submitIfAbsent(duplicate));
+        assertEquals(0, duplicate.submissions);
+        assertEquals(ActionState.NEW, duplicate.getState());
+        assertEquals(1, queue.size());
+    }
+
+    @Test void finishingOneOfTwoSameClassActionsStillBlocksDuplicates() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        PersistentAction first = new PersistentAction(actor);
+        PersistentAction second = new PersistentAction(actor);
+        queue.submit(first);
+        queue.submit(second);
+        first.complete();
+        assertFalse(queue.submitIfAbsent(new PersistentAction(actor)));
+        second.interrupt();
+        assertTrue(queue.submitIfAbsent(new PersistentAction(actor)));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void finishingDuringSubmissionDoesNotUnregisterAnExistingAction() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class ConditionalAction extends PersistentAction {
+            private final boolean finishOnSubmit;
+            ConditionalAction(boolean finishOnSubmit) {
+                super(actor);
+                this.finishOnSubmit = finishOnSubmit;
+            }
+            @Override public void onSubmit() {
+                if (finishOnSubmit) complete();
+            }
+        }
+        queue.submit(new ConditionalAction(false));
+        queue.submit(new ConditionalAction(true));
+        assertFalse(queue.submitIfAbsent(new ConditionalAction(false)));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void completionHookCanSubmitReplacementBeforeQueueCleanup() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class ReplacingAction extends PersistentAction {
+            ReplacingAction() { super(actor); }
+            @Override public void onFinished() {
+                assertTrue(queue.submitIfAbsent(new ReplacingAction()));
+            }
+        }
+        ReplacingAction original = new ReplacingAction();
+        queue.submit(original);
+        original.complete();
+        assertFalse(queue.submitIfAbsent(new ReplacingAction()));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void uniquenessUsesExactClassesAndRejectsAnonymousActions() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class OtherAction extends PersistentAction {
+            OtherAction() { super(actor); }
+        }
+        assertTrue(queue.submitIfAbsent(new PersistentAction(actor)));
+        assertTrue(queue.submitIfAbsent(new OtherAction()));
+        assertThrows(IllegalStateException.class,
+                () -> queue.submitIfAbsent(action(actor, ActionType.SOFT, () -> {})));
+    }
+
     private ActionQueue queue(Mob mob) {
         ActionQueue queue = new ActionQueue(mob);
         when(mob.getActions()).thenReturn(queue);
