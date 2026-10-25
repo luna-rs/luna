@@ -292,6 +292,18 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
+     * Records an incoming attack for logout prevention and single-combat ownership, including secondary targets.
+     * Call when a valid attack is committed, before damage delivery: misses and zero hits still count as engagement.
+     * This does not select a retaliation target or change either participant's attack delay.
+     *
+     * @param attacker The mob responsible for the incoming attack.
+     */
+    public final void markAttackedBy(Mob attacker) {
+        lastCombatWith = attacker;
+        resetCombatTimer();
+    }
+
+    /**
      * Returns this context to how it is for a newly spawned mob: no target or recent combat, no attack delay, not
      * disabled, and an empty damage stack.
      */

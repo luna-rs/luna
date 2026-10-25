@@ -25,6 +25,7 @@ import java.util.function.BiFunction;
  * Area targets are selected and rolled at impact without applying effects. Each hit passes through its recipient's
  * defensive hooks and health cap before its applied-damage callback displays the impact and runs the spell effect.
  * Cancelled hits have no effect callback; secondary hits cannot recursively select further targets.
+ * Each living secondary recipient enters combat before delivery, even when it splashes or auto-retaliate is off.
  * Custom attacks without a spell definition use the attacker's default magic maximum hit. Negative spell maximum
  * hits denote effect-only spells that still check accuracy.
  * Spellbook projectiles are sent with the cast animation and deliver damage on the server tick after their arrival
@@ -169,6 +170,10 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         }
         victim.submitAction(new CombatDamageAction(nextDamage, this, true));
         for (CombatDamage hit : secondaryHits) {
+            if (!hit.getVictim().isAlive()) {
+                continue;
+            }
+            hit.getVictim().getCombat().markAttackedBy(attacker);
             hit.getVictim().submitAction(new CombatDamageAction(hit, this, true));
         }
     }
