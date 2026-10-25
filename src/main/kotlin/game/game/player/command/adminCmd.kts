@@ -393,8 +393,7 @@ cmd("tele", RIGHTS_ADMIN) {
     }
 }
 /**
- * TEMPORARY: A command that teleports the player to a farm with allotment patches (1-4). The positions are
- * approximate and unverified.
+ * A command that teleports the player to a farm with allotment patches (1-4).
  */
 cmd("farmtele", RIGHTS_ADMIN) {
     val farms = listOf(
