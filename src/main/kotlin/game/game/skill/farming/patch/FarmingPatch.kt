@@ -115,6 +115,11 @@ abstract class FarmingPatch(val location: PatchLocation) {
     open val seedsRequired = 1
 
     /**
+     * How many seeds of [crop] are needed to plant this patch. By default [seedsRequired], for every crop.
+     */
+    open fun seedsRequired(crop: Crop): Int = seedsRequired
+
+    /**
      * If crops in this patch can be watered.
      */
     open val canBeWatered = false
@@ -218,6 +223,20 @@ abstract class FarmingPatch(val location: PatchLocation) {
      * the patch object defines, anything else is drawn as full weeds.
      */
     abstract fun encode(): Int
+
+    /**
+     * Encodes the planted crop for a patch drawn the way allotments and hops patches are: the crop is its
+     * [configIndexOffset] plus its stage, plus 64 when watered, 128 when diseased, or 192 when dead.
+     */
+    protected fun encodeWaterable(configIndexOffset: Int): Int {
+        val value = configIndexOffset + stage
+        return when {
+            dead -> value + 192
+            diseased -> value + 128
+            watered -> value + 64
+            else -> value
+        }
+    }
 
     /**
      * The value this patch contributes to its varp.

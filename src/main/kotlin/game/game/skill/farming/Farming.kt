@@ -42,6 +42,11 @@ object Farming {
     const val FRUIT_TREE_PATCH_VARP = 503
 
     /**
+     * The varp holding the state of the Yanille, Entrana, Lumbridge and McGrubor's Wood hops patches.
+     */
+    const val HOPS_PATCH_VARP = 506
+
+    /**
      * The varp changed when using compost on a compost bin.
      */
     const val COMPOST_BIN_VARP = 511
@@ -180,7 +185,7 @@ object Farming {
      * The location of every farming patch.
      */
     val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
-            TreePatchLocation.values() + FruitTreePatchLocation.values()
+            TreePatchLocation.values() + FruitTreePatchLocation.values() + HopsPatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.

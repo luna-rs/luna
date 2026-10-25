@@ -17,7 +17,7 @@ import io.luna.game.model.mob.varp.*
  */
 fun plant(plr: Player, objectId: Int, crop: Crop) {
     val patch = Farming.findPatch(objectId, plr) ?: return
-    val seeds = patch.seedsRequired
+    val seeds = patch.seedsRequired(crop)
     val seedName = itemName(crop.seedId).lowercase()
     val tool = patch.plantTool
     when {

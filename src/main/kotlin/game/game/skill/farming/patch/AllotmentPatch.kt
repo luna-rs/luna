@@ -21,19 +21,13 @@ class AllotmentPatch(location: AllotmentPatchLocation) : FarmingPatch(location) 
 
     /**
      * Weeds are 0 (full weeds) to 3 (raked). A crop is its [AllotmentSeed.configIndexOffset] plus its stage,
-     * plus 64 when watered, 128 when diseased, or 192 when dead.
+     * plus 64 when watered, 128 when diseased, or 192 when dead. See [encodeWaterable].
      */
     override fun encode(): Int {
         if (needsRaking()) {
             return MAX_WEEDS - weeds
         }
         val seed = crop as? AllotmentSeed ?: return MAX_WEEDS
-        val value = seed.configIndexOffset + stage
-        return when {
-            dead -> value + 192
-            diseased -> value + 128
-            watered -> value + 64
-            else -> value
-        }
+        return encodeWaterable(seed.configIndexOffset)
     }
 }
