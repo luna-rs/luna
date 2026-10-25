@@ -27,6 +27,8 @@ import java.util.function.BiFunction;
  * Cancelled hits have no effect callback; secondary hits cannot recursively select further targets.
  * Custom attacks without a spell definition use the attacker's default magic maximum hit. Negative spell maximum
  * hits denote effect-only spells that still check accuracy.
+ * Spellbook projectiles are sent with the cast animation and deliver damage on the server tick after their arrival
+ * cycle. Spells without a projectile resolve on the following tick. Custom attacks retain their existing timing.
  *
  * @param <T> The concrete {@link Mob} type performing the magic attack.
  * @author lare96
@@ -62,6 +64,11 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      * The spell definition used to resolve spell-specific secondary effects.
      */
     protected final CombatSpellDefinition spellEffect;
+
+    /**
+     * Impact delay captured from the displayed projectile, or one tick for a spell without a projectile.
+     */
+    private int projectileHitDelay = 1;
 
     /**
      * Creates a new {@link MagicCombatAttack} using explicit visual and effect data.
@@ -120,7 +127,12 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
+        if (spellEffect != null) {
+            onProjectileLaunched();
+            scheduleProjectileArrival(projectileHitDelay);
+        } else {
+            launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
+        }
     }
 
     @Override
@@ -140,6 +152,8 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     public final void onProjectileLaunched() {
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
+            // Lost City's spell queues use duration / 30 + 1, including exact cycle boundaries.
+            projectileHitDelay = projectile.getEndCycle() / 30 + 1;
             projectile.display();
         }
     }

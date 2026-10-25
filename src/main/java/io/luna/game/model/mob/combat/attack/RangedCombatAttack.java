@@ -1,8 +1,5 @@
 package io.luna.game.model.mob.combat.attack;
 
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionState;
-import io.luna.game.action.ActionType;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -107,18 +104,7 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         }
         if (usesProjectileTiming()) {
             onProjectileLaunched();
-            attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, projectileHitDelay) {
-                @Override
-                public boolean run() {
-                    onProjectileReached();
-                    return true;
-                }
-
-                @Override
-                public void onFinished() {
-                    onProjectileFinished(getState() == ActionState.INTERRUPTED);
-                }
-            });
+            scheduleProjectileArrival(projectileHitDelay);
         } else {
             launchProjectile(0, 2);
         }

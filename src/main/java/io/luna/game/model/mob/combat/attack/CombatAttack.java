@@ -187,6 +187,27 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
+     * Schedules arrival after an already displayed projectile's flight delay. Both normal completion and interruption
+     * notify the attack through the same lifecycle hook used by the legacy launch scheduler.
+     *
+     * @param arrivalDelay The positive server-tick delay until impact.
+     */
+    protected final void scheduleProjectileArrival(int arrivalDelay) {
+        attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, arrivalDelay) {
+            @Override
+            public boolean run() {
+                onProjectileReached();
+                return true;
+            }
+
+            @Override
+            public void onFinished() {
+                onProjectileFinished(getState() == ActionState.INTERRUPTED);
+            }
+        });
+    }
+
+    /**
      * Starts a simple projectile timing action for this attack.
      * <p>
      * This helper invokes {@link #onProjectileLaunched()} on the first action execution and {@link #onProjectileReached()}
