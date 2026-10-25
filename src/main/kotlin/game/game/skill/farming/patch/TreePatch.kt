@@ -14,16 +14,7 @@ import game.skill.farming.seed.*
  *
  * @author hydrozoa
  */
-class TreePatch(location: TreePatchLocation) : FarmingPatch(location) {
-
-    companion object {
-
-        /**
-         * The chance from 0 to 1 that pruning a diseased tree removes all of the diseased leaves (wiki, given for fruit
-         * trees).
-         */
-        const val PRUNE_CHANCE = 0.75
-    }
+class TreePatch(location: TreePatchLocation) : AbstractTreePatch(location) {
 
     override val cycleMinutes = 40
     override val crops: List<Crop> = TreeSapling.values().toList()
@@ -33,42 +24,13 @@ class TreePatch(location: TreePatchLocation) : FarmingPatch(location) {
      * Unused, trees are chopped down instead of harvested.
      */
     override val harvestAnimation = Farming.DIG_ANIMATION
-    override val plantTool = Farming.SPADE
-    override val plantLeftover = Farming.PLANT_POT
-    override val plantAnimation = Farming.DIG_ANIMATION
-    override val plantXpOnPlanting = true
-
-    /**
-     * If the fully grown tree has had its health checked, which lets it be chopped down.
-     */
-    var healthChecked = false
-
-    /**
-     * If the tree has been chopped down, leaving a stump.
-     */
-    var stump = false
 
     /**
      * The time the stump grows back into a tree, in epoch milliseconds.
      */
     var regrowAt = 0L
 
-    /**
-     * @return True if the fully grown tree is waiting to have its health checked.
-     */
-    fun canCheckHealth(): Boolean = harvestReady() && !healthChecked
-
-    /**
-     * @return True if the tree can be chopped down.
-     */
-    fun canChop(): Boolean = harvestReady() && healthChecked && !stump
-
-    /**
-     * Checks the health of the fully grown tree, which lets it be chopped down.
-     */
-    fun checkHealth() {
-        healthChecked = true
-    }
+    override fun canChop(): Boolean = harvestReady() && healthChecked && !stump
 
     /**
      * Turns the tree into a stump at time [now], in epoch milliseconds, which grows back after [regrowTicks].
@@ -108,20 +70,17 @@ class TreePatch(location: TreePatchLocation) : FarmingPatch(location) {
     }
 
     override fun onReset() {
-        healthChecked = false
-        stump = false
+        super.onReset()
         regrowAt = 0L
     }
 
     override fun saveExtra(obj: JsonObject) {
-        obj.addProperty("health_checked", healthChecked)
-        obj.addProperty("stump", stump)
+        super.saveExtra(obj)
         obj.addProperty("regrow_at", regrowAt)
     }
 
     override fun loadExtra(obj: JsonObject) {
-        healthChecked = obj.get("health_checked")?.asBoolean ?: false
-        stump = obj.get("stump")?.asBoolean ?: false
+        super.loadExtra(obj)
         regrowAt = obj.get("regrow_at")?.asLong ?: 0L
     }
 }

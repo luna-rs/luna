@@ -52,6 +52,12 @@ interface Crop {
         get() = 0
 
     /**
+     * The experience given for checking the health of the fully grown tree, for crops grown in tree patches.
+     */
+    val checkHealthXp: Double
+        get() = 0.0
+
+    /**
      * The chance to save a harvest life at Farming level 1, out of 256. See [chanceToSaveHigh].
      */
     val chanceToSaveLow: Int

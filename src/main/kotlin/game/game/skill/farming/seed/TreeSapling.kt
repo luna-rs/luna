@@ -9,7 +9,7 @@ import io.luna.game.model.item.Item
  *
  * The tree is drawn as its [configIndexOffset] plus its stage minus one, so the seedling is drawn as [configIndexOffset]
  * itself. [stages] is the fully grown stage, where the tree is waiting to have its health checked. [plantXp] is given
- * when the sapling is planted and [harvestXp] when the tree's health is checked. [produce] is the logs the tree gives
+ * when the sapling is planted and [checkHealthXp] when the tree's health is checked. [produce] is the logs the tree gives
  * when chopped, which uses [tree] for the Woodcutting level, experience and regrowth time.
  *
  * The [baseDiseaseChance] values of oak, willow and yew are unchecked placeholders, the wiki only gives maple and
@@ -22,7 +22,7 @@ enum class TreeSapling(override val seedId: Int,
                        val configIndexOffset: Int,
                        override val stages: Int,
                        override val plantXp: Double,
-                       override val harvestXp: Double,
+                       override val checkHealthXp: Double,
                        override val baseDiseaseChance: Int,
                        val roots: Int,
                        val tree: Tree) : Crop {
@@ -32,7 +32,7 @@ enum class TreeSapling(override val seedId: Int,
         configIndexOffset = 8,
         stages = 5,
         plantXp = 14.0,
-        harvestXp = 467.3,
+        checkHealthXp = 467.3,
         baseDiseaseChance = 13,
         roots = 6043,
         tree = Tree.OAK),
@@ -41,7 +41,7 @@ enum class TreeSapling(override val seedId: Int,
            configIndexOffset = 15,
            stages = 7,
            plantXp = 25.0,
-           harvestXp = 1456.5,
+           checkHealthXp = 1456.5,
            baseDiseaseChance = 13,
            roots = 6045,
            tree = Tree.WILLOW),
@@ -50,7 +50,7 @@ enum class TreeSapling(override val seedId: Int,
           configIndexOffset = 24,
           stages = 9,
           plantXp = 45.0,
-          harvestXp = 3403.4,
+          checkHealthXp = 3403.4,
           baseDiseaseChance = 13,
           roots = 6047,
           tree = Tree.MAPLE),
@@ -59,7 +59,7 @@ enum class TreeSapling(override val seedId: Int,
         configIndexOffset = 35,
         stages = 11,
         plantXp = 81.0,
-        harvestXp = 7069.9,
+        checkHealthXp = 7069.9,
         baseDiseaseChance = 13,
         roots = 6049,
         tree = Tree.YEW),
@@ -68,12 +68,17 @@ enum class TreeSapling(override val seedId: Int,
           configIndexOffset = 48,
           stages = 13,
           plantXp = 145.5,
-          harvestXp = 13768.3,
+          checkHealthXp = 13768.3,
           baseDiseaseChance = 9,
           roots = 6051,
           tree = Tree.MAGIC);
 
     override val produce = Item(tree.logId)
+
+    /**
+     * Trees are chopped down instead of harvested, which gives Woodcutting experience instead.
+     */
+    override val harvestXp = 0.0
 
     companion object {
         private val saplings = values().associateBy(TreeSapling::seedId)

@@ -36,6 +36,12 @@ object Farming {
     const val TREE_PATCH_VARP = 502
 
     /**
+     * The varp holding the state of the Tree Gnome Stronghold, Tree Gnome Village, Brimhaven and Catherby fruit tree
+     * patches.
+     */
+    const val FRUIT_TREE_PATCH_VARP = 503
+
+    /**
      * The varp changed when using compost on a compost bin.
      */
     const val COMPOST_BIN_VARP = 511
@@ -151,6 +157,11 @@ object Farming {
     val PICK_ANIMATION = Animation(2282)
 
     /**
+     * The middle picking animation, played when picking fruit from fruit trees.
+     */
+    val PICK_FRUIT_ANIMATION = Animation(2281)
+
+    /**
      * The experience given for each weed raked. An unchecked placeholder, it is not from the wiki.
      */
     const val RAKE_XP = 4.0
@@ -169,7 +180,7 @@ object Farming {
      * The location of every farming patch.
      */
     val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
-            TreePatchLocation.values()
+            TreePatchLocation.values() + FruitTreePatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.
