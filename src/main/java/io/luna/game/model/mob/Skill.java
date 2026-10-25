@@ -20,7 +20,8 @@ import java.util.stream.IntStream;
  *     <li>The current dynamic {@link #level}, which may be boosted or drained.</li>
  *     <li>The total accumulated {@link #experience}, from which the static level is derived.</li>
  * </ul>
- * The static level is calculated lazily from experience and cached in {@link #staticLevel}.
+ * Player static levels are calculated lazily from experience and cached in {@link #staticLevel}. NPC static levels
+ * are assigned from their combat definitions and remain independent of temporary boosts, drains, and damage.
  *
  * @author lare96
  */
@@ -317,11 +318,17 @@ public final class Skill {
     }
 
     /**
-     * Sets the static level by converting the level into its corresponding experience value.
+     * Sets the static level by converting the level into its corresponding experience value for players.
+     * NPC base levels are stored directly, allowing combat definitions above the player level cap without
+     * manufacturing experience. Hitpoints and prayer may be zero; other NPC skills have a minimum of one.
      *
      * @param level The new static level.
      */
     public void setStaticLevel(int level) {
+        if (set.getMob() instanceof Npc) {
+            staticLevel = Math.max(id == HITPOINTS || id == PRAYER ? 0 : 1, level);
+            return;
+        }
         setExperience(SkillSet.experienceForLevel(level));
         staticLevel = level;
     }
@@ -338,11 +345,11 @@ public final class Skill {
     /**
      * Sets the dynamic level for this skill.
      * <p>
-     * Values lower than {@code 1} are clamped to {@code 1}.
+     * Values lower than {@code 1} are clamped to {@code 1}, except hitpoints and prayer which may reach zero.
      * <p>
      * If the level does not change, no listeners are notified and no restoration is scheduled.
      * <p>
-     * For NPCs, setting the dynamic level also updates the cached static level to match.
+     * Temporary changes never alter the static level, including for NPCs.
      * <p>
      * Hitpoints that reach full health clear the mob's damage stack.
      *
@@ -356,9 +363,6 @@ public final class Skill {
         int oldLevel = level;
 
         level = newLevel;
-        if (set.getMob() instanceof Npc) {
-            staticLevel = level;
-        }
         if (oldLevel == level) {
             return;
         }
