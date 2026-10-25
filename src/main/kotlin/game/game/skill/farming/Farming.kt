@@ -3,6 +3,8 @@ package game.skill.farming
 import api.attr.*
 import com.google.gson.JsonObject
 import game.skill.farming.patch.*
+import game.skill.farming.seed.*
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.*
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.varp.*
@@ -107,6 +109,22 @@ object Farming {
     const val PLANT_POT = 5350
 
     /**
+     * The plant pot filled with soil item id, made by using an empty plant pot on a weeded farming patch.
+     */
+    const val FILLED_PLANT_POT = 5354
+
+    /**
+     * The plant pots filled with soil that seeds can be planted in. The cache has a second filled plant pot, which is
+     * never made but is accepted too.
+     */
+    val FILLED_PLANT_POTS = listOf(FILLED_PLANT_POT, 5356)
+
+    /**
+     * The gardening trowel item id.
+     */
+    const val GARDENING_TROWEL = 5325
+
+    /**
      * The empty watering can item id.
      */
     const val EMPTY_WATERING_CAN = 5331
@@ -150,6 +168,16 @@ object Farming {
      * The watering animation.
      */
     val WATERING_ANIMATION = Animation(2293)
+
+    /**
+     * The plant pot filling animation, played when filling a plant pot with soil.
+     */
+    val FILL_PLANT_POT_ANIMATION = Animation(2287)
+
+    /**
+     * The trowel digging animation, played when planting a seed in a plant pot.
+     */
+    val TROWEL_ANIMATION = Animation(2272)
 
     /**
      * The plant cure animation.
@@ -224,6 +252,12 @@ object Farming {
      * varp. See [StorableTool].
      */
     var Player.storedTools by Attr.int().persist("farming_tools")
+
+    /**
+     * An attribute holding the time the player's watered seedlings were last brought up to date, in epoch
+     * milliseconds. See [growSeedlings].
+     */
+    var Player.seedlingsUpdated by Attr.long().persist("farming_seedlings_updated")
 
     /**
      * An attribute holding the saved state of every farming patch and compost bin, one object each keyed by
@@ -303,14 +337,52 @@ object Farming {
      * changed. See [GrowthEngine].
      *
      * Flower patches are brought up to date first, so the allotments they protect use their latest state. After time
-     * offline, a flower that finished growing during it may protect a few earlier allotment growth cycles.
+     * offline, a flower that finished growing during it may protect a few earlier allotment growth cycles. The player's
+     * watered seedlings are grown too, see [growSeedlings].
      */
     fun update(plr: Player) {
         val now = System.currentTimeMillis()
         val (flowers, others) = patches(plr).values.partition { it is FlowerPatch }
         flowers.forEach { GrowthEngine.advance(it, now) }
         others.forEach { GrowthEngine.advance(it, now) }
+        growSeedlings(plr, now)
         commit(plr)
+    }
+
+    /**
+     * Grows every watered seedling in the player's inventory and bank into its sapling, if a multiple of
+     * [GrowthEngine.WEED_CYCLE_MINUTES] has passed since they were last brought up to date at [now], in epoch
+     * milliseconds. A seedling therefore grows within five minutes of being watered, on a growth tick (wiki), also
+     * while the player is offline.
+     */
+    fun growSeedlings(plr: Player, now: Long) {
+        val last = plr.seedlingsUpdated
+        plr.seedlingsUpdated = now
+        if (last <= 0L || GrowthEngine.boundaries(last, now, GrowthEngine.WEED_CYCLE_MINUTES) <= 0) {
+            return
+        }
+        var grewInInventory = false
+        for (seedling in TreeSeedling.values()) {
+            if (plr.inventory.replaceAll(seedling.wateredSeedling, seedling.sapling) > 0) {
+                grewInInventory = true
+            }
+            val banked = plr.bank.computeAmountForId(seedling.wateredSeedling)
+            if (banked > 0) {
+                plr.bank.remove(Item(seedling.wateredSeedling, banked))
+                plr.bank.add(Item(seedling.sapling, banked))
+            }
+        }
+        if (grewInInventory) {
+            plr.sendMessage("Your seedling has grown into a sapling.")
+        }
+    }
+
+    /**
+     * Returns the watering can left after using one dose of water from [can].
+     */
+    fun lowerWateringCan(can: Int): Int {
+        val dose = WATERING_CANS.indexOf(can)
+        return if (dose == 0) EMPTY_WATERING_CAN else WATERING_CANS[dose - 1]
     }
 
     /**
