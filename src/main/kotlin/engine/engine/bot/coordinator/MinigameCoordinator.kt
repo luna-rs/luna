@@ -12,6 +12,7 @@ import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.DepositPartyRoomItemBotScript
 import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
+import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.PartyRoomDonations
 import game.bot.scripts.LogoutBotScript
 import game.bot.scripts.trading.TradeBotScript
@@ -22,7 +23,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Considers a donation, an active party, then a supplied Fishing Trawler trip before a bounded Party Room visit.
+ * Considers a donation, an active party, Fishing Trawler and Castle Wars before a bounded Party Room visit.
  * Native parties invite every eligible bot, regardless of
  * the host, personality or prize value; unsafe bots are reconsidered while that party remains active.
  *
@@ -42,6 +43,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
         if (FishingTrawlerBotScript.eligible(bot)) return FishingTrawlerBotScript(bot)
+        if (CastleWarsBotScript.eligible(bot)) return CastleWarsBotScript(bot)
         return object : DynamicBotScript(bot) {
             override suspend fun run(): Boolean {
                 if (handler.travelTo(SubZone.PARTY_ROOM)) delay(30.seconds)

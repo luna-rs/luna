@@ -3,6 +3,8 @@ package game.content.castleWars
 import api.bot.script.InventoryProductionFixtures
 import api.predef.ext.*
 import api.predef.*
+import game.bot.scripts.CastleWarsBotScript
+import engine.controllers.WildernessLocatableController.wildernessLevel
 import io.luna.game.model.`object`.ObjectType
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -34,13 +36,12 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 import org.mockito.Mockito.mock
 
-
 /**
- * Exercises match inventory and lifecycle boundaries with native equipment and controllers.
+ * Covers Castle Wars matches, native interactions, routes, rewards and bot lifecycle boundaries.
  *
  * @author lare96
  */
-class CastleWarsGameTest {
+class CastleWarsTest {
     companion object {
         @JvmStatic @BeforeAll fun initialize() {
             InventoryProductionFixtures.initializeCombat()
@@ -354,16 +355,80 @@ class CastleWarsGameTest {
         assertEquals(4382, captured.value.id)
         assertTrue(sara.inventory.contains(4051))
     }
-}
 
+    @Test fun botInterruptionDropsFlagAndPreservesOwnedEquipment() {
+        val game = CastleWars.game
+        val bot = player() as io.luna.game.model.mob.bot.Bot
+        val opponent = player()
+        try {
+            start(game, bot, opponent)
+            bot.move(Team.ZAMORAK.home)
+            bot.equipment.set(Equipment.WEAPON, Item(1275))
+            assertTrue(game.pickup(bot, Team.ZAMORAK))
+            CastleWarsBotScript(bot).paused()
+            assertNull(game.match.team(bot))
+            assertNull(game.match.flag(Team.ZAMORAK).carrier)
+            assertFalse(bot.equipment.contains(4039))
+            assertTrue(bot.inventory.contains(1275))
+            assertEquals(CastleWarsGame.LOBBY, bot.position)
+            verify(bot.navigator).cancel()
+            verify(bot.walking).clear()
+        } finally {
+            game.exit(bot)
+            game.exit(opponent)
+            repeat(2000) { game.tick() }
+        }
+    }
 
+    @Test fun routesReachBothStandardsAndReturnThroughTheCurrentTower() {
+        assertNull(game.bot.scripts.CastleWarsBotScript.nextStair(Position(2370, 3130), Position(2425, 3075)))
+        for (team in Team.entries) {
+            var position = team.spawn
+            repeat(8) {
+                val step = game.bot.scripts.CastleWarsBotScript.nextStair(position, team.enemy.home) ?: return@repeat
+                position = CastleWarsRoutes.stairs.getValue(step)
+            }
+            assertEquals(3, position.z)
+            assertTrue(position.isWithinDistance(team.enemy.home, 8))
+            val down = game.bot.scripts.CastleWarsBotScript.nextStair(position, team.home)!!
+            assertEquals(2, CastleWarsRoutes.stairs.getValue(down).z)
+        }
+    }
 
-/**
- * Source-rule regressions for balanced entry, standards, timing and one-time ticket awards.
- *
- * @author lare96
- */
-class CastleWarsMatchTest {
+    @Test fun restoredAndExpiredAttemptsCannotEnterAnotherMatch() = kotlinx.coroutines.runBlocking {
+        val bot = InventoryProductionFixtures.bot()
+        val script = game.bot.scripts.CastleWarsBotScript(bot, true, true, System.currentTimeMillis() + 60_000)
+        val json = com.google.gson.JsonObject().also { script.snapshot().save(it) }
+        val restored = game.bot.scripts.CastleWarsBotScript.MatchData().also { it.load(json) }
+        assertTrue(restored.entered)
+        assertTrue(restored.started)
+        assertEquals(json.get("deadline").asLong, restored.deadline)
+        assertTrue(game.bot.scripts.CastleWarsBotScript(bot, restored).init(true))
+        assertTrue(game.bot.scripts.CastleWarsBotScript(bot, deadline = 1).init(false))
+        verifyNoInteractions(bot.output)
+        verify(bot, never()).move(any())
+    }
+
+    @Test fun selectionRequiresOwnedGearUncappedStyleAndSafeState() {
+        val bot = InventoryProductionFixtures.bot()
+        `when`(bot.asPlr()).thenReturn(bot)
+        bot.wildernessLevel = 0
+        `when`(bot.controllers).thenReturn(ControllerManager(bot))
+        val equipment = Equipment(bot)
+        `when`(bot.equipment).thenReturn(equipment)
+        val style = mock(io.luna.game.model.def.CombatStyleDefinition::class.java)
+        `when`(style.exp).thenReturn(ImmutableList.of(SKILL_ATTACK))
+        `when`(bot.combat.styleDef).thenReturn(style)
+        assertFalse(game.bot.scripts.CastleWarsBotScript.eligible(bot))
+        bot.equipment.set(Equipment.WEAPON, Item(1275))
+        assertTrue(game.bot.scripts.CastleWarsBotScript.eligible(bot))
+        `when`(bot.combat.inCombat()).thenReturn(true)
+        assertFalse(game.bot.scripts.CastleWarsBotScript.eligible(bot))
+        `when`(bot.combat.inCombat()).thenReturn(false)
+        bot.wildernessLevel = 1
+        assertFalse(game.bot.scripts.CastleWarsBotScript.eligible(bot))
+    }
+
     private fun match(): CastleWarsMatch<String> = CastleWarsMatch<String>().also {
         assertTrue(it.join("sara", Team.SARADOMIN))
         assertTrue(it.join("zammy", Team.ZAMORAK))
@@ -452,19 +517,6 @@ class CastleWarsMatchTest {
         assertEquals(Team.ZAMORAK, match.carried("sara2"))
         assertFalse(match.takeFrom("sara1", "sara2"))
         assertFalse(match.takeFrom("zammy1", "sara2"))
-    }
-}
-
-
-
-/**
- * Checks source-derived routes against the local cache and protects flag and spawn-room restrictions.
- *
- * @author lare96
- */
-class CastleWarsRoutesTest {
-    companion object {
-        @JvmStatic @BeforeAll fun initialize() { InventoryProductionFixtures.initializeCombat() }
     }
 
     @Test fun stairsRemainInsideArenaAndOwnFlagCannotBeTakenDownstairs() {
