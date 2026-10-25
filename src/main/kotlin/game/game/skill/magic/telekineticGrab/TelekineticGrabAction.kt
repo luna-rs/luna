@@ -1,6 +1,7 @@
 package game.skill.magic.telekineticGrab
 
 import api.predef.*
+import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
 import game.player.Sound
 import game.skill.magic.Magic
@@ -32,6 +33,10 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             return
         }
         val item = groundItem.toItem()
+        if (!TreasureTrails.canAcquire(mob, item.id)) {
+            complete()
+            return
+        }
         if (!mob.inventory.hasSpaceFor(item)) {
             mob.sendMessage(Messages.inventoryFull())
             complete()
@@ -83,10 +88,13 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                 val item = groundItem.toItem()
                 if (groundItem.state == EntityState.INACTIVE) {
                     mob.sendMessage("You were too late!")
+                } else if (!TreasureTrails.canAcquire(mob, item.id)) {
+                    // Another clue may have been acquired while the projectile was travelling.
                 } else if (!mob.inventory.hasSpaceFor(item)) {
                     mob.sendMessage(Messages.inventoryFull())
                 } else if (world.items.unregister(groundItem)) {
                     mob.inventory.add(item)
+                    TreasureTrails.acquired(mob, item.id)
                 }
                 true
             }

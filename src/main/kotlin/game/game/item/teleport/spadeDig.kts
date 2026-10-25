@@ -2,6 +2,7 @@ package game.item.teleport
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.treasureTrails.TreasureTrails
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
@@ -27,6 +28,7 @@ val SPADE_FALL_DELAY = 2
 fun Player.digWithSpade(spot: SpadeDigSpot?) {
     walking.clear()
     animation(SPADE_DIG_ANIMATION)
+    if (TreasureTrails.dig(this)) return
     if (spot == null) {
         sendMessage("Nothing interesting happens.")
         return
