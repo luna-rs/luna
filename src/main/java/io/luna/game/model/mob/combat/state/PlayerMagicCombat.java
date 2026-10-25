@@ -5,7 +5,10 @@ import game.skill.magic.Staff;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.Equipment;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.Weapon;
@@ -13,6 +16,7 @@ import io.luna.game.model.mob.varp.Varp;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.List;
+import java.util.Locale;
 
 import static io.luna.game.model.def.CombatSpellDefinition.NONE;
 import static java.util.Objects.requireNonNullElse;
@@ -60,6 +64,42 @@ public class PlayerMagicCombat {
      */
     public PlayerMagicCombat(Player player) {
         this.player = player;
+    }
+
+    /**
+     * Checks target eligibility for the six standard stat-draining curses before consuming runes or awarding
+     * cast experience. A stat must have recovered to at least its base level before another curse can be cast,
+     * even if a stronger curse would lower it further. Castle Wars barricades cannot be weakened.
+     * Other spells, including damaging spells with secondary drains, retain their own effect rules.
+     *
+     * @param spell The spell about to be cast.
+     * @param target The intended recipient.
+     * @return Whether this target permits the cast.
+     */
+    public boolean canCurseTarget(CombatSpellDefinition spell, Mob target) {
+        if (spell == null || spell == NONE) {
+            return true;
+        }
+        int skillId = switch (spell.getSpell()) {
+            case CONFUSE, STUN -> Skill.ATTACK;
+            case WEAKEN, ENFEEBLE -> Skill.STRENGTH;
+            case CURSE, VULNERABILITY -> Skill.DEFENCE;
+            default -> -1;
+        };
+        if (skillId == -1) {
+            return true;
+        }
+        if (target instanceof Npc && ((Npc) target).getId() >= 1532 && ((Npc) target).getId() <= 1535) {
+            player.sendMessage("You can't weaken that.");
+            return false;
+        }
+        Skill skill = target.skill(skillId);
+        if (skill.getLevel() < skill.getStaticLevel()) {
+            player.sendMessage("Your foe's " + skill.getName().toLowerCase(Locale.ROOT) +
+                    " has already been weakened.");
+            return false;
+        }
+        return true;
     }
 
     /**

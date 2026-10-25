@@ -28,6 +28,8 @@ import java.util.function.BiFunction;
  * Defensive casts award 1.33 Magic and 1 Defence experience per damage instead of the ordinary 2 Magic experience.
  * The casting stance is retained for every hit from the spell, including secondary targets and equipment changes
  * during flight. Base spell experience and Hitpoints experience are unaffected by the stance.
+ * Standard stat-draining curses reject already-drained targets and barricades before consuming runes or granting
+ * cast experience. Rejected manual selections are cleared so the failed spell cannot leak into a later attack.
  *
  * @author lare96
  */
@@ -96,6 +98,10 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
+        if (!magic.canCurseTarget(spellEffect, victim)) {
+            magic.setSelectedSpell(CombatSpellDefinition.NONE);
+            return null;
+        }
         if (!magic.removeRunes(spellEffect)) {
             // Cancel attack, we don't meet requirements.
             return null;
