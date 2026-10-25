@@ -18,6 +18,7 @@ import game.skill.smithing.BarType
 import io.luna.Luna
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.def.NpcDefinition
@@ -407,7 +408,7 @@ cmd("findnpc") {
     val name = getInputFrom(0)
     val choices = ArrayList<Position>()
     for (next in world.npcs) {
-        if (next.def().name.equals(name, true)) {
+        if (next.state == EntityState.ACTIVE && next.def().name.equals(name, true)) {
             choices += next.position
         }
     }

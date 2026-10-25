@@ -175,6 +175,16 @@ public final class AttributeMap {
     }
 
     /**
+     * Removes every attribute.
+     */
+    public void clear() {
+        attributes.clear();
+        loadedAttributes.clear();
+        lastKey = null;
+        lastValue = null;
+    }
+
+    /**
      * @return How many attributes are within this map.
      */
     public int size() {

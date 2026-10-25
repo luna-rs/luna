@@ -310,6 +310,17 @@ public final class ActionQueue {
     public void interruptAll() {
         processing.values().forEach(Action::interrupt);
     }
+
+    /**
+     * Interrupts every action and empties this queue at once, instead of on the next {@link #process()}, so the same
+     * actions can be submitted again straight away. Safe to call from a running action.
+     */
+    public void clear() {
+        interruptAll();
+        processing.clear();
+        executing.clear();
+        types.clear();
+    }
     //todo docs, testing
 
     /**

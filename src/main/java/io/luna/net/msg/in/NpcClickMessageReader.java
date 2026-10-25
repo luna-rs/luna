@@ -6,6 +6,7 @@ import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.NpcThirdClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -49,7 +50,7 @@ public final class NpcClickMessageReader extends GameMessageReader<NpcClickEvent
 
     @Override
     public boolean validate(Player player, NpcClickEvent event) {
-        return event.getTargetNpc() != null;
+        return event.getTargetNpc() != null && event.getTargetNpc().getState() == EntityState.ACTIVE;
     }
 }
 

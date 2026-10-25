@@ -637,6 +637,10 @@ public final class WorldLocator {
         if (iterable != null) {
             // Do an optimized check when possible.
             for (Entity entity : iterable) {
+                if (entity.getState() != EntityState.ACTIVE) {
+                    // A dead NPC waits in the list for its respawn.
+                    continue;
+                }
                 if (entity.getPosition().getZ() == abs.getZ() && filter.test((T) entity)) {
                     found.add((T) entity);
                 }

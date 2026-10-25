@@ -278,6 +278,23 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
+     * Returns this context to how it is for a newly spawned mob: no target or recent combat, no attack delay, not
+     * disabled, and an empty damage stack.
+     */
+    public void reset() {
+        target = null;
+        autoRetaliateTarget = null;
+        lastCombatWith = null;
+        attackDelay = 0;
+        disabled = false;
+        lastAttackReceived = null;
+        lastAttackSent = null;
+        lastDamageReceived = null;
+        combatTimer.reset();
+        damageStack.clear();
+    }
+
+    /**
      * Determines whether the owning mob is currently considered in combat.
      * <p>
      * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION}
