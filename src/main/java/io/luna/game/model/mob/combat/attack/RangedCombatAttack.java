@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
@@ -25,6 +26,8 @@ import java.util.function.BiFunction;
  * <p>
  * This attack plays the attacker's firing animation, applies an optional start graphic, launches an optional
  * projectile, and resolves the hit when the projectile reaches the victim.
+ * Both timing paths report projectile completion or interruption. Impact graphics are displayed only after the
+ * damage pipeline accepts the hit, including misses and zero hits, so discarded or cancelled hits show no impact.
  * <p>
  * The base damage for the primary target is calculated as {@link CombatDamageType#RANGED}.
  *
@@ -110,6 +113,11 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
                     onProjectileReached();
                     return true;
                 }
+
+                @Override
+                public void onFinished() {
+                    onProjectileFinished(getState() == ActionState.INTERRUPTED);
+                }
             });
         } else {
             launchProjectile(0, 2);
@@ -142,10 +150,13 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public void onProjectileReached() {
-        // Deal damage and apply final effects.
         victim.submitAction(new CombatDamageAction(nextDamage, this, true));
+    }
+
+    @Override
+    public void onDamageApplied(CombatDamage damage) {
         if (end != null) {
-            victim.graphic(end);
+            damage.getVictim().graphic(end);
         }
     }
 }

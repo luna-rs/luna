@@ -152,6 +152,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
 
     @Override
     public void onDamageApplied(CombatDamage damage) {
+        super.onDamageApplied(damage);
         awardDamageExperience(damage);
         int rawAmount = Math.max(0, damage.getRawAmount());
         if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
