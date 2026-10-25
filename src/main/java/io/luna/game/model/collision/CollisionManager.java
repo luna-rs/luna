@@ -595,8 +595,6 @@ public final class CollisionManager {
                 return start.isWithinDistance(end, distance) && raycast(start, end);
             case SIZE:
                 if (target instanceof GroundItem) {
-                    // TODO Probably not the best way to do this? Maybe create a flag in GroundItem isOnFurniture to
-                    //  speed this up?
                     return start.isWithinDistance(end, distance) && raycast(start, end)
                             && !world.getLocator().findObjectsOnTile(end, it -> it.getObjectType() == ObjectType.DEFAULT).isEmpty();
                 } else if (distance == 1) {
