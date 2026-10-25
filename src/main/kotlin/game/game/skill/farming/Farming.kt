@@ -47,6 +47,11 @@ object Farming {
     const val HOPS_PATCH_VARP = 506
 
     /**
+     * The varp holding the state of the Falador, Catherby, Ardougne and Port Phasmatys flower patches.
+     */
+    const val FLOWER_PATCH_VARP = 508
+
+    /**
      * The varp changed when using compost on a compost bin.
      */
     const val COMPOST_BIN_VARP = 511
@@ -75,6 +80,11 @@ object Farming {
      * The spade item id.
      */
     const val SPADE = 952
+
+    /**
+     * The scarecrow item id, placed in a flower patch.
+     */
+    const val SCARECROW = 6059
 
     /**
      * The secateurs item id.
@@ -185,7 +195,8 @@ object Farming {
      * The location of every farming patch.
      */
     val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
-            TreePatchLocation.values() + FruitTreePatchLocation.values() + HopsPatchLocation.values()
+            TreePatchLocation.values() + FruitTreePatchLocation.values() + HopsPatchLocation.values() +
+            FlowerPatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.
@@ -236,6 +247,7 @@ object Farming {
                 }
                 patches[location] = patch
             }
+            patches.values.forEach { it.link(patches) }
             loaded = LoadedPatches(patches)
             plr.loadedPatches = loaded
         }
@@ -261,10 +273,15 @@ object Farming {
     /**
      * Brings all of the player's patches up to date with the current time, then saves them and sends any varps that
      * changed. See [GrowthEngine].
+     *
+     * Flower patches are brought up to date first, so the allotments they protect use their latest state. After time
+     * offline, a flower that finished growing during it may protect a few earlier allotment growth cycles.
      */
     fun update(plr: Player) {
         val now = System.currentTimeMillis()
-        patches(plr).values.forEach { GrowthEngine.advance(it, now) }
+        val (flowers, others) = patches(plr).values.partition { it is FlowerPatch }
+        flowers.forEach { GrowthEngine.advance(it, now) }
+        others.forEach { GrowthEngine.advance(it, now) }
         commit(plr)
     }
 

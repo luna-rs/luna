@@ -201,6 +201,18 @@ abstract class FarmingPatch(val location: PatchLocation) {
     open fun advanceTimers(now: Long): Boolean = false
 
     /**
+     * Called once after all of the player's [patches] are loaded, so a patch can keep a reference to another patch it
+     * depends on. By default there is none.
+     */
+    open fun link(patches: Map<PatchLocation, FarmingPatch>) {
+    }
+
+    /**
+     * Determines if something is in this patch that stops it from being planted. By default, only a planted crop.
+     */
+    open fun isOccupied(): Boolean = hasPlant()
+
+    /**
      * Called when the patch is reset, to reset any state a subclass adds. See [reset].
      */
     protected open fun onReset() {

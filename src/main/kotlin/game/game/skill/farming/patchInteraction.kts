@@ -22,7 +22,7 @@ fun plant(plr: Player, objectId: Int, crop: Crop) {
     val tool = patch.plantTool
     when {
         patch.needsRaking() -> plr.sendMessage("This patch needs weeding first.")
-        patch.hasPlant() -> plr.sendMessage("There is already something growing in this patch.")
+        patch.isOccupied() -> plr.sendMessage("There is already something growing in this patch.")
         plr.farming.level < crop.level ->
             plr.sendMessage("You need a Farming level of ${crop.level} to plant ${seedName}s.")
 
@@ -195,16 +195,74 @@ fun digStump(plr: Player, patch: AbstractTreePatch) {
     }
 }
 
+/**
+ * Picks the fully grown flower in the flower patch [objectId]. One pick gives the flower's whole yield, its harvest and
+ * planting experience, and leaves the patch empty.
+ */
+fun pickFlower(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) as? FlowerPatch ?: return
+    val seed = patch.crop as? FlowerSeed ?: return
+    if (!patch.harvestReady()) {
+        return
+    }
+    val amount = seed.amount(plr.farming.level)
+    val produce = Item(seed.produce.id, amount)
+    if (!plr.inventory.hasSpaceFor(produce)) {
+        plr.sendMessage("You don't have enough inventory space.")
+        return
+    }
+    plr.animation(patch.harvestAnimation)
+    plr.inventory.add(produce)
+    plr.farming.addExperience(seed.harvestXp + seed.plantXp)
+    val name = itemName(seed.produce.id).lowercase()
+    plr.sendMessage(if (amount == 1) "You pick ${addArticle(name)}." else "You pick some $name.")
+    patch.clear()
+    Farming.commit(plr)
+}
+
+/**
+ * Places a scarecrow in the flower patch [objectId], if the patch is weeded and empty.
+ */
+fun placeScarecrow(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) as? FlowerPatch ?: return
+    when {
+        patch.needsRaking() -> plr.sendMessage("This patch needs weeding first.")
+        patch.isOccupied() -> plr.sendMessage("There is already something growing in this patch.")
+        else -> {
+            plr.inventory.remove(Item(Farming.SCARECROW))
+            patch.placeScarecrow()
+            plr.sendMessage("You place the scarecrow in the ${patch.patchName}.")
+            Farming.commit(plr)
+        }
+    }
+}
+
+/**
+ * Digs up the scarecrow in the flower [patch], giving it back and leaving the patch weeded and empty.
+ */
+fun digScarecrow(plr: Player, patch: FlowerPatch) {
+    if (!plr.inventory.hasSpaceFor(Item(Farming.SCARECROW))) {
+        plr.sendMessage("You don't have enough inventory space.")
+        return
+    }
+    plr.animation(Farming.DIG_ANIMATION)
+    plr.inventory.add(Item(Farming.SCARECROW))
+    plr.sendMessage("You dig up the scarecrow.")
+    patch.clear()
+    Farming.commit(plr)
+}
+
 Farming.LOCATIONS.forEach { location ->
     val objectId = location.objectId
     val isTreePatch = location.createPatch() is AbstractTreePatch
+    val isFlowerPatch = location.createPatch() is FlowerPatch
 
     // Hook for raking patches
     useItem(Farming.RAKE).onObject(objectId) {
         plr.submitAction(RakePatchAction(plr, gameObject))
     }
 
-    // Hook for clearing dead crops and digging up tree stumps
+    // Hook for clearing dead crops, digging up tree stumps and digging up scarecrows
     useItem(Farming.SPADE).onObject(objectId) {
         val patch = Farming.findPatch(objectId, plr)
         if (patch != null && patch.dead) {
@@ -214,16 +272,23 @@ Farming.LOCATIONS.forEach { location ->
             Farming.commit(plr)
         } else if (patch is AbstractTreePatch) {
             digStump(plr, patch)
+        } else if (patch is FlowerPatch && patch.scarecrow) {
+            digScarecrow(plr, patch)
         }
     }
 
-    // Hook for harvesting, or checking the health of, picking from and chopping down trees
+    // Hook for harvesting, picking flowers, or checking the health of, picking from and chopping down trees
     object1(objectId) {
-        if (isTreePatch) {
-            treeOption(plr, objectId)
-        } else {
-            plr.submitAction(HarvestAction(plr, gameObject))
+        when {
+            isTreePatch -> treeOption(plr, objectId)
+            isFlowerPatch -> pickFlower(plr, objectId)
+            else -> plr.submitAction(HarvestAction(plr, gameObject))
         }
+    }
+
+    // Hook for placing scarecrows in flower patches
+    if (isFlowerPatch) {
+        useItem(Farming.SCARECROW).onObject(objectId) { placeScarecrow(plr, objectId) }
     }
 
     // Hook for planting seeds
