@@ -125,8 +125,7 @@ cmd("goto", RIGHTS_DEV) {
 cmd("rockcrabs") {
 
 }
-cmd("zonebots", RIGHTS_DEV) {// todo not working? craftarmorbotscript, https://i.imgur.com/LTo2YUn.png no fishing spots here?,
-   // todo check craftrunebotscript? some teleport areas incorrect?? (after air, etc.)
+cmd("zonebots", RIGHTS_DEV) {
     for (nextPlr in world.players) {
         if (nextPlr is Bot) {
             if (nextPlr.scriptStack.current() is ZonedBotScript) {
