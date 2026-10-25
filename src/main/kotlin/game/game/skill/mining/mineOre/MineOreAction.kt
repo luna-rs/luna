@@ -2,7 +2,6 @@ package game.skill.mining.mineOre
 
 import api.predef.*
 import api.predef.ext.*
-import game.skill.Skills
 import game.skill.mining.Mining
 import game.skill.mining.Ore
 import game.skill.mining.Ore.PURE_ESSENCE
@@ -136,7 +135,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 return
             }
             // Ore roll was successful.
-            mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
+            mob.sendMessage(ore.minedMessage(currentAdd.first().id))
             mob.mining.addExperience(ore.exp)
           //  mob.playSound(Sound.MINING_COMPLETED)
             deleteAndRespawnRock()
@@ -145,7 +144,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun add(): List<Item> {
-        if (ore != RUNE_ESSENCE) {
+        if (ore.rollsGems) {
             // The gem roll comes before the ore roll.
             gem = Mining.rollGem(mob)
             val foundGem = gem
@@ -153,18 +152,12 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 return listOf(Item(foundGem))
             }
         }
-        val (low, high) = ore.chance
-        return when {
-            ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
-                listOf(Item(PURE_ESSENCE.item)) else listOf(Item(RUNE_ESSENCE.item))
-
-            Skills.success(low, high, mob.mining.level) -> {
-                successTick = world.currentTick
-                listOf(Item(ore.item))
-            }
-
-            else -> emptyList()
+        if (ore == RUNE_ESSENCE) {
+            return listOf(Item(if (mob.mining.level >= PURE_ESSENCE.level) PURE_ESSENCE.item else RUNE_ESSENCE.item))
         }
+        val mined = ore.mine(mob, rockObj) ?: return emptyList()
+        successTick = world.currentTick
+        return listOf(Item(mined))
     }
 
     override fun onFinished() = mob.animation(Animation.CANCEL)

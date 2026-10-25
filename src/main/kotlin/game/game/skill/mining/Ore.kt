@@ -1,11 +1,17 @@
 package game.skill.mining;
 
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.collect.ImmutableSetMultimap
+import game.skill.Skills
+import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 
 /**
  * An enumerated type representing all ores that can be mined with [Pickaxe]s.
  *
+ * @param name The name of the ore in messages, if not the name of [item].
+ * @param rollsGems If each attempt is preceded by the gem roll.
  * @author lare96
  */
 enum class Ore(val rocks: List<Pair<Int, Int>>,
@@ -13,13 +19,16 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
                val item: Int,
                val respawnTicks: Int?,
                val exp: Double,
-               val chance: Pair<Int, Int>) {
+               val chance: Pair<Int, Int>,
+               name: String? = null,
+               val rollsGems: Boolean = true) {
     RUNE_ESSENCE(rocks = listOf(2491 to -1),
                  level = 1,
                  item = 1436,
                  respawnTicks = null,
                  exp = 5.0,
-                 chance = 1 to 1),
+                 chance = 1 to 1,
+                 rollsGems = false),
     PURE_ESSENCE(rocks = emptyList(),
                  level = 30,
                  item = 7936,
@@ -190,6 +199,28 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
          respawnTicks = 100,
          exp = 65.0,
          chance = 7 to 75),
+    GEM_ROCK(rocks = listOf(2111 to 451),
+             level = 40,
+             item = 1625,
+             respawnTicks = 99,
+             exp = 65.0,
+             chance = 28 to 70,
+             name = "gems",
+             rollsGems = false) {
+
+        /**
+         * A charged amulet of glory makes the roll three times as likely. Each success gives a gem from the gem rock
+         * table.
+         */
+        override fun mine(plr: Player, rock: GameObject): Int? {
+            val multiplier = if (Mining.hasChargedGlory(plr)) 3 else 1
+            val (low, high) = chance
+            return if (Skills.success(low * multiplier, high * multiplier, plr.mining.level))
+                Mining.rollGemRockTable() else null
+        }
+
+        override fun minedMessage(item: Int) = "You just mined ${Mining.gemName(item)}!"
+    },
     MITHRIL(rocks = listOf(2102 to 450,
                            2103 to 451,
                            11946 to 11556,
@@ -232,12 +263,24 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     /**
      * The name of the type of ore.
      */
-    val typeName = itemName(item).replace("ore", "").replace("Rune essence", "essence").trim()
+    val typeName = name ?: itemName(item).replace("ore", "").replace("Rune essence", "essence").trim()
 
     /**
      * The ticks until [rock], once mined, turns back into the rock placed in the map, or `null` if it never does.
      */
     open fun respawnTicks(rock: Int) = respawnTicks
+
+    /**
+     * Makes one attempt at mining [rock].
+     *
+     * @return The item mined, or `null` if the attempt failed.
+     */
+    open fun mine(plr: Player, rock: GameObject): Int? = if (Skills.success(chance, plr.mining.level)) item else null
+
+    /**
+     * The message for mining [item] from this rock.
+     */
+    open fun minedMessage(item: Int) = "You manage to mine some ${typeName.lowercase()}."
 
     companion object {
 
