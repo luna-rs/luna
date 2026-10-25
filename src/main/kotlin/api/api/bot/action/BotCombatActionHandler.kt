@@ -27,6 +27,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.EntityState
 import io.luna.game.model.Direction
+import io.luna.game.model.EntityType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -145,6 +146,17 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             session.observeMovement(bot.world.locator.findViewablePlayers(bot))
             session.protectObservedPlayer()
         }
+
+        /**
+         * How far from its attacker, in tiles, a running bot tries to get. An NPC stops chasing a target it can no
+         * longer see.
+         */
+        private const val ESCAPE_DISTANCE = Position.VIEWING_DISTANCE + 3
+
+        /**
+         * How far, in tiles, a running bot looks for a place to run to.
+         */
+        private const val ESCAPE_SEARCH_RADIUS = 32
     }
 
     /**
@@ -364,6 +376,64 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
+     * Returns the mob the bot is fighting: the last mob it traded blows with, while that mob is alive and still
+     * fighting the bot. Both sides are set when an attack is made, so a new attacker is named before its first hit
+     * lands. The last attack received only changes when a hit lands, so until then it still names the previous
+     * attacker. A respawned NPC is the same object on its next life, but no longer fighting the bot.
+     *
+     * @return The opponent, or `null` if there is none.
+     */
+    fun opponent(): Mob? = bot.combat.lastCombatWith?.takeIf {
+        it.isAlive && (it.combat.lastCombatWith == bot || it.combat.target == bot)
+    }
+
+    /**
+     * Starts the bot running from [threat], to the nearest tile at least [ESCAPE_DISTANCE] tiles away, where it gives
+     * up the chase. The bot walks the route that was searched rather than one from the pathfinder, which doesn't know
+     * about [threat]: the route never comes closer to [threat] than the bot is now (up to 3 tiles), and passes next to
+     * it only while the bot is still next to it, so the bot never doubles back past it.
+     *
+     * @param threat The mob to run from.
+     * @return The tile the bot runs to, or `null` if there is none within [ESCAPE_SEARCH_RADIUS] tiles.
+     */
+    fun runFrom(threat: Mob): Position? {
+        val start = bot.position
+        val near = threat.position
+        val farX = near.x + threat.size() - 1
+        val farY = near.y + threat.size() - 1
+        fun gap(tile: Position) = maxOf(near.x - tile.x, tile.x - farX, near.y - tile.y, tile.y - farY)
+        val closest = minOf(gap(start), 3)
+        val cameFrom = hashMapOf(start to start)
+        val queue = ArrayDeque(listOf(start))
+        while (queue.isNotEmpty()) {
+            var tile = queue.removeFirst()
+            if (!threat.isWithinDistance(tile, ESCAPE_DISTANCE - 1)) {
+                val destination = tile
+                val route = java.util.ArrayDeque<Position>()
+                while (tile != start) {
+                    route.addFirst(tile)
+                    tile = cameFrom.getValue(tile)
+                }
+                bot.navigator.cancel()
+                bot.walking.isRunning = true
+                bot.walking.replacePath(route)
+                return destination
+            }
+            for (direction in Direction.ALL_EXCEPT_NONE) {
+                val next = tile.translate(1, direction)
+                val gap = gap(next)
+                if (gap >= closest && (gap >= 2 || gap(tile) <= 1) && next !in cameFrom &&
+                    next.isWithinDistance(start, ESCAPE_SEARCH_RADIUS) &&
+                    world.collisionManager.traversable(tile, EntityType.PLAYER, direction)) {
+                    cameFrom[next] = tile
+                    queue.addLast(next)
+                }
+            }
+        }
+        return null
+    }
+
+    /**
      * Uses native home teleport checks at Wilderness level 20 or below, unless teleblocked. Otherwise reuses the
      * existing web-walker to reach the safe Edgeville anchor, without bank access or forced zone teleportation.
      * Actual Wilderness membership determines success. Combat and wandering flags are restored on every exit,
@@ -413,7 +483,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         } else if (bot.healthPercent < 15) {
             bot.output.sendCommand("home")
         } else {
-            (bot.combat.lastAttackReceived?.attacker ?: bot.combat.lastCombatWith)?.let { stepAwayFrom(it) }
+            (opponent() ?: bot.combat.lastAttackReceived?.attacker)?.let { stepAwayFrom(it) }
         }
     }
 
