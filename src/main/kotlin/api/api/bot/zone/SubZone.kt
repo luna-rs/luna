@@ -11,6 +11,7 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.runecrafting.enterAltar.Altar
+import game.bot.scripts.skills.AgilityCourseTravel
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -116,6 +117,36 @@ enum class SubZone(
         inside = Position(2474, 3437),
         area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
         parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Barbarian course including its upper platform, entered through the northern pipe.
+     */
+    BARBARIAN_OUTPOST_AGILITY(
+        inside = Position(2551, 3554),
+        outside = { Position(2552, 3561) },
+        area = SimpleBoxArea.of(2530, 3540, 2555, 3558),
+        parent = { SEERS_VILLAGE }) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.barbarianPipe(bot, true)
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.barbarianPipe(bot, false)
+    },
+
+    /**
+     * Wilderness course north of the entrance ridge. Failure pits are recovered by the script.
+     */
+    WILDERNESS_AGILITY(
+        inside = Position(2998, 3933),
+        outside = { Position(2998, 3916) },
+        area = SimpleBoxArea.of(2990, 3933, 3008, 3968),
+        parent = { WILDERNESS }, plane = 0) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.wildernessRidge(bot, true)
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.wildernessRidge(bot, false)
+    },
 
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(
