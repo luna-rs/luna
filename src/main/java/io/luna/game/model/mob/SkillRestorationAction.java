@@ -8,11 +8,12 @@ import io.luna.game.action.ActionType;
  * <p>
  * On each execution, this action scans the owning mob's {@link SkillSet} and adjusts every eligible skill by one
  * level toward its static value. Skills below their static level are increased, while skills above their static level
- * are reduced.
+ * are reduced by exactly one without discarding the rest of a temporary boost.
  * <p>
  * Prayer is excluded from this restoration flow because it is handled separately by its own mechanics.
  * <p>
- * The action finishes once all eligible skills match their static levels or the mob is no longer alive. Restoration
+ * The action finishes on the execution that brings all eligible skills to their static levels, or when the mob is
+ * no longer alive. Restoration
  * must not raise zero hitpoints while a death action is pending, since that would make the victim alive again.
  *
  * @author lare96
@@ -49,12 +50,12 @@ public final class SkillRestorationAction extends Action<Mob> {
             int staticLevel = nextSkill.getStaticLevel();
 
             if (level != staticLevel) {
-                done = false;
                 if (level < staticLevel) {
                     nextSkill.adjustLevel(1);
                 } else if(mob instanceof Player) {
-                    nextSkill.adjustLevel(-1);
+                    nextSkill.setLevel(level - 1);
                 }
+                done &= nextSkill.getLevel() == staticLevel;
             }
         }
         return done;
