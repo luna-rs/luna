@@ -115,7 +115,7 @@ object GamesRoom {
         val offer = offers[opponent] ?: return false
         if (offer.recipient !== player || offer.expires <= ticks || !canChallenge(player, opponent) ||
             player.overlays.hasWindow() || opponent.overlays.hasWindow()) return false
-        val table = world.locator.findObjects(Position(2208, 4960, player.position.z), 64) {
+        val table = world.locator.findObjects(Position(2208, 4960), 64) {
             it.id == 4651 && inRoom(it.position) && sessions.values.none { session -> session.table.position == it.position }
         }.minByOrNull { it.position.computeLongestDistance(player.position) }
         if (table == null) {
@@ -146,6 +146,13 @@ object GamesRoom {
     }
 
     fun playing(player: Player): Boolean = player in sessions
+
+    /**
+     * Lists live challenges addressed to this player without accepting or extending them.
+     */
+    fun challengers(player: Player): List<Player> = offers.values.filter {
+        it.recipient === player && it.expires > ticks && canChallenge(it.sender, player)
+    }.map { it.sender }
     fun column(player: Player, column: Int) { sessions[player]?.column(player, column) }
     fun move(player: Player, from: Int, to: Int) { sessions[player]?.move(player, from, to) }
     fun draw(player: Player) { sessions[player]?.draw(player) }

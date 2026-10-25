@@ -8,6 +8,8 @@ import engine.widget.make.ButtonIndex
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.NumberInput
+import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.def.WidgetDefinition
 
 /**
  * Handles bot interactions with client widgets, overlays, and interface controls.
@@ -20,6 +22,40 @@ import io.luna.game.model.mob.overlay.NumberInput
  * @author lare96
  */
 class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /**
+     * Checks that the expected standard interface is still open and owns this component.
+     */
+    private fun ownsComponent(interfaceId: Int, componentId: Int): Boolean {
+        val active = bot.overlays[StandardInterface::class] ?: return false
+        if (active.id != interfaceId) return false
+        val pending = ArrayDeque<Int>().apply { add(interfaceId) }
+        val visited = mutableSetOf<Int>()
+        while (pending.isNotEmpty()) {
+            val id = pending.removeFirst()
+            if (!visited.add(id)) continue
+            if (id == componentId) return true
+            WidgetDefinition.ALL[id].orElse(null)?.children?.let(pending::addAll)
+        }
+        return false
+    }
+
+    /**
+     * Clicks a component only while its expected interface is open. The caller verifies the resulting action.
+     */
+    fun clickButton(interfaceId: Int, buttonId: Int): Boolean =
+        ownsComponent(interfaceId, buttonId) && bot.output.clickButton(buttonId)
+
+    /**
+     * Drags between two slots of an open item grid through the native arrange-item packet.
+     * Slot capacity and move legality remain owned by the interface's content handler.
+     */
+    fun dragItem(interfaceId: Int, widgetId: Int, from: Int, to: Int): Boolean {
+        if (from !in 0..32767 || to !in 0..32767 || from == to ||
+            !ownsComponent(interfaceId, widgetId) ||
+            WidgetDefinition.ALL[widgetId].orElse(null)?.type != WidgetDefinition.WidgetType.ITEM_GRID) return false
+        return bot.output.sendArrangeItem(widgetId, from, to)
+    }
 
     companion object {
 

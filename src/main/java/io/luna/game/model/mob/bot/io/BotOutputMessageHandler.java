@@ -13,6 +13,7 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.in.ButtonClickMessageReader;
+import io.luna.net.msg.in.ArrangeItemMessageReader;
 import io.luna.net.msg.in.ChatMessageReader;
 import io.luna.net.msg.in.CloseInterfaceMessageReader;
 import io.luna.net.msg.in.CommandMessageReader;
@@ -644,6 +645,28 @@ public final class BotOutputMessageHandler {
         ByteMessage msg = ByteMessage.raw();
         msg.putShort(buttonId);
         client.queueSimulated(new GameMessage(79, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Sends a swap-mode {@link ArrangeItemMessageReader} packet for a client item-grid drag.
+     *
+     * @param widgetId The item grid identifier.
+     * @param fromIndex The source slot.
+     * @param toIndex The destination slot.
+     * @return Whether the packet was queued.
+     */
+    public boolean sendArrangeItem(int widgetId, int fromIndex, int toIndex) {
+        if (widgetId <= 0 || widgetId > Short.MAX_VALUE || fromIndex < 0 || fromIndex > Short.MAX_VALUE ||
+                toIndex < 0 || toIndex > Short.MAX_VALUE || fromIndex == toIndex) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(toIndex, ByteOrder.LITTLE, ValueType.ADD);
+        msg.put(0, ValueType.ADD);
+        msg.putShort(widgetId, ValueType.ADD);
+        msg.putShort(fromIndex, ByteOrder.LITTLE);
+        client.queueSimulated(new GameMessage(123, MessageType.FIXED, msg));
         return true;
     }
 

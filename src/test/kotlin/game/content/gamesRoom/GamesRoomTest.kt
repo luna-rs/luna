@@ -28,6 +28,20 @@ import io.luna.game.cache.codec.WidgetDefinitionDecoder
 import io.luna.game.cache.map.MapIndex
 import java.nio.file.Files
 import java.nio.file.Path
+import api.bot.action.BotActionHandler
+import api.bot.action.BotWidgetActionHandler
+import game.bot.scripts.GamesRoomBotScript
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.bot.io.BotClient
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
+import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.mob.controller.ControllerManager
+import io.luna.net.msg.GameMessage
+import io.luna.net.msg.`in`.ArrangeItemMessageReader
+import org.mockito.ArgumentCaptor
+import kotlinx.coroutines.runBlocking
+import com.google.gson.JsonObject
+import engine.controllers.WildernessLocatableController.wildernessLevel
 
 /**
  * Checks adversarial moves and completed games without a running client.
@@ -42,8 +56,17 @@ class GamesRoomTest {
             for (id in listOf(10380, 10617, 10507, 10874)) {
                 val definition = mock(WidgetDefinition::class.java)
                 `when`(definition.id()).thenReturn(id)
+                `when`(definition.children).thenReturn(ImmutableList.copyOf(when (id) {
+                    10380 -> listOf(10494)
+                    10617 -> (10736..10742).toList()
+                    else -> emptyList()
+                }))
                 WidgetDefinition.ALL.storeDefinition(definition)
             }
+            val grid = mock(WidgetDefinition::class.java)
+            `when`(grid.id()).thenReturn(10494)
+            `when`(grid.type).thenReturn(WidgetDefinition.WidgetType.ITEM_GRID)
+            WidgetDefinition.ALL.storeDefinition(grid)
         }
     }
 
@@ -58,7 +81,8 @@ class GamesRoomTest {
         val locator = world.locator
         doAnswer { call ->
             val filter = call.getArgument<Predicate<GameObject>>(2)
-            if (filter.test(table)) setOf(table) else emptySet<GameObject>()
+            val base = call.getArgument<Locatable>(0).abs()
+            if (base.z == table.position.z && filter.test(table)) setOf(table) else emptySet<GameObject>()
         }.`when`(locator).findObjects(any(Locatable::class.java), anyInt(), any())
     }
 
@@ -88,6 +112,159 @@ class GamesRoomTest {
         val cells = field.get(board) as IntArray
         cells.fill(0)
         pieces.forEach { (slot, piece) -> cells[slot] = piece }
+    }
+
+    @Test fun nativeDragPacketRoundTripsThroughThePlayerReader() {
+        val bot = player() as Bot
+        val client = mock(BotClient::class.java)
+        `when`(client.bot).thenReturn(bot)
+        val output = BotOutputMessageHandler(client)
+        assertFalse(output.sendArrangeItem(10494, -1, 33))
+        assertFalse(output.sendArrangeItem(10494, 40, 40))
+        assertFalse(output.sendArrangeItem(40000, 40, 33))
+        assertFalse(output.sendArrangeItem(10494, 40, 65536))
+        assertTrue(output.sendArrangeItem(10494, 40, 33))
+        val captured = ArgumentCaptor.forClass(GameMessage::class.java)
+        verify(client).queueSimulated(captured.capture())
+        val packet = captured.value
+        try {
+            assertEquals(123, packet.opcode)
+            assertEquals(7, packet.size)
+            val reader = ArrangeItemMessageReader()
+            val event = reader.decode(bot, packet)
+            assertTrue(reader.validate(bot, event))
+            assertEquals(10494, event.widgetId)
+            assertEquals(40, event.fromIndex)
+            assertEquals(33, event.toIndex)
+            assertEquals(0, event.insertionMode)
+            assertEquals(0, packet.payload.buffer.readableBytes())
+        } finally { packet.payload.buffer.release() }
+    }
+
+    @Test fun widgetActionsRejectClosedAndUnrelatedInterfaces() {
+        val bot = player() as Bot
+        val handler = BotWidgetActionHandler(bot, mock(BotActionHandler::class.java))
+        assertFalse(handler.clickButton(10617, 10736))
+        assertFalse(handler.dragItem(10380, 10494, 40, 33))
+        bot.overlays.open(StandardInterface(10617))
+        assertFalse(handler.clickButton(10617, 2458))
+        assertFalse(handler.dragItem(10380, 10494, 40, 33))
+        `when`(bot.output.clickButton(10739)).thenReturn(true)
+        assertTrue(handler.clickButton(10617, 10739))
+        bot.overlays.open(StandardInterface(10380))
+        assertFalse(handler.dragItem(10380, 10494, -1, 33))
+        assertFalse(handler.dragItem(10380, 10494, 40, 40))
+        assertFalse(handler.dragItem(10380, 10380, 40, 33))
+        `when`(bot.output.sendArrangeItem(10494, 40, 33)).thenReturn(true)
+        assertTrue(handler.dragItem(10380, 10494, 40, 33))
+        verify(bot.output).clickButton(10739)
+        verify(bot.output).sendArrangeItem(10494, 40, 33)
+        verifyNoMoreInteractions(bot.output)
+    }
+
+    @Test fun botSnapshotsCannotRenewUsedAttemptsOrDeadlines() = runBlocking {
+        val bot = player() as Bot
+        val future = System.currentTimeMillis() + 60_000
+        val script = GamesRoomBotScript(bot, attempted = true, started = true,
+            runeLink = true, waitingUntil = future, deadline = future + 60_000)
+        val json = JsonObject().also { script.snapshot().save(it) }
+        val data = GamesRoomBotScript.BoardGameData().also { it.load(json) }
+        assertTrue(data.attempted && data.started && data.runeLink)
+        assertEquals(future, data.waitingUntil)
+        assertEquals(future + 60_000, data.deadline)
+        assertTrue(GamesRoomBotScript(bot, data).init(true))
+        assertTrue(GamesRoomBotScript(bot, deadline = 1).init(false))
+        assertTrue(GamesRoomBotScript(bot, waitingUntil = 1).init(false))
+        verifyNoInteractions(bot.actionHandler)
+    }
+
+    @Test fun botInterruptionsResignAndClearIncomingChallenges() {
+        val (first, second) = start(true)
+        val bot = first as Bot
+        val script = GamesRoomBotScript(bot)
+        script.paused()
+        assertFalse(GamesRoom.playing(first))
+        assertFalse(GamesRoom.playing(second))
+        assertFalse(bot.overlays.hasWindow())
+        assertTrue(GamesRoom.offer(second, bot, false, 15))
+        assertEquals(listOf(second), GamesRoom.challengers(bot))
+        script.paused()
+        assertTrue(GamesRoom.challengers(bot).isEmpty())
+        verify(bot.navigator, times(2)).cancel()
+    }
+
+    @Test fun botSelectionHonorsSafetyAndUsesOnlyAvailableVisitorPeers() {
+        val bot = player() as Bot
+        val other = player() as Bot
+        `when`(bot.asPlr()).thenReturn(bot)
+        `when`(bot.controllers).thenReturn(ControllerManager(bot))
+        bot.wildernessLevel = 0
+        assertTrue(GamesRoomBotScript.eligible(bot))
+        bot.wildernessLevel = 1
+        assertFalse(GamesRoomBotScript.eligible(bot))
+        bot.wildernessLevel = 0
+        `when`(bot.isLocked).thenReturn(true)
+        assertFalse(GamesRoomBotScript.eligible(bot))
+        `when`(bot.isLocked).thenReturn(false)
+        `when`(bot.index).thenReturn(1)
+        `when`(other.index).thenReturn(2)
+        assertNull(GamesRoomBotScript.opponent(bot, listOf(other)))
+        val visitor = GamesRoomBotScript(other)
+        `when`(other.scriptStack.current()).thenReturn(visitor)
+        assertSame(other, GamesRoomBotScript.opponent(bot, listOf(other)))
+        assertNull(GamesRoomBotScript.opponent(other, listOf(bot)))
+        val usedVisit = GamesRoomBotScript(other, attempted = true)
+        `when`(other.scriptStack.current()).thenReturn(usedVisit)
+        assertNull(GamesRoomBotScript.opponent(bot, listOf(other)))
+    }
+
+    @Test fun botChoosesOnlyLegalColumnsAndPrefersDraughtsPromotion() {
+        assertNull(GamesRoomBotScript.chooseColumn(emptyList()))
+        assertEquals(3, GamesRoomBotScript.chooseColumn((0..6).toList()))
+        assertEquals(1, GamesRoomBotScript.chooseColumn(listOf(0, 1, 6)))
+        assertNull(GamesRoomBotScript.chooseMove(emptyList()))
+        assertEquals(17 to 3, GamesRoomBotScript.chooseMove(listOf(42 to 33, 17 to 3)))
+    }
+
+    @Test fun upstairsChallengesAllocateTablesOnTheNativeBoardGameFloor() {
+        val first = player()
+        val second = player()
+        first.move(Position(2208, 4934, 1))
+        second.move(Position(2209, 4934, 1))
+        assertTrue(GamesRoom.offer(first, second, false, 30))
+        assertTrue(GamesRoom.accept(second, first))
+        assertEquals(0, first.position.z)
+        assertEquals(0, second.position.z)
+        assertEquals(0, GamesRoomBotScript.LOBBY.z)
+    }
+
+    @Test fun botPlaysBothGamesThroughWidgetActionsAndDoesNotPlayOffTurn() = runBlocking {
+        for (runeLink in listOf(false, true)) {
+            val (first, second) = start(runeLink)
+            val bot = (if (GamesRoom.columns(first).isNotEmpty() || GamesRoom.moves(first).isNotEmpty()) first else second) as Bot
+            val actions = bot.actionHandler.widgets
+            if (runeLink) {
+                doAnswer {
+                    GamesRoom.column(bot, it.getArgument<Int>(1) - 10736)
+                    true
+                }.`when`(actions).clickButton(eq(10617), anyInt())
+            } else {
+                doAnswer {
+                    GamesRoom.move(bot, it.getArgument(2), it.getArgument(3))
+                    true
+                }.`when`(actions).dragItem(eq(10380), eq(10494), anyInt(), anyInt())
+            }
+            val script = GamesRoomBotScript(bot)
+            assertFalse(script.run())
+            assertTrue(GamesRoom.columns(bot).isEmpty())
+            assertTrue(GamesRoom.moves(bot).isEmpty())
+            assertFalse(script.run())
+            if (runeLink) verify(actions).clickButton(eq(10617), anyInt())
+            else verify(actions).dragItem(eq(10380), eq(10494), anyInt(), anyInt())
+            verifyNoInteractions(bot.output)
+            script.paused()
+            assertTrue(script.run())
+        }
     }
 
     @Test fun challengesRequireConsentAndExpire() {
