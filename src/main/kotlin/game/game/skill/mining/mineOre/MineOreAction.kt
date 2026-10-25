@@ -10,10 +10,12 @@ import game.skill.mining.Ore.RUNE_ESSENCE
 import game.skill.mining.Pickaxe
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.`object`.ObjectType
 import java.util.WeakHashMap
 
 /**
@@ -32,6 +34,22 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
          * Rock -> the tick of the roll that emptied it. Players who succeed on the same tick all get ore.
          */
         private val emptiedOn = WeakHashMap<GameObject, Long>()
+
+        /**
+         * The tile and type of a mined rock -> the rock placed there in the map, until it grows back.
+         */
+        private val minedRocks = HashMap<Pair<Position, ObjectType>, MinedRock>()
+    }
+
+    /**
+     * A rock that has been mined, and is waiting to turn back into the rock placed in the map.
+     */
+    private class MinedRock(val placedId: Int) {
+
+        /**
+         * Counts the times this rock was mined. Only the timer started by the last of them grows the rock back.
+         */
+        var timesMined = 0
     }
 
     /**
@@ -163,7 +181,8 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     /**
-     * Deletes and respawns an [Ore] rock object.
+     * Replaces the rock with its empty rock, or the next smaller rock, and grows the rock placed in the map back
+     * later.
      */
     private fun deleteAndRespawnRock() {
         if (rockObj.state == EntityState.INACTIVE) {
@@ -172,13 +191,18 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
         emptiedOn[rockObj] = successTick
         val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
-        if (emptyId != null && emptyId != -1) {
-            world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
-            val respawn = ore.respawnTicks
-            if (respawn != null) {
-                world.scheduleOnce(respawn) {
-                    world.addObject(rockObj.id, rockObj.position, rockObj.objectType, rockObj.direction, null)
-                }
+        if (emptyId == null || emptyId == -1) {
+            return
+        }
+        val tile = rockObj.position to rockObj.objectType
+        val minedRock = minedRocks.getOrPut(tile) { MinedRock(rockObj.id) }
+        val timesMined = ++minedRock.timesMined
+        world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
+        val respawn = ore.respawnTicks(rockObj.id) ?: return
+        world.scheduleOnce(respawn) {
+            if (minedRock.timesMined == timesMined) {
+                minedRocks.remove(tile)
+                world.addObject(minedRock.placedId, rockObj.position, rockObj.objectType, rockObj.direction, null)
             }
         }
     }

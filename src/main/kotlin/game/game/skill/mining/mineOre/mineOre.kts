@@ -23,7 +23,10 @@ Ore.ROCK_MAP.entries.forEach { (oreId, ore) ->
     object1(oreId) { mineRock(plr, ore, gameObject) }
 }
 
-// A rock whose ore has been mined.
+// A rock whose ore has been mined. The emptied limestone rock has its own line.
 Ore.EMPTY_ROCKS.filter { it != -1 }.forEach {
-    object1(it) { plr.sendMessage("There is no ore currently available in this rock.") }
+    object1(it) {
+        plr.sendMessage(if (gameObject.id == 4030) "There are no minerals currently available in this rock."
+                        else "There is no ore currently available in this rock.")
+    }
 }

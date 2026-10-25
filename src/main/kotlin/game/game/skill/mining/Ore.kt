@@ -94,6 +94,25 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
             respawnTicks = 42,
             exp = 17.5,
             chance = 90 to 350),
+    LIMESTONE(rocks = listOf(4027 to 4028,
+                             4028 to 4029,
+                             4029 to 4030),
+              level = 10,
+              item = 3211,
+              respawnTicks = 9,
+              exp = 26.5,
+              chance = 95 to 350) {
+
+        /**
+         * Each limestone mined shrinks the rock by one stage. It grows back to the rock placed in the map 39 ticks
+         * after its first stage is mined, 19 after its second and 9 after its last.
+         */
+        override fun respawnTicks(rock: Int) = when (rock) {
+            4027 -> 39
+            4028 -> 19
+            else -> 9
+        }
+    },
     IRON(rocks = listOf(2092 to 450,
                         2093 to 451,
                         6943 to 6947,
@@ -215,6 +234,11 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
      */
     val typeName = itemName(item).replace("ore", "").replace("Rune essence", "essence").trim()
 
+    /**
+     * The ticks until [rock], once mined, turns back into the rock placed in the map, or `null` if it never does.
+     */
+    open fun respawnTicks(rock: Int) = respawnTicks
+
     companion object {
 
         /**
@@ -230,9 +254,11 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
         val ITEM_MAP = values().associateBy { it.item }
 
         /**
-         * All empty rock object IDs, with the empty rocks 452 and 453 that are only ever placed as scenery.
+         * All empty rock object IDs, with the empty rocks 452 and 453 that are only ever placed as scenery. A rock
+         * mined down to a smaller rock that still has ore isn't empty.
          */
-        val EMPTY_ROCKS: Set<Int> = (values().flatMap { ore -> ore.rocks.map { it.second } } + listOf(452, 453)).toHashSet()
+        val EMPTY_ROCKS: Set<Int> =
+            (values().flatMap { ore -> ore.rocks.map { it.second } } + listOf(452, 453) - ROCK_MAP.keys).toHashSet()
 
         /**
          * Ore rock object ID -> Empty rock object ID.
