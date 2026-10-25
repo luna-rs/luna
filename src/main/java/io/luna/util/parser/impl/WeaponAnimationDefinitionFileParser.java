@@ -45,7 +45,7 @@ public final class WeaponAnimationDefinitionFileParser extends JsonFileParser<We
             styles.put(type, new Pair<>(attack, defend));
         }
 
-        WeaponModelDefinition model = readModel(token.get("model").getAsJsonObject());
+        WeaponModelDefinition model = token.has("model") ? readModel(token.getAsJsonObject("model")) : null;
         return new WeaponAnimationDefinition(ids, styles, model);
     }
 
