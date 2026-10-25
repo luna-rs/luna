@@ -108,8 +108,8 @@ public final class BotReflex {
                 return true;
             }
             Mob focus = bot.getCombat().getTarget();
-            if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
-                focus = bot.getCombat().getLastAttackReceived().getAttacker();
+            if (focus == null || !focus.isAlive()) {
+                focus = bot.getActionHandler().getCombat().opponent();
             }
             if (focus != null) {
                 if (focus instanceof Npc && pkSession != null && bot.getScriptStack().current() == pkSession) {
