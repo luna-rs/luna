@@ -52,14 +52,14 @@ object Farming {
     const val FLOWER_PATCH_VARP = 508
 
     /**
-     * The varp changed when using compost on a compost bin.
+     * The varp holding the state of the Falador, Catherby, Port Phasmatys and Ardougne compost bins. See [CompostBin].
      */
     const val COMPOST_BIN_VARP = 511
 
     /**
-     * The varp changed when using supercompost on a compost bin.
+     * The varp holding the state of the cactus, mushroom and belladonna patches, in six bits each.
      */
-    const val SUPERCOMPOST_BIN_VARP = 512
+    const val SPECIAL_PATCH_VARP = 512
 
     /**
      * The varp holding the tools stored with tool leprechauns. See [StorableTool].
@@ -196,7 +196,7 @@ object Farming {
      */
     val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
             TreePatchLocation.values() + FruitTreePatchLocation.values() + HopsPatchLocation.values() +
-            FlowerPatchLocation.values()
+            FlowerPatchLocation.values() + SpecialPatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.
@@ -204,9 +204,9 @@ object Farming {
     private val locationsByObject = LOCATIONS.associateBy(PatchLocation::objectId)
 
     /**
-     * The farming patches loaded for a player's session, and the varp values last sent to them.
+     * The farming patches and compost bins loaded for a player's session, and the varp values last sent to them.
      */
-    class LoadedPatches(val patches: Map<PatchLocation, FarmingPatch>) {
+    class LoadedPatches(val patches: Map<PatchLocation, FarmingPatch>, val bins: Map<CompostBinLocation, CompostBin>) {
 
         /**
          * The varp values last sent, keyed by varp id.
@@ -221,8 +221,8 @@ object Farming {
     var Player.storedTools by Attr.int().persist("farming_tools")
 
     /**
-     * An attribute holding the saved state of every farming patch, one object per patch keyed by
-     * [PatchLocation.key]. See [FarmingPatch.save].
+     * An attribute holding the saved state of every farming patch and compost bin, one object each keyed by
+     * [PatchLocation.key] or [CompostBinLocation.key]. See [FarmingPatch.save] and [CompostBin.save].
      */
     var Player.farmingPatchData by Attr.obj { JsonObject() }.persist("farming_patches")
 
@@ -248,7 +248,16 @@ object Farming {
                 patches[location] = patch
             }
             patches.values.forEach { it.link(patches) }
-            loaded = LoadedPatches(patches)
+            val bins = LinkedHashMap<CompostBinLocation, CompostBin>()
+            for (location in CompostBinLocation.values()) {
+                val bin = CompostBin(location)
+                val binData = data.get(location.key)
+                if (binData != null && binData.isJsonObject) {
+                    bin.load(binData.asJsonObject)
+                }
+                bins[location] = bin
+            }
+            loaded = LoadedPatches(patches, bins)
             plr.loadedPatches = loaded
         }
         return loaded
@@ -258,6 +267,20 @@ object Farming {
      * Returns all of the player's farming patches, keyed by location.
      */
     fun patches(plr: Player): Map<PatchLocation, FarmingPatch> = loaded(plr).patches
+
+    /**
+     * Returns all of the player's compost bins, keyed by location.
+     */
+    fun compostBins(plr: Player): Map<CompostBinLocation, CompostBin> = loaded(plr).bins
+
+    /**
+     * Finds a player's compost bin based on the object id, after bringing their farming state up to date.
+     */
+    fun findCompostBin(objectId: Int, plr: Player): CompostBin? {
+        val location = CompostBinLocation.lookup(objectId) ?: return null
+        update(plr)
+        return compostBins(plr)[location]
+    }
 
     /**
      * Finds a players farming patch based on the object id, after bringing their patches up to date. Useful for
@@ -294,23 +317,27 @@ object Farming {
     }
 
     /**
-     * Saves the state of the player's patches to [farmingPatchData].
+     * Saves the state of the player's patches and compost bins to [farmingPatchData].
      */
     fun save(plr: Player) {
         val data = JsonObject()
         patches(plr).forEach { (location, patch) -> data.add(location.key, patch.save()) }
+        compostBins(plr).forEach { (location, bin) -> data.add(location.key, bin.save()) }
         plr.farmingPatchData = data
     }
 
     /**
-     * Combines the states of the player's patches per varp and sends them, either all of them if [force] is true, or
-     * only the ones that changed since they were last sent.
+     * Combines the states of the player's patches and compost bins per varp and sends them, either all of them if
+     * [force] is true, or only the ones that changed since they were last sent.
      */
     fun sendPatches(plr: Player, force: Boolean = false) {
         val loaded = loaded(plr)
         val values = HashMap<Int, Int>()
         loaded.patches.values.forEach { patch ->
             values.merge(patch.location.varpId, patch.getVarpValue()) { old, new -> old or new }
+        }
+        loaded.bins.values.forEach { bin ->
+            values.merge(bin.location.varpId, bin.getVarpValue()) { old, new -> old or new }
         }
         values.forEach { (varpId, value) ->
             if (force || loaded.sentVarps[varpId] != value) {

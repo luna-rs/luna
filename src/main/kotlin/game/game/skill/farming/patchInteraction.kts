@@ -9,7 +9,7 @@ import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.event.impl.*
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.*
-import io.luna.game.model.mob.varp.*
+import io.luna.game.model.`object`.*
 
 /**
  * Plants [crop] in the patch [objectId], if the patch is weeded and empty and the player has the level, the seeds and
@@ -252,10 +252,42 @@ fun digScarecrow(plr: Player, patch: FlowerPatch) {
     Farming.commit(plr)
 }
 
+/**
+ * Handles the first option of the fully grown cactus in the cactus patch [objectId]: checking its health, which gives
+ * the cactus's [Crop.checkHealthXp], then picking its spines.
+ */
+fun cactusOption(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) as? CactusPatch ?: return
+    val crop = patch.crop ?: return
+    when {
+        patch.canCheckHealth() -> {
+            patch.checkHealth()
+            plr.farming.addExperience(crop.checkHealthXp)
+            plr.sendMessage("You examine the cactus for signs of disease and find that it is in perfect health.")
+            Farming.commit(plr)
+        }
+
+        patch.canPick() -> plr.submitAction(PickFruitAction(plr, patch))
+    }
+}
+
+/**
+ * Harvests the belladonna in the belladonna patch [patchObject], if the player is wearing gloves.
+ */
+fun pickBelladonna(plr: Player, patchObject: GameObject) {
+    if (plr.equipment[Equipment.HANDS] == null) {
+        plr.sendMessage("You need to wear gloves to pick this.")
+        return
+    }
+    plr.submitAction(HarvestAction(plr, patchObject))
+}
+
 Farming.LOCATIONS.forEach { location ->
     val objectId = location.objectId
     val isTreePatch = location.createPatch() is AbstractTreePatch
     val isFlowerPatch = location.createPatch() is FlowerPatch
+    val isCactusPatch = location.createPatch() is CactusPatch
+    val isBelladonnaPatch = location.createPatch() is BelladonnaPatch
 
     // Hook for raking patches
     useItem(Farming.RAKE).onObject(objectId) {
@@ -277,11 +309,13 @@ Farming.LOCATIONS.forEach { location ->
         }
     }
 
-    // Hook for harvesting, picking flowers, or checking the health of, picking from and chopping down trees
+    // Hook for harvesting, picking flowers, or checking the health of and picking from trees and cacti
     object1(objectId) {
         when {
             isTreePatch -> treeOption(plr, objectId)
             isFlowerPatch -> pickFlower(plr, objectId)
+            isCactusPatch -> cactusOption(plr, objectId)
+            isBelladonnaPatch -> pickBelladonna(plr, gameObject)
             else -> plr.submitAction(HarvestAction(plr, gameObject))
         }
     }
@@ -317,6 +351,97 @@ Farming.LOCATIONS.forEach { location ->
     } else {
         useItem(Farming.PLANT_CURE).onObject(objectId) { cure(plr, objectId) }
     }
+}
+
+/**
+ * Puts as many of [itemId] as the player has, up to a full bin, in the compost bin [objectId].
+ */
+fun fillCompostBin(plr: Player, objectId: Int, itemId: Int) {
+    val bin = Farming.findCompostBin(objectId, plr) ?: return
+    val type = CompostBinType.lookup(itemId) ?: return
+    when {
+        bin.closed -> plr.sendMessage("The compost bin is closed.")
+        bin.open -> plr.sendMessage("You need to empty the compost bin first.")
+        !bin.canFill() -> plr.sendMessage("The compost bin is already full.")
+        else -> {
+            val count = minOf(plr.inventory.computeAmountForId(itemId), CompostBin.MAX_ITEMS - bin.amount)
+            plr.inventory.remove(Item(itemId, count))
+            bin.fill(type, count)
+            plr.playSound(Sound.FARMING_PUTIN)
+            plr.sendMessage("You put ${itemName(itemId).lowercase()} in the compost bin.")
+            Farming.commit(plr)
+        }
+    }
+}
+
+/**
+ * Handles the first option of the compost bin [objectId]: closing a full bin, opening a rotted one, or taking a rotten
+ * tomato out of an open bin of rotten tomatoes.
+ */
+fun compostBinOption(plr: Player, objectId: Int) {
+    val bin = Farming.findCompostBin(objectId, plr) ?: return
+    val now = System.currentTimeMillis()
+    when {
+        bin.canClose() -> {
+            bin.close(now, CompostBin.ROT_MINUTES.random())
+            plr.playSound(Sound.COMPOST_CLOSE)
+            plr.sendMessage("You close the compost bin.")
+            plr.sendMessage("The contents have begun to rot.")
+            Farming.commit(plr)
+        }
+
+        bin.closed && !bin.isRotted(now) -> plr.sendMessage("The contents of the compost bin are still rotting.")
+        bin.closed -> {
+            bin.open()
+            plr.playSound(Sound.COMPOST_OPEN)
+            plr.sendMessage("You open the compost bin.")
+            Farming.commit(plr)
+        }
+
+        bin.canTakeOut() && bin.type == CompostBinType.TOMATOES -> {
+            val tomato = Item(CompostBinType.TOMATOES.product)
+            if (!plr.inventory.hasSpaceFor(tomato)) {
+                plr.sendMessage("You don't have enough inventory space.")
+                return
+            }
+            plr.inventory.add(tomato)
+            plr.farming.addExperience(CompostBinType.TOMATOES.experience)
+            plr.sendMessage("You take a rotten tomato out of the compost bin.")
+            bin.takeOut()
+            Farming.commit(plr)
+        }
+    }
+}
+
+/**
+ * Fills an empty bucket with compost or supercompost from the open compost bin [objectId].
+ */
+fun takeCompost(plr: Player, objectId: Int) {
+    val bin = Farming.findCompostBin(objectId, plr) ?: return
+    val type = bin.type
+    if (type == null || type == CompostBinType.TOMATOES || !bin.canTakeOut()) {
+        return
+    }
+    plr.inventory.replace(Farming.BUCKET, type.product)
+    plr.farming.addExperience(type.experience)
+    plr.sendMessage("You fill the bucket with ${itemName(type.product).lowercase()}.")
+    bin.takeOut()
+    Farming.commit(plr)
+}
+
+CompostBinLocation.values().forEach { location ->
+    val objectId = location.objectId
+
+    // Hook for filling compost bins
+    CompostBinType.itemIds().forEach { itemId ->
+        useItem(itemId).onObject(objectId) { fillCompostBin(plr, objectId, itemId) }
+    }
+
+    // Hook for closing, opening and taking rotten tomatoes out of compost bins
+    object1(objectId) { compostBinOption(plr, objectId) }
+
+    // Hook for taking compost and supercompost out of compost bins
+    useItem(Farming.BUCKET).onObject(objectId) { takeCompost(plr, objectId) }
 }
 
 cmd("resetpatches", RIGHTS_ADMIN) {
@@ -385,14 +510,4 @@ world.schedule(UpdateFarmsTask(world.players))
 on(LoginEvent::class) {
     Farming.update(plr)
     Farming.sendPatches(plr, true)
-}
-
-useItem(6032).onObject(7836) {
-    plr.sendMessage("Composting")
-    plr.sendVarp(Varp(Farming.COMPOST_BIN_VARP, 10))
-}
-
-useItem(6034).onObject(7836) {
-    plr.sendVarp(Varp(Farming.SUPERCOMPOST_BIN_VARP, 10))
-    plr.sendMessage("Supercomposting")
 }

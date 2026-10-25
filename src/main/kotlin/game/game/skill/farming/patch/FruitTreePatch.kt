@@ -14,7 +14,7 @@ import game.skill.farming.seed.*
  *
  * @author hydrozoa
  */
-class FruitTreePatch(location: FruitTreePatchLocation) : AbstractTreePatch(location) {
+class FruitTreePatch(location: FruitTreePatchLocation) : AbstractTreePatch(location), PickablePatch {
 
     companion object {
 
@@ -64,14 +64,14 @@ class FruitTreePatch(location: FruitTreePatchLocation) : AbstractTreePatch(locat
     /**
      * @return True if there is fruit on the tree to pick.
      */
-    fun canPick(): Boolean = isBearing() && fruit > 0
+    override fun canPick(): Boolean = isBearing() && fruit > 0
 
     override fun canChop(): Boolean = isBearing() && fruit == 0
 
     /**
      * Picks one fruit from the tree.
      */
-    fun pick() {
+    override fun pick() {
         fruit--
     }
 

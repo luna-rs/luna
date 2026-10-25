@@ -7,13 +7,13 @@ import io.luna.game.action.*
 import io.luna.game.model.mob.*
 
 /**
- * Action that picks the fruit from a fruit tree. Every cycle picks one fruit and gives its harvest experience, until the
- * tree has no fruit left or the inventory is full.
+ * Action that picks from a [PickablePatch], such as the fruit from a fruit tree or the spines from a cactus. Every cycle
+ * picks one and gives its harvest experience, until there is nothing left to pick or the inventory is full.
  *
  * @author hydrozoa
  */
-class PickFruitAction(plr: Player, private val patch: FruitTreePatch) :
-    Action<Player>(plr, ActionType.WEAK, true, 4) {
+class PickFruitAction<T>(plr: Player, private val patch: T) :
+    Action<Player>(plr, ActionType.WEAK, true, 4) where T : FarmingPatch, T : PickablePatch {
 
     override fun run(): Boolean {
         val crop = patch.crop
