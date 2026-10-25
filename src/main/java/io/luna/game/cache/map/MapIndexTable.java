@@ -20,7 +20,6 @@ import io.luna.game.model.Region;
  */
 public final class MapIndexTable {
 
-    // TODO Utility methods..
     /**
      * The index table keyed by region.
      */
