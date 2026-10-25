@@ -105,6 +105,8 @@ import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
 import game.bot.scripts.skills.HerbGatheringScript
 import game.bot.scripts.skills.HerbGatheringScript.Companion.GatheringData
+import game.bot.scripts.skills.TelegrabBotScript
+import game.bot.scripts.skills.TelegrabBotScript.Companion.TelegrabData
 import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
@@ -122,6 +124,7 @@ on(ServerLaunchEvent::class) {
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }
+    scriptManager.addScript<TelegrabData>(TelegrabBotScript::class) { bot, data -> TelegrabBotScript(bot, data) }
     scriptManager.addScript<PkData>(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
     scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
     scriptManager.addScript<IdleData>(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }

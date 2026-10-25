@@ -24,6 +24,23 @@ import io.luna.game.model.mob.block.Graphic
  */
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
 
+    companion object {
+        /**
+         * The regular-spellbook widget used for native Telekinetic Grab packets.
+         */
+        const val SPELL_ID = 1168
+
+        /**
+         * The minimum Magic level checked by the player action and bot cost planning.
+         */
+        const val LEVEL = 33
+
+        /**
+         * Native rune requirements; Magic resolves equipped staffs and combination runes for each cast.
+         */
+        val REQUIREMENTS = listOf(RuneRequirement(Rune.AIR, 1), RuneRequirement(Rune.LAW, 1))
+    }
+
     override fun onLock() {
         mob.walking.clear()
         mob.face(groundItem.position)
@@ -42,10 +59,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             complete()
             return
         }
-        val removeItems = Magic.checkRequirements(mob, 33, listOf(
-            RuneRequirement(Rune.AIR, 1),
-            RuneRequirement(Rune.LAW, 1)
-        ))
+        val removeItems = Magic.checkRequirements(mob, LEVEL, REQUIREMENTS)
         if (removeItems == null) {
             complete()
             return

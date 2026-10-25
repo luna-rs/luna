@@ -27,6 +27,7 @@ import io.luna.net.msg.in.ItemOnObjectMessageReader;
 import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.MagicOnItemMessageReader;
 import io.luna.net.msg.in.MagicOnObjectMessageReader;
+import io.luna.net.msg.in.MagicOnGroundItemMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
 import io.luna.net.msg.in.NumberInputMessageReader;
 import io.luna.net.msg.in.ObjectClickMessageReader;
@@ -206,6 +207,28 @@ public final class BotOutputMessageHandler {
         msg.putShort(targetObject.getPosition().getX(), ValueType.ADD);
         msg.putShort(targetObject.getPosition().getY(), ByteOrder.LITTLE);
         client.queueSimulated(new GameMessage(210, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Queues the native {@link MagicOnGroundItemMessageReader} packet for visible, active ground loot.
+     * Costs, line of sight and delayed collection belong to the spell action; queuing confirms no pickup.
+     *
+     * @param spellId The spell widget identifier.
+     * @param targetItem The ground item to cast on.
+     * @return Whether a packet was queued for a current visible target on the bot's plane.
+     */
+    public boolean useSpellOnGroundItem(int spellId, GroundItem targetItem) {
+        if (targetItem == null || targetItem.getState() != io.luna.game.model.EntityState.ACTIVE ||
+                !targetItem.isVisibleTo(bot) || !targetItem.getPosition().isViewable(bot.getPosition())) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(targetItem.getId(), ByteOrder.LITTLE);
+        msg.putShort(targetItem.getPosition().getY());
+        msg.putShort(spellId, ByteOrder.LITTLE);
+        msg.putShort(targetItem.getPosition().getX(), ByteOrder.LITTLE, ValueType.ADD);
+        client.queueSimulated(new GameMessage(83, MessageType.FIXED, msg));
         return true;
     }
 

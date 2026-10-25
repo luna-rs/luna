@@ -77,7 +77,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             override fun load(data: JsonObject) {
                 duration = data.get("duration").asLong.milliseconds
                 zones = GsonUtils.getAsType(data.get("zones"), Array<String>::class.java)
-                    .map { SubZone.valueOf(it) }
+                    .map {
+                        // Preserve saved sessions from before the lower temple's level was corrected.
+                        SubZone.valueOf(if (it == "LVL_20_WILDERNESS_CHAOS_TEMPLE")
+                            "LVL_12_WILDERNESS_CHAOS_TEMPLE" else it)
+                    }
                     .toMutableList()
             }
 

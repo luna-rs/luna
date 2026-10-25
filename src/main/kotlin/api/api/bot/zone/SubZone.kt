@@ -1583,7 +1583,7 @@ enum class SubZone(
     },
 
     /*
-     * Level 20 Wilderness chaos temple.
+     * Level 12 Wilderness chaos temple.
      *
      * Used for:
      * - Telegrabbing wines money-making method.
@@ -1591,7 +1591,7 @@ enum class SubZone(
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_20_WILDERNESS_CHAOS_TEMPLE(
+    LVL_12_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(3239, 3619),
         area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
         parent = { EDGEVILLE }),
