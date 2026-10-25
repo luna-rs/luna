@@ -57,6 +57,21 @@ object Doors {
     private val swinging: MutableSet<GameObject> = Collections.newSetFromMap(IdentityHashMap())
 
     /**
+     * Open objects reserved for conditional passage, which cannot be toggled by another player.
+     */
+    private val passages: MutableSet<GameObject> = Collections.newSetFromMap(IdentityHashMap())
+
+    /**
+     * Closed door tiles reserved until their conditional crossing finishes restoring the objects.
+     */
+    private val passagePositions = HashSet<Position>()
+
+    /**
+     * Returns whether another player is currently crossing the door at [position].
+     */
+    internal fun isPassageBusy(position: Position): Boolean = position in passagePositions
+
+    /**
      * Doors that are currently away from their home state, mapped to the object they replaced. A door only reverts
      * on its own if it is still in this map when its timer expires.
      */
@@ -156,6 +171,57 @@ object Doors {
     private fun typeOf(obj: GameObject): DoorType? = origins[obj] ?: typeOf(obj.id)
 
     /**
+     * Determines which side of a straight door the player occupies using Lost City's check_axis rule.
+     */
+    internal fun isEntering(door: Position, direction: ObjectDirection, player: Position): Boolean =
+        when (direction) {
+            ObjectDirection.NORTH, ObjectDirection.SOUTH -> player.y == door.y
+            ObjectDirection.WEST, ObjectDirection.EAST -> player.x == door.x
+        }
+
+    /**
+     * Opens a conditional straight door for one player and restores it after the type's duration.
+     * The caller checks access and aligns the player before calling this on the game thread.
+     * An invisible wall prevents other players from following through without their own access check.
+     * The type is supplied directly so registering a freely opening handler cannot bypass the condition.
+     *
+     * @return Whether the door was replaced and the player crossed it.
+     */
+    internal fun passThrough(world: World, plr: Player, door: GameObject, type: DoorType,
+                             entering: Boolean): Boolean {
+        if (door.id != type.closed || type.side != null || door.objectType != ObjectType.STRAIGHT_WALL ||
+            isPassageBusy(door.position)) {
+            return false
+        }
+        val swap = singleSwap(door, type, true) ?: return false
+        val start = if (entering) door.position else swap.position
+        val destination = if (entering) swap.position else door.position
+        if (plr.position != start) {
+            return false
+        }
+        if (!world.removeObject(door)) {
+            return false
+        }
+        val blocker = world.addObject(83, door.position, door.objectType, door.direction)
+        val open = world.addObject(swap.id, swap.position, door.objectType, swap.direction)
+        passages += open
+        passagePositions += door.position
+        plr.playSound(type.openSoundOrDefault)
+        world.scheduleOnce(type.durationOrDefault) {
+            try {
+                world.removeObject(open)
+                world.removeObject(blocker)
+                world.addObject(door.id, door.position, door.objectType, door.direction)
+            } finally {
+                passages -= open
+                passagePositions -= door.position
+            }
+        }
+        plr.walking.addStep(Direction.between(start, destination))
+        return true
+    }
+
+    /**
      * Opens [door] if it is closed, or closes it if it is open.
      *
      * What is replaced depends on the kind of door:
@@ -174,6 +240,9 @@ object Doors {
      * @param door The door that was clicked.
      */
     fun toggle(world: World, plr: Player, door: GameObject) {
+        if (door in passages) {
+            return
+        }
         val type = typeOf(door) ?: return
         val opening = door.id == type.closed
         val curtain = type in curtainTypes
