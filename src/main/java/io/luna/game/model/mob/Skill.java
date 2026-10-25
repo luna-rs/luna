@@ -399,16 +399,22 @@ public final class Skill {
     }
 
     /**
-     * Applies a temporary boost relative to the static level.
+     * Adds a temporary boost to the current dynamic level, capped at the static level plus the boost amount.
      * <p>
-     * The target level is {@code getStaticLevel() + amount}. If this skill is already at or above that value, nothing
-     * changes and {@code false} is returned.
+     * Drained skills gain only the supplied amount rather than jumping directly to the boosted cap. Existing
+     * higher boosts are preserved. Player boosts cannot raise a level above 255, matching the client skill field.
+     * Non-positive amounts do nothing, and intermediate arithmetic uses longs to avoid overflow.
      *
-     * @param amount The amount to boost above the static level.
-     * @return {@code true} if the boost was applied, otherwise {@code false}.
+     * @param amount The amount to add and the maximum permitted boost above the static level.
+     * @return {@code true} if the dynamic level increased, otherwise {@code false}.
      */
     public boolean boost(int amount) {
-        int newLevel = getStaticLevel() + amount;
+        if (amount <= 0) {
+            return false;
+        }
+        long boosted = Math.min((long) level + amount, (long) getStaticLevel() + amount);
+        int maximum = set.getMob() instanceof Player ? 255 : Integer.MAX_VALUE;
+        int newLevel = (int) Math.min(boosted, maximum);
         if (level >= newLevel) {
             return false;
         }
