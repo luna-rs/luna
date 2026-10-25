@@ -50,7 +50,7 @@ object FishingTrawler {
 
     fun atSea(position: Position): Boolean = position.y in 4800..4863 &&
         (position.x in 1856..1919 || position.x in 1984..2047) && position.z in 0..1
-    fun inWreck(position: Position): Boolean = position.x in 1920..1983 && position.y in 4800..4863
+    fun inWreck(position: Position): Boolean = position.x in 1920..1983 && position.y in 4800..4863 && position.z == 0
     private fun inLobby(position: Position): Boolean = position.x in 2669..2673 && position.y in 3166..3182 && position.z in 0..1
 
     fun board(player: Player) {
