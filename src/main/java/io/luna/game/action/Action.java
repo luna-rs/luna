@@ -188,7 +188,6 @@ public abstract class Action<T extends Mob> {
         if (state == ActionState.PROCESSING) {
             state = ActionState.COMPLETED;
             onFinished();
-            mob.getActions().removeType(this);
         }
     }
 
@@ -204,7 +203,6 @@ public abstract class Action<T extends Mob> {
         if (state == ActionState.PROCESSING) {
             state = ActionState.INTERRUPTED;
             onFinished();
-            mob.getActions().removeType(this);
         }
     }
 

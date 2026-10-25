@@ -75,6 +75,16 @@ enum class Pickaxe(val level: Int,
         }
 
         /**
+         * Tells [plr], in a message box, that they have no pickaxe they can use.
+         */
+        fun sendNoPickaxeMessage(plr: Player) {
+            plr.newDialogue()
+                .text("You need a Pickaxe to mine this rock. You do not have a Pickaxe which you have",
+                      "the Mining level to use.")
+                .open()
+        }
+
+        /**
          * Does the player have [pick]?
          */
         fun hasPick(plr: Player, pick: Pickaxe) = plr.equipment[Equipment.WEAPON]?.id == pick.id ||
