@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import game.player.Sound;
+import game.combat.BarrowsEquipmentSet;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
@@ -41,6 +42,11 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
      * Whether defensive casting was selected when this spell was successfully cast.
      */
     private boolean defensiveCasting;
+
+    /**
+     * The complete Barrows set captured when the spell is successfully cast.
+     */
+    private BarrowsEquipmentSet barrowsSet;
 
     /**
      * Creates a new {@link PlayerMagicCombatAttack} from a spell definition.
@@ -96,6 +102,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         }
         defensiveCasting = attacker.getCombat().getStance() == CombatStance.DEFENSIVE;
 
+        barrowsSet = BarrowsEquipmentSet.find(attacker);
         if (magic.getSelectedSpell() != CombatSpellDefinition.NONE) {
             // Remove target so we don't automatically keep attacking (how it functions on OSRS).
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
@@ -110,6 +117,9 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
     @Override
     public void onDamageApplied(CombatDamage damage) {
         super.onDamageApplied(damage);
+        if (barrowsSet != null) {
+            barrowsSet.onDamageApplied(damage);
+        }
         int rawAmount = Math.max(0, damage.getRawAmount());
         if (defensiveCasting) {
             attacker.skill(Skill.MAGIC).addExperience(rawAmount * 1.33);
