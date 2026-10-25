@@ -52,6 +52,11 @@ object Farming {
     const val FLOWER_PATCH_VARP = 508
 
     /**
+     * The varp holding the state of the Champions' Guild, Rimmington, Etceteria and south Ardougne bush patches.
+     */
+    const val BUSH_PATCH_VARP = 509
+
+    /**
      * The varp holding the state of the Falador, Catherby, Port Phasmatys and Ardougne compost bins. See [CompostBin].
      */
     const val COMPOST_BIN_VARP = 511
@@ -196,7 +201,7 @@ object Farming {
      */
     val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
             TreePatchLocation.values() + FruitTreePatchLocation.values() + HopsPatchLocation.values() +
-            FlowerPatchLocation.values() + SpecialPatchLocation.values()
+            FlowerPatchLocation.values() + SpecialPatchLocation.values() + BushPatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.

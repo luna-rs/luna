@@ -112,13 +112,16 @@ fun cure(plr: Player, objectId: Int) {
 }
 
 /**
- * Prunes the diseased tree in the tree or fruit tree patch [objectId] with secateurs or magic secateurs. Each attempt
- * has a [AbstractTreePatch.PRUNE_CHANCE] of removing all of the diseased leaves.
+ * Prunes the diseased tree or bush in the tree, fruit tree or bush patch [objectId] with secateurs or magic secateurs.
+ * Each attempt has a [AbstractTreePatch.PRUNE_CHANCE] of removing all of the diseased leaves.
  */
 fun prune(plr: Player, objectId: Int) {
-    val patch = Farming.findPatch(objectId, plr) as? AbstractTreePatch ?: return
+    val patch = Farming.findPatch(objectId, plr) ?: return
+    if (patch !is AbstractTreePatch && patch !is BushPatch) {
+        return
+    }
     if (!patch.diseased) {
-        plr.sendMessage("This tree doesn't need pruning.")
+        plr.sendMessage(if (patch is BushPatch) "This bush doesn't need pruning." else "This tree doesn't need pruning.")
         return
     }
     plr.animation(Farming.PRUNE_ANIMATION)
@@ -253,22 +256,38 @@ fun digScarecrow(plr: Player, patch: FlowerPatch) {
 }
 
 /**
- * Handles the first option of the fully grown cactus in the cactus patch [objectId]: checking its health, which gives
- * the cactus's [Crop.checkHealthXp], then picking its spines.
+ * Handles the first option of the fully grown crop in the [HealthCheckPatch] [objectId], such as a cactus or a bush:
+ * checking its health, which gives the crop's [Crop.checkHealthXp], then picking from it.
  */
-fun cactusOption(plr: Player, objectId: Int) {
-    val patch = Farming.findPatch(objectId, plr) as? CactusPatch ?: return
+fun checkHealthOrPick(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) ?: return
     val crop = patch.crop ?: return
+    if (patch !is HealthCheckPatch || patch !is PickablePatch) {
+        return
+    }
     when {
         patch.canCheckHealth() -> {
             patch.checkHealth()
             plr.farming.addExperience(crop.checkHealthXp)
-            plr.sendMessage("You examine the cactus for signs of disease and find that it is in perfect health.")
+            plr.sendMessage("You examine the ${patch.checkedName} for signs of disease and find that it is in perfect health.")
             Farming.commit(plr)
         }
 
         patch.canPick() -> plr.submitAction(PickFruitAction(plr, patch))
     }
+}
+
+/**
+ * Digs up the fully grown bush in the bush [patch], once its health has been checked, leaving the patch empty.
+ */
+fun digUpBush(plr: Player, patch: BushPatch) {
+    if (!patch.canDigUp()) {
+        return
+    }
+    plr.animation(Farming.DIG_ANIMATION)
+    plr.sendMessage("You dig up the bush.")
+    patch.clear()
+    Farming.commit(plr)
 }
 
 /**
@@ -286,7 +305,8 @@ Farming.LOCATIONS.forEach { location ->
     val objectId = location.objectId
     val isTreePatch = location.createPatch() is AbstractTreePatch
     val isFlowerPatch = location.createPatch() is FlowerPatch
-    val isCactusPatch = location.createPatch() is CactusPatch
+    val isHealthCheckPatch = location.createPatch() is HealthCheckPatch
+    val isBushPatch = location.createPatch() is BushPatch
     val isBelladonnaPatch = location.createPatch() is BelladonnaPatch
 
     // Hook for raking patches
@@ -294,7 +314,7 @@ Farming.LOCATIONS.forEach { location ->
         plr.submitAction(RakePatchAction(plr, gameObject))
     }
 
-    // Hook for clearing dead crops, digging up tree stumps and digging up scarecrows
+    // Hook for clearing dead crops, digging up tree stumps, scarecrows and bushes
     useItem(Farming.SPADE).onObject(objectId) {
         val patch = Farming.findPatch(objectId, plr)
         if (patch != null && patch.dead) {
@@ -306,15 +326,17 @@ Farming.LOCATIONS.forEach { location ->
             digStump(plr, patch)
         } else if (patch is FlowerPatch && patch.scarecrow) {
             digScarecrow(plr, patch)
+        } else if (patch is BushPatch) {
+            digUpBush(plr, patch)
         }
     }
 
-    // Hook for harvesting, picking flowers, or checking the health of and picking from trees and cacti
+    // Hook for harvesting, picking flowers, or checking the health of and picking from trees, cacti and bushes
     object1(objectId) {
         when {
             isTreePatch -> treeOption(plr, objectId)
             isFlowerPatch -> pickFlower(plr, objectId)
-            isCactusPatch -> cactusOption(plr, objectId)
+            isHealthCheckPatch -> checkHealthOrPick(plr, objectId)
             isBelladonnaPatch -> pickBelladonna(plr, gameObject)
             else -> plr.submitAction(HarvestAction(plr, gameObject))
         }
@@ -343,8 +365,8 @@ Farming.LOCATIONS.forEach { location ->
         useItem(type.itemId).onObject(objectId) { compost(plr, objectId, type) }
     }
 
-    // Hook for curing diseased crops, or pruning diseased trees
-    if (isTreePatch) {
+    // Hook for curing diseased crops, or pruning diseased trees and bushes
+    if (isTreePatch || isBushPatch) {
         listOf(Farming.SECATEURS, Farming.MAGIC_SECATEURS).forEach { secateurs ->
             useItem(secateurs).onObject(objectId) { prune(plr, objectId) }
         }

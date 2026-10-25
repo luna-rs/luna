@@ -13,7 +13,7 @@ import game.skill.farming.seed.*
  *
  * @author hydrozoa
  */
-class CactusPatch(location: SpecialPatchLocation) : FarmingPatch(location), PickablePatch {
+class CactusPatch(location: SpecialPatchLocation) : FarmingPatch(location), HealthCheckPatch, PickablePatch {
 
     companion object {
 
@@ -27,6 +27,7 @@ class CactusPatch(location: SpecialPatchLocation) : FarmingPatch(location), Pick
     override val crops: List<Crop> = listOf(SpecialSeed.CACTUS)
     override val patchName = "cactus patch"
     override val harvestAnimation = Farming.PICK_FRUIT_ANIMATION
+    override val checkedName = "cactus"
 
     /**
      * If the fully grown cactus has had its health checked.
@@ -46,12 +47,12 @@ class CactusPatch(location: SpecialPatchLocation) : FarmingPatch(location), Pick
     /**
      * @return True if the fully grown cactus is waiting to have its health checked.
      */
-    fun canCheckHealth(): Boolean = harvestReady() && !healthChecked
+    override fun canCheckHealth(): Boolean = harvestReady() && !healthChecked
 
     /**
      * Checks the health of the fully grown cactus, which then bears [MAX_SPINES] spines.
      */
-    fun checkHealth() {
+    override fun checkHealth() {
         healthChecked = true
         spines = MAX_SPINES
     }
