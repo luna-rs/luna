@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.ReflexBotScript;
 import api.bot.action.BotCombatActionHandler;
+import engine.bot.speech.BotReactions;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
@@ -121,6 +122,7 @@ public final class BotReflex {
                     return true;
                 }
                 InitialState response = bot.getEmotions().getCombatResponse(focus);
+                BotReactions.INSTANCE.reactToThreat(bot, focus);
                 bot.getScriptStack().pushHead(new CombatBotScript(bot, focus, response, focus instanceof Player ? pkSession : null));
                 bot.log("Reflex [responding to combat] triggered.");
                 return false;
