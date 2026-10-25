@@ -445,8 +445,6 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             targetEnemy()
             return
         }
-        // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
-        //  Wilderness depth, and available escape options.
         if (pkSession == null) {
             if (!handler.inventory.hasAnyFood() && leavesFight(nervous)) {
                 gaveUp = true
