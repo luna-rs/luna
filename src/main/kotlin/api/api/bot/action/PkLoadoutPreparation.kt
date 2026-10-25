@@ -56,6 +56,16 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
+     * Separates absent physical supplies from a rejected risk budget or another departure restriction.
+     * Scavenging detours may address stock shortages, but must not bypass unrelated PK policies.
+     */
+    fun missingSupplies(): Boolean = purposes().let { purposes ->
+        purposes.isNotEmpty() && ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
+            bot.bank.filterNotNull()).none { Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true } ||
+            purposes.any { CombatLoadout.find(bot, it) == null })
+    }
+
+    /**
      * Plans synchronously from owned stock. A coordinator may project the one authorized missing clan cape;
      * the actual cape is only replenished when the script runs. Other supplies always require physical stock.
      * Each unsuccessful minimum kit lowers the damage spell or excludes

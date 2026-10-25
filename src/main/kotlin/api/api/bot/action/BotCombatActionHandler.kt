@@ -60,7 +60,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         @JvmStatic
         fun wantsToTrain(bot: Bot, skill: Int): Boolean {
             if (!Skill.isCombatSkill(skill)) return true
-            if (bot.preferences.isSkiller) return false
+            if (bot.preferences.isSkiller || bot.preferences.scavenging.isIntroductory) return false
             val target = bot.preferences.pk?.build()?.targetLevel(skill) ?: 99
             return bot.skill(skill).staticLevel < target
         }
@@ -79,7 +79,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         @JvmStatic
         fun mayGainExperience(bot: Bot, skill: Int): Boolean {
             if (!Skill.isCombatSkill(skill)) return true
-            if (bot.preferences.isSkiller) return false
+            if (bot.preferences.isSkiller || bot.preferences.scavenging.isIntroductory) return false
             val target = bot.preferences.pk?.build()?.targetLevel(skill) ?: 99
             return target == 99 || bot.skill(skill).staticLevel < target
         }
@@ -94,7 +94,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         @JvmStatic
         fun limitExperience(bot: Bot, skill: Skill, amount: Double): Double {
             if (!Skill.isCombatSkill(skill.id)) return amount
-            if (bot.preferences.isSkiller) return 0.0
+            if (bot.preferences.isSkiller || bot.preferences.scavenging.isIntroductory) return 0.0
             val target = bot.preferences.pk?.build()?.targetLevel(skill.id) ?: return amount
             if (target == 99) return amount
             val remaining = (SkillSet.experienceForLevel(target) - skill.experience).coerceAtLeast(0.0)

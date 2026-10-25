@@ -5,6 +5,7 @@ import api.bot.action.BotCombatActionHandler;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
+import game.bot.scripts.WildernessScavengeBotScript;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -103,6 +104,10 @@ public final class BotReflex {
 
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+            if (bot.getScriptStack().current() instanceof WildernessScavengeBotScript) {
+                // Scavengers escape without creating an attacking combat child, even after a loot pause.
+                return true;
+            }
             PkBotScript pkSession = bot.getScriptStack().findActive(PkBotScript.class).orElse(null);
             if (pkSession != null && bot.getScriptStack().current() == pkSession && pkSession.isRestocking()) {
                 return true;

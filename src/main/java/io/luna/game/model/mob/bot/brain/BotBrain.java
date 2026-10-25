@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.BotScript;
+import engine.bot.coordinator.ScavengingCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -43,6 +44,9 @@ public class BotBrain {
      * @return The coordinator that should run for this decision cycle.
      */
     public BotCoordinator process(Bot bot) {
+        if (bot.getPreferences().getScavenging().isIntroductory()) {
+            return ScavengingCoordinator.INSTANCE;
+        }
         /*
          * TODO@0.5.0 Add more bias:
          * - Check if bot needs any items within its preferences before selecting.

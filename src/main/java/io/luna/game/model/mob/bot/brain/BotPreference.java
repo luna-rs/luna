@@ -387,6 +387,35 @@ public final class BotPreference {
     private BotPkPreference pk;
 
     /**
+     * One-off introductory allowance and PK detour cooldown, independent of the permanent account build.
+     */
+    private BotScavengingPreference scavenging = new BotScavengingPreference(0);
+
+    /**
+     * Prevents duplicate creation callbacks from rerolling an account. Saved accounts set this during load.
+     */
+    private transient boolean newAccountInitialized;
+
+    /**
+     * Returns durable scavenging progress, including the disabled default for legacy accounts.
+     */
+    public BotScavengingPreference getScavenging() {
+        return scavenging;
+    }
+
+    /**
+     * Rolls only after persistence confirms a genuinely new, permanent level-three account.
+     * Builder construction and ordinary saved-account login must never call this method.
+     */
+    public void initializeNewScavenger(double chance) {
+        if (newAccountInitialized) return;
+        newAccountInitialized = true;
+        if (bot.getCombatLevel() == 3 && !bot.isTemporary() && ThreadLocalRandom.current().nextDouble() < chance) {
+            scavenging = new BotScavengingPreference(ThreadLocalRandom.current().nextLong(60, 601) * 60_000);
+        }
+    }
+
+    /**
      * Returns the permanent PK identity, or {@code null} when PKing is not desired.
      */
     public BotPkPreference getPk() {
@@ -397,7 +426,7 @@ public final class BotPreference {
      * Applies the skiller invariant even when activity weights were edited directly or loaded from old saves.
      */
     public boolean canChooseActivity(BotActivity activity) {
-        return !isSkiller() || (activity != BotActivity.PKING &&
+        return !(isSkiller() || scavenging.isIntroductory()) || (activity != BotActivity.PKING &&
                 activity != BotActivity.TRAINING_COMBAT && activity != BotActivity.PROFIT_COMBAT);
     }
 
@@ -534,6 +563,7 @@ public final class BotPreference {
         }
         preferences.add("player_feelings", playerFeelingsJson);
         preferences.add("pk", pk == null ? com.google.gson.JsonNull.INSTANCE : pk.save());
+        preferences.add("scavenging", scavenging.save());
         return preferences;
     }
 
@@ -546,6 +576,9 @@ public final class BotPreference {
      * @param object The JSON object containing saved preferences.
      */
     public void load(JsonObject object) {
+        newAccountInitialized = true;
+        scavenging = object.has("scavenging") && object.get("scavenging").isJsonObject()
+                ? BotScavengingPreference.load(object.getAsJsonObject("scavenging")) : new BotScavengingPreference(0);
         // Deserialize activities and their weightings.
         JsonArray activitiesJson = object.getAsJsonArray("activities");
         for (JsonElement activityJson : activitiesJson) {

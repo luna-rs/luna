@@ -67,6 +67,19 @@ public final class BotSettings {
     private final int baseLootValue;
 
     /**
+     * Optional new-account scavenger fraction. Omitted settings use two percent.
+     */
+    private Double newAccountScavengingChance;
+
+    /**
+     * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
+     */
+    public double newAccountScavengingChance() {
+        if (newAccountScavengingChance == null || !Double.isFinite(newAccountScavengingChance)) return 0.02;
+        return newAccountScavengingChance == 0 ? 0 : Math.clamp(newAccountScavengingChance, 0.01, 0.03);
+    }
+
+    /**
      * Returns the baseline number of bots the world should try to keep online.
      */
     public int baseOnlineCount() {

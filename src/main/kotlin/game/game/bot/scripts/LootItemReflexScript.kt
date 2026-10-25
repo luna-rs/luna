@@ -104,6 +104,10 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 }
 
                 val groundItem = iterator.next()
+                if (bot.scriptStack.current()?.allowsLoot(groundItem) == false) {
+                    iterator.remove()
+                    continue
+                }
                 if (groundItem.state != EntityState.ACTIVE) {
                     bot.deathItems.remove(groundItem)
                     iterator.remove()
@@ -131,10 +135,13 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 }
 
                 val amountBefore = bot.inventory.computeAmountForId(item.id)
-                if (handler.interactions.interact(1, groundItem)) {
+                if (handler.interactions.interact(1, groundItem) {
+                        bot.health > 0 && bot.scriptStack.current()?.allowsLoot(groundItem) != false
+                    }) {
                     // Interaction success only confirms reaching the item and sending the click.
                     waitFor {
                         groundItem.state != EntityState.ACTIVE ||
+                                bot.scriptStack.current()?.allowsLoot(groundItem) == false ||
                                 bot.inventory.computeAmountForId(item.id) > amountBefore
                     }
                 }
@@ -223,6 +230,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                 groundItem.id in ignored) {
                 continue
             }
+            if (bot.scriptStack.current()?.allowsLoot(groundItem) == false) continue
 
             val item = groundItem.toItem()
             if (!bot.inventory.hasSpaceFor(item) &&

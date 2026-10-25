@@ -458,6 +458,7 @@ public final class Bot extends Player {
                     loadData(data);
                     if (data == null) {
                         position = spawnPosition;
+                        preferences.initializeNewScavenger(Luna.settings().bots().newAccountScavengingChance());
                     }
                     if (world.getPlayers().add(this)) {
                         world.getBots().add(this);
@@ -486,6 +487,10 @@ public final class Bot extends Player {
      */
     public void process() {
         try {
+            if (preferences.getScavenging().isIntroductory()) {
+                preferences.getScavenging().advance(getTimePlayed().toMillis());
+                if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();
+            }
             // TODO@1.0 Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
             // Process speech before scripts so we can still talk while doing anything.
             speechStack.process();
