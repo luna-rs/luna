@@ -423,7 +423,8 @@ public class WalkingNavigator {
      * The path is computed using the supplied pathfinder, then applied to the mob's walking queue on the game
      * executor. The path is dropped instead of applied if it went stale in the meantime: if a newer path was
      * requested, if paths were {@link #discardPaths() discarded}, if the request it was computed for is no longer
-     * active, or if the mob has since moved more than {@link #MAX_PATH_DRIFT} tiles from where the path starts.
+     * active, if the mob is immobilized, or if the mob has since moved more than {@link #MAX_PATH_DRIFT} tiles from
+     * where the path starts.
      *
      * @param request The navigation request that owns this path.
      * @param destination The destination to walk to.
@@ -566,7 +567,8 @@ public class WalkingNavigator {
 
     /**
      * Determines if a path that was computed from {@code start} should no longer be applied. Must be called on the
-     * game thread.
+     * game thread. Immobilization is checked again at delivery so an asynchronous result cannot restore walking
+     * steps after a freeze has cleared them, even before the next navigation action executes.
      *
      * @param start The position the path was computed from.
      * @param request The request that was active when the path was requested.
@@ -574,6 +576,9 @@ public class WalkingNavigator {
      * @return {@code true} if the path is stale and should be dropped.
      */
     private boolean isStale(Position start, NavigationRequest request, int generation) {
+        if (mob.getStatus().isImmobilized()) {
+            return true;
+        }
         if (generation != pathGeneration.get()) {
             return true;
         }

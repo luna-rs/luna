@@ -17,6 +17,8 @@ import java.util.concurrent.CompletableFuture;
  * This action is responsible for moving a mob toward its requested target, re-pathing when continuous tracking is
  * enabled, cancelling stale pathfinding futures, and completing the request's pending result future when navigation
  * finishes.
+ * Immobilization pauses movement and discards pending paths while retaining the navigation request for resumption.
+ * One-shot requests already in reach may still finish without moving.
  *
  * @author lare96
  */
@@ -117,6 +119,20 @@ final class NavigationAction extends Action<Mob> {
 
         boolean reached = world.getCollisionManager().reached(mob, target, request.getPolicy());
         boolean targetChanged = !targetPos.equals(lastPosition);
+
+        if (mob.getStatus().isImmobilized()) {
+            if (current != null) {
+                cancelCurrent();
+            } else {
+                navigator.discardPaths();
+            }
+            mob.getWalking().clear();
+            if (reached) {
+                reachedOnce = true;
+                return !request.isContinuous();
+            }
+            return false;
+        }
 
         if (sourcePos.equals(targetPos) && isTargetMob && request.getPolicy().getDistance() > 0) {
             // Step away if occupying same tile and interaction policy isn't equal position.
