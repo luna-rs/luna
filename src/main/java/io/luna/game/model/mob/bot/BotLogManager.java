@@ -23,14 +23,56 @@ import static java.util.Objects.requireNonNullElse;
  * to both destinations.
  * <p>
  * The in-memory buffer is bounded. Once the buffer reaches its capacity, the oldest entry is removed before a new
- * entry is added. This keeps the logger lightweight even when many bots are active.
+ * entry is added. Persistent files default to the regular size limit and start over when an append would exceed it.
+ * File size preferences are independent of the in-memory buffer and stream destination.
  *
  * @author lare96
  * @author TheLining
  */
 public final class BotLogManager {
 
-    // todo file size management, reset log file if > certain size
+    /**
+     * Maximum persistent log size for an individual bot. MB uses decimal units (1 MB = 1,000,000 bytes).
+     */
+    public enum FileSizePreference {
+
+        /**
+         * A maximum of 0.1 MB (100,000 bytes).
+         */
+        SMALL(100_000L),
+
+        /**
+         * A maximum of 1 MB (1,000,000 bytes), used by default.
+         */
+        REGULAR(1_000_000L),
+
+        /**
+         * A maximum of 10 MB (10,000,000 bytes).
+         */
+        LARGE(10_000_000L),
+
+        /**
+         * No application size limit. Long.MAX_VALUE is a sentinel, not a value multiplied by MB.
+         */
+        UNBOUNDED(Long.MAX_VALUE);
+
+        /**
+         * The byte limit, or {@link Long#MAX_VALUE} when unbounded.
+         */
+        private final long maxBytes;
+
+        FileSizePreference(long maxBytes) {
+            this.maxBytes = maxBytes;
+        }
+
+        /**
+         * @return The maximum file size in bytes, or {@link Long#MAX_VALUE} when unbounded.
+         */
+        public long getMaxBytes() {
+            return maxBytes;
+        }
+    }
+
     /**
      * Defines where bot log messages should be streamed when they are recorded.
      */
@@ -204,7 +246,7 @@ public final class BotLogManager {
      * Writes the current in-memory log buffer to this bot's log file.
      * <p>
      * This method only writes when the current stream type includes file output. The file is overwritten with the
-     * current buffer contents, meaning older file entries outside the buffer are discarded.
+     * current buffer contents, subject to the file size preference. Older file entries outside the buffer are discarded.
      * <p>
      * The overwrite is ordered with {@link #log(String)} file appends: lines logged before this call are replaced,
      * and lines logged after it are appended to the rewritten file.
@@ -230,6 +272,27 @@ public final class BotLogManager {
             sb.append(entry.getFormattedMessage());
         }
         return sb.toString();
+    }
+
+    /**
+     * Changes this bot's persistent log size preference. The new limit applies to subsequent file writes,
+     * including queued writes that have not started yet. An existing oversized file starts over on the next append.
+     * <p>
+     * Bounded files discard their old contents when full; a single oversized write is clipped on a UTF-8 boundary.
+     * The in-memory buffer and stream destination are unaffected. Preferences are runtime settings and are not saved.
+     *
+     * @param preference The new file size preference.
+     * @throws NullPointerException If {@code preference} is {@code null}.
+     */
+    public void setFileSizePreference(FileSizePreference preference) {
+        fileWriter.setFileSizePreference(preference);
+    }
+
+    /**
+     * @return This bot's current persistent log size preference, initially {@link FileSizePreference#REGULAR}.
+     */
+    public FileSizePreference getFileSizePreference() {
+        return fileWriter.getFileSizePreference();
     }
 
     /**
