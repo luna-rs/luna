@@ -29,6 +29,8 @@ import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript.Companion.EnchantJewelleryData
 import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.ChargeOrbBotScript.Companion.ChargeOrbData
+import game.bot.scripts.skills.BonesToFoodBotScript
+import game.bot.scripts.skills.BonesToFoodBotScript.Companion.BonesToFoodData
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.AlchemyBotScript.Companion.AlchemyData
 import game.bot.scripts.skills.CollectHidesBotScript
@@ -176,5 +178,6 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }
+    scriptManager.addScript<BonesToFoodData>(BonesToFoodBotScript::class) { bot, data -> BonesToFoodBotScript(bot, data) }
     scriptManager.addScript<AlchemyData>(AlchemyBotScript::class) { bot, data -> AlchemyBotScript(bot, data) }
 }

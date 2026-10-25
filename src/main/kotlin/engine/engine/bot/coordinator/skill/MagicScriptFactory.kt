@@ -8,6 +8,8 @@ import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript
+import game.bot.scripts.skills.BonesToFoodBotScript
+import game.skill.magic.bonesToItems.BonesToItemsType
 import game.skill.magic.chargeOrb.ChargeOrbType
 import game.skill.magic.lowHighAlch.AlchemyType
 import game.skill.magic.superheatItem.SuperheatItemAction
@@ -20,7 +22,8 @@ import io.luna.game.model.mob.bot.Bot
  * Magic currently shares its activity selection between normal and profit-oriented training.
  * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
  * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
- * then enable superheating when both skill requirements are met. Eligible alchemy follows; splashing
+ * then enable superheating when both skill requirements are met. Owned normal bones and spell costs can prepare
+ * bananas or peaches up to the food stock target at the same safe hubs. Eligible alchemy follows; splashing
  * remains the fallback. Production activities use the normal eligibility and personality rules.
  * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
  * its matching obelisk subzone and uses the shared travel and banking system.
@@ -40,11 +43,23 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
         getOrbScript(bot, level)?.let { return it }
         getEnchantScript(bot, level)?.let { return it }
         getSuperheatScript(bot, level)?.let { return it }
+        getBonesToFoodScript(bot, level)?.let { return it }
         val alchemy = getAlchemyScript(bot, level)
         if (alchemy != null) {
             return alchemy
         }
         return SplashBotScript(bot, getDuration(bot))
+    }
+
+    /**
+     * Selects an eligible native food-conversion spell with the normal level/personality policy. Existing stock
+     * limits preparation sessions; missing inputs leave other Magic activities available.
+     */
+    internal fun getBonesToFoodScript(bot: Bot, level: Int): BonesToFoodBotScript? {
+        val duration = getDuration(bot)
+        val options = BonesToItemsType.entries.map { BonesToFoodBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.type.level }, options)
     }
 
     /**
