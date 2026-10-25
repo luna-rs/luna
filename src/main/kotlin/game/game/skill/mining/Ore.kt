@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import com.google.common.collect.ImmutableSetMultimap
 import game.skill.Skills
+import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 
@@ -224,7 +225,14 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
          item = 444,
          respawnTicks = 100,
          exp = 65.0,
-         chance = 7 to 75),
+         chance = 7 to 75) {
+
+        /**
+         * The gold rocks in the Witchaven Dungeon give 'perfect' gold ore, for Family Crest.
+         */
+        override fun mine(plr: Player, rock: GameObject) =
+            super.mine(plr, rock)?.let { if (WITCHAVEN_DUNGEON_MINE.contains(rock.position)) PERFECT_GOLD_ORE else it }
+    },
     GEM_ROCK(rocks = listOf(2111 to 451),
              level = 40,
              item = 1625,
@@ -318,6 +326,16 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
     open fun minedMessage(item: Int) = "You manage to mine some ${typeName.lowercase()}."
 
     companion object {
+
+        /**
+         * The 'perfect' gold ore item.
+         */
+        const val PERFECT_GOLD_ORE = 446
+
+        /**
+         * The room in the Witchaven Dungeon with the four gold rocks that give 'perfect' gold ore.
+         */
+        private val WITCHAVEN_DUNGEON_MINE = Area.of(2736, 9683, 2740, 9693)
 
         /**
          * Ore instance -> Ore rock object ID.
