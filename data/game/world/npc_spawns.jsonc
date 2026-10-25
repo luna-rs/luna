@@ -146859,5 +146859,294 @@
       "radius": 5,
       "frequency": "NORMAL"
     }
+  },
+  // Zamorak wine guards at the two Wilderness sources.
+  {
+    "id": 190,
+    "position": {
+      "x": 2946,
+      "y": 3822,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2945,
+      "y": 3824,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2946,
+      "y": 3817,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2952,
+      "y": 3825,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2950,
+      "y": 3826,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2947,
+      "y": 3816,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2951,
+      "y": 3826,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2952,
+      "y": 3826,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2943,
+      "y": 3821,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2949,
+      "y": 3815,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2943,
+      "y": 3820,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2943,
+      "y": 3822,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3239,
+      "y": 3609,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3242,
+      "y": 3610,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3239,
+      "y": 3606,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3242,
+      "y": 3611,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3238,
+      "y": 3610,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3239,
+      "y": 3611,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3245,
+      "y": 3611,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3235,
+      "y": 3607,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3237,
+      "y": 3602,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3247,
+      "y": 3604,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3233,
+      "y": 3608,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 189,
+    "position": {
+      "x": 3241,
+      "y": 3616,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
   }
 ]
