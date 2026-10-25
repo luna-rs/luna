@@ -378,22 +378,24 @@ public final class Skill {
     /**
      * Adjusts the current dynamic level by a signed amount.
      * <p>
-     * Positive values raise the level and negative values lower it. The resulting value is clamped into the range
-     * {@code [1, getStaticLevel()]}.
+     * Positive values restore a drained level up to its static level and leave existing boosts unchanged.
+     * Negative values subtract only the requested amount, retaining any remaining boost above the static level.
+     * Hitpoints and prayer have a minimum of zero; other skills have a minimum of one.
      * <p>
-     * This method cannot boost beyond the current static level.
+     * Zero is a no-op. This method cannot create or increase a boost. Intermediate arithmetic uses a long so
+     * extreme adjustments cannot wrap around and reverse the intended change.
      *
      * @param amount The signed adjustment to apply.
      */
     public void adjustLevel(int amount) {
-        int newLevel = level + amount;
-
-        if (newLevel < 1) {
-            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
-        } else if (newLevel > getStaticLevel()) {
-            newLevel = getStaticLevel();
+        if (amount == 0 || (amount > 0 && level >= getStaticLevel())) {
+            return;
         }
-        setLevel(newLevel);
+        long adjusted = (long) level + amount;
+        if (amount > 0) {
+            adjusted = Math.min(adjusted, getStaticLevel());
+        }
+        setLevel((int) Math.max(0L, adjusted));
     }
 
     /**
