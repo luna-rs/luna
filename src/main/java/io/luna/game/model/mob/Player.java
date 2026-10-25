@@ -837,6 +837,7 @@ public class Player extends Mob {
 
     /**
      * Sets the current run energy percentage and optionally updates the client.
+     * Direct assignments, saved values, and delta adjustments share the same bounds.
      *
      * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
      * @param update Whether to send an {@link UpdateRunEnergyMessageWriter} to the client.
@@ -844,6 +845,8 @@ public class Player extends Mob {
     public void setRunEnergy(double newRunEnergy, boolean update) {
         if (newRunEnergy > 100.0) {
             newRunEnergy = 100.0;
+        } else if (newRunEnergy < 0.0) {
+            newRunEnergy = 0.0;
         }
 
         if (runEnergy != newRunEnergy) {
@@ -856,17 +859,12 @@ public class Player extends Mob {
 
     /**
      * Modifies run energy by a delta amount and updates the client.
+     * The resulting value is clamped by {@link #setRunEnergy(double, boolean)}.
      *
      * @param amount The amount to add (or subtract) from the current run energy.
      */
     public void increaseRunEnergy(double amount) {
-        double newEnergy = runEnergy + amount;
-        if (newEnergy > 100.0) {
-            newEnergy = 100.0;
-        } else if (newEnergy < 0.0) {
-            newEnergy = 0.0;
-        }
-        setRunEnergy(newEnergy, true);
+        setRunEnergy(runEnergy + amount, true);
     }
 
     /**
