@@ -288,6 +288,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     protected open suspend fun beforeZoneWork(): Boolean = false
 
     /**
+     * Reaches a work zone after selection, banking or displacement. Activities with native alternative entrances
+     * override this rather than duplicating the zone lifecycle or bypassing their entrance on later bank trips.
+     */
+    protected open suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess = BankAccess.ALL): Boolean =
+        handler.travelTo(zone, bank)
+
+    /**
+     * Selects the banking parent when an activity uses an alternative entrance whose bank differs from its work zone.
+     */
+    protected open fun bankParent(zone: SubZone) = zone.parent(bot)
+
+    /**
      * Rejoins a precise marketplace work tile after initial travel, banking or displacement.
      * A failed or unavailable work area is rejected through the normal zoned retry lifecycle.
      * Ordinary resource/facility destinations bypass this check. Existing webwalking owns navigation.
@@ -415,7 +427,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             }
 
             bot.log("Bot wandered too far from active zone. Returning. activeZone=$zone")
-            val returned = handler.travelTo(zone)
+            val returned = travelToWorkZone(zone)
             if (!isActionSafe()) return awaitActionSafety()
             if (returned) {
                 bot.log("Return travel started for active zone. activeZone=$zone")
@@ -454,7 +466,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return true
             }
 
-            val arrived = handler.travelTo(newZone)
+            val arrived = travelToWorkZone(newZone)
             if (!isActionSafe()) return awaitActionSafety()
             if (arrived) {
                 val lastZone = activeZone
@@ -505,7 +517,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!bot.inventory.isFull && !forceBanking) {
             if (!activeZone.isWithinDistance(bot, 64) && bot.walking.isEmpty) {
                 bot.log("Bot is outside active zone after activity cycle. Returning. activeZone=$activeZone")
-                handler.travelTo(activeZone, BankAccess.COINS)
+                travelToWorkZone(activeZone, BankAccess.COINS)
             }
             return
         }
@@ -525,7 +537,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         forceBanking = true
         if (!awaitActionSafety()) return
-        val parent = activeZone.parent(bot)
+        val parent = bankParent(activeZone)
 
         val bank = cachedBank
         if (bank != null && !bot.bank.isOpen) {
@@ -631,7 +643,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         forceBanking = false
         
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
-        if (BotMarketplace.forZone(activeZone) == null) handler.travelTo(activeZone, BankAccess.COINS)
+        if (BotMarketplace.forZone(activeZone) == null) travelToWorkZone(activeZone, BankAccess.COINS)
     }
 
     /**

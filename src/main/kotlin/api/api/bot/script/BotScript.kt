@@ -104,6 +104,18 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     open val ignoredLoot: Set<Int> = emptySet()
 
     /**
+     * Restricts reactive pickups while this activity owns the script stack, including a loot-reflex pause.
+     * Ordinary activities accept loot by default; geographic and safety policies can reject it live.
+     */
+    open fun allowsLoot(item: io.luna.game.model.item.GroundItem): Boolean = true
+
+    /**
+     * Whether automatic retaliation may replace this activity with a combat child. Hazardous non-combat activities
+     * handle escape themselves; native attack suppression remains their responsibility.
+     */
+    open val allowsCombatResponse: Boolean = true
+
+    /**
      * Whether this script has been permanently terminated.
      *
      * Paused scripts may be started again by [start]. Terminated scripts cannot be restarted, even if

@@ -12,9 +12,12 @@ import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
 import engine.combat.prayer.CombatPrayer
+import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
+import io.luna.game.model.Position
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -88,7 +91,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
         if (combatPolicy.prepareTrainingStyle()) return true
         bot.combat.target = null
-        stop()
+        if (pkSession == null) {
+            // Nothing the bot is wielding trains a skill its build wants, so it runs instead.
+            running = true
+        } else {
+            stop()
+        }
         return false
     }
 
@@ -98,6 +106,30 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     enum class InitialState {
         ATTACK,
         RUN
+    }
+
+    companion object {
+
+        /**
+         * How long a fight may go on without any of the bot's attacks landing before the bot runs instead.
+         */
+        private val STALLED_FIGHT = 12.seconds
+
+        /**
+         * The least run energy a bot needs to get away. Walking is no faster than an NPC's chase.
+         */
+        private const val MIN_RUN_ENERGY = 10.0
+
+        /**
+         * How long after the last hit, in seconds, a bot that ran stays away while its attacker still has it as its
+         * target.
+         */
+        private const val MAX_KEEP_AWAY = 30L
+
+        /**
+         * How many new routes a running bot may plan with its attacker still close behind before it stops running.
+         */
+        private const val MAX_CAUGHT_UP = 8
     }
 
     /**
@@ -125,14 +157,56 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private var previousShield: Int? = null
 
+    /**
+     * The life of [focus] when it was given, for an NPC. A respawned NPC is the same object on its next life, and
+     * this script does not follow it there.
+     */
+    private var focusSpawn = (focus as? Npc)?.spawnCount
+
+    /**
+     * Whether the bot is running from the fight instead of fighting.
+     */
+    private var running = false
+
+    /**
+     * Whether the bot gave up on the fight (none of its attacks were landing, or it was low with no food), so it won't
+     * turn back to fight.
+     */
+    private var gaveUp = false
+
+    /**
+     * The tile the bot is running to, or `null` if it isn't on its way anywhere.
+     */
+    private var escapeTile: Position? = null
+
+    /**
+     * How many routes the bot has planned with its attacker still close behind it.
+     */
+    private var caughtUp = 0
+
+    /**
+     * When this script last started or resumed, in milliseconds.
+     */
+    private var startedAt = 0L
+
     override suspend fun init(resumed: Boolean): Boolean {
+        startedAt = System.currentTimeMillis()
+        if (running) {
+            // Whatever paused this script may have moved the bot or left its own walk in the queue.
+            escapeTile = null
+            return false
+        }
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
-            handler.combat.fleeCombat()
-            return true
+            running = true
+            return false
         }
         when (initialState) {
             InitialState.ATTACK -> {
+                // A resumed script may find its focus dead, or an NPC on its next life: nothing to attack then.
+                if (focusAlive()) {
+                    bot.combat.attack(focus)
+                }
                 bot.speechStack.setDisableGeneral(true)
                 if (!prepareAttack()) return isTerminated()
                 if (!targetAllowed()) return true
@@ -149,16 +223,16 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 }
             }
 
-            InitialState.RUN -> {
-                handler.combat.fleeCombat()
-                stop()
-            }
+            InitialState.RUN -> running = true
         }
 
         return false
     }
 
     override suspend fun run(): Boolean {
+        if (running) {
+            return runAway()
+        }
         if (usesPkSwitching) {
             if (!focus.isAlive && lootOnVictory) {
                 waitFor(5.seconds) { focus.health > 0 || focus.state != io.luna.game.model.EntityState.ACTIVE }
@@ -179,6 +253,10 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
         if (!combatPolicy.prepareTrainingStyle()) {
             bot.combat.target = null
+            if (pkSession == null) {
+                running = true
+                return false
+            }
             handler.combat.fleeCombat()
             return true
         }
@@ -187,6 +265,14 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
         if (!bot.combat.inCombat()) {
             return true
+        }
+        if (!running && pkSession == null && isStalled()) {
+            bot.log("My attacks aren't landing, running from the fight.")
+            gaveUp = true
+            running = true
+        }
+        if (running) {
+            return false
         }
 
         talk()
@@ -200,6 +286,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     override suspend fun finish() {
+        if (running) {
+            bot.combat.isDisabled = false
+        }
         if (!isPaused()) onCombatFinished()
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
@@ -216,11 +305,19 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     /**
      * Attacks the current focus if it is still valid.
      *
-     * In PvP, the bot has a small chance to switch to a nearby low-health player in multi-combat. If the current focus
-     * is dead, unreachable, out of view, or no longer valid for multi-combat, the bot looks for nearby loot instead.
+     * In PvP, the bot has a small chance to switch to a nearby low-health player in multi-combat. When the focus can't
+     * be fought but another mob is still fighting the bot, that mob becomes the focus. If the current focus is dead,
+     * unreachable, out of view, or no longer valid for multi-combat, the bot looks for nearby loot instead.
      */
     private suspend fun targetEnemy() {
-        if (focus.isAlive && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
+        val opponent = if (pkSession == null) combatPolicy.opponent() else null
+        if (opponent != null && (opponent != focus || !focusAlive()) && opponent.isViewableFrom(bot) &&
+            (!focusAlive() || !focus.isViewableFrom(bot) || !bot.combat.checkMultiCombat(focus))) {
+            bot.log("Switching focus from $focus to $opponent.")
+            focus = opponent
+            focusSpawn = (opponent as? Npc)?.spawnCount
+        }
+        if (focusAlive() && focus.isViewableFrom(bot) && bot.combat.checkMultiCombat(focus)) {
             if (focus is Player && !usesPkSwitching && rand(1 of 5)) {
                 val local = world.locator.findViewablePlayers(bot) {
                     bot.combat.checkMultiCombat(it) &&
@@ -230,6 +327,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
                 if (local.size > 0) {
                     focus = local.first()
+                    focusSpawn = null
                 }
             }
 
@@ -243,6 +341,14 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
 
         lootItems()
+    }
+
+    /**
+     * Whether [focus] is alive and, for an NPC, still on the life this script was given.
+     */
+    private fun focusAlive(): Boolean {
+        val current = focus
+        return current.isAlive && (current !is Npc || current.spawnCount == focusSpawn)
     }
 
     /**
@@ -269,6 +375,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             if (!handler.inventory.eatAnyFood()) {
                 // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
                 //  Wilderness depth, and available escape options.
+                if (pkSession == null) {
+                    gaveUp = true
+                    running = true
+                    return
+                }
                 handler.combat.fleeCombat()
                 if (usesPkSwitching) stop()
                 return
@@ -276,6 +387,74 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
             targetEnemy()
         }
+    }
+
+    /**
+     * Runs from the fight for one cycle, to a tile far enough away that the attacker gives up the chase, then waits
+     * there until the combat timer runs out and the attacker drops it. In the Wilderness, or when nearly dead, the bot
+     * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
+     * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
+     * up on the fight; otherwise it teleports home.
+     *
+     * @return `true` once the bot is out of combat.
+     */
+    private suspend fun runAway(): Boolean {
+        val threat = combatPolicy.opponent() ?: focus.takeIf { focusAlive() }
+        // Going back while the attacker still has the bot as its target would start the fight again.
+        if (!bot.combat.inCombat() &&
+            (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
+            return true
+        }
+        if (bot.inWilderness()) {
+            handler.combat.fleeCombat()
+            return true
+        }
+        // Auto retaliate would turn the bot back toward whatever hits it.
+        bot.combat.isDisabled = true
+        if (bot.healthPercent < 15) {
+            handler.combat.fleeCombat()
+        } else if (threat != null && threat.combat.target == bot && threat.isViewableFrom(bot)) {
+            val tile = escapeTile
+            if (tile == null || bot.position == tile || bot.walking.isEmpty ||
+                threat.isWithinDistance(tile, Position.VIEWING_DISTANCE)) {
+                val stuck = when {
+                    bot.runEnergy < MIN_RUN_ENERGY -> "Too tired to run from $threat"
+                    caughtUp >= MAX_CAUGHT_UP -> "Can't shake off $threat"
+                    else -> null
+                }
+                val next = if (stuck == null) combatPolicy.runFrom(threat) else null
+                escapeTile = next
+                if (next != null) {
+                    if (threat.isWithinDistance(bot, 3)) caughtUp++
+                    bot.log("Running from $threat to $next.")
+                } else if (!gaveUp && pkSession == null && bot.personality.type != PersonalityTemplateType.SKILLER &&
+                    !combatPolicy.isThreat(threat) && combatPolicy.prepareTrainingStyle()) {
+                    bot.log("${stuck ?: "Nowhere to run from $threat"}, fighting back.")
+                    bot.combat.isDisabled = false
+                    running = false
+                    startedAt = System.currentTimeMillis()
+                    focus = threat
+                    focusSpawn = (threat as? Npc)?.spawnCount
+                    return false
+                } else {
+                    bot.log("${stuck ?: "Nowhere to run from $threat"}, teleporting home.")
+                    output.sendCommand("home")
+                }
+            }
+        }
+        delay(600.milliseconds)
+        return false
+    }
+
+    /**
+     * Determines if something keeps the bot in combat while none of its attacks land, like an attacker it can't reach.
+     *
+     * @return `true` if the fight has stalled.
+     */
+    private fun isStalled(): Boolean {
+        val lastAttack = bot.combat.lastAttackSent?.timestamp?.toEpochMilli() ?: 0
+        return combatPolicy.opponent() != null &&
+            System.currentTimeMillis() - maxOf(lastAttack, startedAt) > STALLED_FIGHT.inWholeMilliseconds
     }
 
     /**

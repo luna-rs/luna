@@ -73,6 +73,36 @@ public class LocalProjectile extends LocalEntity {
         private int initialSlope = 16; // historically 16–18 is common
 
         /**
+         * An explicit launch offset, or {@code null} to retain the builder's default.
+         */
+        private Integer launchOffset;
+
+        /**
+         * Sets the projectile's launch and arrival timing. Both values are offsets
+         * from the current client cycle, not a delay followed by a flight duration.
+         *
+         * @param startCycle The launch cycle offset.
+         * @param endCycle The arrival cycle offset.
+         * @return This builder.
+         */
+        public TargetBuilder setTiming(int startCycle, int endCycle) {
+            ticksToStart = startCycle;
+            ticksToEnd = endCycle;
+            return this;
+        }
+
+        /**
+         * Sets the distance along the trajectory where the projectile first appears.
+         *
+         * @param launchOffset The offset in client world units.
+         * @return This builder.
+         */
+        public TargetBuilder setLaunchOffset(int launchOffset) {
+            this.launchOffset = launchOffset;
+            return this;
+        }
+
+        /**
          * Who the projectile is visible to.
          */
         private ChunkUpdatableView view = ChunkUpdatableView.globalView();
@@ -183,7 +213,8 @@ public class LocalProjectile extends LocalEntity {
          */
         public LocalProjectile build() {
             return new LocalProjectile(context, id, sourcePosition(), targetPosition(), targetIndex(),
-                    startHeight, endHeight, ticksToStart, ticksToEnd, initialSlope, distanceFromSource(),
+                    startHeight, endHeight, ticksToStart, ticksToEnd, initialSlope,
+                    launchOffset == null ? distanceFromSource() : launchOffset,
                     view);
         }
     }
@@ -428,6 +459,13 @@ public class LocalProjectile extends LocalEntity {
                 initialSlope,
                 distanceFromSource
         );
+    }
+
+    /**
+     * @return The arrival offset in 20ms client cycles, as encoded in the projectile packet.
+     */
+    public int getEndCycle() {
+        return ticksToEnd;
     }
 
     @Override

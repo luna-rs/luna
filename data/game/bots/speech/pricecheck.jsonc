@@ -1,0 +1,85 @@
+/*
+ * Price check chat: questions bots ask at the markets, and the answers bots give to anyone who asks.
+ *
+ * <item> is the bot's own name for the item and <price> is its estimate ("60k", "1.2m", "180 ea"). Answers must never
+ * read as a price check themselves, so bots can't keep answering each other. Every line must fit in 80 characters.
+ */
+{
+  "ASK": [
+    "pc <item>",
+    "pc <item>?",
+    "pc <item> pls",
+    "pc on <item>",
+    "price check <item>",
+    "how much is <item>?",
+    "how much r <item>?",
+    "whats <item> worth?",
+    "<item> price?",
+    "anyone know <item> price?"
+  ],
+  "ANSWER": [
+    "<price>",
+    "like <price>",
+    "about <price>",
+    "around <price>",
+    "<price> i think",
+    "prob <price>",
+    "<item> r <price>",
+    "<item> sell for <price>",
+    "<price> last i checked",
+    "<price> m8"
+  ],
+  "UNSURE": [
+    "<price>?",
+    "maybe <price>",
+    "idk like <price>?",
+    "<price> or so",
+    "not sure, <price>?",
+    "i think <price>"
+  ],
+  "NO_IDEA": [
+    "idk",
+    "no idea",
+    "dunno",
+    "no clue sry",
+    "idk m8",
+    "not sure"
+  ],
+  "RARE": [
+    "offer",
+    "make an offer",
+    "rares r priceless lol",
+    "nobody sells those",
+    "depends who u ask",
+    "too rare, offer"
+  ],
+  "UNTRADEABLE": [
+    "u cant trade those",
+    "cant trade that lol",
+    "untradeable",
+    "thats untradeable"
+  ],
+  "AGREE": [
+    "ya <price>",
+    "yep",
+    "yea about <price>",
+    "ya thats right",
+    "true"
+  ],
+  "DISAGREE": [
+    "no its like <price>",
+    "nah more like <price>",
+    "no <price>",
+    "more like <price>",
+    "nah <price>",
+    "<price> actually"
+  ],
+  "THANKS": [
+    "ty",
+    "thx",
+    "k ty",
+    "ty m8",
+    "thanks",
+    "kk thx"
+  ]
+}

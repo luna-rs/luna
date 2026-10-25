@@ -2,6 +2,11 @@ package api.bot.webwalk.generate
 
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.Requirements
+import api.bot.webwalk.model.ItemRequirement
+import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
+import game.content.miningGuild.MiningGuild
+import game.skill.thieving.lockedDoor.YanilleDoorAction
+import io.luna.game.model.mob.Skill
 import api.bot.webwalk.walk.crossing.BorderGateCrossing
 import api.bot.webwalk.walk.crossing.HamTrapdoorCrossing
 import engine.obj.HamTrapdoor
@@ -70,9 +75,24 @@ object SpecialCrossings {
                                                                           HamTrapdoor.USE_FROM, HamTrapdoor.HIDEOUT)))
 
     /**
+     * The Mining Guild door checks the current Mining level on both sides.
+     */
+    val MINING_GUILD = CrossingSpec(ConditionalDoorCrossing.ID, setOf(MiningGuild.DOOR),
+                                    Requirements(skills = mapOf(Skill.MINING to MiningGuild.REQUIRED_LEVEL)), cost = 4)
+
+    /**
+     * The Yanille door is unlocked from its own tile; the reverse direction needs a lockpick.
+     * The cost includes time for failed attempts before a successful pick.
+     */
+    val YANILLE_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(YanilleDoorAction.DOOR),
+                                    reverseRequirements = Requirements(
+                                        skills = mapOf(Skill.THIEVING to YanilleDoorAction.REQUIRED_LEVEL),
+                                        items = listOf(ItemRequirement(YanilleDoorAction.LOCKPICK))), cost = 8)
+
+    /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR)
+    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR)
 }
 
 /**

@@ -59,7 +59,7 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
         }
 
         /**
-         * How many cowhides [bot] collects before it moves on to tanning, between 500 and 1000.
+         * How many cowhides [bot] collects before it moves on to tanning, between 100 and 200.
          *
          * Derived from the username so it stays the same across sessions without being saved.
          *
@@ -67,7 +67,7 @@ class CollectHidesBotScript(bot: Bot, duration: Duration, zones: MutableList<Sub
          * @return The number of cowhides to own before tanning.
          */
         fun hideTarget(bot: Bot): Int {
-            return 500 + Math.floorMod(bot.username.hashCode(), 501)
+            return 100 + Math.floorMod(bot.username.hashCode(), 101)
         }
 
         /**

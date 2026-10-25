@@ -11,7 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Selects supported native Agility courses through the normal skilling coordinator.
  *
- * Gnome Stronghold is the first mapped course. New mapped courses use the same level/personality
+ * Gnome Stronghold, Barbarian Outpost and Wilderness use the same level/personality
  * selection and script. Profit selection completes without training because these courses produce
  * no saleable output. The factory remains registered normally alongside the other skills.
  *

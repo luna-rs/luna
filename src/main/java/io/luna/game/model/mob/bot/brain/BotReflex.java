@@ -103,13 +103,17 @@ public final class BotReflex {
 
         // Automatically respond to combat if we aren't already.
         if (!disableCombatReflex && bot.getCombat().inCombat() && !(bot.getScriptStack().current() instanceof CombatBotScript)) {
+            if (bot.getScriptStack().current() != null && !bot.getScriptStack().current().getAllowsCombatResponse()) {
+                // Activities such as scavenging and Abyss trips own escape without creating an attacking child.
+                return true;
+            }
             PkBotScript pkSession = bot.getScriptStack().findActive(PkBotScript.class).orElse(null);
             if (pkSession != null && bot.getScriptStack().current() == pkSession && pkSession.isRestocking()) {
                 return true;
             }
             Mob focus = bot.getCombat().getTarget();
-            if (focus == null && bot.getCombat().getLastAttackReceived() != null) {
-                focus = bot.getCombat().getLastAttackReceived().getAttacker();
+            if (focus == null || !focus.isAlive()) {
+                focus = bot.getActionHandler().getCombat().opponent();
             }
             if (focus != null) {
                 if (focus instanceof Npc && pkSession != null && bot.getScriptStack().current() == pkSession) {

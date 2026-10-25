@@ -34,7 +34,8 @@ object CrossingHandlers {
      * reports when the web is loaded.
      */
     private val handlers: Map<String, CrossingHandler> = mapOf(BorderGateCrossing.ID to BorderGateCrossing,
-                                                               HamTrapdoorCrossing.ID to HamTrapdoorCrossing)
+                                                               HamTrapdoorCrossing.ID to HamTrapdoorCrossing,
+                                                               ConditionalDoorCrossing.ID to ConditionalDoorCrossing)
 
     /**
      * The names of every handler.

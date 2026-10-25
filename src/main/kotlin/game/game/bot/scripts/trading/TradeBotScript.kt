@@ -13,6 +13,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.gear.BotGearLocator
 import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
@@ -57,10 +58,45 @@ class TradeBotScript(bot: Bot,
                      private val purpose: BotTradePurpose,
                      private val marketplace: BotMarketplace = BotMarketplace.VARROCK,
                      duration: Duration = getPreferenceBasedDuration(bot),
-                     zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone)) :
+                     zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone),
+                     private val purchaseTarget: Item? = null,
+                     private val purchasePrice: Long = 0) :
     ZonedBotScript(bot, duration, zone), SocialBotScript {
 
     companion object {
+
+        /**
+         * Creates a single-item buying session only when a prepared seller has an affordable match.
+         * The target is total owned stock, not an additional quantity. Normal negotiation revalidates
+         * stock and payment after travel; no items or money are reserved by this scan.
+         */
+        fun buySpecific(bot: Bot, id: Int, target: Int): TradeBotScript? {
+            require(target > 0 && id != COINS)
+            val guide = world.economy.getPrice(id)
+            if (guide <= 0) return null
+            val price = BotTradePrice.computePriceStrategy(bot).applyBuy(guide).coerceAtLeast(1)
+            for (market in BotMarketplace.entries) {
+                val script = TradeBotScript(bot, BotTradePurpose.BUY, market, 10.minutes,
+                    purchaseTarget = Item(id, target), purchasePrice = price)
+                if (script.specificDemand().isEmpty()) return null
+                val payment = BotTradeManager.computeOfferItems(bot, script.resolveTradePrice(), BotTradePurpose.BUY)
+                    .filter { it.item.id == COINS }
+                if (TradeBasket.value(script.quantities(payment.map { it.item }, true), script.prices(payment)) <
+                    BotTradeManager.MINIMUM_OFFER_VALUE) return null
+                val sellers = world.players.filterIsInstance<Bot>().mapNotNull {
+                    it.scriptStack.current() as? TradeBotScript
+                }.filter { script.availableAtMarket(it) }
+                if (sellers.any { seller ->
+                    TradeBasket.exchange(seller.quantities(seller.carriedOffer.mapNotNull { (id, amount) ->
+                        minOf(amount, seller.bot.inventory.computeAmountForId(id)).takeIf { it > 0 }?.let { Item(id, it) }
+                    }, true),
+                        script.quantities(script.specificDemand().map { it.item }, true),
+                        seller.prices(seller.offering), script.prices(script.specificDemand()),
+                        script.quantities(payment.map { it.item }, true), script.prices(payment)) != null
+                }) return script
+            }
+            return null
+        }
 
         /** The currency used for marketplace payments. */
         private const val COINS = 995
@@ -211,7 +247,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun completed() {
-        if (!traded) {
+        if (purchaseTarget == null && !traded) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
             else bot.scriptStack.push(SellToStoreBotScript(bot))
         }
@@ -245,16 +281,31 @@ class TradeBotScript(bot: Bot,
         return true
     }
 
-    override suspend fun beforeZoneWork(): Boolean = BotSocialInteractions.participate(bot)
+    override suspend fun beforeZoneWork(): Boolean = purchaseTarget == null && BotSocialInteractions.participate(bot)
 
     override fun snapshot(): BotScriptData? = null
+
+    /**
+     * Counts both noted and unnoted purchases so a banked or carried delivery cannot be bought twice.
+     */
+    private fun specificDemand(): List<BotTradeItem> {
+        val target = purchaseTarget ?: return emptyList()
+        val note = itemDef(target.id).notedId.orElse(-1)
+        val owned = bot.itemTracker.count(target.id).toLong() +
+            if (note >= 0) bot.itemTracker.count(note).toLong() else 0L
+        val missing = (target.amount.toLong() - owned).coerceAtLeast(0).toInt()
+        return if (missing == 0) emptyList() else
+            listOf(BotTradeItem(Item(target.id, missing), purchasePrice, BotTradePurpose.BUY, bot))
+    }
 
     /** Refreshes intentions from current ownership and ends the session normally when nothing useful remains. */
     private fun computeOfferAndExpected(): Boolean {
         bot.preferences.rebalanceWantedItems()
         val strategy = resolveTradePrice()
         val offers = BotTradeManager.computeOfferItems(bot, strategy, purpose)
-        val wants = BotTradeManager.computeExpected(bot, strategy, purpose, offers)
+            .filter { purchaseTarget == null || it.item.id == COINS }
+        val wants = if (purchaseTarget == null) BotTradeManager.computeExpected(bot, strategy, purpose, offers)
+        else BotTradeManager.affordablePurchases(specificDemand(), offers)
         val traders = world.players.filterIsInstance<Bot>().mapNotNull {
             it.scriptStack.current() as? TradeBotScript
         }.filter { availableAtMarket(it) }
@@ -421,7 +472,7 @@ class TradeBotScript(bot: Bot,
         val buyer = if (buying) this else other
         val seller = if (buying) other else this
         val asks = seller.prices(seller.offering)
-        val selected = TradeBasket.exchange(quantities(seller.carriedOffer.toItems(), true),
+        val selected = TradeBasket.exchange(quantities(seller.carriedOffer.map { (id, amount) -> Item(id, amount) }, true),
             quantities(buyer.expected.map { it.item }, true), asks, buyer.prices(buyer.expected),
             quantities(buyer.carriedOffer.toItems(), true), buyer.prices(buyer.offering)) ?: return null
         val stock = seller.carriedQuantities(selected.first)
@@ -523,7 +574,7 @@ class TradeBotScript(bot: Bot,
     /** Exposes the selected scrutiny policy for future personality-specific negotiation behavior. */
     fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
 
-    override fun canSocialize(): Boolean = prepared && !forceBanking && !negotiating && activeTrade == null &&
+    override fun canSocialize(): Boolean = purchaseTarget == null && prepared && !forceBanking && !negotiating && activeTrade == null &&
         duration > Duration.ZERO && marketplace.contains(bot.position)
 
     override fun socialTradeCompleted() {

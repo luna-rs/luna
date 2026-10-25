@@ -192,6 +192,7 @@
   },
   {
     "id": 7, // Farmer
+    "movement": { "max_range": 22, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -223,6 +224,7 @@
   },
   {
     "id": 8, // Thief
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": 8 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -285,6 +287,7 @@
   },
   {
     "id": 10, // Guard
+    "movement": { "max_range": 4, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -316,6 +319,7 @@
   },
   {
     "id": 11, // Tramp
+    "movement": { "max_range": 22, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -346,6 +350,7 @@
   },
   {
     "id": 12, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -376,6 +381,7 @@
   },
   {
     "id": 13, // Wizard
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -406,6 +412,7 @@
   },
   {
     "id": 14, // Druid
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -497,6 +504,7 @@
   },
   {
     "id": 17, // Barbarian woman
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -588,6 +596,7 @@
   },
   {
     "id": 20, // Paladin
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -678,6 +687,7 @@
   },
   {
     "id": 23, // Knight of Ardougne
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -769,6 +779,7 @@
   },
   {
     "id": 26, // Knight of Ardougne
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -799,6 +810,7 @@
   },
   {
     "id": 27, // Archer
+    "movement": { "max_range": 12, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -979,6 +991,7 @@
   },
   {
     "id": 41, // Chicken
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1010,6 +1023,7 @@
   },
   {
     "id": 44, // Duck
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1041,6 +1055,7 @@
   },
   {
     "id": 45, // Duck
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1072,6 +1087,7 @@
   },
   {
     "id": 46, // Duckling
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1103,6 +1119,7 @@
   },
   {
     "id": 47, // Rat
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1165,6 +1182,7 @@
   },
   {
     "id": 49, // Hellhound
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1199,6 +1217,7 @@
   },
   {
     "id": 50, // King black dragon
+    "movement": { "max_range": 20, "attack_range": 15, "retreat_hitpoints": -1 },
     "respawn_ticks": 59,
     "aggression": {
       "policy": "ALWAYS",
@@ -1233,6 +1252,7 @@
   },
   {
     "id": 51, // Baby dragon
+    "movement": { "max_range": 6, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1263,6 +1283,7 @@
   },
   {
     "id": 52, // Baby blue dragon
+    "movement": { "max_range": 6, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1297,6 +1318,7 @@
   },
   {
     "id": 53, // Red dragon
+    "movement": { "max_range": 12, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 39,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1331,6 +1353,7 @@
   },
   {
     "id": 54, // Black dragon
+    "movement": { "max_range": 12, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 39,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1365,6 +1388,7 @@
   },
   {
     "id": 55, // Blue dragon
+    "movement": { "max_range": 6, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 39,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1399,6 +1423,7 @@
   },
   {
     "id": 58, // Shadow spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1433,6 +1458,7 @@
   },
   {
     "id": 59, // Giant spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1467,6 +1493,7 @@
   },
   {
     "id": 60, // Giant spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1501,6 +1528,7 @@
   },
   {
     "id": 61, // Spider
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1531,6 +1559,7 @@
   },
   {
     "id": 62, // Jungle spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1565,6 +1594,7 @@
   },
   {
     "id": 63, // Deadly red spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1599,6 +1629,7 @@
   },
   {
     "id": 64, // Ice spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -1663,6 +1694,7 @@
   },
   {
     "id": 66, // Gnome
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1693,6 +1725,7 @@
   },
   {
     "id": 67, // Gnome
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1723,6 +1756,7 @@
   },
   {
     "id": 68, // Gnome
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1843,6 +1877,7 @@
   },
   {
     "id": 73, // Zombie
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1874,6 +1909,7 @@
   },
   {
     "id": 74, // Zombie
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1905,6 +1941,7 @@
   },
   {
     "id": 75, // Zombie
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -1936,6 +1973,7 @@
   },
   {
     "id": 76, // Zombie
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2001,6 +2039,7 @@
   },
   {
     "id": 78, // Giant bat
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2035,6 +2074,7 @@
   },
   {
     "id": 79, // Death wing
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2100,6 +2140,7 @@
   },
   {
     "id": 82, // Lesser demon
+    "movement": { "max_range": 16, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2134,6 +2175,7 @@
   },
   {
     "id": 83, // Greater demon
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2168,6 +2210,7 @@
   },
   {
     "id": 84, // Black Demon
+    "movement": { "max_range": 9, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2233,6 +2276,7 @@
   },
   {
     "id": 86, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2264,6 +2308,7 @@
   },
   {
     "id": 87, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2295,6 +2340,7 @@
   },
   {
     "id": 88, // Dungeon rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2326,6 +2372,7 @@
   },
   {
     "id": 89, // Unicorn
+    "movement": { "max_range": 19, "attack_range": 0, "retreat_hitpoints": 6 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2388,6 +2435,7 @@
   },
   {
     "id": 91, // Skeleton
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2419,6 +2467,7 @@
   },
   {
     "id": 92, // Skeleton
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2450,6 +2499,7 @@
   },
   {
     "id": 93, // Skeleton
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2512,6 +2562,7 @@
   },
   {
     "id": 95, // Wolf
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2543,6 +2594,7 @@
   },
   {
     "id": 96, // White wolf
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2577,6 +2629,7 @@
   },
   {
     "id": 97, // White wolf
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2611,6 +2664,7 @@
   },
   {
     "id": 99, // Guard dog
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2645,6 +2699,7 @@
   },
   {
     "id": 100, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2676,6 +2731,7 @@
   },
   {
     "id": 101, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2707,6 +2763,7 @@
   },
   {
     "id": 102, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2738,6 +2795,7 @@
   },
   {
     "id": 103, // Ghost
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2800,6 +2858,7 @@
   },
   {
     "id": 105, // Bear
+    "movement": { "max_range": 15, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2834,6 +2893,7 @@
   },
   {
     "id": 106, // Bear
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2865,6 +2925,7 @@
   },
   {
     "id": 107, // Scorpion
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2899,6 +2960,7 @@
   },
   {
     "id": 108, // Poison Scorpion
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -2933,6 +2995,7 @@
   },
   {
     "id": 109, // Pit Scorpion
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -2964,6 +3027,7 @@
   },
   {
     "id": 110, // Fire giant
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3032,6 +3096,7 @@
   },
   {
     "id": 112, // Moss giant
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3066,6 +3131,7 @@
   },
   {
     "id": 113, // Jogre
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3100,6 +3166,7 @@
   },
   {
     "id": 114, // Ogre
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3134,6 +3201,7 @@
   },
   {
     "id": 115, // Ogre
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3168,6 +3236,7 @@
   },
   {
     "id": 116, // Cyclops
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3202,6 +3271,7 @@
   },
   {
     "id": 117, // Hill giant
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3236,6 +3306,7 @@
   },
   {
     "id": 118, // Dwarf
+    "movement": { "max_range": 15, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3267,6 +3338,7 @@
   },
   {
     "id": 119, // Chaos dwarf
+    "movement": { "max_range": 22, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3301,6 +3373,7 @@
   },
   {
     "id": 120, // Dwarf
+    "movement": { "max_range": 15, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3332,6 +3405,7 @@
   },
   {
     "id": 121, // Dwarf
+    "movement": { "max_range": 15, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3362,6 +3436,7 @@
   },
   {
     "id": 122, // Hobgoblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3396,6 +3471,7 @@
   },
   {
     "id": 123, // Hobgoblin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3430,6 +3506,7 @@
   },
   {
     "id": 124, // Earth warrior
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3498,6 +3575,7 @@
   },
   {
     "id": 126, // Otherworldly being
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3529,6 +3607,7 @@
   },
   {
     "id": 127, // Magic axe
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3657,6 +3736,7 @@
   },
   {
     "id": 131, // Penguin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3688,6 +3768,7 @@
   },
   {
     "id": 132, // Monkey
+    "movement": { "max_range": 13, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3719,6 +3800,7 @@
   },
   {
     "id": 133, // Black unicorn
+    "movement": { "max_range": 19, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3750,6 +3832,7 @@
   },
   {
     "id": 134, // Poison spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3817,6 +3900,7 @@
   },
   {
     "id": 136, // Terrorbird
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3848,6 +3932,7 @@
   },
   {
     "id": 137, // Mounted terrorbird gnome
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3879,6 +3964,7 @@
   },
   {
     "id": 138, // Mounted terrorbird gnome
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3910,6 +3996,7 @@
   },
   {
     "id": 139, // Entrana Fire Bird
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -3940,6 +4027,7 @@
   },
   {
     "id": 140, // Souless
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": 9 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -3974,6 +4062,7 @@
   },
   {
     "id": 141, // Big Wolf
+    "movement": { "max_range": 22, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4005,6 +4094,7 @@
   },
   {
     "id": 142, // Wolf
+    "movement": { "max_range": 22, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4036,6 +4126,7 @@
   },
   {
     "id": 143, // Jungle Wolf
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4067,6 +4158,7 @@
   },
   {
     "id": 144, // King Scorpion
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4135,6 +4227,7 @@
   },
   {
     "id": 158, // Shadow warrior
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4319,6 +4412,7 @@
   },
   {
     "id": 168, // Gnome woman
+    "movement": { "max_range": 7, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4349,6 +4443,7 @@
   },
   {
     "id": 169, // Gnome woman
+    "movement": { "max_range": 7, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4379,6 +4474,7 @@
   },
   {
     "id": 172, // Dark wizard
+    "movement": { "max_range": 5, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4444,6 +4540,7 @@
   },
   {
     "id": 174, // Dark wizard
+    "movement": { "max_range": 5, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4478,6 +4575,7 @@
   },
   {
     "id": 175, // Mugger
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4512,6 +4610,7 @@
   },
   {
     "id": 176, // Witch
+    "movement": { "max_range": 5, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4543,6 +4642,7 @@
   },
   {
     "id": 177, // Witch
+    "movement": { "max_range": 5, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4574,6 +4674,7 @@
   },
   {
     "id": 178, // Black Knight
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4608,6 +4709,7 @@
   },
   {
     "id": 179, // Black Knight
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4642,6 +4744,7 @@
   },
   {
     "id": 180, // Highwayman
+    "movement": { "max_range": 14, "attack_range": 3, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4676,6 +4779,7 @@
   },
   {
     "id": 181, // Chaos druid
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -4911,6 +5015,7 @@
   },
   {
     "id": 188, // Monk of Zamorak
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4942,6 +5047,7 @@
   },
   {
     "id": 189, // Monk of Zamorak
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -4973,6 +5079,7 @@
   },
   {
     "id": 190, // Monk of Zamorak
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5168,6 +5275,7 @@
   },
   {
     "id": 196, // Guard Bandit
+    "movement": { "max_range": 7, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -5421,6 +5529,7 @@
   },
   {
     "id": 206, // Guard
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5451,6 +5560,7 @@
   },
   {
     "id": 221, // Black Knight Titan
+    "movement": { "max_range": 0, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -5484,6 +5594,7 @@
   },
   {
     "id": 222, // Monk
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5515,6 +5626,7 @@
   },
   {
     "id": 224, // Dungeon rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5578,6 +5690,7 @@
   },
   {
     "id": 238, // Thrantax the Mighty
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5608,6 +5721,7 @@
   },
   {
     "id": 247, // Sir Mordred
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5638,6 +5752,7 @@
   },
   {
     "id": 253, // Khazard Guard
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5669,6 +5784,7 @@
   },
   {
     "id": 254, // Khazard Guard
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5700,6 +5816,7 @@
   },
   {
     "id": 255, // Khazard Guard
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5730,6 +5847,7 @@
   },
   {
     "id": 256, // Khazard Guard
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5760,6 +5878,7 @@
   },
   {
     "id": 258, // General Khazard
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5790,6 +5909,7 @@
   },
   {
     "id": 269, // Bouncer
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -5824,6 +5944,7 @@
   },
   {
     "id": 270, // Khazard Ogre
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -5858,6 +5979,7 @@
   },
   {
     "id": 271, // Khazard Scorpion
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -5979,6 +6101,7 @@
   },
   {
     "id": 277, // Fire Warrior of Lesarkus
+    "movement": { "max_range": 4, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6009,6 +6132,7 @@
   },
   {
     "id": 281, // Monk
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 2 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6039,6 +6163,7 @@
   },
   {
     "id": 282, // Thief
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 8 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6099,6 +6224,7 @@
   },
   {
     "id": 298, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6130,6 +6256,7 @@
   },
   {
     "id": 299, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6560,6 +6687,7 @@
   },
   {
     "id": 370, // Mourner
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6654,6 +6782,7 @@
   },
   {
     "id": 391, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6687,6 +6816,7 @@
   },
   {
     "id": 392, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6720,6 +6850,7 @@
   },
   {
     "id": 393, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6753,6 +6884,7 @@
   },
   {
     "id": 394, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6786,6 +6918,7 @@
   },
   {
     "id": 395, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6819,6 +6952,7 @@
   },
   {
     "id": 396, // River troll
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -6883,6 +7017,7 @@
   },
   {
     "id": 408, // Strange plant
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6913,6 +7048,7 @@
   },
   {
     "id": 412, // Bat
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6944,6 +7080,7 @@
   },
   {
     "id": 413, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -6974,6 +7111,7 @@
   },
   {
     "id": 414, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7004,6 +7142,7 @@
   },
   {
     "id": 415, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7034,6 +7173,7 @@
   },
   {
     "id": 416, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7064,6 +7204,7 @@
   },
   {
     "id": 417, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7094,6 +7235,7 @@
   },
   {
     "id": 418, // Rock Golem
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7124,6 +7266,7 @@
   },
   {
     "id": 419, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7154,6 +7297,7 @@
   },
   {
     "id": 420, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7184,6 +7328,7 @@
   },
   {
     "id": 421, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7214,6 +7359,7 @@
   },
   {
     "id": 422, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7244,6 +7390,7 @@
   },
   {
     "id": 423, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7274,6 +7421,7 @@
   },
   {
     "id": 424, // Zombie
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7304,6 +7452,7 @@
   },
   {
     "id": 425, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7334,6 +7483,7 @@
   },
   {
     "id": 426, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7364,6 +7514,7 @@
   },
   {
     "id": 427, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7394,6 +7545,7 @@
   },
   {
     "id": 428, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7424,6 +7576,7 @@
   },
   {
     "id": 429, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7454,6 +7607,7 @@
   },
   {
     "id": 430, // Shade
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7484,6 +7638,7 @@
   },
   {
     "id": 431, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7514,6 +7669,7 @@
   },
   {
     "id": 432, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7544,6 +7700,7 @@
   },
   {
     "id": 433, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7574,6 +7731,7 @@
   },
   {
     "id": 434, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7604,6 +7762,7 @@
   },
   {
     "id": 435, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7634,6 +7793,7 @@
   },
   {
     "id": 436, // Watchman
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -7664,6 +7824,7 @@
   },
   {
     "id": 438, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -7698,6 +7859,7 @@
   },
   {
     "id": 439, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -7732,6 +7894,7 @@
   },
   {
     "id": 440, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -7766,6 +7929,7 @@
   },
   {
     "id": 441, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -7800,6 +7964,7 @@
   },
   {
     "id": 442, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -7834,6 +7999,7 @@
   },
   {
     "id": 443, // Tree spirit
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8092,6 +8258,7 @@
   },
   {
     "id": 459, // Skeleton
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8123,6 +8290,7 @@
   },
   {
     "id": 475, // Khazard trooper
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8153,6 +8321,7 @@
   },
   {
     "id": 476, // Khazard trooper
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8183,6 +8352,7 @@
   },
   {
     "id": 477, // Khazard warlord
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -8216,6 +8386,7 @@
   },
   {
     "id": 478, // Khazard commander
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8246,6 +8417,7 @@
   },
   {
     "id": 479, // Gnome troop
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8276,6 +8448,7 @@
   },
   {
     "id": 480, // Gnome troop
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8306,6 +8479,7 @@
   },
   {
     "id": 489, // Goblin guard
+    "movement": { "max_range": 15, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8369,6 +8543,7 @@
   },
   {
     "id": 493, // Grave Scorpion
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8399,6 +8574,7 @@
   },
   {
     "id": 502, // Undead One
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8432,6 +8608,7 @@
   },
   {
     "id": 503, // Undead One
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8498,6 +8675,7 @@
   },
   {
     "id": 505, // Undead One
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8690,6 +8868,7 @@
   },
   {
     "id": 644, // Straven
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8720,6 +8899,7 @@
   },
   {
     "id": 645, // Jonny the beard
+    "movement": { "max_range": 6, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8784,6 +8964,7 @@
   },
   {
     "id": 667, // Chronozon
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -8817,6 +8998,7 @@
   },
   {
     "id": 674, // Foreman
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8848,6 +9030,7 @@
   },
   {
     "id": 677, // Black Demon
+    "movement": { "max_range": 9, "attack_range": 19, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -8882,6 +9065,7 @@
   },
   {
     "id": 678, // Guard
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8912,6 +9096,7 @@
   },
   {
     "id": 688, // Tower Archer
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8942,6 +9127,7 @@
   },
   {
     "id": 689, // Tower Archer
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -8972,6 +9158,7 @@
   },
   {
     "id": 690, // Tower Archer
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9002,6 +9189,7 @@
   },
   {
     "id": 691, // Tower Archer
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9062,6 +9250,7 @@
   },
   {
     "id": 708, // Imp
+    "movement": { "max_range": 27, "attack_range": 0, "retreat_hitpoints": 4 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9092,6 +9281,7 @@
   },
   {
     "id": 709, // Imp
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 4 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9122,6 +9312,7 @@
   },
   {
     "id": 742, // Elvarg
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 29,
     "aggression": {
       "policy": "ALWAYS",
@@ -9155,6 +9346,7 @@
   },
   {
     "id": 745, // Wormbrain
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9186,6 +9378,7 @@
   },
   {
     "id": 748, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9216,6 +9409,7 @@
   },
   {
     "id": 749, // Ghost
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9247,6 +9441,7 @@
   },
   {
     "id": 750, // Skeleton
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9278,6 +9473,7 @@
   },
   {
     "id": 751, // Zombie
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9309,6 +9505,7 @@
   },
   {
     "id": 752, // Lesser demon
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -9343,6 +9540,7 @@
   },
   {
     "id": 753, // Melzar the mad
+    "movement": { "max_range": 4, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9407,6 +9605,7 @@
   },
   {
     "id": 792, // Grip
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9467,6 +9666,7 @@
   },
   {
     "id": 799, // Pirate Guard
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9497,6 +9697,7 @@
   },
   {
     "id": 803, // Monk
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9527,6 +9728,7 @@
   },
   {
     "id": 827, // Rowdy slave
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -9560,6 +9762,7 @@
   },
   {
     "id": 828, // Mercenary
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9590,6 +9793,7 @@
   },
   {
     "id": 829, // Mercenary
+    "movement": { "max_range": 1, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9620,6 +9824,7 @@
   },
   {
     "id": 830, // Mercenary Captain
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9650,6 +9855,7 @@
   },
   {
     "id": 837, // Shantay Guard
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9713,6 +9919,7 @@
   },
   {
     "id": 840, // Ugthanki
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 5 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -9746,6 +9953,7 @@
   },
   {
     "id": 842, // Rowdy Guard
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9776,6 +9984,7 @@
   },
   {
     "id": 852, // Ogre chieftain
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9806,6 +10015,7 @@
   },
   {
     "id": 856, // Gorad
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9866,6 +10076,7 @@
   },
   {
     "id": 870, // Enclave guard
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9926,6 +10137,7 @@
   },
   {
     "id": 873, // Ogre trader
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9956,6 +10168,7 @@
   },
   {
     "id": 874, // Ogre merchant
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -9986,6 +10199,7 @@
   },
   {
     "id": 875, // Ogre trader
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10016,6 +10230,7 @@
   },
   {
     "id": 876, // Ogre trader
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10046,6 +10261,7 @@
   },
   {
     "id": 877, // Tower guard
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10076,6 +10292,7 @@
   },
   {
     "id": 878, // Colonel Radick
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10106,6 +10323,7 @@
   },
   {
     "id": 879, // Delrith
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10346,6 +10564,7 @@
   },
   {
     "id": 907, // Kolodion
+    "movement": { "max_range": 7, "attack_range": 3, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10380,6 +10599,7 @@
   },
   {
     "id": 908, // Kolodion
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10413,6 +10633,7 @@
   },
   {
     "id": 909, // Kolodion
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10447,6 +10668,7 @@
   },
   {
     "id": 910, // Kolodion
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10480,6 +10702,7 @@
   },
   {
     "id": 911, // Kolodion
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10514,6 +10737,7 @@
   },
   {
     "id": 912, // Battle mage
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10545,6 +10769,7 @@
   },
   {
     "id": 913, // Battle mage
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10576,6 +10801,7 @@
   },
   {
     "id": 914, // Battle mage
+    "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10607,6 +10833,7 @@
   },
   {
     "id": 917, // Jail guard
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -10640,6 +10867,7 @@
   },
   {
     "id": 929, // Ungadulu
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10670,6 +10898,7 @@
   },
   {
     "id": 930, // Ungadulu
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10700,6 +10929,7 @@
   },
   {
     "id": 931, // Jungle Savage
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10730,6 +10960,7 @@
   },
   {
     "id": 934, // Nezikchened
+    "movement": { "max_range": 40, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10763,6 +10994,7 @@
   },
   {
     "id": 935, // Viyeldi
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10793,6 +11025,7 @@
   },
   {
     "id": 936, // San Tojalon
+    "movement": { "max_range": 15, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10823,6 +11056,7 @@
   },
   {
     "id": 937, // Irvig Senay
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -10856,6 +11090,7 @@
   },
   {
     "id": 938, // Ranalph Devere
+    "movement": { "max_range": 40, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -10886,6 +11121,7 @@
   },
   {
     "id": 941, // Green dragon
+    "movement": { "max_range": 6, "attack_range": 1, "retreat_hitpoints": -1 },
     "respawn_ticks": 29,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -10920,6 +11156,7 @@
   },
   {
     "id": 950, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11012,6 +11249,7 @@
   },
   {
     "id": 977, // Blessed spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11042,6 +11280,7 @@
   },
   {
     "id": 978, // Blessed Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11162,6 +11401,7 @@
   },
   {
     "id": 997, // Kalrag
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -11195,6 +11435,7 @@
   },
   {
     "id": 998, // Othainian
+    "movement": { "max_range": 9, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -11228,6 +11469,7 @@
   },
   {
     "id": 999, // Doomion
+    "movement": { "max_range": 9, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -11261,6 +11503,7 @@
   },
   {
     "id": 1000, // Holthion
+    "movement": { "max_range": 9, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -11324,6 +11567,7 @@
   },
   {
     "id": 1004, // Spider
+    "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11355,6 +11599,7 @@
   },
   {
     "id": 1007, // Zamorak Wizard
+    "movement": { "max_range": 5, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "WEARING_ZAMORAK",
@@ -11389,6 +11634,7 @@
   },
   {
     "id": 1009, // Poison spider
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -11422,6 +11668,7 @@
   },
   {
     "id": 1015, // Chompy bird
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11453,6 +11700,7 @@
   },
   {
     "id": 1017, // Chicken
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11484,6 +11732,7 @@
   },
   {
     "id": 1018, // Rooster
+    "movement": { "max_range": 7, "attack_range": 0, "retreat_hitpoints": 1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11670,6 +11919,7 @@
   },
   {
     "id": 1024, // Man
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11700,6 +11950,7 @@
   },
   {
     "id": 1025, // Man
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11730,6 +11981,7 @@
   },
   {
     "id": 1026, // Man
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11760,6 +12012,7 @@
   },
   {
     "id": 1027, // Woman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11790,6 +12043,7 @@
   },
   {
     "id": 1028, // Woman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11820,6 +12074,7 @@
   },
   {
     "id": 1029, // Woman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11850,6 +12105,7 @@
   },
   {
     "id": 1030, // Wolfman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11880,6 +12136,7 @@
   },
   {
     "id": 1031, // Wolfman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11910,6 +12167,7 @@
   },
   {
     "id": 1032, // Wolfman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11940,6 +12198,7 @@
   },
   {
     "id": 1033, // Wolfwoman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -11970,6 +12229,7 @@
   },
   {
     "id": 1034, // Wolfwoman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12000,6 +12260,7 @@
   },
   {
     "id": 1035, // Wolfwoman
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12030,6 +12291,7 @@
   },
   {
     "id": 1044, // Monk of Zamorak
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12060,6 +12322,7 @@
   },
   {
     "id": 1045, // Monk of Zamorak
+    "movement": { "max_range": 14, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12184,6 +12447,7 @@
   },
   {
     "id": 1065, // Soldier
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12244,6 +12508,7 @@
   },
   {
     "id": 1073, // Archer
+    "movement": { "max_range": 12, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12274,6 +12539,7 @@
   },
   {
     "id": 1074, // Archer
+    "movement": { "max_range": 12, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12304,6 +12570,7 @@
   },
   {
     "id": 1075, // Archer
+    "movement": { "max_range": 12, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12334,6 +12601,7 @@
   },
   {
     "id": 1076, // Guard
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12364,6 +12632,7 @@
   },
   {
     "id": 1077, // Guard
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -12764,6 +13033,7 @@
   },
   {
     "id": 1101, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -12798,6 +13068,7 @@
   },
   {
     "id": 1102, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -12832,6 +13103,7 @@
   },
   {
     "id": 1103, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -12866,6 +13138,7 @@
   },
   {
     "id": 1104, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -12900,6 +13173,7 @@
   },
   {
     "id": 1105, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13271,6 +13545,7 @@
   },
   {
     "id": 1118, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13301,6 +13576,7 @@
   },
   {
     "id": 1119, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13331,6 +13607,7 @@
   },
   {
     "id": 1120, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13361,6 +13638,7 @@
   },
   {
     "id": 1121, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13391,6 +13669,7 @@
   },
   {
     "id": 1122, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13421,6 +13700,7 @@
   },
   {
     "id": 1123, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13451,6 +13731,7 @@
   },
   {
     "id": 1124, // Troll Spectator
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13481,6 +13762,7 @@
   },
   {
     "id": 1125, // Dad
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13574,6 +13856,7 @@
   },
   {
     "id": 1128, // Twig
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13604,6 +13887,7 @@
   },
   {
     "id": 1129, // Berry
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13637,6 +13921,7 @@
   },
   {
     "id": 1130, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13670,6 +13955,7 @@
   },
   {
     "id": 1131, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13703,6 +13989,7 @@
   },
   {
     "id": 1132, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13736,6 +14023,7 @@
   },
   {
     "id": 1133, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13769,6 +14057,7 @@
   },
   {
     "id": 1134, // Thrower Troll
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13835,6 +14124,7 @@
   },
   {
     "id": 1153, // Kalphite Worker
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -13866,6 +14156,7 @@
   },
   {
     "id": 1154, // Kalphite Soldier
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13900,6 +14191,7 @@
   },
   {
     "id": 1155, // Kalphite Guardian
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -13968,6 +14260,7 @@
   },
   {
     "id": 1157, // Kalphite Guardian
+    "movement": { "max_range": 25, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -14002,6 +14295,7 @@
   },
   {
     "id": 1158, // Kalphite Queen
+    "movement": { "max_range": 25, "attack_range": 15, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -14036,6 +14330,7 @@
   },
   {
     "id": 1160, // Kalphite Queen
+    "movement": { "max_range": 25, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -18328,6 +18623,7 @@
   },
   {
     "id": 1532, // Barricade
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -18358,6 +18654,7 @@
   },
   {
     "id": 1533, // Barricade
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -18388,6 +18685,7 @@
   },
   {
     "id": 1534, // Barricade
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -18418,6 +18716,7 @@
   },
   {
     "id": 1535, // Barricade
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19120,6 +19419,7 @@
   },
   {
     "id": 1587, // Moss giant
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19154,6 +19454,7 @@
   },
   {
     "id": 1588, // Moss giant
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19222,6 +19523,7 @@
   },
   {
     "id": 1590, // Bronze dragon
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19256,6 +19558,7 @@
   },
   {
     "id": 1591, // Iron dragon
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19290,6 +19593,7 @@
   },
   {
     "id": 1592, // Steel dragon
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19528,6 +19832,7 @@
   },
   {
     "id": 1604, // Aberrant specter
+    "movement": { "max_range": 7, "attack_range": 6, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19559,6 +19864,7 @@
   },
   {
     "id": 1605, // Aberrant specter
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19590,6 +19896,7 @@
   },
   {
     "id": 1606, // Aberrant specter
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19621,6 +19928,7 @@
   },
   {
     "id": 1607, // Aberrant specter
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19788,6 +20096,7 @@
   },
   {
     "id": 1612, // Banshee
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -19918,6 +20227,7 @@
   },
   {
     "id": 1616, // Basilisk
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -19949,6 +20259,7 @@
   },
   {
     "id": 1617, // Basilisk
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20042,6 +20353,7 @@
   },
   {
     "id": 1620, // Cockatrice
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20754,6 +21066,7 @@
   },
   {
     "id": 1643, // Infernal Mage
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20785,6 +21098,7 @@
   },
   {
     "id": 1644, // Infernal Mage
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20816,6 +21130,7 @@
   },
   {
     "id": 1645, // Infernal Mage
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20847,6 +21162,7 @@
   },
   {
     "id": 1646, // Infernal Mage
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -20878,6 +21194,7 @@
   },
   {
     "id": 1647, // Infernal Mage
+    "movement": { "max_range": 7, "attack_range": 8, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21710,6 +22027,7 @@
   },
   {
     "id": 1769, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21741,6 +22059,7 @@
   },
   {
     "id": 1770, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21772,6 +22091,7 @@
   },
   {
     "id": 1771, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21803,6 +22123,7 @@
   },
   {
     "id": 1772, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21834,6 +22155,7 @@
   },
   {
     "id": 1773, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21865,6 +22187,7 @@
   },
   {
     "id": 1774, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21896,6 +22219,7 @@
   },
   {
     "id": 1775, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -21927,6 +22251,7 @@
   },
   {
     "id": 1776, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26780,6 +27105,7 @@
   },
   {
     "id": 2274, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26811,6 +27137,7 @@
   },
   {
     "id": 2275, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26842,6 +27169,7 @@
   },
   {
     "id": 2276, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26873,6 +27201,7 @@
   },
   {
     "id": 2277, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26904,6 +27233,7 @@
   },
   {
     "id": 2278, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26935,6 +27265,7 @@
   },
   {
     "id": 2279, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26966,6 +27297,7 @@
   },
   {
     "id": 2280, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -26997,6 +27329,7 @@
   },
   {
     "id": 2281, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -29628,6 +29961,7 @@
   },
   {
     "id": 2678, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -29659,6 +29993,7 @@
   },
   {
     "id": 2679, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -29690,6 +30025,7 @@
   },
   {
     "id": 2680, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -29721,6 +30057,7 @@
   },
   {
     "id": 2681, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -29843,6 +30180,7 @@
   },
   {
     "id": 2685, // Hobgoblin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -29876,6 +30214,7 @@
   },
   {
     "id": 2686, // Hobgoblin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -29909,6 +30248,7 @@
   },
   {
     "id": 2687, // Hobgoblin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -29942,6 +30282,7 @@
   },
   {
     "id": 2688, // Hobgoblin
+    "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "COMBAT_LEVEL",
@@ -30446,6 +30787,7 @@
   },
   {
     "id": 2722, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -30477,6 +30819,7 @@
   },
   {
     "id": 2723, // Giant rat
+    "movement": { "max_range": 8, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -30508,6 +30851,7 @@
   },
   {
     "id": 2724, // Skeleton
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -30539,6 +30883,7 @@
   },
   {
     "id": 2725, // Skeleton
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -32506,6 +32851,7 @@
   },
   {
     "id": 3057, // Earth Warrior Champion
+    "movement": { "max_range": 2, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -33831,6 +34177,7 @@
   },
   {
     "id": 3229, // Guard
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -33861,6 +34208,7 @@
   },
   {
     "id": 3230, // Guard
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -33891,6 +34239,7 @@
   },
   {
     "id": 3231, // Guard
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -33921,6 +34270,7 @@
   },
   {
     "id": 3232, // Guard
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -33951,6 +34301,7 @@
   },
   {
     "id": 3233, // Guard
+    "movement": { "max_range": 4, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34297,6 +34648,7 @@
   },
   {
     "id": 3246, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34328,6 +34680,7 @@
   },
   {
     "id": 3247, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34359,6 +34712,7 @@
   },
   {
     "id": 3248, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34390,6 +34744,7 @@
   },
   {
     "id": 3249, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34421,6 +34776,7 @@
   },
   {
     "id": 3250, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34452,6 +34808,7 @@
   },
   {
     "id": 3251, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34483,6 +34840,7 @@
   },
   {
     "id": 3252, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34514,6 +34872,7 @@
   },
   {
     "id": 3253, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34545,6 +34904,7 @@
   },
   {
     "id": 3255, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34576,6 +34936,7 @@
   },
   {
     "id": 3256, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34607,6 +34968,7 @@
   },
   {
     "id": 3257, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34638,6 +35000,7 @@
   },
   {
     "id": 3258, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34669,6 +35032,7 @@
   },
   {
     "id": 3259, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34700,6 +35064,7 @@
   },
   {
     "id": 3260, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34731,6 +35096,7 @@
   },
   {
     "id": 3261, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34762,6 +35128,7 @@
   },
   {
     "id": 3262, // Barbarian
+    "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34824,6 +35191,7 @@
   },
   {
     "id": 3264, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34855,6 +35223,7 @@
   },
   {
     "id": 3265, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34886,6 +35255,7 @@
   },
   {
     "id": 3266, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
@@ -34917,6 +35287,7 @@
   },
   {
     "id": 3267, // Goblin
+    "movement": { "max_range": 17, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,

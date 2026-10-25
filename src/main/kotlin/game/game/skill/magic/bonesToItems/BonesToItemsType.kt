@@ -6,12 +6,15 @@ import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
 
 /**
- * An enum representing the two bones to items spells.
+ * The two native bone-to-food spells, including their regular-spellbook buttons and per-cast requirements.
+ * Each cast converts all carried normal bones; rune costs and experience apply once to the whole inventory.
  *
  * @author lare96
  */
-enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double, val requirements: List<SpellRequirement>) {
-    BANANAS(id = 1963,
+enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double,
+                           val requirements: List<SpellRequirement>, val spellId: Int) {
+    BANANAS(spellId = 1159,
+            id = 1963,
             level = 15,
             xp = 25.0,
             requirements = listOf(
@@ -20,7 +23,8 @@ enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double, val req
                 RuneRequirement(Rune.WATER, 2),
                 RuneRequirement(Rune.NATURE, 1)
             )),
-    PEACHES(id = 6883,
+    PEACHES(spellId = 15877,
+            id = 6883,
             level = 60,
             xp = 35.5,
             requirements = listOf(

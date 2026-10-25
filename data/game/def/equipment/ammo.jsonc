@@ -8,13 +8,15 @@
     "strength": 7,
     "start_graphic": {
       "id": 19,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 10,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -45,13 +47,15 @@
     "strength": 10,
     "start_graphic": {
       "id": 18,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 9,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -82,13 +86,15 @@
     "strength": 16,
     "start_graphic": {
       "id": 20,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 11,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -117,13 +123,15 @@
     "strength": 22,
     "start_graphic": {
       "id": 21,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 12,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -150,13 +158,15 @@
     "strength": 31,
     "start_graphic": {
       "id": 22,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 13,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -181,13 +191,15 @@
     "strength": 49,
     "start_graphic": {
       "id": 24,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 15,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -210,13 +222,15 @@
     "strength": 28,
     "start_graphic": {
       "id": 325,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 326,
-      "delay": 44,
-      "speed": 12,
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
       "start_height": 40,
       "end_height": 36,
       "curve": 15
@@ -234,16 +248,18 @@
     "strength": 58,
     "start_graphic": {
       "id": 250,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 249,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       4212, // New crystal bow
@@ -265,16 +281,18 @@
     "strength": 10,
     "start_graphic": {
       "id": 28,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 27,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       837, // Crossbow
@@ -292,16 +310,18 @@
     "strength": 12,
     "start_graphic": {
       "id": 28,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 27,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       837, // Crossbow
@@ -316,16 +336,18 @@
     "strength": 14,
     "start_graphic": {
       "id": 28,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 27,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       837, // Crossbow
@@ -340,16 +362,18 @@
     "strength": 48,
     "start_graphic": {
       "id": 28,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 27,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       837, // Crossbow
@@ -364,16 +388,18 @@
     "strength": 55,
     "start_graphic": {
       "id": 28,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 27,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 41,
+      "flight_length": 5,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       4734, // Karils crossbow
@@ -391,16 +417,18 @@
     "strength": 3,
     "start_graphic": {
       "id": 219,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 212,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       864, // Bronze knife
@@ -415,16 +443,18 @@
     "strength": 4,
     "start_graphic": {
       "id": 220,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 213,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       863, // Iron knife
@@ -439,16 +469,18 @@
     "strength": 7,
     "start_graphic": {
       "id": 221,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 214,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       865, // Steel knife
@@ -463,16 +495,18 @@
     "strength": 8,
     "start_graphic": {
       "id": 222,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 215,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       869, // Black knife
@@ -487,16 +521,18 @@
     "strength": 10,
     "start_graphic": {
       "id": 223,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 216,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       866, // Mithril knife
@@ -511,16 +547,18 @@
     "strength": 14,
     "start_graphic": {
       "id": 224,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 217,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       867, // Adamant knife
@@ -535,16 +573,18 @@
     "strength": 24,
     "start_graphic": {
       "id": 225,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 218,
-      "delay": 33,
-      "speed": 3,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       868, // Rune knife
@@ -559,16 +599,18 @@
     "strength": 1,
     "start_graphic": {
       "id": 232,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 226,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       806, // Bronze dart
@@ -583,16 +625,18 @@
     "strength": 3,
     "start_graphic": {
       "id": 233,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 227,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       807, // Iron dart
@@ -607,16 +651,18 @@
     "strength": 4,
     "start_graphic": {
       "id": 234,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 228,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       808, // Steel dart
@@ -631,16 +677,18 @@
     "strength": 6,
     "start_graphic": {
       "id": 273,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 273,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       3093, // Black dart
@@ -655,16 +703,18 @@
     "strength": 7,
     "start_graphic": {
       "id": 235,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 229,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       809, // Mithril dart
@@ -679,16 +729,18 @@
     "strength": 10,
     "start_graphic": {
       "id": 236,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 230,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       810, // Adamant dart
@@ -703,16 +755,18 @@
     "strength": 14,
     "start_graphic": {
       "id": 237,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 231,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       811, // Rune dart
@@ -727,16 +781,18 @@
     "strength": 6,
     "start_graphic": {
       "id": 206,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 200,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       825, // Bronze javelin
@@ -751,16 +807,18 @@
     "strength": 10,
     "start_graphic": {
       "id": 207,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 201,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       826, // Iron javelin
@@ -775,16 +833,18 @@
     "strength": 12,
     "start_graphic": {
       "id": 208,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 202,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       827, // Steel javelin
@@ -799,16 +859,18 @@
     "strength": 18,
     "start_graphic": {
       "id": 209,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 203,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       828, // Mithril javelin
@@ -823,16 +885,18 @@
     "strength": 28,
     "start_graphic": {
       "id": 210,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 204,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       829, // Adamant javelin
@@ -847,16 +911,18 @@
     "strength": 42,
     "start_graphic": {
       "id": 211,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 205,
-      "delay": 40,
-      "speed": 2,
-      "start_height": 45,
-      "end_height": 37,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       830, // Rune javelin
@@ -871,16 +937,18 @@
     "strength": 5,
     "start_graphic": {
       "id": 43,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 35,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       800 // Bronze thrownaxe
@@ -892,16 +960,18 @@
     "strength": 7,
     "start_graphic": {
       "id": 42,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 36,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       801 // Iron thrownaxe
@@ -913,16 +983,18 @@
     "strength": 11,
     "start_graphic": {
       "id": 44,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 37,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       802 // Steel thrownaxe
@@ -934,16 +1006,18 @@
     "strength": 16,
     "start_graphic": {
       "id": 45,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 38,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       803 // Mithril thrownaxe
@@ -955,16 +1029,18 @@
     "strength": 23,
     "start_graphic": {
       "id": 46,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 39,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       804 // Adamnt thrownaxe
@@ -976,16 +1052,18 @@
     "strength": 26,
     "start_graphic": {
       "id": 48,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 41,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       805 // Rune thrownaxe
@@ -997,16 +1075,18 @@
     "strength": 50,
     "start_graphic": {
       "id": 0,
-      "height": 100,
+      "height": 96,
       "delay": 0
     },
     "projectile": {
       "id": 442,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 32,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 11,
+      "start_height": 40,
+      "end_height": 36,
+      "curve": 15
     },
     "weapons": [
       6522 // Toktz-xil-ul

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
+import io.luna.game.model.def.NpcCombatMovement;
 import io.luna.game.model.mob.NpcAggressionProfile;
 import io.luna.game.model.mob.NpcAggressionProfile.NpcAggressionPolicy;
 import io.luna.util.GsonUtils;
@@ -52,9 +53,13 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         int rangedBonus = token.get("ranged_bonus").getAsInt();
         int[] skills = GsonUtils.getAsType(token.get("skills"), int[].class);
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
+        JsonObject movement = token.getAsJsonObject("movement");
+        NpcCombatMovement rules = movement == null ? NpcCombatMovement.DEFAULT : new NpcCombatMovement(
+                movement.get("max_range").getAsInt(), movement.get("attack_range").getAsInt(),
+                movement.get("retreat_hitpoints").getAsInt());
         return new NpcCombatDefinition(id, respawnTicks, aggression, poisonous, immunePoison, hitpoints, maximumHit,
                 attackSpeed, attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus,
-                rangedBonus, skills, bonuses);
+                rangedBonus, skills, bonuses, rules);
     }
 
     @Override

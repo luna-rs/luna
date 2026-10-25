@@ -1,5 +1,8 @@
 package game.bot.scripts.skills
 
+import engine.bot.coordinator.skill.CraftingScriptFactory
+import game.bot.scripts.trading.TradeBotScript
+import com.google.gson.JsonObject
 import api.bot.Suspendable.waitFor
 import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
@@ -23,6 +26,7 @@ import io.luna.util.RandomUtils.roll
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.hours
 
 /**
  * Tans hides by interacting with a tanner NPC.
@@ -30,6 +34,9 @@ import kotlin.time.Duration.Companion.seconds
  * This script searches the bot's bank for an untanned hide, withdraws enough coins and hides for one inventory cycle,
  * counts startup supplies across inventory and bank, then recalculates each withdrawal from bank stock after deposit.
  * It requests only missing hides or an unaffordable tanning fee, preserving existing wanted targets and metadata.
+ * Below the stable 100-200-hide startup goal, one market purchase or cow-collection session
+ * is queued before a bounded tanning retry. Producing and retaining at least 100 tanned
+ * hides enables a crafting continuation; pauses preserve progress without queuing it.
  * The script travels to a tanner, opens the tanning interface, and clicks the matching "tan all" button for the selected hide.
  * Carried coins must cover every carried hide before tan-all is attempted; otherwise another bank visit balances
  * the batch. Bank withdrawals use the inherited bounded, unnoted verification and must deliver both coins
@@ -43,12 +50,38 @@ import kotlin.time.Duration.Companion.seconds
 class TanHideBotScript(
     bot: Bot,
     duration: Duration,
-    zones: MutableList<SubZone> = mutableListOf(SubZone.AL_KHARID_BANK)
+    zones: MutableList<SubZone> = mutableListOf(SubZone.AL_KHARID_BANK),
+    private var allowGathering: Boolean = true
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
     companion object {
-        /** Saved tanning session configuration and inherited retry counters. @author lare96 */
-        class TanningData : InventoryScriptData()
+        /**
+         * Tanning progress and one-shot supply continuation, retained across saves.
+         *
+         * @author lare96
+         */
+        class TanningData : InventoryScriptData() {
+            var allowGathering = true
+            var started = false
+            var made = 0
+            var craftingQueued = false
+
+            override fun load(data: JsonObject) {
+                super.load(data)
+                allowGathering = data.get("allow_gathering")?.asBoolean ?: true
+                started = data.get("started")?.asBoolean ?: false
+                made = data.get("made")?.asInt ?: 0
+                craftingQueued = data.get("crafting_queued")?.asBoolean ?: false
+            }
+
+            override fun save(data: JsonObject) {
+                super.save(data)
+                data.addProperty("allow_gathering", allowGathering)
+                data.addProperty("started", started)
+                data.addProperty("made", made)
+                data.addProperty("crafting_queued", craftingQueued)
+            }
+        }
 
         /** Shared by all tanning scripts, with at most one entry per configured zone. */
         private val tanners = mutableMapOf<SubZone, Npc>()
@@ -73,6 +106,12 @@ class TanHideBotScript(
      */
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones) {
         if (data is InventoryScriptData) restoreInventoryState(data)
+        if (data is TanningData) {
+            allowGathering = data.allowGathering
+            started = data.started
+            made = data.made
+            craftingQueued = data.craftingQueued
+        }
     }
 
     /**
@@ -82,6 +121,9 @@ class TanHideBotScript(
      * interface button.
      */
     private var tanning: Hide? = null
+    private var started = false
+    private var made = 0
+    private var craftingQueued = false
 
     override suspend fun onInventoryBankRequested(): Boolean {
         if (tanning == null) return false
@@ -124,13 +166,36 @@ class TanHideBotScript(
         }
         if (!waitFor(3.seconds) { TanInterface::class in bot.overlays }) return false
         val button = TanInterface.hideToMakeAll[hide] ?: return false
-        output.clickButton(button)
-        return true
+        val before = bot.inventory.computeAmountForId(hide.tan)
+        try {
+            output.clickButton(button)
+            return waitFor(3.seconds) { bot.inventory.computeAmountForId(hide.tan) > before }
+        } finally {
+            made += (bot.inventory.computeAmountForId(hide.tan) - before).coerceAtLeast(0)
+        }
     }
 
     override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
 
-    override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
+    override fun withdraw(): List<Item> {
+        if (!started) {
+            val stock = Hide.HIDE_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
+            if (stock < CollectHidesBotScript.hideTarget(bot)) {
+                if (allowGathering) {
+                    allowGathering = false
+                    bot.scriptStack.softPushHead(TanHideBotScript(bot, duration, allowGathering = false))
+                    val supply = TradeBotScript.buySpecific(bot, CollectHidesBotScript.COWHIDE,
+                        CollectHidesBotScript.hideTarget(bot))
+                        ?: CraftingScriptFactory.getCollectHidesScript(bot, mutableListOf(), pickUpHides = true)
+                    bot.scriptStack.softPushHead(supply)
+                }
+                stop()
+                return emptyList()
+            }
+            started = true
+        }
+        return withdrawBatch(bankOnly = false)
+    }
 
     /**
      * Counts owned startup supplies, or bank-only supplies after deposit, and chooses an affordable partial batch.
@@ -166,12 +231,31 @@ class TanHideBotScript(
      */
     private fun requestMissingSupplies() {
         val ownedHides = Hide.entries.filter { bot.itemTracker.count(it.hide) > 0 }
-        if (ownedHides.isEmpty()) Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.raiseWantedItemTarget(it, 500) }
+        if (ownedHides.isEmpty()) Hide.HIDE_TO_HIDE.keys.forEach { bot.preferences.raiseWantedItemTarget(it, CollectHidesBotScript.hideTarget(bot)) }
         val minimumFee = ownedHides.minOfOrNull { it.cost } ?: Hide.SOFT_LEATHER.cost
         if (bot.itemTracker.count(995) < minimumFee) bot.preferences.raiseWantedItemTarget(995, 100_000)
     }
 
-    override fun snapshot(): TanningData = TanningData().also { saveInventoryState(it) }
+    override suspend fun finish() {
+        if (isPaused() || craftingQueued || made < 100) return
+        val leather = Hide.TAN_TO_HIDE.keys.sumOf { bot.itemTracker.count(it).toLong() }
+        if (leather < 100) return
+        val recipe = HideArmor.ALL.filter { armor ->
+            val hides = armor.hides ?: return@filter false
+            armor.level <= bot.crafting.staticLevel && bot.itemTracker.count(hides.first.tan) >= hides.second
+        }.maxWithOrNull(compareBy<HideArmor> { bot.itemTracker.count(it.hides!!.first.tan) }
+            .thenBy { it.level }) ?: return
+        craftingQueued = true
+        bot.scriptStack.softPushHead(CraftArmorBotScript(bot, recipe, 2.hours))
+    }
+
+    override fun snapshot(): TanningData = TanningData().also {
+        saveInventoryState(it)
+        it.allowGathering = allowGathering
+        it.started = started
+        it.made = made
+        it.craftingQueued = craftingQueued
+    }
 
     override suspend fun equipment(): BotGearLocator? {
         if (bot.personality.isIntelligent) {

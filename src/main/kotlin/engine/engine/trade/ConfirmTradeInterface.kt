@@ -84,7 +84,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
      * Invoked when [plr] clicks the "Accept" button on the confirmation screen.
      */
     fun accept(plr: Player) {
-        if (accepted) {
+        if (accepted || completed) {
             return
         }
 
@@ -92,18 +92,27 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             completed = true
             confirm.completed = true
 
-            plr.inventory.addAll(confirm.tradingItems)
-            other.inventory.addAll(tradingItems)
+            // Take both offers out before paying either side, so an error partway can't pay one out twice.
+            val otherItems = TradeItemContainer()
+            val plrItems = TradeItemContainer()
+            otherItems.addAll(confirm.tradingItems)
+            plrItems.addAll(tradingItems)
+            confirm.tradingItems.clear()
+            tradingItems.clear()
+            try {
+                plr.inventory.addAll(otherItems)
+                other.inventory.addAll(plrItems)
+            } finally {
+                plr.overlays.closeWindows()
+                other.overlays.closeWindows()
+            }
 
             // TODO@1.0 Prevent manipulation by making player trades not count if they're trading with someone they've
             //  traded with in the last <x> trades. The system should support a modifiable number of trades.
             world.economy.addTrade(CompletedTradeData(plr.username,
                                                       other.username,
-                                                      confirm.tradingItems,
-                                                      tradingItems))
-
-            plr.overlays.closeWindows()
-            other.overlays.closeWindows()
+                                                      otherItems,
+                                                      plrItems))
         } else {
             accepted = true
             plr.sendText("Waiting for other player...", 3535)

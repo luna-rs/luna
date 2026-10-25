@@ -11,6 +11,7 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.runecrafting.enterAltar.Altar
+import game.bot.scripts.skills.AgilityCourseTravel
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -116,6 +117,36 @@ enum class SubZone(
         inside = Position(2474, 3437),
         area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
         parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Barbarian course including its upper platform, entered through the northern pipe.
+     */
+    BARBARIAN_OUTPOST_AGILITY(
+        inside = Position(2551, 3554),
+        outside = { Position(2552, 3561) },
+        area = SimpleBoxArea.of(2530, 3540, 2555, 3558),
+        parent = { SEERS_VILLAGE }) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.barbarianPipe(bot, true)
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.barbarianPipe(bot, false)
+    },
+
+    /**
+     * Wilderness course north of the entrance ridge. Failure pits are recovered by the script.
+     */
+    WILDERNESS_AGILITY(
+        inside = Position(2998, 3933),
+        outside = { Position(2998, 3916) },
+        area = SimpleBoxArea.of(2990, 3933, 3008, 3968),
+        parent = { WILDERNESS }, plane = 0) {
+        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.wildernessRidge(bot, true)
+
+        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
+            AgilityCourseTravel.wildernessRidge(bot, false)
+    },
 
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(
@@ -286,7 +317,7 @@ enum class SubZone(
      * - 3 adamant
      */
     DWARVEN_MINE(
-        inside = Position( 3057, 9767),
+        inside = Position(3058, 9776),
         area = SimpleBoxArea.ofRadius(2959, 9753, 110, 104),
         parent = { FALADOR }),
 
@@ -355,6 +386,35 @@ enum class SubZone(
         inside = Position(2565, 3355),
         area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
         parent = { ARDOUGNE }),
+
+    /**
+     * The southern chaos druids in Yanille dungeon, reached from the stairs south of the bank.
+     * Includes the entrance landing and exit stairs without crossing the deeper dungeon obstacles.
+     */
+    YANILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2611, 9485),
+        outside = { Position(2606, 3078) },
+        area = SimpleBoxArea.ofRadius(2595, 9475, 27, 26),
+        parent = { YANILLE }),
+
+    /**
+     * Chaos druids in the Wilderness section of Edgeville Dungeon.
+     */
+    EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(3110, 9937),
+        outside = { Position(3096, 3468) },
+        area = SimpleBoxArea.ofRadius(3102, 9922, 24, 23),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Chaos druids in the eastern part of Taverley Dungeon, before the dusty-key door.
+     * The entrance ladder is at (2884, 3397), paired with the ladder at (2884, 9797).
+     */
+    TAVERLEY_DUNGEON_CHAOS_DRUIDS(
+        inside = Position(2933, 9849),
+        outside = { Position(2885, 3397) },
+        area = SimpleBoxArea.ofRadius(2926, 9843, 15, 13),
+        parent = { TAVERLY }),
 
     /**
      * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
@@ -1167,6 +1227,22 @@ enum class SubZone(
         inside = Position(3141, 3690),
         area = SimpleBoxArea.of(3120, 3690, 3155, 3721),
         parent = { WILDERNESS }),
+
+    /**
+     * The Wilderness Mage of Zamorak's roaming area, used before native Abyss entry.
+     */
+    ABYSS_ENTRY_MAGE(
+        inside = Position(3107, 3557),
+        area = SimpleBoxArea.of(3102, 3552, 3112, 3562),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Both Abyss rings. Runecrafting scripts use native mage, obstacle and rift interactions inside this footprint.
+     */
+    ABYSS(
+        inside = Position(3039, 4856),
+        area = SimpleBoxArea.ofRadius(3010, 4802, 61, 62),
+        parent = { EDGEVILLE }),
 
     /**
      * The Air Altar interior.

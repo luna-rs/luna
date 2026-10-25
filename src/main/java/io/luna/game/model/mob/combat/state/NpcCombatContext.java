@@ -9,7 +9,9 @@ import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
@@ -54,7 +56,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     /**
      * The retreating policy of this mob.
      */
-    private RetreatPolicy retreatPolicy = RetreatPolicy.NONE;
+    private RetreatPolicy retreatPolicy = RetreatPolicy.CONFIGURED;
 
     /**
      * The primary attack bonus type this NPC uses.
@@ -130,6 +132,14 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     @Override
+    public void reset() {
+        super.reset();
+        retreatPolicy = RetreatPolicy.CONFIGURED;
+        attackBonusType = null;
+        maxHit = -1;
+    }
+
+    @Override
     public int getDefaultMaxHit(CombatDamageType type) {
         return maxHit >= 0 ? maxHit : mob.combatDef().getMaximumHit();
     }
@@ -154,29 +164,42 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public boolean isAutoRetaliate() {
-        return true;
+        return !isRetreating();
     }
 
     @Override
     public boolean onCombatProcess(boolean reached) {
-        boolean retreat = false;
-        switch (retreatPolicy) {
-            case LOW_HEALTH:
-                if (mob.getHealthPercent() <= 25) {
-                    retreat = true;
-                }
-                break;
-            case DISTANCE:
-                if (!mob.getBasePosition().isViewable(mob)) {
-                    retreat = true;
-                }
-                break;
+        return !isRetreating() && (target == null || isWithinLeash(target));
+    }
+
+    @Override
+    public void retaliate(Mob enemy) {
+        if (enemy == null || !enemy.isAlive() || !mob.isAlive() || isDisabled() || isRetreating()) {
+            return;
         }
-        if (retreat) {
-            mob.getActions().submitIfAbsent(new NpcRetreatAction(mob));
-            return false;
+        boolean lowHealth = (retreatPolicy == RetreatPolicy.CONFIGURED || retreatPolicy == RetreatPolicy.LOW_HEALTH) &&
+                mob.getHealth() <= mob.combatDef().getMovement().retreatHitpoints();
+        CombatAction combatAction = mob.getActions().first(CombatAction.class);
+        boolean engaged = target != null && target.isAlive() && combatAction != null && !combatAction.isFinished();
+        if (enemy instanceof Player && (lowHealth || (!engaged && !isWithinLeash(enemy)))) {
+            mob.getActions().submitIfAbsent(new NpcRetreatAction(mob, enemy));
+        } else if (!engaged) {
+            attack(enemy);
         }
-        return true;
+    }
+
+    /**
+     * Checks the target against this NPC type's spawn-relative combat bounds.
+     * Explicit NONE and LOW_HEALTH policies retain their unrestricted chase behavior.
+     *
+     * @param enemy The proposed target.
+     * @return Whether this NPC may attack or pursue the target.
+     */
+    public boolean isWithinLeash(Mob enemy) {
+        if (retreatPolicy == RetreatPolicy.NONE || retreatPolicy == RetreatPolicy.LOW_HEALTH) {
+            return true;
+        }
+        return mob.combatDef().getMovement().containsTarget(mob.getBasePosition(), enemy.getPosition());
     }
 
     @Override
@@ -269,7 +292,8 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @return {@code true} if this NPC is retreating, otherwise {@code false}.
      */
     public boolean isRetreating() {
-        return mob.getActions().contains(NpcRetreatAction.class);
+        NpcRetreatAction action = mob.getActions().first(NpcRetreatAction.class);
+        return action != null && !action.isFinished();
     }
 
     /**

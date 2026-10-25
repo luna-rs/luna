@@ -446,18 +446,18 @@ public class WalkingNavigator {
     }
 
     /**
-     * Paths to a usable object interaction tile rather than the object's occupied origin. Reach is checked on the
-     * game thread using the same rotated footprint/access/collision rules as the eventual interaction. Try another
+     * Paths to a usable object or mob interaction tile rather than its occupied origin. Reach is checked on the
+     * game thread using the same footprint/access/collision rules as the eventual interaction. Try another
      * legal side if the nearest side has no complete route; retain a partial route for long-distance travel.
      */
-    CompletableFuture<Void> walkToObject(GameObject target, Optional<Direction> offsetDir,
+    CompletableFuture<Void> walkToInteraction(Entity target, Optional<Direction> offsetDir,
                                          GamePathfinder<Position> pathfinder, boolean async) {
         Position start = mob.getPosition();
         NavigationRequest request = active;
         int generation = pathGeneration.incrementAndGet();
-        List<Position> candidates = objectApproachPositions(target, offsetDir);
-        var search = async ? CompletableFuture.supplyAsync(() -> findObjectPath(start, candidates, pathfinder), pool) :
-                CompletableFuture.completedFuture(findObjectPath(start, candidates, pathfinder));
+        List<Position> candidates = interactionApproachPositions(target, offsetDir);
+        var search = async ? CompletableFuture.supplyAsync(() -> findInteractionPath(start, candidates, pathfinder), pool) :
+                CompletableFuture.completedFuture(findInteractionPath(start, candidates, pathfinder));
         var result = search.thenAcceptAsync(path -> {
             if (!isStale(start, request, generation)) {
                 mob.getWalking().replacePath(path);
@@ -540,8 +540,10 @@ public class WalkingNavigator {
                 .toList();
     }
 
-    /** Complete endpoints are preferred over a nearer side's fallback path. */
-    Deque<Position> findObjectPath(Position start, List<Position> candidates, GamePathfinder<Position> pathfinder) {
+    /**
+     * Complete endpoints are preferred over a nearer side's fallback path.
+     */
+    Deque<Position> findInteractionPath(Position start, List<Position> candidates, GamePathfinder<Position> pathfinder) {
         Deque<Position> partial = null;
         int partialDistance = Integer.MAX_VALUE;
         for (Position candidate : candidates) {

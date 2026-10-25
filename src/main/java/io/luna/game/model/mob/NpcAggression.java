@@ -116,6 +116,7 @@ public class NpcAggression {
     public void process() {
         if (attacker.getAggressionProfile() != null &&
                 !attacker.isLocked() &&
+                !attacker.getCombat().isRetreating() &&
                 attacker.getCombat().isAttackable() &&
                 attacker.getCombat().getTarget() == null) {
             scanPlayers(attacker.getWorld(), attacker.getAggressionProfile().getPolicy());
@@ -151,7 +152,7 @@ public class NpcAggression {
             if (ignored || radius > 0 && !victim.isWithinDistance(attacker, radius)) {
                 continue;
             }
-            if (attacker.getCombat().checkMultiCombat(victim) &&
+            if (attacker.getCombat().isWithinLeash(victim) && attacker.getCombat().checkMultiCombat(victim) &&
                     !isTolerantOf(victim) &&
                     checkPolicy(victim, policy) &&
                     victim.isAlive() &&

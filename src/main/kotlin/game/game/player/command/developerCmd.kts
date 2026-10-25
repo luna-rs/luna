@@ -18,6 +18,7 @@ import game.skill.smithing.BarType
 import io.luna.Luna
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.def.NpcDefinition
@@ -125,8 +126,7 @@ cmd("goto", RIGHTS_DEV) {
 cmd("rockcrabs") {
 
 }
-cmd("zonebots", RIGHTS_DEV) {// todo not working? craftarmorbotscript, https://i.imgur.com/LTo2YUn.png no fishing spots here?,
-   // todo check craftrunebotscript? some teleport areas incorrect?? (after air, etc.)
+cmd("zonebots", RIGHTS_DEV) {
     for (nextPlr in world.players) {
         if (nextPlr is Bot) {
             if (nextPlr.scriptStack.current() is ZonedBotScript) {
@@ -408,7 +408,7 @@ cmd("findnpc") {
     val name = getInputFrom(0)
     val choices = ArrayList<Position>()
     for (next in world.npcs) {
-        if (next.def().name.equals(name, true)) {
+        if (next.state == EntityState.ACTIVE && next.def().name.equals(name, true)) {
             choices += next.position
         }
     }

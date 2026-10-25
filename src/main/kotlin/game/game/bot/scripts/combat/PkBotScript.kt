@@ -4,6 +4,7 @@ import api.bot.Suspendable.delay
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatObservations
 import api.bot.action.PkLoadoutPreparation
+import engine.bot.coordinator.ScavengingCoordinator
 import api.bot.action.PkClanPolicy
 import api.bot.script.BotScript
 import api.bot.social.BotSocialInteractions
@@ -91,6 +92,22 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Shared PK bot constants.
      */
     companion object {
+
+        /**
+         * Shared patrol groups for hunting and supply-starved scavenging, retaining permanent PK purpose.
+         */
+        internal fun patrolGroups(bot: Bot): List<List<Position>> {
+            val groups = when (bot.preferences.pk?.purpose()) {
+                Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION })
+                Purpose.VALUE -> listOf(PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
+                    PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
+                    listOfNotNull(SubZone.KBD_LAIR.outside(bot)))
+                Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
+                    PkArea.DEMONIC_RUINS.anchors)
+                else -> PkArea.ALL.map { it.anchors }
+            }
+            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }.filter { it.isNotEmpty() }
+        }
 
         /**
          * The surface region immediately north of Edgeville, covering native Wilderness levels 1 through 8.
@@ -551,17 +568,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Wilderness; GENERIC retains the full existing area selection. Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
-        val groups = when (bot.preferences.pk?.purpose()) {
-            Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { allowsHuntingAt(it) })
-            Purpose.VALUE -> listOf(PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
-                PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
-                listOfNotNull(SubZone.KBD_LAIR.outside(bot)))
-            Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
-                PkArea.DEMONIC_RUINS.anchors)
-            else -> PkArea.ALL.map { it.anchors }
-        }
-        return groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }
-            .filter { it.isNotEmpty() }.random()
+        return patrolGroups(bot).random()
     }
 
     /**
@@ -616,6 +623,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             if (!ActionSafety.NON_COMBAT.allows(bot)) return false
             if (!preparation.prepare()) {
                 preparationState = PreparationState.LEAVING
+                ScavengingCoordinator.detour(bot, preparation)?.let { bot.scriptStack.softPushHead(it) }
                 return if (bot.inWilderness()) handler.combat.fleeWilderness() else true
             }
             preparationState = PreparationState.READY

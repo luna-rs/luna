@@ -58,8 +58,10 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
         /**
          * Quotes owned wealth, prices and protection once for a synchronous sequence of pack candidates.
          * The planner must discard this function before suspending; departure uses a fresh live assessment.
+         * An optional retention override prices forced skull/prayer-drain travel before those native effects occur.
          */
-        internal fun assessor(bot: Bot, losesItems: Boolean): (List<Item>, List<Item>, Boolean) -> PkRiskBudget {
+        internal fun assessor(bot: Bot, losesItems: Boolean,
+                              shareOverride: Int? = null, keepCountOverride: Int? = null): (List<Item>, List<Item>, Boolean) -> PkRiskBudget {
             val ownedInventory = bot.inventory.filterNotNull()
             val ownedEquipment = bot.equipment.filterNotNull()
             val bank = bot.bank.filterNotNull()
@@ -82,10 +84,10 @@ data class PkRiskBudget(val basisPoints: Int, val wealth: BigInteger, val deathL
             val ownedPouches = (ownedInventory + bank).filter { it.id in EssencePouch.ID_TO_POUCH }
                 .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }
             val wealth = value(ownedInventory + ownedEquipment + bank) + value(pouchContents(ownedPouches))
-            val share = if (bot.preferences.isSkiller || bot.preferences.pk == null) 0 else basisPoints(
+            val share = shareOverride?.coerceIn(0, 10_000) ?: if (bot.preferences.isSkiller || bot.preferences.pk == null) 0 else basisPoints(
                 bot.personality.confidence, bot.personality.intelligence,
                 bot.preferences.activities[BotActivity.PKING] ?: 0.0)
-            val keepCount = PlayerDeathItems.keepCount(bot)
+            val keepCount = keepCountOverride?.coerceIn(0, 4) ?: PlayerDeathItems.keepCount(bot)
             return { inventory, equipment, conservativeTies ->
                 val carriedPouches = inventory.filter { it.id in EssencePouch.ID_TO_POUCH }
                     .distinctBy { EssencePouch.ID_TO_POUCH[it.id] }

@@ -210,8 +210,15 @@ abstract class InventoryBotScript(
     protected var withdraw: List<Item> = emptyList()
         private set
 
+    /**
+     * Optional preparation before supply planning, including returning a resumed hazardous trip to safety.
+     * The shared initialization and quantity checks still run after this hook succeeds.
+     */
+    protected open suspend fun beforeInventoryInit(): Boolean = true
+
     final override suspend fun onInit(resumed: Boolean): Boolean {
         if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
+        if (!beforeInventoryInit()) return false
         startupSupplies = null
         withdraw = withdraw()
         if (isTerminated() || isPaused()) return false
