@@ -195,6 +195,9 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
            respawnTicks = 100,
            exp = 40.0,
            chance = 25 to 200),
+    // TODO Throne of Miscellania: the coal rocks on Miscellania (x 2526-2529, y 3890-3895) can't be mined before the
+    //  quest ("Hey! These are the King's coal rocks. You'll need his approval to make use of them."), and until the
+    //  kingdom's approval reaches 100% Miner Magnus takes the ore for the kingdom instead.
     COAL(rocks = listOf(2096 to 450,
                         2097 to 451,
                         4676 to 450,
