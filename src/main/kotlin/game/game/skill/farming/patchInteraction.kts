@@ -4,6 +4,7 @@ import api.predef.*
 import game.skill.farming.action.*
 import game.skill.farming.patch.*
 import game.skill.farming.seed.*
+import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.event.impl.*
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.*
@@ -11,12 +12,13 @@ import io.luna.game.model.mob.varp.*
 
 /**
  * Plants [crop] in the patch [objectId], if the patch is weeded and empty and the player has the level, the seeds and
- * a seed dibber.
+ * the patch's [FarmingPatch.plantTool].
  */
 fun plant(plr: Player, objectId: Int, crop: Crop) {
     val patch = Farming.findPatch(objectId, plr) ?: return
     val seeds = patch.seedsRequired
     val seedName = itemName(crop.seedId).lowercase()
+    val tool = patch.plantTool
     when {
         patch.needsRaking() -> plr.sendMessage("This patch needs weeding first.")
         patch.hasPlant() -> plr.sendMessage("There is already something growing in this patch.")
@@ -26,12 +28,21 @@ fun plant(plr: Player, objectId: Int, crop: Crop) {
         plr.inventory.computeAmountForId(crop.seedId) < seeds ->
             plr.sendMessage("You need $seeds ${seedName}s to plant this patch.")
 
-        !plr.inventory.contains(Farming.SEED_DIBBER) -> plr.sendMessage("You need a seed dibber to plant seeds.")
+        !plr.inventory.contains(tool) -> if (tool == Farming.SEED_DIBBER) {
+            plr.sendMessage("You need a seed dibber to plant seeds.")
+        } else {
+            plr.sendMessage("You need ${articleItemName(tool).lowercase()} to plant ${addArticle(seedName)}.")
+        }
+
         else -> {
-            plr.animation(Farming.SEED_DIBBING_ANIMATION)
+            plr.animation(patch.plantAnimation)
             plr.inventory.remove(Item(crop.seedId, seeds))
+            patch.plantLeftover?.let { plr.inventory.add(Item(it, seeds)) }
             patch.plant(crop, System.currentTimeMillis())
-            val planted = if (seeds == 1) "a $seedName" else "$seeds ${seedName}s"
+            if (patch.plantXpOnPlanting) {
+                plr.farming.addExperience(crop.plantXp)
+            }
+            val planted = if (seeds == 1) addArticle(seedName) else "$seeds ${seedName}s"
             plr.sendMessage("You plant $planted in the ${patch.patchName}.")
             Farming.commit(plr)
         }
@@ -99,15 +110,82 @@ fun cure(plr: Player, objectId: Int) {
     Farming.commit(plr)
 }
 
+/**
+ * Prunes the diseased tree in the tree patch [objectId] with secateurs or magic secateurs. Each attempt has a
+ * [TreePatch.PRUNE_CHANCE] of removing all of the diseased leaves.
+ */
+fun prune(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) as? TreePatch ?: return
+    if (!patch.diseased) {
+        plr.sendMessage("This tree doesn't need pruning.")
+        return
+    }
+    plr.animation(Farming.PRUNE_ANIMATION)
+    if (!rand(TreePatch.PRUNE_CHANCE)) {
+        plr.sendMessage("There are still some diseased leaves left.")
+        return
+    }
+    patch.cure()
+    plr.farming.addExperience(Farming.CURE_XP)
+    plr.sendMessage("You have successfully removed all the diseased leaves.")
+    Farming.commit(plr)
+}
+
+/**
+ * Handles the first option of the fully grown tree in the tree patch [objectId]: checking its health, which gives the
+ * tree's [Crop.harvestXp], or chopping it down once its health has been checked.
+ */
+fun treeOption(plr: Player, objectId: Int) {
+    val patch = Farming.findPatch(objectId, plr) as? TreePatch ?: return
+    val sapling = patch.crop as? TreeSapling ?: return
+    when {
+        patch.canCheckHealth() -> {
+            patch.checkHealth()
+            plr.farming.addExperience(sapling.harvestXp)
+            plr.sendMessage("You examine the tree for signs of disease and find that it is in perfect health.")
+            Farming.commit(plr)
+        }
+
+        patch.canChop() -> {
+            val axe = Axe.computeAxeType(plr)
+            if (axe == null) {
+                Axe.sendNoAxeMessages(plr)
+                return
+            }
+            plr.submitAction(ChopPatchTreeAction(plr, axe, patch, sapling))
+        }
+    }
+}
+
+/**
+ * Digs up the stump in the tree [patch], which gives the tree's roots and empties the patch.
+ */
+fun digStump(plr: Player, patch: TreePatch) {
+    val sapling = patch.crop as? TreeSapling ?: return
+    when {
+        patch.harvestReady() && !patch.stump -> plr.sendMessage("You need to chop this tree down first.")
+        !patch.stump -> return
+        !plr.inventory.hasSpaceFor(Item(sapling.roots)) -> plr.sendMessage("You don't have enough inventory space.")
+        else -> {
+            plr.animation(Farming.DIG_ANIMATION)
+            plr.inventory.add(Item(sapling.roots))
+            plr.sendMessage("You dig up the tree stump.")
+            patch.clear()
+            Farming.commit(plr)
+        }
+    }
+}
+
 Farming.LOCATIONS.forEach { location ->
     val objectId = location.objectId
+    val isTreePatch = location.createPatch() is TreePatch
 
     // Hook for raking patches
     useItem(Farming.RAKE).onObject(objectId) {
         plr.submitAction(RakePatchAction(plr, gameObject))
     }
 
-    // Hook for clearing dead crops
+    // Hook for clearing dead crops and digging up tree stumps
     useItem(Farming.SPADE).onObject(objectId) {
         val patch = Farming.findPatch(objectId, plr)
         if (patch != null && patch.dead) {
@@ -115,12 +193,18 @@ Farming.LOCATIONS.forEach { location ->
             plr.sendMessage("You clear the dead plants away.")
             patch.clear()
             Farming.commit(plr)
+        } else if (patch is TreePatch) {
+            digStump(plr, patch)
         }
     }
 
-    // Hook for harvesting
+    // Hook for harvesting, or checking the health of and chopping down trees
     object1(objectId) {
-        plr.submitAction(HarvestAction(plr, gameObject))
+        if (isTreePatch) {
+            treeOption(plr, objectId)
+        } else {
+            plr.submitAction(HarvestAction(plr, gameObject))
+        }
     }
 
     // Hook for planting seeds
@@ -141,8 +225,14 @@ Farming.LOCATIONS.forEach { location ->
         useItem(type.itemId).onObject(objectId) { compost(plr, objectId, type) }
     }
 
-    // Hook for curing diseased crops
-    useItem(Farming.PLANT_CURE).onObject(objectId) { cure(plr, objectId) }
+    // Hook for curing diseased crops, or pruning diseased trees
+    if (isTreePatch) {
+        listOf(Farming.SECATEURS, Farming.MAGIC_SECATEURS).forEach { secateurs ->
+            useItem(secateurs).onObject(objectId) { prune(plr, objectId) }
+        }
+    } else {
+        useItem(Farming.PLANT_CURE).onObject(objectId) { cure(plr, objectId) }
+    }
 }
 
 cmd("resetpatches", RIGHTS_ADMIN) {

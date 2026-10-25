@@ -120,8 +120,28 @@ abstract class FarmingPatch(val location: PatchLocation) {
     open val canBeWatered = false
 
     /**
+     * The tool required to plant allotments and herb patches.
+     */
+    open val plantTool = Farming.SEED_DIBBER
+
+    /**
+     * The item left over for every seed planted, or `null` if nothing is.
+     */
+    open val plantLeftover: Int? = null
+
+    /**
+     * The animation played when planting.
+     */
+    open val plantAnimation = Farming.SEED_DIBBING_ANIMATION
+
+    /**
+     * If the crop's [Crop.plantXp] is given when it is planted, instead of when the patch is fully harvested.
+     */
+    open val plantXpOnPlanting = false
+
+    /**
      * Determines if the crop can become diseased at [stage]. By default every stage can, except the seed and fully
-     * grown. An unchecked rule, it is not from the wiki.
+     * grown (wiki).
      */
     open fun canBeDiseased(stage: Int): Boolean {
         val stages = crop?.stages ?: return false
@@ -166,6 +186,31 @@ abstract class FarmingPatch(val location: PatchLocation) {
      */
     open fun onFullyHarvested() {
         reset(false)
+    }
+
+    /**
+     * Brings any timers of this patch other than its growth cycles up to date with [now], in epoch milliseconds. Called
+     * every time the patch is brought up to date, see [GrowthEngine]. By default there are none.
+     * @return True if the patch changed.
+     */
+    open fun advanceTimers(now: Long): Boolean = false
+
+    /**
+     * Called when the patch is reset, to reset any state a subclass adds. See [reset].
+     */
+    protected open fun onReset() {
+    }
+
+    /**
+     * Saves any state a subclass adds into [obj]. See [save].
+     */
+    protected open fun saveExtra(obj: JsonObject) {
+    }
+
+    /**
+     * Loads any state a subclass adds from [obj], previously written by [saveExtra]. See [load].
+     */
+    protected open fun loadExtra(obj: JsonObject) {
     }
 
     /**
@@ -340,6 +385,7 @@ abstract class FarmingPatch(val location: PatchLocation) {
         dead = false
         compost = CompostType.NONE
         harvestLives = 0
+        onReset()
     }
 
     /**
@@ -356,6 +402,7 @@ abstract class FarmingPatch(val location: PatchLocation) {
         obj.addProperty("compost", compost.name)
         obj.addProperty("harvest_lives", harvestLives)
         obj.addProperty("last_updated", lastUpdated)
+        saveExtra(obj)
         return obj
     }
 
@@ -373,5 +420,6 @@ abstract class FarmingPatch(val location: PatchLocation) {
         compost = CompostType.values().find { it.name == obj.get("compost")?.asString } ?: CompostType.NONE
         harvestLives = obj.get("harvest_lives")?.asInt ?: 0
         lastUpdated = obj.get("last_updated")?.asLong ?: 0L
+        loadExtra(obj)
     }
 }

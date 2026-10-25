@@ -20,17 +20,18 @@ object GrowthEngine {
 
     /**
      * Runs every weed or growth cycle of [patch] whose boundary has passed since it was last updated, then marks it
-     * as updated at [now], in epoch milliseconds. Growth stops early once the crop is fully grown or dead.
+     * as updated at [now], in epoch milliseconds. Growth stops early once the crop is fully grown or dead. The patch's
+     * other timers are brought up to date first, see [FarmingPatch.advanceTimers].
      *
      * @return True if the patch changed.
      */
     fun advance(patch: FarmingPatch, now: Long): Boolean {
         val last = patch.lastUpdated
         patch.lastUpdated = now
+        var changed = patch.advanceTimers(now)
         if (last <= 0L) {
-            return false
+            return changed
         }
-        var changed = false
         if (patch.hasPlant()) {
             val cycles = boundaries(last, now, patch.cycleMinutes)
             for (i in 0 until cycles) {

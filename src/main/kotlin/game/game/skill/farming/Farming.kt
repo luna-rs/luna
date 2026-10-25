@@ -31,6 +31,11 @@ object Farming {
     const val HERB_PATCH_VARP = 515
 
     /**
+     * The varp holding the state of the Taverley, Falador, Varrock and Lumbridge tree patches.
+     */
+    const val TREE_PATCH_VARP = 502
+
+    /**
      * The varp changed when using compost on a compost bin.
      */
     const val COMPOST_BIN_VARP = 511
@@ -59,6 +64,21 @@ object Farming {
      * The spade item id.
      */
     const val SPADE = 952
+
+    /**
+     * The secateurs item id.
+     */
+    const val SECATEURS = 5329
+
+    /**
+     * The magic secateurs item id.
+     */
+    const val MAGIC_SECATEURS = 7409
+
+    /**
+     * The empty plant pot item id, left over after planting a sapling.
+     */
+    const val PLANT_POT = 5350
 
     /**
      * The empty watering can item id.
@@ -116,6 +136,11 @@ object Farming {
     val COMPOST_ANIMATION = Animation(2283)
 
     /**
+     * The pruning animation, played when pruning a diseased tree.
+     */
+    val PRUNE_ANIMATION = Animation(2274)
+
+    /**
      * The spade digging animation, played when harvesting allotments and clearing dead crops.
      */
     val DIG_ANIMATION = Animation(830)
@@ -143,7 +168,8 @@ object Farming {
     /**
      * The location of every farming patch.
      */
-    val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values()
+    val LOCATIONS: List<PatchLocation> = AllotmentPatchLocation.values().toList() + HerbPatchLocation.values() +
+            TreePatchLocation.values()
 
     /**
      * The location of every farming patch, keyed by object id.
