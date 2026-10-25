@@ -105,6 +105,8 @@ object WebWalkDoorGenerator {
      */
     fun readDoors(directory: Path): List<DoorEntry> {
         val entries = ArrayList<DoorEntry>()
+        // Scripted crossings provide their own requirements and execution. A normal door edge would bypass them.
+        val crossings = SpecialCrossings.ALL.flatMap { it.closedObjectIds }.toSet()
         for ((file, type, swing) in DOOR_FILES) {
             val path = directory.resolve(file)
             if (!Files.exists(path)) {
@@ -112,6 +114,9 @@ object WebWalkDoorGenerator {
             }
             val doors = Files.newBufferedReader(path).use { JsonParser.parseReader(it).asJsonArray }
             for (door in doors.map { it.asJsonObject }) {
+                if (door.get("closed").asInt in crossings) {
+                    continue
+                }
                 val left = door.get("side")?.asString.equals("LEFT", true)
                 entries += DoorEntry(door.get("closed").asInt, door.get("open").asInt, type, swing, left)
             }

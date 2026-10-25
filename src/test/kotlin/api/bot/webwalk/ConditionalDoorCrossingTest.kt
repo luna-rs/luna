@@ -1,6 +1,8 @@
 package api.bot.webwalk
 
 import api.bot.webwalk.generate.SpecialCrossings
+import api.bot.webwalk.generate.WebWalkDoorGenerator
+import java.nio.file.Paths
 import api.bot.webwalk.plan.CapabilitySnapshot
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import api.bot.webwalk.walk.crossing.CrossingHandlers
@@ -14,6 +16,14 @@ import org.junit.jupiter.api.Test
  * @author lare96
  */
 class ConditionalDoorCrossingTest {
+
+    @Test
+    fun registeredConditionalDoorDoesNotProduceAnUnrestrictedRoute() {
+        val doors = WebWalkDoorGenerator.readDoors(Paths.get("data/game/world/doors"))
+        assertFalse(doors.any { it.closed == 2559 })
+        assertTrue(doors.any { it.closed == 1530 })
+        assertTrue(SpecialCrossings.YANILLE_DOOR.closedObjectIds.contains(2559))
+    }
 
     @Test
     fun yanilleExitIsFreeButEntryNeedsLevelAndLockpick() {

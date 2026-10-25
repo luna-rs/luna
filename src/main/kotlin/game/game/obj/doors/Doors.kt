@@ -2,6 +2,7 @@ package game.obj.doors
 
 import api.predef.*
 import api.predef.ext.*
+import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.*
 import io.luna.game.model.mob.*
 import io.luna.game.model.`object`.*
@@ -240,6 +241,10 @@ object Doors {
      * @param door The door that was clicked.
      */
     fun toggle(world: World, plr: Player, door: GameObject) {
+        if (door.id == YanilleDoorAction.DOOR) {
+            plr.submitAction(YanilleDoorAction(plr, door, false))
+            return
+        }
         if (door in passages) {
             return
         }
