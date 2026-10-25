@@ -40,8 +40,8 @@ class DegradableDropWarningDialogue(val index: Int, val itemId: Int) : DialogueI
      * Removes the item from the player's inventory and drops the result of its final degradation stage.
      *
      * The item's degradable set is resolved from [itemId], and the last entry in that chain is used to determine what
-     * should happen when the item is dropped. Any open windows are closed before the inventory slot at [index] is
-     * cleared.
+     * should happen when the item is dropped. Any open windows are closed first. If the inventory slot at [index] no
+     * longer holds [itemId], nothing is dropped; otherwise the slot is cleared.
      *
      * If the final degradable stage has a valid [DegradableItem.nextId], that item is spawned on the ground at the
      * player's position and the player is informed that the item degraded completely on drop. Otherwise, no ground
@@ -54,6 +54,9 @@ class DegradableDropWarningDialogue(val index: Int, val itemId: Int) : DialogueI
         val lastItem = set.items.last()
 
         plr.overlays.closeWindows()
+        if (plr.inventory[index]?.id != itemId) {
+            return
+        }
         plr.inventory[index] = null
         if (lastItem.nextId > 0) {
             world.addItem(lastItem.nextId, 1, plr.position, plr)
