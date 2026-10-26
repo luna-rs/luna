@@ -150,16 +150,17 @@ object BotReactions {
     }
 
     /**
-     * Makes a bot react to a kill. Killing a player, or a mob it sees as a threat, makes it happier and less greedy for
-     * 10 minutes.
+     * Makes a bot react to a kill. Killing a player increases happiness by 0.25 and reduces greed by 0.10 for one hour.
+     * Killing a threatening NPC increases happiness by 0.10 and reduces greed by 0.10 for ten minutes.
      *
      * @param killer The bot that made the kill.
      * @param victim The mob it killed.
      */
     fun reactToKill(killer: Bot, victim: Mob) {
         if (victim is Player || killer.actionHandler.combat.isThreat(victim)) {
-            val expire = minutesFromNow(10)
-            killer.emotions.add(EmotionalTrigger(EmotionType.HAPPY, 0.10, expire))
+            val playerKill = victim is Player
+            val expire = minutesFromNow(if (playerKill) 60 else 10)
+            killer.emotions.add(EmotionalTrigger(EmotionType.HAPPY, if (playerKill) 0.25 else 0.10, expire))
             killer.emotions.add(EmotionalTrigger(EmotionType.GREEDY, -0.10, expire))
         }
     }
