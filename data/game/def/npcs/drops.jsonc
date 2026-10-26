@@ -10224,7 +10224,13 @@
   },
   {
     "ids": [
-      181 // Chaos druid
+      181, // Chaos druid
+      188, // Monk of Zamorak
+      189, // Monk of Zamorak
+      190, // Monk of Zamorak
+      1044, // Monk of Zamorak
+      1045, // Monk of Zamorak
+      1046 // Monk of Zamorak
     ],
     "rare": "RARE",
     "drops": [
@@ -10887,44 +10893,6 @@
         "quantity": "2",
         "noted": false,
         "rarity": 0.0078125,
-        "table": 1
-      }
-    ]
-  },
-  {
-    "ids": [
-      188, // Monk of Zamorak
-      189, // Monk of Zamorak
-      190 // Monk of Zamorak
-    ],
-    "rare": null,
-    "drops": [
-      {
-        "id": 526, // Bones
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
-        "table": 1
-      },
-      {
-        "id": 1033, // Zamorak robe
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.05,
-        "table": 1
-      },
-      {
-        "id": 1035, // Zamorak robe
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.05,
-        "table": 1
-      },
-      {
-        "id": 2944, // Golden key
-        "quantity": "1",
-        "noted": false,
-        "rarity": 1.0,
         "table": 1
       }
     ]
@@ -15870,10 +15838,7 @@
   },
   {
     "ids": [
-      1043, // Will o' the wisp
-      1044, // Monk of Zamorak
-      1045, // Monk of Zamorak
-      1046 // Monk of Zamorak
+      1043 // Will o' the wisp
     ],
     "rare": "GEM",
     "drops": [
