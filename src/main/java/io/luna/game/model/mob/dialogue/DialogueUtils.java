@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -12,6 +15,20 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class DialogueUtils {
+
+    /**
+     * The pixel width of each printable character in the chat head font, starting from the space character.
+     */
+    private static final int[] CHAT_CHARACTER_WIDTHS = {
+            7, 4, 6, 8, 8, 14, 11, 3, 4, 4, 9, 7, 3, 5, 4, 7, 9, 6, 9, 9, 8, 9, 9, 7, 9, 9, 4, 4, 6, 6, 6, 7,
+            14, 9, 11, 10, 13, 12, 10, 11, 12, 7, 8, 12, 9, 15, 14, 12, 12, 12, 12, 9, 12, 11, 11, 16, 12, 11, 10, 4,
+            7, 4, 5, 8, 4, 7, 7, 7, 8, 7, 5, 8, 7, 3, 4, 7, 3, 12, 9, 7, 7, 7, 7, 6, 5, 9, 7, 10, 8, 9, 7, 5, 3, 5, 8
+    };
+
+    /**
+     * The widest a line of chat head text can be, in pixels.
+     */
+    private static final int CHAT_LINE_WIDTH = 380;
 
     /**
      * An immutable list of "Make item" model widgets.
@@ -226,5 +243,43 @@ public final class DialogueUtils {
      * Prevent instantiation.
      */
     private DialogueUtils() {
+    }
+
+    /**
+     * Splits {@code text} into chat head lines the way the game does, starting a new line whenever the next word
+     * wouldn't fit. Only needed where the text isn't known ahead of time, such as text that includes a name.
+     *
+     * @param text The text to split.
+     * @return The lines.
+     */
+    public static String[] splitChatLines(String text) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String longer = line.length() == 0 ? word : line + " " + word;
+            if (line.length() == 0 || computeChatWidth(longer) <= CHAT_LINE_WIDTH) {
+                line = new StringBuilder(longer);
+            } else {
+                lines.add(line.toString());
+                line = new StringBuilder(word);
+            }
+        }
+        lines.add(line.toString());
+        return lines.toArray(String[]::new);
+    }
+
+    /**
+     * Computes how wide {@code text} is in the chat head font, in pixels.
+     *
+     * @param text The text.
+     * @return The width.
+     */
+    private static int computeChatWidth(String text) {
+        int width = 0;
+        for (int index = 0; index < text.length(); index++) {
+            int character = text.charAt(index) - 32;
+            width += character >= 0 && character < CHAT_CHARACTER_WIDTHS.length ? CHAT_CHARACTER_WIDTHS[character] : 3;
+        }
+        return width;
     }
 }

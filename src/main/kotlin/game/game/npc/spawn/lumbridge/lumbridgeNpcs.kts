@@ -1,7 +1,6 @@
 package game.npc.spawn.lumbridge
 
 import api.predef.*
-import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
@@ -9,12 +8,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 // TODO@0.5.0 Make NPCs wander by file.
-
-npc1(521) {
-    plr.newDialogue()
-        .npc(targetNpc.id, "I'm the assistant!")
-        .then { it.overlays.open(ShopInterface(world, "General Store")) }.open()
-}
 
 // Hans dialogue
 npc1(0) {

@@ -1,111 +1,101 @@
 package game.npc.spawn.rellekka
 
+import api.attr.Attr
+import api.attr.getValue
+import api.attr.setValue
 import api.predef.*
 import api.shop.dsl.ShopHandler
+import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
-import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.DialogueUtils
+import io.luna.game.model.mob.dialogue.Expression
 
 /**
- * The [Npc] id for Sigmund The Merchant.
+ * Sigmund The Merchant's general store in Rellekka.
  */
-val SIGMUND_ID = 1282
-
-/**
- * The name of the shop.
- */
-val SHOP_NAME = "Sigmund the Merchant"
-
-/*
- * Registers Sigmund's shop in Rellekka. It is opened by the npc options below, so outerlanders can be turned away.
- */
-ShopHandler.create(SHOP_NAME) {
-    buy = BuyPolicy.EXISTING
-    restock = RestockPolicy.SLOW
+ShopHandler.create("Sigmund The Merchant") {
+    buy = BuyPolicy.ALL
+    restock = RestockPolicy.BALANCED
     currency = Currency.COINS
+    merchantsAccessOnly()
 
     sell {
-        "Tinderbox" x 2
-        "Rope" x 10
-        "Pestle and mortar" x 3
-        "Pot" x 3
-        "Cooked meat" x 2
-        "Bread" x 10
-        "Spade" x 10
-        "Candle" x 10
-        "Chisel" x 10
-        "Hammer" x 10
-        "Vial" x 10
-        "Vial of water" x 10
-        "Bucket" x 10
-        "Bucket of water" x 10
-        "Egg" x 10
-        "Potato" x 10
-        "Cabbage" x 10
+        "Tinderbox" x 2 every 500
+        "Rope" x 10 every 200
+        "Pestle and mortar" x 3 every 500
+        "Pot" x 3 every 500
+        "Cooked meat" x 2 every 500
+        "Bread" x 10 every 500
+        "Spade" x 10 every 500
+        "Candle" x 10 every 500
+        "Chisel" x 10 every 500
+        "Hammer" x 10 every 500
+        "Vial" x 10 every 500
+        "Vial of water" x 10 every 200
+        "Bucket" x 10 every 500
+        "Bucket of water" x 10 every 200
+        "Egg" x 10 every 200
+        "Potato" x 10 every 200
+        "Cabbage" x 10 every 200
+    }
+
+    open {
+        npc2 += 1282
     }
 }
 
-/*
- * Handles Sigmund's first npc option dialogue.
- *
- * Sigmund only speaks to Fremenniks, and turns outerlanders away.
+/**
+ * The first halves of the names given to new Fremennik.
  */
-npc1(SIGMUND_ID) {
-    if (Fremennik.isFremennik(plr)) {
-        // TODO The Fremennik Trials: address the player by their Fremennik name.
-        val name = plr.username
-        val sibling = if (plr.appearance.isFemale) "sister" else "brother"
-        plr.newDialogue()
-            .player("Hello there!")
-            .npc(
-                targetNpc.id,
-                "Greetings again $sibling $name!",
-                "What can I do for you this day?"
-            )
-            .options(
-                "Can I see your wares?",
-                {
-                    plr.newDialogue()
-                        .player("Can I see your wares?")
-                        .npc(targetNpc.id, "Certainly, $name.")
-                        .then { it.overlays.open(ShopInterface(world, SHOP_NAME)) }
-                        .open()
-                },
-                "Nothing thanks.",
-                {
-                    plr.newDialogue()
-                        .player("Nothing thanks.")
-                        .npc(
-                            targetNpc.id,
-                            "Well, feel free to stop by anytime that you wish",
-                            "$name. You are always welcome here!"
-                        )
-                        .open()
-                }
-            ).open()
-    } else {
-        plr.newDialogue()
-            .player("Hiya.")
-            .npc(
-                targetNpc.id,
-                "Hello outerlander. By the laws of our tribe, I am afraid",
-                "I may not speak to you without the express permission",
-                "of the chieftain."
-            )
-            .open()
+val NAME_STARTS = listOf("Rak", "Bal", "Bar", "Dal", "Dar", "Den", "Dok", "Jar", "Jik", "Lar", "Ral", "Ril", "Sig",
+                         "Tal", "Thor", "Ton")
+
+/**
+ * The second halves of the names given to new Fremennik.
+ */
+val NAME_ENDS = listOf("lak", "dar", "dor", "dur", "kal", "kar", "kir", "kur", "lah", "lim", "lor", "rak", "tin", "ton",
+                       "tor", "vald")
+
+/**
+ * The player's Fremennik name, or an empty string if they haven't been given one yet.
+ */
+var Player.fremennikName by Attr.string().persist("fremennik_name")
+
+/**
+ * Returns [plr]'s Fremennik name, giving them one first if they don't have one yet.
+ */
+fun nameOf(plr: Player): String {
+    if (plr.fremennikName.isEmpty()) {
+        plr.fremennikName = NAME_STARTS.random() + NAME_ENDS.random()
     }
+    return plr.fremennikName
 }
 
-/*
- * Handles Sigmund's "Trade" option.
- */
-npc2(SIGMUND_ID) {
-    if (Fremennik.isFremennik(plr)) {
-        plr.overlays.open(ShopInterface(world, SHOP_NAME))
-    } else {
-        plr.newDialogue()
-            .text("Only Fremenniks may trade with this merchant.")
-            .open()
-    }
+// Sigmund only trades with the Fremennik.
+// TODO Once The Fremennik Trials is added, turn away outerlanders and give players their Fremennik name when they
+//  finish the quest instead.
+npc1(1282) {
+    val name = nameOf(plr)
+    val kin = if (plr.appearance.isFemale) "sister" else "brother"
+    plr.newDialogue()
+        .player("Hello there!")
+        .npc(1282, Expression.QUIZZICAL,
+             *DialogueUtils.splitChatLines("Greetings again $kin $name! What can I do for you this day?"))
+        .options("Can I see your wares?", {
+            it.newDialogue()
+                .player(Expression.QUIZZICAL, "Can I see your wares?")
+                .npc(1282, Expression.HAPPY, "Certainly, $name.")
+                .then { GeneralStore.open(it, "Sigmund The Merchant") }
+                .open()
+        }, "Nothin thanks.", { // The option's missing letter is how it was in the 377 era.
+            it.newDialogue()
+                .player(Expression.HAPPY, "Nothing thanks.")
+                .npc(1282, Expression.HAPPY, *DialogueUtils.splitChatLines(
+                    "Well, feel free to stop by anytime that you wish $name. You are always welcome here!"))
+                .open()
+        })
+        .open()
 }

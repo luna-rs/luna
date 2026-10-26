@@ -17,15 +17,21 @@ class SellReceiver(private val shop: ShopReceiver, private val noted: Boolean) {
     /**
      * Adds an item to the shop.
      */
-    infix fun String.x(amount: Int) {
-        Item.findId(this, noted).x(amount)
-    }
+    infix fun String.x(amount: Int) = Item.findId(this, noted).x(amount)
 
     /**
      * Adds an item to the shop.
      */
     infix fun Int.x(amount: Int) =
         shop.addItem(this, amount, amount)
+
+    /**
+     * Sets how many ticks it takes to restock one of this item, for example `"Pot" x 5 every 10`.
+     */
+    infix fun ShopHandler.PendingShopItem.every(ticks: Int) {
+        require(ticks > 0) { "Restock rate must be > 0." }
+        restockRate = ticks
+    }
 
     /**
      * Adds an item to the shop.
