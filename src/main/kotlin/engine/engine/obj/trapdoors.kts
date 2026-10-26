@@ -314,13 +314,6 @@ object2(4173) {
     change(gameObject, 4174, TRAPDOOR_TICKS)
 }
 
-// Castle Wars, down from the team respawn rooms.
-for (id in listOf(4471, 4472)) {
-    object1(id) {
-        climbDown(plr, floorsDown(1).from(gameObject.position, plr.position), message = null, bend = false, delay = 0)
-    }
-}
-
 // Ape Atoll temple, into the dungeon below (Monkey Madness).
 object1(4879) {
     val trapdoor = gameObject

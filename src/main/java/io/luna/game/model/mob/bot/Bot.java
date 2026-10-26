@@ -70,8 +70,6 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Bot extends Player {
 
-    // TODO@0.5.0 Optional debugging mode for bots that allows player updating processing (for stress testing).
-
     /**
      * The logger used for bot lifecycle events and diagnostic messages.
      */
@@ -337,6 +335,9 @@ public final class Bot extends Player {
      */
     private ImmutableSet<SubZone> localSubZones = ImmutableSet.of();
 
+    /**
+     * Locally scoped ground items tracked for this bot by the item activation and deactivation callbacks.
+     */
     private final Set<GroundItem> viewableItems = new HashSet<>();
 
     /**
@@ -491,7 +492,6 @@ public final class Bot extends Player {
                 preferences.getScavenging().advance(getTimePlayed().toMillis());
                 if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();
             }
-            // TODO@1.0 Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
             // Process speech before scripts so we can still talk while doing anything.
             speechStack.process();
 
@@ -773,8 +773,15 @@ public final class Bot extends Player {
         this.localSubZones = localSubZones;
     }
 
-    // todo test, docs
-    public Set<GroundItem> getViewableItems() { // faster than using the locator
+    /**
+     * Returns the live, mutable set of locally scoped ground items tracked for this bot.
+     * <p>
+     * Ground-item lifecycle callbacks maintain this set. Looting scripts use it as a source of candidates and must
+     * still check each item's current state, visibility and distance before attempting to take it.
+     *
+     * @return The tracked ground-item set, not a snapshot or a complete locator search result.
+     */
+    public Set<GroundItem> getViewableItems() {
         return viewableItems;
     }
 }

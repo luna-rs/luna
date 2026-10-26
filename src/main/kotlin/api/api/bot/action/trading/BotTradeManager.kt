@@ -256,7 +256,7 @@ object BotTradeManager {
                     }
                 }
             }
-            return candidates
+            return BotTradeSelection.order(candidates)
         }
 
         // Otherwise, sell any surplus of wanted items we can.
@@ -277,9 +277,23 @@ object BotTradeManager {
                 }
             }
         }
-        return candidates
+        return BotTradeSelection.order(candidates)
     }
 
+
+    /**
+     * Uses market history within usability, wanted-priority, and minimum-stock urgency tiers before
+     * allocating the purchase budget. Merchant quotes retain their existing usability and priority tiers.
+     */
+    internal fun prioritizePurchases(bot: Bot, candidates: List<BotTradeItem>): List<BotTradeItem> =
+        BotTradeSelection.order(candidates)
+            .sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
+                .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 }
+                .thenByDescending {
+                    val wanted = bot.preferences.getWantedItem(it.item.id)
+                    it.purpose == BotTradePurpose.BUY && wanted != null && wanted.min != -1 &&
+                        bot.totalItemAmount(it.item.id) < wanted.min
+                })
 
     /**
      * Builds candidate wanted items for normal or merchant buying.
@@ -312,8 +326,7 @@ object BotTradeManager {
                 else guide / 2
                 candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
             }
-            return candidates.sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
-                .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 })
+            return prioritizePurchases(bot, candidates)
         }
 
         // Otherwise, buy any wanted items we need to acquire.
@@ -340,7 +353,7 @@ object BotTradeManager {
                                                bot)
                 }
             }
-            return candidates
+            return prioritizePurchases(bot, candidates)
         }
     }
 

@@ -93,6 +93,13 @@ abstract class InventoryBotScript(
     protected var bankFailures = 0
         private set
 
+    /**
+     * Starts a fresh interaction budget after an activity abandons a work site. Banking failures are retained.
+     */
+    protected fun resetProductionFailures() {
+        failures = 0
+    }
+
     /** Restores retry state; duration and zones are supplied to the script constructor. */
     protected fun restoreInventoryState(data: InventoryScriptData) {
         failures = data.failures

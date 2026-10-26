@@ -12,6 +12,9 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.movement.NavigationRequest;
+import io.luna.game.model.mob.movement.NavigationResult;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * An {@link Action} that drives a mob's active combat loop against its current
@@ -45,6 +48,12 @@ public final class CombatAction extends Action<Mob> {
     private Position lastProgressPosition;
     private Mob pendingTarget;
     private int stalledTicks;
+
+    /**
+     * Identifies the player navigation request used by this combat action. Cleanup compares the pending result by
+     * identity so that a newer movement request is not cancelled when this combat action ends.
+     */
+    private CompletableFuture<NavigationResult> playerPursuit;
 
     /**
      * Creates a new {@link CombatAction} for the specified mob.
@@ -158,11 +167,28 @@ public final class CombatAction extends Action<Mob> {
                 navigator.cancel();
                 mob.getWalking().clear();
             }
+            playerPursuit = null;
             return;
         }
         if (!navigator.isFollowing(target, policy)) {
             var request = NavigationRequest.builder(mob).policy(policy).continuous(true).target(target).build();
             navigator.submit(request);
+        }
+        playerPursuit = navigator.getCurrentPending();
+    }
+
+    /**
+     * Cancels this combat action's active player chase and queued steps, including paths still being computed.
+     * A replacement request belongs to a newer movement command and is left untouched.
+     */
+    private void cancelPlayerPursuit() {
+        if (playerPursuit != null) {
+            var navigator = mob.getNavigator();
+            if (navigator.getCurrentPending() == playerPursuit) {
+                navigator.cancel();
+                mob.getWalking().clear();
+            }
+            playerPursuit = null;
         }
     }
 
@@ -197,9 +223,6 @@ public final class CombatAction extends Action<Mob> {
             stalledTicks++;
         }
         if (stalledTicks >= MAX_STALLED_TICKS && !combat.inCombat()) {
-            if (target.equals(mob.getNavigator().getCurrentTarget()) && mob.getNavigator().isCurrentContinuous()) {
-                mob.getNavigator().cancel();
-            }
             return clearTarget();
         }
         return false;
@@ -207,6 +230,7 @@ public final class CombatAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
+        cancelPlayerPursuit();
         combat.onCombatFinished();
         combat.setTarget(null);
         combat.setAutoRetaliateTarget(null);
@@ -236,12 +260,14 @@ public final class CombatAction extends Action<Mob> {
 
     /**
      * Clears the current combat target without performing full combat teardown.
+     * Cancels pursuit immediately even if the combat timer keeps this action alive for subsequent ticks.
      * <p>
      * The remaining cleanup is expected to occur when the action finishes.
      *
      * @return {@code true} if the action should finish now, otherwise {@code false}.
      */
     private boolean clearTarget() {
+        cancelPlayerPursuit();
         if (mob instanceof Npc) {
             PursuitAction pursuit = mob.getActions().first(PursuitAction.class);
             if (pursuit != null && !pursuit.isFinished()) {

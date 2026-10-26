@@ -28,6 +28,7 @@ import io.luna.util.parser.impl.ItemNicknameDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.WantedItemDefinitionFileParser;
+import io.luna.util.parser.impl.ItemEconomyDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
@@ -251,6 +252,7 @@ public final class LunaServer {
 
         // Wait for cache decoders after launch tasks (keeps startup ordering deterministic).
         context.getCache().waitForDecoders();
+        new ItemEconomyDefinitionFileParser().run();
     }
 
     /**

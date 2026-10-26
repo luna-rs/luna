@@ -2,6 +2,7 @@ package io.luna.game.model.item.economy;
 
 import io.luna.Luna;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.def.ItemEconomyDefinition;
 import io.luna.game.model.item.Item;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -39,7 +40,8 @@ public final class ItemPriceData {
     /**
      * Computes the starting economy guide price for an item.
      * <p>
-     * The item's definition value is used as the base price, then clamped to the configured economy minimum. Stackable
+     * An optional economy definition overrides the item's base value for new prices only. The result is clamped to
+     * the configured economy minimum. Notes inherit their base item's override. Stackable
      * items use {@code minimumStackablePrice}; non-stackable items use {@code minimumPrice}.
      *
      * @param id The item id to compute a starting price for.
@@ -47,7 +49,10 @@ public final class ItemPriceData {
      */
     public static int computeInitialPrice(int id) {
         ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        return Math.max(def.getValue(), def.isStackable() ? Luna.settings().economy().minimumStackablePrice() :
+        def = ItemDefinition.ALL.retrieve(def.getUnnotedId().orElse(id));
+        var economy = ItemEconomyDefinition.ALL.get(def.id()).orElse(null);
+        int initialPrice = economy != null && economy.getInitialPrice() != null ? economy.getInitialPrice() : def.getValue();
+        return Math.max(initialPrice, def.isStackable() ? Luna.settings().economy().minimumStackablePrice() :
                 Luna.settings().economy().minimumPrice());
     }
 

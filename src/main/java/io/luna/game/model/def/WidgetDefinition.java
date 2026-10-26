@@ -17,67 +17,78 @@ import io.luna.net.msg.out.WidgetVisibilityMessageWriter;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A {@link Definition} implementation representing data for an interface-based widget.
+ * Server-side metadata decoded from a 377 client interface widget.
+ * <p>
+ * Stores the widget's numeric identity, type, child ids, CS1 instruction blocks, item options, text and animation ids.
+ * Layout and rendering details such as coordinates, fonts, colors and sprites remain client-side.
  *
  * @author lare96
  */
 public final class WidgetDefinition implements Definition {
 
     /**
-     * An enum representing the different widget types.
+     * Widget kinds identified by the numeric type stored in the 377 interface cache.
      */
     public enum WidgetType {
 
         /**
-         * Holds a potentially scrollable interface with child widgets, may also hold hidden widgets. An example of
-         * this is the {@link QuestJournalInterface}. Visibility of hidden widget(s) can be toggled with
-         * {@link WidgetVisibilityMessageWriter}. These types of widgets are also used with
-         * {@link InventoryOverlayMessageWriter}.
+         * A container of positioned child widgets, optionally scrollable or hidden until hovered.
+         * {@link QuestJournalInterface} is one example. Hidden containers can be controlled with
+         * {@link WidgetVisibilityMessageWriter}; {@link InventoryOverlayMessageWriter} opens an interface as an
+         * inventory overlay.
          */
-        DEFAULT(0),
+        CONTAINER(0),
 
         /**
-         * Holds a range of items with option actions. Items can be displayed using {@link WidgetIndexedItemsMessageWriter} or
-         * {@link WidgetItemsMessageWriter}. The option actions can be handled by intercepting one of the
-         * {@link WidgetItemClickEvent} implementations.
+         * A legacy type decoded with additional fields and text-style settings. The 377 client has no normal
+         * rendering branch for this type.
          */
-        ITEMS_WITH_ACTIONS(2),
+        LEGACY(1),
 
         /**
-         * Holds a space that can be filled with a color.
+         * A grid of item icons and quantities with optional item actions and dragging behavior.
+         * Contents can be updated with {@link WidgetIndexedItemsMessageWriter} or {@link WidgetItemsMessageWriter}.
+         * Item actions are delivered through {@link WidgetItemClickEvent} implementations.
          */
-        COLOR(3),
+        ITEM_GRID(2),
 
         /**
-         * Holds a string of text. Can be modified with {@link WidgetTextMessageWriter}.
+         * A filled or outlined rectangle with enabled, disabled and hover colors.
+         */
+        RECTANGLE(3),
+
+        /**
+         * Text with font, alignment, shadow and state-dependent text and colors.
+         * Text can be updated with {@link WidgetTextMessageWriter}.
          */
         TEXT(4),
 
         /**
-         * Holds two static images (enabled and disabled).
+         * A two-dimensional sprite selected from enabled and disabled images.
          */
-        STATIC_MODEL(5),
+        SPRITE(5),
 
         /**
-         * Holds a model. A model can be displayed using {@link WidgetItemModelMessageWriter} or
-         * {@link WidgetMobModelMessageWriter}. The displayed model can be animated using
-         * {@link WidgetAnimationMessageWriter}.
+         * A three-dimensional model with state-dependent model and animation ids, zoom and rotation.
+         * Models can be updated with {@link WidgetItemModelMessageWriter} or {@link WidgetMobModelMessageWriter},
+         * and animated with {@link WidgetAnimationMessageWriter}.
          */
         MODEL(6),
 
         /**
-         * Holds item models similar to {@link #ITEMS_WITH_ACTIONS}. Seems to only be used by the trading and
-         * dueling interfaces.
+         * A grid of item names and quantities rendered as text rather than item icons.
+         * Contents can be updated with {@link WidgetIndexedItemsMessageWriter} or {@link WidgetItemsMessageWriter}.
          */
-        UNKNOWN(7), // TODO@0.5.0 Item list? Find out more from interface editor.
+        ITEM_LIST(7),
 
         /**
-         * Holds a string of text on a fullscreen interface. Can be modified with {@link WidgetTextMessageWriter}.
+         * A delayed hover tooltip rendered as text inside a bordered background box.
+         * Its text supports CS1 substitutions and can be updated with {@link WidgetTextMessageWriter}.
          */
-        FULLSCREEN_TEXT(8);
+        TOOLTIP(8);
 
         /**
-         * An immutable map of opcodes to instances.
+         * An immutable map of numeric cache type ids to widget kinds.
          */
         public static final ImmutableMap<Integer, WidgetType> ALL;
 
@@ -90,21 +101,21 @@ public final class WidgetDefinition implements Definition {
         }
 
         /**
-         * The widget type opcode.
+         * The numeric widget type id stored in the cache.
          */
         private final int opcode;
 
         /**
-         * Creates a new {@link WidgetDefinition}.
+         * Creates a new {@link WidgetType}.
          *
-         * @param opcode The widget type opcode.
+         * @param opcode The numeric widget type id stored in the cache.
          */
         WidgetType(int opcode) {
             this.opcode = opcode;
         }
 
         /**
-         * @return The widget type opcode.
+         * @return The numeric widget type id stored in the cache.
          */
         public int getOpcode() {
             return opcode;
@@ -112,7 +123,7 @@ public final class WidgetDefinition implements Definition {
     }
 
     /**
-     * The repository that will hold these definitions.
+     * The repository of decoded widget definitions.
      */
     public static final DefinitionRepository<WidgetDefinition> ALL = new ArrayDefinitionRepository<>(18_786);
 
@@ -122,7 +133,7 @@ public final class WidgetDefinition implements Definition {
     private final int id;
 
     /**
-     * The parent widget id.
+     * The parent interface id, or {@code -1} when no parent is specified.
      */
     private final int parentId;
 
@@ -132,42 +143,42 @@ public final class WidgetDefinition implements Definition {
     private final WidgetType type;
 
     /**
-     * The CS1 opcodes.
+     * CS1 instruction blocks evaluated by the client for widget expressions.
      */
     private final int[][] cs1opcodes;
 
     /**
-     * The widget children.
+     * The immutable list of child widget ids in cache order.
      */
     private final ImmutableList<Integer> children;
 
     /**
-     * If this widget is an inventory.
+     * The inventory flag retained by the decoder for text item lists.
      */
     private final boolean inventory;
 
     /**
-     * The widget action click options.
+     * The immutable list of item-slot option labels in cache order.
      */
     private final ImmutableList<String> options;
 
     /**
-     * The disabled text on the widget.
+     * Text used when the widget's CS1 conditions are not met, or the tooltip text for type 8.
      */
     private final String disabledText;
 
     /**
-     * The enabled text on the widget.
+     * Alternate text used when the widget's CS1 conditions are met.
      */
     private final String enabledText;
 
     /**
-     * The disabled animation on the widget.
+     * The model animation id used when CS1 conditions are not met, or {@code -1} for no animation on model widgets.
      */
     private final int disabledAnimation;
 
     /**
-     * The enabled animation on the widget.
+     * The model animation id used when CS1 conditions are met, or {@code -1} for no animation on model widgets.
      */
     private final int enabledAnimation;
 
@@ -175,13 +186,13 @@ public final class WidgetDefinition implements Definition {
      * Creates a new {@link WidgetDefinition}.
      *
      * @param id The widget id.
-     * @param parentId The parent widget id.
+     * @param parentId The parent interface id, or {@code -1} when unspecified.
      * @param type The widget type.
-     * @param cs1opcodes The CS1 opcodes.
-     * @param children The widget children.
-     * @param inventory If this widget is an inventory.
-     * @param options The widget action click options.
-     * @param disabledText The disabled text on the widget
+     * @param cs1opcodes The client-side CS1 instruction blocks.
+     * @param children The child widget ids, copied into an immutable list.
+     * @param inventory The inventory flag retained by the decoder.
+     * @param options The item-slot option labels, copied into an immutable list.
+     * @param disabledText The default or disabled-state text.
      * @param enabledText The enabled text on the widget.
      * @param disabledAnimation The disabled animation on the widget.
      * @param enabledAnimation The enabled animation on the widget.
@@ -226,7 +237,7 @@ public final class WidgetDefinition implements Definition {
     }
 
     /**
-     * @return The parent widget id.
+     * @return The parent interface id, or {@code -1} when unspecified.
      */
     public int getParentId() {
         return parentId;
@@ -240,56 +251,61 @@ public final class WidgetDefinition implements Definition {
     }
 
     /**
-     * @return The CS1 data at {@code csIndex} and {@code dataIndex}.
+     * Returns an instruction value from a CS1 block.
+     *
+     * @param csIndex The instruction block index.
+     * @param dataIndex The value index within the block.
+     * @return The instruction value at the supplied indexes.
+     * @throws ArrayIndexOutOfBoundsException If either index is outside its array bounds.
      */
     public int getCs1(int csIndex, int dataIndex) {
         return cs1opcodes[csIndex][dataIndex];
     }
 
     /**
-     * @return The widget children.
+     * @return The immutable list of child widget ids in cache order.
      */
     public ImmutableList<Integer> getChildren() {
         return children;
     }
 
     /**
-     * @return If this widget is an inventory.
+     * @return The inventory flag retained by the decoder for text item lists.
      */
     public boolean isInventory() {
         return inventory;
     }
 
     /**
-     * @return The widget action click options.
+     * @return The immutable list of item-slot option labels in cache order.
      */
     public ImmutableList<String> getOptions() {
         return options;
     }
 
     /**
-     * @return The disabled text on the widget.
+     * @return The default or disabled-state text, including tooltip text for type 8.
      */
     public String getDisabledText() {
         return disabledText;
     }
 
     /**
-     * @return The enabled text on the widget.
+     * @return The alternate text used when CS1 conditions are met.
      */
     public String getEnabledText() {
         return enabledText;
     }
 
     /**
-     * @return The disabled animation on the widget.
+     * @return The disabled-state model animation id, or {@code -1} for no animation on model widgets.
      */
     public int getDisabledAnimation() {
         return disabledAnimation;
     }
 
     /**
-     * @return The enabled animation on the widget.
+     * @return The enabled-state model animation id, or {@code -1} for no animation on model widgets.
      */
     public int getEnabledAnimation() {
         return enabledAnimation;

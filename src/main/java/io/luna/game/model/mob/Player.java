@@ -3,6 +3,7 @@ package io.luna.game.model.mob;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import engine.controllers.WildernessLocatableController;
+import engine.player.sounds.PlayerHitSounds;
 import game.player.Messages;
 import game.player.Sound;
 import io.luna.Luna;
@@ -414,18 +415,7 @@ public class Player extends Mob {
 
     @Override
     public void onHit(Hit hit) {
-        // TODO@0.5.0 Do more research into combat sounds, when different sound effects play.
-
-        /*  if (hit.getDamage() > 0) {
-          playRandomSound(
-                    Sound.TAKE_DAMAGE,
-                    Sound.TAKE_DAMAGE_2,
-                    Sound.TAKE_DAMAGE_3,
-                    Sound.TAKE_DAMAGE_4
-            );
-        } else {
-            //playSound(Sound.UNARMED_BLOCK);
-        }*/
+        PlayerHitSounds.INSTANCE.play(this, hit);
         plugins.post(new DamageReceivedEvent(this, hit));
     }
 

@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
+import game.combat.BarrowsEquipmentSet;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.AmmoDefinition;
@@ -41,6 +42,11 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      * The ammunition or thrown weapon's poison definition captured before consumption, or {@code null} if unpoisoned.
      */
     private EquipmentPoisonDefinition poison;
+
+    /**
+     * The complete Barrows set captured before consuming ammunition.
+     */
+    private BarrowsEquipmentSet barrowsSet;
 
     /**
      * The ammunition definition captured before consumption, retained for special attacks and delayed secondary hits.
@@ -132,6 +138,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
 
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
+        barrowsSet = BarrowsEquipmentSet.find(attacker);
         PlayerCombatContext combat = attacker.getCombat();
         attackStance = combat.getStance();
         AmmoDefinition loadedAmmo = combat.getAmmoDef();
@@ -152,6 +159,10 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
 
     @Override
     public void onDamageApplied(CombatDamage damage) {
+        super.onDamageApplied(damage);
+        if (barrowsSet != null) {
+            barrowsSet.onDamageApplied(damage);
+        }
         awardDamageExperience(damage);
         int rawAmount = Math.max(0, damage.getRawAmount());
         if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {

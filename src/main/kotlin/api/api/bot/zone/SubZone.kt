@@ -1489,6 +1489,39 @@ enum class SubZone(
         parent = { FALADOR }),
 
     /**
+     * South-Ardougne Zamorak monks. Bounds cover the configured spawn positions and five-tile wandering.
+     */
+    SOUTH_ARDOUGNE_ZAMORAK_MONKS(
+        inside = Position(2465, 3248),
+        area = SimpleBoxArea.of(2449, 3233, 2482, 3253),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Taverley Dungeon's stronger Zamorak monks, using their existing spawn and wandering footprint.
+     */
+    TAVERLEY_DUNGEON_ZAMORAK_MONKS(
+        inside = Position(2829, 9808),
+        area = SimpleBoxArea.of(2820, 9800, 2839, 9819),
+        parent = { TAVERLY }),
+
+    /**
+     * Varrock's Zamorak monk and its configured five-tile wandering area.
+     */
+    VARROCK_ZAMORAK_TEMPLE(
+        inside = Position(3213, 3476),
+        area = SimpleBoxArea.of(3208, 3471, 3218, 3481),
+        parent = { VARROCK }),
+
+    /**
+     * Paterdomus Zamorak monks on both configured floors. The ground-floor anchor uses existing travel;
+     * normal plane-aware target searches select only monks reachable on the bot's current floor.
+     */
+    PATERDOMUS_ZAMORAK_MONKS(
+        inside = Position(3411, 3489),
+        area = SimpleBoxArea.of(3405, 3479, 3421, 3498),
+        parent = { VARROCK }),
+
+    /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
      * training and telegrabbing wines money-making method.
      * - Zamorak wine
@@ -1583,7 +1616,7 @@ enum class SubZone(
     },
 
     /*
-     * Level 20 Wilderness chaos temple.
+     * Level 12 Wilderness chaos temple.
      *
      * Used for:
      * - Telegrabbing wines money-making method.
@@ -1591,7 +1624,7 @@ enum class SubZone(
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_20_WILDERNESS_CHAOS_TEMPLE(
+    LVL_12_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(3239, 3619),
         area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
         parent = { EDGEVILLE }),
@@ -1612,7 +1645,7 @@ enum class SubZone(
      */
     LVL_40_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(2956, 3820),
-        area = SimpleBoxArea.ofRadius(2946, 3813, 13, 14),
+        area = SimpleBoxArea.ofRadius(2943, 3813, 16, 14),
         parent = { EDGEVILLE });
 
     companion object {

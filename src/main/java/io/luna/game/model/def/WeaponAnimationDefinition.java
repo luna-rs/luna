@@ -72,7 +72,7 @@ public final class WeaponAnimationDefinition {
     private final EnumMap<CombatStyle, Pair<Integer, Integer>> styles;
 
     /**
-     * The equipped model data used by weapons assigned to this definition.
+     * The equipped model data, or {@code null} to retain the weapon type's default model animations.
      */
     private final WeaponModelDefinition model;
 
@@ -81,7 +81,7 @@ public final class WeaponAnimationDefinition {
      *
      * @param ids The weapon item IDs that use this definition.
      * @param styles The combat style animation mappings.
-     * @param model The equipped weapon model data.
+     * @param model The equipped weapon model data, or {@code null} to retain the weapon type's defaults.
      */
     public WeaponAnimationDefinition(ImmutableSet<Integer> ids, EnumMap<CombatStyle, Pair<Integer, Integer>> styles,
                                      WeaponModelDefinition model) {
@@ -129,7 +129,7 @@ public final class WeaponAnimationDefinition {
     }
 
     /**
-     * @return The equipped weapon model data.
+     * @return The equipped weapon model data, or {@code null} to retain the weapon type's defaults.
      */
     public WeaponModelDefinition getModel() {
         return model;

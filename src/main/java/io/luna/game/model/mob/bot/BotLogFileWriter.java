@@ -1,23 +1,29 @@
 package io.luna.game.model.mob.bot;
 
+import io.luna.game.model.mob.bot.BotLogManager.FileSizePreference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Applies asynchronous writes to a single bot log file in the same order they were requested.
  * <p>
  * Requested writes are queued and applied by at most one writer task at a time, so they can never race each other,
  * even on an executor with many threads. Consecutive appends are batched into a single file write.
+ * A bounded file is reset before an append would exceed its limit; old file contents are discarded.
  *
  * @author lare96
  * @author TheLining
@@ -75,6 +81,27 @@ final class BotLogFileWriter {
      * Whether a writer task is scheduled or running. Only the task holding this flag touches the file.
      */
     private final AtomicBoolean writerScheduled = new AtomicBoolean();
+
+    /**
+     * The size policy read once at the start of each file write.
+     */
+    private volatile FileSizePreference fileSizePreference = FileSizePreference.REGULAR;
+
+    /**
+     * Sets the policy enforced by subsequent writes, without performing file I/O on the calling thread.
+     *
+     * @param preference The new non-null size preference.
+     */
+    void setFileSizePreference(FileSizePreference preference) {
+        fileSizePreference = requireNonNull(preference, "File size preference cannot be null.");
+    }
+
+    /**
+     * @return The current file size preference.
+     */
+    FileSizePreference getFileSizePreference() {
+        return fileSizePreference;
+    }
 
     /**
      * Creates a new {@link BotLogFileWriter}.
@@ -172,6 +199,9 @@ final class BotLogFileWriter {
 
     /**
      * Writes {@code text} to the log file, creating the file and its parent directories if needed.
+     * <p>
+     * The current preference limits both appends and overwrites in UTF-8 bytes. An append that would exceed the
+     * limit starts a fresh file. A single oversized write is clipped to the limit without splitting a UTF-8 character.
      *
      * @param text The text to write.
      * @param mode {@link StandardOpenOption#APPEND} or {@link StandardOpenOption#TRUNCATE_EXISTING}.
@@ -184,7 +214,20 @@ final class BotLogFileWriter {
             if (parent != null && !Files.exists(parent)) {
                 Files.createDirectories(parent);
             }
-            Files.writeString(path, text, mode, StandardOpenOption.CREATE);
+            long maxBytes = fileSizePreference.getMaxBytes();
+            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+            if (bytes.length > maxBytes) {
+                int end = Math.toIntExact(maxBytes);
+                while (end > 0 && (bytes[end] & 0xC0) == 0x80) {
+                    end--;
+                }
+                bytes = Arrays.copyOf(bytes, end);
+                mode = StandardOpenOption.TRUNCATE_EXISTING;
+            } else if (mode == StandardOpenOption.APPEND && Files.exists(path) &&
+                    Files.size(path) > maxBytes - bytes.length) {
+                mode = StandardOpenOption.TRUNCATE_EXISTING;
+            }
+            Files.write(path, bytes, mode, StandardOpenOption.CREATE);
             return true;
         } catch (IOException | RuntimeException e) {
             logger.catching(e);

@@ -47,14 +47,6 @@ public class BotBrain {
         if (bot.getPreferences().getScavenging().isIntroductory()) {
             return ScavengingCoordinator.INSTANCE;
         }
-        /*
-         * TODO@0.5.0 Add more bias:
-         * - Check if bot needs any items within its preferences before selecting.
-         * - Which activities have we not done recently?
-         * - What context signals are active?
-         * - Does the bot have everything needed for this activity?
-         * - Should activity weights decay or use cooldowns?
-         */
         var map = new HashMap<>(bot.getPreferences().getActivities());
         if (bot.getTimePlayed().toDays() < 2) {
             // New bots have an additional chance to do combat activities.

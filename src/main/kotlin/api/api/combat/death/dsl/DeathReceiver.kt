@@ -6,6 +6,8 @@ import api.drops.MergedDropTable
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
+import game.content.treasureTrails.TreasureTrails
+import game.content.treasureTrails.EasyClues
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.GroundItem
@@ -87,6 +89,7 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
     fun DeathReceiver<Npc>.drop() {
         val source = receiver.source
         val victim = receiver.victim
+        if (source is Player) TreasureTrails.drop(source, victim)
         val table = getDropTable(victim)
         if (table != null) {
             val itemList = table.roll(victim, source)
@@ -96,7 +99,13 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
                 ChunkUpdatableView.globalView()
 
             var reacted = false
-            for (item in itemList) {
+            var clueDropped = false
+            for (rolledItem in itemList) {
+                val item = TreasureTrails.nativeDrop(source as? Player, victim.id, rolledItem) ?: continue
+                if (item.id in EasyClues.trailItems) {
+                    if (clueDropped) continue
+                    clueDropped = true
+                }
                 if (source is Bot && item.itemDef.value > 10_000 && !reacted) { // TODO@0.5.0 Use economy value.
                     // React to receiving a rare drop.
                     BotReactions.reactToRareDrop(source, item)

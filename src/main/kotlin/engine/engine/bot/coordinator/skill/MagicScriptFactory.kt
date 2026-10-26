@@ -9,6 +9,7 @@ import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.BonesToFoodBotScript
+import game.bot.scripts.skills.TelegrabBotScript
 import game.skill.magic.bonesToItems.BonesToItemsType
 import game.skill.magic.chargeOrb.ChargeOrbType
 import game.skill.magic.lowHighAlch.AlchemyType
@@ -19,7 +20,7 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates bot scripts used to train Magic.
  *
- * Magic currently shares its activity selection between normal and profit-oriented training.
+ * Production selection is shared by training and profit; Telegrab gathering is restricted to profit selection.
  * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
  * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
  * then enable superheating when both skill requirements are met. Owned normal bones and spell costs can prepare
@@ -36,10 +37,19 @@ import io.luna.game.model.mob.bot.Bot
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        return getProfitScript(bot, level, zones)
+        return getProductionScript(bot, level)
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
+        if (telegrab.isEligible()) return telegrab
+        return getProductionScript(bot, level)
+    }
+
+    /**
+     * Retains the existing production and fallback order without selecting profit-only gathering in training.
+     */
+    private fun getProductionScript(bot: Bot, level: Int): BotScript {
         getOrbScript(bot, level)?.let { return it }
         getEnchantScript(bot, level)?.let { return it }
         getSuperheatScript(bot, level)?.let { return it }

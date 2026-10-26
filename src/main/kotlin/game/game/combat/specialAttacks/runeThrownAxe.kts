@@ -131,6 +131,7 @@ fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatD
  *
  * Each rebound validates attackability, controller permission, and multi-combat eligibility before paying its energy
  * cost and displaying a projectile. After the travel delay, it applies damage and schedules the next rebound.
+ * Each rebound target enters combat at launch, independent of accuracy or its auto-retaliate setting.
  * Ineligible candidates are skipped without spending energy or consuming a rebound. Exhausted targets, exhausted
  * attacks, or insufficient energy end the chain and unlock the bar.
  * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
@@ -167,6 +168,7 @@ fun handleChainHit(
             return
         }
         val nextDamage = source.calculateDamage(nextVictim)
+        nextVictim.combat.markAttackedBy(attacker)
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
             override fun run(): Boolean {

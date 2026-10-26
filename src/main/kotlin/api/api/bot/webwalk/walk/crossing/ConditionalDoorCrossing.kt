@@ -5,6 +5,8 @@ import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.walk.LegContext
 import api.predef.*
 import game.content.miningGuild.MiningGuild
+import game.content.craftingGuild.CraftingGuild
+import game.obj.doors.Doors
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import kotlin.time.Duration.Companion.seconds
 
@@ -21,7 +23,7 @@ object ConditionalDoorCrossing : CrossingHandler {
         val action = leg.action ?: return "the leg has no object"
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
-        if (id != YanilleDoorAction.DOOR && id != MiningGuild.DOOR) {
+        if (id != YanilleDoorAction.DOOR && id != MiningGuild.DOOR && id != CraftingGuild.DOOR) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
@@ -42,6 +44,10 @@ object ConditionalDoorCrossing : CrossingHandler {
             }
             if (id == MiningGuild.DOOR && bot.mining.level < MiningGuild.REQUIRED_LEVEL) {
                 return "the door requires level 60 Mining"
+            }
+            if (id == CraftingGuild.DOOR && Doors.isEntering(position, door.direction, bot.position) &&
+                !CraftingGuild.canEnter(bot)) {
+                return "the door requires level 40 Crafting and a worn brown apron"
             }
             if (!context.handler.interactions.interactOnLeg(if (picking) 2 else 1, door)) {
                 return "could not reach door $id at $position"

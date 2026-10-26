@@ -18,6 +18,7 @@ import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
+import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.LootItemReflexScript
@@ -282,6 +283,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private var restingSince: Long? = null
 
+    /**
+     * Whether the bot already reacted to getting away during this escape, so resting at home doesn't repeat it.
+     */
+    private var reactedToEscape = false
+
     override suspend fun init(resumed: Boolean): Boolean {
         startedAt = System.currentTimeMillis()
         if (running) {
@@ -476,7 +482,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 running = true
             }
         } else if (nervous) {
+            val inWilderness = bot.inWilderness()
             handler.combat.fleeCombat()
+            if (inWilderness && !bot.inWilderness()) BotReactions.reactToEscape(bot)
             if (usesPkSwitching) stop()
         }
     }
@@ -544,8 +552,9 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * there until the combat timer runs out and the attacker drops it. In the Wilderness, or when nearly dead, the bot
      * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
      * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
-     * up on the fight; otherwise it teleports home. Outside the Wilderness, a bot that teleports home remembers where it
-     * was attacked so its work keeps it away from there for a while, and waits at home until it has the energy to run.
+     * up on the fight; otherwise it teleports home. A bot that gets away reacts to it ([BotReactions.reactToEscape]).
+     * Outside the Wilderness, a bot that teleports home remembers where it was attacked so its work keeps it away from
+     * there for a while, and waits at home until it has the energy to run.
      *
      * @return `true` once the bot is out of combat and done waiting.
      */
@@ -554,12 +563,21 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
             (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
-            if (!isResting()) return true
-            delay(1.seconds)
-            return false
+            // React once, on getting away, while health still shows how close it was.
+            if (!reactedToEscape) {
+                BotReactions.reactToEscape(bot)
+                reactedToEscape = true
+            }
+            if (isResting()) {
+                delay(1.seconds)
+                return false
+            }
+            reactedToEscape = false
+            return true
         }
         if (bot.inWilderness()) {
             handler.combat.fleeCombat()
+            if (!bot.inWilderness()) BotReactions.reactToEscape(bot)
             return true
         }
         // Auto retaliate would turn the bot back toward whatever hits it.

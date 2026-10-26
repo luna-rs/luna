@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import game.content.treasureTrails.TrailPuzzle;
 import io.luna.game.event.impl.ItemClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFifthClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent;
@@ -64,11 +65,16 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
         if (event.getInterfaceId() == 3214) {
             return player.getInventory().contains(event.getIndex(), event.getId());
         }
+        if (event instanceof ItemFifthClickEvent && event.getInterfaceId() == 6980) {
+            return TrailPuzzle.INSTANCE.validClick(player, event.getIndex(), event.getId());
+        }
         return false;
     }
 
     @Override
     public void handle(Player player, ItemClickEvent event){
-        player.getOverlays().closeWindows();
+        if (event.getInterfaceId() != 6980) {
+            player.getOverlays().closeWindows();
+        }
     }
 }

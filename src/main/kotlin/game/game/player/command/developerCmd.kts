@@ -524,7 +524,7 @@ cmd("npcanim") {
     val npcId = asInt(0)
     val animationId = asInt(1)
 
-    var npc = world.locator.findNearestNpc(plr) { it.id == npcId }
+    var npc = world.locator.findNearestNpc(plr, Position.VIEWING_DISTANCE) { it.id == npcId }
     if (npc == null) {
         npc = world.addNpc(npcId, plr.position.x, plr.position.y)
         world.scheduleOnce(5) {

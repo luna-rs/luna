@@ -23,7 +23,7 @@ public final class MagicOnGroundItemMessageReader extends GameMessageReader<Magi
         int itemY = msg.getPayload().getShort(false);
         int spellId = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int itemX = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
-        GroundItem groundItem = player.getWorld().getItems().findAll(new Position(itemX, itemY)).
+        GroundItem groundItem = player.getWorld().getItems().findAll(new Position(itemX, itemY, player.getPosition().getZ())).
                 filter(item -> item.getId() == itemId && item.isVisibleTo(player)).
                 findFirst().orElse(null);
         return new MagicOnGroundItemEvent(player, spellId, groundItem);

@@ -48,8 +48,10 @@ fun validManualSpell(player: Player, spellId: Int): CombatSpellDefinition? {
 }
 
 // "Attack" context menu option on players.
-on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target -> getInteraction(plr, target) }) {
-    if (plr.combat.isAttackable && targetPlr.combat.isAttackable) {
+on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { plr, target ->
+    if (plr.contextMenu.contains(OPTION_ATTACK)) getInteraction(plr, target) else InteractionPolicy.STANDARD_SIZE
+}) {
+    if (plr.contextMenu.contains(OPTION_ATTACK) && plr.combat.isAttackable && targetPlr.combat.isAttackable) {
         plr.combat.attack(targetPlr)
     }
 }

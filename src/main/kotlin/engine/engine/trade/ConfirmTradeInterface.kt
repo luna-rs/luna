@@ -89,6 +89,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         }
 
         if (confirm.accepted) {
+            val plrReaction = WantedTradeReaction.capture(plr, tradingItems)
+            val otherReaction = WantedTradeReaction.capture(other, confirm.tradingItems)
             completed = true
             confirm.completed = true
 
@@ -102,6 +104,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             try {
                 plr.inventory.addAll(otherItems)
                 other.inventory.addAll(plrItems)
+                plrReaction?.complete()
+                otherReaction?.complete()
             } finally {
                 plr.overlays.closeWindows()
                 other.overlays.closeWindows()

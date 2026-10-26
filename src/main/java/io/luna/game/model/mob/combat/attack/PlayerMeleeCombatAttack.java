@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
+import game.combat.BarrowsEquipmentSet;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
 import io.luna.game.model.item.Equipment;
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
+import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
@@ -37,6 +39,11 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
      * The weapon's poison definition captured at attack time, or {@code null} for an unpoisoned weapon.
      */
     private EquipmentPoisonDefinition poison;
+
+    /**
+     * The complete Barrows set captured before resolving this swing.
+     */
+    private BarrowsEquipmentSet barrowsSet;
 
     /**
      * The chance for a successful melee hit from a poisonous weapon to apply poison.
@@ -80,6 +87,16 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
     }
 
     @Override
+    public CombatDamage calculateDamage(Mob other) {
+        barrowsSet = BarrowsEquipmentSet.find(attacker);
+        CombatDamageRequest.Builder request = CombatDamageRequest.builder(attacker, other, CombatDamageType.MELEE);
+        if (barrowsSet != null) {
+            barrowsSet.modifyMeleeRequest(attacker, request);
+        }
+        return request.build().resolve();
+    }
+
+    @Override
     public CombatDamage onAttack(CombatDamage damage) {
         attackStance = attacker.getCombat().getStance();
         int weaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
@@ -89,6 +106,9 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
 
     @Override
     public void onDamageApplied(CombatDamage damage) {
+        if (barrowsSet != null) {
+            barrowsSet.onDamageApplied(damage);
+        }
 
         // Attempt to poison if our equipped weapon is poisonous and we've dealt damage.
         int rawAmount = Math.max(0, damage.getRawAmount());

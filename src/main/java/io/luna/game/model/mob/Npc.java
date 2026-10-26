@@ -347,7 +347,8 @@ public class Npc extends Mob {
 
     /**
      * Sets the NPC's combat-related skills (attack, strength, defence, ranged, magic, hitpoints) based on its current
-     * {@link NpcCombatDefinition}, if one is present.
+     * {@link NpcCombatDefinition}, if one is present. Base levels are established before dynamic levels so later
+     * combat damage and drains can recover toward the definition values.
      */
     private void setSkills() {
         // Set the attack, strength, defence, ranged, and magic levels.
@@ -358,6 +359,13 @@ public class Npc extends Mob {
             Skill ranged = skill(Skill.RANGED);
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
+
+            attack.setStaticLevel(def.getAttackLevel());
+            strength.setStaticLevel(def.getStrengthLevel());
+            defence.setStaticLevel(def.getDefenceLevel());
+            ranged.setStaticLevel(def.getRangedLevel());
+            magic.setStaticLevel(def.getMagicLevel());
+            hitpoints.setStaticLevel(def.getHitpoints());
 
             attack.setLevel(def.getAttackLevel());
             strength.setLevel(def.getStrengthLevel());

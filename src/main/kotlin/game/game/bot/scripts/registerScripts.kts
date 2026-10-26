@@ -13,6 +13,9 @@ import engine.bot.coordinator.ProgressiveCoordinator.ProgressiveScript.Progressi
 import engine.bot.speech.BotConversationPool
 import engine.bot.speech.BotScamSpeechPool
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
+import game.bot.scripts.CastleWarsBotScript.MatchData
+import game.bot.scripts.GamesRoomBotScript.BoardGameData
+import game.bot.scripts.TreasureTrailBotScript.Companion.TrailData
 import game.bot.scripts.DropPartyBotScript.PartyData
 import game.bot.scripts.IdleBotScript.IdleData
 import game.bot.scripts.skills.AgilityBotScript
@@ -103,6 +106,8 @@ import game.bot.scripts.skills.StringJewelleryBotScript.Companion.JewelleryData
 import game.bot.scripts.skills.StringBowBotScript.Companion.StringBowData
 import game.bot.scripts.skills.HerbGatheringScript
 import game.bot.scripts.skills.HerbGatheringScript.Companion.GatheringData
+import game.bot.scripts.skills.TelegrabBotScript
+import game.bot.scripts.skills.TelegrabBotScript.Companion.TelegrabData
 import game.bot.scripts.skills.TanHideBotScript
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
@@ -119,12 +124,16 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
     scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }
+    scriptManager.addScript<TelegrabData>(TelegrabBotScript::class) { bot, data -> TelegrabBotScript(bot, data) }
     scriptManager.addScript<PkData>(PkBotScript::class) { bot, data -> PkBotScript(bot, data) }
     scriptManager.addScript<ProgressionData>(ProgressiveScript::class) { bot, data -> ProgressiveScript(bot, data) }
     scriptManager.addScript<IdleData>(IdleBotScript::class) { bot, data -> IdleBotScript(bot, data) }
     scriptManager.addScript<DonationData>(DepositPartyRoomItemBotScript::class) { bot, data -> DepositPartyRoomItemBotScript(bot, data) }
     scriptManager.addScript<PartyData>(DropPartyBotScript::class) { bot, data -> DropPartyBotScript(bot, data) }
+    scriptManager.addScript<MatchData>(CastleWarsBotScript::class) { bot, data -> CastleWarsBotScript(bot, data) }
+    scriptManager.addScript<BoardGameData>(GamesRoomBotScript::class) { bot, data -> GamesRoomBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
     scriptManager.addScript<LampData>(UseLampBotScript::class) { bot, data -> UseLampBotScript(bot, data) }

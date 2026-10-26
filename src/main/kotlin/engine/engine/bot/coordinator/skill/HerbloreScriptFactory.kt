@@ -4,9 +4,11 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.IdentifyHerbBotScript
 import game.bot.scripts.skills.GrindIngredientBotScript
 import game.bot.scripts.skills.MakePotionBotScript
+import game.bot.scripts.skills.TelegrabBotScript
 import game.skill.herblore.makePotion.FinishedPotion
 import game.bot.scripts.skills.MakeUnfPotionBotScript
 import game.skill.herblore.grindIngredient.Ingredient
@@ -39,12 +41,26 @@ object HerbloreScriptFactory : SkillingScriptFactory(SKILL_HERBLORE) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         val selectionLevel = ensureMinimumLevel(bot, level)
         getProductionScript(bot, selectionLevel, true)?.let { return it }
+        getIngredientGatheringScript(bot)?.let { return it }
         return IdentifyHerbBotScript(bot, Herb.GUAM_LEAF, getDuration(bot))
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         val selectionLevel = ensureMinimumLevel(bot, level)
-        return getProductionScript(bot, selectionLevel, false) ?: getTrainingScript(bot, selectionLevel, zones)
+        return getProductionScript(bot, selectionLevel, false) ?: getIngredientGatheringScript(bot) ?:
+            getTrainingScript(bot, selectionLevel, zones)
+    }
+
+    /**
+     * Gathers missing ranging-potion wine when the bot owns unfinished potions but cannot mix them yet.
+     * This is a Herblore supply activity; ordinary Magic training never selects the trip.
+     */
+    internal fun getIngredientGatheringScript(bot: Bot): TelegrabBotScript? {
+        val potion = FinishedPotion.RANGING_POTION
+        if (bot.herblore.staticLevel < potion.level || bot.itemTracker.count(potion.unf) < 1 ||
+            bot.itemTracker.count(potion.secondary) > 0) return null
+        return TelegrabBotScript(bot, TelegrabBotScript.WINE, false, getDuration(bot), TelegrabBotScript.wineZones(bot))
+            .takeIf { it.isEligible() }
     }
 
     /**

@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import io.luna.Luna;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.def.ItemEconomyDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.util.GsonUtils;
 import kotlin.Triple;
@@ -158,6 +159,17 @@ public final class WorldEconomy extends AbstractScheduledService {
         }
         lastPricesAmount = prices.size();
         logger.info("A total of {} economy prices have been loaded.", box(lastPricesAmount));
+        initializeDefinitions();
+    }
+
+    /**
+     * Makes configured items available to marketplace consumers immediately after saved prices are loaded.
+     * Missing snapshots enter the normal persistence queues; existing JSON or SQL snapshots remain authoritative.
+     */
+    void initializeDefinitions() {
+        for (ItemEconomyDefinition definition : ItemEconomyDefinition.ALL) {
+            resolvePriceData(definition.id());
+        }
     }
 
     /**
@@ -295,6 +307,25 @@ public final class WorldEconomy extends AbstractScheduledService {
      */
     public long getPrice(int id) {
         return (long) Math.floor(getRealPrice(id));
+    }
+
+    /**
+     * Returns observed popularity plus a fading initial seed without creating or changing price snapshots.
+     * Notes share their base item's history. Coins and untradeable items have no market popularity.
+     *
+     * @param id The item ID.
+     * @return The effective popularity used for bot item selection.
+     */
+    public double getPopularity(int id) {
+        var item = ItemDefinition.ALL.retrieve(id);
+        if (id == 995 || !item.isTradeable()) {
+            return 0.0;
+        }
+        int baseId = item.getUnnotedId().orElse(id);
+        var data = prices.get(baseId);
+        long samples = data == null ? 0L : Math.max(0L, data.samples);
+        var definition = ItemEconomyDefinition.ALL.get(baseId).orElse(null);
+        return definition == null ? samples : definition.computePopularity(samples);
     }
 
     /**

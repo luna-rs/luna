@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import game.player.Sound;
+import game.combat.BarrowsEquipmentSet;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
@@ -9,6 +10,7 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
+import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.state.PlayerMagicCombat;
 
@@ -23,6 +25,11 @@ import java.util.function.BiFunction;
  * Ordinary spellbook casts use the same five-tick attack delay for manual casting and autocasting.
  * Base spell experience is awarded when casting; damage experience is awarded after the hit is delivered and capped
  * to the victim's remaining health.
+ * Defensive casts award 1.33 Magic and 1 Defence experience per damage instead of the ordinary 2 Magic experience.
+ * The casting stance is retained for every hit from the spell, including secondary targets and equipment changes
+ * during flight. Base spell experience and Hitpoints experience are unaffected by the stance.
+ * Standard stat-draining curses reject already-drained targets and barricades before consuming runes or granting
+ * cast experience. Rejected manual selections are cleared so the failed spell cannot leak into a later attack.
  *
  * @author lare96
  */
@@ -32,6 +39,16 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
      * The player's magic combat state.
      */
     protected final PlayerMagicCombat magic;
+
+    /**
+     * Whether defensive casting was selected when this spell was successfully cast.
+     */
+    private boolean defensiveCasting;
+
+    /**
+     * The complete Barrows set captured when the spell is successfully cast.
+     */
+    private BarrowsEquipmentSet barrowsSet;
 
     /**
      * Creates a new {@link PlayerMagicCombatAttack} from a spell definition.
@@ -81,11 +98,17 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
+        if (!magic.canCurseTarget(spellEffect, victim)) {
+            magic.setSelectedSpell(CombatSpellDefinition.NONE);
+            return null;
+        }
         if (!magic.removeRunes(spellEffect)) {
             // Cancel attack, we don't meet requirements.
             return null;
         }
+        defensiveCasting = attacker.getCombat().getStance() == CombatStance.DEFENSIVE;
 
+        barrowsSet = BarrowsEquipmentSet.find(attacker);
         if (magic.getSelectedSpell() != CombatSpellDefinition.NONE) {
             // Remove target so we don't automatically keep attacking (how it functions on OSRS).
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
@@ -100,8 +123,16 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
     @Override
     public void onDamageApplied(CombatDamage damage) {
         super.onDamageApplied(damage);
+        if (barrowsSet != null) {
+            barrowsSet.onDamageApplied(damage);
+        }
         int rawAmount = Math.max(0, damage.getRawAmount());
-        attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
+        if (defensiveCasting) {
+            attacker.skill(Skill.MAGIC).addExperience(rawAmount * 1.33);
+            attacker.skill(Skill.DEFENCE).addExperience(rawAmount);
+        } else {
+            attacker.skill(Skill.MAGIC).addExperience(rawAmount * 2);
+        }
         attacker.skill(Skill.HITPOINTS).addExperience(rawAmount * 1.33);
     }
 

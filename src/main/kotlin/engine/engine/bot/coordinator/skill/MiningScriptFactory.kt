@@ -13,7 +13,8 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Mining methods keep each mine's rocks together with its access and personality preferences.
  * Training retains iron-focused efficient personalities and broader casual routes. Profit progresses
- * from essence/basic ores to gold, coal, and high-tier metals. The guild is preferred once accessible.
+ * from essence/basic ores to gold, coal, gems, and high-tier metals. Shilo gem rocks are available to
+ * casual trainers and profit miners at level 40. The guild is preferred once accessible.
  *
  * @author lare96
  */
@@ -32,7 +33,8 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.AL_KHARID_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, GOLD, MITHRIL, ADAMANT),
         SubZone.SOUTH_LUMBRIDGE_MINE to setOf(COAL, MITHRIL, ADAMANT),
         SubZone.EDGEVILLE_DUNGEON_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, MITHRIL, ADAMANT),
-        SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE)
+        SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE),
+        SubZone.SHILO_VILLAGE to setOf(GEM_ROCK)
     )
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
@@ -57,7 +59,9 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
      */
     internal fun activities(bot: Bot, level: Int, training: Boolean): List<BotSkillingActivity<Ore>> {
         val efficient = bot.personality.isDextrous || bot.personality.isIntelligent
-        val desired = if (training) trainingOres(bot, level) else profitOres(bot, level)
+        val desired = (if (training) trainingOres(bot, level) else profitOres(bot, level)).let {
+            if (level >= GEM_ROCK.level && (!training || !efficient)) it + GEM_ROCK else it
+        }
         val activities = ArrayList<BotSkillingActivity<Ore>>()
         for ((zone, supported) in rocks) {
             if (zone == SubZone.MINING_GUILD &&

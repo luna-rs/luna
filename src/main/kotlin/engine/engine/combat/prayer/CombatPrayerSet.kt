@@ -2,13 +2,12 @@ package engine.combat.prayer
 
 import api.predef.*
 import api.predef.ext.*
-import engine.combat.prayer.PrayerRestorationAction.RapidHealAction
-import engine.combat.prayer.PrayerRestorationAction.RapidRestoreAction
 import engine.combat.status.StatusEffectType
 import game.player.Sound
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PrayerIcon
+import io.luna.game.model.mob.SkillRestorationAction
 import io.luna.game.model.mob.varp.Varp
 import java.util.Collections
 import java.util.EnumSet
@@ -47,7 +46,7 @@ class CombatPrayerSet(private val player: Player) {
      * - Checks level requirements and remaining prayer points.
      * - Updates the client via varps, plays sounds, and sets the head icon (if applicable).
      * - Starts the drain action ([CombatPrayerDrainAction]) if not already running.
-     * - Starts restoration actions for prayers that have periodic effects (rapid restore/heal).
+     * - Restarts the affected shared recovery clock for rapid restore/heal.
      *
      * If [prayer] is already active, this method toggles it off (non-silently).
      * Requirements are checked before replacing prayers in the same group, so rejected upgrades preserve the active
@@ -97,12 +96,23 @@ class CombatPrayerSet(private val player: Player) {
             player.submitAction(CombatPrayerDrainAction(player))
         }
 
-        // Start actions for restoring skills or hitpoints if needed.
-        if (prayer == CombatPrayer.RAPID_RESTORE && !player.actions.contains(RapidRestoreAction::class)) {
-            player.submitAction(RapidRestoreAction(player))
-        } else if (prayer == CombatPrayer.RAPID_HEAL && !player.actions.contains(RapidHealAction::class)) {
-            player.submitAction(RapidHealAction(player))
+        restartRecovery(prayer)
+    }
+
+    /**
+     * Restarts only the recovery clock controlled by [prayer]. Active rapid prayers retain a clock even at full
+     * stats, so later damage or drains join the existing cadence instead of starting a duplicate timer.
+     */
+    private fun restartRecovery(prayer: CombatPrayer) {
+        if (prayer != CombatPrayer.RAPID_HEAL && prayer != CombatPrayer.RAPID_RESTORE) {
+            return
         }
+        var restoration = player.actions.first(SkillRestorationAction::class.java)
+        if (restoration == null && isActive(prayer)) {
+            restoration = SkillRestorationAction(player)
+            player.submitAction(restoration)
+        }
+        restoration?.restartRecovery(prayer)
     }
 
     /**
@@ -124,6 +134,7 @@ class CombatPrayerSet(private val player: Player) {
      *
      * This also clears the prayer varp and (if applicable) removes the head icon. If [silent] is `false`, the standard
      * deactivation sound is played.
+     * The affected rapid-prayer recovery clock restarts at the normal interval immediately.
      *
      * @param prayer The prayer to deactivate.
      * @param silent If `true`, no deactivation sound is played (useful for auto-deactivations within a group).
@@ -132,6 +143,7 @@ class CombatPrayerSet(private val player: Player) {
     fun deactivate(prayer: CombatPrayer, silent: Boolean): Boolean {
         val removed = activePrayers.remove(prayer)
         if (removed) {
+            restartRecovery(prayer)
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
                 player.playSound(Sound.CANCEL_PRAYER)
@@ -150,12 +162,17 @@ class CombatPrayerSet(private val player: Player) {
      * Deactivates all prayers for this set.
      *
      * This also clears all prayer varps, the drain remainder and timer, and any active head icon.
+     * Recovery clocks controlled by active rapid prayers restart at their normal intervals.
      */
     fun deactivateAll() {
         CombatPrayer.VALUES.forEach { player.sendVarp(Varp(it.varp, 0)) }
         player.prayerIcon = PrayerIcon.NONE
+        val rapidHeal = isActive(CombatPrayer.RAPID_HEAL)
+        val rapidRestore = isActive(CombatPrayer.RAPID_RESTORE)
         activePrayers.clear()
         drainCounter = 0
+        if (rapidHeal) restartRecovery(CombatPrayer.RAPID_HEAL)
+        if (rapidRestore) restartRecovery(CombatPrayer.RAPID_RESTORE)
         player.actions.first(CombatPrayerDrainAction::class.java)?.interrupt()
     }
 

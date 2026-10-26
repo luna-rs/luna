@@ -1,8 +1,10 @@
 package engine.widget
 
 import api.predef.*
+import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
 import game.player.Sound
+import game.obj.resource.ZamorakWine
 import game.skill.runecrafting.essencePouch.EssencePouch
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent
@@ -28,6 +30,9 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_
     val pickupItem = groundItem.toItem()
     val pouch = EssencePouch.ID_TO_POUCH[pickupItem.id]
     when {
+        !TreasureTrails.canAcquire(plr, pickupItem.id) -> Unit
+        ZamorakWine.onPickup(plr, groundItem) -> Unit
+
         !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.inventoryFull())
 
         pouch != null && pouch.isOwnedBy(plr) ->
@@ -36,6 +41,7 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_
         groundItem.state == EntityState.ACTIVE && world.items.unregister(groundItem) -> {
             plr.playSound(Sound.PICKUP_ITEM)
             plr.inventory.add(pickupItem)
+            TreasureTrails.acquired(plr, pickupItem.id)
             logger.log(itemPickup, "{}: {}(x{})", plr.username, groundItem.def().name, box(groundItem.amount))
         }
 

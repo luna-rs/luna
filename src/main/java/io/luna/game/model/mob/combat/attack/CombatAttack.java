@@ -130,8 +130,7 @@ public abstract class CombatAttack<T extends Mob> {
         }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
-        victim.getCombat().setLastCombatWith(attacker);
-        victim.getCombat().resetCombatTimer(); // Once targeted and engaged, cannot safely log out or attack anyone else.
+        victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         attack();
     }
@@ -184,6 +183,27 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public void onProjectileFinished(boolean interrupted) {
 
+    }
+
+    /**
+     * Schedules arrival after an already displayed projectile's flight delay. Both normal completion and interruption
+     * notify the attack through the same lifecycle hook used by the legacy launch scheduler.
+     *
+     * @param arrivalDelay The positive server-tick delay until impact.
+     */
+    protected final void scheduleProjectileArrival(int arrivalDelay) {
+        attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, arrivalDelay) {
+            @Override
+            public boolean run() {
+                onProjectileReached();
+                return true;
+            }
+
+            @Override
+            public void onFinished() {
+                onProjectileFinished(getState() == ActionState.INTERRUPTED);
+            }
+        });
     }
 
     /**

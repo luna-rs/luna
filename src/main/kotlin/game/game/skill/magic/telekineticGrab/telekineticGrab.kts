@@ -5,5 +5,5 @@ import io.luna.game.event.impl.UseSpellEvent.MagicOnGroundItemEvent
 
 // Intercept event for telegrab spell.
 on(MagicOnGroundItemEvent::class)
-    .filter { spellId == 1168 }
+    .filter { spellId == TelekineticGrabAction.SPELL_ID }
     .then { plr.submitAction(TelekineticGrabAction(plr, targetItem)) }

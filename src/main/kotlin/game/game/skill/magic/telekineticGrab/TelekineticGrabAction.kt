@@ -1,6 +1,7 @@
 package game.skill.magic.telekineticGrab
 
 import api.predef.*
+import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
 import game.player.Sound
 import game.skill.magic.Magic
@@ -23,6 +24,23 @@ import io.luna.game.model.mob.block.Graphic
  */
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
 
+    companion object {
+        /**
+         * The regular-spellbook widget used for native Telekinetic Grab packets.
+         */
+        const val SPELL_ID = 1168
+
+        /**
+         * The minimum Magic level checked by the player action and bot cost planning.
+         */
+        const val LEVEL = 33
+
+        /**
+         * Native rune requirements; Magic resolves equipped staffs and combination runes for each cast.
+         */
+        val REQUIREMENTS = listOf(RuneRequirement(Rune.AIR, 1), RuneRequirement(Rune.LAW, 1))
+    }
+
     override fun onLock() {
         mob.walking.clear()
         mob.face(groundItem.position)
@@ -32,15 +50,16 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             return
         }
         val item = groundItem.toItem()
+        if (!TreasureTrails.canAcquire(mob, item.id)) {
+            complete()
+            return
+        }
         if (!mob.inventory.hasSpaceFor(item)) {
             mob.sendMessage(Messages.inventoryFull())
             complete()
             return
         }
-        val removeItems = Magic.checkRequirements(mob, 33, listOf(
-            RuneRequirement(Rune.AIR, 1),
-            RuneRequirement(Rune.LAW, 1)
-        ))
+        val removeItems = Magic.checkRequirements(mob, LEVEL, REQUIREMENTS)
         if (removeItems == null) {
             complete()
             return
@@ -83,10 +102,13 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                 val item = groundItem.toItem()
                 if (groundItem.state == EntityState.INACTIVE) {
                     mob.sendMessage("You were too late!")
+                } else if (!TreasureTrails.canAcquire(mob, item.id)) {
+                    // Another clue may have been acquired while the projectile was travelling.
                 } else if (!mob.inventory.hasSpaceFor(item)) {
                     mob.sendMessage(Messages.inventoryFull())
                 } else if (world.items.unregister(groundItem)) {
                     mob.inventory.add(item)
+                    TreasureTrails.acquired(mob, item.id)
                 }
                 true
             }

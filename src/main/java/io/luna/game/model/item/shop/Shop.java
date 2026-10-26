@@ -169,7 +169,9 @@ public final class Shop {
      */
     private final Set<Integer> restockItems = new HashSet<>();
 
-    // todo docs
+    /**
+     * The predicate that determines whether an individual bot may access this shop.
+     */
     private final Predicate<Bot> botAccess;
 
     /**
