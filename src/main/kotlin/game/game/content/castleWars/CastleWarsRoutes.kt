@@ -43,8 +43,8 @@ object CastleWarsRoutes {
             } else null
             6280, 6281 -> {
                 val owner = if (id == 6280) Team.SARADOMIN else Team.ZAMORAK
-                if (team != owner || flag != null || playerPosition.z != 0) null
-                else Position(playerPosition.x, playerPosition.y, 1)
+                if (team != owner || flag != null || playerPosition.z != 1) null
+                else Position(playerPosition.x, playerPosition.y, 2)
             }
             4471, 4472, 4911 -> if (playerPosition.z > 0)
                 Position(playerPosition.x, playerPosition.y, playerPosition.z - 1) else null
