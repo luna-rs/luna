@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.attack;
 
 import game.player.Sound;
 import game.combat.BarrowsEquipmentSet;
+import game.combat.spells.GodSpells;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
@@ -31,6 +32,8 @@ import java.util.function.BiFunction;
  * Standard stat-draining curses reject already-drained targets and barricades before consuming runes or granting
  * cast experience. Rejected manual selections are cleared so the failed spell cannot leak into a later attack.
  * Bind, Snare, and Entangle also reject frozen targets, barricades, and no-movement duels before those costs.
+ * God spells resolve Charge at the initial damage roll and apply their equipment-gated drains at cast time,
+ * after requirements have succeeded. Splashes and rejected casts never drain the target.
  *
  * @author lare96
  */
@@ -95,6 +98,19 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
                                    Sound impactSound, CombatSpell spellEffect, int speed, int distance) {
         super(attacker, victim, cast, start, projectileFunction, end, impactSound, spellEffect, speed, distance);
         magic = attacker.getCombat().getMagic();
+    }
+
+    @Override
+    protected int spellMaxHit() {
+        return GodSpells.INSTANCE.maxHit(attacker, spellEffect);
+    }
+
+    @Override
+    public void attack() {
+        if (spellEffect != null) {
+            GodSpells.INSTANCE.castEffect(attacker, victim, spellEffect.getSpell(), nextDamage.isAccurate());
+        }
+        super.attack();
     }
 
     @Override

@@ -168,12 +168,21 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         // Use spell effect max hit.
         CombatDamageRequest.Builder request = new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC);
         if (spellEffect != null) {
-            request.setBaseMaxHit(spellEffect.getMaxHit());
+            request.setBaseMaxHit(spellMaxHit());
             if (spellEffect.getMaxHit() < 0) {
                 request.disableDamage();
             }
         }
         return request.build().resolve();
+    }
+
+    /**
+     * Resolves the configured spell maximum before the hit is rolled. Player casts may apply spell-specific buffs.
+     *
+     * @return The spell's base maximum hit.
+     */
+    protected int spellMaxHit() {
+        return spellEffect.getMaxHit();
     }
 
     @Override

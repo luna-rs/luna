@@ -5,6 +5,7 @@ import engine.combat.status.hooks.PoisonStatusEffect
 import engine.combat.status.hooks.SkullStatusEffect
 import engine.combat.status.hooks.TeleBlockStatusEffect
 import game.combat.specialAttacks.DragonScimitar
+import game.combat.spells.ChargeStatusEffect
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 
@@ -59,7 +60,12 @@ enum class StatusEffectType(val loadFunction: (Player) -> StatusEffect<out Mob>?
     /**
      * Shows the white skull above the player for a fixed duration.
      */
-    SKULLED({ SkullStatusEffect(it) });
+    SKULLED({ SkullStatusEffect(it) }),
+
+    /**
+     * Raises matching god spell maximum hits while Charge is active.
+     */
+    CHARGED({ ChargeStatusEffect(it) });
 
     companion object {
 

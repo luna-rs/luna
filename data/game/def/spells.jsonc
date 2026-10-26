@@ -994,7 +994,7 @@
       },
       {
         "id": 554,
-        "amount": 2
+        "amount": 1
       }
     ],
     "start_sound": "CLAWS_OF_GUTHIX",
@@ -1022,7 +1022,7 @@
     "required_inventory": [
       {
         "id": 556,
-        "amount": 4
+        "amount": 1
       },
       {
         "id": 565,
@@ -1030,7 +1030,7 @@
       },
       {
         "id": 554,
-        "amount": 2
+        "amount": 4
       }
     ],
     "start_sound": "FLAMES_OF_ZAMORAK",
