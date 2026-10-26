@@ -1,6 +1,7 @@
 package api.bot.webwalk.plan
 
 import game.content.sailing.ShipSearch
+import game.content.craftingGuild.CraftingGuild
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -22,12 +23,18 @@ object BotConditions {
     const val SHIP_SEARCH_PREFIX = "ship_search_"
 
     /**
+     * Entry needs the current Crafting level and an equipped brown apron, not a carried or banked one.
+     * A flag also preserves boosts and drains instead of using the snapshot's static skill levels.
+     */
+    const val CRAFTING_GUILD_ENTRY = "crafting_guild_entry"
+
+    /**
      * The conditions, keyed by the name of their flag.
      */
     private val conditions: Map<String, (Bot) -> Boolean> =
         ShipSearch.entries.mapNotNull { search ->
             shipSearchFlag(search)?.let { flag -> flag to { bot: Bot -> !search.turnsAway(bot) } }
-        }.toMap()
+        }.toMap() + mapOf(CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) })
 
     /**
      * The names of every condition flag.

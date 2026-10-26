@@ -5,6 +5,8 @@ import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
+import game.content.craftingGuild.CraftingGuild
+import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.mob.Skill
 import api.bot.webwalk.walk.crossing.BorderGateCrossing
@@ -90,9 +92,17 @@ object SpecialCrossings {
                                         items = listOf(ItemRequirement(YanilleDoorAction.LOCKPICK))), cost = 8)
 
     /**
+     * The guild building needs level 40 Crafting and a worn brown apron on entry only.
+     * The nearby cow field uses its own unrestricted gate.
+     */
+    val CRAFTING_GUILD = CrossingSpec(ConditionalDoorCrossing.ID, setOf(CraftingGuild.DOOR),
+                                      Requirements(flags = setOf(BotConditions.CRAFTING_GUILD_ENTRY)),
+                                      reverseRequirements = Requirements.NONE, cost = 4)
+
+    /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR)
+    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CRAFTING_GUILD)
 }
 
 /**

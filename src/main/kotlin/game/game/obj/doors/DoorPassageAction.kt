@@ -29,6 +29,11 @@ abstract class DoorPassageAction(plr: Player, door: GameObject, private val type
      */
     protected abstract fun checkAccess(entering: Boolean): Boolean
 
+    /**
+     * Called after a successful passage has queued the step through the door.
+     */
+    protected open fun onPassage(entering: Boolean) {}
+
     override fun run(): Boolean {
         if (++ticks > 30) {
             mob.sendMessage("You can't get through the door right now.")
@@ -54,8 +59,11 @@ abstract class DoorPassageAction(plr: Player, door: GameObject, private val type
         if (!checkAccess(entering)) {
             return true
         }
-        if (Doors.passThrough(world, mob, closed, type, entering) && faceDoor) {
-            mob.interact(closed)
+        if (Doors.passThrough(world, mob, closed, type, entering)) {
+            if (faceDoor) {
+                mob.interact(closed)
+            }
+            onPassage(entering)
         }
         return true
     }
