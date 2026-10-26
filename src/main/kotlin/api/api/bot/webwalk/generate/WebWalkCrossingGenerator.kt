@@ -6,6 +6,7 @@ import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
+import game.obj.doors.JewellersDoor
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.mob.Skill
@@ -100,9 +101,14 @@ object SpecialCrossings {
                                       reverseRequirements = Requirements.NONE, cost = 4)
 
     /**
+     * The jeweller's door is open to everyone, but it is a scripted passage rather than a toggle door.
+     */
+    val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
+
+    /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CRAFTING_GUILD)
+    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CRAFTING_GUILD, JEWELLERS_DOOR)
 }
 
 /**
