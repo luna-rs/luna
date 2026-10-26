@@ -233,6 +233,11 @@ public class LocalProjectile extends LocalEntity {
         private Entity sourceEntity;
 
         /**
+         * Optional launch tile within the source entity's footprint, captured when configured.
+         */
+        private Position sourcePosition;
+
+        /**
          * The entity being targeted.
          */
         private Entity targetEntity;
@@ -243,7 +248,7 @@ public class LocalProjectile extends LocalEntity {
 
         @Override
         public Position sourcePosition() {
-            return sourceEntity.getPosition();
+            return sourcePosition == null ? sourceEntity.getPosition() : sourcePosition;
         }
 
         @Override
@@ -282,6 +287,18 @@ public class LocalProjectile extends LocalEntity {
          */
         public EntityTargetBuilder setSourceEntity(Entity sourceEntity) {
             this.sourceEntity = sourceEntity;
+            return this;
+        }
+
+        /**
+         * Overrides the launch tile while retaining entity tracking for the target. Large NPCs can launch from
+         * a facing-dependent tile within their footprint. The source entity still supplies the default launch offset.
+         *
+         * @param sourcePosition The launch tile, or {@code null} to use the source entity's position.
+         * @return This builder.
+         */
+        public EntityTargetBuilder setSourcePosition(Position sourcePosition) {
+            this.sourcePosition = sourcePosition;
             return this;
         }
 
