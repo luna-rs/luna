@@ -39,12 +39,21 @@ class SearchResultInterface(private val searchToken: String) :
 }
 
 /**
- * Spawn an item.
+ * Spawn an item. Non-stackable items are limited to the free inventory space, so that the excess is never dropped
+ * on the ground.
  */
 fun spawn(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
     val id = msg.itemId
-    val item = Item(id, amount ?: 100_000)
+    var item = Item(id, amount ?: 100_000)
+    if (!item.itemDef.isStackable) {
+        val freeSlots = plr.inventory.computeRemainingSize()
+        if (freeSlots == 0) {
+            plr.sendMessage("You do not have enough inventory space.")
+            return
+        }
+        item = item.withAmount(minOf(item.amount, freeSlots))
+    }
     plr.giveItem(item)
 }
 
