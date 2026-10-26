@@ -525,8 +525,19 @@ enum class SubZone(
     ROCK_CRABS(
         inside = Position(2670, 3715),
         area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
-        parent = { RELLEKKA }), // todo there's also a mine near here??? coal, silver and gold i think?
-    // todo or coal tin and clay
+        parent = { RELLEKKA }),
+
+    /**
+     * The walled mine south of the Rellekka rock crabs, entered through the gate at (2681, 3697). Intended for
+     * low -> mid level miners.
+     * - 4 clay rocks
+     * - 3 silver rocks
+     * - 7 coal rocks
+     */
+    RELLEKKA_MINE(
+        inside = Position(2683, 3700),
+        area = SimpleBoxArea.of(2679, 3698, 2688, 3710),
+        parent = { RELLEKKA }, plane = 0),
 
     /**
      * The chaos druid tower dungeon.

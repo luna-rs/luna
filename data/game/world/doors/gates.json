@@ -4,5 +4,7 @@
   { "closed": 12986, "open": 12988, "side": "LEFT" },
   { "closed": 12987, "open": 12989, "side": "RIGHT" },
   { "closed": 7049, "open": 7051, "side": "LEFT" },
-  { "closed": 7050, "open": 7052, "side": "RIGHT" }
+  { "closed": 7050, "open": 7052, "side": "RIGHT" },
+  { "closed": 4311, "open": 4313, "side": "LEFT" },
+  { "closed": 4312, "open": 4314, "side": "RIGHT" }
 ]

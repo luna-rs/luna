@@ -37,6 +37,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.AL_KHARID_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, GOLD, MITHRIL, ADAMANT),
         SubZone.SOUTH_LUMBRIDGE_MINE to setOf(COAL, MITHRIL, ADAMANT),
         SubZone.EDGEVILLE_DUNGEON_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, MITHRIL, ADAMANT),
+        SubZone.RELLEKKA_MINE to setOf(CLAY, SILVER, COAL),
         SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE),
         SubZone.SHILO_VILLAGE to setOf(GEM_ROCK)
     )
