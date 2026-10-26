@@ -241,9 +241,19 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
         }
         awardDamageExperience(damage);
         int rawAmount = Math.max(0, damage.getRawAmount());
-        if (poison != null && rawAmount > 0 && RandomUtils.roll(RANGED_POISON_CHANCE)) {
+        if (poison != null && rawAmount > 0 && RandomUtils.roll(getPoisonChance())) {
             damage.getVictim().getStatus().add(new PoisonStatusEffect(damage.getVictim(), poison.getSeverity()), false);
         }
+    }
+
+    /**
+     * Supplies the poison chance for each delivered positive hit. Specials can override the ordinary one-in-eight
+     * chance while retaining the ammunition poison captured before consumption.
+     *
+     * @return The probability of applying the captured poison.
+     */
+    protected Rational getPoisonChance() {
+        return RANGED_POISON_CHANCE;
     }
 
     /**
