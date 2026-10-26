@@ -32,6 +32,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * Shocking breath subtracts two current levels, including from boosted skills, with a floor of zero.
  * Breath sounds are sent at launch with a thirty-client-cycle delay, independently of the damage arrival.
  * Shocking breath displays its target graphic with a sixty-client-cycle delay, independently of accuracy.
+ * Icy breath expires eleven world ticks after application, matching Lost City's current tick plus ten plus one.
  *
  * @param npc The attacking King Black Dragon.
  * @param other The target receiving the breath.
@@ -168,7 +169,7 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
         if (rand().nextInt(if (protected) 8 else 2) != 0) return
         when (kind) {
             Kind.POISON -> if (!victim.status.isAntiPoison()) victim.status.add(PoisonStatusEffect(victim, 36))
-            Kind.ICE -> victim.status.add(ImmobilizedStatusEffect(victim, 10.ticks))
+            Kind.ICE -> victim.status.add(ImmobilizedStatusEffect(victim, 11.ticks))
             Kind.SHOCK -> {
                 victim.sendMessage("You're zapped by the dragon's shocking breath!")
                 victim.skills.filter { it.id != Skill.HITPOINTS }.forEach {
