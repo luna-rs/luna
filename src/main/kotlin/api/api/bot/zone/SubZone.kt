@@ -890,6 +890,24 @@ enum class SubZone(
         parent = { ARDOUGNE }),
 
     /**
+     * Upper Watchtower floor containing Yanille's four pickpocketable Watchmen and their wander range.
+     * Arrival uses an existing Watchman spawn tile; shared travel owns tower access.
+     */
+    YANILLE_WATCHMEN(
+        inside = Position(2549, 3112, 1),
+        area = SimpleBoxArea.of(2539, 3107, 2554, 3121),
+        parent = { YANILLE }, plane = 1),
+
+    /**
+     * Ground-floor Gnomes west of the Stronghold bank. Bounds include the local civilian spawns and wander range,
+     * while the plane restriction excludes upstairs residents. No quest or special equipment is required.
+     */
+    GNOME_STRONGHOLD_THIEVING(
+        inside = Position(2423, 3426),
+        area = SimpleBoxArea.of(2388, 3412, 2432, 3454),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+
+    /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
      * - Paladins
      * - Guards

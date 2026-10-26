@@ -14,7 +14,10 @@ import io.luna.game.model.mob.bot.Bot
 
 /**
  * Describes pickpocket, stall, and chest methods with matching locations. Personality retains the
- * original method odds and target progression; unavailable methods fall back to basic pickpocketing.
+ * original method odds and early target progression; unavailable methods fall back to basic pickpocketing.
+ * Watchmen at 65, Gnomes at 75 and Heroes at 80 extend both training and profit pickpocket selection through
+ * the same level/personality policy. Existing pickpocket scripts own food, stun handling, loot and banking;
+ * higher-level profit targets describe gathering choices rather than guaranteeing a market return.
  *
  * @author lare96
  */
@@ -84,7 +87,11 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         zones: MutableList<SubZone>,
         training: Boolean
     ): PickpocketBotScript {
-        val options = pickpockets(bot, level, training)
+        val options = pickpockets(bot, level, training) + listOf(
+            npc(setOf(WATCHMAN), SubZone.YANILLE_WATCHMEN),
+            npc(setOf(GNOME), SubZone.GNOME_STRONGHOLD_THIEVING),
+            npc(setOf(HERO), SubZone.ARDOUGNE_SQUARE_THIEVING)
+        )
         val activity = getBestSkillingActivity(bot, level, { it.level }, options)
             ?: error("No pickpocket activity is available at level $level.")
         zones.clear()
@@ -112,7 +119,11 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         }
         if (level >= GUARD.level) {
             if (bot.personality.isDextrous || rand(bot.personality.dexterity)) {
-                val target = if (level >= KNIGHT_OF_ARDOUGNE.level) KNIGHT_OF_ARDOUGNE else GUARD
+                val target = when {
+                    level >= PALADIN.level -> PALADIN
+                    level >= KNIGHT_OF_ARDOUGNE.level -> KNIGHT_OF_ARDOUGNE
+                    else -> GUARD
+                }
                 return listOf(npc(setOf(target), SubZone.ARDOUGNE_SQUARE_THIEVING))
             }
             if (rand(bot.personality.intelligence)) {
