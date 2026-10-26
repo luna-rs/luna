@@ -1,6 +1,7 @@
 package game.bot.scripts
 
 import game.bot.scripts.skills.TeleportTrainingBotScript
+import game.bot.scripts.DuelArenaBotScript.DuelData
 import game.bot.scripts.skills.TeleportTrainingBotScript.Companion.TeleportTrainingData
 
 import game.bot.scripts.combat.PkBotScript
@@ -127,6 +128,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<DuelData>(DuelArenaBotScript::class) { bot, data -> DuelArenaBotScript(bot, data) }
     scriptManager.addScript<TeleportTrainingData>(TeleportTrainingBotScript::class) { bot, data -> TeleportTrainingBotScript(bot, data) }
     scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
     scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }

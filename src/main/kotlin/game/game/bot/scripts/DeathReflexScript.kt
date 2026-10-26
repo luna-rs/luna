@@ -10,6 +10,7 @@ import api.bot.zone.Zone
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
 import engine.controllers.WildernessLocatableController.levelAt
+import game.content.duelArena.DuelController
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
@@ -27,6 +28,7 @@ import kotlin.time.Duration.Companion.minutes
  * alternative travel routes.
  *
  * This script only handles recovery travel. Once the bot returns, [LootItemReflexScript] can recover nearby items.
+ * Safe Duel Arena deaths remain with their controller and do not create a recovery trip.
  *
  * @param bot The bot running this script.
  * @author lare96
@@ -87,6 +89,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
     private var deathLocation: Triple<Position, Zone?, EnumSet<SubZone>>? = null
 
     override fun shouldReact(): Boolean {
+        if (bot.controllers.primary is DuelController) return false
         if (bot.health < 1) {
             deathLocation = Triple(bot.position, bot.zone, EnumSet.copyOf(bot.subZones))
             return true

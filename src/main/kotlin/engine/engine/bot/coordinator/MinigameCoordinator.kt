@@ -14,6 +14,8 @@ import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.GamesRoomBotScript
+import game.bot.scripts.DuelArenaBotScript
+import game.content.duelArena.DuelArena
 import game.content.gamesRoom.GamesRoom
 import game.bot.scripts.PartyRoomDonations
 import game.bot.scripts.LogoutBotScript
@@ -25,7 +27,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Considers parties, board games, Fishing Trawler and Castle Wars before a bounded Party Room visit.
+ * Considers parties, board games, Fishing Trawler, Castle Wars and duels before a bounded Party Room visit.
  * Native parties invite every eligible bot, regardless of
  * the host, personality or prize value; unsafe bots are reconsidered while that party remains active.
  *
@@ -45,6 +47,8 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
+        if (DuelArenaBotScript.eligible(bot) && (DuelArena.inside(bot.position) || rand().nextBoolean()))
+            return DuelArenaBotScript(bot)
         if (FishingTrawlerBotScript.eligible(bot)) return FishingTrawlerBotScript(bot)
         if (CastleWarsBotScript.eligible(bot)) return CastleWarsBotScript(bot)
         if (GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)

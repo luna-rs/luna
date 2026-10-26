@@ -1,7 +1,16 @@
 package game.content.duelArena
 
 import api.bot.script.InventoryProductionFixtures
+import api.bot.action.BotInteractionActionHandler
+import game.bot.scripts.DuelArenaBotScript
+import engine.controllers.WildernessLocatableController.wildernessLevel
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.PlayerContextMenuOption
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.def.CombatSpellDefinition
+import kotlinx.coroutines.runBlocking
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import game.content.duelArena.DuelArena.duelEscrow
 import io.luna.game.model.Position
@@ -85,6 +94,219 @@ class DuelArenaTest {
         assertFalse(duel.fighting(duel.first, duel.second))
         repeat(4) { duel.tick() }
         assertTrue(duel.fighting(duel.first, duel.second))
+    }
+
+    private fun visitor(): Bot = (player() as Bot).also { bot ->
+        `when`(bot.asPlr()).thenReturn(bot)
+        bot.wildernessLevel = 0
+        bot.equipment.set(Equipment.WEAPON, Item(1275))
+        val style = mock(io.luna.game.model.def.CombatStyleDefinition::class.java)
+        `when`(style.exp).thenReturn(ImmutableList.of(SKILL_ATTACK))
+        `when`(bot.combat.styleDef).thenReturn(style)
+        `when`(bot.combat.magic.selectedSpell).thenReturn(CombatSpellDefinition.NONE)
+    }
+
+    @Test fun botRequiresSafeMeleeGearAndChallengesOnlyUnusedVisitorPeers() {
+        val a = visitor(); val b = visitor()
+        `when`(a.index).thenReturn(1); `when`(b.index).thenReturn(2)
+        assertTrue(DuelArenaBotScript.eligible(a))
+        assertNull(DuelArenaBotScript.opponent(a, listOf(b)))
+        val visitorScript = DuelArenaBotScript(b)
+        `when`(b.scriptStack.current()).thenReturn(visitorScript)
+        assertSame(b, DuelArenaBotScript.opponent(a, listOf(b)))
+        assertNull(DuelArenaBotScript.opponent(b, listOf(a)))
+        val usedScript = DuelArenaBotScript(b, attempted = true)
+        `when`(b.scriptStack.current()).thenReturn(usedScript)
+        assertNull(DuelArenaBotScript.opponent(a, listOf(b)))
+        `when`(a.combat.weapon.isRanged).thenReturn(true)
+        assertFalse(DuelArenaBotScript.eligible(a))
+        `when`(a.combat.weapon.isRanged).thenReturn(false)
+        `when`(a.combat.magic.isAutocasting).thenReturn(true)
+        assertFalse(DuelArenaBotScript.eligible(a))
+        `when`(a.combat.magic.isAutocasting).thenReturn(false)
+        a.wildernessLevel = 1
+        assertFalse(DuelArenaBotScript.eligible(a))
+        a.wildernessLevel = 0
+        `when`(a.isLocked).thenReturn(true)
+        assertFalse(DuelArenaBotScript.eligible(a))
+    }
+
+    @Test fun botSnapshotsAndInterruptionsCannotRenewAnAttempt() = runBlocking {
+        val bot = visitor()
+        val future = System.currentTimeMillis() + 60_000
+        val script = DuelArenaBotScript(bot, attempted = true, started = true,
+            waitingUntil = future, deadline = future + 60_000)
+        val json = com.google.gson.JsonObject().also { script.snapshot().save(it) }
+        val data = DuelArenaBotScript.DuelData().also { it.load(json) }
+        assertTrue(data.attempted && data.started)
+        assertEquals(future, data.waitingUntil)
+        assertEquals(future + 60_000, data.deadline)
+        assertTrue(DuelArenaBotScript(bot, data).init(true))
+        assertTrue(DuelArenaBotScript(bot, deadline = 1).init(false))
+        assertTrue(DuelArenaBotScript(bot, waitingUntil = 1).init(false))
+        val unused = DuelArenaBotScript(bot)
+        unused.paused()
+        assertTrue(unused.init(true))
+        assertTrue(unused.snapshot().attempted)
+        verifyNoInteractions(bot.actionHandler)
+    }
+
+    @Test fun incomingChallengesAreReadOnlyNearbyAndClearedOnInterruption() {
+        val a = visitor(); val b = visitor()
+        DuelArena.challenge(a, b)
+        assertEquals(listOf(a), DuelArena.challengers(b))
+        assertEquals(listOf(a), DuelArena.challengers(b))
+        a.move(Position(3200, 3200))
+        assertTrue(DuelArena.challengers(b).isEmpty())
+        a.move(DuelArena.LOBBY)
+        DuelArenaBotScript(b).paused()
+        assertTrue(DuelArena.challengers(b).isEmpty())
+    }
+
+    @Test fun botAcceptsBothScreensThroughWidgetsAndRechecksChangedOffers() = runBlocking {
+        val a = visitor(); val b = visitor()
+        val duel = negotiate(a, b)
+        val widgets = a.actionHandler.widgets
+        doAnswer { duel.accept(a) }.`when`(widgets).clickButton(6575, 6674)
+        doAnswer { duel.accept(a) }.`when`(widgets).clickButton(6412, 6520)
+        val script = DuelArenaBotScript(a)
+        assertFalse(script.run())
+        assertFalse(script.run())
+        verify(widgets, times(1)).clickButton(6575, 6674)
+        duel.toggle(b, DuelRules.NO_FOOD)
+        assertFalse(script.run())
+        verify(widgets, times(2)).clickButton(6575, 6674)
+        duel.accept(b)
+        assertTrue(duel.confirmation)
+        assertFalse(script.run())
+        verify(widgets).clickButton(6412, 6520)
+        duel.accept(b)
+        assertTrue(duel.started)
+        script.paused()
+        assertTrue(duel.ended)
+        assertNull(DuelArena.session(a))
+    }
+
+    @Test fun botDeclinesStakesAndIncompatibleRulesWithoutOfferingItsItems() = runBlocking {
+        for (staked in listOf(false, true)) {
+            val a = visitor(); val b = visitor()
+            b.inventory.add(Item(1265))
+            val duel = negotiate(a, b)
+            if (staked) duel.stake(b, 0, 1265, 1) else duel.toggle(b, DuelRules.NO_MELEE)
+            val widgets = a.actionHandler.widgets
+            doAnswer { duel.finish(null); true }.`when`(widgets).clickButton(6575, 6676)
+            assertTrue(DuelArenaBotScript(a).run())
+            verify(widgets).clickButton(6575, 6676)
+            verify(widgets, never()).clickButton(6575, 6674)
+            assertEquals(1, b.inventory.computeAmountForId(1265))
+            assertTrue(duel.ended)
+        }
+    }
+
+    @Test fun botWaitsForCountdownThenAttacksOnlyItsOpponentThroughInteractions() = runBlocking {
+        val a = visitor(); val b = visitor()
+        val duel = negotiate(a, b)
+        duel.accept(a); duel.accept(b); duel.accept(a); duel.accept(b)
+        val script = DuelArenaBotScript(a)
+        assertFalse(script.run())
+        verifyNoInteractions(a.actionHandler.interactions)
+        repeat(4) { duel.tick() }
+        val interactions = a.actionHandler.interactions
+        doAnswer {
+            assertSame(b, it.getArgument<Player>(1))
+            assertTrue(it.getArgument<() -> Boolean>(2).invoke())
+            true
+        }.`when`(interactions).interact(eq(PlayerContextMenuOption.ATTACK.index), eq(b), any<() -> Boolean>() ?: { false })
+        assertFalse(script.run())
+        verify(interactions).interact(eq(PlayerContextMenuOption.ATTACK.index), eq(b), any<() -> Boolean>() ?: { false })
+        duel.finish(b)
+        assertTrue(script.run())
+    }
+
+    @Test fun noMovementAllowsAlreadyReachedInteractionsButNeverStartsNavigation() = runBlocking {
+        val a = visitor(); val b = visitor()
+        `when`(a.walking.isLocked).thenReturn(true)
+        `when`(a.walking.isEmpty).thenReturn(true)
+        `when`(b.isViewableFrom(a)).thenReturn(true)
+        val collision = world.collisionManager
+        `when`(collision.reached(a, b, InteractionPolicy.STANDARD_SIZE)).thenReturn(true)
+        val handler = BotInteractionActionHandler(a, a.actionHandler)
+        assertTrue(handler.approach(b))
+        `when`(collision.reached(a, b, InteractionPolicy.STANDARD_SIZE)).thenReturn(false)
+        assertFalse(handler.approach(b))
+        verifyNoInteractions(a.actionHandler)
+    }
+
+    @Test fun interruptionSettlesOnceAndCannotAffectALaterDuel() = runBlocking {
+        val a = visitor(); val b = visitor()
+        val duel = negotiate(a, b)
+        start(duel)
+        val script = DuelArenaBotScript(a, attempted = true)
+        assertFalse(script.init(true))
+        script.paused()
+        assertTrue(duel.ended)
+        a.overlays.closeWindows(); b.overlays.closeWindows()
+        val next = negotiate(a, b)
+        script.paused()
+        assertFalse(next.ended)
+        assertSame(next, DuelArena.session(a))
+    }
+
+    @Test fun duelOwnsEatingCombatAndSafeDeathWithoutGenericReflexes() = runBlocking {
+        val a = visitor(); val b = visitor()
+        val duel = negotiate(a, b)
+        assertTrue(duel.toggle(a, DuelRules.NO_FOOD))
+        start(duel)
+        val script = DuelArenaBotScript(a)
+        assertFalse(script.allowsCombatResponse)
+        `when`(a.emotions.isNervousAboutHp).thenReturn(true)
+        `when`(a.actionHandler.inventory.hasAnyFood()).thenReturn(true)
+        assertFalse(game.bot.scripts.EatFoodReflexScript(a).shouldReact())
+        `when`(a.combat.target).thenReturn(b)
+        assertFalse(script.run())
+        verify(a.actionHandler.inventory, never()).eat(anyInt(), anyInt())
+        `when`(a.health).thenReturn(0)
+        assertFalse(game.bot.scripts.DeathReflexScript(a).shouldReact())
+    }
+
+    @Test fun botAnswersIncomingChallengesThroughInteractionHandler() = runBlocking {
+        val a = visitor(); val b = visitor()
+        DuelArena.challenge(b, a)
+        val interactions = a.actionHandler.interactions
+        doAnswer {
+            assertTrue(it.getArgument<() -> Boolean>(2).invoke())
+            DuelArena.challenge(a, b)
+        }.`when`(interactions).interact(eq(PlayerContextMenuOption.CHALLENGE.index), eq(b), any<() -> Boolean>() ?: { false })
+        val script = DuelArenaBotScript(a)
+        assertFalse(script.run())
+        assertNotNull(DuelArena.session(a))
+        assertTrue(script.snapshot().attempted)
+        verify(interactions).interact(eq(PlayerContextMenuOption.CHALLENGE.index), eq(b), any<() -> Boolean>() ?: { false })
+        script.paused()
+        assertNull(DuelArena.session(a))
+    }
+
+    @Test fun botEatsPermittedFoodThroughInventoryHandlerAndStopsAtDeadline() = runBlocking {
+        val a = visitor(); val b = visitor()
+        val duel = negotiate(a, b)
+        start(duel)
+        // Fixture metadata need only identify the item; food behavior still comes from the native food table.
+        val foodId = game.player.item.consume.food.Food.ID_TO_FOOD.keys.first {
+            io.luna.game.model.def.ItemDefinition.ALL[it].isPresent
+        }
+        a.inventory.add(Item(foodId))
+        `when`(a.emotions.isNervousAboutHp).thenReturn(true)
+        val inventory = a.actionHandler.inventory
+        doAnswer { a.inventory.remove(Item(foodId)); true }.`when`(inventory).eat(0, foodId)
+        val script = DuelArenaBotScript(a)
+        assertFalse(script.run())
+        verify(inventory).eat(0, foodId)
+        verifyNoInteractions(a.actionHandler.interactions)
+        val expired = DuelArenaBotScript(a, attempted = true, started = true, deadline = 1)
+        assertTrue(expired.run())
+        expired.finish()
+        assertTrue(duel.ended)
+        assertTrue(expired.allowsCombatResponse)
     }
 
     @Test fun challengeRequiresMutualNearbyConsentAndAvailablePlayers() {

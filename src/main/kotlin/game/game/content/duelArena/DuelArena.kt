@@ -69,6 +69,14 @@ object DuelArena {
         Position(3364, 3244), Position(3333, 3225), Position(3364, 3206))
     private val flowers = (2460..2468).toSet()
     fun session(player: Player): Duel? = sessions[player]
+
+    /**
+     * Returns live nearby requests for native challenge responses without consuming them.
+     */
+    fun challengers(player: Player): List<Player> = requests.filter { (other, request) ->
+        request.first === player && request.second > System.currentTimeMillis() &&
+            available(other) && other !in sessions && player.position.isWithinDistance(other.position, 16)
+    }.keys.toList()
     fun scoreboard(player: Player) {
         player.overlays.open(StandardInterface(6308))
         val lines = player.duelHistory.split('|').filter { it.isNotEmpty() }

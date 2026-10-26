@@ -64,13 +64,15 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
     /**
      * Approaches through the web, then confirms native collision reach. Moving targets are replanned
      * at most three times within one deadline. Target loss, caller safety, cancellation and locks
-     * abort the trip; approaches cannot acquire bank supplies or disable those caller checks.
+     * abort the trip; a walking lock still permits interaction with an already reached target.
+     * Approaches cannot acquire bank supplies or disable those caller checks.
      */
     suspend fun approach(target: Entity, policy: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
                          timeout: Duration = 30.seconds, allowOutOfView: Boolean = false,
                          canContinue: () -> Boolean = { true }): Boolean = withTimeoutOrNull(timeout) {
         fun eligible(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive && !bot.isLocked &&
-                !bot.walking.isLocked && target.state == EntityState.ACTIVE && canContinue() &&
+                (!bot.walking.isLocked || bot.walking.isEmpty && world.collisionManager.reached(bot, target, policy)) &&
+                target.state == EntityState.ACTIVE && canContinue() &&
                 (target !is Mob || target.isAlive && (allowOutOfView || target.isViewableFrom(bot)))
         repeat(3) {
             if (!eligible()) return@withTimeoutOrNull false
