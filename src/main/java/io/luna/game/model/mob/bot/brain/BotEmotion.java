@@ -30,7 +30,6 @@ import java.util.function.Function;
 public final class BotEmotion {
 
     // TODO@0.5.0 Implement this in more scenarios.
-    //  Wasn't able to find the item they're searching for (greed up, happy down, anger up).
     //  Successfully PKed a player (greed down, happy up).
     //  Check if scared before trying to PK someone, bossing, entering the wild to do certain activities.
     //  Check if feeling greedy, angry, and if intelligent, social, confident before scamming.
