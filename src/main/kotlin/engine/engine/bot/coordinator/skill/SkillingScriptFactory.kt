@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.BASE_SKILLING_DURATION_MINUTES
@@ -163,7 +164,9 @@ abstract class SkillingScriptFactory(val skillId: Int) {
     }
 
     /**
-     * Applies the existing best/worst/random personality choice to complete resource-and-location groups.
+     * Applies the existing best/worst/random personality choice to complete resource-and-location groups. Activities
+     * whose every zone is near the bot's recent escape from an attacker are left out while others remain, so the bot
+     * isn't sent straight back to that attacker.
      */
     protected fun <T> getBestSkillingActivity(
         bot: Bot,
@@ -171,7 +174,11 @@ abstract class SkillingScriptFactory(val skillId: Int) {
         levelFunc: (T) -> Int,
         options: Collection<BotSkillingActivity<T>>
     ): BotSkillingActivity<T>? {
-        val activities = getSkillingActivities(level, levelFunc, options)
+        val available = getSkillingActivities(level, levelFunc, options)
+        val escape = bot.recentEscape
+        val activities = if (escape == null) available else
+            available.filterNot { activity -> activity.zones.isNotEmpty() && activity.zones.all { escape.avoids(it) } }
+                .ifEmpty { available }
         if (bot.personality.isDextrous || bot.personality.isIntelligent) {
             return activities.firstOrNull()
         } else if (bot.personality.isDumb) {

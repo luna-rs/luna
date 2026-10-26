@@ -10,7 +10,10 @@ import api.bot.Suspendable.waitFor
 import api.drops.DropTableHandler
 import api.drops.SimpleDropTable
 import io.luna.game.model.mob.bot.Bot
+import api.bot.script.BotEscape
 import api.bot.script.DynamicBotScript
+import api.bot.script.ZonedBotScript
+import api.bot.script.lastEscape
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
@@ -34,6 +37,7 @@ import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -156,6 +160,17 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
          * How many health percent higher an intelligent bot with no food leaves when it would drop everything it owns.
          */
         private const val SMART_RISK_HP = 35
+
+        /**
+         * The run energy a bot that teleported home waits for before it goes back to work, so it can run if something
+         * goes for it again. Waiting also gives the attacker time to wander off.
+         */
+        private const val REST_RUN_ENERGY = 40.0
+
+        /**
+         * The longest a bot waits at home for its run energy.
+         */
+        private val MAX_REST = 5.minutes
     }
 
     /**
@@ -257,6 +272,21 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * Whether [prizeOwner] carries a prize.
      */
     private var prize = false
+
+    /**
+     * Where the bot was when this fight started.
+     */
+    private val attackedAt = bot.position
+
+    /**
+     * When the bot teleported home to get away, while it waits there for its run energy, or `null` if it isn't waiting.
+     */
+    private var restingSince: Long? = null
+
+    /**
+     * Whether the bot already reacted to getting away during this escape, so resting at home doesn't repeat it.
+     */
+    private var reactedToEscape = false
 
     override suspend fun init(resumed: Boolean): Boolean {
         startedAt = System.currentTimeMillis()
@@ -523,15 +553,26 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
      * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
      * up on the fight; otherwise it teleports home. A bot that gets away reacts to it ([BotReactions.reactToEscape]).
+     * Outside the Wilderness, a bot that teleports home remembers where it was attacked so its work keeps it away from
+     * there for a while, and waits at home until it has the energy to run.
      *
-     * @return `true` once the bot is out of combat.
+     * @return `true` once the bot is out of combat and done waiting.
      */
     private suspend fun runAway(): Boolean {
         val threat = combatPolicy.opponent() ?: focus.takeIf { focusAlive() }
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
             (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
-            BotReactions.reactToEscape(bot)
+            // React once, on getting away, while health still shows how close it was.
+            if (!reactedToEscape) {
+                BotReactions.reactToEscape(bot)
+                reactedToEscape = true
+            }
+            if (isResting()) {
+                delay(1.seconds)
+                return false
+            }
+            reactedToEscape = false
             return true
         }
         if (bot.inWilderness()) {
@@ -542,6 +583,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         // Auto retaliate would turn the bot back toward whatever hits it.
         bot.combat.isDisabled = true
         if (bot.healthPercent < 15) {
+            rememberEscape(threat ?: focus)
             handler.combat.fleeCombat()
         } else if (threat != null && threat.combat.target == bot && threat.isViewableFrom(bot)) {
             val tile = escapeTile
@@ -568,12 +610,42 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                     return false
                 } else {
                     bot.log("${stuck ?: "Nowhere to run from $threat"}, teleporting home.")
+                    rememberEscape(threat)
                     output.sendCommand("home")
                 }
             }
         }
         delay(600.milliseconds)
         return false
+    }
+
+    /**
+     * Records that the bot is teleporting home to get away from [attacker], so the zoned script it goes back to and
+     * the skilling factories keep it away from where it was attacked for a while, and makes the bot wait at home for
+     * its run energy. PK sessions handle their own escapes and are left alone.
+     */
+    private fun rememberEscape(attacker: Mob) {
+        if (pkSession != null) return
+        val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
+        bot.lastEscape = BotEscape(attackedAt, attacker.toString(), System.currentTimeMillis(), zone)
+        if (restingSince == null && bot.runEnergy < REST_RUN_ENERGY) {
+            bot.log("Will rest at home until run energy is back to $REST_RUN_ENERGY. runEnergy=${bot.runEnergy}")
+            restingSince = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Whether the bot, having teleported home, is still waiting there for its run energy. It waits until the energy is
+     * back to [REST_RUN_ENERGY], or for at most [MAX_REST].
+     */
+    private fun isResting(): Boolean {
+        val since = restingSince ?: return false
+        if (bot.runEnergy >= REST_RUN_ENERGY || System.currentTimeMillis() - since >= MAX_REST.inWholeMilliseconds) {
+            bot.log("Done resting. runEnergy=${bot.runEnergy}")
+            restingSince = null
+            return false
+        }
+        return true
     }
 
     /**
