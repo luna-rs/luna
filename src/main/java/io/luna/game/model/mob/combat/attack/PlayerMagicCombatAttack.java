@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.attack;
 import game.player.Sound;
 import game.combat.BarrowsEquipmentSet;
 import game.combat.spells.GodSpells;
+import game.combat.spells.IbanStaff;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
@@ -34,6 +35,8 @@ import java.util.function.BiFunction;
  * Bind, Snare, and Entangle also reject frozen targets, barricades, and no-movement duels before those costs.
  * God spells resolve Charge at the initial damage roll and apply their equipment-gated drains at cast time,
  * after requirements have succeeded. Splashes and rejected casts never drain the target.
+ * Iban Blast checks its player-owned staff balance before consuming runes and spends charges once on a successful
+ * cast, including splashes. The cost is one charge against NPCs or two against players, independent of impact.
  *
  * @author lare96
  */
@@ -119,9 +122,17 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
             return null;
         }
+        boolean ibanBlast = spellEffect != null && spellEffect.getSpell() == CombatSpell.IBAN_BLAST;
+        if (ibanBlast && !IbanStaff.INSTANCE.canCast(attacker, victim)) {
+            magic.setSelectedSpell(CombatSpellDefinition.NONE);
+            return null;
+        }
         if (!magic.removeRunes(spellEffect)) {
             // Cancel attack, we don't meet requirements.
             return null;
+        }
+        if (ibanBlast) {
+            IbanStaff.INSTANCE.consume(attacker, victim);
         }
         defensiveCasting = attacker.getCombat().getStance() == CombatStance.DEFENSIVE;
 
