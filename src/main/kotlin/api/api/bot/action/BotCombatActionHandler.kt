@@ -191,6 +191,10 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * A received hit must match the current opponent and the native combat timeout. Old hits cannot authorize
      * retaliation just because unrelated combat has started later. A current incoming attempt remains sufficient.
      * Callers must independently enforce native player combat legality.
+     *
+     * @param target The proposed player aggressor.
+     * @param nowTick The world tick used to check the received attack's launch time.
+     * @return `true` if a current attempt or matching recent attack permits retaliation, otherwise `false`.
      */
     fun canRetaliateAgainst(target: Player, nowTick: Long = bot.world.currentTick): Boolean {
         if (target.combat.target === bot) return true

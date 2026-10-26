@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *   <li>They obey queue semantics defined by {@link ActionType} (weak/strong/normal/soft rules).</li>
  * </ul>
  *
- * <h3>Scheduling model</h3>
+ * <h2>Scheduling model</h2>
  * <ul>
  *   <li>An action may be {@linkplain #submit() submitted} at any time.</li>
  *   <li>Once submitted, it enters {@link ActionState#PROCESSING} and participates in the queue each tick.</li>
@@ -25,13 +25,17 @@ import static com.google.common.base.Preconditions.checkArgument;
  *   <li>{@link #run()} returning {@code true} marks the action as complete and removes it from the queue.</li>
  * </ul>
  *
- * <h3>Instant execution</h3>
+ * <h2>Instant execution</h2>
  * <p>If {@link #instant} is {@code true}, the action attempts to execute on its first eligible cycle.
- * However, actions submitted <em>from within another action</em> (nested submission) are still not executed
- * until a subsequent queue cycle in the same phase. An action submitted into a later {@link ActionPhase}
- * can run when that phase is reached.
+ * {@link ActionQueue} snapshots each {@link ActionPhase} before executing its candidates. An action submitted
+ * after its own phase's snapshot waits for a later pass. An action submitted into a later phase may run when that
+ * phase is reached during the same turn.
+ * <p>
+ * After walking, existing interaction and combat actions may retry through {@link #runAfterMovement()}. This
+ * retry does not advance the action counter or repeat {@link #onProcess()}. An action first reached during that
+ * pass receives its normal processing hook and execution-counter check instead.
  *
- * <h3>Lifecycle hooks</h3>
+ * <h2>Lifecycle hooks</h2>
  * <ul>
  *   <li>{@link #onSubmit()} - called immediately when the action is registered into the queue.</li>
  *   <li>{@link #onProcess()} - called once per tick during the processing stage.</li>
@@ -182,14 +186,21 @@ public abstract class Action<T extends Mob> {
 
     /**
      * Returns when this action executes within the mob's turn, independently of its interruption type.
+     *
+     * @return The execution phase. Defaults to {@link ActionPhase#NORMAL}.
      */
     public ActionPhase getPhase() {
         return ActionPhase.NORMAL;
     }
 
     /**
-     * Retries reach after walking, without advancing the action counter or calling {@link #onProcess()} again.
-     * Only interaction and combat phases receive this hook. Return true to complete the action.
+     * Retries an existing interaction or combat action after the mob's walking has been processed.
+     * <p>
+     * Only {@link ActionPhase#INTERACTION} and {@link ActionPhase#COMBAT} receive this hook. It does not advance
+     * the action counter, increment the execution count, or invoke {@link #onProcess()} again. The default
+     * implementation leaves the action unchanged.
+     *
+     * @return {@code true} if the action should complete, otherwise {@code false}.
      */
     public boolean runAfterMovement() {
         return false;

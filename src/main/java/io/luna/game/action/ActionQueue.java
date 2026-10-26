@@ -13,12 +13,19 @@ import java.util.Queue;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Per-mob action scheduler. Execution follows {@link ActionPhase}; interruption and modal rules follow
- * {@link ActionType}. Strong actions interrupt weak actions, and normal actions wait while a modal is open.
+ * Manages the {@link Action}s submitted to a single {@link Mob}.
  * <p>
- * Each phase snapshots its candidates before execution. Submissions to a later phase can execute in the same turn;
- * submissions to the current phase wait. Insertion order is retained within each action type. Combat therefore has
- * a defined position after incoming effects and ordinary actions rather than relying on multimap key order.
+ * {@link #process()} runs actions in {@link ActionPhase} order. Each phase snapshots its candidates before
+ * execution, allowing an interaction to submit combat for a later phase of the same turn. Submissions to a phase
+ * whose snapshot has already been taken wait for a later pass. Insertion order is retained within each action type.
+ * <p>
+ * {@link ActionType} determines interruption and modal behavior independently of execution order. An unfinished
+ * strong action interrupts weak actions at each phase boundary. Normal actions continue receiving their processing
+ * hooks while a modal is open, but their execution counters do not advance.
+ * <p>
+ * {@link #processAfterMovement()} revisits interaction and combat phases after walking. Existing actions use
+ * {@link Action#runAfterMovement()} without a second counter update; newly submitted actions receive their first
+ * normal processing cycle. {@link #normalize()} clears per-tick processing flags after world synchronization.
  *
  * @author lare96
  */
@@ -38,10 +45,9 @@ public final class ActionQueue {
     private final ListMultimap<ActionType, Action<?>> processing = ArrayListMultimap.create();
 
     /**
-     * Per-cycle execution queue used to support nesting.
+     * The candidate snapshot for the phase currently being processed.
      * <p>
-     * Actions that remain in {@link ActionState#PROCESSING} after {@link Action#onProcess()} are added here for the
-     * execution stage.
+     * Candidates are checked again before execution so an earlier action may finish, interrupt, or clear them.
      */
     private final Queue<Action<?>> executing = new ArrayDeque<>();
 
@@ -57,8 +63,9 @@ public final class ActionQueue {
     /**
      * Submits an {@link Action} to this queue.
      * <p>
-     * The action is immediately placed into the processing set, transitioned to {@link ActionState#PROCESSING},
-     * and has {@link Action#onSubmit()} invoked.
+     * The action first transitions to {@link ActionState#PROCESSING} and receives {@link Action#onSubmit()}.
+     * It is added to the processing set only if that hook leaves it unfinished. Actions such as immediate
+     * consumption may therefore complete during submission without being retained by the queue.
      *
      * @param action The action to submit.
      */
@@ -174,9 +181,11 @@ public final class ActionQueue {
     }
 
     /**
-     * Processes effects, ordinary actions, interactions, then combat. Each phase takes its own snapshot so an
-     * interaction can establish combat in the same turn. Nested submissions to the current phase wait until
-     * the next turn. Strong actions are checked at every phase boundary.
+     * Processes this mob's actions once before walking, in {@link ActionPhase} declaration order.
+     * <p>
+     * Finished actions are removed before the phase passes begin. Incoming effects precede ordinary actions,
+     * reach-based interactions, and outgoing combat. Each pass applies the interruption and modal rules before
+     * executing its candidate snapshot.
      */
     public void process() {
         if (processing.isEmpty() && executing.isEmpty()) {
@@ -189,8 +198,11 @@ public final class ActionQueue {
     }
 
     /**
-     * Retries interactions and combat after walking. Existing actions do not advance their counters or processing
-     * hooks twice. Combat created by a just-reached interaction may execute its first cycle here.
+     * Revisits interaction and combat phases after this mob's walking has been processed.
+     * <p>
+     * Existing actions receive {@link Action#runAfterMovement()} without advancing their counters or repeating
+     * processing hooks. An action submitted since the initial pass receives its first normal processing cycle.
+     * This allows an interaction reached by walking to start combat during the same turn.
      */
     public void processAfterMovement() {
         if (processing.isEmpty()) {
@@ -200,6 +212,15 @@ public final class ActionQueue {
         processPhase(ActionPhase.COMBAT, true);
     }
 
+    /**
+     * Processes a candidate snapshot for one execution phase.
+     * <p>
+     * Strong-action suppression is checked before taking the snapshot. Candidates are rechecked for completion
+     * before execution, and modal-blocked normal actions retain their processing hooks without advancing time.
+     *
+     * @param phase The phase whose actions should be considered.
+     * @param afterMovement Whether existing candidates should receive their reach-retry hook.
+     */
     private void processPhase(ActionPhase phase, boolean afterMovement) {
         boolean strong = processing.get(ActionType.STRONG).stream().anyMatch(action -> !action.isFinished());
         if (strong) {
@@ -245,7 +266,10 @@ public final class ActionQueue {
     }
 
     /**
-     * Normalizes all delays when actions are scheduled within actions.
+     * Resets processing flags and normalizes newly submitted action counters after the world tick's action passes.
+     * <p>
+     * An action that did not receive a processing cycle starts counting from zero on its next eligible pass.
+     * This keeps delayed submissions consistent when their owner's turn has already finished.
      */
     public void normalize() {
         if (processing.isEmpty()) {

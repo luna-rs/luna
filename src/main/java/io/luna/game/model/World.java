@@ -347,7 +347,7 @@ public final class World {
      * <ol>
      *     <li>finish login + logout staging</li>
      *     <li>run scheduled tasks</li>
-     *     <li>pre-synchronization: input + movement + actions</li>
+     *     <li>pre-synchronization: cooldowns, client input, incoming impacts, phased actions, and movement retries</li>
      *     <li>synchronization: build block data + send update packets (parallel)</li>
      *     <li>post-synchronization: reset flags + flush</li>
      *     <li>housekeeping: chunk updates reset, bot event cleanup, collision snapshots</li>
@@ -380,15 +380,15 @@ public final class World {
     }
 
     /**
-     * Pre-synchronization phase: consume client input and run tick-dependent logic.
+     * Advances combat readiness, consumes client input, and processes each mob's turn before synchronization.
      * <p>
-     * Responsibilities:
-     * <ul>
-     *     <li>decode and handle incoming client messages (for non-logging-out players)</li>
-     *     <li>advance combat cooldowns once before input</li>
-     *     <li>process each active NPC's incoming impacts, phased actions, walking, and reach retry</li>
-     *     <li>process player controllers, incoming impacts, phased actions, walking, reach retry, and bot logic</li>
-     * </ul>
+     * Combat countdowns advance once before input can apply food delays. All eligible player input is then handled
+     * before NPC turns begin. NPCs process aggression, incoming impacts, phased actions, walking, and reach retries;
+     * players follow with controllers, tolerance, incoming impacts, phased actions, walking, reach retries, and bot
+     * decisions.
+     * <p>
+     * Incoming effects precede outgoing combat within each recipient's turn. The method retains NPC-before-player
+     * processing; it does not perform a global pass that delivers every hit before any mob may attack.
      */
     private void preSynchronize() {
 

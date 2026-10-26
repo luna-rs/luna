@@ -26,19 +26,22 @@ import java.util.Set;
 
 /**
  * An {@link Action} that advances a player toward an interaction target and executes matched interaction listeners
- * nce the target becomes reachable.
+ * once the target becomes reachable.
  * <p>
  * This action owns the standard interaction flow for reach-based events:
  * <ol>
  *     <li>the player begins interacting with a target {@link Entity}</li>
  *     <li>listeners are checked each cycle against their {@link InteractionPolicy}</li>
- *     <li>once one or more listeners become reachable, optional corrective movement is applied</li>
- *     <li>the player is re-focused on the target and the matched listeners are executed</li>
+ *     <li>once one or more listeners become reachable, optional corrective movement is requested</li>
+ *     <li>combat and pickup listeners execute immediately; other listeners use a delayed interaction action</li>
  * </ol>
  * <p>
  * Listeners are evaluated in their existing order. The first satisfied concrete policy becomes the authoritative
  * trigger for that reach cycle, and any other listeners matched in the same cycle are executed under that same
  * interaction result.
+ * <p>
+ * This action executes in {@link ActionPhase#INTERACTION}, before outgoing combat. After an actual walking step,
+ * {@link #runAfterMovement()} may retry reach without advancing the action counter a second time.
  *
  * @author lare96
  */
@@ -105,17 +108,30 @@ public final class InteractionAction extends Action<Player> {
      * The listeners still waiting to be satisfied for this interaction.
      */
     private List<InteractionActionListener> listeners;
-//todo docs
+    /**
+     * Whether a stationary interaction has already received its initial retry before reporting failure.
+     */
     private boolean retry;
 
-    /** Position of the last reach attempt; a post-movement retry is useful only after an actual step. */
+    /**
+     * The position of the last reach attempt, or {@code null} before the first attempt.
+     * A post-movement retry is needed only after the player has changed position.
+     */
     private Position lastAttemptPosition;
 
+    /**
+     * @return {@link ActionPhase#INTERACTION}, before listeners can establish outgoing combat.
+     */
     @Override
     public ActionPhase getPhase() {
         return ActionPhase.INTERACTION;
     }
 
+    /**
+     * Retries reach after the player has moved since the previous attempt.
+     *
+     * @return {@code true} if the repeated interaction attempt finishes, otherwise {@code false}.
+     */
     @Override
     public boolean runAfterMovement() {
         return !mob.getPosition().equals(lastAttemptPosition) && run();
@@ -165,7 +181,8 @@ public final class InteractionAction extends Action<Player> {
      *     <li>reachable listeners are queued and removed for post-reach execution</li>
      * </ul>
      * <p>
-     * If one or more listeners are reached, they are handled with {@link #onReached(boolean, boolean, InteractionPolicy, List)}.
+     * If one or more listeners are reached, they are handled with
+     * {@link #onReached(boolean, boolean, InteractionPolicy, List)}.
      * If nothing is reached and the player is no longer walking, the interaction fails through {@link #onStanding()}.
      *
      * @return {@code true} if this action has completed, otherwise {@code false}.
@@ -220,10 +237,12 @@ public final class InteractionAction extends Action<Player> {
     /**
      * Handles a successful reach cycle for this interaction.
      * <p>
-     * Any required corrective movement is resolved first. Listener execution is then deferred into a new weak action
-     * so that movement, if any, can complete before the final interaction runs.
+     * Any required corrective movement is requested first. Combat and pickup events invoke their matched
+     * listeners immediately; other events defer their listeners through the strong
+     * {@link DelayedInteractionAction} so the walking step can finish first.
      *
      * @param isMob {@code true} if the target is a {@link Mob}.
+     * @param combatEvent Whether the event uses immediate combat or pickup listener execution.
      * @param trigger The authoritative interaction policy that was satisfied first for this reach cycle.
      * @param pending The listeners to execute once the interaction is finalized.
      */
@@ -251,6 +270,8 @@ public final class InteractionAction extends Action<Player> {
      * This only applies to close {@link InteractionType#SIZE} interactions with distance {@code 1} against mobs or
      * size-{@code 1} entities. In that case, diagonal adjacency may be corrected by stepping to a cardinal tile, and
      * standing on the same tile may be corrected by stepping away.
+     * Ordinary immobilization prevents only a required corrective step; it does not reject an already-reached
+     * cardinal interaction that needs no movement.
      *
      * @param isMob {@code true} if the target is a {@link Mob}.
      * @param trigger The interaction policy that triggered the reach.

@@ -20,19 +20,50 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies the attack delays applied when player and NPC auto-retaliation begins.
+ * <p>
+ * Fresh flinches, repeated hits, the NPC idle boundary, rapid ranged styles, and exact cooldown readiness are
+ * checked separately. A real combat action also verifies the tick of the first NPC retaliatory swing.
+ *
+ * @author lare96
+ */
 class RetaliationTimingTest {
 
     @BeforeAll static void bindings() {
         api.bot.script.InventoryProductionFixtures.INSTANCE.initializeCombat();
     }
 
+    /**
+     * A living four-tick NPC with real retaliation state and a controllable world clock.
+     *
+     * @author lare96
+     */
     private static class NpcFixture {
+        /**
+         * The NPC whose retaliation delay is being checked.
+         */
         final Npc npc = mock(Npc.class, RETURNS_DEEP_STUBS);
+        /**
+         * The living aggressor used to trigger NPC retaliation.
+         */
         final Player player = mock(Player.class, RETURNS_DEEP_STUBS);
+        /**
+         * The world tick used for attack and flinch deadlines.
+         */
         final AtomicLong tick = new AtomicLong(100);
+        /**
+         * The action queue used to execute the first retaliatory swing.
+         */
         final ActionQueue actions = new ActionQueue(npc);
+        /**
+         * The NPC combat context retaining its real retaliation and cooldown behavior.
+         */
         final NpcCombatContext combat;
 
+        /**
+         * Creates a four-tick NPC whose retreat and leash rules do not obscure timing assertions.
+         */
         NpcFixture() {
             when(npc.getWorld().getCurrentTick()).thenAnswer(call -> tick.get());
             when(npc.getActions()).thenReturn(actions);
@@ -44,6 +75,9 @@ class RetaliationTimingTest {
             combat.setRetreatPolicy(RetreatPolicy.NONE);
         }
 
+        /**
+         * Advances the world tick and decrements the NPC attack cooldown once.
+         */
         void advance() {
             tick.incrementAndGet();
             combat.processAttackDelay();

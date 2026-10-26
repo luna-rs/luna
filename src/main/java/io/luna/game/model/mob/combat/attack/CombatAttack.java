@@ -16,8 +16,9 @@ import java.time.Instant;
  * Subclasses are responsible for calculating a base damage result in {@link #calculateDamage(Mob)} and for
  * implementing the concrete attack behavior in {@link #attack()}. This base class handles the shared combat pipeline,
  * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, combat timer refreshes,
- * attack delay application, and simple projectile timing hooks.
+ * attack delay application, and recipient-owned projectile timing callbacks.
  *
+ * @param <T> The mob type performing this attack.
  * @author lare96
  */
 public abstract class CombatAttack<T extends Mob> {
@@ -33,7 +34,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * The mob being attacked.
      * <p>
-     * This target is captured from the attacker's combat state when this attack instance is created.
+     * This reference is supplied when the attack is created and is retained through delayed delivery.
      */
     protected final Mob victim;
 
@@ -65,7 +66,10 @@ public abstract class CombatAttack<T extends Mob> {
      */
     private Instant timestamp;
 
-    /** Tick when the attack committed, used for gameplay recency independently of wall-clock time. */
+    /**
+     * The world tick at which this attack committed, or {@code -1} before {@link #apply()} succeeds.
+     * Gameplay recency checks use this value independently of the wall-clock timestamp.
+     */
     private long launchTick = -1;
 
     /**
@@ -177,20 +181,26 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * Called when the projectile timing action finishes, including interruption before arrival.
-     * Normal completion follows the arrival callback and does not imply that damage was delivered.
+     * Called when the recipient's projectile event finishes or is discarded.
+     * <p>
+     * Normal completion follows the arrival callback and does not imply that damage was delivered. Recipient
+     * cleanup and arrival failures report interruption. The legacy two-event scheduler reports completion once
+     * for the whole flight, even when both its launch and arrival events are discarded.
      *
-     * @param interrupted Whether the timing action was interrupted rather than completed normally.
+     * @param interrupted Whether the event was discarded or its arrival callback failed.
      */
     public void onProjectileFinished(boolean interrupted) {
 
     }
 
     /**
-     * Schedules arrival after an already displayed projectile's flight delay. Both normal completion and interruption
-     * notify the attack through the same lifecycle hook used by the legacy launch scheduler.
+     * Schedules the arrival of an already displayed projectile on the victim's incoming combat queue.
+     * <p>
+     * The deadline is relative to the current world tick and survives changes to the attacker's action queue.
+     * Both delivery and interruption notify {@link #onProjectileFinished(boolean)}.
      *
-     * @param arrivalDelay The positive server-tick delay until impact.
+     * @param arrivalDelay The non-negative delay in game ticks until the event is due.
+     * @throws IllegalArgumentException If {@code arrivalDelay} is negative.
      */
     protected final void scheduleProjectileArrival(int arrivalDelay) {
         victim.getCombat().getImpacts().schedule(arrivalDelay, this::onProjectileReached, this::onProjectileFinished);
@@ -205,9 +215,22 @@ public abstract class CombatAttack<T extends Mob> {
      * @param arrivalTicks The later legacy execution counter on which it arrives.
      */
     protected final void launchProjectile(int launchTicks, int arrivalTicks) {
+        /**
+         * Shares a single completion notification between the legacy launch and arrival events.
+         *
+         * @author lare96
+         */
         class Flight {
+            /**
+             * Whether this flight's completion hook has already been notified.
+             */
             private boolean finished;
 
+            /**
+             * Notifies the owning attack once for the complete flight.
+             *
+             * @param interrupted Whether an event was discarded or its callback failed.
+             */
             void finish(boolean interrupted) {
                 if (!finished) {
                     finished = true;
@@ -300,7 +323,9 @@ public abstract class CombatAttack<T extends Mob> {
         return timestamp;
     }
 
-    /** Returns the launch tick, or -1 if this attack has not committed. */
+    /**
+     * @return The world tick at which this attack committed, or {@code -1} if it has not committed.
+     */
     public long getLaunchTick() {
         return launchTick;
     }

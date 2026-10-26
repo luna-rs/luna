@@ -15,8 +15,9 @@ import io.luna.game.model.mob.interact.InteractionType;
 /**
  * A {@link CombatAttack} implementation for melee combat.
  * <p>
- * This attack plays the attacker's melee animation immediately, triggers the victim's defence animation, and queues
- * the prepared damage for application without projectile timing.
+ * This attack plays the attacker's melee animation immediately and schedules the prepared damage on the victim's
+ * incoming combat queue. Ordinary NPC-to-player melee is due in the current tick's later player queue pass;
+ * other melee hits use an explicit one-tick delay.
  * <p>
  * The base damage for the primary target is calculated as {@link CombatDamageType#MELEE}.
  *

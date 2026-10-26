@@ -128,6 +128,11 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
 
     /**
      * Removes membership before controller removal, making cleanup safe to call repeatedly.
+     *
+     * Incoming combat events and deferred damage actions are discarded before the player leaves the match.
+     * Combat targets, carried tools, and match interfaces are cleared without discarding unrelated inventory.
+     *
+     * @param player The player leaving this match or waiting area.
      */
     fun detach(player: Player) {
         dropFlag(player)

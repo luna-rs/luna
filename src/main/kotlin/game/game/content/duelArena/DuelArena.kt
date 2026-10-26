@@ -376,6 +376,15 @@ object DuelArena {
             return true
         }
 
+        /**
+         * Settles this duel once, awarding the combined stake to a winner or refunding a cancelled negotiation.
+         *
+         * Both participants are removed from the session before their controllers are cleaned up. Incoming
+         * combat events, deferred damage actions, and combat targets are cleared so a completed duel cannot
+         * deliver a pending hit after its participants return to the lobby.
+         *
+         * @param winner The winning participant, or `null` to cancel and refund both sides.
+         */
         fun finish(winner: Player?) {
             if (ended) return
             require(winner == null || contains(winner))
@@ -407,6 +416,14 @@ object DuelArena {
             }
         }
 
+        /**
+         * Restores a participant's controller, location, skills, and temporary combat effects after the duel.
+         *
+         * Safe-death handling may call this after settlement has already cleaned up the surviving participant.
+         * A duel that never started leaves the player's location and skills unchanged.
+         *
+         * @param player The participant whose normal state should be restored.
+         */
         fun cleanup(player: Player) {
             if (player.controllers.primary is DuelController) player.controllers.unregister()
             player.contextMenu.hide(PlayerContextMenuOption.ATTACK)

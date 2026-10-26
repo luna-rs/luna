@@ -10,6 +10,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies action registration, lifecycle callbacks, interruption, and phase scheduling.
+ * <p>
+ * The checks include nested submissions, queue clearing during execution, modal processing hooks, and delayed
+ * execution without changing the action queue's existing counter behavior.
+ *
+ * @author lare96
+ */
 class ActionQueueTest {
     @Test void modalBlockingRetainsProcessingHooksWithoutAdvancingTheExecutionCounter() {
         var mob = mock(io.luna.game.model.mob.Player.class, RETURNS_DEEP_STUBS);
@@ -37,9 +45,22 @@ class ActionQueueTest {
         assertEquals(1, executed[0]);
     }
 
+    /**
+     * A soft action that remains registered until a test completes or interrupts it.
+     *
+     * @author lare96
+     */
     private static class PersistentAction extends Action<Mob> {
+        /**
+         * The number of times this action received its submission hook.
+         */
         private int submissions;
 
+        /**
+         * Creates a persistent action for queue registration tests.
+         *
+         * @param mob The mob owning the action.
+         */
         PersistentAction(Mob mob) {
             super(mob, ActionType.SOFT);
         }

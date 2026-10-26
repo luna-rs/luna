@@ -32,8 +32,14 @@ import java.util.concurrent.CompletableFuture;
  *     <li>runs per-tick combat processing hooks, and</li>
  *     <li>fires the attack once the combat delay is ready.</li>
  * </ul>
- * The action remains active while combat should continue and finishes once the
- * target is cleared or combat otherwise ends.
+ * <p>
+ * This weak action executes in {@link ActionPhase#COMBAT}, after incoming effects and ordinary actions. If its
+ * selected attack is out of range, {@link #runAfterMovement()} may retry that attack after walking without
+ * repeating attack selection or per-tick processing hooks. Attack readiness belongs to {@link CombatContext}
+ * and continues advancing independently of this action's interruption lifecycle.
+ * <p>
+ * Clearing a target stops pursuit immediately. The action may remain registered until recent-combat status
+ * expires, after which normal completion performs the remaining combat cleanup.
  *
  * @author lare96
  */
@@ -44,14 +50,34 @@ public final class CombatAction extends Action<Mob> {
      */
     private final CombatContext<?> combat;
 
-    /** Give a pending engagement 30 ticks without movement or an attack before abandoning it. */
+    /**
+     * The number of stalled ticks allowed before an engagement outside recent combat is abandoned.
+     */
     private static final int MAX_STALLED_TICKS = 30;
+
+    /**
+     * The last position observed while tracking progress toward a pending attack.
+     */
     private Position lastProgressPosition;
+
+    /**
+     * The target whose pending attack is being checked for stalled progress.
+     */
     private Mob pendingTarget;
+
+    /**
+     * The consecutive processing cycles without target or position progress.
+     */
     private int stalledTicks;
 
-    /** Attack selected before walking, reused for the reach retry without repeating selection hooks. */
+    /**
+     * The out-of-range attack selected before walking, or {@code null} when no reach retry is pending.
+     */
     private CombatAttack<?> pendingAttack;
+
+    /**
+     * The target captured with {@link #pendingAttack}, used to reject a retry after a target change.
+     */
     private Mob pendingAttackTarget;
 
     /**
@@ -70,11 +96,22 @@ public final class CombatAction extends Action<Mob> {
         combat = mob.getCombat();
     }
 
+    /**
+     * @return {@link ActionPhase#COMBAT}, after effects and reach-based interaction listeners.
+     */
     @Override
     public ActionPhase getPhase() {
         return ActionPhase.COMBAT;
     }
 
+    /**
+     * Rechecks the selected attack's reach and legality after walking.
+     * <p>
+     * Only an attack that was out of range before walking is eligible. The pending reference is consumed before
+     * retrying, preventing a second swing from another retry call. A changed target discards the retry.
+     *
+     * @return {@code true} if combat should finish, otherwise {@code false}.
+     */
     @Override
     public boolean runAfterMovement() {
         CombatAttack<?> attack = pendingAttack;
@@ -170,7 +207,15 @@ public final class CombatAction extends Action<Mob> {
         return tryAttack(attack);
     }
 
-    /** Validates and executes one already-selected attack without repeating per-tick selection hooks. */
+    /**
+     * Performs final combat checks and applies an already-selected attack when its cooldown permits it.
+     * <p>
+     * Single-combat ownership, same-tile movement, and player stop-attack listeners are checked here for both
+     * the initial attempt and the post-movement retry.
+     *
+     * @param attack The attack selected for the current target.
+     * @return {@code true} if combat should finish, otherwise {@code false}.
+     */
     private boolean tryAttack(CombatAttack<?> attack) {
         Mob target = combat.getTarget();
         // Run final close-range combat checks before attacking.
@@ -256,7 +301,15 @@ public final class CombatAction extends Action<Mob> {
         }
     }
 
-    /** The combat timer starts after an attack; it cannot decide whether a first attack is still pending. */
+    /**
+     * Tracks progress while waiting to reach a target or finish an attack cooldown.
+     * <p>
+     * Target changes, position changes, and successful attacks reset the stalled count. A pending engagement is
+     * abandoned only after {@link #MAX_STALLED_TICKS} stalled cycles and when recent-combat status has expired.
+     *
+     * @param target The target of the pending attack.
+     * @return {@code true} if the action should finish, otherwise {@code false}.
+     */
     private boolean pendingAttackExpired(Mob target) {
         Position position = mob.getPosition();
         if (pendingTarget != target || !position.equals(lastProgressPosition)) {

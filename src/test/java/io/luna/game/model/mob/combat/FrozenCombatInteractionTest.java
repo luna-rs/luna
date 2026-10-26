@@ -17,6 +17,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies that ordinary immobilization blocks required melee approach steps without blocking cardinal reach.
+ * <p>
+ * The real interaction action receives cardinal, diagonal, and same-tile targets while its player is frozen.
+ * Only the already-reached interaction may invoke its listener.
+ *
+ * @author lare96
+ */
 class FrozenCombatInteractionTest {
 
     @Test void freezingAllowsCardinalMeleeButPreventsCorrectiveMovement() {

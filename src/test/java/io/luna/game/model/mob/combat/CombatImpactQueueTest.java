@@ -19,17 +19,53 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies recipient-owned combat deadlines, delivery order, and lifecycle cancellation.
+ * <p>
+ * The tests use a controllable world tick and the real queue and projectile schedulers. Shooter removal, recipient
+ * cleanup, nested submissions, and directional melee are checked independently of a live server.
+ *
+ * @author lare96
+ */
 class CombatImpactQueueTest {
 
+    /**
+     * A recipient with a real incoming queue, a controllable clock, and recorded callback events.
+     *
+     * @author lare96
+     */
     private static class Fixture {
+        /**
+         * The recipient that owns the scheduled events.
+         */
         final Mob recipient;
+        /**
+         * The world tick used for event deadlines.
+         */
         final AtomicLong tick = new AtomicLong(100);
+        /**
+         * Whether the recipient remains alive for delivery.
+         */
         final AtomicBoolean alive = new AtomicBoolean(true);
+        /**
+         * The real recipient-owned queue under test.
+         */
         final CombatImpactQueue queue;
+        /**
+         * The arrival and completion callbacks in observed order.
+         */
         final List<String> events = new ArrayList<>();
 
+        /**
+         * Creates a queue fixture with a generic mocked recipient.
+         */
         Fixture() { this(mock(Mob.class, RETURNS_DEEP_STUBS)); }
 
+        /**
+         * Creates a queue fixture for a specific recipient type.
+         *
+         * @param recipient The player, NPC, or generic mob receiving events.
+         */
         Fixture(Mob recipient) {
             this.recipient = recipient;
             when(recipient.isAlive()).thenAnswer(call -> alive.get());
@@ -39,11 +75,22 @@ class CombatImpactQueueTest {
             when(recipient.getCombat().getImpacts()).thenReturn(queue);
         }
 
+        /**
+         * Moves the world clock and processes one recipient queue pass.
+         *
+         * @param nextTick The world tick at which the queue should run.
+         */
         void at(long nextTick) {
             tick.set(nextTick);
             queue.process();
         }
 
+        /**
+         * Schedules an event whose arrival and completion are recorded by name.
+         *
+         * @param delay The delay in game ticks.
+         * @param name The label used in the event trace.
+         */
         void schedule(int delay, String name) {
             queue.schedule(delay, () -> events.add(name + "@" + tick.get()),
                     interrupted -> events.add(name + ":" + interrupted));
@@ -107,9 +154,23 @@ class CombatImpactQueueTest {
         assertEquals(List.of("new:true", "pending:true"), f.events);
     }
 
+    /**
+     * Exposes the real modern and legacy projectile schedulers while recording their lifecycle callbacks.
+     *
+     * @author lare96
+     */
     private static class Projectile extends CombatAttack<Mob> {
+        /**
+         * The recipient fixture recording projectile callback order.
+         */
         final Fixture fixture;
 
+        /**
+         * Creates a projectile whose callbacks are observed by the supplied fixture.
+         *
+         * @param attacker The mob launching the projectile.
+         * @param fixture The recipient and event trace used for delivery.
+         */
         Projectile(Mob attacker, Fixture fixture) {
             super(attacker, fixture.recipient, InteractionPolicy.STANDARD_LINE_OF_SIGHT, 4);
             this.fixture = fixture;
@@ -120,6 +181,9 @@ class CombatImpactQueueTest {
         @Override public void onProjectileLaunched() { fixture.events.add("launch@" + fixture.tick.get()); }
         @Override public void onProjectileReached() { fixture.events.add("hit@" + fixture.tick.get()); }
         @Override public void onProjectileFinished(boolean interrupted) { fixture.events.add("finish:" + interrupted); }
+        /**
+         * Schedules the legacy launch at the next tick and arrival three ticks after scheduling.
+         */
         void legacy() { launchProjectile(0, 2); }
     }
 

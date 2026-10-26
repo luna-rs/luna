@@ -22,24 +22,67 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies combat phase ordering, post-movement reach, and independent attack cooldowns.
+ * <p>
+ * Real action queues and combat actions run against controlled participants and reach results. The checks cover
+ * phase handoffs, four-tick cadence, lethal incoming damage, strong interruption, and immediate consumption.
+ *
+ * @author lare96
+ */
 class CombatSchedulingTest {
 
     @BeforeAll static void bindings() {
         api.bot.script.InventoryProductionFixtures.INSTANCE.initialize();
     }
 
+    /**
+     * A combat action environment with real countdown and queue behavior, and controlled attack effects.
+     *
+     * @author lare96
+     */
     private static class Fixture {
+        /**
+         * The attacker whose action queue is processed.
+         */
         final Mob mob = mock(Mob.class, RETURNS_DEEP_STUBS);
+        /**
+         * The living target used for reach and attack checks.
+         */
         final Mob victim = mock(Mob.class, RETURNS_DEEP_STUBS);
+        /**
+         * The combat context retaining real countdown and target state.
+         */
         final CombatContext<?> combat = mock(CombatContext.class,
                 withSettings().useConstructor(mob).defaultAnswer(CALLS_REAL_METHODS));
+        /**
+         * The selected attack whose applications are recorded.
+         */
         final CombatAttack<?> attack = mock(CombatAttack.class);
+        /**
+         * The real action queue used for phase and retry processing.
+         */
         final ActionQueue actions = new ActionQueue(mob);
+        /**
+         * The reach result exposed to collision checks.
+         */
         final AtomicBoolean reached = new AtomicBoolean(true);
+        /**
+         * Whether the attacker survives incoming test damage.
+         */
         final AtomicBoolean alive = new AtomicBoolean(true);
+        /**
+         * The fixture ticks in which an attack was applied.
+         */
         final List<Integer> swings = new ArrayList<>();
+        /**
+         * The current fixture turn, starting at zero.
+         */
         int tick;
 
+        /**
+         * Creates adjacent participants with a four-tick attack and configurable reach.
+         */
         Fixture() {
             doReturn(combat).when(mob).getCombat();
             when(mob.getActions()).thenReturn(actions);
@@ -64,6 +107,9 @@ class CombatSchedulingTest {
             combat.setTarget(victim);
         }
 
+        /**
+         * Runs one countdown, pre-movement action pass, reach retry, and counter normalization.
+         */
         void turn() {
             combat.processAttackDelay();
             actions.process();

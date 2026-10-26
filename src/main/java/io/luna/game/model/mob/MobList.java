@@ -34,7 +34,7 @@ import static com.google.common.base.Preconditions.checkState;
  * </p>
  *
  * <p>
- * <strong>Important:</strong> This list should never be used directly to remove players. Use {@link Player#logout()}
+ * <strong>Important:</strong> This list should never be used directly to remove players. Use {@link Player#logout(boolean)}
  * or {@link Player#forceLogout()} instead, both of which safely handle disconnection and persistence.
  * </p>
  *
@@ -236,13 +236,13 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Removes a mob from the list and frees its index.
-     *
-     * <p><strong>Warning:</strong> Never use this for players. Use {@link Player#logout()} or
-     * {@link Player#forceLogout()}.</p>
-     *
-     * <p>An NPC that is dead and waiting to respawn (see {@link Npc#despawn()}) can be removed too: it frees its slot
-     * and does not respawn.</p>
+     * Removes a mob from the list, marks it inactive, and frees its index.
+     * <p>
+     * Incoming combat events are discarded before the index can be reused. A despawned NPC may also be removed;
+     * its reserved slot is freed and it will no longer respawn.
+     * <p>
+     * Player removal must be initiated through {@link Player#logout(boolean)} so logout and persistence checks
+     * run first. The logout service calls this method when that lifecycle reaches world removal.
      *
      * @param mob The mob to remove.
      */

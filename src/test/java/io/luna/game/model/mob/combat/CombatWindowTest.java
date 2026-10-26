@@ -11,17 +11,42 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies the exclusive tick boundaries used by recent combat, single-combat ownership, and logout.
+ * <p>
+ * The world clock is advanced explicitly so no assertion depends on elapsed wall time. Ownership expiry, combat
+ * refreshes, and full context resets are checked against the real combat-window methods.
+ *
+ * @author lare96
+ */
 class CombatWindowTest {
 
     @BeforeAll static void bindings() {
         api.bot.script.InventoryProductionFixtures.INSTANCE.initialize();
     }
 
+    /**
+     * A combat context whose elapsed time is controlled by a mock world tick.
+     *
+     * @author lare96
+     */
     private static class Fixture {
+        /**
+         * The mob owning the combat-window state.
+         */
         final Mob mob = mock(Mob.class, RETURNS_DEEP_STUBS);
+        /**
+         * The world tick observed by the combat timer.
+         */
         final AtomicLong tick = new AtomicLong(100);
+        /**
+         * The real combat-window methods bound to the controlled clock.
+         */
         final CombatContext<?> combat;
 
+        /**
+         * Creates an unstarted combat timer bound to the controlled world clock.
+         */
         Fixture() {
             when(mob.getWorld().getCurrentTick()).thenAnswer(call -> tick.get());
             when(mob.getPosition()).thenReturn(new Position(100, 100));
