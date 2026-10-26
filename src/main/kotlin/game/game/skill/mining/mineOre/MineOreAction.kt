@@ -2,7 +2,7 @@ package game.skill.mining.mineOre
 
 import api.predef.*
 import api.predef.ext.*
-import game.skill.Skills
+import game.player.Sound
 import game.skill.mining.Mining
 import game.skill.mining.Ore
 import game.skill.mining.Ore.PURE_ESSENCE
@@ -10,10 +10,12 @@ import game.skill.mining.Ore.RUNE_ESSENCE
 import game.skill.mining.Pickaxe
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.`object`.ObjectType
 import java.util.WeakHashMap
 
 /**
@@ -32,6 +34,22 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
          * Rock -> the tick of the roll that emptied it. Players who succeed on the same tick all get ore.
          */
         private val emptiedOn = WeakHashMap<GameObject, Long>()
+
+        /**
+         * The tile and type of a mined rock -> the rock placed there in the map, until it grows back.
+         */
+        private val minedRocks = HashMap<Pair<Position, ObjectType>, MinedRock>()
+    }
+
+    /**
+     * A rock that has been mined, and is waiting to turn back into the rock placed in the map.
+     */
+    private class MinedRock(val placedId: Int) {
+
+        /**
+         * Counts the times this rock was mined. Only the timer started by the last of them grows the rock back.
+         */
+        var timesMined = 0
     }
 
     /**
@@ -54,7 +72,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      */
     private var stopFull = false
 
-        // TODO@0.5.0 Implement correct sounds: MINE_QUICK, MINE, FOUND_GEM, MINE_3, MINING_3, MINE_5.
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
             // No inventory space.
@@ -64,13 +81,13 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
         mob.mining.level < ore.level -> {
             // Check if we have required level.
-            mob.sendMessage("You need a Mining level of ${ore.level} to mine this.")
+            mob.newDialogue().text("You need a Mining level of ${ore.level} to mine this rock.").open()
             false
         }
 
         !Pickaxe.hasPick(mob, pick) -> {
             // Check if we still have a pickaxe.
-            mob.sendMessage("You need a pickaxe to mine ores.")
+            Pickaxe.sendNoPickaxeMessage(mob)
             false
         }
         // Check if rock isn't already mined, unless this player found ore on the same tick as the one who emptied it.
@@ -94,6 +111,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             swung = true
             mob.sendMessage("You swing your pick at the rock.")
             swing()
+        } else {
+            // The quick mining sound plays on every tick after the swing.
+            mob.playSound(Sound.MINE_QUICK)
         }
     }
 
@@ -118,16 +138,24 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 return
             }
             // Ore roll was successful.
-            mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
-            mob.mining.addExperience(ore.exp)
-          //  mob.playSound(Sound.MINING_COMPLETED)
+            val mined = currentAdd.first().id
+            mob.sendMessage(ore.minedMessage(mined))
+            mob.mining.addExperience(ore.exp(mined))
+            mob.playSound(if (ore == Ore.GEM_ROCK) Sound.FOUND_GEM else Sound.MINE)
+            if (Ore.ORE_TO_EMPTY[rockObj.id] == -1) {
+                // A rock with no empty rock never runs out: mine until the inventory is full.
+                if (mob.inventory.isFull) {
+                    stopFull = true
+                }
+                return
+            }
             deleteAndRespawnRock()
             complete()
         }
     }
 
     override fun add(): List<Item> {
-        if (ore != RUNE_ESSENCE) {
+        if (ore.rollsGems) {
             // The gem roll comes before the ore roll.
             gem = Mining.rollGem(mob)
             val foundGem = gem
@@ -135,18 +163,12 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 return listOf(Item(foundGem))
             }
         }
-        val (low, high) = ore.chance
-        return when {
-            ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
-                listOf(Item(PURE_ESSENCE.item)) else listOf(Item(RUNE_ESSENCE.item))
-
-            Skills.success(low, high, mob.mining.level) -> {
-                successTick = world.currentTick
-                listOf(Item(ore.item))
-            }
-
-            else -> emptyList()
+        if (ore == RUNE_ESSENCE) {
+            return listOf(Item(if (mob.mining.level >= PURE_ESSENCE.level) PURE_ESSENCE.item else RUNE_ESSENCE.item))
         }
+        val mined = ore.mine(mob, rockObj) ?: return emptyList()
+        successTick = world.currentTick
+        return listOf(Item(mined))
     }
 
     override fun onFinished() = mob.animation(Animation.CANCEL)
@@ -163,7 +185,8 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     /**
-     * Deletes and respawns an [Ore] rock object.
+     * Replaces the rock with its empty rock, or the next smaller rock, and grows the rock placed in the map back
+     * later.
      */
     private fun deleteAndRespawnRock() {
         if (rockObj.state == EntityState.INACTIVE) {
@@ -172,13 +195,18 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
         emptiedOn[rockObj] = successTick
         val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
-        if (emptyId != null && emptyId != -1) {
-            world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
-            val respawn = ore.respawnTicks
-            if (respawn != null) {
-                world.scheduleOnce(respawn) {
-                    world.addObject(rockObj.id, rockObj.position, rockObj.objectType, rockObj.direction, null)
-                }
+        if (emptyId == null || emptyId == -1) {
+            return
+        }
+        val tile = rockObj.position to rockObj.objectType
+        val minedRock = minedRocks.getOrPut(tile) { MinedRock(rockObj.id) }
+        val timesMined = ++minedRock.timesMined
+        world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
+        val respawn = Mining.scaleRespawn(ore.respawnTicks(rockObj.id) ?: return, world.players.size())
+        world.scheduleOnce(respawn) {
+            if (minedRock.timesMined == timesMined) {
+                minedRocks.remove(tile)
+                world.addObject(minedRock.placedId, rockObj.position, rockObj.objectType, rockObj.direction, null)
             }
         }
     }

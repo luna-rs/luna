@@ -81,7 +81,7 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<KotlinCompile>().all {
-    // TODO@Lunascape We will need this flag in later Kotlin versions for script files to be recognized.
+    // Allow game scripts (.kts) to compile from the configured source directories.
     kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
     kotlinOptions.jvmTarget = "21"
 }
