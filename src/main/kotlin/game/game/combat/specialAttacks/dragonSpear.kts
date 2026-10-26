@@ -2,6 +2,7 @@ package game.combat.specialAttacks
 
 import api.combat.player.VoidCombatAttack
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import api.predef.ext.*
 import engine.combat.status.BasicStatusEffect
 import engine.combat.status.StatusEffectType
@@ -11,7 +12,6 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_SPEAR
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
-
 
 val SHOVE_GRAPHIC = Graphic(253, 100, 0)
 val STUNNED_GRAPHIC = Graphic(254, 100, 0)
@@ -46,8 +46,15 @@ fun applyShoveStun(victim: Mob) {
  * larger NPCs still consume the normal special energy and receive the stun without changing position.
  * Barricades are rejected before energy consumption, visuals, or status effects, and special selection is cleared.
  */
+/**
+ * Configures the dragon spear special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = DRAGON_SPEAR,
        drain = 25) {
+
+    launchSound = Sound.SHOVE
 
     attack {
         if (victim is Npc && victim.id in BARRICADE_IDS) {

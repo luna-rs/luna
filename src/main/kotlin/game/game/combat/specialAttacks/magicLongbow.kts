@@ -1,6 +1,7 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import api.predef.*
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
@@ -48,9 +49,16 @@ fun calculateMaxHit(source: PlayerRangedCombatAttack): Int {
     return ((combatStat + 320) / 640).toInt()
 }
 
+/**
+ * Configures the magic longbow special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = MAGIC_LONGBOW,
        drain = 25,
        attackBonus = 1.0) {
+
+    launchSound = Sound.POWERSHOT
 
     attack {
         ranged(ANIMATION,

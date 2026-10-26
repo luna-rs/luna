@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
+import game.player.Sound;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -15,16 +16,14 @@ import java.time.Instant;
  * <p>
  * Subclasses are responsible for calculating a base damage result in {@link #calculateDamage(Mob)} and for
  * implementing the concrete attack behavior in {@link #attack()}. This base class handles the shared combat pipeline,
- * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, combat timer refreshes,
+ * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, player launch audio,
+ * combat timer refreshes,
  * attack delay application, and recipient-owned projectile timing callbacks.
  *
  * @param <T> The mob type performing this attack.
  * @author lare96
  */
 public abstract class CombatAttack<T extends Mob> {
-
-    // TODO@0.5.0 Correct weapon sounds. Think this can be done with other combat weapons though through JSON.
-    //  Or it might be randomized, some tests need to be done.
 
     /**
      * The mob performing the attack.
@@ -113,7 +112,9 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This method calculates the base damage, passes it through {@link #onAttack(CombatDamage)} to allow subclasses
      * to modify or cancel the result, then applies the standard combat delay and timer updates before invoking {@link #attack()}.
-     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it.
+     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it. An optional
+     * player launch sound is captured before preparation can consume equipment, then played once immediately before
+     * the attack behavior. Misses and accurate zero hits still play the sound; cancellation suppresses it.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -121,6 +122,7 @@ public abstract class CombatAttack<T extends Mob> {
     public final void apply() {
         // todo onAttack is redundant, do anything within calculate damage?
         // todo maybe just only pass the builder until attack is ready to run?
+        Sound attackSound = getAttackSound();
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);
@@ -137,7 +139,26 @@ public abstract class CombatAttack<T extends Mob> {
         victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
+        if (attackSound != null && attacker instanceof Player player) {
+            player.playSound(attackSound);
+            if (victim instanceof Player other && other != player) {
+                other.playSound(attackSound);
+            }
+        }
         attack();
+    }
+
+    /**
+     * Selects an optional player attack launch sound before damage preparation or ammunition consumption.
+     * <p>
+     * The captured sound is sent once to the attacking player and a player victim only after the attack commits,
+     * including inaccurate and zero-damage attacks. Cancelled attacks remain silent. The default leaves spell,
+     * NPC, and custom attack audio on their existing paths; specials may override ordinary weapon selection.
+     *
+     * @return The launch sound, or {@code null} to suppress shared launch playback.
+     */
+    protected Sound getAttackSound() {
+        return null;
     }
 
     /**

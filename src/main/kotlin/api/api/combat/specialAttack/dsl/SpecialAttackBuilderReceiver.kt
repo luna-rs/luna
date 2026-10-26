@@ -26,6 +26,8 @@ import java.util.function.BiFunction
  *
  * This receiver exposes helper methods for constructing melee, ranged, and magic combat attacks that automatically
  * integrate special attack launch handling, custom damage calculation, and arrival callbacks.
+ * Melee and ranged builders use [SpecialAttackDataReceiver.launchSound] instead of ordinary weapon audio.
+ * A successful commit sends it once; additional hit callbacks do not replay the sound.
  * Applied damage first runs the base attack's experience and poison handling, then the special arrival callback.
  *
  * The receiver is created for a single attacker, victim, and special attack configuration.
@@ -64,6 +66,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
               range: Int = atkCombat.weapon.range,
               speed: Int = atkCombat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
+            /**
+             * Uses the special's explicit launch sound, suppressing ordinary weapon audio when absent.
+             *
+             * @return The configured launch sound, or `null` for silence.
+             */
+            override fun getAttackSound(): Sound? = receiver.launchSound
+
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -110,6 +119,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
              * Whether the initial projectile delivered a hit, including an inaccurate or zero-damage hit.
              */
             private var delivered = false
+
+            /**
+             * Uses the special's explicit launch sound, suppressing ordinary weapon audio when absent.
+             *
+             * @return The configured launch sound, or `null` for silence.
+             */
+            override fun getAttackSound(): Sound? = receiver.launchSound
 
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }

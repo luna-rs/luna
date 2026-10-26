@@ -1,6 +1,7 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_LONGSWORD
@@ -21,10 +22,17 @@ val GRAPHIC = Graphic(248, 100, 0)
  */
 val MAX_HIT_BONUS = 0.25
 
+/**
+ * Configures the dragon longsword special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = DRAGON_LONGSWORD,
        drain = 25,
        meleeDefenceBonus = EquipmentBonus.SLASH_DEFENCE,
        strengthBonus = MAX_HIT_BONUS) {
+
+    launchSound = Sound.CLEAVE
 
     attack { melee(ANIMATION) }
 

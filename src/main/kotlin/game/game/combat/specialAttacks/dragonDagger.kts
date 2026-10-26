@@ -1,6 +1,7 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Equipment.EquipmentBonus
@@ -56,15 +57,21 @@ fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
     })
 }
 
+/**
+ * Configures the dragon dagger special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = DRAGON_DAGGER,
        drain = 25,
        meleeDefenceBonus = EquipmentBonus.SLASH_DEFENCE,
        attackRollMultiplier = ATTACK_ROLL_MULTIPLIER,
        strengthBonus = MAX_HIT_BONUS) {
 
+    launchSound = Sound.PUNCTURE
+
     // Use the dragon dagger special attack animation.
     attack { melee(ANIMATION) }
-
 
     // Resolve and apply the second strike, apply graphics.
     launched {

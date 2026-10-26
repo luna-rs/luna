@@ -2,11 +2,13 @@ package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
 import game.combat.BarrowsEquipmentSet;
+import game.player.Sound;
 import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
+import io.luna.game.model.def.WeaponSoundDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
@@ -25,9 +27,9 @@ import java.util.function.BiFunction;
 /**
  * A {@link RangedCombatAttack} implementation for ranged attacks performed by {@link Player}s.
  * <p>
- * This specialization captures the stance and poison source before ammunition is consumed. Experience and poison are
- * applied when damage is delivered, using the damage capped to the victim's remaining health. Equipment changes during
- * projectile flight therefore do not change the captured poison source.
+ * This specialization selects a verified launch sound and captures the stance and poison source before ammunition
+ * is consumed. Experience and poison are applied when damage is delivered, using the damage capped to the victim's
+ * remaining health. Equipment changes during projectile flight therefore do not change the captured poison source.
  *
  * @author lare96
  */
@@ -134,6 +136,18 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
     @Override
     protected boolean usesProjectileTiming() {
         return ammo != null;
+    }
+
+    /**
+     * Resolves the verified ordinary ranged sound from equipment and style before attack processing.
+     * Special attack builders override this selection with their configured launch sound.
+     *
+     * @return The ordinary launch sound, or {@code null} when this weapon or style is unverified.
+     */
+    @Override
+    protected Sound getAttackSound() {
+        return WeaponSoundDefinition.resolve(attacker.getEquipment().computeIdForIndex(Equipment.WEAPON),
+                attacker.getCombat().getStyleDef(), CombatDamageType.RANGED);
     }
 
     @Override
