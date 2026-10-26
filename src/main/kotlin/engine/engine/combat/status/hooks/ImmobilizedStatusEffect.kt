@@ -10,6 +10,7 @@ import kotlin.time.Duration
  *
  * This effect clears the affected mob's current walking queue when applied. Its expiry is measured against the
  * world tick, so processing the victim's status action during the application tick does not shorten the freeze.
+ * Status queries also use this deadline, allowing expiry-tick input before the status action removes the effect.
  *
  * @param mob The mob being immobilized.
  * @param duration The amount of time the immobilization should last.
@@ -30,6 +31,8 @@ open class ImmobilizedStatusEffect(mob: Mob, duration: Duration) :
         expiresAt = mob.world.currentTick + countdown
         mob.walking.clear()
     }
+
+    override fun hasExpired(): Boolean = mob.world.currentTick >= expiresAt
 
     override fun process() {
         // isReady decrements after this hook; include that decrement when projecting the absolute deadline.

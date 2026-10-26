@@ -21,6 +21,8 @@ import kotlin.reflect.full.isSubclassOf
  *
  * This action runs every game tick and checks each active [StatusEffect]. When an effect becomes ready, its [StatusEffect.run]
  * method is called. Effects that return `true` from [StatusEffect.run] are removed.
+ * Effects with an absolute expiry deadline stop participating in queries and replacement checks as soon as that
+ * deadline passes, even when player input or another mob's actions run before this action's cleanup.
  *
  * Player status effects can save persistent data into [statusEffectData] and later be restored through [load].
  *
@@ -54,6 +56,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      *
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
      * decide whether the new effect can replace it.
+     * An expired effect permits replacement immediately and receives its completion callback once when replaced.
      * Poison is rejected before replacement checks when antipoison is active, the NPC definition grants immunity,
      * or the NPC is awaiting a finishing item. This also blocks poison reapplied by the hit that prepared execution.
      * Existing poison accepts only a stronger severity and retains its countdown instead of restarting the effect.
@@ -70,14 +73,16 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
         val current = effects[listener.type]
 
         if (current != null) {
-            if (onlyIfAbsent) {
-                return false
-            } else if (!current.refreshable) {
-                return false
-            } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
-                return current.strengthenFrom(listener)
-            } else if (current.countdown > listener.countdown) {
-                return false
+            if (!current.hasExpired()) {
+                if (onlyIfAbsent) {
+                    return false
+                } else if (!current.refreshable) {
+                    return false
+                } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
+                    return current.strengthenFrom(listener)
+                } else if (current.countdown > listener.countdown) {
+                    return false
+                }
             }
             current.complete()
         }
@@ -94,7 +99,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      * @return `true` if [type] is active.
      */
     operator fun contains(type: StatusEffectType): Boolean {
-        return effects.containsKey(type)
+        return effects[type]?.hasExpired() == false
     }
 
     /**
@@ -117,7 +122,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun has(type: StatusEffectType, classType: Class<out StatusEffect<out Mob>>): Boolean {
         val effect = effects[type] ?: return false
-        return effect::class.isSubclassOf(classType.kotlin)
+        return !effect.hasExpired() && effect::class.isSubclassOf(classType.kotlin)
     }
 
     /**
@@ -129,7 +134,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun has(type: StatusEffectType, classType: KClass<out StatusEffect<out Mob>>): Boolean {
         val effect = effects[type] ?: return false
-        return effect::class.isSubclassOf(classType)
+        return !effect.hasExpired() && effect::class.isSubclassOf(classType)
     }
 
     /**

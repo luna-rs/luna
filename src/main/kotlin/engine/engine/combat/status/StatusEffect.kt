@@ -47,6 +47,17 @@ abstract class StatusEffect<T : Mob>(val mob: T,
     abstract fun run(): Boolean
 
     /**
+     * Checks whether an absolute expiry deadline has passed, independently of status-action processing.
+     * Expired effects no longer participate in status queries or prevent replacement. Queries do not remove them;
+     * normal status processing or replacement still owns completion callbacks.
+     *
+     * Countdown-only effects retain their normal lifecycle by returning `false`.
+     *
+     * @return `true` if this effect has reached its absolute expiry deadline.
+     */
+    open fun hasExpired(): Boolean = false
+
+    /**
      * Processes one game tick and checks whether this effect is ready to run.
      *
      * [process] runs before countdown is decremented. When the countdown reaches zero, it is reset to the original
