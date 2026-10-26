@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat.damage;
 import io.luna.game.event.impl.CombatDamageReceivedEvent;
 import engine.combat.prayer.CombatPrayerEffects;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 
@@ -122,6 +123,9 @@ public final class CombatDamage {
         attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
         victim.getCombat().setLastDamageReceived(applied);
+        if (victim instanceof Npc npc) {
+            npc.onDamageApplied(applied);
+        }
         if (victim instanceof Player && victim != attacker) {
             victim.getPlugins().post(new CombatDamageReceivedEvent((Player) victim, applied));
         }
