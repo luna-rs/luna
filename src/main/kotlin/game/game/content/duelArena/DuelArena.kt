@@ -65,6 +65,11 @@ object DuelArena {
     private val attacks = WeakHashMap<CombatAttack<*>, Duel>()
     private var Player.duelHistory by Attr.string().persist("duel_arena_history")
     var Player.duelEscrow by Attr.string().persist("duel_arena_escrow")
+
+    /**
+     * Surviving ammunition owed to this player, kept separate from stakes so a loss cannot transfer it to the winner.
+     */
+    private var Player.duelAmmo by Attr.string().persist("duel_arena_ammo")
     val arenas = listOf(Position(3333, 3244), Position(3364, 3225), Position(3333, 3206),
         Position(3364, 3244), Position(3333, 3225), Position(3364, 3206))
     private val flowers = (2460..2468).toSet()
@@ -118,7 +123,8 @@ object DuelArena {
         val incoming = requests[other]
         if (incoming?.first === player && incoming.second > System.currentTimeMillis()) {
             requests.remove(other)
-            if (player.duelEscrow.isNotEmpty() || other.duelEscrow.isNotEmpty()) {
+            if (player.duelEscrow.isNotEmpty() || other.duelEscrow.isNotEmpty() ||
+                player.duelAmmo.isNotEmpty() || other.duelAmmo.isNotEmpty()) {
                 claim(player); claim(other)
                 return false
             }
@@ -144,6 +150,31 @@ object DuelArena {
         player.duelEscrow = items.joinToString(";") { "${it.id}:${it.amount}" }
     }
 
+    /**
+     * Reads ammunition retained during a duel or left unclaimed after settlement or restart.
+     */
+    private fun ammunition(player: Player): List<Item> = if (player.duelAmmo.isEmpty()) emptyList() else
+        player.duelAmmo.split(';').map { record ->
+            val parts = record.split(':')
+            Item(parts[0].toInt(), parts[1].toInt())
+        }
+
+    /**
+     * Retains one surviving projectile for its original owner. Ammunition is recorded at launch so logout,
+     * death, and clearing pending combat events cannot lose the refund. Full stacks are kept as separate entries.
+     */
+    fun retainAmmo(player: Player, item: Item) {
+        require(item.amount == 1)
+        val items = ammunition(player).toMutableList()
+        val index = items.indexOfFirst { it.id == item.id && it.amount < Int.MAX_VALUE }
+        if (index < 0) items.add(item) else items[index] = items[index].addAmount(1)
+        player.duelAmmo = items.joinToString(";") { "${it.id}:${it.amount}" }
+    }
+
+    /**
+     * Returns settled stakes and the player's own surviving ammunition to inventory, then bank. Items that do not
+     * fit remain persisted for a later claim; ammunition is never included in the opponent's winnings.
+     */
     fun claim(player: Player) {
         if (player in sessions) return
         val remaining = mutableListOf<Item>()
@@ -153,7 +184,15 @@ object DuelArena {
             remaining.add(item)
         }
         save(player, remaining)
-        if (remaining.isNotEmpty()) player.sendMessage("Make room in your inventory or bank, then speak to Mubariz to collect your stake.")
+        val remainingAmmo = mutableListOf<Item>()
+        for (item in ammunition(player)) {
+            if (player.inventory.hasSpaceFor(item) && player.inventory.add(item)) continue
+            if (player.bank.hasSpaceFor(item) && player.bank.add(item)) continue
+            remainingAmmo.add(item)
+        }
+        player.duelAmmo = remainingAmmo.joinToString(";") { "${it.id}:${it.amount}" }
+        if (remaining.isNotEmpty() || remainingAmmo.isNotEmpty())
+            player.sendMessage("Make room in your inventory or bank, then speak to Mubariz to collect your stake and ammunition.")
     }
 
     fun login(player: Player) {

@@ -125,6 +125,16 @@ public class PlayerController {
     }
 
     /**
+     * Retains a surviving fired projectile for an activity instead of placing it on the ground.
+     *
+     * @param item The single consumed item that survived its breakage roll.
+     * @return Whether this controller accepted responsibility for returning the item to its owner.
+     */
+    public boolean recoverAmmo(io.luna.game.model.item.Item item) {
+        return false;
+    }
+
+    /**
      * Called before a generated {@link ControllableEvent} is processed or posted
      * to plugins.
      * <p>

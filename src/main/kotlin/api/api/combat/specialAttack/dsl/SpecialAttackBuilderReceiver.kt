@@ -104,6 +104,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param range The maximum attack range.
      * @param projectileDiscarded Cleanup when the initial projectile is interrupted or finishes without delivering
      * a hit. Delivered misses and zero hits still run the ordinary arrival callback instead.
+     * @param recoverAtLaunch Whether the fired item lands at the initial target; chains defer recovery until they end.
      * @return A configured ranged combat attack instance.
      */
     fun ranged(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.RANGED),
@@ -112,13 +113,16 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                end: Graphic? = atkCombat.ammoDef.endGraphic,
                speed: Int = atkCombat.weapon.speed,
                range: Int = atkCombat.weapon.range,
-               projectileDiscarded: () -> Unit = {}): PlayerRangedCombatAttack {
+               projectileDiscarded: PlayerRangedCombatAttack.() -> Unit = {},
+               recoverAtLaunch: Boolean = true): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
                                                  speed, range) {
             /**
              * Whether the initial projectile delivered a hit, including an inaccurate or zero-damage hit.
              */
             private var delivered = false
+
+            override fun recoverAmmoAtLaunch(): Boolean = recoverAtLaunch
 
             /**
              * Uses the special's explicit launch sound, suppressing ordinary weapon audio when absent.
@@ -136,8 +140,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onProjectileFinished(interrupted: Boolean) {
+                super.onProjectileFinished(interrupted)
                 if (interrupted || !delivered) {
-                    projectileDiscarded()
+                    projectileDiscarded(this)
                 }
             }
 

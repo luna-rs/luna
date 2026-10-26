@@ -6,6 +6,7 @@ import io.luna.game.action.Action
 import io.luna.game.action.ActionState
 import io.luna.game.action.ActionType
 import io.luna.game.model.LocalProjectile
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -73,6 +74,19 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
      * The hit delivered by the current synchronous rebound attempt, or null when delivery was skipped or cancelled.
      */
     private var appliedDamage: CombatDamage? = null
+
+    /**
+     * The last committed projectile's landing tile. Rebounds share the one consumed axe's recovery ownership.
+     */
+    var recoveryPosition: Position = source.launchedTargetPosition
+
+    /**
+     * Ends the chain and recovers its single surviving axe, including misses, exhaustion, and interruption.
+     */
+    fun finish() {
+        source.recoverAmmo(recoveryPosition, 0)
+        attacker.combat.specialBar.isLocked = false
+    }
 
     /**
      * Applies one rebound through defence hooks and continues only after an accurate hit was actually delivered.
@@ -159,17 +173,18 @@ fun handleChainHit(
     targets: Iterator<Mob>,
     source: ChainHitCombatAttack,
     attacksLeft: Int) {
-    while (attacker.isAlive && targets.hasNext() && attacksLeft > 0) {
+    while (attacker.isAlive && attacker.state == EntityState.ACTIVE && targets.hasNext() && attacksLeft > 0) {
         val nextVictim = targets.next()
         if (!nextVictim.combat.isAttackable || !isVisibleRebound(origin, nextVictim) ||
             !attacker.controllers.checkCombat(nextVictim) || !attacker.combat.checkMultiCombat(nextVictim)) {
             continue
         }
         if (!attacker.combat.specialBar.drain(10, true)) {
-            attacker.combat.specialBar.isLocked = false
+            source.finish()
             return
         }
         val nextDamage = source.calculateDamage(nextVictim)
+        source.recoveryPosition = nextVictim.position
         nextVictim.combat.markAttackedBy(attacker)
         PROJECTILE(lastVictim, nextVictim).display()
         nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
@@ -177,20 +192,20 @@ fun handleChainHit(
                 if (source.applyRebound(nextDamage)) {
                     handleChainHit(attacker, origin, nextVictim, targets, source, attacksLeft - 1)
                 } else {
-                    attacker.combat.specialBar.isLocked = false
+                    source.finish()
                 }
                 return true
             }
 
             override fun onFinished() {
                 if (state == ActionState.INTERRUPTED) {
-                    attacker.combat.specialBar.isLocked = false
+                    source.finish()
                 }
             }
         })
         return
     }
-    attacker.combat.specialBar.isLocked = false
+    source.finish()
 }
 
 attack(type = RUNE_THROWN_AXE,
@@ -200,7 +215,11 @@ attack(type = RUNE_THROWN_AXE,
         ranged(animationId = ANIMATION,
                start = GRAPHIC,
                projectileFunction = PROJECTILE,
-               projectileDiscarded = { attacker.combat.specialBar.isLocked = false })
+               projectileDiscarded = {
+                   recoverAmmo(launchedTargetPosition, 0)
+                   attacker.combat.specialBar.isLocked = false
+               },
+               recoverAtLaunch = false)
     }
 
     launched {
@@ -210,13 +229,14 @@ attack(type = RUNE_THROWN_AXE,
     }
 
     arrived {
+        val rangedSource = source as PlayerRangedCombatAttack
         // A missed initial throw must not spend energy on any rebounds.
         if (!damage.isAccurate) {
+            rangedSource.recoverAmmo(rangedSource.launchedTargetPosition, 0)
             attacker.combat.specialBar.isLocked = false
             return@arrived
         }
         val attacksLeft = floor(attacker.combat.specialBar.energy / drain.toDouble()).toInt().coerceAtMost(MAX_REBOUNDS)
-        val rangedSource = source as PlayerRangedCombatAttack
         val origin = rangedSource.launchedTargetPosition
         val filter: (Mob) -> Boolean =
             { it != attacker && it != victim && it.combat.isAttackable && attacker.controllers.checkCombat(it) &&
@@ -229,6 +249,7 @@ attack(type = RUNE_THROWN_AXE,
             // Use recursion to handle chain hits.
             handleChainHit(attacker, origin, victim, targets, ChainHitCombatAttack(rangedSource), attacksLeft)
         } else {
+            rangedSource.recoverAmmo(rangedSource.launchedTargetPosition, 0)
             attacker.combat.specialBar.isLocked = false
         }
     }

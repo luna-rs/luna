@@ -117,6 +117,15 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
         return false;
     }
 
+    /**
+     * Returns the displayed projectile's travel duration in whole game ticks, excluding the damage delivery offset.
+     *
+     * @return The delay used for recovered ammunition after the projectile is displayed.
+     */
+    protected final int getAmmoLandingDelay() {
+        return Math.max(0, projectileHitDelay - 1);
+    }
+
     @Override
     public CombatDamage calculateDamage(Mob other) {
         return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.RANGED).build().resolve();
