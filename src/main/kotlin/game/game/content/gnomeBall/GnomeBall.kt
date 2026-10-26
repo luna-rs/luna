@@ -73,6 +73,15 @@ object GnomeBall {
 
     fun session(player: Player): Session? = sessions[player]
     fun hasBall(player: Player): Boolean = player.matchBall && player.equipment[Equipment.WEAPON]?.id == BALL
+
+    /**
+     * Returns only the NPC holding this player's current match ball, excluding other players' possessions.
+     * Wingers return it automatically; a defending baller must be tackled through the normal interaction.
+     */
+    fun holder(player: Player): Npc? {
+        val owner = session(player) ?: return null
+        return gnomes.entries.firstOrNull { it.value.owner === owner }?.key
+    }
     private fun live(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive && inside(player.position)
     private fun ready(player: Player): Boolean = live(player) && !player.isLocked && !player.combat.inCombat()
     private fun nearby(player: Player, npc: Npc, distance: Int): Boolean = npc.state == EntityState.ACTIVE &&

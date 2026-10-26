@@ -119,6 +119,15 @@ enum class SubZone(
         parent = { GNOME_STRONGHOLD }),
 
     /**
+     * Central playable lane of the native Gnome Ball pitch. The native area listener owns admission and
+     * possession; the shared travel layer reaches the gate/pitch and retains its existing fallback.
+     */
+    GNOME_BALL_PITCH(
+        inside = Position(2389, 3488),
+        area = SimpleBoxArea.of(2384, 3484, 2407, 3492),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+
+    /**
      * Barbarian course including its upper platform, entered through the northern pipe.
      */
     BARBARIAN_OUTPOST_AGILITY(
