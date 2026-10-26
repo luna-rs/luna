@@ -125168,6 +125168,7 @@
       "y": 3182,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125181,6 +125182,7 @@
       "y": 3167,
       "z": 0
     },
+    "route_strategy": "OUTDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125203,6 +125205,7 @@
       "y": 3193,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125580,6 +125583,7 @@
       "y": 3194,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125667,7 +125671,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 2,
       "frequency": "NORMAL"
     }
   },
