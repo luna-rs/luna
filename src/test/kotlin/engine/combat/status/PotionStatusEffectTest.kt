@@ -26,15 +26,21 @@ class PotionStatusEffectTest {
         @JvmStatic
         @BeforeAll
         fun loadItemNames() {
+            api.bot.script.InventoryProductionFixtures.initialize()
             Files.newBufferedReader(Path.of("data/dumps/items.json")).use { reader ->
                 for (entry in JsonParser.parseReader(reader).asJsonArray) {
                     val item = entry.asJsonObject
                     val id = item.get("id").asInt
                     if (ItemDefinition.ALL.get(id).isEmpty) {
-                        val definition = mock(ItemDefinition::class.java)
-                        `when`(definition.id()).thenReturn(id)
-                        `when`(definition.name).thenReturn(item.get("name").asString)
-                        ItemDefinition.ALL.storeDefinition(definition)
+                        // Other suites share this repository; a name-only mock would hide native note and trade rules.
+                        val unnoted = item.getAsJsonObject("unnoted_id")
+                        ItemDefinition.ALL.storeDefinition(ItemDefinition(
+                            id, item["name"].asString, "", 0, 0, 0, 0, 0, 0, 0,
+                            item["stackable"].asBoolean, 0, false, emptyArray(), emptyArray(),
+                            if (unnoted["is_present"].asBoolean) java.util.OptionalInt.of(unnoted["value"].asInt)
+                            else java.util.OptionalInt.empty(),
+                            0, 0, 0, java.util.OptionalInt.empty(), 0.0, item["tradeable"].asBoolean
+                        ))
                     }
                 }
             }

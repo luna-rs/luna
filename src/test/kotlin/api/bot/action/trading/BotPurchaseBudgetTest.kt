@@ -24,7 +24,7 @@ class BotPurchaseBudgetTest {
     companion object {
         @JvmStatic
         @BeforeAll
-        fun fixtures() = InventoryProductionFixtures.initialize()
+        fun fixtures() = InventoryProductionFixtures.initializeCombat()
     }
 
     private val bot = InventoryProductionFixtures.bot()
@@ -90,28 +90,24 @@ class BotPurchaseBudgetTest {
     @Test
     fun usableNeedsPrecedeUnusableUpgradesUntilRequirementsAreMet() {
         val id = 7158
-        val original = EquipmentDefinition.ALL.get(id)
-        val equipment = mock(EquipmentDefinition::class.java)
-        `when`(equipment.id()).thenReturn(id)
-        EquipmentDefinition.ALL.storeDefinition(equipment)
-        try {
-            val upgrade = WantedItemDefinition(id, -1, 1, -1, -1,
-                WantedItemPriority.URGENT, WantedItemDefinition.DEFAULT_TAGS)
-            val supplies = WantedItemDefinition(314, -1, 100, -1, -1,
-                WantedItemPriority.LOW, WantedItemDefinition.DEFAULT_TAGS)
-            val preferences = bot.preferences
-            `when`(preferences.bot).thenReturn(bot)
-            `when`(preferences.wantedItems).thenAnswer {
-                Iterators.unmodifiableIterator(listOf(upgrade, supplies).iterator())
-            }
-            assertEquals(listOf(314, id), preferences.wantedItemsToAcquire().map { it.id })
-            `when`(equipment.meetsAllRequirements(bot)).thenReturn(true)
-            assertEquals(listOf(id, 314), preferences.wantedItemsToAcquire().map { it.id })
-        } finally {
-            if (original.isPresent) EquipmentDefinition.ALL.storeDefinition(original.get())
-            else EquipmentDefinition.ALL.newIterator().let { iterator ->
-                while (iterator.hasNext()) if (iterator.next().id() == id) iterator.remove()
-            }
+        val equipment = EquipmentDefinition.ALL.retrieve(id)
+        assertTrue(equipment.requirements.isNotEmpty())
+        equipment.requirements.forEach { requirement ->
+            `when`(bot.skill(requirement.id).level).thenReturn(requirement.level - 1)
         }
+        val upgrade = WantedItemDefinition(id, -1, 1, -1, -1,
+            WantedItemPriority.URGENT, WantedItemDefinition.DEFAULT_TAGS)
+        val supplies = WantedItemDefinition(314, -1, 100, -1, -1,
+            WantedItemPriority.LOW, WantedItemDefinition.DEFAULT_TAGS)
+        val preferences = bot.preferences
+        `when`(preferences.bot).thenReturn(bot)
+        `when`(preferences.wantedItems).thenAnswer {
+            Iterators.unmodifiableIterator(listOf(upgrade, supplies).iterator())
+        }
+        assertEquals(listOf(314, id), preferences.wantedItemsToAcquire().map { it.id })
+        equipment.requirements.forEach { requirement ->
+            `when`(bot.skill(requirement.id).level).thenReturn(requirement.level)
+        }
+        assertEquals(listOf(id, 314), preferences.wantedItemsToAcquire().map { it.id })
     }
 }
