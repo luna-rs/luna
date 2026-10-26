@@ -39,8 +39,9 @@ import java.util.concurrent.Executor
 /**
  * Makes the generated files of the web-walker: `obstacles.jsonc`, `climbs.jsonc`, `crossings.jsonc`, `teleports.jsonc`,
  * `banks.jsonc`, `walk_graph.jsonc` and `ships.jsonc`.
- * Everything is made in a single run of the server, because most of it needs a running world. The `generateWebWalk` Gradle task
- * makes it on demand, and the server makes it itself when it starts without the files, see [WebWalkGenerationRunner]. The files start with a comment that says they are generated and when, see [WebWalkWriter.header].
+ * Everything is made in a single run of the server, because most of it needs a running world. The server makes it every time
+ * that it starts, see [WebWalkGenerationRunner]. The files start with a comment that says they are generated and when, see
+ * [WebWalkWriter.header].
  *
  * - The closed doors, gates and curtains of `obstacles.jsonc` are made by [WebWalkDoorGenerator] from the map data of the
  *   cache.
@@ -702,20 +703,11 @@ object WebWalkLiveGenerator {
     }
 
     /**
-     * The names of the generated files, which are all written by [write] and which [missingFiles] looks for.
+     * The names of the generated files, which are all written by [write].
      */
     val GENERATED_FILES = listOf(WebWalkLoader.OBSTACLES, WebWalkLoader.CLIMBS, WebWalkLoader.CROSSINGS,
                                  WebWalkLoader.TELEPORTS, WebWalkLoader.BANKS, WebWalkLoader.WALK_GRAPH,
                                  WebWalkLoader.SHIPS)
-
-    /**
-     * Finds the generated files that don't exist. The files depend on each other (the banks are linked to nodes of the walk
-     * graph, for one), so if any is missing they should all be generated again.
-     *
-     * @param directory The directory of the files.
-     * @return The names of the files that are missing.
-     */
-    fun missingFiles(directory: Path): List<String> = GENERATED_FILES.filter { !Files.exists(directory.resolve(it)) }
 
     /**
      * Pairs each generated file with the text that it should have, without its header.
@@ -731,7 +723,7 @@ object WebWalkLiveGenerator {
     /**
      * Writes the generated files, each with a [WebWalkWriter.header] that says it is generated and when. Every file is written
      * to a temporary file first and only moved into place once all of them are written, so a failure half way never leaves a
-     * set of files that [missingFiles] would think is complete.
+     * mix of old and new files. The files depend on each other (the banks are linked to nodes of the walk graph, for one).
      *
      * @param output The text to write.
      * @param directory The directory to write to.
@@ -752,52 +744,10 @@ object WebWalkLiveGenerator {
             temporary.values.forEach { Files.deleteIfExists(it) }
         }
     }
-
-    /**
-     * Finds the generated files that are not what [output] says they should be. The header of a file is left out of the
-     * comparison, as it changes every time.
-     *
-     * @param output The text that the files should have.
-     * @param directory The directory of the files.
-     * @return The names of the files that are different or missing.
-     */
-    fun outOfDate(output: Output, directory: Path): List<String> {
-        val stale = ArrayList<String>()
-        for ((file, text) in texts(output)) {
-            val path = directory.resolve(file)
-            if (!Files.exists(path)) {
-                stale += "$file (missing)"
-                continue
-            }
-            val found = WebWalkWriter.withoutHeader(Files.readString(path).replace("\r\n", "\n"))
-            if (found != text) {
-                stale += "$file (${firstDifference(text, found)})"
-            }
-        }
-        return stale
-    }
-
-    /**
-     * Describes the first line where two texts differ, for the report.
-     */
-    private fun firstDifference(expected: String, found: String): String {
-        val expectedLines = expected.lines()
-        val foundLines = found.lines()
-        for (index in 0 until maxOf(expectedLines.size, foundLines.size)) {
-            val a = expectedLines.getOrNull(index)
-            val b = foundLines.getOrNull(index)
-            if (a != b) {
-                return "line ${index + 1}: generated '${a?.trim()}' but the file has '${b?.trim()}'; " +
-                        "${expectedLines.size} lines generated, ${foundLines.size} in the file"
-            }
-        }
-        return "no differing line"
-    }
 }
 
 /**
- * Runs [WebWalkLiveGenerator]. It is run by the `generateWebWalk` Gradle task, which exits the server when it is done, and
- * when the server starts without the generated files, which it then goes on running with.
+ * Runs [WebWalkLiveGenerator]. It is run every time the server starts, before the server goes online.
  *
  * @author Hydrozoa
  */
@@ -814,39 +764,16 @@ object WebWalkGenerationRunner {
     private fun say(line: String) = logger.info("[webwalk] {}", line)
 
     /**
-     * Finds the generated files that don't exist, see [WebWalkLiveGenerator.missingFiles].
-     *
-     * @return The names of the files that are missing.
-     */
-    fun missingFiles(): List<String> = WebWalkLiveGenerator.missingFiles(DIRECTORY)
-
-    /**
-     * Gathers on the game thread (so this must be called from it), then finishes on a thread of its own. The server exits
-     * when it is done, with an exit code of `1` if anything went wrong.
-     *
-     * @param check `true` to only report the files that are out of date instead of writing them.
-     */
-    fun run(check: Boolean) {
-        val gathered = gather()
-        if (gathered == null) {
-            // Not on the game thread, which the shutdown hook needs for the graceful shutdown.
-            Thread({ System.exit(1) }, "WebWalkGeneratorThread").start()
-            return
-        }
-        Thread({ System.exit(if (finish(gathered, check)) 0 else 1) }, "WebWalkGeneratorThread").start()
-    }
-
-    /**
-     * Generates the files when the server starts without them. Gathers on the game thread (so this must be called from it),
-     * then finishes on [executor]. It is meant for the task pool of a [io.luna.game.event.impl.ServerStateChangedEvent], which
-     * the server waits for before it goes online. The server doesn't exit, and if anything goes wrong it is logged and the
-     * files are left as they were, so that bots can't web-walk until the problem is fixed.
+     * Generates the files. Gathers on the game thread (so this must be called from it), then finishes on [executor]. It is
+     * meant for the task pool of a [io.luna.game.event.impl.ServerStateChangedEvent], which the server waits for before it
+     * goes online. If anything goes wrong it is logged and the files are left as they were, so a server that had them still
+     * web-walks with the old ones, and one that didn't can't web-walk until the problem is fixed.
      *
      * @param executor Where the part that takes a while is run.
      */
-    fun generateMissing(executor: Executor) {
+    fun generate(executor: Executor) {
         val gathered = gather() ?: return
-        executor.execute { finish(gathered, check = false) }
+        executor.execute { finish(gathered) }
     }
 
     /**
@@ -866,27 +793,18 @@ object WebWalkGenerationRunner {
     }
 
     /**
-     * Links what was gathered and then writes the files, or reports which are out of date.
+     * Links what was gathered and then writes the files.
      *
      * @param gathered What [gather] found.
-     * @param check `true` to only report the files that are out of date instead of writing them.
-     * @return `true` if it worked.
      */
-    private fun finish(gathered: WebWalkLiveGenerator.Gathered, check: Boolean): Boolean {
+    private fun finish(gathered: WebWalkLiveGenerator.Gathered) {
         try {
             val output = WebWalkLiveGenerator.finish(gathered, DIRECTORY)
             gathered.report.summary().forEach { say(it) }
-            if (check) {
-                val stale = WebWalkLiveGenerator.outOfDate(output, DIRECTORY)
-                say(if (stale.isEmpty()) "The generated files are up to date." else "Out of date: $stale")
-            } else {
-                WebWalkLiveGenerator.write(output, DIRECTORY)
-                say("Wrote ${WebWalkLiveGenerator.GENERATED_FILES.joinToString()} to $DIRECTORY.")
-            }
-            return true
+            WebWalkLiveGenerator.write(output, DIRECTORY)
+            say("Wrote ${WebWalkLiveGenerator.GENERATED_FILES.joinToString()} to $DIRECTORY.")
         } catch (e: Throwable) {
             logger.error("Could not generate the web-walker data!", e)
-            return false
         }
     }
 }

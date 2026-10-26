@@ -8,13 +8,11 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
 /**
  * Loads the web and makes the planner in the first tick after the server has launched, so that the first bot to web-walk
- * doesn't hold up the game thread while the data is read. It is skipped when there are no bots, and when the data is being
- * generated, because then the files may be about to change.
+ * doesn't hold up the game thread while the data is read. That tick comes after the server has generated the data (see
+ * webWalkGenerate.kts), because the game thread waits for it. It is skipped when there are no bots.
  */
 on(ServerLaunchEvent::class) {
-    // The property is the one that webWalkGenerate.kts reads.
-    val generating = System.getProperty("luna.webwalk.generate") != null
-    if (Luna.settings().bots().baseOnlineCount() >= 1 && !generating) {
+    if (Luna.settings().bots().baseOnlineCount() >= 1) {
         world.scheduleOnce(1) {
             try {
                 WebWalker.warmUp()

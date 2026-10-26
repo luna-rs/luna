@@ -60,7 +60,7 @@ object WebWalker {
      */
     private fun missingData(): String? =
         if (Files.exists(DIRECTORY.resolve(WebWalkLoader.WALK_GRAPH))) null
-        else "The web-walker data is missing. Start the server with bots enabled to generate it, or run the generateWebWalk Gradle task."
+        else "The web-walker data is missing. Start the server with bots enabled to generate it."
 
     /**
      * The planner, which is made the first time that it is needed. It reads the web and the collision of the world, and is

@@ -16,7 +16,7 @@ import java.nio.file.Path
  *
  * The doors come from the ids in `data/game/world/doors/` that are found in the map data of the cache. This needs no
  * running world, so a test can run it against the cache to make sure that the committed file is still up to date. The
- * `generateWebWalk` Gradle task runs it with the rest of the generation, see [WebWalkLiveGenerator].
+ * server runs it with the rest of the generation every time that it starts, see [WebWalkLiveGenerator].
  *
  * Doors that the map places open are listed too, as the door that [game.obj.doors.Doors] closes them to, so that the web
  * knows about them when a player closes one. Only straight walls are listed, because those are the only ones that
