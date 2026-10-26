@@ -114,6 +114,16 @@ public class PlayerController {
     }
 
     /**
+     * Receives a committed player attack, including a secondary target, before its damage is delivered.
+     * Misses and zero-damage attacks count; target selection, pursuit, and rejected attacks do not. Controllers
+     * can apply aggression rules here without adding side effects to repeated combat-permission checks.
+     *
+     * @param victim The player receiving the committed attack.
+     */
+    public void pvpAttackCommitted(Player victim) {
+    }
+
+    /**
      * Checks whether a dying player may damage this target with Retribution. Ordinary area/team restrictions still
      * apply; controllers whose combat checks require a living attacker may override this death-specific permission.
      *

@@ -373,11 +373,16 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Records an incoming attack for logout prevention and single-combat ownership, including secondary targets.
      * Call when a valid attack is committed, before damage delivery: misses and zero hits still count as engagement.
+     * Player-versus-player commits also notify the attacker's controller so Wilderness aggression includes secondary
+     * targets without treating pursuit or failed resource checks as an attack.
      * This does not select a retaliation target or change either participant's attack delay.
      *
      * @param attacker The mob responsible for the incoming attack.
      */
     public final void markAttackedBy(Mob attacker) {
+        if (attacker instanceof Player player && mob instanceof Player victim && player != victim) {
+            player.getControllers().getPrimary().pvpAttackCommitted(victim);
+        }
         lastCombatWith = attacker;
         resetCombatTimer();
     }
