@@ -29,9 +29,6 @@ import java.util.function.Function;
  */
 public final class BotEmotion {
 
-    // TODO@0.5.0 Implement this in more scenarios.
-    //  Emotion also influences the type of chat bots will speak (change general chat into the 4 emotional categories).
-
     /**
      * The emotions a bot can experience.
      * <p>
