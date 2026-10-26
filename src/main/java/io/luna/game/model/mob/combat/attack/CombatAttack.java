@@ -53,7 +53,9 @@ public abstract class CombatAttack<T extends Mob> {
      * The final prepared damage for this attack.
      * <p>
      * This value is assigned during {@link #apply()} after the result from {@link #calculateDamage(Mob)} has been
-     * passed through {@link #onAttack(CombatDamage)}.
+     * passed through {@link #onAttack(CombatDamage)}. Defensive changes and health capping belong to each delivered
+     * hit and do not replace this launch value. Secondary recipients receive independently resolved damage while
+     * sharing the source attack's launch context.
      */
     protected CombatDamage nextDamage;
 
@@ -134,8 +136,6 @@ public abstract class CombatAttack<T extends Mob> {
      * will not be executed.
      */
     public final void apply() {
-        // todo onAttack is redundant, do anything within calculate damage?
-        // todo maybe just only pass the builder until attack is ready to run?
         Sound attackSound = getAttackSound();
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
@@ -190,9 +190,13 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * Called when the damage from this attack turn is applied to the {@link #victim}.
+     * Called after a hit from this attack has been applied and recorded in combat history.
+     * <p>
+     * The supplied hit has passed defensive hooks and health capping. Its recipient may differ from {@link #victim}
+     * for area or secondary hits. Use this argument for delivered damage and effects; {@link #nextDamage} retains
+     * the primary launch result. Nested callbacks may publish a newer hit before this callback returns.
      *
-     * @param damage The damage that was applied to the victim.
+     * @param damage The applied hit, including its actual recipient, amount, and original accuracy result.
      */
     public void onDamageApplied(CombatDamage damage) {
 
@@ -331,7 +335,9 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * @return The prepared damage, or {@code null} if not yet assigned or if the attack was cancelled.
+     * Gets the primary launch damage before recipient-side defensive changes and health capping.
+     *
+     * @return The prepared launch hit, or {@code null} if not yet assigned or if the attack was cancelled.
      */
     public CombatDamage getNextDamage() {
         return nextDamage;

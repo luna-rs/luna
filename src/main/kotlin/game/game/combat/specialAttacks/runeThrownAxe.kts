@@ -20,6 +20,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import java.time.Instant
 import kotlin.math.floor
 
 /**
@@ -60,7 +61,9 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
  * Chainhit reuses [CombatDamageAction] to apply delayed rebound damage, but it must not execute the original special
  * attack logic again. This wrapper keeps the original attack context while disabling attack execution and resolving
  * rebound damage with the original ammunition snapshot. Delivered damage awards experience through the captured stance,
- * without calling its special attack arrival callback and starting another chain.
+ * without calling its special attack arrival callback and starting another chain. Launch metadata is delegated to
+ * the original attack so combat history, bot retaliation, and stall checks retain the initial throw's time. The
+ * callback's damage identifies each rebound recipient; this wrapper's victim remains the original primary target.
  *
  * @param source The original rune thrownaxe special attack.
  * @author lare96
@@ -101,6 +104,20 @@ class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
         CombatDamageAction(damage, this, true, 1).run()
         return appliedDamage?.isAccurate == true
     }
+
+    /**
+     * Retains the original throw's launch tick without executing another attack or resetting its cooldown.
+     *
+     * @return The initial throw's world tick, or `-1` if that attack has not committed.
+     */
+    override fun getLaunchTick(): Long = source.launchTick
+
+    /**
+     * Retains the initial throw's observation timestamp for history consumers such as bot stall checks.
+     *
+     * @return The original launch timestamp, or `null` before the initial throw commits.
+     */
+    override fun getTimestamp(): Instant? = source.timestamp
 
     override fun attack() {}
 

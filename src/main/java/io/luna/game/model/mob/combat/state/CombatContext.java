@@ -122,8 +122,8 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * The most recent combat damage received by this mob.
      * <p>
-     * This is updated when damage is applied and can be used by combat scripts, prayers, effects, or listeners
-     * that need to inspect the previous incoming hit.
+     * This is published after damage is applied and before its events or source callbacks run. Nested hit
+     * notifications may replace it with a newer applied hit; event and callback arguments identify their own hit.
      */
     private CombatDamage lastDamageReceived;
 
