@@ -136,6 +136,20 @@ object BotReactions {
     }
 
     /**
+     * Makes a bot happier and less greedy for ten minutes after a completed trade increases stock it needed.
+     *
+     * The confirmation handler checks actual ownership gains before invoking this reaction. The adjustment is
+     * applied once per qualifying trade, regardless of how many wanted item types were received.
+     *
+     * @param bot The bot that acquired needed stock.
+     */
+    fun reactToWantedTrade(bot: Bot) {
+        val expire = minutesFromNow(10)
+        bot.emotions.add(EmotionalTrigger(EmotionType.HAPPY, 0.10, expire))
+        bot.emotions.add(EmotionalTrigger(EmotionType.GREEDY, -0.10, expire))
+    }
+
+    /**
      * Makes a bot react to a kill. Killing a player, or a mob it sees as a threat, makes it happier and less greedy for
      * 10 minutes.
      *
