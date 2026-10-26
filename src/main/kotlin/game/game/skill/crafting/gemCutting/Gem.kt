@@ -4,7 +4,9 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 
 /**
- * An enum representing uncut precious gems.
+ * Native gem-cutting recipes, including the three semi-precious gems that can be crushed.
+ *
+ * @param chance Lost City level-one/level-99 success inputs, or null for gems that always cut successfully.
  *
  * @author lare96
  */
@@ -12,23 +14,27 @@ enum class Gem(val uncut: Int,
                val cut: Int,
                val animation: Animation,
                val level: Int,
-               val exp: Double) {
+               val exp: Double,
+               val chance: Pair<Int, Int>? = null) {
 
     OPAL(uncut = 1625,
          cut = 1609,
          animation = Animation(890),
          level = 1,
-         exp = 15.0),
+         exp = 15.0,
+         chance = 128 to 250),
     JADE(uncut = 1627,
          cut = 1611,
          animation = Animation(891),
          level = 13,
-         exp = 20.0),
+         exp = 20.0,
+         chance = 90 to 240),
     RED_TOPAZ(uncut = 1629,
               cut = 1613,
               animation = Animation(892),
               level = 16,
-              exp = 25.0),
+              exp = 25.0,
+              chance = 100 to 245),
     SAPPHIRE(uncut = 1623,
              cut = 1607,
              animation = Animation(888),
@@ -86,13 +92,13 @@ enum class Gem(val uncut: Int,
     /**
      * Determines if this is a semi-precious gem.
      */
-    fun isSemiPrecious(): Boolean = this == JADE || this == OPAL || this == RED_TOPAZ
+    fun isSemiPrecious(): Boolean = chance != null
 
     /**
      * Gets the crushed value of this gem, throws an exception if this gem isn't semi-precious.
      */
     fun getCrushedItem(): Item {
-        return if (this == JADE || this == OPAL || this == RED_TOPAZ) Item(1633) else
+        return if (isSemiPrecious()) Item(1633) else
             throw IllegalStateException("Gem [$this] is not a semi-precious gem.")
 
     }

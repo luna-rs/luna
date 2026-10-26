@@ -19,11 +19,12 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Cuts one configured precious gem using a chisel and the normal player make-item dialogue.
+ * Cuts one configured gem using a chisel and the normal player make-item dialogue.
  *
  * [InventoryBotScript] supplies banking, zone travel, session expiry, and weak-action gating. Each bank visit
  * deposits the previous inventory before withdrawing one chisel and up to twenty-seven uncut gems. Smaller
- * batches are allowed when bank stock is low. Semi-precious gems are rejected because their crushing rules differ.
+ * batches are allowed when bank stock is low. Opal, jade and red topaz use the same player interaction: both a cut
+ * gem and a crushed gem consume an input and therefore count as progress, without charging the failure budget.
  *
  * The script requires owned supplies rather than assuming another system can purchase them. Missing startup
  * items are requested through the wanted-item list; depleted stock ends the session. Interactions must consume
@@ -35,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
  * responsible for level checks, item conversion, and experience.
  *
  * @param bot The bot running this script.
- * @property gem The precious gem recipe to process throughout this session.
+ * @property gem The native gem recipe to process throughout this session.
  * @param duration The session duration managed by the inherited zone lifecycle.
  * @param zones Candidate processing zones with existing banking and travel support.
  * @author lare96
@@ -56,7 +57,9 @@ class CutGemBotScript(
          * @author lare96
          */
         class CutGemData : InventoryScriptData() {
-            /** [Gem] enum name used to reconstruct the configured recipe. */
+            /**
+             * Gem enum name used to reconstruct the configured recipe.
+             */
             var recipe = ""
 
             override fun load(data: JsonObject) {
@@ -71,13 +74,17 @@ class CutGemBotScript(
         }
     }
 
-    init { require(!gem.isSemiPrecious()) { "Semi-precious gem success rates need review." } }
-
-    /** Static Crafting level required for factory selection and startup validation. */
+    /**
+     * Static Crafting level required for factory selection and startup validation.
+     */
     val requiredLevel = gem.level
-    /** Minimum input for one conversion; the bank batch expands this to available inventory capacity. */
+    /**
+     * Minimum input for one conversion; the bank batch expands this to available inventory capacity.
+     */
     private val materials = listOf(Item(gem.uncut))
-    /** Reusable tools reserved in every batch and retained by the gem-cutting action. */
+    /**
+     * Reusable tools reserved in every batch and retained by the gem-cutting action.
+     */
     private val tools = setOf(Gem.CHISEL)
 
     /**
@@ -98,7 +105,9 @@ class CutGemBotScript(
     fun isEligible(): Boolean = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel &&
             bot.ownsProductionSupplies(materials, tools)
 
-    /** Returns one chisel and as many banked gems as fit, or an empty batch when either supply is unavailable. */
+    /**
+     * Returns one chisel and as many banked gems as fit, or an empty batch when either supply is unavailable.
+     */
     fun bankBatch(): List<Item> = bot.productionBatch(materials, tools)
 
     override fun withdraw(): List<Item> =
@@ -110,7 +119,9 @@ class CutGemBotScript(
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
-    /** Whether inventory currently holds a chisel and at least one configured uncut gem. */
+    /**
+     * Whether inventory currently holds a chisel and at least one configured uncut gem.
+     */
     private fun hasMaterials() = bot.inventory.containsAll(materials) && tools.all { it in bot.inventory }
 
     override suspend fun onExecuteInZone(): Boolean {
@@ -119,7 +130,9 @@ class CutGemBotScript(
         return true
     }
 
-    /** Uses the chisel on an uncut gem, waits for the single-recipe dialogue, and requests the carried batch. */
+    /**
+     * Uses the chisel on an uncut gem, waits for the single-recipe dialogue, and requests the carried batch.
+     */
     private suspend fun startProduction(): Boolean {
         if (!handler.inventory.useItem(Gem.CHISEL).onItem(gem.uncut)) return false
         if (!waitFor(3.seconds) { MakeItemDialogue::class in bot.overlays }) return false
