@@ -44,8 +44,12 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
     /**
      * The maximum number of ground items that may be visible on a single tile.
+     * <p>
+     * The client builds a right-click entry for every action of every item on a hovered tile into a fixed
+     * 500-entry menu array, with no bounds check. At up to three entries per item (two ground actions and
+     * "Examine"), 128 items stays within the client's own 400-entry soft limit and leaves room for other entries.
      */
-    private static final int MAX_ITEMS_PER_TILE = 255;
+    private static final int MAX_ITEMS_PER_TILE = 128;
 
     /**
      * A {@link Task} that processes ground item expiration.
