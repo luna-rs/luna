@@ -562,7 +562,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         val threat = combatPolicy.opponent() ?: focus.takeIf { focusAlive() }
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
-            (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
+            (threat?.combat?.target != bot || !bot.combat.timer.isRunning ||
+                    bot.combat.timer.duration.seconds > MAX_KEEP_AWAY)) {
             // React once, on getting away, while health still shows how close it was.
             if (!reactedToEscape) {
                 BotReactions.reactToEscape(bot)

@@ -256,12 +256,12 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
             return true
         }
         val plrOpponent = plr.combat.lastCombatWith
-        if (plr.combat.inCombat() && plrOpponent != null && plrOpponent != npc) {
+        if (plr.combat.isSingleCombatLocked && plrOpponent != null && plrOpponent != npc) {
             plr.sendMessage("I'm already under attack!")
             return false
         }
         val npcOpponent = npc.combat.lastCombatWith
-        if (npc.combat.inCombat() && npcOpponent != null && npcOpponent != plr) {
+        if (npc.combat.isSingleCombatLocked && npcOpponent != null && npcOpponent != plr) {
             plr.sendMessage("Someone else is fighting that.")
             return false
         }

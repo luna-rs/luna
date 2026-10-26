@@ -34,9 +34,8 @@ import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplat
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
-import io.luna.game.model.mob.combat.state.CombatContext.COMBAT_TIMER_DURATION
+import io.luna.game.model.mob.combat.state.CombatContext.COMBAT_TIMER_TICKS
 import io.luna.game.model.mob.combat.Weapon
-import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -193,13 +192,12 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * retaliation just because unrelated combat has started later. A current incoming attempt remains sufficient.
      * Callers must independently enforce native player combat legality.
      */
-    fun canRetaliateAgainst(target: Player, now: Instant = Instant.now()): Boolean {
+    fun canRetaliateAgainst(target: Player, nowTick: Long = bot.world.currentTick): Boolean {
         if (target.combat.target === bot) return true
         if (!bot.combat.inCombat() || bot.combat.lastCombatWith !== target) return false
         val received = bot.combat.lastAttackReceived ?: return false
-        val timestamp = received.timestamp ?: return false
-        return received.attacker === target &&
-            java.time.Duration.between(timestamp, now).seconds in 0..COMBAT_TIMER_DURATION.toLong()
+        return received.attacker === target && received.launchTick >= 0 &&
+            nowTick - received.launchTick in 0 until COMBAT_TIMER_TICKS.toLong()
     }
 
     /**

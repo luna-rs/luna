@@ -1,9 +1,9 @@
 package io.luna.game.model.mob.combat.state;
 
-import com.google.common.base.Stopwatch;
 import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
 import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
+import io.luna.game.TickTimer;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -31,6 +31,13 @@ public abstract class CombatContext<T extends Mob> {
      */
     public static final int COMBAT_TIMER_DURATION = 10;
 
+    /** Recent-combat and logout windows round the nominal ten seconds up to whole 600ms ticks. */
+    public static final int COMBAT_TIMER_TICKS = 17;
+    public static final int LOGOUT_DELAY_TICKS = 17;
+
+    /** Single-combat ownership expires independently of the longer recent-combat/logout window. */
+    public static final int SINGLE_COMBAT_TICKS = 8;
+
     /**
      * The mob that owns this combat context.
      */
@@ -47,7 +54,7 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Measures how long the mob has remained in combat since its last qualifying combat interaction.
      */
-    private final Stopwatch combatTimer = Stopwatch.createUnstarted();
+    private final TickTimer combatTimer;
 
     /**
      * The mob currently being attacked, or {@code null} if no combat target is set.
@@ -110,6 +117,7 @@ public abstract class CombatContext<T extends Mob> {
      */
     public CombatContext(T mob) {
         this.mob = mob;
+        combatTimer = new TickTimer(mob.getWorld());
         damageStack = new CombatDamageStack(mob);
         impacts = new CombatImpactQueue(mob);
     }
@@ -266,13 +274,14 @@ public abstract class CombatContext<T extends Mob> {
             return true;
         }
 
-        if (inCombat() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
+        if (isSingleCombatLocked() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
             mob.ifPlayer(player -> player.sendMessage("You are already in combat."));
             return false;
         }
 
         CombatContext<?> victimCombat = victim.getCombat();
-        if (victimCombat.inCombat() && victimCombat.lastCombatWith != null && !Objects.equals(victimCombat.lastCombatWith, mob)) {
+        if (victimCombat.isSingleCombatLocked() && victimCombat.lastCombatWith != null &&
+                !Objects.equals(victimCombat.lastCombatWith, mob)) {
             mob.ifPlayer(player -> player.sendMessage("They are already in combat."));
             return false;
         }
@@ -303,11 +312,11 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Gets the stopwatch used to track how long the owning mob has remained in combat.
+     * Gets the tick timer used to track time since the last qualifying combat interaction.
      *
-     * @return The combat timer stopwatch.
+     * @return The combat tick timer.
      */
-    public Stopwatch getTimer() {
+    public TickTimer getTimer() {
         return combatTimer;
     }
 
@@ -355,13 +364,27 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Determines whether the owning mob is currently considered in combat.
      * <p>
-     * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION}
-     * seconds have elapsed since the timer was last reset.
+     * A mob remains in recent combat for {@link #COMBAT_TIMER_TICKS} ticks. Ownership and logout use their own
+     * predicates so changing one policy does not silently change the others.
      *
      * @return {@code true} if the mob is still considered in combat, otherwise {@code false}.
      */
     public final boolean inCombat() {
-        return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= COMBAT_TIMER_DURATION;
+        return withinCombatWindow(COMBAT_TIMER_TICKS);
+    }
+
+    /** Whether a recent opponent still owns this mob under single-combat rules. */
+    public final boolean isSingleCombatLocked() {
+        return withinCombatWindow(SINGLE_COMBAT_TICKS);
+    }
+
+    /** Whether recent combat still prevents an ordinary logout. */
+    public final boolean isLogoutBlocked() {
+        return withinCombatWindow(LOGOUT_DELAY_TICKS);
+    }
+
+    private boolean withinCombatWindow(int ticks) {
+        return combatTimer.isRunning() && combatTimer.getDurationTicks() < ticks;
     }
 
     /**

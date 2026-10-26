@@ -674,7 +674,7 @@ public class Player extends Mob {
         if (!force) {
             if (!controllers.checkLogout()) {
                 return;
-            } else if (combat.inCombat()) {
+            } else if (combat.isLogoutBlocked()) {
                 sendMessage("You must wait until " + CombatContext.COMBAT_TIMER_DURATION + " seconds after combat before logging out.");
                 return;
             }

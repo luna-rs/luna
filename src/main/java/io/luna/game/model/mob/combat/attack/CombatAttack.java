@@ -65,6 +65,9 @@ public abstract class CombatAttack<T extends Mob> {
      */
     private Instant timestamp;
 
+    /** Tick when the attack committed, used for gameplay recency independently of wall-clock time. */
+    private long launchTick = -1;
+
     /**
      * Creates a new {@link CombatAttack}.
      *
@@ -129,6 +132,7 @@ public abstract class CombatAttack<T extends Mob> {
         attacker.getCombat().resetCombatTimer();
         victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
+        launchTick = attacker.getWorld().getCurrentTick();
         attack();
     }
 
@@ -294,5 +298,10 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public Instant getTimestamp() {
         return timestamp;
+    }
+
+    /** Returns the launch tick, or -1 if this attack has not committed. */
+    public long getLaunchTick() {
+        return launchTick;
     }
 }

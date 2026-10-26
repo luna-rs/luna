@@ -140,7 +140,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
             return true;
         }
 
-        return (player.getControllers().checkLogout() && !player.isLocked() && !player.getCombat().inCombat())
+        return (player.getControllers().checkLogout() && !player.isLocked() && !player.getCombat().isLogoutBlocked())
                 || request.isTimeout();
     }
 
