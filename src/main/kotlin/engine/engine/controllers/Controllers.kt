@@ -4,6 +4,7 @@ import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.content.fishingTrawler.TrawlerAreaListener
 import game.content.gamesRoom.GamesRoomAreaListener
 import game.content.duelArena.DuelAreaListener
+import game.content.gnomeBall.GnomeBallAreaListener
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 
@@ -18,7 +19,8 @@ object Controllers {
         WildernessLocatableController,
         TrawlerAreaListener,
         GamesRoomAreaListener,
-        DuelAreaListener
+        DuelAreaListener,
+        GnomeBallAreaListener
     )
 
     /**

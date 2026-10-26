@@ -6,6 +6,15 @@
 */
 [
   {
+    "id": 751, // Gnomeball
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
     "id": 35, // Excalibur
     "index": 3,
     "two_handed?": false,
