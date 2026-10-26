@@ -73,6 +73,9 @@ public abstract class CombatContext<T extends Mob> {
      */
     private int attackDelay;
 
+    /** Deadline corresponding to the last assigned cooldown, retained after the countdown reaches zero. */
+    private long attackReadyTick = -1;
+
     /**
      * Indicates whether this mob is fully disabled.
      * <p>
@@ -217,7 +220,29 @@ public abstract class CombatContext<T extends Mob> {
      * @param enemy The attacker to retaliate against.
      */
     public void retaliate(Mob enemy) {
+        if (enemy == null || !enemy.isAlive() || !mob.isAlive() || isDisabled()) {
+            return;
+        }
         attack(enemy);
+        CombatAction action = mob.getActions().first(CombatAction.class);
+        if (target == enemy && action != null && hasExpiredAttackDelay()) {
+            setAttackDelay(getRetaliationDelay());
+        }
+    }
+
+    /** Half-speed flinch for an idle retaliator. Player weapon styles override the unarmed interval. */
+    protected int getRetaliationDelay() {
+        return 2;
+    }
+
+    /** Distinguishes an expired cooldown from one becoming ready in this exact tick. */
+    protected final boolean hasExpiredAttackDelay() {
+        return isAttackReady() && mob.getWorld().getCurrentTick() > attackReadyTick;
+    }
+
+    /** NPCs may flinch again after eight idle ticks beyond their previous attack deadline. */
+    protected final boolean hasLongExpiredAttackDelay() {
+        return isAttackReady() && mob.getWorld().getCurrentTick() > attackReadyTick + 8;
     }
 
     /**
@@ -318,6 +343,7 @@ public abstract class CombatContext<T extends Mob> {
         autoRetaliateTarget = null;
         lastCombatWith = null;
         attackDelay = 0;
+        attackReadyTick = -1;
         disabled = false;
         lastAttackReceived = null;
         lastAttackSent = null;
@@ -429,7 +455,8 @@ public abstract class CombatContext<T extends Mob> {
      * @param attackDelay The new attack delay in game ticks.
      */
     public void setAttackDelay(int attackDelay) {
-        this.attackDelay = attackDelay;
+        this.attackDelay = Math.max(0, attackDelay);
+        attackReadyTick = mob.getWorld().getCurrentTick() + this.attackDelay;
     }
 
     /**
@@ -441,7 +468,7 @@ public abstract class CombatContext<T extends Mob> {
      * @param delay The additional delay to add.
      */
     public void addFoodDelay(int delay) {
-        attackDelay = Math.max(0, attackDelay) + Math.max(0, delay);
+        setAttackDelay(Math.max(0, attackDelay) + Math.max(0, delay));
     }
 
     /**

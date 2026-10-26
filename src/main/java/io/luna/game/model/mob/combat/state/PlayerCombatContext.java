@@ -194,6 +194,18 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     }
 
     @Override
+    protected int getRetaliationDelay() {
+        int speed = getWeapon().getSpeed();
+        return switch (getWeapon().getStyleDef().getType()) {
+            // Style speeds already subtract the rapid tick; the flinch subtracts it after halving the base speed.
+            case CROSSBOW_RAPID, SHORTBOW_RAPID, LONGBOW_RAPID, KNIFE_RAPID, THROWN_AXE_RAPID, DART_RAPID,
+                 JAVELIN_RAPID ->
+                    Math.max(0, (speed + 1) / 2 - 1);
+            default -> Math.max(0, speed / 2);
+        };
+    }
+
+    @Override
     public void onCombatFinished() {
         setFirstAttack(null);
     }

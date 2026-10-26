@@ -183,8 +183,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         boolean engaged = target != null && target.isAlive() && combatAction != null && !combatAction.isFinished();
         if (enemy instanceof Player && (lowHealth || (!engaged && !isWithinLeash(enemy)))) {
             mob.getActions().submitIfAbsent(new NpcRetreatAction(mob, enemy));
-        } else if (!engaged) {
+        } else if (!engaged || hasLongExpiredAttackDelay()) {
             attack(enemy);
+            if (target == enemy) {
+                setAttackDelay(Math.max(0, mob.combatDef().getAttackSpeed() / 2));
+            }
         }
     }
 

@@ -31,7 +31,8 @@ class CombatSchedulingTest {
     private static class Fixture {
         final Mob mob = mock(Mob.class, RETURNS_DEEP_STUBS);
         final Mob victim = mock(Mob.class, RETURNS_DEEP_STUBS);
-        final CombatContext<?> combat = mock(CombatContext.class, CALLS_REAL_METHODS);
+        final CombatContext<?> combat = mock(CombatContext.class,
+                withSettings().useConstructor(mob).defaultAnswer(CALLS_REAL_METHODS));
         final CombatAttack<?> attack = mock(CombatAttack.class);
         final ActionQueue actions = new ActionQueue(mob);
         final AtomicBoolean reached = new AtomicBoolean(true);
