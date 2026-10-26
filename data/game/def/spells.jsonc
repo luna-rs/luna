@@ -4,6 +4,10 @@
   "spell" assigns the data to a static type within "CombatSpell."
 
   Use this file to add new static combat spells that can be referenced using "CombatSpell."
+
+  Standard spell projectile timings follow Lost City's magic_combat_spells.dbrow.
+  Arrival cycle = launch_delay + flight_length + tile distance * flight_step.
+  Unconverted definitions retain the legacy delay (arrival) and speed (launch) fields.
 */
 [
   {
@@ -22,11 +26,13 @@
     },
     "projectile": {
       "id": 91,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 92,
@@ -61,11 +67,13 @@
     },
     "projectile": {
       "id": 103,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 104,
@@ -106,11 +114,13 @@
     },
     "projectile": {
       "id": 94,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 95,
@@ -151,11 +161,13 @@
     },
     "projectile": {
       "id": 97,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 98,
@@ -194,11 +206,13 @@
     },
     "projectile": {
       "id": 106,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 107,
@@ -239,11 +253,13 @@
     },
     "projectile": {
       "id": 100,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 101,
@@ -284,11 +300,13 @@
     },
     "projectile": {
       "id": 118,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 119,
@@ -323,11 +341,13 @@
     },
     "projectile": {
       "id": 109,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 110,
@@ -366,11 +386,13 @@
     },
     "projectile": {
       "id": 178,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 75,
+      "flight_length": -24,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 45,
+      "end_height": 0,
+      "curve": 16
     },
     "end_graphic": {
       "id": 181,
@@ -411,11 +433,13 @@
     },
     "projectile": {
       "id": 121,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 122,
@@ -456,11 +480,13 @@
     },
     "projectile": {
       "id": 124,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 125,
@@ -501,11 +527,13 @@
     },
     "projectile": {
       "id": 127,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 128,
@@ -545,11 +573,13 @@
     },
     "projectile": {
       "id": 146,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 46,
+      "flight_length": 0,
+      "flight_step": 5,
+      "launch_offset": 64,
+      "start_height": 31,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 147,
@@ -590,11 +620,13 @@
     },
     "projectile": {
       "id": 133,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 134,
@@ -631,11 +663,13 @@
     },
     "projectile": {
       "id": 136,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 137,
@@ -675,11 +709,13 @@
     },
     "projectile": {
       "id": 88,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 89,
@@ -720,11 +756,13 @@
     },
     "projectile": {
       "id": 178,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 75,
+      "flight_length": -24,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 45,
+      "end_height": 0,
+      "curve": 16
     },
     "end_graphic": {
       "id": 180,
@@ -764,11 +802,13 @@
     },
     "projectile": {
       "id": 328,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 329,
@@ -810,11 +850,13 @@
     },
     "projectile": {
       "id": 139,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 140,
@@ -855,11 +897,13 @@
     },
     "projectile": {
       "id": 130,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 131,
@@ -1008,11 +1052,13 @@
     },
     "projectile": {
       "id": 159,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 160,
@@ -1049,11 +1095,13 @@
     },
     "projectile": {
       "id": 162,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 163,
@@ -1092,11 +1140,13 @@
     },
     "projectile": {
       "id": 168,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 169,
@@ -1137,11 +1187,13 @@
     },
     "projectile": {
       "id": 165,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 166,
@@ -1180,11 +1232,13 @@
     },
     "projectile": {
       "id": 171,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 172,
@@ -1225,11 +1279,13 @@
     },
     "projectile": {
       "id": 156,
-      "delay": 44,
-      "speed": 3,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
       "start_height": 43,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 157,
@@ -1269,11 +1325,13 @@
     },
     "projectile": {
       "id": 178,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
-      "end_height": 31,
-      "curve": 0
+      "launch_delay": 75,
+      "flight_length": -24,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 45,
+      "end_height": 0,
+      "curve": 16
     },
     "end_graphic": {
       "id": 179,
@@ -1312,11 +1370,13 @@
     },
     "projectile": {
       "id": 174,
-      "delay": 44,
-      "speed": 3,
-      "start_height": 43,
+      "launch_delay": 51,
+      "flight_length": -5,
+      "flight_step": 10,
+      "launch_offset": 64,
+      "start_height": 36,
       "end_height": 31,
-      "curve": 0
+      "curve": 16
     },
     "end_graphic": {
       "id": 107,
