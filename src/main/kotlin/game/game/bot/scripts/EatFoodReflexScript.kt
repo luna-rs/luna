@@ -1,13 +1,22 @@
 package game.bot.scripts
 
+import api.bot.action.eating.PvmEating
 import api.bot.script.ReflexBotScript
 import io.luna.game.model.mob.bot.Bot
 
-//todo docs
+/**
+ * Eats whenever the bot is nervous about its hitpoints and has food, whatever it is doing.
+ *
+ * A script that eats for itself through [PvmEating] is watching the bot's hitpoints, so this reflex leaves the food to
+ * it. Interrupting would pause that script and hand its fight to the combat reflex. Once the script stops checking,
+ * this reflex looks after the bot again.
+ *
+ * @author lare96
+ */
 class EatFoodReflexScript(bot: Bot) : ReflexBotScript(bot) {
     private val inventoryActions = bot.actionHandler.inventory
     override fun shouldReact(): Boolean {
-        return bot.emotions.isNervousAboutHp && inventoryActions.hasAnyFood()
+        return !PvmEating.isAttending(bot) && bot.emotions.isNervousAboutHp && inventoryActions.hasAnyFood()
     }
 
     override suspend fun run(): Boolean {

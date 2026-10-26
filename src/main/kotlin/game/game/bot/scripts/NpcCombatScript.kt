@@ -2,6 +2,7 @@ package game.bot.scripts
 
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.eating.PvmEating
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -182,6 +183,9 @@ open class NpcCombatScript(bot: Bot,
     internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
         (slayerTask == null || npc.id in slayerTask.npcs)
 
+    /** Eats the way a player watching their hitpoints would; the Kalphite Queen trip keeps its own supply rules. */
+    private val eating = PvmEating(bot)
+
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
@@ -226,6 +230,7 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun finish() {
         bot.reflex.isDisableCombatReflex = false
+        eating.stopAttending()
         if (queenTrip && !bot.combat.inCombat()) bot.combat.prayers.deactivateAll()
         // Keep the spell through a pause, so the combat reflex can finish the fight with it.
         if (!isPaused()) {
@@ -344,7 +349,7 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun onExecuteInZone(searching: Boolean) {
         if (!prepareCombat()) return
         eatFood()
-        if (queenTrip && (forceBanking || waitingForQueen())) return
+        if (forceBanking || (queenTrip && waitingForQueen())) return
         if (bot.combat.lastCombatWith?.isAlive == true &&
             (!queenTrip || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
             !bot.actions.contains(CombatAction::class.java)
@@ -355,7 +360,11 @@ open class NpcCombatScript(bot: Bot,
             } else if (opponent is Npc && acceptsAssignment(opponent)) {
                 interactWithTarget(3, opponent)
             }
-            bot.naturalDelay()
+            if (queenTrip) {
+                bot.naturalDelay()
+            } else if (!eating.watch()) {
+                forceBanking = true
+            }
         } else if (focus?.isAlive != true) {
             lootItems()
         }
@@ -453,7 +462,12 @@ open class NpcCombatScript(bot: Bot,
     private suspend fun lootItems() {
         eatFood()
         if (queenTrip && forceBanking) return
-        delay(2.seconds, 4.seconds)
+        // Wait for the drop to appear.
+        if (queenTrip) {
+            delay(2.seconds, 4.seconds)
+        } else if (!eating.watch(2.seconds, 4.seconds)) {
+            forceBanking = true
+        }
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
         for (item in groundItems) {
             val inventoryItem = item.toItem()
@@ -485,7 +499,7 @@ open class NpcCombatScript(bot: Bot,
             (bot.equipment.shield?.id != 1540 || !handler.inventory.hasAnyFood())) {
             forceBanking = true
         }
-        if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
+        if (!eating.check()) {
             forceBanking = true
         }
     }
