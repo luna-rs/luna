@@ -3,6 +3,7 @@ package game.combat.npcHooks
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
 import game.player.Sound
+import game.skill.slayer.Slayer.drainCombatSkills
 import io.luna.Luna
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.mob.Mob
@@ -56,9 +57,11 @@ val END_GRAPHIC = Graphic(336, 500, 0)
 /**
  * Handles the aberrant spectre special magic attack.
  *
- * Victims wearing a nose peg take a normal magic hit. Victims without a nose peg take a magic hit that ignores
- * protection prayers, and may also have one or more combat-related skills reduced when the projectile lands.
- * Delivered hits retain the shared magic impact graphics and sound before applying the stat drain.
+ * Victims wearing a nose peg take a normal magic hit. Unprotected players take an always-accurate fourteen-damage
+ * hit that ignores protection prayers. At launch, offensive skills lose eighty percent of their current levels;
+ * defence, prayer, and agility lose forty percent. These drains are immediate in Lost City's spectre script.
+ * Equipment is checked when the hit is calculated, not when an attack is first selected during pursuit.
+ * Delivered hits retain the shared magic impact graphics and sound.
  *
  * @author lare96
  */
@@ -75,44 +78,32 @@ class AberrantSpectreMagicAttack(attacker: Npc, victim: Mob) : MagicCombatAttack
     6) {
 
     /**
-     * Whether the victim is protected by a nose peg.
+     * Protection captured during damage resolution immediately before launch, including the global equipment setting.
      */
-    private val protected = !Luna.settings().skills().slayerEquipmentNeeded() ||
-            (victim is Player && victim.equipment.head?.id == NOSE_PEG)
+    private var protected = true
 
     override fun calculateDamage(other: Mob?): CombatDamage {
+        protected = !Luna.settings().skills().slayerEquipmentNeeded() || victim !is Player ||
+                victim.equipment.head?.id == NOSE_PEG
         val request = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MAGIC)
 
         if (!protected) {
-            // 25% Increased accuracy and ignores prayer when not wearing nose peg.
-            request.setFlatBonusAccuracy(0.25)
+            request.setBaseAccuracy(1.0)
+            request.setFlatBonusAccuracy(1.0)
+            request.setBaseMaxHit(0)
+            request.setFlatBonusDamage(14)
             request.ignoreProtectionPrayers()
         }
 
         return request.build().resolve()
     }
 
-    override fun onDamageApplied(damage: CombatDamage?) {
-        if (damage != null) super.onDamageApplied(damage)
-        // Weakens the player when not wearing a nose peg.
-        if (!protected && victim is Player) {
-            if (randBoolean()) {
-                victim.attack.adjustLevel(-rand(10, 20))
-            }
-            if (randBoolean()) {
-                victim.strength.adjustLevel(-rand(10, 20))
-            }
-            if (randBoolean()) {
-                victim.defence.adjustLevel(-rand(10, 20))
-            }
-            if (randBoolean()) {
-                victim.ranged.adjustLevel(-rand(10, 20))
-            }
-            if (randBoolean()) {
-                victim.magic.adjustLevel(-rand(10, 20))
-            }
+    override fun onAttack(damage: CombatDamage?): CombatDamage? {
+        if (damage != null && !protected && victim is Player && victim.isAlive) {
+            victim.drainCombatSkills(80, 40)
             victim.sendMessage("You have been weakened.")
         }
+        return damage
     }
 }
 

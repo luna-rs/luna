@@ -2,28 +2,11 @@ package game.combat.npcHooks
 
 import api.combat.npc.NpcCombatHandler.combat
 import api.predef.*
+import game.skill.slayer.Slayer.drainCombatSkills
 import io.luna.Luna
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
-
-/**
- * Applies the current-level penalties for an unprotected basilisk or cockatrice attack.
- * Every attack drains all seven affected skills, including prayer and agility. Protection prayers prevent the
- * hitpoint damage but do not prevent these drains, matching Lost City's gaze scripts.
- *
- * @param offensivePercent The percentage drained from attack, strength, ranged, and magic.
- * @param otherPercent The percentage drained from defence, prayer, and agility.
- */
-fun Player.drainGazeSkills(offensivePercent: Int, otherPercent: Int) {
-    attack.adjustLevel(-(attack.level * offensivePercent / 100))
-    strength.adjustLevel(-(strength.level * offensivePercent / 100))
-    ranged.adjustLevel(-(ranged.level * offensivePercent / 100))
-    magic.adjustLevel(-(magic.level * offensivePercent / 100))
-    defence.adjustLevel(-(defence.level * otherPercent / 100))
-    prayer.adjustLevel(-(prayer.level * otherPercent / 100))
-    agility.adjustLevel(-(agility.level * otherPercent / 100))
-}
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
@@ -46,7 +29,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
                         .setFlatBonusAccuracy(1.0)
                         .setFlatBonusDamage(other.hitpoints.staticLevel * damagePercent / 100)
                         .build().resolve()
-                    other.drainGazeSkills(if (basilisk) 60 else 40, if (basilisk) 30 else 20)
+                    other.drainCombatSkills(if (basilisk) 60 else 40, if (basilisk) 30 else 20)
                     other.sendMessage("You have been weakened.")
                     gazeHit
                 } else {
