@@ -160,6 +160,11 @@ public final class Shop {
     private final OptionalInt[] amountMap;
 
     /**
+     * The restock rate of each shop slot in ticks, or {@code -1} to use the {@link #restockPolicy} rate.
+     */
+    private final int[] restockRates;
+
+    /**
      * The task responsible for replenishing stock over time, depending on the {@link #restockPolicy}.
      */
     private RestockTask restockTask;
@@ -195,6 +200,8 @@ public final class Shop {
 
         amountMap = new OptionalInt[40];
         Arrays.fill(amountMap, OptionalInt.empty());
+        restockRates = new int[40];
+        Arrays.fill(restockRates, -1);
 
         restockTask = new RestockTask(this);
         items.setListeners(new ShopListener(this),
@@ -612,10 +619,13 @@ public final class Shop {
         items.load(new ArrayList<>(shopItems));
         for (PendingShopItem item : shopItems) {
             int current = item.getAmount();
-            if (current == 0) {
+            boolean balancing = restockPolicy != null && restockPolicy.isBalanced() &&
+                    current != item.getMaxStockAmount();
+            if (current == 0 || balancing) {
                 restockItems.add(item.getIndex());
             }
             amountMap[item.getIndex()] = OptionalInt.of(item.getMaxStockAmount());
+            restockRates[item.getIndex()] = item.getRestockRate();
         }
         restockItems();
     }
@@ -637,6 +647,40 @@ public final class Shop {
             }
             world.schedule(restockTask);
         }
+    }
+
+    /**
+     * Computes how many ticks it takes to move the item at {@code index} one unit back toward its original amount.
+     *
+     * @param index The shop slot index.
+     * @return The item's own restock rate if it has one, otherwise the {@link #restockPolicy} rate.
+     */
+    int computeRestockRate(int index) {
+        int rate = restockRates[index];
+        return rate > 0 ? rate : restockPolicy.getRate();
+    }
+
+    /**
+     * Determines if the slot at {@code index} needs balancing under a {@link RestockPolicy#isBalanced() balanced}
+     * policy. That's a stocked item above or below its original amount, or any item the shop doesn't normally stock.
+     *
+     * @param index The shop slot index.
+     * @return {@code true} if the slot is out of balance.
+     */
+    boolean isOutOfBalance(int index) {
+        Item item = items.get(index);
+        OptionalInt originalAmount = amountMap[index];
+        if (originalAmount.isEmpty()) {
+            return item != null;
+        }
+        return item != null && item.getAmount() != originalAmount.getAsInt();
+    }
+
+    /**
+     * @return The world this shop restocks in.
+     */
+    World getWorld() {
+        return world;
     }
 
     /**

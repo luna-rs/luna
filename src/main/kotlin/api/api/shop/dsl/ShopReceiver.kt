@@ -93,8 +93,10 @@ class ShopReceiver(val name: String) {
     /**
      * Adds an item to this shop. Is invoked implicitly through [sell].
      */
-    fun addItem(id: Int, amount: Int, maxAmount: Int) {
-        items += ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
+    fun addItem(id: Int, amount: Int, maxAmount: Int): ShopHandler.PendingShopItem {
+        val item = ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
+        items += item
+        return item
     }
 
     /**

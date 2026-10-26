@@ -80,7 +80,12 @@ public enum Expression {
     /**
      * The shocked expressions.
      */
-    SHOCKED(571, 572, 573, 574);
+    SHOCKED(571, 572, 573, 574),
+
+    /**
+     * The bored expressions.
+     */
+    BORED(562, 563, 564, 565);
 
     /**
      * The expression identifiers.
