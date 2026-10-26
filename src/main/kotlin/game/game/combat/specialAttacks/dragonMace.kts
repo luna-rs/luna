@@ -1,6 +1,7 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_MACE
@@ -26,11 +27,18 @@ val MAX_HIT_BONUS = 0.50
  */
 val ATTACK_ROLL_MULTIPLIER = 1.25
 
+/**
+ * Configures the dragon mace special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = DRAGON_MACE,
        drain = 25,
        meleeDefenceBonus = EquipmentBonus.CRUSH_DEFENCE,
        attackRollMultiplier = ATTACK_ROLL_MULTIPLIER,
        strengthBonus = MAX_HIT_BONUS) {
+
+    launchSound = Sound.SHATTER
 
     attack { melee(ANIMATION) }
 

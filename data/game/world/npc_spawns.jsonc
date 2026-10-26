@@ -44348,6 +44348,7 @@
       "y": 3294,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -44400,6 +44401,7 @@
       "y": 3292,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -67974,9 +67976,9 @@
       "frequency": "NORMAL"
     }
   },
-  // Mime (id 1056)
+  // Pirate Jackie the Fruit (id 1055)
   {
-    "id": 1056,
+    "id": 1055,
     "position": {
       "x": 2811,
       "y": 3192,
@@ -76458,6 +76460,7 @@
       "y": 3442,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -76471,6 +76474,7 @@
       "y": 3445,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -124914,7 +124918,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 3,
       "frequency": "NORMAL"
     }
   },
@@ -124938,10 +124942,6 @@
       "x": 3303,
       "y": 3118,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Camel (id 80)
@@ -124965,9 +124965,8 @@
       "y": 3123,
       "z": 0
     },
-    "route_strategy": "INDOORS",
     "wander": {
-      "radius": 5,
+      "radius": 3,
       "frequency": "NORMAL"
     }
   },
@@ -124993,7 +124992,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 3,
       "frequency": "NORMAL"
     }
   },
@@ -125005,7 +125004,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 3,
       "frequency": "NORMAL"
     }
   },
@@ -125166,6 +125165,7 @@
       "y": 3182,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125179,6 +125179,7 @@
       "y": 3167,
       "z": 0
     },
+    "route_strategy": "OUTDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125201,6 +125202,7 @@
       "y": 3193,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125578,6 +125580,7 @@
       "y": 3194,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -125665,7 +125668,7 @@
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 2,
       "frequency": "NORMAL"
     }
   },

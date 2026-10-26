@@ -5,6 +5,7 @@ import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
+import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
@@ -30,7 +31,8 @@ import kotlin.time.Duration.Companion.seconds
  * bait withdrawal when required, and interacts with the correct fishing option based on the spot definition.
  *
  * Fishing spots are resolved from both first-click and second-click spot maps, allowing the same tool to support NPCs
- * that require different interaction options.
+ * that require different interaction options. Guild trips recheck current Fishing 68 before every work-zone
+ * trip, including returns from banking. The normal player fishing action retains its per-cast level checks.
  *
  * @author lare96
  */
@@ -54,6 +56,10 @@ class FishBotScript(
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing) {
 
     companion object {
+        /**
+         * Current Fishing level required by the Fishing Guild entrance in the supplied Lost City source.
+         */
+        const val FISHING_GUILD_LEVEL = 68
 
         /**
          * How many times a bot clicks its fishing spot without starting to fish before it looks for another spot.
@@ -174,6 +180,11 @@ class FishBotScript(
 
         // TODO Only withdraw percentage amount based on intelligence.
         handler.banking.withdrawAll(baitId)
+    }
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
+        if (zone == SubZone.FISHING_GUILD && bot.fishing.level < FISHING_GUILD_LEVEL) return false
+        return super.travelToWorkZone(zone, bank)
     }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {

@@ -27,6 +27,12 @@ class NpcCombatReceiver {
     var attack: NpcAttackCombatHookReceiver.() -> CombatAttack<out Npc> = { default() }
 
     /**
+     * Whether [attack] was registered, so the NPC may attack in other ways than the standard melee attack.
+     */
+    var replacesAttack = false
+        private set
+
+    /**
      * Defence hook callback.
      *
      * Defaults to a no-op when no custom defence hook is registered.
@@ -42,6 +48,7 @@ class NpcCombatReceiver {
      */
     fun attack(attackSupplier: NpcAttackCombatHookReceiver.() -> CombatAttack<out Npc>) {
         attack = attackSupplier
+        replacesAttack = true
     }
 
     /**

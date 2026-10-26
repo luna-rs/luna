@@ -2,7 +2,7 @@ package game.bot.scripts
 
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
-import api.bot.action.eating.PvmEating
+import api.bot.action.PvmTactics
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -183,8 +183,11 @@ open class NpcCombatScript(bot: Bot,
     internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
         (slayerTask == null || npc.id in slayerTask.npcs)
 
-    /** Eats the way a player watching their hitpoints would; the Kalphite Queen trip keeps its own supply rules. */
-    private val eating = PvmEating(bot)
+    /**
+     * Eats and prays the way a player watching their hitpoints and prayer would; the Kalphite Queen trip keeps its own
+     * supply and prayer rules.
+     */
+    private val tactics = PvmTactics(bot)
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null
@@ -230,8 +233,10 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun finish() {
         bot.reflex.isDisableCombatReflex = false
-        eating.stopAttending()
+        tactics.stopAttending()
         if (queenTrip && !bot.combat.inCombat()) bot.combat.prayers.deactivateAll()
+        // A pause hands the fight to another script, which looks after the prayers from there.
+        if (!queenTrip && !isPaused()) tactics.leaveFight()
         // Keep the spell through a pause, so the combat reflex can finish the fight with it.
         if (!isPaused()) {
             clearMagic()
@@ -239,7 +244,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
-        eatFood()
+        attend()
         if (!prepareCombat()) return mutableListOf()
         if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc &&
             (!queenTrip || canAttack(bot.combat.lastCombatWith as Npc))) {
@@ -258,6 +263,7 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
         bot.reflex.isDisableCombatReflex = false
+        if (!queenTrip) tactics.leaveFight()
         combatConfigured = false
         bot.combat.target = null
         clearMagic()
@@ -338,7 +344,7 @@ open class NpcCombatScript(bot: Bot,
         }
     }
     // todo auto bury bones after each kill
-    // todo use prayers, etc. when available and needed
+    // todo use potions, etc. when available and needed
     // todo dumb bots collect all loot, smart bots only collect good loot
     // todo safespotting (map of combat sub-zones and all known safespots??)
     //  ^^ SAFESPOT_MAGIC, SAFESPOT_RANGED, MAGIC, RANGED, MELEE
@@ -348,7 +354,7 @@ open class NpcCombatScript(bot: Bot,
     // todo discard focus if not reachable.
     override suspend fun onExecuteInZone(searching: Boolean) {
         if (!prepareCombat()) return
-        eatFood()
+        attend()
         if (forceBanking || (queenTrip && waitingForQueen())) return
         if (bot.combat.lastCombatWith?.isAlive == true &&
             (!queenTrip || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
@@ -362,7 +368,7 @@ open class NpcCombatScript(bot: Bot,
             }
             if (queenTrip) {
                 bot.naturalDelay()
-            } else if (!eating.watch()) {
+            } else if (!tactics.watch()) {
                 forceBanking = true
             }
         } else if (focus?.isAlive != true) {
@@ -372,7 +378,7 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) return true
-        eatFood()
+        attend()
         if (queenTrip && (forceBanking || waitingForQueen())) return false
         if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
             lootItems()
@@ -407,7 +413,7 @@ open class NpcCombatScript(bot: Bot,
     override val targetSearchTimeout: Duration = 180.seconds
 
     override suspend fun interactionOption(target: Npc): Int? {
-        eatFood()
+        attend()
         return if (prepareCombat() && acceptsAssignment(target)) 3 else null
     }
 
@@ -460,12 +466,12 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private suspend fun lootItems() {
-        eatFood()
+        attend()
         if (queenTrip && forceBanking) return
         // Wait for the drop to appear.
         if (queenTrip) {
             delay(2.seconds, 4.seconds)
-        } else if (!eating.watch(2.seconds, 4.seconds)) {
+        } else if (!tactics.watch(2.seconds, 4.seconds)) {
             forceBanking = true
         }
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
@@ -477,7 +483,7 @@ open class NpcCombatScript(bot: Bot,
             }
             handler.interactions.interact(1, item)
             waitFor { countBefore < bot.itemTracker.count(inventoryItem.id) }
-            eatFood()
+            attend()
             if (queenTrip && forceBanking) return
             bot.naturalDelay()
         }
@@ -489,7 +495,10 @@ open class NpcCombatScript(bot: Bot,
         }
     }
 
-    private suspend fun eatFood() {
+    /**
+     * Looks after the bot's hitpoints and prayer, and sends it to the bank when it runs out of what it needs.
+     */
+    private suspend fun attend() {
         if (queenTrip) {
             if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
             if (!KalphiteQueenTrip.canContinue(bot)) forceBanking = true
@@ -499,7 +508,7 @@ open class NpcCombatScript(bot: Bot,
             (bot.equipment.shield?.id != 1540 || !handler.inventory.hasAnyFood())) {
             forceBanking = true
         }
-        if (!eating.check()) {
+        if (!tactics.check()) {
             forceBanking = true
         }
     }

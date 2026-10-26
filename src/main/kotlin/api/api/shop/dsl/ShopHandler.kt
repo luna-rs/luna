@@ -13,7 +13,13 @@ object ShopHandler {
      * A pending item awaiting registration within a shop.
      */
     class PendingShopItem(index: Int, id: Int, startAmount: Int, val maxStockAmount: Int) :
-        IndexedItem(index, id, startAmount)
+        IndexedItem(index, id, startAmount) {
+
+        /**
+         * How many ticks it takes to restock one of this item, or `-1` to use the shop's restock policy rate.
+         */
+        var restockRate = -1
+    }
 
     /**
      * Initializes a new [ShopReceiver]. The entry point of shop creation.

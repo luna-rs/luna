@@ -1,0 +1,419 @@
+/*
+ * Verified explicit normal attack sounds from Lost City Content 377-wip:
+ * 44eab09081ef0f6c5f3eaabd1897a588ad7d9e50 (object configs and pack/synth.pack).
+ * Grouped by identical mappings; omitted items/styles remain silent. No family or variant inference.
+ * See docs/weapon-sounds.md for coverage, source details, and unresolved style mismatches.
+ */
+[
+  {
+    "ids": [
+      806,
+      807,
+      808,
+      809,
+      810,
+      811,
+      812,
+      813,
+      814,
+      815,
+      816,
+      817,
+      818,
+      3093,
+      3094
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "DART"
+    }
+  },
+  {
+    "ids": [
+      746,
+      747,
+      1203,
+      1205,
+      1207,
+      1209,
+      1211,
+      1213,
+      1215,
+      1217,
+      1219,
+      1221,
+      1223,
+      1225,
+      1227,
+      1229,
+      1231,
+      1233,
+      1235,
+      1277,
+      1279,
+      1281,
+      1283,
+      1285,
+      1287,
+      1289,
+      2952,
+      3095,
+      3096,
+      3097,
+      3098,
+      3099,
+      3100,
+      3101
+    ],
+    "sounds": {
+      "SLASH_ATTACK": "STABSWORD_SLASH",
+      "STAB_ATTACK": "STABSWORD_STAB"
+    }
+  },
+  {
+    "ids": [
+      35,
+      667,
+      1291,
+      1293,
+      1295,
+      1297,
+      1299,
+      1301,
+      1303,
+      1305,
+      1321,
+      1323,
+      1325,
+      1327,
+      1329,
+      1331,
+      1333,
+      2402,
+      2963,
+      4068,
+      4503,
+      4508,
+      4587,
+      6523,
+      6525
+    ],
+    "sounds": {
+      "SLASH_ATTACK": "HACKSWORD_SLASH",
+      "STAB_ATTACK": "HACKSWORD_STAB"
+    }
+  },
+  {
+    "ids": [
+      4151
+    ],
+    "sounds": {
+      "SLASH_ATTACK": "WHIP"
+    }
+  },
+  {
+    "ids": [
+      4153
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "GRANITE_MAUL"
+    }
+  },
+  {
+    "ids": [
+      1237,
+      1239,
+      1241,
+      1243,
+      1245,
+      1247,
+      1249,
+      1251,
+      1253,
+      1255,
+      1257,
+      1259,
+      1261,
+      1263,
+      4158
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "STAFF_HIT",
+      "SLASH_ATTACK": "STAFF_HIT",
+      "STAB_ATTACK": "STAFF_STAB"
+    }
+  },
+  {
+    "ids": [
+      772,
+      1379,
+      1381,
+      1383,
+      1385,
+      1387,
+      1389,
+      1391,
+      1393,
+      1395,
+      1397,
+      1399,
+      1401,
+      1403,
+      1405,
+      1407,
+      2415,
+      2416,
+      2417,
+      3053,
+      3054,
+      4170,
+      6526
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "STAFF_HIT"
+    }
+  },
+  {
+    "ids": [
+      1265,
+      1267,
+      1269,
+      1271,
+      1273,
+      1275
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "BAXE_CRUSH",
+      "STAB_ATTACK": "BAXE_SLASH"
+    }
+  },
+  {
+    "ids": [
+      1307,
+      1309,
+      1311,
+      1313,
+      1315,
+      1317,
+      1319
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "TWO_H_CRUSH",
+      "SLASH_ATTACK": "TWO_H_SLASH"
+    }
+  },
+  {
+    "ids": [
+      1335,
+      1337,
+      1339,
+      1341,
+      1343,
+      1345,
+      1347
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "WARHAMMER_CRUSH"
+    }
+  },
+  {
+    "ids": [
+      1349,
+      1351,
+      1353,
+      1355,
+      1357,
+      1359,
+      1361,
+      1363,
+      1365,
+      1367,
+      1369,
+      1371,
+      1373,
+      1375,
+      1377,
+      6739
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "BAXE_CRUSH",
+      "SLASH_ATTACK": "BAXE_SLASH"
+    }
+  },
+  {
+    "ids": [
+      6527
+    ],
+    "sounds": {
+      "SLASH_ATTACK": "MACE_CRUSH"
+    }
+  },
+  {
+    "ids": [
+      6528
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "TWO_H_CRUSH"
+    }
+  },
+  {
+    "ids": [
+      1419
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "SCYTHE_DOUBLE",
+      "SLASH_ATTACK": "SCYTHE_SLASH",
+      "STAB_ATTACK": "SCYTHE_STAB"
+    }
+  },
+  {
+    "ids": [
+      1420,
+      1422,
+      1424,
+      1426,
+      1428,
+      1430,
+      1432,
+      1434
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "MACE_CRUSH",
+      "STAB_ATTACK": "MACE_STAB"
+    }
+  },
+  {
+    "ids": [
+      2460,
+      2462,
+      2464,
+      2466,
+      2468,
+      2470,
+      2472,
+      2474,
+      2476
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "FLOWER_ATTACK"
+    }
+  },
+  {
+    "ids": [
+      466
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "BAXE_CRUSH"
+    }
+  },
+  {
+    "ids": [
+      4755,
+      4982,
+      4983,
+      4984,
+      4985
+    ],
+    "sounds": {
+      "CRUSH_ATTACK": "FLAIL_CRUSH",
+      "STAB_ATTACK": "FLAIL_STAB"
+    }
+  },
+  {
+    "ids": [
+      767,
+      837
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "CROSSBOW"
+    }
+  },
+  {
+    "ids": [
+      800,
+      801,
+      802,
+      803,
+      804,
+      805
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "THROWINGAXE"
+    }
+  },
+  {
+    "ids": [
+      825,
+      826,
+      827,
+      828,
+      829,
+      830,
+      831,
+      832,
+      833,
+      834,
+      835,
+      836
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "JAVELIN"
+    }
+  },
+  {
+    "ids": [
+      841,
+      843,
+      849,
+      853,
+      857,
+      861,
+      2883
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "ARROWLAUNCH2"
+    }
+  },
+  {
+    "ids": [
+      839,
+      845,
+      847,
+      851,
+      855,
+      859
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "LONGBOW"
+    }
+  },
+  {
+    "ids": [
+      863,
+      864,
+      865,
+      866,
+      867,
+      868,
+      869,
+      870,
+      871,
+      872,
+      873,
+      874,
+      875,
+      876
+    ],
+    "sounds": {
+      "RANGED_ATTACK": "THROWINGKNIFE"
+    }
+  },
+  {
+    "ids": [
+      2961
+    ],
+    "sounds": {
+      "SLASH_ATTACK": "SICKLE_SLASH",
+      "STAB_ATTACK": "SICKLE_STAB"
+    }
+  }
+]

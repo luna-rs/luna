@@ -9,6 +9,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.FillWaterBotScript.Source
 import game.skill.crafting.glassMaking.MakeMoltenGlassActionItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -22,7 +24,9 @@ import kotlin.time.Duration.Companion.seconds
  * [InventoryBotScript] handles banking, zone travel, expiry, and weak-action gating. Balanced withdrawals
  * contain up to fourteen pairs, limited by the smaller bank stock. The player [MakeMoltenGlassActionItem]
  * consumes the inputs, returns empty buckets, and awards its existing twenty Crafting experience per glass.
- * No materials are gathered, bought, or injected; missing startup inputs request total targets of 1,000.
+ * Missing startup inputs request total targets of 1,000. Non-training selection can prepare missing sand
+ * from owned empty buckets when soda ash is available, using the shared filling prerequisite. It queues
+ * one bounded task and ends; normal activity selection can later use the prepared sand. No materials are injected.
  *
  * Default zones are the existing Al Kharid and Falador furnace routes used by ore-smelting bots. Every
  * interaction resolves a loaded object named Furnace with a Smelt option inside the active zone. Missing
@@ -43,12 +47,22 @@ class MakeMoltenGlassBotScript(
     override val verifiedProductionWithdrawals = true
 
     companion object {
-        /** Banked furnace routes already used by the existing ore-smelting factory. */
+        /**
+         * Banked furnace routes already used by the existing ore-smelting factory.
+         */
         val DEFAULT_ZONES = listOf(SubZone.AL_KHARID_BANK, SubZone.FALADOR_WEST_BANK)
-        /** Soda ash consumed by the player action. */
+        /**
+         * Soda ash consumed by the player action.
+         */
         const val SODA_ASH = 1781
-        /** Bucket of sand consumed by the player action. */
+        /**
+         * Bucket of sand consumed by the player action.
+         */
         const val BUCKET_OF_SAND = 1783
+        /**
+         * Reusable bucket returned by glassmaking and accepted by the native sand resource.
+         */
+        const val EMPTY_BUCKET = 1925
 
         /**
          * Saved furnace zones and retry counters alongside the inherited duration and candidate zones.
@@ -68,9 +82,13 @@ class MakeMoltenGlassBotScript(
         }
     }
 
-    /** Permanent Crafting level required for selection and startup validation. */
+    /**
+     * Permanent Crafting level required for selection and startup validation.
+     */
     val requiredLevel = 1
-    /** Minimum supplies for one conversion; both inputs are non-stackable. */
+    /**
+     * Minimum supplies for one conversion; both inputs are non-stackable.
+     */
     private val materials = listOf(Item(SODA_ASH), Item(BUCKET_OF_SAND))
 
     /**
@@ -92,18 +110,46 @@ class MakeMoltenGlassBotScript(
     fun isEligible(): Boolean = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel &&
             bot.ownsProductionSupplies(materials)
 
-    /** Returns up to fourteen balanced input pairs from bank stock, or an empty batch if either input is absent. */
+    /**
+     * Whether owned soda ash and empty buckets can supply a missing sand input.
+     */
+    fun canPrepareSand(): Boolean = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel &&
+        !bot.ownsProductionSupplies(listOf(Item(BUCKET_OF_SAND))) &&
+        bot.ownsProductionSupplies(listOf(Item(SODA_ASH), Item(EMPTY_BUCKET)))
+
+    /**
+     * Queues up to fourteen buckets of sand through native filling, then returns to activity selection.
+     */
+    private fun queueSandPreparation(): Boolean {
+        if (!isActionSafe() || productionRetriesExhausted() || !canPrepareSand()) return false
+        val ash = bot.bank.computeAmountForId(SODA_ASH).toLong() + bot.inventory.computeAmountForId(SODA_ASH)
+        val buckets = bot.bank.computeAmountForId(EMPTY_BUCKET).toLong() + bot.inventory.computeAmountForId(EMPTY_BUCKET)
+        bot.scriptStack.softPushHead(FillWaterBotScript(bot, EMPTY_BUCKET, minOf(14L, ash, buckets).toInt(),
+            duration, Source.SAND))
+        stop()
+        return true
+    }
+
+    /**
+     * Returns up to fourteen balanced input pairs from bank stock, or an empty batch if either input is absent.
+     */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
-    override fun withdraw(): List<Item> = productionWithdraw(materials, levelEligible = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel)
+    override fun withdraw(): List<Item> {
+        if (queueSandPreparation()) return emptyList()
+        return productionWithdraw(materials, levelEligible = bot.skill(SKILL_CRAFTING).staticLevel >= requiredLevel,
+            prepareMissing = { queueSandPreparation() })
+    }
 
     override fun bankWithdraw(): List<Item> = bankBatch().also {
-        if (it.isEmpty()) stop()
+        if (it.isEmpty() && !queueSandPreparation()) stop()
     }
 
     override suspend fun onInventoryBankRequested(): Boolean = requestProductionBank(hasMaterials())
 
-    /** Whether inventory contains at least one complete pair of the configured recipe's inputs. */
+    /**
+     * Whether inventory contains at least one complete pair of the configured recipe's inputs.
+     */
     private fun hasMaterials() = bot.inventory.containsAll(materials)
 
     override suspend fun onExecuteInZone(): Boolean {
@@ -112,7 +158,9 @@ class MakeMoltenGlassBotScript(
         return true
     }
 
-    /** Resolves a supported furnace, opens the player dialogue, and requests the carried balanced batch. */
+    /**
+     * Resolves a supported furnace, opens the player dialogue, and requests the carried balanced batch.
+     */
     private suspend fun startProduction(): Boolean {
         val zone = activeZone ?: return false
         val furnace = world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {

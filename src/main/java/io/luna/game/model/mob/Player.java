@@ -416,6 +416,7 @@ public class Player extends Mob {
     @Override
     public void onHit(Hit hit) {
         PlayerHitSounds.INSTANCE.play(this, hit);
+        engine.combat.prayer.CombatPrayerEffects.INSTANCE.receivedHit(this, hit);
         plugins.post(new DamageReceivedEvent(this, hit));
     }
 

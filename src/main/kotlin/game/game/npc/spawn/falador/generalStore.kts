@@ -2,52 +2,38 @@ package game.npc.spawn.falador
 
 import api.predef.*
 import api.shop.dsl.ShopHandler
-import com.google.common.collect.ImmutableList
+import game.npc.spawn.GeneralStore
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
-import io.luna.game.model.item.shop.ShopInterface
-
-val shopkeeperId = ImmutableList.of(526, 527)
 
 /**
- * General store shop.
+ * The general store in Falador, run by a shop keeper and an assistant.
  */
 ShopHandler.create("Falador General Store") {
     buy = BuyPolicy.ALL
-    restock = RestockPolicy.FAST
+    restock = RestockPolicy.BALANCED
     currency = Currency.COINS
 
     sell {
-        "Pot" x 5
-        "Jug" x 2
-        "Shears" x 2
-        "Bucket" x 3
-        "Bowl" x 2
-        "Cake tin" x 2
-        "Tinderbox" x 2
-        "Chisel" x 2
-        "Hammer" x 5
-        "Newcomer map" x 5
+        "Pot" x 5 every 10
+        "Jug" x 2 every 100
+        "Shears" x 2 every 100
+        "Bucket" x 3 every 10
+        "Bowl" x 2 every 50
+        "Cake tin" x 2 every 50
+        "Tinderbox" x 2 every 100
+        "Chisel" x 2 every 100
+        "Hammer" x 5 every 100
+        "Newcomer map" x 5 every 100
     }
 
     open {
-        shopkeeperId.forEach({ npc2 += it })
+        npc2 += 526
+        npc2 += 527
     }
 }
 
-/**
- * Dialogue for "Talk" option.
- */
-shopkeeperId.forEach({ npcId ->
-    npc1(npcId) {
-        plr.newDialogue()
-            .npc(targetNpc.id, "Can I help you at all?")
-            .options("Yes please, what are you selling?", {
-                it.overlays.open(ShopInterface(world, "Falador General Store"))
-            }, "No thanks.", {
-                plr.newDialogue().player("No thanks.").open()
-            })
-            .open()
-    }
-})
+listOf(526, 527).forEach { id ->
+    npc1(id) { GeneralStore.greet(plr, id, "Falador General Store") }
+}

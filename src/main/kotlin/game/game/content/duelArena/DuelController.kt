@@ -49,6 +49,13 @@ class DuelController(private val player: Player, val duel: DuelArena.Duel) : Pla
 
     override fun register() { process() }
     override fun combat(victim: Mob): Boolean = victim is Player && duel.fighting(player, victim)
+    override fun retribution(victim: Mob): Boolean = victim is Player && duel.started && !duel.ended &&
+        duel.countdown == 0 && duel.contains(player) && duel.other(player) === victim && victim.isAlive
+    override fun recoverAmmo(item: Item): Boolean {
+        if (!duel.started || duel.ended || !duel.contains(player)) return false
+        DuelArena.retainAmmo(player, item)
+        return true
+    }
     override fun teleport(action: TeleportAction): Boolean = false
     override fun logout(): Boolean { duel.finish(duel.other(player)); return true }
     override fun unregister() {

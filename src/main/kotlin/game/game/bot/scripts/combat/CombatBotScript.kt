@@ -3,6 +3,8 @@ package game.bot.scripts.combat
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatSwitcher
 import api.bot.action.PkRiskBudget
+import api.bot.action.PvmFight
+import api.bot.action.prayer.PvmPrayer
 import api.combat.death.PlayerDeathItems
 import api.combat.specialAttack.SpecialAttackHandler
 import api.bot.Suspendable.delay
@@ -171,6 +173,17 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
          * The longest a bot waits at home for its run energy.
          */
         private val MAX_REST = 5.minutes
+
+        /**
+         * The share of its prayer points below which a bot fighting a player keeps only its cheapest prayers on.
+         */
+        private const val SAVE_PRAYER_SHARE = 0.15
+
+        /**
+         * The share of its prayer points a bot fighting a player needs again, after a restore, before it uses all its
+         * prayers again.
+         */
+        private const val RESUME_PRAYER_SHARE = 0.30
     }
 
     /**
@@ -288,6 +301,21 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      */
     private var reactedToEscape = false
 
+    /**
+     * Prays against monsters, the same way bots training on them do.
+     */
+    private val monsterPrayer = PvmPrayer(bot)
+
+    /**
+     * Whether the bot has prayed against a monster in this fight.
+     */
+    private var prayedAgainstMonsters = false
+
+    /**
+     * Whether the bot, fighting a player, is down to its last prayer points and keeping only its cheapest prayers on.
+     */
+    private var savingPrayer = false
+
     override suspend fun init(resumed: Boolean): Boolean {
         startedAt = System.currentTimeMillis()
         if (running) {
@@ -389,6 +417,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             bot.combat.isDisabled = false
         }
         if (!isPaused()) onCombatFinished()
+        if (prayedAgainstMonsters && !isPaused()) monsterPrayer.leaveFight()
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
         if (usesPkSwitching && !isPaused()) {
@@ -790,20 +819,41 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     /**
-     * Activates defensive and offensive prayers based on the current combat situation.
+     * Activates prayers for the current fight: against a monster through [PvmPrayer], against a player through
+     * [activatePlayerPrayer].
+     */
+    private suspend fun activatePrayer() {
+        if (focus is Npc) {
+            prayedAgainstMonsters = true
+            monsterPrayer.check(PvmFight.of(bot))
+        } else {
+            activatePlayerPrayer()
+        }
+    }
+
+    /**
+     * Activates defensive and offensive prayers in a fight against a player.
      *
      * The bot mirrors its protection prayer against the last received damage type. It also keeps low-cost defensive
-     * prayers active and uses melee offensive prayers when not ranging or autocasting.
+     * prayers active and uses melee offensive prayers when not ranging or autocasting. Once it is under
+     * [SAVE_PRAYER_SHARE] of its prayer points, it keeps only Steel Skin and Protect Item on until a restore brings it
+     * back to [RESUME_PRAYER_SHARE]. The gap keeps it from switching its other prayers off and on every cycle. Prayers
+     * the bot doesn't have the level for are left alone.
      */
-    private fun activatePrayer() {
+    private fun activatePlayerPrayer() {
         if (bot.prayer.level > 0) {
             // TODO@0.5.0 Intelligent bots should use Smite, Retribution, and Redemption strategically.
             val prayerPercent = bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble()
 
-            if (prayerPercent < 0.15 && bot.combat.prayers.active.size > 2) {
+            if (savingPrayer && prayerPercent >= RESUME_PRAYER_SHARE) {
+                savingPrayer = false
+            } else if (!savingPrayer && prayerPercent < SAVE_PRAYER_SHARE) {
+                savingPrayer = true
                 bot.combat.prayers.deactivateAll()
-                bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
-                bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)
+            }
+            if (savingPrayer) {
+                activateIfAble(CombatPrayer.STEEL_SKIN)
+                activateIfAble(CombatPrayer.PROTECT_ITEM)
                 return
             }
 
@@ -816,20 +866,29 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 }
 
             if (protectionPrayer != null) {
-                bot.combat.prayers.activateIfOff(protectionPrayer)
+                activateIfAble(protectionPrayer)
             } else {
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MELEE, true)
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MISSILES, true)
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MAGIC, true)
             }
 
-            bot.combat.prayers.activateIfOff(CombatPrayer.STEEL_SKIN)
-            bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_ITEM)
+            activateIfAble(CombatPrayer.STEEL_SKIN)
+            activateIfAble(CombatPrayer.PROTECT_ITEM)
 
             if (!bot.combat.weapon.isRanged && !bot.combat.magic.isAutocasting) {
-                bot.combat.prayers.activateIfOff(CombatPrayer.ULTIMATE_STRENGTH)
-                bot.combat.prayers.activateIfOff(CombatPrayer.INCREDIBLE_REFLEXES)
+                activateIfAble(CombatPrayer.ULTIMATE_STRENGTH)
+                activateIfAble(CombatPrayer.INCREDIBLE_REFLEXES)
             }
+        }
+    }
+
+    /**
+     * Activates [prayer] if it is off and the bot has the Prayer level for it.
+     */
+    private fun activateIfAble(prayer: CombatPrayer) {
+        if (bot.prayer.staticLevel >= prayer.level) {
+            bot.combat.prayers.activateIfOff(prayer)
         }
     }
 

@@ -51,6 +51,8 @@ class CombatPrayerSet(private val player: Player) {
      * If [prayer] is already active, this method toggles it off (non-silently).
      * Requirements are checked before replacing prayers in the same group, so rejected upgrades preserve the active
      * prayer. The dragon scimitar status restricts protection prayers only.
+     * A valid replacement becomes active before conflicting prayers are removed, preserving the shared drain timer
+     * and its due tick. Repeated switches within a group therefore cannot postpone prayer drain.
      */
     fun activate(prayer: CombatPrayer) {
 
@@ -78,9 +80,13 @@ class CombatPrayerSet(private val player: Player) {
             player.sendMessage("Use an altar to recharge your Prayer points.")
             return
         }
+        // Keep the set nonempty during a group switch so deactivation cannot cancel the existing drain timer.
+        activePrayers.add(prayer)
         if (prayer.group != null) {
             for (otherPrayer in prayer.group.getPrayers()) {
-                deactivate(otherPrayer, true)
+                if (otherPrayer != prayer) {
+                    deactivate(otherPrayer, true)
+                }
             }
         }
         player.sendVarp(Varp(prayer.varp, 1))
@@ -88,8 +94,6 @@ class CombatPrayerSet(private val player: Player) {
         if (prayer.icon != PrayerIcon.NONE) {
             player.prayerIcon = prayer.icon
         }
-
-        activePrayers.add(prayer)
 
         // Start the shared drain timer if needed.
         if (!player.actions.contains(CombatPrayerDrainAction::class)) {
