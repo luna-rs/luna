@@ -1,6 +1,7 @@
 package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
+import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.MineBotScript
@@ -79,7 +80,9 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
                 activities.add(BotSkillingActivity(tokens = tokens, zones = setOf(zone)))
             }
         }
-        val preferGuild = if (training) efficient else bot.personality.isIntelligent
+        // A bot that just escaped an attacker in or near the guild mines elsewhere for a while.
+        val preferGuild = (if (training) efficient else bot.personality.isIntelligent) &&
+            bot.recentEscape?.avoids(SubZone.MINING_GUILD) != true
         if (preferGuild) {
             for (activity in activities) {
                 if (SubZone.MINING_GUILD in activity.zones) {

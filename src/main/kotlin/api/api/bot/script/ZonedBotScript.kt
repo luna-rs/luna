@@ -131,6 +131,18 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         private set
 
     /**
+     * The candidate zone the bot is travelling to before it becomes [activeZone].
+     */
+    private var travelZone: SubZone? = null
+
+    /**
+     * The zone the bot was working in or travelling to when this script was last paused. A combat child that teleports
+     * the bot home to escape an attacker records it in [Bot.lastEscape], so the bot keeps away from it for a while.
+     */
+    var interruptedZone: SubZone? = null
+        private set
+
+    /**
      * The original candidate-zone list used for one retry pass after travel-based selection failures.
      *
      * Runtime selection may remove zones from [zones]. This snapshot lets the script make one rebuilt retry pass
@@ -153,6 +165,10 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         }
 
         if (!awaitActionSafety()) return true
+        if (!avoidRecentEscape()) {
+            bot.log("Every candidate zone is near a recent escape. Stopping script so another activity is chosen.")
+            return true
+        }
         timestamp = System.currentTimeMillis()
 
         if (!resumed || !initialPreparationComplete) {
@@ -262,9 +278,28 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     final override fun paused() {
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
+        interruptedZone = activeZone ?: travelZone
         cachedBank = null
         activeZone = null
+        travelZone = null
         onPaused()
+    }
+
+    /**
+     * Drops the candidate zones the bot was recently chased out of, so that resuming or starting this script doesn't
+     * walk the bot straight back to the attacker it teleported home to escape. Like a zone rejected by
+     * [executeInZone], a dropped zone isn't selected again by this script.
+     *
+     * @return `false` if that leaves no candidate zones.
+     */
+    private fun avoidRecentEscape(): Boolean {
+        val escape = bot.recentEscape ?: return true
+        val avoided = zones.filter { escape.avoids(it) }
+        if (avoided.isEmpty()) return true
+        zones.removeAll(avoided)
+        bot.log("Avoiding zones near a recent escape. escape=$escape, avoided=$avoided, " +
+                "remainingCandidates=${zones.size}")
+        return zones.isNotEmpty()
     }
 
     /**
@@ -466,7 +501,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return true
             }
 
+            travelZone = newZone
             val arrived = travelToWorkZone(newZone)
+            travelZone = null
             if (!isActionSafe()) return awaitActionSafety()
             if (arrived) {
                 val lastZone = activeZone
@@ -486,7 +523,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                     return false
                 }
 
-                zones.addAll(originalZones)
+                val escape = bot.recentEscape
+                zones.addAll(originalZones.filterNot { escape?.avoids(it) == true })
                 if (zones.size > 1) {
                     zones.shuffle()
                 }
