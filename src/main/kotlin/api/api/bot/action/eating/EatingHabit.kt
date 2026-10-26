@@ -76,7 +76,7 @@ class EatingHabit(val intelligence: Double,
     /**
      * How much of a monster's real maximum hit the bot knows about before it has been hit hard by one.
      */
-    val knowledge = 0.4 + 0.6 * intelligence
+    val knowledge = MonsterMemory.knowledge(intelligence)
 
     /**
      * The chance the bot fails to notice a hit, until it next glances at its hitpoints or is hit again.

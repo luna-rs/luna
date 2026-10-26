@@ -23,6 +23,14 @@ class MonsterMemory {
          * The session memory of each bot. It is not saved, so a bot that logs back in starts learning again.
          */
         val Bot.monsterMemory by Attr.obj { MonsterMemory() }
+
+        /**
+         * How much of a monster's real maximum hit a bot knows about before it has been hit hard by one.
+         *
+         * @param intelligence The bot's intelligence, from `0.0` to `1.0`.
+         * @return The knowledge [expectedMaxHit] works from.
+         */
+        fun knowledge(intelligence: Double): Double = 0.4 + 0.6 * intelligence
     }
 
     /**
