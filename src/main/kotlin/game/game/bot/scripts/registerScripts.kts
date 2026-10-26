@@ -1,5 +1,8 @@
 package game.bot.scripts
 
+import game.bot.scripts.skills.FarmingBotScript
+import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
+
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
 import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
@@ -199,6 +202,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
+    scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }

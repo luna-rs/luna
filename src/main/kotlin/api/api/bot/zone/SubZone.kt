@@ -45,6 +45,35 @@ enum class SubZone(
     val plane: Int? = null
 ) {
     /**
+     * Regular farming plots mapped in revision 377 and Lost City; anchors use the paths between plots.
+     */
+    FALADOR_FARM(
+        inside = Position(3055, 3309), area = SimpleBoxArea.of(3047, 3300, 3063, 3315),
+        parent = { FALADOR }, plane = 0),
+    CATHERBY_FARM(
+        inside = Position(2811, 3465), area = SimpleBoxArea.of(2802, 3456, 2818, 3471),
+        parent = { CATHERBY }, plane = 0),
+    ARDOUGNE_FARM(
+        inside = Position(2668, 3376), area = SimpleBoxArea.of(2659, 3367, 2675, 3382),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
+     */
+    YANILLE_HOPS(
+        inside = Position(2573, 3104), area = SimpleBoxArea.of(2571, 3100, 2580, 3109),
+        parent = { YANILLE }, plane = 0),
+    ENTRANA_HOPS(
+        inside = Position(2808, 3336), area = SimpleBoxArea.of(2806, 3332, 2815, 3341),
+        parent = { ENTRANA }, plane = 0),
+    LUMBRIDGE_HOPS(
+        inside = Position(3226, 3315), area = SimpleBoxArea.of(3224, 3310, 3234, 3320),
+        parent = { LUMBRIDGE }, plane = 0),
+    MCGRUBORS_HOPS(
+        inside = Position(2663, 3525), area = SimpleBoxArea.of(2661, 3520, 2672, 3531),
+        parent = { SEERS_VILLAGE }, plane = 0),
+
+    /**
      * Turael's Burthorpe house, used for native Slayer assignment dialogue.
      */
     TURAEL(
