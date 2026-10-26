@@ -4,6 +4,8 @@ import api.combat.CombatHandler.displayCombatOverlay
 import engine.controllers.Controllers.inMultiArea
 import io.luna.game.model.area.Area
 import engine.combat.status.hooks.ImmobilizedStatusEffect
+import engine.combat.prayer.CombatPrayer
+import api.predef.ext.ticks
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
@@ -78,15 +80,38 @@ object CombatSpellHandler {
     /**
      * Applies an immobilization effect to a mob.
      *
-     * If the mob is not already immobilized by an active matching action, a new [ImmobilizationAction] is submitted
-     * for the supplied duration.
+     * Player spells respect the original freeze deadline and five-tick immunity window. PvP spell freezes retain
+     * their caster so movement can release when the caster leaves range. NPC spells do not grant an extra immunity
+     * check beyond an existing hold. Rejected effects leave all deadlines unchanged.
      *
+     * @param attacker The caster of the spell.
      * @param mob The mob to immobilize.
      * @param duration The immobilization duration.
      */
-    fun immobilize(mob: Mob, duration: Duration) {
-        if (!mob.isAlive) return
-        mob.status.add(ImmobilizedStatusEffect(mob, duration))
+    fun immobilize(attacker: Mob, mob: Mob, duration: Duration) {
+        if (!mob.isAlive || mob.status.isHeldBySpell() || (attacker is Player && mob.status.isFreezeImmune())) return
+        mob.status.add(ImmobilizedStatusEffect(mob, duration, attacker as? Player))
+    }
+
+    /**
+     * Applies accurate Bind, Snare, and Entangle at cast time, matching Lost City's standard spell scripts.
+     * Protect from Magic halves their PvP duration at this point; switching prayer during flight cannot change it.
+     * NPC casts and holds against NPCs include the reference's extra deadline tick. Ancient ice effects are separate
+     * impact effects and do not receive this standard-spell prayer reduction.
+     */
+    fun holdAtCast(attacker: Mob, victim: Mob, spell: CombatSpell) {
+        var ticks = when (spell) {
+            CombatSpell.BIND -> 8
+            CombatSpell.SNARE -> 16
+            CombatSpell.ENTANGLE -> 24
+            else -> return
+        }
+        if (attacker is Player && victim is Player) {
+            if (victim.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) ticks /= 2
+        } else {
+            ticks++
+        }
+        immobilize(attacker, victim, ticks.ticks)
     }
 
     /**

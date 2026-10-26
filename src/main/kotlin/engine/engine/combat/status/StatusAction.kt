@@ -7,6 +7,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import engine.combat.status.StatusAction.Companion.statusEffectData
 import engine.combat.status.hooks.PoisonStatusEffect
+import engine.combat.status.hooks.ImmobilizedStatusEffect
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
@@ -52,6 +53,22 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
     private val effects = EnumMap<StatusEffectType, StatusEffect<out Mob>>(StatusEffectType::class.java)
 
     /**
+     * Original freeze deadline, retained after movement release or normal expiry. Player spells cannot freeze again
+     * until five ticks after this deadline. Explicit status removal, including respawn cleanup, resets it.
+     */
+    private var freezeUntil = -1L
+
+    /**
+     * Checks the original freeze window even if leaving the caster's range has already released movement.
+     */
+    fun isHeldBySpell(): Boolean = mob.world.currentTick < freezeUntil || isImmobilized()
+
+    /**
+     * Checks the freeze window and its five-tick immunity period without extending either on a rejected spell.
+     */
+    fun isFreezeImmune(): Boolean = freezeUntil >= 0 && mob.world.currentTick < freezeUntil + 5
+
+    /**
      * Adds a status effect to this mob.
      *
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
@@ -89,6 +106,9 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
 
         effects[listener.type] = listener
         listener.start(false)
+        if (listener is ImmobilizedStatusEffect) {
+            freezeUntil = listener.expiresAt
+        }
         return true
     }
 
@@ -111,6 +131,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun remove(type: StatusEffectType) {
         effects.remove(type)?.complete()
+        if (type == StatusEffectType.IMMOBILIZED) freezeUntil = -1L
     }
 
     /**
