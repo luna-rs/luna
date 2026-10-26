@@ -53,6 +53,14 @@ enum class SubZone(
         parent = { BURTHORPE }),
 
     /**
+     * Fountain room below the Heroes' Guild, used to restore glory charges. Shared travel handles its entrance.
+     */
+    HEROES_GUILD_FOUNTAIN(
+        inside = Position(2916, 9893),
+        area = SimpleBoxArea.of(2913, 9890, 2922, 9899),
+        parent = { TAVERLY }, plane = 0),
+
+    /**
      * Supplied Canifis town footprint containing Mazchna's configured spawn.
      */
     CANIFIS_MAIN(
