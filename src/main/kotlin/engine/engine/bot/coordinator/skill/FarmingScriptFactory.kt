@@ -36,7 +36,7 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
                     patch.seedsRequired(it)
             }
             val crop = getBestActivity(bot, minOf(level, bot.farming.level), { it.level }, seeds)
-            FarmingBotScript(bot, location, crop?.seedId ?: 0, duration)
+            FarmingBotScript(bot, location, crop?.seedId ?: 0, duration, replantTrees = !profit)
         }.filter { it.isEligible() }
         val urgent = candidates.filter { it.patch.dead || it.patch.diseased || it.patch.harvestReady() }.ifEmpty { candidates }
         val preferred = if (profit) urgent.filter { it.location is HerbPatchLocation }.ifEmpty { urgent } else urgent

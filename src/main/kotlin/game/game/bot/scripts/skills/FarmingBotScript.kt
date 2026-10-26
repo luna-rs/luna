@@ -21,13 +21,21 @@ import game.skill.farming.patch.CompostType
 import game.skill.farming.patch.Crop
 import game.skill.farming.patch.FarmingPatch
 import game.skill.farming.patch.PatchLocation
+import game.skill.farming.tree.AbstractTreePatch
+import game.skill.farming.tree.ChopPatchTreeAction
+import game.skill.farming.tree.TreePatchLocation
+import game.skill.farming.tree.TreeSapling
+import game.skill.farming.fruitTree.FruitTreePatch
+import game.skill.farming.fruitTree.FruitTreePatchLocation
+import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.model.EntityState
+import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import kotlin.time.Duration
 
 /**
- * Visits one native allotment, herb, flower or hops patch using ordinary object and item-on-object packets.
+ * Visits one native allotment, herb, flower, hops, tree or fruit-tree patch through normal player packets.
  * Dead crops are cleared, weeds raked, disease cured and mature crops harvested before replanting owned seeds.
  * Owned compost and charged watering cans are optional. Native handlers alone consume supplies, change patch
  * state and award experience. The visit ends when no useful work remains; it never waits for crops to grow.
@@ -35,20 +43,24 @@ import kotlin.time.Duration
  * The inherited lifecycle supplies travel, verified banking and persistent failure budgets. Harvesting resumes
  * after banking a full inventory. Saved visits retain a patch key and seed choice, then re-read native patch state
  * and stock. Scarecrows and flowers protecting a growing allotment are preserved. Entrana visits require the
- * native equipment restriction. Tree, fruit-tree, bush and special-patch visits use different harvest flows and
- * are outside this script's current scope.
+ * native equipment restriction. Trees use native pruning, one-time health checks, chopping and stump digging.
+ * Fruit is picked before considering replacement; profit visits preserve healthy trees for produce regrowth.
+ * Training can replace mature trees only with an owned, plantable sapling and usable tools. Raw seeds must first
+ * become saplings through native pot preparation, which is a separate activity. Bush and special patches are deferred.
  *
  * @param bot The farmer.
  * @property location Native persistent patch identity, independent of its changing appearance.
  * @property seedId Optional owned seed selected for replanting; zero means tend or harvest only.
  * @param duration Maximum visit duration, including travel and banking.
+ * @property replantTrees Whether to rotate mature trees when another owned sapling can be planted.
  * @author lare96
  */
 class FarmingBotScript(
     bot: Bot,
     val location: PatchLocation,
     val seedId: Int,
-    duration: Duration
+    duration: Duration,
+    val replantTrees: Boolean = false
 ) : InventoryBotScript(bot, duration, mutableListOf(SITES.getValue(location))) {
     override val trainingSkill = SKILL_FARMING
     override val verifiedProductionWithdrawals = true
@@ -74,7 +86,15 @@ class FarmingBotScript(
             HopsPatchLocation.YANILLE to SubZone.YANILLE_HOPS,
             HopsPatchLocation.ENTRANA to SubZone.ENTRANA_HOPS,
             HopsPatchLocation.LUMBRIDGE to SubZone.LUMBRIDGE_HOPS,
-            HopsPatchLocation.MCGRUBORS_WOOD to SubZone.MCGRUBORS_HOPS
+            HopsPatchLocation.MCGRUBORS_WOOD to SubZone.MCGRUBORS_HOPS,
+            TreePatchLocation.TAVERLEY to SubZone.TAVERLEY_TREE_PATCH,
+            TreePatchLocation.FALADOR to SubZone.FALADOR_TREE_PATCH,
+            TreePatchLocation.VARROCK to SubZone.VARROCK_TREE_PATCH,
+            TreePatchLocation.LUMBRIDGE to SubZone.LUMBRIDGE_TREE_PATCH,
+            FruitTreePatchLocation.GNOME_STRONGHOLD to SubZone.GNOME_STRONGHOLD_FRUIT_PATCH,
+            FruitTreePatchLocation.BRIMHAVEN to SubZone.BRIMHAVEN_FRUIT_PATCH,
+            FruitTreePatchLocation.CATHERBY to SubZone.CATHERBY_FRUIT_PATCH
+            // TODO Gnome Village fruit patch (2489, 3179): needs its parent travel zone data.
         )
 
         /**
@@ -92,25 +112,33 @@ class FarmingBotScript(
              * Seed chosen for this visit, or zero for tending an existing crop only.
              */
             var seedId = 0
+            /**
+             * Preserves the factory's training/profit replacement policy across saved visits.
+             */
+            var replantTrees = false
             override fun load(data: JsonObject) {
                 super.load(data)
                 patchKey = data.get("patchKey").asString
                 seedId = data.get("seedId")?.asInt ?: 0
+                replantTrees = data.get("replantTrees")?.asBoolean ?: false
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("patchKey", patchKey)
                 data.addProperty("seedId", seedId)
+                data.addProperty("replantTrees", replantTrees)
             }
         }
     }
 
     /**
-     * One player interaction and its exact inventory prerequisites. A null input selects the harvest option.
+     * One player interaction and its exact inventory prerequisites. A null input selects the first object option.
+     * State-only operations verify their native result; long-running tree chopping can acknowledge its native action.
      *
      * @author lare96
      */
-    private data class Work(val input: Item?, val tool: Int? = null, val output: Item? = null, val clear: Boolean = false) {
+    private data class Work(val input: Item?, val tool: Int? = null, val output: Item? = null,
+                            val progressCondition: () -> Boolean = { false }) {
         /**
          * Minimum carried quantities for the native handler's tool and material checks.
          */
@@ -126,7 +154,7 @@ class FarmingBotScript(
      * Restores a visit without replenishing retry budgets or advancing crop timers.
      */
     constructor(bot: Bot, data: FarmingData) : this(bot,
-        SITES.keys.first { it.key == data.patchKey }, data.seedId, data.duration) {
+        SITES.keys.first { it.key == data.patchKey }, data.seedId, data.duration, data.replantTrees) {
         restoreInventoryState(data)
     }
 
@@ -164,8 +192,12 @@ class FarmingBotScript(
         val crop = plantingCrop()
         return when {
             patch is FlowerPatch && patch.scarecrow -> null
-            patch.dead -> Work(Item(Farming.SPADE), clear = true)
-            patch.diseased -> if (owns(Item(Farming.PLANT_CURE))) Work(Item(Farming.PLANT_CURE)) else null
+            patch.dead -> Work(Item(Farming.SPADE), progressCondition = { !patch.dead && !patch.isOccupied() })
+            patch.diseased -> if (patch is AbstractTreePatch) {
+                listOf(Farming.MAGIC_SECATEURS, Farming.SECATEURS).firstOrNull { owns(Item(it)) }
+                    ?.let { Work(Item(it), progressCondition = { !patch.diseased }) }
+            } else if (owns(Item(Farming.PLANT_CURE))) Work(Item(Farming.PLANT_CURE)) else null
+            patch is AbstractTreePatch && patch.harvestReady() -> treeWork(patch, crop)
             patch.harvestReady() -> if (protectsAllotment()) null else {
                 val planted = patch.crop ?: return null
                 val amount = (planted as? FlowerSeed)?.amount(bot.farming.level) ?: planted.produce.amount
@@ -178,6 +210,37 @@ class FarmingBotScript(
             }
             else -> plantingOrWatering(crop)
         }
+    }
+
+    /**
+     * Uses owned axes at the native Woodcutting requirement. Worn axes are left alone; inventory tools survive banking.
+     */
+    private fun treeAxe(): Axe? = Axe.entries.filter {
+        bot.woodcutting.level >= it.level && (owns(Item(it.id)) || bot.equipment[Equipment.WEAPON]?.id == it.id)
+    }
+        .maxByOrNull { it.level }
+
+    /**
+     * Checks health once, picks available fruit, then optionally removes a tree for a supplied replacement.
+     * Ordinary trees require their own Woodcutting level; fruit-tree removal follows the native axe-only rule.
+     * Native chopping may take many unsuccessful swings, so a live native action counts as an accepted start while
+     * InventoryBotScript defers further clicks until that action finishes. No tree state is changed here.
+     */
+    private fun treeWork(tree: AbstractTreePatch, replacement: Crop?): Work? = when {
+        tree.canCheckHealth() -> Work(null, progressCondition = { tree.healthChecked })
+        tree is FruitTreePatch && tree.canPick() -> Work(null, output = tree.crop?.produce)
+        !replantTrees || replacement == null -> null
+        tree.stump -> Work(Item(Farming.SPADE), output = (tree.crop as? TreeSapling)?.let { Item(it.roots) },
+            progressCondition = { !tree.isOccupied() })
+        tree.canChop() -> {
+            val planted = tree.crop as? TreeSapling
+            if (planted != null && bot.woodcutting.level < planted.tree.level) null else treeAxe()?.let {
+                Work(null, it.id.takeIf { id -> owns(Item(id)) }, planted?.produce, progressCondition = {
+                    tree.stump || bot.actions.first(ChopPatchTreeAction::class.java) != null
+                })
+            }
+        }
+        else -> null
     }
 
     /**
@@ -204,10 +267,14 @@ class FarmingBotScript(
         return buildList {
             addAll(work.supplies)
             plantingCrop()?.let {
-                if (patch.dead || patch.harvestReady() || !patch.isOccupied()) {
+                if (patch.dead || !patch.isOccupied() ||
+                    patch.harvestReady() && (patch !is AbstractTreePatch || replantTrees)) {
                     add(Item(it.seedId, patch.seedsRequired(it)))
                     add(Item(patch.plantTool))
                     if (patch.needsRaking()) add(Item(Farming.RAKE))
+                    if (patch is AbstractTreePatch && patch.harvestReady()) treeAxe()?.let { axe ->
+                        if (owns(Item(axe.id))) add(Item(axe.id))
+                    }
                 }
             }
             if (!protectsAllotment()) {
@@ -248,8 +315,8 @@ class FarmingBotScript(
         val target = world.locator.findObjects(zone.inside, zone.area.tileRadius) {
             it.id == location.objectId && it.state == EntityState.ACTIVE && it.position.z == 0 && it in zone.area
         }.minByOrNull { bot.position.computeLongestDistance(it.position) }
-        attemptProduction(work.input?.id ?: requireNotNull(work.output).id, available = target != null, outputId = work.output?.id,
-            progressCondition = { work.clear && !patch.dead && !patch.isOccupied() }) {
+        attemptProduction(work.input?.id ?: work.output?.id ?: Farming.SPADE,
+            available = target != null, outputId = work.output?.id, progressCondition = work.progressCondition) {
             target != null && if (work.input == null) handler.interactions.interact(1, target)
             else handler.inventory.useItem(work.input.id).onObject(target)
         }
@@ -260,5 +327,6 @@ class FarmingBotScript(
         saveInventoryState(it)
         it.patchKey = location.key
         it.seedId = seedId
+        it.replantTrees = replantTrees
     }
 }

@@ -45,6 +45,35 @@ enum class SubZone(
     val plane: Int? = null
 ) {
     /**
+     * Native revision 377 tree patch locations; arrival anchors stand beside their multi-tile tree objects.
+     */
+    TAVERLEY_TREE_PATCH(
+        inside = Position(2934, 3437), area = SimpleBoxArea.of(2932, 3434, 2940, 3442),
+        parent = { TAVERLY }, plane = 0),
+    FALADOR_TREE_PATCH(
+        inside = Position(3002, 3372), area = SimpleBoxArea.of(3000, 3369, 3008, 3377),
+        parent = { FALADOR }, plane = 0),
+    VARROCK_TREE_PATCH(
+        inside = Position(3227, 3458), area = SimpleBoxArea.of(3225, 3455, 3233, 3463),
+        parent = { VARROCK }, plane = 0),
+    LUMBRIDGE_TREE_PATCH(
+        inside = Position(3191, 3230), area = SimpleBoxArea.of(3189, 3227, 3197, 3235),
+        parent = { LUMBRIDGE }, plane = 0),
+
+    /**
+     * Fruit-tree plots with existing travel parents. Shared webwalking handles approach to the actual tree.
+     */
+    GNOME_STRONGHOLD_FRUIT_PATCH(
+        inside = Position(2474, 3445), area = SimpleBoxArea.of(2472, 3442, 2480, 3450),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+    BRIMHAVEN_FRUIT_PATCH(
+        inside = Position(2763, 3212), area = SimpleBoxArea.of(2761, 3209, 2769, 3217),
+        parent = { KARAMJA }, plane = 0),
+    CATHERBY_FRUIT_PATCH(
+        inside = Position(2859, 3433), area = SimpleBoxArea.of(2857, 3430, 2865, 3438),
+        parent = { CATHERBY }, plane = 0),
+
+    /**
      * Regular farming plots mapped in revision 377 and Lost City; anchors use the paths between plots.
      */
     FALADOR_FARM(
