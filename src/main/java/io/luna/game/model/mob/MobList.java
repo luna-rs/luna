@@ -250,6 +250,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getState() != EntityState.INACTIVE) {
             mob.setState(EntityState.INACTIVE);
         }
+        mob.getCombat().getImpacts().clear();
         if (mob.getType() == EntityType.PLAYER) {
             world.removePlayer(mob.asPlr());
         }

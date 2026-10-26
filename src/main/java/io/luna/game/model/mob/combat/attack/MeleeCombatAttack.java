@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.combat.attack;
 
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -46,7 +48,11 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
         if(animation != null) {
             attacker.animation(animation);
         }
-        victim.submitAction(new CombatDamageAction(nextDamage, this, false));
+        // NPC turns precede player turns: their ordinary melee hit can arrive in this tick's player queue pass.
+        // Player-to-NPC and PvP melee retain an explicit one-tick delay regardless of player index order.
+        int hitDelay = attacker instanceof Npc && victim instanceof Player ? 0 : 1;
+        victim.getCombat().getImpacts().schedule(hitDelay,
+                () -> victim.submitAction(new CombatDamageAction(nextDamage, this, true)), ignored -> { });
     }
 
     @Override

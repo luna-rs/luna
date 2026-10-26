@@ -35,6 +35,7 @@ class NpcRetreatTest {
         player = mock(Player.class, RETURNS_DEEP_STUBS);
         when(npc.isAlive()).thenReturn(true);
         when(player.isAlive()).thenReturn(true);
+        when(player.getState()).thenReturn(io.luna.game.model.EntityState.ACTIVE);
         when(npc.size()).thenReturn(1);
         when(player.size()).thenReturn(1);
         when(npc.getPosition()).thenReturn(new Position(100, 100));

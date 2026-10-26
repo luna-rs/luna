@@ -132,6 +132,7 @@ class CastleWarsGame(val match: CastleWarsMatch<Player> = CastleWarsMatch()) {
     fun detach(player: Player) {
         dropFlag(player)
         match.leave(player, player.position)
+        player.combat.impacts.clear()
         player.actions.getAll(io.luna.game.model.mob.combat.damage.CombatDamageAction::class.java)
             .forEach { it.interrupt() }
         removeTools(player)

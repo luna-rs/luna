@@ -446,6 +446,22 @@ class DuelArenaTest {
         assertTrue(DuelArena.blockImpact(b, a, attack))
     }
 
+    @Test fun finishingADuelDiscardsCommittedIncomingHitsForBothParticipants() {
+        val a = player(); val b = player()
+        val duel = negotiate(a, b)
+        start(duel)
+        val finished = mutableListOf<Boolean>()
+        val queues = listOf(a, b).map { participant ->
+            io.luna.game.model.mob.combat.CombatImpactQueue(participant).also { queue ->
+                `when`(participant.combat.impacts).thenReturn(queue)
+                queue.schedule(0, { fail<Unit>("A finished duel cannot deliver pending damage") }, finished::add)
+            }
+        }
+        duel.finish(a)
+        queues.forEach { it.process() }
+        assertEquals(listOf(true, true), finished)
+    }
+
     @Test fun timerEndsDuelsAndNoForfeitStillLosesOnLogout() {
         val a = player(); val b = player()
         val duel = negotiate(a, b)

@@ -185,6 +185,20 @@ class CastleWarsTest {
         assertEquals(CastleWarsGame.LOBBY, sara.position)
     }
 
+    @Test fun leavingAMatchDiscardsIncomingHitsBeforeReturningToTheLobby() {
+        val game = CastleWarsGame()
+        val sara = player()
+        start(game, sara, player())
+        val queue = io.luna.game.model.mob.combat.CombatImpactQueue(sara)
+        `when`(sara.combat.impacts).thenReturn(queue)
+        val finished = mutableListOf<Boolean>()
+        queue.schedule(0, { fail<Unit>("A player leaving the match cannot receive a pending match hit") }, finished::add)
+        assertTrue(sara.controllers.checkLogout())
+        queue.process()
+        assertEquals(listOf(true), finished)
+        assertEquals(CastleWarsGame.LOBBY, sara.position)
+    }
+
     @Test fun matchEndDuringDeathKeepsSafeControllerUntilRespawn() {
         val game = CastleWarsGame()
         val sara = player()

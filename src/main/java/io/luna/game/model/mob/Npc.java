@@ -263,8 +263,9 @@ public class Npc extends Mob {
         if (getState() != EntityState.ACTIVE) {
             return;
         }
-        actions.clear();
         setState(EntityState.INACTIVE);
+        actions.clear();
+        combat.getImpacts().clear();
     }
 
     /**

@@ -419,6 +419,7 @@ public final class World {
             }
             try {
                 npc.getAggression().process();
+                npc.getCombat().getImpacts().process();
                 npc.getActions().process();
                 npc.getWalking().process();
                 npc.getActions().processAfterMovement();
@@ -436,6 +437,7 @@ public final class World {
             try {
                 player.getControllers().process();
                 player.getTolerance().process();
+                player.getCombat().getImpacts().process();
                 player.getActions().process();
                 player.getWalking().process();
                 player.getActions().processAfterMovement();

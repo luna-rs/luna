@@ -7,6 +7,8 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionQueue;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.LocalProjectile;
+import io.luna.game.model.EntityState;
+import io.luna.game.model.mob.combat.CombatImpactQueue;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -24,6 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -123,7 +126,13 @@ class RangedProjectileTimingTest {
     @CsvSource({"37,2", "51,2", "60,3", "86,3", "96,4"})
     void launchesWithAnimationAndHitsOnArrivalTick(int endCycle, int hitTick) {
         Player source = mock(Player.class, RETURNS_DEEP_STUBS);
-        Npc target = mock(Npc.class);
+        Npc target = mock(Npc.class, RETURNS_DEEP_STUBS);
+        AtomicLong clock = new AtomicLong();
+        when(target.isAlive()).thenReturn(true);
+        when(target.getState()).thenReturn(EntityState.ACTIVE);
+        when(target.getWorld().getCurrentTick()).thenAnswer(call -> clock.get());
+        CombatImpactQueue impacts = new CombatImpactQueue(target);
+        when(target.getCombat().getImpacts()).thenReturn(impacts);
         LocalProjectile projectile = mock(LocalProjectile.class);
         when(projectile.getEndCycle()).thenReturn(endCycle);
         AmmoDefinition ammo = mock(AmmoDefinition.class);
@@ -155,6 +164,8 @@ class RangedProjectileTimingTest {
         verify(projectile).display();
         assertEquals(0, hits.get());
         for (int tick = 1; tick <= hitTick + 1; tick++) {
+            clock.set(tick);
+            impacts.process();
             queue.process();
             queue.normalize();
             assertEquals(tick < hitTick ? 0 : 1, hits.get(), "tick " + tick);

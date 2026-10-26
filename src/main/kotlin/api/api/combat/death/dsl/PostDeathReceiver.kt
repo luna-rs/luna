@@ -34,6 +34,7 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
             victim.combat.target = null
             victim.combat.autoRetaliateTarget = null
             victim.combat.lastCombatWith = null
+            victim.combat.impacts.clear()
             victim.combat.timer.reset()
             victim.animation(Animation.CANCEL)
             victim.skills.resetAll()

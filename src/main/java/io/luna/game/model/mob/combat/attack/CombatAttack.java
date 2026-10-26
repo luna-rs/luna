@@ -1,9 +1,6 @@
 package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionState;
-import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -192,47 +189,44 @@ public abstract class CombatAttack<T extends Mob> {
      * @param arrivalDelay The positive server-tick delay until impact.
      */
     protected final void scheduleProjectileArrival(int arrivalDelay) {
-        attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, arrivalDelay) {
-            @Override
-            public boolean run() {
-                onProjectileReached();
-                return true;
-            }
-
-            @Override
-            public void onFinished() {
-                onProjectileFinished(getState() == ActionState.INTERRUPTED);
-            }
-        });
+        victim.getCombat().getImpacts().schedule(arrivalDelay, this::onProjectileReached, this::onProjectileFinished);
     }
 
     /**
-     * Starts a simple projectile timing action for this attack.
-     * <p>
-     * This helper invokes {@link #onProjectileLaunched()} on the first action execution and {@link #onProjectileReached()}
-     * on the third execution, then completes.
+     * Retains the legacy launch and arrival offsets while giving both callbacks to the recipient's tick queue.
+     * Execution counter zero corresponds to the tick after the attack, so offsets receive one additional tick.
+     * Recipient removal discards the flight and invokes the finish hook once, even if both callbacks are pending.
      *
-     * @param launchTicks The execution counter to run {@link #onProjectileLaunched()} on ({@code ticks - 1}).
-     * @param arrivalTicks The execution counter to run {@link #onProjectileReached()} on ({@code ticks - 1}).
+     * @param launchTicks The legacy execution counter on which the projectile is displayed.
+     * @param arrivalTicks The later legacy execution counter on which it arrives.
      */
     protected final void launchProjectile(int launchTicks, int arrivalTicks) {
-        attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, 1) {
-            @Override
-            public boolean run() {
-                if (getExecutions() == launchTicks) {
-                    onProjectileLaunched();
-                } else if (getExecutions() == arrivalTicks) {
-                    onProjectileReached();
-                    return true;
-                }
-                return false;
-            }
+        class Flight {
+            private boolean finished;
 
-            @Override
-            public void onFinished() {
-                onProjectileFinished(getState() == ActionState.INTERRUPTED);
+            void finish(boolean interrupted) {
+                if (!finished) {
+                    finished = true;
+                    onProjectileFinished(interrupted);
+                }
+            }
+        }
+        Flight flight = new Flight();
+        var impacts = victim.getCombat().getImpacts();
+        impacts.schedule(launchTicks + 1, () -> {
+            if (!flight.finished) {
+                onProjectileLaunched();
+            }
+        }, interrupted -> {
+            if (interrupted) {
+                flight.finish(true);
             }
         });
+        impacts.schedule(arrivalTicks + 1, () -> {
+            if (!flight.finished) {
+                onProjectileReached();
+            }
+        }, flight::finish);
     }
 
     /**

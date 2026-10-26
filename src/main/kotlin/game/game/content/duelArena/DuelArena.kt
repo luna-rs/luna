@@ -388,6 +388,7 @@ object DuelArena {
                 player.overlays.closeWindows()
                 player.combat.target = null
                 player.combat.autoRetaliateTarget = null
+                player.combat.impacts.clear()
                 player.actions.getAll(CombatDamageAction::class.java).forEach { it.interrupt() }
                 if (player.isAlive) cleanup(player)
                 claim(player)
