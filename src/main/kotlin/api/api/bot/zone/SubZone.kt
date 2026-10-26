@@ -95,6 +95,38 @@ enum class SubZone(
         parent = { YANILLE }),
 
     /**
+     * Fishing Guild docks and bank. All native moving-spot destinations are enclosed; entry requires Fishing 68.
+     */
+    FISHING_GUILD(
+        inside = Position(2586, 3418),
+        area = SimpleBoxArea.of(2578, 3380, 2620, 3430),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Stronghold river fishing and the nearby bank. Uses the supplied Stronghold bank tile for arrival.
+     */
+    GNOME_STRONGHOLD_FISHING(
+        inside = Position(2447, 3424),
+        area = SimpleBoxArea.of(2375, 3400, 2450, 3433),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+
+    /**
+     * Seers' northern fishing spots and bank, using the existing town arrival anchor.
+     */
+    SEERS_VILLAGE_FISHING(
+        inside = SEERS_VILLAGE.anchor,
+        area = SimpleBoxArea.of(2708, 3484, 2736, 3538),
+        parent = { SEERS_VILLAGE }, plane = 0),
+
+    /**
+     * Fishing on the Ardougne river north of town. Arrival is an existing north-bank anchor.
+     */
+    ARDOUGNE_RIVER_FISHING(
+        inside = Position(2618, 3331),
+        area = SimpleBoxArea.of(2556, 3328, 2624, 3378),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
      * Dairy cow at (3040, 3301) on the farm south of Falador, used to fill empty buckets with milk.
      */
     FALADOR_DAIRY_COW(

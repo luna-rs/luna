@@ -18,7 +18,9 @@ import io.luna.game.model.mob.bot.Bot
  * - Dumb and non-dextrous bots are sent to less efficient or lower-level areas.
  * - Smarter or more dextrous bots are sent to better fishing locations.
  *
- * Profit fishing currently uses the same behavior as training fishing.
+ * Fly and pike fishing also use the native Stronghold, Seers, Ardougne and Shilo spots. Fishing Guild
+ * cage/harpoon and big-net/shark spots join selection only at current Fishing 68. Training and profit
+ * share the same location rules; the existing script owns tools, bait, moving spots and banking.
  *
  * @author lare96
  */
@@ -32,10 +34,14 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
      * - A zone provider that may change based on bot personality.
      *
      * The zone provider is evaluated against the bot, allowing each bot to pick locations that match its personality
-     * traits.
+     * traits. Unrestricted areas have no additional entry-level gate.
+     *
+     * @property requiredLevel Current Fishing level needed to enter this area, or zero for unrestricted areas.
+     * @author lare96
      */
     enum class FishingZone(
         val tools: Set<Tool>,
+        val requiredLevel: Int = 0,
         val zones: Bot.() -> MutableList<SubZone>
     ) {
 
@@ -67,15 +73,19 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         /**
          * Lure and bait fishing locations.
          *
-         * Less capable bots use Lumbridge River, while better bots use Barbarian Village.
+         * Casual bots also use Seers and the Stronghold. More capable bots add Shilo and the Ardougne river
+         * to the existing Barbarian Village choice. Each candidate supports both lure and bait options.
          */
         LURE_AND_BAIT(
             tools = setOf(FLY_FISHING_ROD, PIKE_FISHING_ROD),
             zones = {
                 if (personality.isDumb || !personality.isDextrous) {
-                    mutableListOf(SubZone.LUMBRIDGE_RIVER)
+                    mutableListOf(SubZone.LUMBRIDGE_RIVER, SubZone.SEERS_VILLAGE_FISHING,
+                                  SubZone.GNOME_STRONGHOLD_FISHING)
                 } else {
-                    mutableListOf(SubZone.BARBARIAN_VILLAGE)
+                    mutableListOf(SubZone.BARBARIAN_VILLAGE, SubZone.SHILO_VILLAGE,
+                                  SubZone.ARDOUGNE_RIVER_FISHING, SubZone.GNOME_STRONGHOLD_FISHING,
+                                  SubZone.SEERS_VILLAGE_FISHING)
                 }
             }
         ),
@@ -116,6 +126,16 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             zones = {
                 mutableListOf(SubZone.PISCATORIS_FISHING_COLONY_MAIN)
             }
+        ),
+
+        /**
+         * Native Guild spots for lobster, tuna/swordfish, big-net fish and sharks.
+         * Current Fishing level includes boosts and must meet the source's entry requirement.
+         */
+        FISHING_GUILD(
+            tools = setOf(LOBSTER_POT, HARPOON, BIG_NET, SHARK_HARPOON),
+            requiredLevel = FishBotScript.FISHING_GUILD_LEVEL,
+            zones = { mutableListOf(SubZone.FISHING_GUILD) }
         ),
 
         /**
@@ -179,10 +199,10 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
      * randomly to add variety between bots.
      *
      * The chosen zone group's provider is then evaluated against the bot so personality-based zone selection can be
-     * applied.
+     * applied. Guild access uses current Fishing so a drained bot cannot be selected for a restricted dock.
      */
     private fun getZones(bot: Bot, tool: Tool): MutableList<SubZone> {
-        val zones = FishingZone.entries.filter { tool in it.tools }
+        val zones = FishingZone.entries.filter { tool in it.tools && bot.fishing.level >= it.requiredLevel }
 
         return zones.random().zones(bot)
     }
