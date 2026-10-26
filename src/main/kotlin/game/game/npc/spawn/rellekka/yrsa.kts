@@ -6,7 +6,6 @@ import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
-import io.luna.game.model.mob.Player
 
 /**
  * The [Npc] id for Yrsa.
@@ -17,14 +16,6 @@ val YRSA_ID = 1301
  * The name of the shop.
  */
 val SHOP_NAME = "Yrsa's Accoutrements"
-
-/**
- * Returns whether [plr] is a Fremennik, which Yrsa requires before she will sell to them.
- */
-fun isFremennik(plr: Player): Boolean {
-    // TODO The Fremennik Trials: only players who have finished the quest are Fremenniks.
-    return true
-}
 
 /*
  * Registers Yrsa's clothes shop in Rellekka. It is opened by the npc options below, so outerlanders can be turned
@@ -66,7 +57,7 @@ ShopHandler.create(SHOP_NAME) {
  * Yrsa only sells clothes to Fremenniks, and turns outerlanders away.
  */
 npc1(YRSA_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         plr.newDialogue()
             .npc(targetNpc.id, "Hi. You wanted to buy some clothes?")
             .options(
@@ -95,7 +86,7 @@ npc1(YRSA_ID) {
  * Handles Yrsa's "Trade" option.
  */
 npc2(YRSA_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         plr.overlays.open(ShopInterface(world, SHOP_NAME))
     } else {
         plr.newDialogue()

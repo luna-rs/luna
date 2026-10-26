@@ -6,7 +6,6 @@ import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
-import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
 
 /**
@@ -18,14 +17,6 @@ val SKULGRIMEN_ID = 1303
  * The name of the shop.
  */
 val SHOP_NAME = "Skulgrimen's Battle Gear"
-
-/**
- * Returns whether [plr] is a Fremennik, which Skulgrimen requires before he will sell to them.
- */
-fun isFremennik(plr: Player): Boolean {
-    // TODO The Fremennik Trials: only players who have finished the quest are Fremenniks.
-    return true
-}
 
 /*
  * Registers Skulgrimen's battle gear shop in Rellekka. It is opened by the npc options below, so outerlanders can be
@@ -57,7 +48,7 @@ ShopHandler.create(SHOP_NAME) {
  * Skulgrimen only sells to Fremenniks, and turns outerlanders away.
  */
 npc1(SKULGRIMEN_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         // TODO The Fremennik Trials: greet the player by their Fremennik name.
         plr.newDialogue()
             .npc(targetNpc.id, Expression.HAPPY, "Hello again ${plr.username}. Come to see what's for sale?")
@@ -80,7 +71,7 @@ npc1(SKULGRIMEN_ID) {
  * Handles Skulgrimen's "Trade" option.
  */
 npc2(SKULGRIMEN_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         plr.overlays.open(ShopInterface(world, SHOP_NAME))
     } else {
         plr.newDialogue()

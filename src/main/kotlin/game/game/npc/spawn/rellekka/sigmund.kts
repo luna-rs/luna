@@ -6,7 +6,6 @@ import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
-import io.luna.game.model.mob.Player
 
 /**
  * The [Npc] id for Sigmund The Merchant.
@@ -17,14 +16,6 @@ val SIGMUND_ID = 1282
  * The name of the shop.
  */
 val SHOP_NAME = "Sigmund the Merchant"
-
-/**
- * Returns whether [plr] is a Fremennik, which Sigmund requires before he will trade with them.
- */
-fun isFremennik(plr: Player): Boolean {
-    // TODO The Fremennik Trials: only players who have finished the quest are Fremenniks.
-    return true
-}
 
 /*
  * Registers Sigmund's shop in Rellekka. It is opened by the npc options below, so outerlanders can be turned away.
@@ -61,13 +52,17 @@ ShopHandler.create(SHOP_NAME) {
  * Sigmund only speaks to Fremenniks, and turns outerlanders away.
  */
 npc1(SIGMUND_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         // TODO The Fremennik Trials: address the player by their Fremennik name.
         val name = plr.username
         val sibling = if (plr.appearance.isFemale) "sister" else "brother"
         plr.newDialogue()
             .player("Hello there!")
-            .npc(targetNpc.id, "Greetings again $sibling $name! What can I do for you this day?")
+            .npc(
+                targetNpc.id,
+                "Greetings again $sibling $name!",
+                "What can I do for you this day?"
+            )
             .options(
                 "Can I see your wares?",
                 {
@@ -83,8 +78,8 @@ npc1(SIGMUND_ID) {
                         .player("Nothing thanks.")
                         .npc(
                             targetNpc.id,
-                            "Well, feel free to stop by anytime that you wish $name.",
-                            "You are always welcome here!"
+                            "Well, feel free to stop by anytime that you wish",
+                            "$name. You are always welcome here!"
                         )
                         .open()
                 }
@@ -106,7 +101,7 @@ npc1(SIGMUND_ID) {
  * Handles Sigmund's "Trade" option.
  */
 npc2(SIGMUND_ID) {
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         plr.overlays.open(ShopInterface(world, SHOP_NAME))
     } else {
         plr.newDialogue()

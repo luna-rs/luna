@@ -30,14 +30,6 @@ val GRUDGE = 15.minutes
  */
 val SHOP_NAME = "Fremennik Fur Trader"
 
-/**
- * Returns whether [plr] is a Fremennik, which the fur trader requires before he will sell to them.
- */
-fun isFremennik(plr: Player): Boolean {
-    // TODO The Fremennik Trials: only players who have finished the quest are Fremenniks.
-    return true
-}
-
 /*
  * Registers the fur trader's shop in Rellekka. It is opened by the npc options below, so outerlanders can be turned
  * away.
@@ -80,10 +72,14 @@ npc1(FUR_TRADER_ID) {
     if (catchThief(plr, "You think me stupid ${plr.username}?")) {
         return@npc1
     }
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         // TODO The Fremennik Trials: greet the player by their Fremennik name.
         plr.newDialogue()
-            .npc(targetNpc.id, "Welcome back ${plr.username}! Have you seen the furs I have today?")
+            .npc(
+                targetNpc.id,
+                "Welcome back ${plr.username}!",
+                "Have you seen the furs I have today?"
+            )
             .then { it.overlays.open(ShopInterface(world, SHOP_NAME)) }
             .open()
     } else {
@@ -100,7 +96,7 @@ npc2(FUR_TRADER_ID) {
     if (catchThief(plr, "You're the one who stole something from me!")) {
         return@npc2
     }
-    if (isFremennik(plr)) {
+    if (Fremennik.isFremennik(plr)) {
         plr.overlays.open(ShopInterface(world, SHOP_NAME))
     } else {
         plr.newDialogue()
