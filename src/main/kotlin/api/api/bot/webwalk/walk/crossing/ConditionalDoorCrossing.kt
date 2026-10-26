@@ -7,11 +7,12 @@ import api.predef.*
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.Doors
+import game.obj.doors.JewellersDoor
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Crosses skill-gated doors through their normal click handlers, retrying failed lockpicks.
+ * Crosses skill-gated and scripted doors through their normal click handlers, retrying failed lockpicks.
  *
  * @author lare96
  */
@@ -23,7 +24,8 @@ object ConditionalDoorCrossing : CrossingHandler {
         val action = leg.action ?: return "the leg has no object"
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
-        if (id != YanilleDoorAction.DOOR && id != MiningGuild.DOOR && id != CraftingGuild.DOOR) {
+        if (id != YanilleDoorAction.DOOR && id != MiningGuild.DOOR && id != CraftingGuild.DOOR &&
+            id != JewellersDoor.DOOR) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
