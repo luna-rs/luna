@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
+import game.content.duelArena.DuelController;
+import game.content.duelArena.DuelRules;
 import game.skill.magic.Magic;
 import game.skill.magic.Staff;
 import io.luna.game.model.def.CombatSpellDefinition;
@@ -64,6 +66,39 @@ public class PlayerMagicCombat {
      */
     public PlayerMagicCombat(Player player) {
         this.player = player;
+    }
+
+    /**
+     * Checks Bind, Snare, and Entangle target restrictions before rune consumption and cast experience.
+     * Already-frozen targets, Castle Wars barricades, and no-movement duels reject these effect-only spells.
+     * Damaging ice spells remain castable against frozen targets because their damage is still useful.
+     *
+     * @param spell The spell about to be cast.
+     * @param target The intended recipient.
+     * @return Whether these hold-spell restrictions permit the cast.
+     */
+    public boolean canHoldTarget(CombatSpellDefinition spell, Mob target) {
+        if (spell == null || spell == NONE) {
+            return true;
+        }
+        CombatSpell type = spell.getSpell();
+        if (type != CombatSpell.BIND && type != CombatSpell.SNARE && type != CombatSpell.ENTANGLE) {
+            return true;
+        }
+        if (target instanceof Npc npc && npc.getId() >= 1532 && npc.getId() <= 1535) {
+            player.sendMessage("You can't " + type.name().toLowerCase(Locale.ROOT) + " that.");
+            return false;
+        }
+        if (target.getStatus().isImmobilized()) {
+            player.sendMessage("Your target is already held by a magical force.");
+            return false;
+        }
+        if (player.getControllers().getPrimary() instanceof DuelController duel &&
+                DuelRules.NO_MOVEMENT.enabled(duel.getDuel().getRules())) {
+            player.sendMessage("You can not use a hold spell in a no movement duel.");
+            return false;
+        }
+        return true;
     }
 
     /**

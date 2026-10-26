@@ -30,6 +30,7 @@ import java.util.function.BiFunction;
  * during flight. Base spell experience and Hitpoints experience are unaffected by the stance.
  * Standard stat-draining curses reject already-drained targets and barricades before consuming runes or granting
  * cast experience. Rejected manual selections are cleared so the failed spell cannot leak into a later attack.
+ * Bind, Snare, and Entangle also reject frozen targets, barricades, and no-movement duels before those costs.
  *
  * @author lare96
  */
@@ -98,7 +99,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
-        if (!magic.canCurseTarget(spellEffect, victim)) {
+        if (!magic.canHoldTarget(spellEffect, victim) || !magic.canCurseTarget(spellEffect, victim)) {
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
             return null;
         }
