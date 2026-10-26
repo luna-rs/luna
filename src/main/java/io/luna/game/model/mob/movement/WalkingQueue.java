@@ -22,6 +22,8 @@ import java.util.Queue;
  * allowed by that strategy. Otherwise it will blindly follow whatever sequence of {@link Position} tiles it is given.
  * Higher-level systems (such as {@link WalkingNavigator}) are responsible for generating valid paths and avoiding
  * blocked tiles.
+ * Immobilization is enforced here for every mob before consuming steps, including human players. This prevents
+ * existing or directly queued paths from bypassing the freeze checks in player input and navigation.
  *
  * @author lare96
  * @author Graham
@@ -78,7 +80,7 @@ public final class WalkingQueue {
      * <p>
      * This method:
      * <ol>
-     *     <li>Aborts if the mob is stationary or movement-locked, clearing the queue.</li>
+     *     <li>Aborts if the mob is immobilized, movement-locked, or a stationary NPC, clearing the queue.</li>
      *     <li>Consumes one step as the walking step, updating the mob's walking direction.</li>
      *     <li>If running is enabled and the player has enough run energy, consumes a second step
      *         as the running step, updating the mob's running direction.</li>
@@ -87,10 +89,9 @@ public final class WalkingQueue {
      * </ol>
      */
     public void process() {
-        // Ignore processing and clear queue for stationary/immobilized NPCs, and locked mobs.
+        // Apply the movement restriction at execution, regardless of how the path was queued.
         boolean isNpc = mob instanceof Npc;
-        boolean isNpcOrBot = isNpc || mob.asPlr().isBot();
-        if ((isNpc && mob.asNpc().isStationary()) || (isNpcOrBot && mob.getStatus().isImmobilized()) || locked) {
+        if ((isNpc && mob.asNpc().isStationary()) || mob.getStatus().isImmobilized() || locked) {
             clear();
             mob.setWalkingDirection(Direction.NONE);
             mob.setRunningDirection(Direction.NONE);
