@@ -1,5 +1,7 @@
 package game.skill.thieving.stealFromStall
 
+import api.attr.Attr
+import api.attr.getValue
 import api.predef.*
 import api.predef.ext.*
 import game.player.Animations
@@ -14,6 +16,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
+import kotlin.time.Duration
 
 /**
  * A [LockedAction] that handles players stealing from market stalls.
@@ -48,6 +51,33 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
          */
         fun canSee(npc: Npc, thief: Locatable): Boolean =
             world.collisionManager.raycast(npc.position, thief.abs()) && npc.inViewCone(thief)
+
+        /**
+         * When the player last stole from each stall, by full stall object id, in epoch milliseconds.
+         */
+        private val Player.stallThefts by Attr.map<Int, Long>()
+
+        /**
+         * Determines if [plr] successfully stole from the stall [stallId] within the last [within].
+         *
+         * @param plr The player.
+         * @param stallId The full stall object id.
+         * @param within How far back a theft counts.
+         * @return `true` if [plr] stole from the stall recently.
+         */
+        fun stoleRecently(plr: Player, stallId: Int, within: Duration): Boolean {
+            val stolenAt = plr.stallThefts[stallId] ?: return false
+            return System.currentTimeMillis() - stolenAt < within.inWholeMilliseconds
+        }
+
+        /**
+         * Has the first nearby guard who is free to stop a thief attack [plr], as when a merchant calls for the guards.
+         *
+         * @param plr The thief.
+         */
+        fun callGuards(plr: Player) {
+            world.locator.findViewableNpcs(plr) { isGuard(it) }.firstOrNull()?.combat?.attack(plr)
+        }
     }
 
     /**
@@ -117,6 +147,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
             val stolen = loot.firstOrNull()?.let { thievable.stolen[it.itemDef.name] }
             mob.sendMessage(if (stolen != null) "You steal $stolen." else "You steal from the ${obj.def().name}.")
             mob.thieving.addExperience(thievable.xp)
+            mob.stallThefts[obj.id] = System.currentTimeMillis()
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
                 mob.playSound(Sound.PICKUP_ITEM)

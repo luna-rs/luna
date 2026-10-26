@@ -80,6 +80,26 @@ exit clear incoming events. Clearing the queue also invalidates due events waiti
 arrival callback already running may finish. A lethal hit prevents the remaining due entries from reaching the
 recipient. Arrival failures are logged and reported as interrupted completion without stopping other entries.
 
+## Damage stages and notifications
+
+`CombatAttack.nextDamage` describes the primary launch hit. Each `CombatDamageAction` carries an incoming hit
+that defensive hooks may replace or cancel. `CombatDamage.apply` caps numeric damage to the recipient's remaining
+health, then supplies that applied hit to events, source callbacks, and combat history. For example, a launch roll
+of 10 against 3 remaining hitpoints leaves the original roll at 10 while damage credit, XP, recoil, and healing
+use the applied amount of 3. A physical miss and an accurate zero hit both have a numeric zero amount;
+`isAccurate()` distinguishes them. A splash has no numeric amount, and -1 denotes an effect-only hit.
+
+Kill contribution is recorded before hitpoints change so a killing hit counts. The attack and damage history
+fields are published after application and before event/effect notifications. A callback that immediately applies
+another hit leaves that newer hit in history, and an exception in a callback cannot prevent publication of the hit
+already applied. Event and callback arguments remain authoritative for their own hit if nested notifications
+change the latest history. A cancelled hit produces no applied-hit notifications or history update.
+
+Area spells and secondary attacks can share a source attack while delivering independent damage to different
+recipients. Their effects use the applied damage's victim rather than the source attack's primary victim.
+Rune thrownaxe rebounds preserve the original throw's launch tick and timestamp through their callback wrapper;
+rebound delivery does not execute the original special again, refresh its launch time, or restart its cooldown.
+
 ## Auto-retaliation
 
 Fresh NPC retaliation applies half the configured attack speed. Continuing hits do not restart this delay. An

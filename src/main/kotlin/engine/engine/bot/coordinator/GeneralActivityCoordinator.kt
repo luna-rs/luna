@@ -7,6 +7,7 @@ import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
 import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.RechargeGloryBotScript
 import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
@@ -24,7 +25,8 @@ import kotlin.time.Duration.Companion.minutes
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
  * are filled toward their wanted-stock target. Wanted buckets of milk and sand use the same native filling task.
  * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
- * in a preferred supported skill. These tasks do not depend on a Crafting or combat preference.
+ * in a preferred supported skill. Depleted glories can be recharged at the native Fountain of Heroes.
+ * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
@@ -80,6 +82,7 @@ object GeneralActivityCoordinator : BotCoordinator {
         Nest.VALUES.filter { owned(bot, it.id) > 0 }.randomOrNull()?.let {
             return SearchNestBotScript(bot, it, duration)
         }
+        RechargeGloryBotScript(bot, duration).let { if (it.isEligible()) return it }
         val filling = buildList {
             for (source in Source.entries) {
                 for (empty in source.emptyIds) {

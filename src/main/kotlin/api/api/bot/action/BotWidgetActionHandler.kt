@@ -55,6 +55,18 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
             bot.output.sendItemAction(option, index, widgetId, itemId)
 
     /**
+     * Selects a widget-defined container option, such as Value or Buy, through its native packet family.
+     * Item-defined options use [clickItemAction]; the two menus dispatch different server events.
+     */
+    fun clickContainerAction(interfaceId: Int, widgetId: Int, option: Int, index: Int, itemId: Int): Boolean {
+        if (index !in 0..32767 || option !in 1..5 || !ownsComponent(interfaceId, widgetId)) return false
+        val widget = WidgetDefinition.ALL[widgetId].orElse(null) ?: return false
+        val label = widget.options.getOrNull(option - 1)
+        return widget.type == WidgetDefinition.WidgetType.ITEM_GRID && !label.isNullOrBlank() && label != "null" &&
+            bot.output.sendItemWidgetClick(option, index, widgetId, itemId)
+    }
+
+    /**
      * Answers the current numeric prompt through the native input packet.
      */
     fun enterAmount(amount: Int): Boolean = NumberInput::class in bot.overlays && bot.output.enterAmount(amount)

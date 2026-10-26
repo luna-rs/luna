@@ -20,13 +20,15 @@ object ShipGangplanks {
         2085 to "You must speak to Captain Barnaby before it will set sail.", // Ardougne
         2087 to "You must speak to the Customs Officer before it will set sail.", // Brimhaven
         2412 to null, // Port Sarim, to Entrana
-        2414 to null // Entrana
+        2414 to null, // Entrana
+        14304 to "Speak to the Squire to sail to the Void Knights' outpost.",
+        14306 to "Speak to the Squire to sail to Port Sarim."
     )
 
     /**
      * Gangplanks on deck that lead ashore.
      */
-    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415)
+    val LEAVING_PLANKS = setOf(2082, 2084, 2086, 2088, 2413, 2415, 14305, 14307)
 
     /**
      * The Entrana ships' gangplanks, which don't say "You board the ship."

@@ -122,8 +122,8 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * The most recent combat damage received by this mob.
      * <p>
-     * This is updated when damage is applied and can be used by combat scripts, prayers, effects, or listeners
-     * that need to inspect the previous incoming hit.
+     * This is published after damage is applied and before its events or source callbacks run. Nested hit
+     * notifications may replace it with a newer applied hit; event and callback arguments identify their own hit.
      */
     private CombatDamage lastDamageReceived;
 
@@ -373,11 +373,16 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Records an incoming attack for logout prevention and single-combat ownership, including secondary targets.
      * Call when a valid attack is committed, before damage delivery: misses and zero hits still count as engagement.
+     * Player-versus-player commits also notify the attacker's controller so Wilderness aggression includes secondary
+     * targets without treating pursuit or failed resource checks as an attack.
      * This does not select a retaliation target or change either participant's attack delay.
      *
      * @param attacker The mob responsible for the incoming attack.
      */
     public final void markAttackedBy(Mob attacker) {
+        if (attacker instanceof Player player && mob instanceof Player victim && player != victim) {
+            player.getControllers().getPrimary().pvpAttackCommitted(victim);
+        }
         lastCombatWith = attacker;
         resetCombatTimer();
     }

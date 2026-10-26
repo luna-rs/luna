@@ -70,7 +70,8 @@ public class PlayerMagicCombat {
 
     /**
      * Checks Bind, Snare, and Entangle target restrictions before rune consumption and cast experience.
-     * Already-frozen targets, Castle Wars barricades, and no-movement duels reject these effect-only spells.
+     * Held targets, the five-tick post-freeze immunity window, Castle Wars barricades, and no-movement duels reject
+     * these effect-only spells. Leaving the caster's range releases movement but retains the original freeze window.
      * Damaging ice spells remain castable against frozen targets because their damage is still useful.
      *
      * @param spell The spell about to be cast.
@@ -89,8 +90,12 @@ public class PlayerMagicCombat {
             player.sendMessage("You can't " + type.name().toLowerCase(Locale.ROOT) + " that.");
             return false;
         }
-        if (target.getStatus().isImmobilized()) {
+        if (target.getStatus().isHeldBySpell()) {
             player.sendMessage("Your target is already held by a magical force.");
+            return false;
+        }
+        if (target.getStatus().isFreezeImmune()) {
+            player.sendMessage("Your target is currently immune to that spell.");
             return false;
         }
         if (player.getControllers().getPrimary() instanceof DuelController duel &&

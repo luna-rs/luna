@@ -40,6 +40,14 @@ public final class ShopListener extends RefreshListener {
             }
 
             int itemIndex = item.getIndex();
+            if (shop.getRestockPolicy().isBalanced()) {
+                // Balanced shops track every slot that has moved away from its original amount, in either direction.
+                if (shop.isOutOfBalance(itemIndex)) {
+                    shop.getRestockItems().add(itemIndex);
+                }
+                continue;
+            }
+
             double originalAmount = shop.getAmountMap()[itemIndex].orElse(-1);
 
             // Item is not restockable.

@@ -26,6 +26,8 @@ import java.util.function.BiFunction
  *
  * This receiver exposes helper methods for constructing melee, ranged, and magic combat attacks that automatically
  * integrate special attack launch handling, custom damage calculation, and arrival callbacks.
+ * Melee and ranged builders use [SpecialAttackDataReceiver.launchSound] instead of ordinary weapon audio.
+ * A successful commit sends it once; additional hit callbacks do not replay the sound.
  * Applied damage first runs the base attack's experience and poison handling, then the special arrival callback.
  *
  * The receiver is created for a single attacker, victim, and special attack configuration.
@@ -64,6 +66,13 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
               range: Int = atkCombat.weapon.range,
               speed: Int = atkCombat.weapon.speed): PlayerMeleeCombatAttack {
         return object : PlayerMeleeCombatAttack(attacker, victim, animationId, range, speed) {
+            /**
+             * Uses the special's explicit launch sound, suppressing ordinary weapon audio when absent.
+             *
+             * @return The configured launch sound, or `null` for silence.
+             */
+            override fun getAttackSound(): Sound? = receiver.launchSound
+
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
             }
@@ -95,6 +104,7 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
      * @param range The maximum attack range.
      * @param projectileDiscarded Cleanup when the initial projectile is interrupted or finishes without delivering
      * a hit. Delivered misses and zero hits still run the ordinary arrival callback instead.
+     * @param recoverAtLaunch Whether the fired item lands at the initial target; chains defer recovery until they end.
      * @return A configured ranged combat attack instance.
      */
     fun ranged(animationId: Int = atkCombat.getAttackAnimation(CombatDamageType.RANGED),
@@ -103,13 +113,23 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
                end: Graphic? = atkCombat.ammoDef.endGraphic,
                speed: Int = atkCombat.weapon.speed,
                range: Int = atkCombat.weapon.range,
-               projectileDiscarded: () -> Unit = {}): PlayerRangedCombatAttack {
+               projectileDiscarded: PlayerRangedCombatAttack.() -> Unit = {},
+               recoverAtLaunch: Boolean = true): PlayerRangedCombatAttack {
         return object : PlayerRangedCombatAttack(attacker, victim, animationId, start, projectileFunction, end,
                                                  speed, range) {
             /**
              * Whether the initial projectile delivered a hit, including an inaccurate or zero-damage hit.
              */
             private var delivered = false
+
+            override fun recoverAmmoAtLaunch(): Boolean = recoverAtLaunch
+
+            /**
+             * Uses the special's explicit launch sound, suppressing ordinary weapon audio when absent.
+             *
+             * @return The configured launch sound, or `null` for silence.
+             */
+            override fun getAttackSound(): Sound? = receiver.launchSound
 
             override fun onAttack(damage: CombatDamage?): CombatDamage? {
                 return onAttack(this, damage) { super.onAttack(it) }
@@ -120,8 +140,9 @@ class SpecialAttackBuilderReceiver(val attacker: Player, val victim: Mob, val re
             }
 
             override fun onProjectileFinished(interrupted: Boolean) {
+                super.onProjectileFinished(interrupted)
                 if (interrupted || !delivered) {
-                    projectileDiscarded()
+                    projectileDiscarded(this)
                 }
             }
 

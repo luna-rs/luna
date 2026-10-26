@@ -93,14 +93,14 @@ spell(CombatSpell.SHADOW_BARRAGE) {
 
 // Ice spells.
 spell(CombatSpell.ICE_RUSH) {
-    immobilize(victim, 8.ticks)
+    immobilize(attacker, victim, 8.ticks)
 }
 spell(CombatSpell.ICE_BURST) {
-    immobilize(victim, 16.ticks)
+    immobilize(attacker, victim, 16.ticks)
 }
 spell(CombatSpell.ICE_BLITZ) {
-    immobilize(victim, 24.ticks)
+    immobilize(attacker, victim, 24.ticks)
 }
 spell(CombatSpell.ICE_BARRAGE) {
-    immobilize(victim, 32.ticks)
+    immobilize(attacker, victim, 32.ticks)
 }

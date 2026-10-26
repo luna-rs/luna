@@ -1,3 +1,4 @@
 [
-  { "closed": 1528, "open": 1529 }
+  { "closed": 1528, "open": 1529 },
+  { "closed": 4250, "open": 4251, "open_sound": "CURTAIN_OPEN", "close_sound": "CURTAIN_OPEN", "duration": 200 }
 ]

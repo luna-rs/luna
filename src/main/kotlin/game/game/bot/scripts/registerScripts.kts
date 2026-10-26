@@ -1,6 +1,12 @@
 package game.bot.scripts
 
+import game.bot.scripts.skills.FarmingBotScript
+import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
+
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
+import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
+import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
+import game.bot.scripts.RangingGuildBotScript.ArcheryData
 
 import game.bot.scripts.skills.TeleportTrainingBotScript
 import game.bot.scripts.DuelArenaBotScript.DuelData
@@ -20,6 +26,7 @@ import engine.bot.speech.BotConversationPool
 import engine.bot.speech.BotScamSpeechPool
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
 import game.bot.scripts.CastleWarsBotScript.MatchData
+import game.bot.scripts.PestControlBotScript.PestControlData
 import game.bot.scripts.GamesRoomBotScript.BoardGameData
 import game.bot.scripts.TreasureTrailBotScript.Companion.TrailData
 import game.bot.scripts.DropPartyBotScript.PartyData
@@ -130,7 +137,10 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<GloryData>(RechargeGloryBotScript::class) { bot, data -> RechargeGloryBotScript(bot, data) }
     scriptManager.addScript<GnomeBallData>(GnomeBallBotScript::class) { bot, data -> GnomeBallBotScript(bot, data) }
+    scriptManager.addScript<ArenaData>(BrimhavenArenaBotScript::class) { bot, data -> BrimhavenArenaBotScript(bot, data) }
+    scriptManager.addScript<ArcheryData>(RangingGuildBotScript::class) { bot, data -> RangingGuildBotScript(bot, data) }
     scriptManager.addScript<DuelData>(DuelArenaBotScript::class) { bot, data -> DuelArenaBotScript(bot, data) }
     scriptManager.addScript<TeleportTrainingData>(TeleportTrainingBotScript::class) { bot, data -> TeleportTrainingBotScript(bot, data) }
     scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
@@ -142,6 +152,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<DonationData>(DepositPartyRoomItemBotScript::class) { bot, data -> DepositPartyRoomItemBotScript(bot, data) }
     scriptManager.addScript<PartyData>(DropPartyBotScript::class) { bot, data -> DropPartyBotScript(bot, data) }
     scriptManager.addScript<MatchData>(CastleWarsBotScript::class) { bot, data -> CastleWarsBotScript(bot, data) }
+    scriptManager.addScript<PestControlData>(PestControlBotScript::class) { bot, data -> PestControlBotScript(bot, data) }
     scriptManager.addScript<BoardGameData>(GamesRoomBotScript::class) { bot, data -> GamesRoomBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
@@ -193,6 +204,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
+    scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
     scriptManager.addScript<EnchantJewelleryData>(EnchantJewelleryBotScript::class) { bot, data -> EnchantJewelleryBotScript(bot, data) }
     scriptManager.addScript<ChargeOrbData>(ChargeOrbBotScript::class) { bot, data -> ChargeOrbBotScript(bot, data) }

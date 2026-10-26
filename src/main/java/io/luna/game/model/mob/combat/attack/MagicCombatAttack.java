@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
  * cycle. Spells without a projectile resolve on the following tick. Custom attacks can opt into projectile timing
  * through {@link #usesProjectileTiming()}, using the arrival cycle's server tick without the spellbook offset.
  * Other custom attacks retain their existing timing.
+ * Accurate standard hold spells apply at cast time; their prayer reduction is resolved before projectile flight.
  *
  * @param <T> The concrete {@link Mob} type performing the magic attack.
  * @author lare96
@@ -126,6 +127,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public void attack() {
+        if (spellEffect != null && nextDamage.isAccurate()) {
+            CombatSpellHandler.INSTANCE.holdAtCast(attacker, victim, spellEffect.getSpell());
+        }
         attacker.animation(cast);
         if (start != null) {
             attacker.graphic(start);

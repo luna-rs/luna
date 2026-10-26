@@ -114,6 +114,37 @@ public class PlayerController {
     }
 
     /**
+     * Receives a committed player attack, including a secondary target, before its damage is delivered.
+     * Misses and zero-damage attacks count; target selection, pursuit, and rejected attacks do not. Controllers
+     * can apply aggression rules here without adding side effects to repeated combat-permission checks.
+     *
+     * @param victim The player receiving the committed attack.
+     */
+    public void pvpAttackCommitted(Player victim) {
+    }
+
+    /**
+     * Checks whether a dying player may damage this target with Retribution. Ordinary area/team restrictions still
+     * apply; controllers whose combat checks require a living attacker may override this death-specific permission.
+     *
+     * @param victim The potential recipient of Retribution damage.
+     * @return Whether the current area or activity permits this damage.
+     */
+    public boolean retribution(Mob victim) {
+        return combat(victim);
+    }
+
+    /**
+     * Retains a surviving fired projectile for an activity instead of placing it on the ground.
+     *
+     * @param item The single consumed item that survived its breakage roll.
+     * @return Whether this controller accepted responsibility for returning the item to its owner.
+     */
+    public boolean recoverAmmo(io.luna.game.model.item.Item item) {
+        return false;
+    }
+
+    /**
      * Called before a generated {@link ControllableEvent} is processed or posted
      * to plugins.
      * <p>
