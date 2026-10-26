@@ -447,7 +447,7 @@ open class NpcCombatScript(bot: Bot,
      * Determines if the bot should pick up [item] after a kill.
      */
     protected open fun isLoot(item: GroundItem): Boolean {
-        return item is DeathGroundItem || item.id in ALL_LOOT_ITEMS.value
+        return TreasureTrailBotScript.wantsClue(bot, item.id) || item is DeathGroundItem || item.id in ALL_LOOT_ITEMS.value
     }
 
     private suspend fun lootItems() {

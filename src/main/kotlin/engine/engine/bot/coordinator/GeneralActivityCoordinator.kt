@@ -3,6 +3,7 @@ package engine.bot.coordinator
 import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.predef.*
+import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
 import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
@@ -23,6 +24,7 @@ import kotlin.time.Duration.Companion.minutes
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
  * are filled toward their wanted-stock target. Owned unsearched bird nests can also be opened and their contents
  * banked. Owned experience lamps are redeemed in a preferred supported skill. These tasks do not depend on a Crafting or combat preference.
+ * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
  * @author lare96
@@ -59,6 +61,7 @@ object GeneralActivityCoordinator : BotCoordinator {
             val skill = preferred.randomOrNull() ?: eligible.randomOrNull()
             if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
+        if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
                 return OpenCrystalChestBotScript(bot, it, duration)

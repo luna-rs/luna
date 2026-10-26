@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSetMultimap
 import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.NpcCombatScript.Companion.NpcCombatData
 import game.skill.herblore.identifyHerb.Herb
 import io.luna.game.model.item.GroundItem
@@ -70,7 +71,7 @@ class HerbGatheringScript(
 
     constructor(bot: Bot, data: GatheringData) : this(bot, data.herb, data.duration, data.zones)
 
-    override fun isLoot(item: GroundItem): Boolean = item.id in lootIds
+    override fun isLoot(item: GroundItem): Boolean = item.id in lootIds || TreasureTrailBotScript.wantsClue(bot, item.id)
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
         if (bot.inventory.isFull || bot.itemTracker.count(herb.id) >= IdentifyHerbBotScript.herbTarget(bot)) {
