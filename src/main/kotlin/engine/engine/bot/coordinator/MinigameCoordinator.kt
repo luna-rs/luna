@@ -15,6 +15,8 @@ import game.bot.scripts.FishingTrawlerBotScript
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.GnomeBallBotScript
 import game.bot.scripts.BrimhavenArenaBotScript
+import game.bot.scripts.RangingGuildBotScript
+import game.content.rangingGuild.ArcheryCompetition.count
 import game.content.brimhavenArena.BrimhavenArena
 import game.bot.scripts.GamesRoomBotScript
 import game.bot.scripts.DuelArenaBotScript
@@ -50,6 +52,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
+        if (RangingGuildBotScript.eligible(bot) && (bot.count > 0 || rand(0.25))) return RangingGuildBotScript(bot)
         if (BrimhavenArenaBotScript.eligible(bot) && (BrimhavenArena.inside(bot.position) || rand(0.25)))
             return BrimhavenArenaBotScript(bot)
         if (GnomeBallBotScript.eligible(bot) && rand(0.25)) return GnomeBallBotScript(bot)

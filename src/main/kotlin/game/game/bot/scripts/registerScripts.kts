@@ -2,6 +2,7 @@ package game.bot.scripts
 
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
+import game.bot.scripts.RangingGuildBotScript.ArcheryData
 
 import game.bot.scripts.skills.TeleportTrainingBotScript
 import game.bot.scripts.DuelArenaBotScript.DuelData
@@ -133,6 +134,7 @@ on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager
     scriptManager.addScript<GnomeBallData>(GnomeBallBotScript::class) { bot, data -> GnomeBallBotScript(bot, data) }
     scriptManager.addScript<ArenaData>(BrimhavenArenaBotScript::class) { bot, data -> BrimhavenArenaBotScript(bot, data) }
+    scriptManager.addScript<ArcheryData>(RangingGuildBotScript::class) { bot, data -> RangingGuildBotScript(bot, data) }
     scriptManager.addScript<DuelData>(DuelArenaBotScript::class) { bot, data -> DuelArenaBotScript(bot, data) }
     scriptManager.addScript<TeleportTrainingData>(TeleportTrainingBotScript::class) { bot, data -> TeleportTrainingBotScript(bot, data) }
     scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
