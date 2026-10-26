@@ -16,6 +16,8 @@ import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionalTrigger
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.util.StringUtils
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * Coordinates event-driven emotional and speech reactions for bots. Bot reactions are small behavior hooks
@@ -66,6 +68,11 @@ object BotReactions {
     var Bot.lastScammedBy by Attr.obj { "null" }
 
     /**
+     * When the scare from the last threat that attacked this bot wears off. See [reactToThreat].
+     */
+    private var Bot.threatScareEnds by Attr.obj { Instant.EPOCH }
+
+    /**
      * Makes nearby bots react after a player dies.
      *
      * If both the killer and victim are bots and the death happened in the Wilderness, the killer and victim may also queue
@@ -104,8 +111,9 @@ object BotReactions {
     /**
      * Makes a bot react to its own death.
      *
-     * Death reduces happiness, with lower-confidence bots having a chance to lose additional happiness. The bot then
-     * queues a [ReactionSpeech.DIED] line after a randomized delay.
+     * Death reduces happiness, with lower-confidence bots having a chance to lose additional happiness. It also scares
+     * the bot for 10 minutes, the less confident the more. The bot then queues a [ReactionSpeech.DIED] line after a
+     * randomized delay.
      *
      * @param died The bot that died.
      * @param killer The mob that killed this bot.
@@ -116,6 +124,8 @@ object BotReactions {
             happinessLoss += 0.25
         }
         died.emotions.add(EmotionalTrigger(EmotionType.HAPPY, -happinessLoss))
+        died.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.25 * (1.0 - died.personality.confidence),
+                                           minutesFromNow(10)))
         if (killer is Player) {
             died.preferences.adjustFeelingsToward(killer.username, -0.25)
         }
@@ -124,6 +134,72 @@ object BotReactions {
         val delay = rand(8, 20)
         died.speechStack.pushHead(BotSpeech(text, delay))
     }
+
+    /**
+     * Makes a bot happier and less greedy for ten minutes after a completed trade increases stock it needed.
+     *
+     * The confirmation handler checks actual ownership gains before invoking this reaction. The adjustment is
+     * applied once per qualifying trade, regardless of how many wanted item types were received.
+     *
+     * @param bot The bot that acquired needed stock.
+     */
+    fun reactToWantedTrade(bot: Bot) {
+        val expire = minutesFromNow(10)
+        bot.emotions.add(EmotionalTrigger(EmotionType.HAPPY, 0.10, expire))
+        bot.emotions.add(EmotionalTrigger(EmotionType.GREEDY, -0.10, expire))
+    }
+
+    /**
+     * Makes a bot react to a kill. Killing a player increases happiness by 0.25 and reduces greed by 0.10 for one hour.
+     * Killing a threatening NPC increases happiness by 0.10 and reduces greed by 0.10 for ten minutes.
+     *
+     * @param killer The bot that made the kill.
+     * @param victim The mob it killed.
+     */
+    fun reactToKill(killer: Bot, victim: Mob) {
+        if (victim is Player || killer.actionHandler.combat.isThreat(victim)) {
+            val playerKill = victim is Player
+            val expire = minutesFromNow(if (playerKill) 60 else 10)
+            killer.emotions.add(EmotionalTrigger(EmotionType.HAPPY, if (playerKill) 0.25 else 0.10, expire))
+            killer.emotions.add(EmotionalTrigger(EmotionType.GREEDY, -0.10, expire))
+        }
+    }
+
+    /**
+     * Makes a bot react to getting away from a fight. Getting away alive under 20% health was a narrow escape, which
+     * scares it a little for 5 minutes.
+     *
+     * @param bot The bot that got away.
+     */
+    fun reactToEscape(bot: Bot) {
+        if (bot.isAlive && bot.healthPercent < 20) {
+            bot.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.15, minutesFromNow(5)))
+        }
+    }
+
+    /**
+     * Makes a bot that isn't confident react to being attacked by a threat, which scares it a little for 2 minutes.
+     * Another threat in that time doesn't add to it.
+     *
+     * @param bot The bot being attacked.
+     * @param attacker The mob attacking it.
+     */
+    fun reactToThreat(bot: Bot, attacker: Mob) {
+        val now = Instant.now()
+        if (!bot.personality.isConfident && now.isAfter(bot.threatScareEnds) &&
+            bot.actionHandler.combat.isThreat(attacker)) {
+            bot.threatScareEnds = now.plus(2, ChronoUnit.MINUTES)
+            bot.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.10, bot.threatScareEnds))
+        }
+    }
+
+    /**
+     * Works out when an emotional trigger that lasts [minutes] expires.
+     *
+     * @param minutes How long the trigger lasts.
+     * @return The time it expires.
+     */
+    private fun minutesFromNow(minutes: Long): Instant = Instant.now().plus(minutes, ChronoUnit.MINUTES)
 
     /**
      * Makes a bot react after gaining a level.

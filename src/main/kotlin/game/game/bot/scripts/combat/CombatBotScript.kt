@@ -2,28 +2,42 @@ package game.bot.scripts.combat
 
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkCombatSwitcher
+import api.bot.action.PkRiskBudget
+import api.combat.death.PlayerDeathItems
 import api.combat.specialAttack.SpecialAttackHandler
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
+import api.drops.DropTableHandler
+import api.drops.SimpleDropTable
 import io.luna.game.model.mob.bot.Bot
+import api.bot.script.BotEscape
 import api.bot.script.DynamicBotScript
+import api.bot.script.ZonedBotScript
+import api.bot.script.lastEscape
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotPkingSpeechPool
 import engine.bot.speech.BotPkingSpeechPool.PkingSpeech
+import engine.bot.speech.BotReactions
 import engine.combat.prayer.CombatPrayer
 import engine.controllers.Controllers.inWilderness
+import game.bot.scripts.LootItemReflexScript
 import game.player.item.consume.food.Food
 import game.player.item.consume.potion.Potion
+import io.luna.Luna
 import io.luna.game.model.Position
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.bot.speech.BotSpeech
 import io.luna.game.model.mob.combat.damage.CombatDamageType
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -130,6 +144,33 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
          * How many new routes a running bot may plan with its attacker still close behind before it stops running.
          */
         private const val MAX_CAUGHT_UP = 8
+
+        /**
+         * The health percent at which a reckless bot (dumb and confident) with no food decides whether to leave.
+         */
+        private const val RECKLESS_LEAVE_HP = 10
+
+        /**
+         * The health percent at which an intelligent bot with no food leaves when it would drop nothing on death. It is
+         * always nervous about its health from here down.
+         */
+        private const val SMART_LEAVE_HP = 35
+
+        /**
+         * How many health percent higher an intelligent bot with no food leaves when it would drop everything it owns.
+         */
+        private const val SMART_RISK_HP = 35
+
+        /**
+         * The run energy a bot that teleported home waits for before it goes back to work, so it can run if something
+         * goes for it again. Waiting also gives the attacker time to wander off.
+         */
+        private const val REST_RUN_ENERGY = 40.0
+
+        /**
+         * The longest a bot waits at home for its run energy.
+         */
+        private val MAX_REST = 5.minutes
     }
 
     /**
@@ -188,6 +229,64 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * When this script last started or resumed, in milliseconds.
      */
     private var startedAt = 0L
+
+    /**
+     * Whether the bot feels greedy in this fight. Rolled once, since every emotion check rolls again.
+     */
+    private val greedy by lazy { bot.emotions.isFeeling(EmotionType.GREEDY) }
+
+    /**
+     * Whether a reckless bot leaves once it is nearly dead, rolled once on its intelligence.
+     */
+    private val recklessLeaves by lazy {
+        rand(bot.personality.intelligence).also { if (!it) bot.log("Nearly dead with no food, fighting on.") }
+    }
+
+    /**
+     * The health percent at which an intelligent bot with no food leaves: [SMART_LEAVE_HP], plus up to
+     * [SMART_RISK_HP] more the bigger the share of its wealth it would drop on death.
+     */
+    private val riskLeaveHp by lazy {
+        val risk = PkRiskBudget.assess(bot, PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode()))
+        val share = if (risk.wealth.signum() > 0) risk.deathLoss.toDouble() / risk.wealth.toDouble() else 0.0
+        SMART_LEAVE_HP + (SMART_RISK_HP * share.coerceIn(0.0, 1.0)).roundToInt()
+    }
+
+    /**
+     * The least value the bot bothers to loot, which a prize must be worth. Worked out once, since greed lowers it at
+     * random.
+     */
+    private val minimumLootValue by lazy { LootItemReflexScript.calculateMinLootValue(bot) }
+
+    /**
+     * The opponent [hasPrize] last looked at.
+     */
+    private var prizeOwner: Mob? = null
+
+    /**
+     * The life of [prizeOwner], for an NPC.
+     */
+    private var prizeOwnerSpawn: Int? = null
+
+    /**
+     * Whether [prizeOwner] carries a prize.
+     */
+    private var prize = false
+
+    /**
+     * Where the bot was when this fight started.
+     */
+    private val attackedAt = bot.position
+
+    /**
+     * When the bot teleported home to get away, while it waits there for its run energy, or `null` if it isn't waiting.
+     */
+    private var restingSince: Long? = null
+
+    /**
+     * Whether the bot already reacted to getting away during this escape, so resting at home doesn't repeat it.
+     */
+    private var reactedToEscape = false
 
     override suspend fun init(resumed: Boolean): Boolean {
         startedAt = System.currentTimeMillis()
@@ -365,28 +464,87 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     /**
-     * Eats food when the bot is low on health.
+     * Eats food when the bot is nervous about its health, or under 30% in a PK session.
      *
-     * If no usable food is found, the bot attempts to flee combat. After eating or fleeing, the bot refreshes its
-     * target so it can continue fighting if still safe enough to do so.
+     * A bot with no food leaves the fight when its personality says so ([leavesFight]); in a PK session it flees once
+     * it is under 30%. After eating, the bot refreshes its target so it can continue fighting if still safe enough to
+     * do so.
      */
     private suspend fun eatFood() {
-        if (bot.healthPercent < 30) {
-            if (!handler.inventory.eatAnyFood()) {
-                // TODO@1.0 Fleeing should depend on bot intelligence, enemy health, combat level, risk, gear value,
-                //  Wilderness depth, and available escape options.
-                if (pkSession == null) {
-                    gaveUp = true
-                    running = true
-                    return
-                }
-                handler.combat.fleeCombat()
-                if (usesPkSwitching) stop()
-                return
-            }
-
+        val nervous = if (pkSession == null) bot.emotions.isNervousAboutHp else bot.healthPercent < 30
+        if (nervous && handler.inventory.eatAnyFood()) {
             targetEnemy()
+            return
         }
+        if (pkSession == null) {
+            if (!handler.inventory.hasAnyFood() && leavesFight(nervous)) {
+                gaveUp = true
+                running = true
+            }
+        } else if (nervous) {
+            val inWilderness = bot.inWilderness()
+            handler.combat.fleeCombat()
+            if (inWilderness && !bot.inWilderness()) BotReactions.reactToEscape(bot)
+            if (usesPkSwitching) stop()
+        }
+    }
+
+    /**
+     * Decides by personality whether a bot with no food leaves the fight now. A greedy bot fights to the death when
+     * its opponent carries a prize ([hasPrize]). A reckless one (dumb and confident) fights on until it is nearly dead,
+     * then leaves only if a roll on its intelligence passes. An intelligent one also leaves once its health is down to
+     * [riskLeaveHp], which rises with what it would drop on death. Any other bot leaves once it is nervous about its
+     * health.
+     *
+     * @param nervous Whether the bot is nervous about its health.
+     * @return `true` if the bot leaves the fight.
+     */
+    private fun leavesFight(nervous: Boolean): Boolean {
+        val leaves = when {
+            greedy && hasPrize() -> false
+            bot.personality.isStupidlyConfident -> bot.healthPercent <= RECKLESS_LEAVE_HP && recklessLeaves
+            bot.personality.isIntelligent -> nervous || bot.healthPercent <= riskLeaveHp
+            else -> nervous
+        }
+        if (leaves) bot.log("Out of food at ${bot.healthPercent}% health, leaving the fight.")
+        return leaves
+    }
+
+    /**
+     * Determines whether the bot's opponent carries a prize: a player who would drop loot worth at least
+     * [minimumLootValue] on death, or an NPC whose own drops (not the shared gem and rare tables) include a stack
+     * worth that much.
+     *
+     * @return `true` if the opponent carries a prize.
+     */
+    private fun hasPrize(): Boolean {
+        val opponent = combatPolicy.opponent() ?: focus.takeIf { focusAlive() } ?: return false
+        val spawn = (opponent as? Npc)?.spawnCount
+        if (opponent !== prizeOwner || spawn != prizeOwnerSpawn) {
+            prizeOwner = opponent
+            prizeOwnerSpawn = spawn
+            prize = prizeValue(opponent) >= minimumLootValue
+            if (prize) bot.log("Fighting $opponent to the death for its loot.")
+        }
+        return prize
+    }
+
+    /**
+     * Values the prize [opponent] carries: everything a player would drop on death, or the most valuable stack on an
+     * NPC's own drop table.
+     *
+     * @param opponent The mob the bot is fighting.
+     * @return The prize's value in coins.
+     */
+    private fun prizeValue(opponent: Mob): Long = when (opponent) {
+        is Player -> if (!PlayerDeathItems.losesItems(opponent, Luna.settings().game().betaMode())) 0 else
+            PlayerDeathItems.select(opponent.inventory.filterNotNull() + opponent.equipment.filterNotNull(),
+                PlayerDeathItems.keepCount(opponent)).lost.sumOf { world.economy.getTotalPrice(it) }
+        // Only an NPC's own tables are simple tables. The shared gem and rare tables would make any NPC a prize.
+        is Npc -> DropTableHandler.getDropTable(opponent)?.tableList.orEmpty().filterIsInstance<SimpleDropTable>()
+            .flatten().filterNot { it.isNothing() }.map { Item(it.id, it.amount.last) }
+            .filter { it.itemDef.isTradeable }.maxOfOrNull { world.economy.getTotalPrice(it) } ?: 0
+        else -> 0
     }
 
     /**
@@ -394,24 +552,39 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * there until the combat timer runs out and the attacker drops it. In the Wilderness, or when nearly dead, the bot
      * uses the default escape instead, which teleports it home. A bot that can't get away (nowhere to run, too tired to
      * run, or its attacker keeps up) fights back against an attacker that isn't much stronger, unless it already gave
-     * up on the fight; otherwise it teleports home.
+     * up on the fight; otherwise it teleports home. A bot that gets away reacts to it ([BotReactions.reactToEscape]).
+     * Outside the Wilderness, a bot that teleports home remembers where it was attacked so its work keeps it away from
+     * there for a while, and waits at home until it has the energy to run.
      *
-     * @return `true` once the bot is out of combat.
+     * @return `true` once the bot is out of combat and done waiting.
      */
     private suspend fun runAway(): Boolean {
         val threat = combatPolicy.opponent() ?: focus.takeIf { focusAlive() }
         // Going back while the attacker still has the bot as its target would start the fight again.
         if (!bot.combat.inCombat() &&
-            (threat?.combat?.target != bot || bot.combat.timer.elapsed().seconds > MAX_KEEP_AWAY)) {
+            (threat?.combat?.target != bot || !bot.combat.timer.isRunning ||
+                    bot.combat.timer.duration.seconds > MAX_KEEP_AWAY)) {
+            // React once, on getting away, while health still shows how close it was.
+            if (!reactedToEscape) {
+                BotReactions.reactToEscape(bot)
+                reactedToEscape = true
+            }
+            if (isResting()) {
+                delay(1.seconds)
+                return false
+            }
+            reactedToEscape = false
             return true
         }
         if (bot.inWilderness()) {
             handler.combat.fleeCombat()
+            if (!bot.inWilderness()) BotReactions.reactToEscape(bot)
             return true
         }
         // Auto retaliate would turn the bot back toward whatever hits it.
         bot.combat.isDisabled = true
         if (bot.healthPercent < 15) {
+            rememberEscape(threat ?: focus)
             handler.combat.fleeCombat()
         } else if (threat != null && threat.combat.target == bot && threat.isViewableFrom(bot)) {
             val tile = escapeTile
@@ -438,12 +611,42 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                     return false
                 } else {
                     bot.log("${stuck ?: "Nowhere to run from $threat"}, teleporting home.")
+                    rememberEscape(threat)
                     output.sendCommand("home")
                 }
             }
         }
         delay(600.milliseconds)
         return false
+    }
+
+    /**
+     * Records that the bot is teleporting home to get away from [attacker], so the zoned script it goes back to and
+     * the skilling factories keep it away from where it was attacked for a while, and makes the bot wait at home for
+     * its run energy. PK sessions handle their own escapes and are left alone.
+     */
+    private fun rememberEscape(attacker: Mob) {
+        if (pkSession != null) return
+        val zone = bot.scriptStack.findActive(ZonedBotScript::class.java).orElse(null)?.interruptedZone
+        bot.lastEscape = BotEscape(attackedAt, attacker.toString(), System.currentTimeMillis(), zone)
+        if (restingSince == null && bot.runEnergy < REST_RUN_ENERGY) {
+            bot.log("Will rest at home until run energy is back to $REST_RUN_ENERGY. runEnergy=${bot.runEnergy}")
+            restingSince = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Whether the bot, having teleported home, is still waiting there for its run energy. It waits until the energy is
+     * back to [REST_RUN_ENERGY], or for at most [MAX_REST].
+     */
+    private fun isResting(): Boolean {
+        val since = restingSince ?: return false
+        if (bot.runEnergy >= REST_RUN_ENERGY || System.currentTimeMillis() - since >= MAX_REST.inWholeMilliseconds) {
+            bot.log("Done resting. runEnergy=${bot.runEnergy}")
+            restingSince = null
+            return false
+        }
+        return true
     }
 
     /**

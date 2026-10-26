@@ -595,8 +595,6 @@ public final class CollisionManager {
                 return start.isWithinDistance(end, distance) && raycast(start, end);
             case SIZE:
                 if (target instanceof GroundItem) {
-                    // TODO Probably not the best way to do this? Maybe create a flag in GroundItem isOnFurniture to
-                    //  speed this up?
                     return start.isWithinDistance(end, distance) && raycast(start, end)
                             && !world.getLocator().findObjectsOnTile(end, it -> it.getObjectType() == ObjectType.DEFAULT).isEmpty();
                 } else if (distance == 1) {
@@ -620,54 +618,6 @@ public final class CollisionManager {
                 box(policy.getDistance()), target);
         return start.isWithinDistance(target, distance);
     }
-
-    /* TODO Test and implement.
-     * Determines whether {@code position} is a valid tile to interact with {@code object} from.
-     * <p>
-     * This uses the object's rotated interaction-direction mask to reject tiles that are beside the object but blocked by
-     * the object's directional access rules. For example, some objects can only be interacted with from certain sides.
-     *
-     * @param object The object being interacted with.
-     * @param position The tile the mob/player would stand on.
-     * @return {@code true} if {@code position} can interact with {@code object}.
-
-    public boolean canInteractFrom(GameObject object, Position position) {
-        int sizeX = object.def().getSizeX();
-        int sizeY = object.def().getSizeY();
-
-        if (object.getDirection().getId() == 1 || object.getDirection().getId() == 3) {
-            int oldSizeX = sizeX;
-            sizeX = sizeY;
-            sizeY = oldSizeX;
-        }
-        **
-         * Temporary: returns the packed direction from the live direction.
-         *
-        @Deprecated
-        public int getDirectionPacked(ObjectDirection liveDir) {
-            if (liveDir != ObjectDirection.WEST) {
-                return (direction << liveDir.getId() & 0xf) +
-                        (direction >> 4 - liveDir.getId());
-            }
-            return direction;
-        }
-
-        int packed = object.def().getDirectionPacked(object.getDirection());
-        CollisionMatrix matrices = world.getChunks().load(object.getChunk()).getMatrices()[object.getPosition().getZ()];
-        int startX = position.getLocalX(position);
-        int startY = position.getLocalY(position);
-
-        Position end = object.getPosition();
-        int endX = end.getLocalX(position);
-        int endY = end.getLocalY(position);
-
-        int radiusX = (endX + sizeX) - 1;
-        int radiusY = (endY + sizeY) - 1;
-        return startX == endX - 1 && startY >= endY && startY <= radiusY && (matrices.get(position) & 8) == 0 && (packed & 8) == 0
-                || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (matrices.get(position) & 0x80) == 0 && (packed & 2) == 0
-                || startY == endY - 1 && startX >= endX && startX <= radiusX && (matrices.get(position) & 2) == 0 && (packed & 4) == 0
-                || startY == radiusY + 1 && startX >= endX && startX <= radiusX && (matrices.get(position) & 0x20) == 0 && (packed & 1) == 0;
-    }*/
 
     /**
      * Returns whether {@code start} lies within the expanded size bounds of {@code target}.

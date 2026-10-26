@@ -1,6 +1,7 @@
 package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
+import game.player.Sound
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.RUNE_CLAWS
 
@@ -24,9 +25,16 @@ val MAX_HIT_BONUS = 0.10
  */
 val EXTRA_ATTACK_DELAY = 1
 
+/**
+ * Configures rune claws special attack, including its verified Lost City launch sound.
+ *
+ * @author lare96
+ */
 attack(type = RUNE_CLAWS,
        drain = 25,
        strengthBonus = MAX_HIT_BONUS) {
+
+    launchSound = Sound.IMPALE
 
     attack { melee(ANIMATION, speed = atkCombat.weapon.speed + EXTRA_ATTACK_DELAY) }
 

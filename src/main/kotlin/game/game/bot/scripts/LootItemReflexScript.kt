@@ -53,6 +53,56 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                         Rune.ID_TO_RUNE.keys +
                         Arrow.IDS
                 ).toSet()
+
+        /**
+         * Calculates the minimum item value this bot considers worth collecting.
+         *
+         * Skill progress and time played determine maturity within a combat-level price range. Intelligence and
+         * confidence adjust that value, while greed lowers it for the current scan.
+         *
+         * @param bot The bot whose loot threshold is being calculated.
+         * @return The minimum loot value in coins, never less than one.
+         */
+        fun calculateMinLootValue(bot: Bot): Int {
+            val hoursPlayed = bot.timePlayed.toMinutes().coerceAtLeast(0) / 60.0
+            val experience = hoursPlayed / (hoursPlayed + 100.0)
+
+            val skills = bot.skills.toList()
+            val totalLevel = skills.sumOf { it.staticLevel }
+            val startingTotal = skills.size + 9
+            val maximumTotal = skills.size * 99
+            val progress = ((totalLevel - startingTotal).toDouble() /
+                    (maximumTotal - startingTotal)).coerceIn(0.0, 1.0)
+
+            val maturity = 0.75 * progress + 0.25 * experience
+            val (minimumMultiplier, maximumMultiplier) = when {
+                bot.combatLevel < 20 -> 0.10 to 0.25
+                bot.combatLevel < 40 -> 0.25 to 0.50
+                bot.combatLevel < 60 -> 0.50 to 0.75
+                bot.combatLevel < 80 -> 0.75 to 1.00
+                else -> 1.00 to 1.25
+            }
+            val combatMultiplier = minimumMultiplier +
+                    (maximumMultiplier - minimumMultiplier) * maturity
+
+            val intelligence = bot.personality.intelligence.coerceIn(0.0, 1.0)
+            val confidence = bot.personality.confidence.coerceIn(0.0, 1.0)
+            val personalityMultiplier = (0.75 + 0.50 * intelligence) *
+                    (0.90 + 0.20 * confidence)
+
+            val greedMultiplier = if (bot.emotions.isFeeling(EmotionType.GREEDY)) {
+                rand().nextDouble(0.50, 0.75)
+            } else {
+                1.0
+            }
+
+            val value = Luna.settings().bots().baseLootValue().toDouble() *
+                    combatMultiplier *
+                    personalityMultiplier *
+                    greedMultiplier
+
+            return value.roundToInt().coerceAtLeast(1)
+        }
     }
 
     /**
@@ -168,56 +218,6 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
     }
 
     /**
-     * Calculates the minimum item value this bot considers worth collecting.
-     *
-     * Skill progress and time played determine maturity within a combat-level price range. Intelligence and
-     * confidence adjust that value, while greed lowers it for the current scan.
-     *
-     * @param bot The bot whose loot threshold is being calculated.
-     * @return The minimum loot value in coins, never less than one.
-     */
-    fun calculateMinLootValue(bot: Bot): Int {
-        val hoursPlayed = bot.timePlayed.toMinutes().coerceAtLeast(0) / 60.0
-        val experience = hoursPlayed / (hoursPlayed + 100.0)
-
-        val skills = bot.skills.toList()
-        val totalLevel = skills.sumOf { it.staticLevel }
-        val startingTotal = skills.size + 9
-        val maximumTotal = skills.size * 99
-        val progress = ((totalLevel - startingTotal).toDouble() /
-                (maximumTotal - startingTotal)).coerceIn(0.0, 1.0)
-
-        val maturity = 0.75 * progress + 0.25 * experience
-        val (minimumMultiplier, maximumMultiplier) = when {
-            bot.combatLevel < 20 -> 0.10 to 0.25
-            bot.combatLevel < 40 -> 0.25 to 0.50
-            bot.combatLevel < 60 -> 0.50 to 0.75
-            bot.combatLevel < 80 -> 0.75 to 1.00
-            else -> 1.00 to 1.25
-        }
-        val combatMultiplier = minimumMultiplier +
-                (maximumMultiplier - minimumMultiplier) * maturity
-
-        val intelligence = bot.personality.intelligence.coerceIn(0.0, 1.0)
-        val confidence = bot.personality.confidence.coerceIn(0.0, 1.0)
-        val personalityMultiplier = (0.75 + 0.50 * intelligence) *
-                (0.90 + 0.20 * confidence)
-
-        val greedMultiplier = if (bot.emotions.isFeeling(EmotionType.GREEDY)) {
-            rand().nextDouble(0.50, 0.75)
-        } else {
-            1.0
-        }
-
-        val value = Luna.settings().bots().baseLootValue().toDouble() *
-                combatMultiplier *
-                personalityMultiplier *
-                greedMultiplier
-
-        return value.roundToInt().coerceAtLeast(1)
-    }
-
-    /**
      * Selects active nearby loot and orders it by recovery priority.
      *
      * Death items remain tracked until they leave the world. Selecting an item does not mark it as recovered.
@@ -239,6 +239,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             }
 
             val valuable = when {
+                TreasureTrailBotScript.wantsClue(bot, item.id) -> true
                 groundItem in bot.deathItems -> true
                 bot.preferences.needsWantedItem(item.id) -> true
                 item.id == 995 -> item.amount >

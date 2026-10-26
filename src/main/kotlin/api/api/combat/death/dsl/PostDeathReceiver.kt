@@ -23,7 +23,10 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
      * Resets the victim’s state after death. This ensures that both players and NPCs transition smoothly from the
      * dead state back into an active, functional state within the world.
      * Player reset clears active prayers and their drain state, the manually selected spell, combat and retaliation
-     * targets, the last opponent, and the combat timer before restoring skills and removing the skull.
+     * targets, the last opponent, incoming combat events, and the combat timer before restoring skills, fully
+     * replenishing run energy, and removing the skull, freeze, and freeze-immunity deadline.
+     * Clearing incoming events before restoring health prevents
+     * a hit from the previous life from reaching the respawned player.
      */
     fun reset() {
         val victim = receiver.victim
@@ -33,10 +36,13 @@ class PostDeathReceiver(val receiver: DeathHookReceiver<*>) {
             victim.combat.target = null
             victim.combat.autoRetaliateTarget = null
             victim.combat.lastCombatWith = null
+            victim.combat.impacts.clear()
             victim.combat.timer.reset()
             victim.animation(Animation.CANCEL)
             victim.skills.resetAll()
+            victim.runEnergy = 100.0
             victim.status.remove(StatusEffectType.SKULLED)
+            victim.status.remove(StatusEffectType.IMMOBILIZED)
             victim.skullIcon = SkullIcon.NONE
         } else if (victim is Npc) {
             if (victim.respawnTicks > 0) {

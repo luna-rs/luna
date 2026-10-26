@@ -1,14 +1,15 @@
 package io.luna.game.model.mob.combat.state;
 
-import com.google.common.base.Stopwatch;
 import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
 import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
+import io.luna.game.TickTimer;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
+import io.luna.game.model.mob.combat.CombatImpactQueue;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
@@ -26,9 +27,28 @@ import java.util.Objects;
 public abstract class CombatContext<T extends Mob> {
 
     /**
-     * The number of seconds a mob remains flagged as in combat after its most recent qualifying combat interaction.
+     * The nominal combat duration in seconds, used by player-facing logout messages.
+     * <p>
+     * Gameplay checks use the tick durations below rather than comparing elapsed wall-clock seconds.
      */
     public static final int COMBAT_TIMER_DURATION = 10;
+
+    /**
+     * The number of ticks for which a qualifying attack keeps general recent-combat status active.
+     * Seventeen 600ms ticks round the nominal ten-second duration up to whole game ticks.
+     */
+    public static final int COMBAT_TIMER_TICKS = 17;
+
+    /**
+     * The number of ticks for which a qualifying attack prevents an ordinary logout.
+     * Kept separate from recent-combat status so either policy can change independently.
+     */
+    public static final int LOGOUT_DELAY_TICKS = 17;
+
+    /**
+     * The number of ticks for which the last opponent retains ownership under single-combat rules.
+     */
+    public static final int SINGLE_COMBAT_TICKS = 8;
 
     /**
      * The mob that owns this combat context.
@@ -41,9 +61,14 @@ public abstract class CombatContext<T extends Mob> {
     private final CombatDamageStack damageStack;
 
     /**
-     * Measures how long the mob has remained in combat since its last qualifying combat interaction.
+     * Incoming hits and projectile callbacks owned by this mob independently of the attacker's action queue.
      */
-    private final Stopwatch combatTimer = Stopwatch.createUnstarted();
+    private final CombatImpactQueue impacts;
+
+    /**
+     * Tracks game ticks since the last qualifying combat interaction, or remains stopped before any interaction.
+     */
+    private final TickTimer combatTimer;
 
     /**
      * The mob currently being attacked, or {@code null} if no combat target is set.
@@ -68,6 +93,12 @@ public abstract class CombatContext<T extends Mob> {
      * A value of {@code 0} or less means the mob is currently able to attack.
      */
     private int attackDelay;
+
+    /**
+     * The world tick at which the last assigned attack cooldown becomes ready, or {@code -1} before assignment.
+     * Retained after the countdown reaches zero to distinguish newly ready attacks from expired flinch windows.
+     */
+    private long attackReadyTick = -1;
 
     /**
      * Indicates whether this mob is fully disabled.
@@ -103,7 +134,9 @@ public abstract class CombatContext<T extends Mob> {
      */
     public CombatContext(T mob) {
         this.mob = mob;
+        combatTimer = new TickTimer(mob.getWorld());
         damageStack = new CombatDamageStack(mob);
+        impacts = new CombatImpactQueue(mob);
     }
 
     /**
@@ -207,12 +240,54 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Responds to an incoming attack. NPCs may replace retaliation with escape behavior.
+     * Starts retaliation against a living attacker when this mob is alive and combat is enabled.
+     * <p>
+     * An accepted combat action receives {@link #getRetaliationDelay()} only when the previous attack deadline
+     * has already passed. A cooldown still pending, or becoming ready in this exact tick, is preserved. NPCs
+     * override this behavior to apply their own flinch, retreat, and leash rules.
      *
      * @param enemy The attacker to retaliate against.
      */
     public void retaliate(Mob enemy) {
+        if (enemy == null || !enemy.isAlive() || !mob.isAlive() || isDisabled()) {
+            return;
+        }
         attack(enemy);
+        CombatAction action = mob.getActions().first(CombatAction.class);
+        if (target == enemy && action != null && hasExpiredAttackDelay()) {
+            setAttackDelay(getRetaliationDelay());
+        }
+    }
+
+    /**
+     * Gets the delay before an idle mob may perform its first retaliatory attack.
+     * <p>
+     * The default is half the four-tick unarmed interval. Player contexts derive the interval from their weapon.
+     *
+     * @return The retaliation delay in game ticks.
+     */
+    protected int getRetaliationDelay() {
+        return 2;
+    }
+
+    /**
+     * Determines whether the attack countdown is ready and its recorded deadline is strictly in the past.
+     *
+     * @return {@code true} if the cooldown has expired beyond its ready tick, otherwise {@code false}.
+     */
+    protected final boolean hasExpiredAttackDelay() {
+        return isAttackReady() && mob.getWorld().getCurrentTick() > attackReadyTick;
+    }
+
+    /**
+     * Determines whether a ready attack has remained idle for more than eight ticks beyond its deadline.
+     * <p>
+     * NPC retaliation uses this boundary to permit a new flinch during an otherwise active engagement.
+     *
+     * @return {@code true} if the idle flinch boundary has passed, otherwise {@code false}.
+     */
+    protected final boolean hasLongExpiredAttackDelay() {
+        return isAttackReady() && mob.getWorld().getCurrentTick() > attackReadyTick + 8;
     }
 
     /**
@@ -236,13 +311,14 @@ public abstract class CombatContext<T extends Mob> {
             return true;
         }
 
-        if (inCombat() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
+        if (isSingleCombatLocked() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
             mob.ifPlayer(player -> player.sendMessage("You are already in combat."));
             return false;
         }
 
         CombatContext<?> victimCombat = victim.getCombat();
-        if (victimCombat.inCombat() && victimCombat.lastCombatWith != null && !Objects.equals(victimCombat.lastCombatWith, mob)) {
+        if (victimCombat.isSingleCombatLocked() && victimCombat.lastCombatWith != null &&
+                !Objects.equals(victimCombat.lastCombatWith, mob)) {
             mob.ifPlayer(player -> player.sendMessage("They are already in combat."));
             return false;
         }
@@ -273,11 +349,14 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Gets the stopwatch used to track how long the owning mob has remained in combat.
+     * Gets the {@link TickTimer} shared by recent-combat, ownership, and logout checks.
+     * <p>
+     * The timer is stopped until the first qualifying interaction. Callers must check
+     * {@link TickTimer#isRunning()} before reading its elapsed duration.
      *
-     * @return The combat timer stopwatch.
+     * @return The combat tick timer.
      */
-    public Stopwatch getTimer() {
+    public TickTimer getTimer() {
         return combatTimer;
     }
 
@@ -292,14 +371,30 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Returns this context to how it is for a newly spawned mob: no target or recent combat, no attack delay, not
-     * disabled, and an empty damage stack.
+     * Records an incoming attack for logout prevention and single-combat ownership, including secondary targets.
+     * Call when a valid attack is committed, before damage delivery: misses and zero hits still count as engagement.
+     * This does not select a retaliation target or change either participant's attack delay.
+     *
+     * @param attacker The mob responsible for the incoming attack.
+     */
+    public final void markAttackedBy(Mob attacker) {
+        lastCombatWith = attacker;
+        resetCombatTimer();
+    }
+
+    /**
+     * Clears this context for a new mob life.
+     * <p>
+     * Incoming impacts are discarded, targets and combat history are cleared, attack readiness is reset, combat
+     * is enabled, and both the combat timer and damage contribution stack are cleared.
      */
     public void reset() {
+        impacts.clear();
         target = null;
         autoRetaliateTarget = null;
         lastCombatWith = null;
         attackDelay = 0;
+        attackReadyTick = -1;
         disabled = false;
         lastAttackReceived = null;
         lastAttackSent = null;
@@ -311,13 +406,43 @@ public abstract class CombatContext<T extends Mob> {
     /**
      * Determines whether the owning mob is currently considered in combat.
      * <p>
-     * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION}
-     * seconds have elapsed since the timer was last reset.
+     * A mob remains in recent combat for {@link #COMBAT_TIMER_TICKS} ticks. Ownership and logout use their own
+     * predicates so changing one policy does not silently change the others.
      *
      * @return {@code true} if the mob is still considered in combat, otherwise {@code false}.
      */
     public final boolean inCombat() {
-        return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= COMBAT_TIMER_DURATION;
+        return withinCombatWindow(COMBAT_TIMER_TICKS);
+    }
+
+    /**
+     * Determines whether the single-combat ownership window is still active.
+     * <p>
+     * This checks elapsed ticks only. {@link #checkMultiCombat(Mob)} also checks the last opponent and area rules.
+     *
+     * @return {@code true} if fewer than {@link #SINGLE_COMBAT_TICKS} ticks have elapsed, otherwise {@code false}.
+     */
+    public final boolean isSingleCombatLocked() {
+        return withinCombatWindow(SINGLE_COMBAT_TICKS);
+    }
+
+    /**
+     * Determines whether a qualifying combat interaction still prevents an ordinary logout.
+     *
+     * @return {@code true} if fewer than {@link #LOGOUT_DELAY_TICKS} ticks have elapsed, otherwise {@code false}.
+     */
+    public final boolean isLogoutBlocked() {
+        return withinCombatWindow(LOGOUT_DELAY_TICKS);
+    }
+
+    /**
+     * Checks an exclusive tick boundary against the current combat timer.
+     *
+     * @param ticks The number of ticks for which the window remains active.
+     * @return {@code true} if the timer is running and its elapsed ticks are below the boundary.
+     */
+    private boolean withinCombatWindow(int ticks) {
+        return combatTimer.isRunning() && combatTimer.getDurationTicks() < ticks;
     }
 
     /**
@@ -325,6 +450,13 @@ public abstract class CombatContext<T extends Mob> {
      */
     public final CombatDamageStack getDamageStack() {
         return damageStack;
+    }
+
+    /**
+     * @return The queue of incoming combat events for this mob's current life.
+     */
+    public final CombatImpactQueue getImpacts() {
+        return impacts;
     }
 
     /**
@@ -390,9 +522,9 @@ public abstract class CombatContext<T extends Mob> {
     }
 
     /**
-     * Processes one tick of attack delay.
+     * Advances the attack countdown by one game tick without allowing it to become negative.
      * <p>
-     * This decrements the remaining delay so the mob moves closer to being able to attack again.
+     * The world calls this once before client input, independently of combat action execution and movement retries.
      */
     public void processAttackDelay() {
         if (attackDelay > 0) {
@@ -402,11 +534,15 @@ public abstract class CombatContext<T extends Mob> {
 
     /**
      * Sets the number of ticks that must elapse before this mob may attack again.
+     * <p>
+     * Negative values are treated as zero. The corresponding world-tick deadline is retained for retaliation
+     * checks after the countdown reaches zero.
      *
      * @param attackDelay The new attack delay in game ticks.
      */
     public void setAttackDelay(int attackDelay) {
-        this.attackDelay = attackDelay;
+        this.attackDelay = Math.max(0, attackDelay);
+        attackReadyTick = mob.getWorld().getCurrentTick() + this.attackDelay;
     }
 
     /**
@@ -415,10 +551,10 @@ public abstract class CombatContext<T extends Mob> {
      * Adds delay even when the mob is ready to attack. Both the current cooldown and supplied delay are clamped to
      * zero before addition, so negative values cannot shorten the cooldown.
      *
-     * @param delay The additional delay to add.
+     * @param delay The additional delay in game ticks.
      */
     public void addFoodDelay(int delay) {
-        attackDelay = Math.max(0, attackDelay) + Math.max(0, delay);
+        setAttackDelay(Math.max(0, attackDelay) + Math.max(0, delay));
     }
 
     /**

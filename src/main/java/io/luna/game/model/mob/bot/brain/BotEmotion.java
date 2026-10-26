@@ -29,14 +29,6 @@ import java.util.function.Function;
  */
 public final class BotEmotion {
 
-    // TODO@0.5.0 Implement this in more scenarios.
-    //  Completed a successful trade where they got something they needed (greed down, happy up, anger down).
-    //  Wasn't able to find the item they're searching for (greed up, happy down, anger up).
-    //  Successfully PKed a player (greed down, happy up).
-    //  Check if scared before trying to PK someone, bossing, entering the wild to do certain activities.
-    //  Check if feeling greedy, angry, and if intelligent, social, confident before scamming.
-    //  Emotion also influences the type of chat bots will speak (change general chat into the 4 emotional categories).
-
     /**
      * The emotions a bot can experience.
      * <p>

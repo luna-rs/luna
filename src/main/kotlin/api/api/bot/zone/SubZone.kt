@@ -87,6 +87,54 @@ enum class SubZone(
         parent = { KARAMJA }),
 
     /**
+     * Yanille's sandpit at (2542, 3103), used to fill owned buckets for glassmaking.
+     */
+    YANILLE_SAND_PIT(
+        inside = Position(2541, 3103),
+        area = SimpleBoxArea.of(2538, 3099, 2549, 3109),
+        parent = { YANILLE }),
+
+    /**
+     * Fishing Guild docks and bank. All native moving-spot destinations are enclosed; entry requires Fishing 68.
+     */
+    FISHING_GUILD(
+        inside = Position(2586, 3418),
+        area = SimpleBoxArea.of(2578, 3380, 2620, 3430),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Stronghold river fishing and the nearby bank. Uses the supplied Stronghold bank tile for arrival.
+     */
+    GNOME_STRONGHOLD_FISHING(
+        inside = Position(2447, 3424),
+        area = SimpleBoxArea.of(2375, 3400, 2450, 3433),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+
+    /**
+     * Seers' northern fishing spots and bank, using the existing town arrival anchor.
+     */
+    SEERS_VILLAGE_FISHING(
+        inside = SEERS_VILLAGE.anchor,
+        area = SimpleBoxArea.of(2708, 3484, 2736, 3538),
+        parent = { SEERS_VILLAGE }, plane = 0),
+
+    /**
+     * Fishing on the Ardougne river north of town. Arrival is an existing north-bank anchor.
+     */
+    ARDOUGNE_RIVER_FISHING(
+        inside = Position(2618, 3331),
+        area = SimpleBoxArea.of(2556, 3328, 2624, 3378),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Dairy cow at (3040, 3301) on the farm south of Falador, used to fill empty buckets with milk.
+     */
+    FALADOR_DAIRY_COW(
+        inside = Position(3039, 3301),
+        area = SimpleBoxArea.of(3035, 3297, 3045, 3306),
+        parent = { FALADOR }),
+
+    /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
      * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
      */
@@ -117,6 +165,15 @@ enum class SubZone(
         inside = Position(2474, 3437),
         area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
         parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Central playable lane of the native Gnome Ball pitch. The native area listener owns admission and
+     * possession; the shared travel layer reaches the gate/pitch and retains its existing fallback.
+     */
+    GNOME_BALL_PITCH(
+        inside = Position(2389, 3488),
+        area = SimpleBoxArea.of(2384, 3484, 2407, 3492),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
 
     /**
      * Barbarian course including its upper platform, entered through the northern pipe.
@@ -333,6 +390,15 @@ enum class SubZone(
         inside = Position(3053, 9743),
         area = SimpleBoxArea.ofRadius(2994, 9697, 73, 60),
         parent = { FALADOR }),
+
+    /**
+     * Ground-floor Crafting Guild mine: six clay, six silver and seven gold rocks in the 377 reference map.
+     * The existing guild door crossing owns entry; miners prepare the required apron before travelling.
+     */
+    CRAFTING_GUILD_MINE(
+        inside = Position(2940, 3287),
+        area = SimpleBoxArea.of(2936, 3275, 2944, 3292),
+        parent = { FALADOR }, plane = 0),
 
     // TODO rimmington mine
 
@@ -879,6 +945,24 @@ enum class SubZone(
         inside = Position(2629, 3295),
         area = SimpleBoxArea.of(2624, 3290, 2637, 3304),
         parent = { ARDOUGNE }),
+
+    /**
+     * Upper Watchtower floor containing Yanille's four pickpocketable Watchmen and their wander range.
+     * Arrival uses an existing Watchman spawn tile; shared travel owns tower access.
+     */
+    YANILLE_WATCHMEN(
+        inside = Position(2549, 3112, 1),
+        area = SimpleBoxArea.of(2539, 3107, 2554, 3121),
+        parent = { YANILLE }, plane = 1),
+
+    /**
+     * Ground-floor Gnomes west of the Stronghold bank. Bounds include the local civilian spawns and wander range,
+     * while the plane restriction excludes upstairs residents. No quest or special equipment is required.
+     */
+    GNOME_STRONGHOLD_THIEVING(
+        inside = Position(2423, 3426),
+        area = SimpleBoxArea.of(2388, 3412, 2432, 3454),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
 
     /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
@@ -1489,6 +1573,39 @@ enum class SubZone(
         parent = { FALADOR }),
 
     /**
+     * South-Ardougne Zamorak monks. Bounds cover the configured spawn positions and five-tile wandering.
+     */
+    SOUTH_ARDOUGNE_ZAMORAK_MONKS(
+        inside = Position(2465, 3248),
+        area = SimpleBoxArea.of(2449, 3233, 2482, 3253),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Taverley Dungeon's stronger Zamorak monks, using their existing spawn and wandering footprint.
+     */
+    TAVERLEY_DUNGEON_ZAMORAK_MONKS(
+        inside = Position(2829, 9808),
+        area = SimpleBoxArea.of(2820, 9800, 2839, 9819),
+        parent = { TAVERLY }),
+
+    /**
+     * Varrock's Zamorak monk and its configured five-tile wandering area.
+     */
+    VARROCK_ZAMORAK_TEMPLE(
+        inside = Position(3213, 3476),
+        area = SimpleBoxArea.of(3208, 3471, 3218, 3481),
+        parent = { VARROCK }),
+
+    /**
+     * Paterdomus Zamorak monks on both configured floors. The ground-floor anchor uses existing travel;
+     * normal plane-aware target searches select only monks reachable on the bot's current floor.
+     */
+    PATERDOMUS_ZAMORAK_MONKS(
+        inside = Position(3411, 3489),
+        area = SimpleBoxArea.of(3405, 3479, 3421, 3498),
+        parent = { VARROCK }),
+
+    /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
      * training and telegrabbing wines money-making method.
      * - Zamorak wine
@@ -1583,7 +1700,7 @@ enum class SubZone(
     },
 
     /*
-     * Level 20 Wilderness chaos temple.
+     * Level 12 Wilderness chaos temple.
      *
      * Used for:
      * - Telegrabbing wines money-making method.
@@ -1591,7 +1708,7 @@ enum class SubZone(
      * Remaining work:
      * - Determine whether this subzone needs inside, outside, or both.
      */
-    LVL_20_WILDERNESS_CHAOS_TEMPLE(
+    LVL_12_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(3239, 3619),
         area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
         parent = { EDGEVILLE }),
@@ -1612,7 +1729,7 @@ enum class SubZone(
      */
     LVL_40_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(2956, 3820),
-        area = SimpleBoxArea.ofRadius(2946, 3813, 13, 14),
+        area = SimpleBoxArea.ofRadius(2943, 3813, 16, 14),
         parent = { EDGEVILLE });
 
     companion object {

@@ -38,42 +38,6 @@ public final class AmmoDefinitionFileParser extends JsonFileParser<AmmoDefinitio
     }
 
     @Override
-    protected BiFunction<Mob, Mob, LocalProjectile> readProjectile(JsonObject object) {
-        if (!object.has("launch_delay")) {
-            return super.readProjectile(object);
-        }
-        int id = object.get("id").getAsInt();
-        int delay = object.get("launch_delay").getAsInt();
-        int length = object.get("flight_length").getAsInt();
-        int step = object.get("flight_step").getAsInt();
-        int offset = object.get("launch_offset").getAsInt();
-        int startHeight = object.get("start_height").getAsInt();
-        int endHeight = object.get("end_height").getAsInt();
-        int curve = object.get("curve").getAsInt();
-        return (source, target) -> {
-            int x = source.getPosition().getX();
-            int y = source.getPosition().getY();
-            int targetX = target.getPosition().getX();
-            int targetY = target.getPosition().getY();
-            // Lost City's npc_range measures to the nearest occupied tile, rather than the south-west corner.
-            int size = Math.max(1, target.size());
-            int dx = Math.max(Math.max(targetX - x, x - (targetX + size - 1)), 0);
-            int dy = Math.max(Math.max(targetY - y, y - (targetY + size - 1)), 0);
-            int duration = delay + length + Math.max(dx, dy) * step;
-            return LocalProjectile.followEntity(source.getContext())
-                    .setSourceEntity(source)
-                    .setTargetEntity(target)
-                    .setId(id)
-                    .setTiming(delay, duration)
-                    .setLaunchOffset(offset)
-                    .setStartHeight(startHeight)
-                    .setEndHeight(endHeight)
-                    .setInitialSlope(curve)
-                    .build();
-        };
-    }
-
-    @Override
     public AmmoDefinition convert(JsonObject token) {
         AmmoType type = AmmoType.valueOf(token.get("type").getAsString());
         int strength = token.get("strength").getAsInt();

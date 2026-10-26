@@ -13,6 +13,7 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.in.ButtonClickMessageReader;
+import io.luna.net.msg.in.ArrangeItemMessageReader;
 import io.luna.net.msg.in.ChatMessageReader;
 import io.luna.net.msg.in.CloseInterfaceMessageReader;
 import io.luna.net.msg.in.CommandMessageReader;
@@ -26,6 +27,7 @@ import io.luna.net.msg.in.ItemOnObjectMessageReader;
 import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.MagicOnItemMessageReader;
 import io.luna.net.msg.in.MagicOnObjectMessageReader;
+import io.luna.net.msg.in.MagicOnGroundItemMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
 import io.luna.net.msg.in.NumberInputMessageReader;
 import io.luna.net.msg.in.ObjectClickMessageReader;
@@ -209,6 +211,28 @@ public final class BotOutputMessageHandler {
     }
 
     /**
+     * Queues the native {@link MagicOnGroundItemMessageReader} packet for visible, active ground loot.
+     * Costs, line of sight and delayed collection belong to the spell action; queuing confirms no pickup.
+     *
+     * @param spellId The spell widget identifier.
+     * @param targetItem The ground item to cast on.
+     * @return Whether a packet was queued for a current visible target on the bot's plane.
+     */
+    public boolean useSpellOnGroundItem(int spellId, GroundItem targetItem) {
+        if (targetItem == null || targetItem.getState() != io.luna.game.model.EntityState.ACTIVE ||
+                !targetItem.isVisibleTo(bot) || !targetItem.getPosition().isViewable(bot.getPosition())) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(targetItem.getId(), ByteOrder.LITTLE);
+        msg.putShort(targetItem.getPosition().getY());
+        msg.putShort(spellId, ByteOrder.LITTLE);
+        msg.putShort(targetItem.getPosition().getX(), ByteOrder.LITTLE, ValueType.ADD);
+        client.queueSimulated(new GameMessage(83, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
      * Sends the {@link CloseInterfaceMessageReader} packet to close any active interface.
      *
      * @return {@code true} if successfully queued.
@@ -370,6 +394,14 @@ public final class BotOutputMessageHandler {
      * @return {@code true} if successfully queued, otherwise {@code false}.
      */
     public boolean sendInventoryItemClick(int option, int index, int itemId) {
+        return sendItemAction(option, index, 3214, itemId);
+    }
+
+    /**
+     * Sends an item's own action from an inventory-style grid, including puzzle pieces.
+     * Widget-defined container actions use {@link #sendItemWidgetClick(int, int, int, int)} instead.
+     */
+    public boolean sendItemAction(int option, int index, int widgetId, int itemId) {
         if (option < 1 || option > 5) {
             bot.log("Invalid inventory item click option: " + option);
             return false;
@@ -380,13 +412,13 @@ public final class BotOutputMessageHandler {
 
         switch (option) {
             case 1:
-                msg.putShort(3214, ValueType.ADD);
+                msg.putShort(widgetId, ValueType.ADD);
                 msg.putShort(index, ByteOrder.LITTLE);
                 msg.putShort(itemId, ByteOrder.LITTLE);
                 opcode = 203;
                 break;
             case 2:
-                msg.putShort(3214, ByteOrder.LITTLE);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
                 msg.putShort(itemId, ByteOrder.LITTLE);
                 msg.putShort(index, ValueType.ADD);
                 opcode = 24;
@@ -394,19 +426,19 @@ public final class BotOutputMessageHandler {
             case 3:
                 msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
                 msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(3214, ByteOrder.LITTLE);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
                 opcode = 161;
                 break;
             case 4:
                 msg.putShort(index, ByteOrder.LITTLE);
                 msg.putShort(itemId, ValueType.ADD);
-                msg.putShort(3214);
+                msg.putShort(widgetId);
                 opcode = 228;
                 break;
             case 5:
-                msg.putShort(index, ByteOrder.LITTLE);
-                msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(itemId, ValueType.ADD);
+                msg.putShort(widgetId);
+                msg.putShort(index, ValueType.ADD);
                 opcode = 4;
                 break;
             default:
@@ -644,6 +676,28 @@ public final class BotOutputMessageHandler {
         ByteMessage msg = ByteMessage.raw();
         msg.putShort(buttonId);
         client.queueSimulated(new GameMessage(79, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Sends a swap-mode {@link ArrangeItemMessageReader} packet for a client item-grid drag.
+     *
+     * @param widgetId The item grid identifier.
+     * @param fromIndex The source slot.
+     * @param toIndex The destination slot.
+     * @return Whether the packet was queued.
+     */
+    public boolean sendArrangeItem(int widgetId, int fromIndex, int toIndex) {
+        if (widgetId <= 0 || widgetId > Short.MAX_VALUE || fromIndex < 0 || fromIndex > Short.MAX_VALUE ||
+                toIndex < 0 || toIndex > Short.MAX_VALUE || fromIndex == toIndex) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(toIndex, ByteOrder.LITTLE, ValueType.ADD);
+        msg.put(0, ValueType.ADD);
+        msg.putShort(widgetId, ValueType.ADD);
+        msg.putShort(fromIndex, ByteOrder.LITTLE);
+        client.queueSimulated(new GameMessage(123, MessageType.FIXED, msg));
         return true;
     }
 

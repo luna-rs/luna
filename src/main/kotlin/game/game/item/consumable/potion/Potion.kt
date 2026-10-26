@@ -201,28 +201,37 @@ enum class Potion(val fourDose: Int,
         }
 
         /**
-         * Invoked when a Zamorak brew is sipped.
+         * Applies a Zamorak brew's boosts, current-level penalties, and capped prayer restoration.
+         * Each dose drains defence by two plus ten percent of its current level and damages twelve percent of
+         * current hitpoints, rounded down. Prayer is restored by ten percent of its base level without boosting it.
          */
         private fun Player.onZamorakBrew() {
-            val removeHp = 2 + (0.10 * hitpoints.staticLevel).toInt()
+            if (!isAlive) return
+            val removeHp = hitpoints.level * 12 / 100
             attack.boost(2 + (0.20 * attack.staticLevel).toInt())
             strength.boost(2 + (0.12 * strength.staticLevel).toInt())
-            defence.weaken(2 + (0.10 * defence.staticLevel).toInt())
+            defence.adjustLevel(-(2 + defence.level / 10))
             damage(removeHp)
-            prayer.boost((0.10 * prayer.staticLevel).toInt())
+            prayer.adjustLevel(prayer.staticLevel / 10)
         }
 
         /**
-         * Invoked when a Saradomin brew is sipped.
+         * Heals each dose by two plus fifteen percent of base hitpoints, capped at base plus that amount.
+         * Existing higher overheals are preserved, and dead players cannot be revived by a queued dose.
+         * Each offensive stat loses two plus ten percent of its current level on every dose, rounded down.
          */
         private fun Player.onSaradominBrew() {
-            val removeHp = 2 + (0.15 * hitpoints.staticLevel).toInt()
+            if (!isAlive) return
+            val heal = 2 + hitpoints.staticLevel * 15 / 100
+            val maximumHp = hitpoints.staticLevel + heal
             defence.boost(2 + (0.20 * defence.staticLevel).toInt())
-            damage(removeHp)
-            attack.weaken((0.10 * attack.staticLevel).toInt())
-            strength.weaken((0.10 * strength.staticLevel).toInt())
-            magic.weaken((0.10 * magic.staticLevel).toInt())
-            ranged.weaken((0.10 * ranged.staticLevel).toInt())
+            if (hitpoints.level < maximumHp) {
+                hitpoints.level = minOf(hitpoints.level + heal, maximumHp)
+            }
+            attack.adjustLevel(-(2 + attack.level / 10))
+            strength.adjustLevel(-(2 + strength.level / 10))
+            magic.adjustLevel(-(2 + magic.level / 10))
+            ranged.adjustLevel(-(2 + ranged.level / 10))
         }
 
         /**

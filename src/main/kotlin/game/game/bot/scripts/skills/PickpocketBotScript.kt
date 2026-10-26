@@ -22,7 +22,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The script searches for nearby visible NPCs whose definitions expose a `Pickpocket` action and whose names match
  * one of the configured [ThievingNpcType] aliases. When a valid target is found, the bot repeatedly uses the
- * pickpocket interaction option on that NPC.
+ * pickpocket interaction option on that NPC. Searches retain the bot's current floor so upper-floor Watchmen
+ * are discovered alongside the existing ground-floor targets.
  *
  * The script also performs basic food management. If the bot becomes nervous about its current hitpoints, it will
  * attempt to eat food from its inventory. If no food is available, the script forces a banking trip and withdraws
@@ -94,16 +95,6 @@ class PickpocketBotScript(
         names
     }
 
-    /**
-     * Executes one pickpocketing cycle while the bot is inside a valid training zone.
-     *
-     * If the bot is nervous about its hitpoints, it tries to eat any available food. If no food is available, the
-     * script requests a banking trip. Otherwise, if a target NPC is already focused, the bot continues pickpocketing
-     * that same NPC.
-     *
-     * @param searching Whether the parent script is currently searching for a new target.
-     * @param focus The currently selected NPC target, or `null` if no target is focused.
-     */
     override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             bot.log("No food in inventory, banking for more.")
@@ -113,14 +104,6 @@ class PickpocketBotScript(
         }
     }
 
-    /**
-     * Handles banking before or during a pickpocketing session.
-     *
-     * The bot attempts to fill roughly 25% of its remaining inventory space with any available food. If no suitable
-     * food can be withdrawn, the script ends because pickpocketing without food may become unsafe for low-health bots.
-     *
-     * @param initial Whether this is the first banking pass for the script.
-     */
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.25).toInt())) {
@@ -149,7 +132,7 @@ class PickpocketBotScript(
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
-        return world.locator.findNpcs(searchBase, searchRadius, true) {
+        return world.locator.findNpcs(searchBase.setZ(bot.position.z), searchRadius, true) {
             val def = it.def()
             def.actions.elementAtOrNull(2)?.equals("Pickpocket") == true && def.name in npcNames
         }

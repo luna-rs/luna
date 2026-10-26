@@ -172,6 +172,15 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         return !isRetreating() && (target == null || isWithinLeash(target));
     }
 
+    /**
+     * Responds to an incoming attack by starting combat or applying the configured retreat behavior.
+     * <p>
+     * A new engagement, or an engagement beyond the idle flinch boundary, receives half the configured attack
+     * speed as its retaliation delay. Ordinary hits during an ongoing engagement do not restart that delay.
+     * Low-health retreat and leash checks take precedence over attack selection.
+     *
+     * @param enemy The living attacker this NPC may retaliate against or flee from.
+     */
     @Override
     public void retaliate(Mob enemy) {
         if (enemy == null || !enemy.isAlive() || !mob.isAlive() || isDisabled() || isRetreating()) {
@@ -183,8 +192,11 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         boolean engaged = target != null && target.isAlive() && combatAction != null && !combatAction.isFinished();
         if (enemy instanceof Player && (lowHealth || (!engaged && !isWithinLeash(enemy)))) {
             mob.getActions().submitIfAbsent(new NpcRetreatAction(mob, enemy));
-        } else if (!engaged) {
+        } else if (!engaged || hasLongExpiredAttackDelay()) {
             attack(enemy);
+            if (target == enemy) {
+                setAttackDelay(Math.max(0, mob.combatDef().getAttackSpeed() / 2));
+            }
         }
     }
 

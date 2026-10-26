@@ -8,6 +8,10 @@ import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript
+import game.bot.scripts.skills.BonesToFoodBotScript
+import game.bot.scripts.skills.TeleportTrainingBotScript
+import game.bot.scripts.skills.TelegrabBotScript
+import game.skill.magic.bonesToItems.BonesToItemsType
 import game.skill.magic.chargeOrb.ChargeOrbType
 import game.skill.magic.lowHighAlch.AlchemyType
 import game.skill.magic.superheatItem.SuperheatItemAction
@@ -17,34 +21,68 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * Creates bot scripts used to train Magic.
  *
- * Magic currently shares its activity selection between normal and profit-oriented training.
+ * Production selection is shared by training and profit; Telegrab gathering is restricted to profit selection.
  * Owned unpowered orbs and spell costs enable obelisk charging first. Owned jewellery and spell costs
  * enable all existing enchantments next, at the normal safe processing hubs. Owned ores and spell costs
- * then enable superheating when both skill requirements are met. Eligible alchemy follows; splashing
+ * then enable superheating when both skill requirements are met. Owned normal bones and spell costs can prepare
+ * bananas or peaches up to the food stock target at the same safe hubs. Eligible alchemy follows; splashing
  * remains the fallback. Production activities use the normal eligibility and personality rules.
  * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
  * its matching obelisk subzone and uses the shared travel and banking system.
  *
- * TODO Add teleportation-based Magic training. Bots should be able to repeatedly cast suitable teleport spells when
- *      their level and rune supply make teleporting a reasonable training method.
+ * Training also has a 25% chance to consider owned city-teleport supplies before production. Supported safe
+ * teleports use the normal level/personality selector; profit selection never spends runes on teleport training.
  *
  * @author lare96
  */
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
-        return getProfitScript(bot, level, zones)
+        if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
+        return getProductionScript(bot, level)
+    }
+
+    /**
+     * Selects a safe city teleport from owned rune costs without changing the bot's equipped staff or spellbook.
+     * The inherited policy preserves casual variety and prefers higher-level available spells for efficient bots.
+     */
+    internal fun getTeleportScript(bot: Bot, level: Int): TeleportTrainingBotScript? {
+        val duration = getDuration(bot)
+        val options = TeleportTrainingBotScript.SITES.keys.map { TeleportTrainingBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.spell.level }, options)
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
+        if (telegrab.isEligible()) return telegrab
+        return getProductionScript(bot, level)
+    }
+
+    /**
+     * Retains the existing production and fallback order without selecting profit-only gathering in training.
+     */
+    private fun getProductionScript(bot: Bot, level: Int): BotScript {
         getOrbScript(bot, level)?.let { return it }
         getEnchantScript(bot, level)?.let { return it }
         getSuperheatScript(bot, level)?.let { return it }
+        getBonesToFoodScript(bot, level)?.let { return it }
         val alchemy = getAlchemyScript(bot, level)
         if (alchemy != null) {
             return alchemy
         }
         return SplashBotScript(bot, getDuration(bot))
+    }
+
+    /**
+     * Selects an eligible native food-conversion spell with the normal level/personality policy. Existing stock
+     * limits preparation sessions; missing inputs leave other Magic activities available.
+     */
+    internal fun getBonesToFoodScript(bot: Bot, level: Int): BonesToFoodBotScript? {
+        val duration = getDuration(bot)
+        val options = BonesToItemsType.entries.map { BonesToFoodBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.type.level }, options)
     }
 
     /**

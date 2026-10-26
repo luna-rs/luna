@@ -78,7 +78,6 @@ public final class PursuitAction extends Action<Npc> {
         }
         // Cancel any in-progress navigation while pursuing.
         mob.getNavigator().cancel();
-        mob.getCombat().resetCombatTimer();
 
         if (tryStep()) {
             complete();
@@ -98,7 +97,7 @@ public final class PursuitAction extends Action<Npc> {
     }
 
     /**
-     * Checks pursuit eligibility before cancelling navigation, refreshing combat time, or queuing movement.
+     * Checks pursuit eligibility before cancelling navigation or queuing movement.
      * An obsolete chase must leave replacement navigation alone. Dead or disabled attackers and missing,
      * dead, or out-of-view targets cannot authorize another pursuit step.
      *

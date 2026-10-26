@@ -1,9 +1,12 @@
 /*
   This definition file is used for resolving weapon model animations, as well as attack and defend
   combat animations. The model/animation data contained here is always prioritized over the default values
-  contained in the "weapon_types.json" file.
+  contained in the "weapon_type_data.jsonc" file.
 
   Use this file when weapons have the wrong model or combat animations.
+  Omit "model" to retain the weapon type's movement animations. A style animation of -1 retains
+  the weapon type's default for that animation. The additional item overrides below follow explicit
+  LostCityRS/Content 377-wip animation parameters (snapshot 44eab090).
 */
 [
   {
@@ -55,22 +58,22 @@
       {
         "type": "DAGGER_STAB",
         "attack": 376,
-        "defend": 379
+        "defend": 378
       },
       {
         "type": "DAGGER_LUNGE",
         "attack": 376,
-        "defend": 379
+        "defend": 378
       },
       {
         "type": "DAGGER_SLASH",
         "attack": 377,
-        "defend": 379
+        "defend": 378
       },
       {
         "type": "DAGGER_BLOCK",
         "attack": 376,
-        "defend": 379
+        "defend": 378
       }
     ],
     "model": {
@@ -78,5 +81,760 @@
       "walking": 1660,
       "running": 1661
     }
+  },
+  {
+    "ids": [
+      1349, // iron_axe
+      1351, // bronze_axe
+      1353, // steel_axe
+      1355, // mithril_axe
+      1357, // adamant_axe
+      1359, // rune_axe
+      1361, // black_axe
+      1363, // iron_battleaxe
+      1365, // steel_battleaxe
+      1367, // black_battleaxe
+      1369, // mithril_battleaxe
+      1371, // adamant_battleaxe
+      1373, // rune_battleaxe
+      1375, // bronze_battleaxe
+      1377, // dragon_battleaxe
+      6739 // dragon_axe
+    ],
+    "styles": [
+      {
+        "type": "BATTLEAXE_BLOCK",
+        "attack": 395,
+        "defend": 397
+      },
+      {
+        "type": "BATTLEAXE_CHOP",
+        "attack": 395,
+        "defend": 397
+      },
+      {
+        "type": "BATTLEAXE_HACK",
+        "attack": 395,
+        "defend": 397
+      },
+      {
+        "type": "BATTLEAXE_SMASH",
+        "attack": -1,
+        "defend": 397
+      }
+    ]
+  },
+  {
+    "ids": [
+      3095, // bronze_claws
+      3096, // iron_claws
+      3097, // steel_claws
+      3098, // black_claws
+      3099, // mithril_claws
+      3100, // adamant_claws
+      3101 // rune_claws
+    ],
+    "styles": [
+      {
+        "type": "CLAWS_BLOCK",
+        "attack": 393,
+        "defend": 397
+      },
+      {
+        "type": "CLAWS_CHOP",
+        "attack": 393,
+        "defend": 397
+      },
+      {
+        "type": "CLAWS_LUNGE",
+        "attack": 1067,
+        "defend": 397
+      },
+      {
+        "type": "CLAWS_SLASH",
+        "attack": 393,
+        "defend": 397
+      }
+    ]
+  },
+  {
+    "ids": [
+      767, // phoenix_crossbow
+      837 // crossbow
+    ],
+    "styles": [
+      {
+        "type": "CROSSBOW_ACCURATE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "CROSSBOW_LONGRANGE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "CROSSBOW_RAPID",
+        "attack": -1,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      746, // deathdagger
+      747, // deathdaggerdone
+      1203, // iron_dagger
+      1205, // bronze_dagger
+      1207, // steel_dagger
+      1209, // mithril_dagger
+      1211, // adamant_dagger
+      1213, // rune_dagger
+      1217, // black_dagger
+      1219, // iron_dagger_p
+      1221, // bronze_dagger_p
+      1223, // steel_dagger_p
+      1225, // mithril_dagger_p
+      1227, // adamant_dagger_p
+      1229, // rune_dagger_p
+      1233, // black_dagger_p
+      2952, // dagger_wolfbane
+      6525 // tzhaar_knife
+    ],
+    "styles": [
+      {
+        "type": "DAGGER_BLOCK",
+        "attack": 386,
+        "defend": 388
+      },
+      {
+        "type": "DAGGER_LUNGE",
+        "attack": 386,
+        "defend": 388
+      },
+      {
+        "type": "DAGGER_SLASH",
+        "attack": 390,
+        "defend": 388
+      },
+      {
+        "type": "DAGGER_STAB",
+        "attack": 386,
+        "defend": 388
+      }
+    ]
+  },
+  {
+    "ids": [
+      1235 // poisoned_dagger_p
+    ],
+    "styles": [
+      {
+        "type": "DAGGER_BLOCK",
+        "attack": 437,
+        "defend": 435
+      },
+      {
+        "type": "DAGGER_LUNGE",
+        "attack": 437,
+        "defend": 435
+      },
+      {
+        "type": "DAGGER_SLASH",
+        "attack": 438,
+        "defend": 435
+      },
+      {
+        "type": "DAGGER_STAB",
+        "attack": 437,
+        "defend": 435
+      }
+    ]
+  },
+  {
+    "ids": [
+      806, // bronze_dart
+      807, // iron_dart
+      808, // steel_dart
+      809, // mithril_dart
+      810, // adamant_dart
+      811, // rune_dart
+      812, // bronze_dart_p
+      813, // iron_dart_p
+      814, // steel_dart_p
+      815, // mithril_dart_p
+      816, // adamant_dart_p
+      817, // rune_dart_p
+      818, // dart_poisoned_p
+      3093, // black_dart
+      3094 // black_dart_p
+    ],
+    "styles": [
+      {
+        "type": "DART_ACCURATE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "DART_LONGRANGE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "DART_RAPID",
+        "attack": 929,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      825, // bronze_javelin
+      826, // iron_javelin
+      827, // steel_javelin
+      828, // mithril_javelin
+      829, // adamant_javelin
+      830, // rune_javelin
+      831, // bronze_javelin_p
+      832, // iron_javelin_p
+      833, // steel_javelin_p
+      834, // mithril_javelin_p
+      835, // adamant_javelin_p
+      836 // rune_javelin_p
+    ],
+    "styles": [
+      {
+        "type": "JAVELIN_ACCURATE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "JAVELIN_LONGRANGE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "JAVELIN_RAPID",
+        "attack": 929,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      863, // iron_knife
+      864, // bronze_knife
+      865, // steel_knife
+      866, // mithril_knife
+      867, // adamant_knife
+      868, // rune_knife
+      869, // black_knife
+      870, // bronze_knife_p
+      871, // iron_knife_p
+      872, // steel_knife_p
+      873, // mithril_knife_p
+      874, // black_knife_p
+      875, // adamant_knife_p
+      876 // rune_knife_p
+    ],
+    "styles": [
+      {
+        "type": "KNIFE_ACCURATE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "KNIFE_LONGRANGE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "KNIFE_RAPID",
+        "attack": 929,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      839, // longbow
+      845, // oak_longbow
+      847, // willow_longbow
+      851, // maple_longbow
+      855, // yew_longbow
+      859, // magic_longbow
+      2883 // ogre_bow
+    ],
+    "styles": [
+      {
+        "type": "LONGBOW_ACCURATE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "LONGBOW_LONGRANGE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "LONGBOW_RAPID",
+        "attack": -1,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      1420, // iron_mace
+      1422, // bronze_mace
+      1424, // steel_mace
+      1426, // black_mace
+      1428, // mithril_mace
+      1430, // adamant_mace
+      1432, // rune_mace
+      1434, // dragon_mace
+      6527 // tzhaar_mace
+    ],
+    "styles": [
+      {
+        "type": "MACE_BLOCK",
+        "attack": -1,
+        "defend": 403
+      },
+      {
+        "type": "MACE_POUND",
+        "attack": -1,
+        "defend": 403
+      },
+      {
+        "type": "MACE_PUMMEL",
+        "attack": -1,
+        "defend": 403
+      },
+      {
+        "type": "MACE_SPIKE",
+        "attack": -1,
+        "defend": 403
+      }
+    ]
+  },
+  {
+    "ids": [
+      2460, // flowers_waterfall_quest
+      2462, // flowers_waterfall_quest_red
+      2464, // flowers_waterfall_quest_blue
+      2466, // flowers_waterfall_quest_yellow
+      2468, // flowers_waterfall_quest_purple
+      2470, // flowers_waterfall_quest_orange
+      2472, // flowers_waterfall_quest_mixed
+      2474, // flowers_waterfall_quest_white
+      2476 // flowers_waterfall_quest_black
+    ],
+    "styles": [
+      {
+        "type": "MACE_BLOCK",
+        "attack": 400,
+        "defend": -1
+      },
+      {
+        "type": "MACE_POUND",
+        "attack": 400,
+        "defend": -1
+      },
+      {
+        "type": "MACE_PUMMEL",
+        "attack": 400,
+        "defend": -1
+      }
+    ]
+  },
+  {
+    "ids": [
+      466 // macro_pickaxehandle
+    ],
+    "styles": [
+      {
+        "type": "PICKAXE_BLOCK",
+        "attack": -1,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_IMPALE",
+        "attack": -1,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_SMASH",
+        "attack": -1,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_SPIKE",
+        "attack": -1,
+        "defend": 397
+      }
+    ]
+  },
+  {
+    "ids": [
+      1265, // bronze_pickaxe
+      1267, // iron_pickaxe
+      1269, // steel_pickaxe
+      1271, // adamant_pickaxe
+      1273, // mithril_pickaxe
+      1275 // rune_pickaxe
+    ],
+    "styles": [
+      {
+        "type": "PICKAXE_BLOCK",
+        "attack": 401,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_IMPALE",
+        "attack": 401,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_SMASH",
+        "attack": 400,
+        "defend": 397
+      },
+      {
+        "type": "PICKAXE_SPIKE",
+        "attack": 401,
+        "defend": 397
+      }
+    ]
+  },
+  {
+    "ids": [
+      1419 // scythe
+    ],
+    "styles": [
+      {
+        "type": "SCYTHE_BLOCK",
+        "attack": 439,
+        "defend": -1
+      },
+      {
+        "type": "SCYTHE_CHOP",
+        "attack": 437,
+        "defend": -1
+      },
+      {
+        "type": "SCYTHE_JAB",
+        "attack": 438,
+        "defend": -1
+      },
+      {
+        "type": "SCYTHE_REAP",
+        "attack": 440,
+        "defend": -1
+      }
+    ]
+  },
+  {
+    "ids": [
+      841, // shortbow
+      843, // oak_shortbow
+      849, // willow_shortbow
+      853, // maple_shortbow
+      857, // yew_shortbow
+      861 // magic_shortbow
+    ],
+    "styles": [
+      {
+        "type": "SHORTBOW_ACCURATE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "SHORTBOW_LONGRANGE",
+        "attack": -1,
+        "defend": 424
+      },
+      {
+        "type": "SHORTBOW_RAPID",
+        "attack": -1,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      1237, // bronze_spear
+      1239, // iron_spear
+      1241, // steel_spear
+      1243, // mithril_spear
+      1245, // adamant_spear
+      1247, // rune_spear
+      1251, // bronze_spear_p
+      1253, // iron_spear_p
+      1255, // steel_spear_p
+      1257, // mithril_spear_p
+      1259, // adamant_spear_p
+      1261, // rune_spear_p
+      4158 // slayer_leafbladed_spear
+    ],
+    "styles": [
+      {
+        "type": "SPEAR_BLOCK",
+        "attack": 428,
+        "defend": 430
+      },
+      {
+        "type": "SPEAR_LUNGE",
+        "attack": 428,
+        "defend": 430
+      },
+      {
+        "type": "SPEAR_POUND",
+        "attack": 429,
+        "defend": 430
+      },
+      {
+        "type": "SPEAR_SWIPE",
+        "attack": 440,
+        "defend": 430
+      }
+    ]
+  },
+  {
+    "ids": [
+      4037, // castlewars_saradomin_banner
+      4039 // castlewars_zamorak_banner
+    ],
+    "styles": [
+      {
+        "type": "STAFF_BASH",
+        "attack": 1428,
+        "defend": 1429
+      },
+      {
+        "type": "STAFF_FOCUS",
+        "attack": 1428,
+        "defend": 1429
+      },
+      {
+        "type": "STAFF_POUND",
+        "attack": 1428,
+        "defend": 1429
+      }
+    ],
+    "model": {
+      "standing": 1421,
+      "walking": 1422,
+      "running": 1427
+    }
+  },
+  {
+    "ids": [
+      1409, // ibanstaff
+      2415, // saradomin_staff
+      2416, // guthix_staff
+      2417 // zamorak_staff
+    ],
+    "styles": [
+      {
+        "type": "STAFF_BASH",
+        "attack": 401,
+        "defend": 403
+      },
+      {
+        "type": "STAFF_FOCUS",
+        "attack": 401,
+        "defend": 403
+      },
+      {
+        "type": "STAFF_POUND",
+        "attack": 401,
+        "defend": 403
+      }
+    ]
+  },
+  {
+    "ids": [
+      1381, // staff_of_air
+      1383, // staff_of_water
+      1385, // staff_of_earth
+      1387, // staff_of_fire
+      1389, // magic_staff
+      1393, // fire_battlestaff
+      1395, // water_battlestaff
+      1397, // air_battlestaff
+      1399, // earth_battlestaff
+      1401, // mystic_fire_staff
+      1403, // mystic_water_staff
+      1405, // mystic_air_staff
+      1407, // mystic_earth_staff
+      3053, // lava_battlestaff
+      3054, // mystic_lava_staff
+      6526 // tzhaar_staff
+    ],
+    "styles": [
+      {
+        "type": "STAFF_BASH",
+        "attack": 419,
+        "defend": 420
+      },
+      {
+        "type": "STAFF_FOCUS",
+        "attack": 419,
+        "defend": 420
+      },
+      {
+        "type": "STAFF_POUND",
+        "attack": 419,
+        "defend": 420
+      }
+    ]
+  },
+  {
+    "ids": [
+      667 // faladian_sword
+    ],
+    "styles": [
+      {
+        "type": "SWORD_BLOCK",
+        "attack": 386,
+        "defend": -1
+      }
+    ],
+    "model": {
+      "standing": 809,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "ids": [
+      1277, // bronze_sword
+      1279, // iron_sword
+      1281, // steel_sword
+      1283, // black_sword
+      1285, // mithril_sword
+      1287, // adamant_sword
+      1289, // rune_sword
+      4068, // castlewars_sword
+      4503, // castlewars_sword_2
+      4508, // castlewars_sword_3
+      6523 // tzhaar_splitsword
+    ],
+    "styles": [
+      {
+        "type": "SWORD_BLOCK",
+        "attack": 386,
+        "defend": -1
+      }
+    ]
+  },
+  {
+    "ids": [
+      800, // bronze_thrownaxe
+      801, // iron_thrownaxe
+      802, // steel_thrownaxe
+      803, // mithril_thrownaxe
+      804, // adamnt_thrownaxe
+      805 // rune_thrownaxe
+    ],
+    "styles": [
+      {
+        "type": "THROWN_AXE_ACCURATE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "THROWN_AXE_LONGRANGE",
+        "attack": 929,
+        "defend": 424
+      },
+      {
+        "type": "THROWN_AXE_RAPID",
+        "attack": 929,
+        "defend": 424
+      }
+    ]
+  },
+  {
+    "ids": [
+      1307, // bronze_2h_sword
+      1309, // iron_2h_sword
+      1311, // steel_2h_sword
+      1313, // black_2h_sword
+      1315, // mithril_2h_sword
+      1317, // adamant_2h_sword
+      1319 // rune_2h_sword
+    ],
+    "styles": [
+      {
+        "type": "TWO_HANDED_SWORD_BLOCK",
+        "attack": -1,
+        "defend": 388
+      },
+      {
+        "type": "TWO_HANDED_SWORD_CHOP",
+        "attack": -1,
+        "defend": 388
+      },
+      {
+        "type": "TWO_HANDED_SWORD_SLASH",
+        "attack": -1,
+        "defend": 388
+      },
+      {
+        "type": "TWO_HANDED_SWORD_SMASH",
+        "attack": -1,
+        "defend": 388
+      }
+    ]
+  },
+  {
+    "ids": [
+      6528 // tzhaar_maul
+    ],
+    "styles": [
+      {
+        "type": "WARHAMMER_BLOCK",
+        "attack": -1,
+        "defend": 410
+      },
+      {
+        "type": "WARHAMMER_POUND",
+        "attack": -1,
+        "defend": 410
+      },
+      {
+        "type": "WARHAMMER_PUMMEL",
+        "attack": -1,
+        "defend": 410
+      }
+    ]
+  },
+  {
+    "ids": [
+      4755, // barrows_verac_weapon
+      4982, // barrows_verac_weapon_100
+      4983, // barrows_verac_weapon_75
+      4984, // barrows_verac_weapon_50
+      4985 // barrows_verac_weapon_25
+    ],
+    "styles": [
+      {
+        "type": "WHIP_DEFLECT",
+        "attack": -1,
+        "defend": 397
+      },
+      {
+        "type": "WHIP_FLICK",
+        "attack": -1,
+        "defend": 397
+      },
+      {
+        "type": "WHIP_LASH",
+        "attack": -1,
+        "defend": 397
+      }
+    ]
   }
 ]

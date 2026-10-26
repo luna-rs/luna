@@ -71,6 +71,46 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
     }
 
     /**
+     * Reads distance-based timing shared by ranged ammunition and combat spells. Arrival is the launch delay
+     * plus the signed flight length and distance times the per-tile step. NPC distance uses the nearest occupied
+     * tile. The signed length is retained, including spells whose close-range arrival precedes their launch cycle.
+     *
+     * @param object The projectile fields, including launch delay, flight length, step, and launch offset.
+     * @return A function that snapshots distance when the projectile is created.
+     */
+    private BiFunction<Mob, Mob, LocalProjectile> readTimedProjectile(JsonObject object) {
+        int id = object.get("id").getAsInt();
+        int delay = object.get("launch_delay").getAsInt();
+        int length = object.get("flight_length").getAsInt();
+        int step = object.get("flight_step").getAsInt();
+        int offset = object.get("launch_offset").getAsInt();
+        int startHeight = object.get("start_height").getAsInt();
+        int endHeight = object.get("end_height").getAsInt();
+        int curve = object.get("curve").getAsInt();
+        return (source, target) -> {
+            int x = source.getPosition().getX();
+            int y = source.getPosition().getY();
+            int targetX = target.getPosition().getX();
+            int targetY = target.getPosition().getY();
+            // Lost City's npc_range measures to the nearest occupied tile, rather than the south-west corner.
+            int size = Math.max(1, target.size());
+            int dx = Math.max(Math.max(targetX - x, x - (targetX + size - 1)), 0);
+            int dy = Math.max(Math.max(targetY - y, y - (targetY + size - 1)), 0);
+            int duration = delay + length + Math.max(dx, dy) * step;
+            return LocalProjectile.followEntity(source.getContext())
+                    .setSourceEntity(source)
+                    .setTargetEntity(target)
+                    .setId(id)
+                    .setTiming(delay, duration)
+                    .setLaunchOffset(offset)
+                    .setStartHeight(startHeight)
+                    .setEndHeight(endHeight)
+                    .setInitialSlope(curve)
+                    .build();
+        };
+    }
+
+    /**
      * Parses projectile data and returns a builder function that creates a {@link LocalProjectile} for a given source
      * and target pair.
      * <p>
@@ -84,12 +124,19 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
      *     <li>{@code curve} - initial slope</li>
      * </ul>
      * <p>
+     * Definitions with {@code launch_delay} instead use explicit cycle timing: arrival equals
+     * {@code launch_delay + flight_length + distance * flight_step}, with {@code launch_offset} controlling
+     * where the projectile first appears. Legacy delay/speed fields are not needed for that format.
+     * <p>
      * The produced projectile always uses {@link ChunkUpdatableView#globalView()}.
      *
      * @param object The JSON object describing projectile behavior.
      * @return A function that builds a projectile for the provided source and target mobs.
      */
     protected BiFunction<Mob, Mob, LocalProjectile> readProjectile(JsonObject object) {
+        if (object.has("launch_delay")) {
+            return readTimedProjectile(object);
+        }
         int id = object.get("id").getAsInt();
         int delay = object.get("delay").getAsInt();
         int speed = object.get("speed").getAsInt();

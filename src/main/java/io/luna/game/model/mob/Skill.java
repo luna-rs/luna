@@ -20,7 +20,8 @@ import java.util.stream.IntStream;
  *     <li>The current dynamic {@link #level}, which may be boosted or drained.</li>
  *     <li>The total accumulated {@link #experience}, from which the static level is derived.</li>
  * </ul>
- * The static level is calculated lazily from experience and cached in {@link #staticLevel}.
+ * Player static levels are calculated lazily from experience and cached in {@link #staticLevel}. NPC static levels
+ * are assigned from their combat definitions and remain independent of temporary boosts, drains, and damage.
  *
  * @author lare96
  */
@@ -303,11 +304,12 @@ public final class Skill {
     }
 
     /**
-     * Returns the static level derived from total experience.
+     * Returns the static level derived from player experience or assigned from an NPC combat definition.
      * <p>
-     * The value is computed lazily and cached until experience changes.
+     * Experience-based values are computed lazily and cached until experience changes. NPC definitions may
+     * explicitly assign zero, independently of the minimum experience-based player level of one.
      *
-     * @return The static experience-based level.
+     * @return The static level.
      */
     public int getStaticLevel() {
         if (staticLevel == -1) {
@@ -317,11 +319,17 @@ public final class Skill {
     }
 
     /**
-     * Sets the static level by converting the level into its corresponding experience value.
+     * Sets the static level by converting the level into its corresponding experience value for players.
+     * NPC base levels are stored directly, allowing combat definitions above the player level cap without
+     * manufacturing experience. All NPC base skills may be zero; negative values are clamped to zero.
      *
      * @param level The new static level.
      */
     public void setStaticLevel(int level) {
+        if (set.getMob() instanceof Npc) {
+            staticLevel = Math.max(0, level);
+            return;
+        }
         setExperience(SkillSet.experienceForLevel(level));
         staticLevel = level;
     }
@@ -338,27 +346,23 @@ public final class Skill {
     /**
      * Sets the dynamic level for this skill.
      * <p>
-     * Values lower than {@code 1} are clamped to {@code 1}.
+     * All skills may be drained to zero. Negative values are clamped to zero; the static level is unchanged so
+     * restoration can recover a fully drained skill normally.
      * <p>
      * If the level does not change, no listeners are notified and no restoration is scheduled.
      * <p>
-     * For NPCs, setting the dynamic level also updates the cached static level to match.
+     * Temporary changes never alter the static level, including for NPCs.
      * <p>
      * Hitpoints that reach full health clear the mob's damage stack.
      *
      * @param newLevel The new dynamic level.
      */
     public void setLevel(int newLevel) {
-        if (newLevel < 1) {
-            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
-        }
+        newLevel = Math.max(0, newLevel);
 
         int oldLevel = level;
 
         level = newLevel;
-        if (set.getMob() instanceof Npc) {
-            staticLevel = level;
-        }
         if (oldLevel == level) {
             return;
         }
@@ -374,35 +378,43 @@ public final class Skill {
     /**
      * Adjusts the current dynamic level by a signed amount.
      * <p>
-     * Positive values raise the level and negative values lower it. The resulting value is clamped into the range
-     * {@code [1, getStaticLevel()]}.
+     * Positive values restore a drained level up to its static level and leave existing boosts unchanged.
+     * Negative values subtract only the requested amount, retaining any remaining boost above the static level.
+     * All skills have a minimum dynamic level of zero.
      * <p>
-     * This method cannot boost beyond the current static level.
+     * Zero is a no-op. This method cannot create or increase a boost. Intermediate arithmetic uses a long so
+     * extreme adjustments cannot wrap around and reverse the intended change.
      *
      * @param amount The signed adjustment to apply.
      */
     public void adjustLevel(int amount) {
-        int newLevel = level + amount;
-
-        if (newLevel < 1) {
-            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
-        } else if (newLevel > getStaticLevel()) {
-            newLevel = getStaticLevel();
+        if (amount == 0 || (amount > 0 && level >= getStaticLevel())) {
+            return;
         }
-        setLevel(newLevel);
+        long adjusted = (long) level + amount;
+        if (amount > 0) {
+            adjusted = Math.min(adjusted, getStaticLevel());
+        }
+        setLevel((int) Math.max(0L, adjusted));
     }
 
     /**
-     * Applies a temporary boost relative to the static level.
+     * Adds a temporary boost to the current dynamic level, capped at the static level plus the boost amount.
      * <p>
-     * The target level is {@code getStaticLevel() + amount}. If this skill is already at or above that value, nothing
-     * changes and {@code false} is returned.
+     * Drained skills gain only the supplied amount rather than jumping directly to the boosted cap. Existing
+     * higher boosts are preserved. Player boosts cannot raise a level above 255, matching the client skill field.
+     * Non-positive amounts do nothing, and intermediate arithmetic uses longs to avoid overflow.
      *
-     * @param amount The amount to boost above the static level.
-     * @return {@code true} if the boost was applied, otherwise {@code false}.
+     * @param amount The amount to add and the maximum permitted boost above the static level.
+     * @return {@code true} if the dynamic level increased, otherwise {@code false}.
      */
     public boolean boost(int amount) {
-        int newLevel = getStaticLevel() + amount;
+        if (amount <= 0) {
+            return false;
+        }
+        long boosted = Math.min((long) level + amount, (long) getStaticLevel() + amount);
+        int maximum = set.getMob() instanceof Player ? 255 : Integer.MAX_VALUE;
+        int newLevel = (int) Math.min(boosted, maximum);
         if (level >= newLevel) {
             return false;
         }
@@ -413,18 +425,19 @@ public final class Skill {
     /**
      * Applies a temporary drain relative to the static level.
      * <p>
-     * The target level is {@code getStaticLevel() - amount}. If this skill is already at or below that value,
-     * nothing changes and {@code false} is returned.
+     * The target level is {@code getStaticLevel() - amount}, clamped to zero. If this skill is already at or below
+     * that value, nothing changes and {@code false} is returned. In particular, draining an already-zero skill
+     * does not report a change. Intermediate arithmetic uses a long to avoid overflow.
      *
      * @param amount The amount to drain below the static level.
      * @return {@code true} if the drain was applied, otherwise {@code false}.
      */
     public boolean weaken(int amount) {
-        int newLevel = getStaticLevel() - amount;
+        long newLevel = Math.max(0L, (long) getStaticLevel() - amount);
         if (level <= newLevel) {
             return false;
         }
-        setLevel(newLevel);
+        setLevel((int) newLevel);
         return true;
     }
 

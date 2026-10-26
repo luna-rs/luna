@@ -10,7 +10,230 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Verifies action registration, lifecycle callbacks, interruption, and phase scheduling.
+ * <p>
+ * The checks include nested submissions, queue clearing during execution, modal processing hooks, and delayed
+ * execution without changing the action queue's existing counter behavior.
+ *
+ * @author lare96
+ */
 class ActionQueueTest {
+    @Test void modalBlockingRetainsProcessingHooksWithoutAdvancingTheExecutionCounter() {
+        var mob = mock(io.luna.game.model.mob.Player.class, RETURNS_DEEP_STUBS);
+        when(mob.getType()).thenReturn(EntityType.PLAYER);
+        when(mob.asPlr()).thenReturn(mob);
+        when(mob.getOverlays().hasWindow()).thenReturn(true);
+        ActionQueue queue = new ActionQueue(mob);
+        int[] processCalls = {0};
+        int[] executed = {0};
+        Action<?> action = new Action<>(mob, ActionType.NORMAL, false, 1) {
+            @Override public void onProcess() { processCalls[0]++; }
+            @Override public boolean run() { executed[0]++; return true; }
+        };
+        queue.submit(action);
+        queue.process();
+        queue.processAfterMovement();
+        queue.normalize();
+        assertEquals(1, processCalls[0]);
+        assertEquals(0, executed[0]);
+        when(mob.getOverlays().hasWindow()).thenReturn(false);
+        queue.process();
+        queue.normalize();
+        assertEquals(0, executed[0]);
+        queue.process();
+        assertEquals(1, executed[0]);
+    }
+
+    /**
+     * A soft action that remains registered until a test completes or interrupts it.
+     *
+     * @author lare96
+     */
+    private static class PersistentAction extends Action<Mob> {
+        /**
+         * The number of times this action received its submission hook.
+         */
+        private int submissions;
+
+        /**
+         * Creates a persistent action for queue registration tests.
+         *
+         * @param mob The mob owning the action.
+         */
+        PersistentAction(Mob mob) {
+            super(mob, ActionType.SOFT);
+        }
+
+        @Override public void onSubmit() { submissions++; }
+        @Override public boolean run() { return false; }
+    }
+
+    @Test void duplicateSubmissionDoesNotInvokeSetup() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        PersistentAction first = new PersistentAction(actor);
+        PersistentAction duplicate = new PersistentAction(actor);
+        assertTrue(queue.submitIfAbsent(first));
+        assertFalse(queue.submitIfAbsent(duplicate));
+        assertEquals(0, duplicate.submissions);
+        assertEquals(ActionState.NEW, duplicate.getState());
+        assertEquals(1, queue.size());
+    }
+
+    @Test void finishingOneOfTwoSameClassActionsStillBlocksDuplicates() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        PersistentAction first = new PersistentAction(actor);
+        PersistentAction second = new PersistentAction(actor);
+        queue.submit(first);
+        queue.submit(second);
+        first.complete();
+        assertFalse(queue.submitIfAbsent(new PersistentAction(actor)));
+        second.interrupt();
+        assertTrue(queue.submitIfAbsent(new PersistentAction(actor)));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void finishingDuringSubmissionDoesNotUnregisterAnExistingAction() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class ConditionalAction extends PersistentAction {
+            private final boolean finishOnSubmit;
+            ConditionalAction(boolean finishOnSubmit) {
+                super(actor);
+                this.finishOnSubmit = finishOnSubmit;
+            }
+            @Override public void onSubmit() {
+                if (finishOnSubmit) complete();
+            }
+        }
+        queue.submit(new ConditionalAction(false));
+        queue.submit(new ConditionalAction(true));
+        assertFalse(queue.submitIfAbsent(new ConditionalAction(false)));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void completionHookCanSubmitReplacementBeforeQueueCleanup() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class ReplacingAction extends PersistentAction {
+            ReplacingAction() { super(actor); }
+            @Override public void onFinished() {
+                assertTrue(queue.submitIfAbsent(new ReplacingAction()));
+            }
+        }
+        ReplacingAction original = new ReplacingAction();
+        queue.submit(original);
+        original.complete();
+        assertFalse(queue.submitIfAbsent(new ReplacingAction()));
+        assertEquals(1, queue.size());
+    }
+
+    @Test void uniquenessUsesExactClassesAndRejectsAnonymousActions() {
+        Mob actor = mock(Mob.class);
+        ActionQueue queue = queue(actor);
+        class OtherAction extends PersistentAction {
+            OtherAction() { super(actor); }
+        }
+        assertTrue(queue.submitIfAbsent(new PersistentAction(actor)));
+        assertTrue(queue.submitIfAbsent(new OtherAction()));
+        assertThrows(IllegalStateException.class,
+                () -> queue.submitIfAbsent(action(actor, ActionType.SOFT, () -> {})));
+    }
+
+    @Test void clearInterruptsActiveActionsAndDoesNotRepeatFinishedCallbacks() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        List<String> finished = new ArrayList<>();
+        Action<Mob> active = trackedAction(mob, ActionType.SOFT, () -> finished.add("active"));
+        Action<Mob> completed = trackedAction(mob, ActionType.NORMAL, () -> finished.add("completed"));
+        Action<Mob> interrupted = trackedAction(mob, ActionType.WEAK, () -> finished.add("interrupted"));
+        queue.submit(active);
+        queue.submit(completed);
+        queue.submit(interrupted);
+        completed.complete();
+        interrupted.interrupt();
+
+        queue.clear();
+        queue.clear();
+
+        assertEquals(ActionState.INTERRUPTED, active.getState());
+        assertEquals(ActionState.COMPLETED, completed.getState());
+        assertEquals(ActionState.INTERRUPTED, interrupted.getState());
+        assertEquals(List.of("completed", "interrupted", "active"), finished);
+        assertEquals(0, queue.size());
+        for (ActionType type : ActionType.values()) assertEquals(0, queue.size(type));
+        assertNull(queue.first(Action.class));
+    }
+
+    @Test void clearDuringExecutionDiscardsPendingActionsAndAcceptsReplacement() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        List<String> ran = new ArrayList<>();
+        Action<Mob> replacement = action(mob, ActionType.SOFT, () -> ran.add("replacement"));
+        Action<Mob> clearing = action(mob, ActionType.SOFT, () -> {
+            ran.add("clear");
+            queue.clear();
+            assertEquals(0, queue.size());
+            queue.submit(replacement);
+        });
+        Action<Mob> pending = action(mob, ActionType.SOFT, () -> ran.add("pending"));
+        queue.submit(clearing);
+        queue.submit(pending);
+
+        queue.process();
+        queue.normalize();
+
+        assertEquals(List.of("clear"), ran);
+        assertEquals(ActionState.INTERRUPTED, clearing.getState());
+        assertEquals(ActionState.INTERRUPTED, pending.getState());
+        assertSame(replacement, queue.first(Action.class));
+        assertEquals(1, queue.size());
+        queue.process();
+        queue.normalize();
+        assertEquals(List.of("clear", "replacement"), ran);
+        assertEquals(0, queue.size());
+    }
+
+    @Test void countsExcludeFinishedActionsAndDoNotDoubleCountExecutionQueue() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        Action<Mob> completed = action(mob, ActionType.SOFT, () -> {});
+        Action<Mob> interrupted = action(mob, ActionType.NORMAL, () -> {});
+        queue.submit(completed);
+        queue.submit(interrupted);
+        completed.complete();
+        interrupted.interrupt();
+        queue.submit(action(mob, ActionType.SOFT, () -> {
+            assertEquals(3, queue.size());
+            assertEquals(2, queue.size(ActionType.SOFT));
+            assertEquals(1, queue.size(ActionType.NORMAL));
+        }));
+        queue.submit(action(mob, ActionType.SOFT, () -> {}));
+        Action<Mob> normal = trackedAction(mob, ActionType.NORMAL, () -> {});
+        queue.submit(normal);
+
+        assertEquals(3, queue.size());
+        assertEquals(2, queue.size(ActionType.SOFT));
+        assertEquals(1, queue.size(ActionType.NORMAL));
+        assertEquals(0, queue.size(ActionType.WEAK));
+        assertEquals(0, queue.size(ActionType.STRONG));
+        queue.process();
+        assertEquals(1, queue.size());
+        assertEquals(1, queue.size(ActionType.NORMAL));
+        normal.interrupt();
+        assertEquals(0, queue.size());
+        for (ActionType type : ActionType.values()) assertEquals(0, queue.size(type));
+    }
+
+    private Action<Mob> trackedAction(Mob mob, ActionType type, Runnable finished) {
+        return new Action<>(mob, type) {
+            @Override public boolean run() { return false; }
+            @Override public void onFinished() { finished.run(); }
+        };
+    }
+
     private ActionQueue queue(Mob mob) {
         ActionQueue queue = new ActionQueue(mob);
         when(mob.getActions()).thenReturn(queue);

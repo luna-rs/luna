@@ -3,6 +3,7 @@ package io.luna.game.model.mob;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import engine.controllers.WildernessLocatableController;
+import engine.player.sounds.PlayerHitSounds;
 import game.player.Messages;
 import game.player.Sound;
 import io.luna.Luna;
@@ -414,18 +415,8 @@ public class Player extends Mob {
 
     @Override
     public void onHit(Hit hit) {
-        // TODO@0.5.0 Do more research into combat sounds, when different sound effects play.
-
-        /*  if (hit.getDamage() > 0) {
-          playRandomSound(
-                    Sound.TAKE_DAMAGE,
-                    Sound.TAKE_DAMAGE_2,
-                    Sound.TAKE_DAMAGE_3,
-                    Sound.TAKE_DAMAGE_4
-            );
-        } else {
-            //playSound(Sound.UNARMED_BLOCK);
-        }*/
+        PlayerHitSounds.INSTANCE.play(this, hit);
+        engine.combat.prayer.CombatPrayerEffects.INSTANCE.receivedHit(this, hit);
         plugins.post(new DamageReceivedEvent(this, hit));
     }
 
@@ -684,7 +675,7 @@ public class Player extends Mob {
         if (!force) {
             if (!controllers.checkLogout()) {
                 return;
-            } else if (combat.inCombat()) {
+            } else if (combat.isLogoutBlocked()) {
                 sendMessage("You must wait until " + CombatContext.COMBAT_TIMER_DURATION + " seconds after combat before logging out.");
                 return;
             }
@@ -798,14 +789,15 @@ public class Player extends Mob {
 
     /**
      * Plays a {@link Sound} enum value with a delay in game ticks.
+     * One game tick is thirty client cycles. The sound packet carries a repeat count of one; the client applies
+     * the player's effects-volume varp separately, so changing volume cannot alter the sound's loop count.
      *
      * @param sound The sound to play.
      * @param delayTicks The delay in game ticks before the sound is played.
      */
     public void playSound(Sound sound, int delayTicks) {
-        int delay = (delayTicks * 600) / 30;
-        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
-        queue(new SoundMessageWriter(sound.getId(), volume, delay));
+        int delay = delayTicks * 30;
+        queue(new SoundMessageWriter(sound.getId(), 1, delay));
     }
 
     /**
@@ -837,6 +829,7 @@ public class Player extends Mob {
 
     /**
      * Sets the current run energy percentage and optionally updates the client.
+     * Direct assignments, saved values, and delta adjustments share the same bounds.
      *
      * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
      * @param update Whether to send an {@link UpdateRunEnergyMessageWriter} to the client.
@@ -844,6 +837,8 @@ public class Player extends Mob {
     public void setRunEnergy(double newRunEnergy, boolean update) {
         if (newRunEnergy > 100.0) {
             newRunEnergy = 100.0;
+        } else if (newRunEnergy < 0.0) {
+            newRunEnergy = 0.0;
         }
 
         if (runEnergy != newRunEnergy) {
@@ -856,17 +851,12 @@ public class Player extends Mob {
 
     /**
      * Modifies run energy by a delta amount and updates the client.
+     * The resulting value is clamped by {@link #setRunEnergy(double, boolean)}.
      *
      * @param amount The amount to add (or subtract) from the current run energy.
      */
     public void increaseRunEnergy(double amount) {
-        double newEnergy = runEnergy + amount;
-        if (newEnergy > 100.0) {
-            newEnergy = 100.0;
-        } else if (newEnergy < 0.0) {
-            newEnergy = 0.0;
-        }
-        setRunEnergy(newEnergy, true);
+        setRunEnergy(runEnergy + amount, true);
     }
 
     /**

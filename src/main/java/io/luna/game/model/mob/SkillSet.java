@@ -328,11 +328,12 @@ public final class SkillSet implements Iterable<Skill> {
      * <p>
      * If {@code trigger}'s dynamic level differs from its static level and the owning mob does not already have an
      * active {@link SkillRestorationAction}, one is submitted.
+     * Prayer changes are excluded because the restoration action never regenerates prayer points.
      *
      * @param trigger The skill change that may require restoration scheduling.
      */
     void restoreSkills(Skill trigger) {
-        if (trigger.getLevel() != trigger.getStaticLevel()) {
+        if (trigger.getId() != Skill.PRAYER && trigger.getLevel() != trigger.getStaticLevel()) {
             mob.getActions().submitIfAbsent(new SkillRestorationAction(mob));
         }
     }

@@ -1,11 +1,11 @@
 package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionState;
-import io.luna.game.action.ActionType;
+import game.player.Sound;
+import engine.combat.prayer.CombatPrayer;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -18,15 +18,14 @@ import java.time.Instant;
  * <p>
  * Subclasses are responsible for calculating a base damage result in {@link #calculateDamage(Mob)} and for
  * implementing the concrete attack behavior in {@link #attack()}. This base class handles the shared combat pipeline,
- * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, combat timer refreshes,
- * attack delay application, and simple projectile timing hooks.
+ * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, player launch audio,
+ * combat timer refreshes,
+ * attack delay application, and recipient-owned projectile timing callbacks.
  *
+ * @param <T> The mob type performing this attack.
  * @author lare96
  */
 public abstract class CombatAttack<T extends Mob> {
-
-    // TODO@0.5.0 Correct weapon sounds. Think this can be done with other combat weapons though through JSON.
-    //  Or it might be randomized, some tests need to be done.
 
     /**
      * The mob performing the attack.
@@ -36,7 +35,7 @@ public abstract class CombatAttack<T extends Mob> {
     /**
      * The mob being attacked.
      * <p>
-     * This target is captured from the attacker's combat state when this attack instance is created.
+     * This reference is supplied when the attack is created and is retained through delayed delivery.
      */
     protected final Mob victim;
 
@@ -67,6 +66,24 @@ public abstract class CombatAttack<T extends Mob> {
      * A timestamp set when this attack is applied using {@link #apply()}.
      */
     private Instant timestamp;
+
+    /**
+     * The world tick at which this attack committed, or {@code -1} before {@link #apply()} succeeds.
+     * Gameplay recency checks use this value independently of the wall-clock timestamp.
+     */
+    private long launchTick = -1;
+
+    /**
+     * Smite state captured at launch, shared by every delivered hit from this attack.
+     */
+    private boolean smiteActive;
+
+    /**
+     * Returns the launch-time Smite state. Secondary attack wrappers may delegate to their original source.
+     */
+    public boolean isSmiteActive() {
+        return smiteActive;
+    }
 
     /**
      * Creates a new {@link CombatAttack}.
@@ -109,7 +126,9 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This method calculates the base damage, passes it through {@link #onAttack(CombatDamage)} to allow subclasses
      * to modify or cancel the result, then applies the standard combat delay and timer updates before invoking {@link #attack()}.
-     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it.
+     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it. An optional
+     * player launch sound is captured before preparation can consume equipment, then played once immediately before
+     * the attack behavior. Misses and accurate zero hits still play the sound; cancellation suppresses it.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -117,6 +136,7 @@ public abstract class CombatAttack<T extends Mob> {
     public final void apply() {
         // todo onAttack is redundant, do anything within calculate damage?
         // todo maybe just only pass the builder until attack is ready to run?
+        Sound attackSound = getAttackSound();
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);
@@ -130,10 +150,31 @@ public abstract class CombatAttack<T extends Mob> {
         }
         attacker.getCombat().setLastCombatWith(victim);
         attacker.getCombat().resetCombatTimer();
-        victim.getCombat().setLastCombatWith(attacker);
-        victim.getCombat().resetCombatTimer(); // Once targeted and engaged, cannot safely log out or attack anyone else.
+        victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
+        launchTick = attacker.getWorld().getCurrentTick();
+        smiteActive = attacker instanceof Player player && player.skill(Skill.PRAYER).getLevel() > 0 &&
+                player.getCombat().getPrayers().isActive(CombatPrayer.SMITE);
+        if (attackSound != null && attacker instanceof Player player) {
+            player.playSound(attackSound);
+            if (victim instanceof Player other && other != player) {
+                other.playSound(attackSound);
+            }
+        }
         attack();
+    }
+
+    /**
+     * Selects an optional player attack launch sound before damage preparation or ammunition consumption.
+     * <p>
+     * The captured sound is sent once to the attacking player and a player victim only after the attack commits,
+     * including inaccurate and zero-damage attacks. Cancelled attacks remain silent. The default leaves spell,
+     * NPC, and custom attack audio on their existing paths; specials may override ordinary weapon selection.
+     *
+     * @return The launch sound, or {@code null} to suppress shared launch playback.
+     */
+    protected Sound getAttackSound() {
+        return null;
     }
 
     /**
@@ -177,42 +218,79 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * Called when the projectile timing action finishes, including interruption before arrival.
-     * Normal completion follows the arrival callback and does not imply that damage was delivered.
+     * Called when the recipient's projectile event finishes or is discarded.
+     * <p>
+     * Normal completion follows the arrival callback and does not imply that damage was delivered. Recipient
+     * cleanup and arrival failures report interruption. The legacy two-event scheduler reports completion once
+     * for the whole flight, even when both its launch and arrival events are discarded.
      *
-     * @param interrupted Whether the timing action was interrupted rather than completed normally.
+     * @param interrupted Whether the event was discarded or its arrival callback failed.
      */
     public void onProjectileFinished(boolean interrupted) {
 
     }
 
     /**
-     * Starts a simple projectile timing action for this attack.
+     * Schedules the arrival of an already displayed projectile on the victim's incoming combat queue.
      * <p>
-     * This helper invokes {@link #onProjectileLaunched()} on the first action execution and {@link #onProjectileReached()}
-     * on the third execution, then completes.
+     * The deadline is relative to the current world tick and survives changes to the attacker's action queue.
+     * Both delivery and interruption notify {@link #onProjectileFinished(boolean)}.
      *
-     * @param launchTicks The execution counter to run {@link #onProjectileLaunched()} on ({@code ticks - 1}).
-     * @param arrivalTicks The execution counter to run {@link #onProjectileReached()} on ({@code ticks - 1}).
+     * @param arrivalDelay The non-negative delay in game ticks until the event is due.
+     * @throws IllegalArgumentException If {@code arrivalDelay} is negative.
+     */
+    protected final void scheduleProjectileArrival(int arrivalDelay) {
+        victim.getCombat().getImpacts().schedule(arrivalDelay, this::onProjectileReached, this::onProjectileFinished);
+    }
+
+    /**
+     * Retains the legacy launch and arrival offsets while giving both callbacks to the recipient's tick queue.
+     * Execution counter zero corresponds to the tick after the attack, so offsets receive one additional tick.
+     * Recipient removal discards the flight and invokes the finish hook once, even if both callbacks are pending.
+     *
+     * @param launchTicks The legacy execution counter on which the projectile is displayed.
+     * @param arrivalTicks The later legacy execution counter on which it arrives.
      */
     protected final void launchProjectile(int launchTicks, int arrivalTicks) {
-        attacker.submitAction(new Action<>(attacker, ActionType.SOFT, false, 1) {
-            @Override
-            public boolean run() {
-                if (getExecutions() == launchTicks) {
-                    onProjectileLaunched();
-                } else if (getExecutions() == arrivalTicks) {
-                    onProjectileReached();
-                    return true;
-                }
-                return false;
-            }
+        /**
+         * Shares a single completion notification between the legacy launch and arrival events.
+         *
+         * @author lare96
+         */
+        class Flight {
+            /**
+             * Whether this flight's completion hook has already been notified.
+             */
+            private boolean finished;
 
-            @Override
-            public void onFinished() {
-                onProjectileFinished(getState() == ActionState.INTERRUPTED);
+            /**
+             * Notifies the owning attack once for the complete flight.
+             *
+             * @param interrupted Whether an event was discarded or its callback failed.
+             */
+            void finish(boolean interrupted) {
+                if (!finished) {
+                    finished = true;
+                    onProjectileFinished(interrupted);
+                }
+            }
+        }
+        Flight flight = new Flight();
+        var impacts = victim.getCombat().getImpacts();
+        impacts.schedule(launchTicks + 1, () -> {
+            if (!flight.finished) {
+                onProjectileLaunched();
+            }
+        }, interrupted -> {
+            if (interrupted) {
+                flight.finish(true);
             }
         });
+        impacts.schedule(arrivalTicks + 1, () -> {
+            if (!flight.finished) {
+                onProjectileReached();
+            }
+        }, flight::finish);
     }
 
     /**
@@ -280,5 +358,12 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public Instant getTimestamp() {
         return timestamp;
+    }
+
+    /**
+     * @return The world tick at which this attack committed, or {@code -1} if it has not committed.
+     */
+    public long getLaunchTick() {
+        return launchTick;
     }
 }

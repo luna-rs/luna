@@ -25,8 +25,14 @@ import java.util.function.BiFunction;
  * Area targets are selected and rolled at impact without applying effects. Each hit passes through its recipient's
  * defensive hooks and health cap before its applied-damage callback displays the impact and runs the spell effect.
  * Cancelled hits have no effect callback; secondary hits cannot recursively select further targets.
+ * Each living secondary recipient enters combat before delivery, even when it splashes or auto-retaliate is off.
  * Custom attacks without a spell definition use the attacker's default magic maximum hit. Negative spell maximum
  * hits denote effect-only spells that still check accuracy.
+ * Spellbook projectiles are sent with the cast animation and deliver damage on the server tick after their arrival
+ * cycle. Spells without a projectile resolve on the following tick. Custom attacks can opt into projectile timing
+ * through {@link #usesProjectileTiming()}, using the arrival cycle's server tick without the spellbook offset.
+ * Other custom attacks retain their existing timing.
+ * Accurate standard hold spells apply at cast time; their prayer reduction is resolved before projectile flight.
  *
  * @param <T> The concrete {@link Mob} type performing the magic attack.
  * @author lare96
@@ -62,6 +68,11 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      * The spell definition used to resolve spell-specific secondary effects.
      */
     protected final CombatSpellDefinition spellEffect;
+
+    /**
+     * Impact delay captured from the displayed projectile, or one tick for a spell without a projectile.
+     */
+    private int projectileHitDelay = 1;
 
     /**
      * Creates a new {@link MagicCombatAttack} using explicit visual and effect data.
@@ -116,11 +127,40 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
 
     @Override
     public void attack() {
+        if (spellEffect != null && nextDamage.isAccurate()) {
+            CombatSpellHandler.INSTANCE.holdAtCast(attacker, victim, spellEffect.getSpell());
+        }
         attacker.animation(cast);
         if (start != null) {
             attacker.graphic(start);
         }
-        launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
+        scheduleHit();
+    }
+
+    /**
+     * Schedules damage after the cast visuals have been displayed. Spellbook and opted-in custom projectiles use
+     * their flight timing; other custom attacks retain the legacy launch scheduler. Custom attacks with immediate
+     * damage can override this hook and deliver through {@link #onProjectileReached()} without a dummy projectile.
+     * Such overrides must also notify {@link #onProjectileFinished(boolean)} when delivery completes.
+     */
+    protected void scheduleHit() {
+        if (usesProjectileTiming()) {
+            onProjectileLaunched();
+            scheduleProjectileArrival(projectileHitDelay);
+        } else {
+            launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
+        }
+    }
+
+    /**
+     * Selects immediate projectile display and an arrival delay derived from its client cycle.
+     * Spellbook attacks use this by default. Custom attacks may opt in after their projectile profile has been
+     * configured relative to the cast, rather than the legacy delayed launch callback.
+     *
+     * @return Whether this attack uses its displayed projectile to schedule damage.
+     */
+    protected boolean usesProjectileTiming() {
+        return spellEffect != null;
     }
 
     @Override
@@ -140,6 +180,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     public final void onProjectileLaunched() {
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
+            // Spellbook queues add one tick; custom NPC projectiles use duration / 30.
+            // The action scheduler requires a positive delay for very short flights.
+            projectileHitDelay = Math.max(1, projectile.getEndCycle() / 30 + (spellEffect == null ? 0 : 1));
             projectile.display();
         }
     }
@@ -155,6 +198,10 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         }
         victim.submitAction(new CombatDamageAction(nextDamage, this, true));
         for (CombatDamage hit : secondaryHits) {
+            if (!hit.getVictim().isAlive()) {
+                continue;
+            }
+            hit.getVictim().getCombat().markAttackedBy(attacker);
             hit.getVictim().submitAction(new CombatDamageAction(hit, this, true));
         }
     }

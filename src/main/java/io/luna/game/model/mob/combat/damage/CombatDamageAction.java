@@ -1,7 +1,9 @@
 package io.luna.game.model.mob.combat.damage;
 
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionPhase;
 import io.luna.game.action.ActionType;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.combat.CombatAction;
@@ -18,6 +20,9 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
  *     <li>Checks NPC escape thresholds after each incoming hit, including during an existing engagement.</li>
  * </ul>
  * This action completes after a single execution.
+ * <p>
+ * Delayed instances execute in {@link ActionPhase#EFFECT}, before outgoing combat. Instant instances execute
+ * during submission; recipient-owned impact callbacks use them to apply a hit at its scheduled arrival.
  *
  * @author lare96
  */
@@ -56,12 +61,29 @@ public final class CombatDamageAction extends Action<Mob> {
         this(damage, source, instant, 1);
     }
 
+    /**
+     * Creates a new {@link CombatDamageAction} with an explicit action delay.
+     *
+     * @param damage The resolved hit and its participants.
+     * @param source The source attack passed to defensive and damage callbacks.
+     * @param instant Whether to apply the hit during submission.
+     * @param delay The positive action delay in game ticks, used when execution is deferred.
+     * @throws IllegalArgumentException If {@code delay} is not positive.
+     */
     public CombatDamageAction(CombatDamage damage, CombatAttack<?> source, boolean instant, int delay) {
         super(damage.getVictim(), ActionType.SOFT, instant, delay);
         this.damage = damage;
         this.source = source;
         attacker = damage.getAttacker();
         victim = damage.getVictim();
+    }
+
+    /**
+     * @return {@link ActionPhase#EFFECT}, before this victim's outgoing combat.
+     */
+    @Override
+    public ActionPhase getPhase() {
+        return ActionPhase.EFFECT;
     }
 
     @Override
@@ -83,7 +105,8 @@ public final class CombatDamageAction extends Action<Mob> {
             }
 
             // Determine whether the victim should retaliate.
-            if (victim.isAlive() && attacker.isAlive() && victim.getCombat().isAutoRetaliate()) {
+            if (victim.isAlive() && attacker.isAlive() && attacker.getState() == EntityState.ACTIVE &&
+                    victim.getCombat().isAutoRetaliate()) {
                 if (victim instanceof Npc || victim.getCombat().getTarget() == null ||
                         !victim.getCombat().getTarget().isAlive() ||
                         !victim.getActions().contains(CombatAction.class)) {

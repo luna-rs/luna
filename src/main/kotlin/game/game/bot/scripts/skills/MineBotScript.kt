@@ -6,6 +6,11 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
+import engine.bot.gear.BotGearLocator
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.content.craftingGuild.CraftingGuild
+import io.luna.game.model.item.Equipment
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.RunecraftingScriptFactory
@@ -24,7 +29,8 @@ import kotlin.time.Duration
  * pickaxe selection, emergency pickaxe fallback, level requirements, and serialization data.
  *
  * While running, the bot searches for nearby matching rock objects and interacts with them through the normal skilling
- * script targeting flow.
+ * script targeting flow. Crafting Guild sessions reserve the chest slot for an owned brown apron and recheck
+ * the native entry requirements before every work-zone trip, including return travel after banking.
  *
  * @param bot The bot running this script.
  * @param ores The ore types this bot is allowed to mine.
@@ -86,6 +92,17 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         ids
     }
 
+    override suspend fun equipment(): BotGearLocator? = super.equipment()?.also {
+        if (SubZone.CRAFTING_GUILD_MINE in originalZones && bot.itemTracker.contains(CraftingGuild.BROWN_APRON)) {
+            it.equipment[Equipment.CHEST] = CraftingGuild.BROWN_APRON
+        }
+    }
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
+        if (zone == SubZone.CRAFTING_GUILD_MINE && !CraftingGuild.canEnter(bot)) return false
+        return super.travelToWorkZone(zone, bank)
+    }
+
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         return world.locator.findObjects(searchBase, searchRadius) { it.id in rockObjectIds }
     }
@@ -107,6 +124,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     }
 
     override suspend fun completed() {
+        if (ores == setOf(Ore.GEM_ROCK)) return
         // Chance to queue a smelting, smithing, or runecrafting script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script =

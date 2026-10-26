@@ -28,7 +28,9 @@ import io.luna.util.parser.impl.ItemNicknameDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.WantedItemDefinitionFileParser;
+import io.luna.util.parser.impl.ItemEconomyDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponAnimationDefinitionFileParser;
+import io.luna.util.parser.impl.WeaponSoundDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
@@ -235,6 +237,7 @@ public final class LunaServer {
         taskList.add(() -> context.getWorld().getBots().loadNames());
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new WeaponAnimationDefinitionFileParser());
+        taskList.add(new WeaponSoundDefinitionFileParser());
         taskList.add(new ItemNicknameDefinitionFileParser());
         taskList.add(new WantedItemDefinitionFileParser());
 
@@ -251,6 +254,7 @@ public final class LunaServer {
 
         // Wait for cache decoders after launch tasks (keeps startup ordering deterministic).
         context.getCache().waitForDecoders();
+        new ItemEconomyDefinitionFileParser().run();
     }
 
     /**

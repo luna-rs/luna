@@ -26,6 +26,7 @@ import kotlin.math.max
  * A Dwarf multicannon set up in the world. It decays after [DECAY_TICKS], and fires while its owner is online.
  *
  * @author TheLining
+ * @author lare96
  */
 class Cannon(val owner: String, val position: Position) : Task(false, 1) {
 
@@ -249,19 +250,26 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
     }
 
     /**
-     * Determines if single-way combat lets [plr]'s cannon fire at [npc].
+     * Determines whether single-combat ownership allows [plr]'s cannon to fire at [npc].
+     *
+     * Targets in a multi-combat area bypass ownership checks. Otherwise, each participant's independent
+     * single-combat window is checked against its last opponent; the longer logout window does not reserve it.
+     *
+     * @param plr The player who owns the cannon.
+     * @param npc The proposed NPC target.
+     * @return `true` if ownership permits the shot, otherwise `false`.
      */
     private fun canFireAt(plr: Player, npc: Npc): Boolean {
         if (npc.inMultiArea()) {
             return true
         }
         val plrOpponent = plr.combat.lastCombatWith
-        if (plr.combat.inCombat() && plrOpponent != null && plrOpponent != npc) {
+        if (plr.combat.isSingleCombatLocked && plrOpponent != null && plrOpponent != npc) {
             plr.sendMessage("I'm already under attack!")
             return false
         }
         val npcOpponent = npc.combat.lastCombatWith
-        if (npc.combat.inCombat() && npcOpponent != null && npcOpponent != plr) {
+        if (npc.combat.isSingleCombatLocked && npcOpponent != null && npcOpponent != plr) {
             plr.sendMessage("Someone else is fighting that.")
             return false
         }

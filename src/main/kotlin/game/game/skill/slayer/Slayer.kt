@@ -18,6 +18,24 @@ import io.luna.game.model.mob.dialogue.Expression
 object Slayer {
 
     /**
+     * Drains the current combat levels when a player lacks required Slayer protection.
+     * Attack, strength, ranged, and magic use [offensivePercent]; defence and prayer use [otherPercent].
+     * Agility is included only when [drainAgility] is true. Each percentage is rounded down independently.
+     * Call at attack launch after resolving damage protection, so draining prayer cannot change that hit's roll.
+     */
+    fun Player.drainCombatSkills(offensivePercent: Int, otherPercent: Int, drainAgility: Boolean = true) {
+        attack.adjustLevel(-(attack.level * offensivePercent / 100))
+        strength.adjustLevel(-(strength.level * offensivePercent / 100))
+        ranged.adjustLevel(-(ranged.level * offensivePercent / 100))
+        magic.adjustLevel(-(magic.level * offensivePercent / 100))
+        defence.adjustLevel(-(defence.level * otherPercent / 100))
+        prayer.adjustLevel(-(prayer.level * otherPercent / 100))
+        if (drainAgility) {
+            agility.adjustLevel(-(agility.level * otherPercent / 100))
+        }
+    }
+
+    /**
      * The XP multiplier specifically for slayer.
      */
     private val XP_MULTIPLIER = 1.0

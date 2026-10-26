@@ -18,7 +18,8 @@ import kotlin.time.Duration.Companion.minutes
  * Selects supply-ready combat disciplines and level-appropriate, explicitly named NPC camps.
  * Candidate camps share the existing zone travel fallback. KBD requires combat readiness of at least
  * 100, profit mode, a one-handed melee loadout and an owned anti-dragon shield. The combat script
- * equips protection and withdraws stronger food before travelling to the lair.
+ * equips protection and withdraws stronger food before travelling to the lair. Wilderness Zamorak monks
+ * are profit-only camps, with readiness 35 for the lower temple and 55 for the stronger level-40 group.
  *
  * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
@@ -47,10 +48,16 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.TAVERLEY_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
             Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
             Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
-            Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak")),
+            Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
+            Camp(SubZone.SOUTH_ARDOUGNE_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
+            Camp(SubZone.VARROCK_ZAMORAK_TEMPLE, 35, setOf("Monk of Zamorak"), true),
+            Camp(SubZone.PATERDOMUS_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
+            Camp(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
             Camp(SubZone.VARROCK_SEWERS, 50, setOf("Moss giant"), true),
             Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Ogre"), true),
+            Camp(SubZone.TAVERLEY_DUNGEON_ZAMORAK_MONKS, 55, setOf("Monk of Zamorak"), true),
+            Camp(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
             Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
@@ -76,6 +83,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
                                    hasDragonShield: Boolean, queenReady: Boolean = false): List<Camp> {
             val eligible = camps.filter { it.minimum <= level &&
+                (!training || it.zone !in setOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE,
+                    SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE)) &&
                 (it.zone != SubZone.KALPHITE_QUEEN || (!training && purpose == BotGearPurpose.MELEE && queenReady)) &&
                 (it.zone !in NpcCombatScript.DRAGON_ZONES ||
                     (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }

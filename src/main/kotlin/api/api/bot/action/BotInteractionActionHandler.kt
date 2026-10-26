@@ -53,24 +53,28 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         val anchor = target.position
         if (policy.distance == 0) return listOf(anchor)
         val size = maxOf(1, target.sizeX(), target.sizeY())
+        val reach = maxOf(1, policy.distance)
         return buildList {
-            for (x in anchor.x - 1..anchor.x + size) for (y in anchor.y - 1..anchor.y + size) {
-                val stand = Position(x, y, anchor.z)
-                if (world.collisionManager.reached(stand, target, policy)) add(stand)
-            }
+            for (x in anchor.x - reach..anchor.x + size - 1 + reach)
+                for (y in anchor.y - reach..anchor.y + size - 1 + reach) {
+                    val stand = Position(x, y, anchor.z)
+                    if (world.collisionManager.reached(stand, target, policy)) add(stand)
+                }
         }
     }
 
     /**
      * Approaches through the web, then confirms native collision reach. Moving targets are replanned
      * at most three times within one deadline. Target loss, caller safety, cancellation and locks
-     * abort the trip; approaches cannot acquire bank supplies or disable those caller checks.
+     * abort the trip; a walking lock still permits interaction with an already reached target.
+     * Approaches cannot acquire bank supplies or disable those caller checks.
      */
     suspend fun approach(target: Entity, policy: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
                          timeout: Duration = 30.seconds, allowOutOfView: Boolean = false,
                          canContinue: () -> Boolean = { true }): Boolean = withTimeoutOrNull(timeout) {
         fun eligible(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive && !bot.isLocked &&
-                !bot.walking.isLocked && target.state == EntityState.ACTIVE && canContinue() &&
+                (!bot.walking.isLocked || bot.walking.isEmpty && world.collisionManager.reached(bot, target, policy)) &&
+                target.state == EntityState.ACTIVE && canContinue() &&
                 (target !is Mob || target.isAlive && (allowOutOfView || target.isViewableFrom(bot)))
         repeat(3) {
             if (!eligible()) return@withTimeoutOrNull false
@@ -138,8 +142,15 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
     suspend fun interact(option: Int, target: Entity?, allowed: () -> Boolean): Boolean =
         interact(option, target, onWebWalkLeg = false, allowed = allowed)
 
+    /**
+     * Approaches with a content handler's native reach policy, such as a rope swing two tiles away.
+     * The ordinary interaction packet still applies the server's registered policy and validation.
+     */
+    suspend fun interact(option: Int, target: Entity?, policy: InteractionPolicy, allowed: () -> Boolean): Boolean =
+        interact(option, target, onWebWalkLeg = false, allowed = allowed, reachPolicy = policy)
+
     private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean,
-                                 allowed: () -> Boolean = { true }): Boolean {
+                                 allowed: () -> Boolean = { true }, reachPolicy: InteractionPolicy? = null): Boolean {
         if (target == null || !allowed()) {
             return false
         }
@@ -155,7 +166,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         }")
 
-        val policy = if (target is GroundItem && option == 1) InteractionPolicy.EQUAL_POSITION
+        val policy = reachPolicy ?: if (target is GroundItem && option == 1) InteractionPolicy.EQUAL_POSITION
         else InteractionPolicy.STANDARD_SIZE
         val reached = if (onWebWalkLeg) {
             val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)

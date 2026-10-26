@@ -1,8 +1,7 @@
 package game.combat.spells
 
-import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
-import api.combat.magic.CombatSpellHandler.weaken
+import api.combat.magic.CombatSpellHandler.drainCurse
 import api.predef.*
 import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
@@ -20,34 +19,25 @@ val TELE_BLOCK_MINUTES = 5
 
 // Weakening curse spells.
 spell(CombatSpell.CONFUSE) {
-    weaken(victim, victim.attack, 0.05)
+    drainCurse(victim, victim.attack, 0.05)
 }
 spell(CombatSpell.WEAKEN) {
-    weaken(victim, victim.strength, 0.05)
+    drainCurse(victim, victim.strength, 0.05)
 }
 spell(CombatSpell.CURSE) {
-    weaken(victim, victim.defence, 0.05)
+    drainCurse(victim, victim.defence, 0.05)
 }
 spell(CombatSpell.VULNERABILITY) {
-    weaken(victim, victim.defence, 0.10)
+    drainCurse(victim, victim.defence, 0.10)
 }
 spell(CombatSpell.ENFEEBLE) {
-    weaken(victim, victim.strength, 0.10)
+    drainCurse(victim, victim.strength, 0.10)
 }
 spell(CombatSpell.STUN) {
-    weaken(victim, victim.attack, 0.10)
+    drainCurse(victim, victim.attack, 0.10)
 }
 
-// Immobilizing curse spells.
-spell(CombatSpell.BIND) {
-    immobilize(victim, 8.ticks)
-}
-spell(CombatSpell.SNARE) {
-    immobilize(victim, 16.ticks)
-}
-spell(CombatSpell.ENTANGLE) {
-    immobilize(victim, 24.ticks)
-}
+// Bind, Snare, and Entangle are applied by MagicCombatAttack at cast time.
 
 // Teleblock curse spell.
 spell(CombatSpell.TELEBLOCK) {

@@ -129,6 +129,18 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public boolean onCombatProcess(boolean reached) {
         // Handle combat hooks and check controllers to make sure we can attack.
         PlayerCombatHandler.INSTANCE.consumeCombat(player);
+        return canAttackCurrentTarget();
+    }
+
+    /**
+     * Checks the current target's attackability and the player's combat permissions.
+     * <p>
+     * The post-movement combat retry uses this method without repeating script processing hooks or attack
+     * selection. Player targets also require the attacker to remain eligible for player combat.
+     *
+     * @return {@code true} if the target and active controllers permit combat, otherwise {@code false}.
+     */
+    public boolean canAttackCurrentTarget() {
         return target != null && target.getCombat().isAttackable() &&
                 (!(target instanceof Player) || isAttackable()) && player.getControllers().checkCombat(target);
     }
@@ -186,6 +198,26 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     @Override
     public boolean isAutoRetaliate() {
         return player.getVarpManager().getValue(PersistentVarp.AUTO_RETALIATE) == 0;
+    }
+
+    /**
+     * Gets half the weapon's base attack interval for idle auto-retaliation.
+     * <p>
+     * Rapid ranged styles subtract their rapid tick after halving the base interval. Their configured attack
+     * speed already contains that reduction, so it is restored before the division. The result may be zero.
+     *
+     * @return The non-negative retaliation delay in game ticks.
+     */
+    @Override
+    protected int getRetaliationDelay() {
+        int speed = getWeapon().getSpeed();
+        return switch (getWeapon().getStyleDef().getType()) {
+            // Style speeds already subtract the rapid tick; the flinch subtracts it after halving the base speed.
+            case CROSSBOW_RAPID, SHORTBOW_RAPID, LONGBOW_RAPID, KNIFE_RAPID, THROWN_AXE_RAPID, DART_RAPID,
+                 JAVELIN_RAPID ->
+                    Math.max(0, (speed + 1) / 2 - 1);
+            default -> Math.max(0, speed / 2);
+        };
     }
 
     @Override

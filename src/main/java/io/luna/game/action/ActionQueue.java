@@ -7,33 +7,25 @@ import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Per-mob action scheduler responsible for registering and processing {@link Action}s each game cycle.
+ * Manages the {@link Action}s submitted to a single {@link Mob}.
  * <p>
- * The queue is processed once per tick (or "cycle") for a single {@link Mob}. Actions are submitted into a processing
- * set and evaluated in two stages:
- * <ol>
- *   <li><b>Processing stage</b> ({@link Action#onProcess()}): gives actions a chance to update state each cycle and
- *       enqueue themselves for execution.</li>
- *   <li><b>Execution stage</b> (nested queue): actions are polled and executed in a stable order, allowing "nested"
- *       behavior where one action can trigger/queue another during the same cycle.</li>
- * </ol>
- *
- * <h3>Action type rules</h3>
- * <ul>
- *   <li>If any {@link ActionType#STRONG} action exists, all {@link ActionType#WEAK} actions are interrupted.</li>
- *   <li>If a strong action exists and the mob is a player, modal interfaces are closed before execution.</li>
- *   <li>{@link ActionType#NORMAL} actions are skipped during execution if a modal interface is open.</li>
- * </ul>
- * <strong>Implementation note:</strong> This class stores actions in a {@link ListMultimap} keyed by {@link ActionType}.
- * Processing order follows the multimap’s iteration order (which is insertion order for each key in {@link ArrayListMultimap}).
+ * {@link #process()} runs actions in {@link ActionPhase} order. Each phase snapshots its candidates before
+ * execution, allowing an interaction to submit combat for a later phase of the same turn. Submissions to a phase
+ * whose snapshot has already been taken wait for a later pass. Insertion order is retained within each action type.
+ * <p>
+ * {@link ActionType} determines interruption and modal behavior independently of execution order. An unfinished
+ * strong action interrupts weak actions at each phase boundary. Normal actions continue receiving their processing
+ * hooks while a modal is open, but their execution counters do not advance.
+ * <p>
+ * {@link #processAfterMovement()} revisits interaction and combat phases after walking. Existing actions use
+ * {@link Action#runAfterMovement()} without a second counter update; newly submitted actions receive their first
+ * normal processing cycle. {@link #normalize()} clears per-tick processing flags after world synchronization.
  *
  * @author lare96
  */
@@ -53,26 +45,11 @@ public final class ActionQueue {
     private final ListMultimap<ActionType, Action<?>> processing = ArrayListMultimap.create();
 
     /**
-     * Per-cycle execution queue used to support nesting.
+     * The candidate snapshot for the phase currently being processed.
      * <p>
-     * Actions that remain in {@link ActionState#PROCESSING} after {@link Action#onProcess()} are added here for the
-     * execution stage.
+     * Candidates are checked again before execution so an earlier action may finish, interrupt, or clear them.
      */
     private final Queue<Action<?>> executing = new ArrayDeque<>();
-
-    /**
-     * Fast-membership set of action classes currently present in this queue.
-     * <p>
-     * This set exists purely as an O(1) {@link #contains(Class)} shortcut for "is an action of type X currently
-     * queued?", avoiding a linear scan across {@link #processing} and {@link #executing}.
-     */
-    private final Set<String> types = new HashSet<>();
-
-    /**
-     * If actions are currently being run. Used to normalize processing delays when actions are scheduled within
-     * actions.
-     */
-    private boolean running;
 
     /**
      * Creates a new {@link ActionQueue} for {@code mob}.
@@ -86,8 +63,9 @@ public final class ActionQueue {
     /**
      * Submits an {@link Action} to this queue.
      * <p>
-     * The action is immediately placed into the processing set, transitioned to {@link ActionState#PROCESSING},
-     * and has {@link Action#onSubmit()} invoked.
+     * The action first transitions to {@link ActionState#PROCESSING} and receives {@link Action#onSubmit()}.
+     * It is added to the processing set only if that hook leaves it unfinished. Actions such as immediate
+     * consumption may therefore complete during submission without being retained by the queue.
      *
      * @param action The action to submit.
      */
@@ -95,7 +73,6 @@ public final class ActionQueue {
         action.setState(ActionState.PROCESSING);
         action.onSubmit();
         if (!action.isFinished()) {
-            types.add(action.getClass().getName());
             processing.put(action.actionType, action);
         }
     }
@@ -103,23 +80,23 @@ public final class ActionQueue {
     /**
      * Submits {@code action} only if no other action of the same concrete type is currently being processed.
      * <p>
-     * This method uses the action's runtime class as a uniqueness key. If that type has not already been registered,
-     * the action is submitted as normal.
+     * Only unfinished actions of the same exact runtime class prevent submission. Completed or interrupted
+     * actions may remain queued until the next cycle, but do not prevent a replacement from being submitted.
      * <p>
      * If an action of the same class is already present, this method does nothing.
      *
      * @param action The action to submit if its concrete type is not already active.
      * @return {@code true} if the action was not already active, and therefore submitted.
      */
-    @Deprecated // TODO@0.5.0 Remove, actions should monitor their own lifecycle.
     public boolean submitIfAbsent(Action<?> action) {
         checkState(!action.getClass().isAnonymousClass(), "Anonymous classes cannot be used with submitIfAbsent.");
-        String type = action.getClass().getName();
-        if (!types.contains(type)) {
-            submit(action);
-            return true;
+        for (Action<?> active : processing.values()) {
+            if (active.getState() == ActionState.PROCESSING && active.getClass() == action.getClass()) {
+                return false;
+            }
         }
-        return false;
+        submit(action);
+        return true;
     }
 
     /**
@@ -204,71 +181,95 @@ public final class ActionQueue {
     }
 
     /**
-     * Processes this mob’s action queue for a single game cycle.
+     * Processes this mob's actions once before walking, in {@link ActionPhase} declaration order.
      * <p>
-     * High-level flow:
-     * <ol>
-     *   <li>Interrupt {@link ActionType#WEAK} actions if any {@link ActionType#STRONG} exists.</li>
-     *   <li>Remove actions that are no longer {@link ActionState#PROCESSING}.</li>
-     *   <li>Call {@link Action#onProcess()} on remaining actions and enqueue them for execution.</li>
-     *   <li>If a strong action exists, close player modal interfaces.</li>
-     *   <li>Execute queued actions, skipping {@link ActionType#NORMAL} while a modal interface is open.</li>
-     * </ol>
+     * Finished actions are removed before the phase passes begin. Incoming effects precede ordinary actions,
+     * reach-based interactions, and outgoing combat. Each pass applies the interruption and modal rules before
+     * executing its candidate snapshot.
      */
     public void process() {
-        // Most world NPCs have no actions. Avoid allocating multimap iterators for an idle queue.
         if (processing.isEmpty() && executing.isEmpty()) {
             return;
         }
-        // 1) Remove actions that are no longer actively processing.
-        processing.values().removeIf(action -> action.getState() != ActionState.PROCESSING);
+        processing.values().removeIf(Action::isFinished);
+        for (ActionPhase phase : ActionPhase.values()) {
+            processPhase(phase, false);
+        }
+    }
 
-        // 2) Strong actions suppress weak actions.
-        if (processing.containsKey(ActionType.STRONG)) {
+    /**
+     * Revisits interaction and combat phases after this mob's walking has been processed.
+     * <p>
+     * Existing actions receive {@link Action#runAfterMovement()} without advancing their counters or repeating
+     * processing hooks. An action submitted since the initial pass receives its first normal processing cycle.
+     * This allows an interaction reached by walking to start combat during the same turn.
+     */
+    public void processAfterMovement() {
+        if (processing.isEmpty()) {
+            return;
+        }
+        processPhase(ActionPhase.INTERACTION, true);
+        processPhase(ActionPhase.COMBAT, true);
+    }
+
+    /**
+     * Processes a candidate snapshot for one execution phase.
+     * <p>
+     * Strong-action suppression is checked before taking the snapshot. Candidates are rechecked for completion
+     * before execution, and modal-blocked normal actions retain their processing hooks without advancing time.
+     *
+     * @param phase The phase whose actions should be considered.
+     * @param afterMovement Whether existing candidates should receive their reach-retry hook.
+     */
+    private void processPhase(ActionPhase phase, boolean afterMovement) {
+        boolean strong = processing.get(ActionType.STRONG).stream().anyMatch(action -> !action.isFinished());
+        if (strong) {
             interruptWeak();
+            if (mob.getType() == EntityType.PLAYER) {
+                mob.asPlr().getOverlays().closeWindows();
+            }
         }
 
-        // 3) Processing stage: per-tick hooks + enqueue for execution stage.
-        for (Action<?> action : processing.values()) {
-            action.onProcess();
-            if (action.getState() != ActionState.PROCESSING) {
+        // Hooks may submit or cancel actions; iterate a snapshot rather than the live multimap.
+        for (Action<?> action : new ArrayList<>(processing.values())) {
+            if (action.isFinished() || action.getPhase() != phase) {
                 continue;
             }
-            action.processed = true;
             executing.add(action);
         }
-
-        // 4) Close modal interfaces when a strong action is present (player only).
-        if (processing.containsKey(ActionType.STRONG) && mob.getType() == EntityType.PLAYER) {
-            mob.asPlr().getOverlays().closeWindows();
-        }
-
-        // 5) Execution stage: poll until all queued actions are handled.
-        for (; ; ) {
-            Action<?> action = executing.poll();
-            if (action == null) {
-                break;
-            }
-
-            // NORMAL actions are skipped if a modal interface is open.
-            boolean skipForInterface =
-                    action.actionType == ActionType.NORMAL &&
-                            mob.getType() == EntityType.PLAYER &&
-                            mob.asPlr().getOverlays().hasWindow();
-
-            if (skipForInterface || action.getState() != ActionState.PROCESSING) {
+        for (Action<?> action; (action = executing.poll()) != null; ) {
+            boolean skipForInterface = action.actionType == ActionType.NORMAL &&
+                    mob.getType() == EntityType.PLAYER && mob.asPlr().getOverlays().hasWindow();
+            if (action.isFinished()) {
                 continue;
             }
-
-            // Action completed normally this cycle.
-            if (action.isComplete()) {
-                action.complete();
+            if (afterMovement && action.processed) {
+                if (skipForInterface) {
+                    continue;
+                }
+                try {
+                    if (action.runAfterMovement()) {
+                        action.complete();
+                    }
+                } catch (Exception e) {
+                    Action.logger.error("An error occurred while retrying an interaction after movement.", e);
+                    action.interrupt();
+                }
+            } else {
+                action.processed = true;
+                action.onProcess();
+                if (!skipForInterface && !action.isFinished() && action.isComplete()) {
+                    action.complete();
+                }
             }
         }
     }
 
     /**
-     * Normalizes all delays when actions are scheduled within actions.
+     * Resets processing flags and normalizes newly submitted action counters after the world tick's action passes.
+     * <p>
+     * An action that did not receive a processing cycle starts counting from zero on its next eligible pass.
+     * This keeps delayed submissions consistent when their owner's turn has already finished.
      */
     public void normalize() {
         if (processing.isEmpty()) {
@@ -281,13 +282,6 @@ public final class ActionQueue {
                 action.counter = 0;
             }
         }
-    }
-
-    /**
-     * Intended for internal use, removes the specified action type from the cache.
-     */
-    void removeType(Action<?> action) {
-        types.remove(action.getClass().getName());
     }
 
     /**
@@ -308,23 +302,29 @@ public final class ActionQueue {
      * Interrupts all actions currently registered in this queue, regardless of {@link ActionType}.
      */
     public void interruptAll() {
-        processing.values().forEach(Action::interrupt);
+        new ArrayList<>(processing.values()).forEach(Action::interrupt);
     }
 
     /**
-     * Interrupts every action and empties this queue at once, instead of on the next {@link #process()}, so the same
-     * actions can be submitted again straight away. Safe to call from a running action.
+     * Interrupts all unfinished actions and immediately empties the processing and execution queues.
+     * <p>
+     * Each interrupted action receives its {@link Action#onFinished()} callback. Actions that have already completed
+     * or been interrupted are removed without invoking their callbacks again.
+     * <p>
+     * This method may be called from {@link Action#run()}. Remaining actions will not execute during that cycle,
+     * and new actions may be submitted without waiting for the next {@link #process()} call.
      */
     public void clear() {
         interruptAll();
         processing.clear();
         executing.clear();
-        types.clear();
     }
-    //todo docs, testing
 
     /**
-     * Returns the number of unfinished actions with the {@link ActionType} {@code type}.
+     * Returns the number of actions in {@link ActionState#PROCESSING} with the supplied {@link ActionType}.
+     * <p>
+     * Completed and interrupted actions are excluded even if they have not yet been removed from the queue.
+     * Actions awaiting execution during the current cycle are counted once.
      *
      * @param type The action type.
      * @return The active action count for {@code type}.
@@ -340,8 +340,10 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns the number of unfinished actions. Finished actions stay queued until the next cycle, so they are not
-     * counted.
+     * Returns the number of actions in {@link ActionState#PROCESSING}, regardless of {@link ActionType}.
+     * <p>
+     * Completed and interrupted actions are excluded even if they have not yet been removed from the queue.
+     * Actions awaiting execution during the current cycle are counted once.
      *
      * @return The active action count.
      */

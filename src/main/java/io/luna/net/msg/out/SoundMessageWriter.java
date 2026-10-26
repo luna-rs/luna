@@ -6,7 +6,8 @@ import io.luna.net.msg.GameMessageWriter;
 import io.netty.buffer.ByteBuf;
 
 /**
- * A {@link GameMessageWriter} implementation that plays a sound.
+ * A {@link GameMessageWriter} implementation that plays a synthesized sound.
+ * The client interprets the byte after the sound ID as its repeat count, not volume. Volume is controlled by varp 169.
  *
  * @author lare96
  */
@@ -18,12 +19,12 @@ public final class SoundMessageWriter extends GameMessageWriter {
     private final int id;
 
     /**
-     * The sound volume.
+     * The sound repeat count; one plays the complete sound once.
      */
-    private final int volume;
+    private final int loops;
 
     /**
-     * The sound delay.
+     * The additional delay in twenty-millisecond client cycles.
      */
     private final int delay;
 
@@ -31,12 +32,12 @@ public final class SoundMessageWriter extends GameMessageWriter {
      * Creates a new {@link SoundMessageWriter}.
      *
      * @param id The sound identifier.
-     * @param volume The sound volume.
-     * @param delay The sound delay.
+     * @param loops The sound repeat count.
+     * @param delay The sound delay in client cycles.
      */
-    public SoundMessageWriter(int id, int volume, int delay) {
+    public SoundMessageWriter(int id, int loops, int delay) {
         this.id = id;
-        this.volume = volume;
+        this.loops = loops;
         this.delay = delay;
     }
 
@@ -44,7 +45,7 @@ public final class SoundMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player, ByteBuf buffer) {
         ByteMessage msg = ByteMessage.message(26, buffer);
         msg.putShort(id);
-        msg.put(volume);
+        msg.put(loops);
         msg.putShort(delay);
         return msg;
     }

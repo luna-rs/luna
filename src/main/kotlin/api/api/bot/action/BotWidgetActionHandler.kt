@@ -8,6 +8,8 @@ import engine.widget.make.ButtonIndex
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.NumberInput
+import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.def.WidgetDefinition
 
 /**
  * Handles bot interactions with client widgets, overlays, and interface controls.
@@ -20,6 +22,65 @@ import io.luna.game.model.mob.overlay.NumberInput
  * @author lare96
  */
 class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+
+    /**
+     * Checks that the expected standard interface is still open and owns this component.
+     */
+    private fun ownsComponent(interfaceId: Int, componentId: Int): Boolean {
+        val active = bot.overlays[StandardInterface::class] ?: return false
+        if (active.id != interfaceId) return false
+        val pending = ArrayDeque<Int>().apply { add(interfaceId) }
+        val visited = mutableSetOf<Int>()
+        while (pending.isNotEmpty()) {
+            val id = pending.removeFirst()
+            if (!visited.add(id)) continue
+            if (id == componentId) return true
+            WidgetDefinition.ALL[id].orElse(null)?.children?.let(pending::addAll)
+        }
+        return false
+    }
+
+    /**
+     * Clicks a component only while its expected interface is open. The caller verifies the resulting action.
+     */
+    fun clickButton(interfaceId: Int, buttonId: Int): Boolean =
+        ownsComponent(interfaceId, buttonId) && bot.output.clickButton(buttonId)
+
+    /**
+     * Selects an item's own action on an open grid. Native readers validate the displayed item and slot.
+     */
+    fun clickItemAction(interfaceId: Int, widgetId: Int, option: Int, index: Int, itemId: Int): Boolean =
+        index in 0..32767 && option in 1..5 && ownsComponent(interfaceId, widgetId) &&
+            WidgetDefinition.ALL[widgetId].orElse(null)?.type == WidgetDefinition.WidgetType.ITEM_GRID &&
+            bot.output.sendItemAction(option, index, widgetId, itemId)
+
+    /**
+     * Selects a widget-defined container option, such as Value or Buy, through its native packet family.
+     * Item-defined options use [clickItemAction]; the two menus dispatch different server events.
+     */
+    fun clickContainerAction(interfaceId: Int, widgetId: Int, option: Int, index: Int, itemId: Int): Boolean {
+        if (index !in 0..32767 || option !in 1..5 || !ownsComponent(interfaceId, widgetId)) return false
+        val widget = WidgetDefinition.ALL[widgetId].orElse(null) ?: return false
+        val label = widget.options.getOrNull(option - 1)
+        return widget.type == WidgetDefinition.WidgetType.ITEM_GRID && !label.isNullOrBlank() && label != "null" &&
+            bot.output.sendItemWidgetClick(option, index, widgetId, itemId)
+    }
+
+    /**
+     * Answers the current numeric prompt through the native input packet.
+     */
+    fun enterAmount(amount: Int): Boolean = NumberInput::class in bot.overlays && bot.output.enterAmount(amount)
+
+    /**
+     * Drags between two slots of an open item grid through the native arrange-item packet.
+     * Slot capacity and move legality remain owned by the interface's content handler.
+     */
+    fun dragItem(interfaceId: Int, widgetId: Int, from: Int, to: Int): Boolean {
+        if (from !in 0..32767 || to !in 0..32767 || from == to ||
+            !ownsComponent(interfaceId, widgetId) ||
+            WidgetDefinition.ALL[widgetId].orElse(null)?.type != WidgetDefinition.WidgetType.ITEM_GRID) return false
+        return bot.output.sendArrangeItem(widgetId, from, to)
+    }
 
     companion object {
 

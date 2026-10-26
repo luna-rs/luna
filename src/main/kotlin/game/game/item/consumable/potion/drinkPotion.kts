@@ -4,7 +4,7 @@ import api.attr.Attr
 import api.predef.*
 import game.player.Sound
 import game.player.item.consume.potion.Potion
-import io.luna.game.action.impl.ThrottledAction
+import io.luna.game.action.impl.ConsumeAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -30,10 +30,19 @@ val drinkAnimation = Animation(829)
 val consumeDelay = 3
 
 /**
- * Drinks a potion and applies the appropriate effects to the player.
+ * Submits immediate potion consumption through [ConsumeAction].
+ *
+ * A successful throttle check removes the dose, returns the next dose or empty vial, and applies the potion's
+ * effects during submission. Potions submitted by client input take effect before that tick's combat turns.
+ *
+ * @param plr The player drinking the potion.
+ * @param drinkItem The potion dose to remove from the inventory.
+ * @param potion The potion definition supplying dose progression and effects.
+ * @param index The inventory slot containing the dose.
+ * @author lare96
  */
 fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
-    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastDrink, consumeDelay) {
+    plr.submitAction(object : ConsumeAction(plr, plr.lastDrink, consumeDelay) {
         override fun execute() {
             val id = drinkItem.id
             val inv = plr.inventory

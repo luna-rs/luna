@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.damage;
 
 import io.luna.game.event.impl.CombatDamageReceivedEvent;
+import engine.combat.prayer.CombatPrayerEffects;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
@@ -92,6 +93,8 @@ public final class CombatDamage {
      * Splashes and effect-only hits do not deal numeric damage. Other hits are capped to remaining health and recorded
      * before damage is applied. Events, callbacks and history receive the applied hit, including effect-only hits.
      * Hits against victims that are already dead are discarded without invoking callbacks.
+     * Smite uses delivered damage and launch-time prayer state before the hit can trigger death or Redemption.
+     * Lethal combat hits then notify Retribution through its separate, non-recursive damage source.
      *
      * @param source The attack notified after damage is applied.
      */
@@ -107,7 +110,9 @@ public final class CombatDamage {
                 applied = new CombatDamage(attacker, victim, type, OptionalInt.of(actualAmount), accurate);
                 // Record the killing hit before reducing health.
                 victim.getCombat().getDamageStack().push(applied);
+                CombatPrayerEffects.INSTANCE.smite(applied, source);
                 victim.damage(actualAmount);
+                CombatPrayerEffects.INSTANCE.combatDeath(applied, source);
             }
         }
         // todo redesign this, combatattack damage, combatdamageaction, and this should all be in sync

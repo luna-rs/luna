@@ -177,8 +177,12 @@ public final class EquipmentDefinition implements Definition {
      * Equipment bonuses array (defensively copied).
      */
     private final int[] bonuses;
-// todo docs
-    private int highestRequirement= -1;
+
+    /**
+     * The cached highest required skill level, or {@code -1} if it has not yet been calculated.
+     */
+    private int highestRequirement = -1;
+
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
@@ -278,11 +282,18 @@ public final class EquipmentDefinition implements Definition {
         return requirements;
     }
 
+    /**
+     * Returns the highest skill level required to equip this item.
+     * <p>
+     * The value is calculated on first access and cached for subsequent calls.
+     *
+     * @return The highest required skill level, or {@code 0} if the item has no requirements.
+     */
     public int getHighestRequirement() {
-        if(highestRequirement == -1) {
+        if (highestRequirement == -1) {
             highestRequirement = 0;
             requirements.forEach(it -> {
-                if(highestRequirement < it.level) {
+                if (highestRequirement < it.level) {
                     highestRequirement = it.level;
                 }
             });

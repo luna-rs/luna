@@ -13,6 +13,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 public enum Expression {
 
     /**
+     * The neutral expression.
+     */
+    NEUTRAL(588),
+
+    /**
      * The skeptical expressions. Includes {@link #DEFAULT}.
      */
     SKEPTICAL(588, 589, 590, 591),

@@ -1,7 +1,6 @@
 package io.luna.game.model;
 
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
@@ -17,6 +16,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Utility for locating world entities relative to a base location.
@@ -34,9 +35,9 @@ import java.util.function.Supplier;
 public final class WorldLocator {
 
     /**
-     * Maximum chunk ring radius used by the bounded fallback nearest-search path.
+     * Default maximum tile distance for nearest-entity searches (ten chunks).
      */
-    private static final int MAXIMUM_SCAN_RADIUS = 10;
+    private static final int DEFAULT_NEAREST_DISTANCE = Chunk.SIZE * 10;
 
     /**
      * The world being searched.
@@ -599,61 +600,52 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest entity of {@code type} relative to {@code base} that satisfies {@code filter}.
+     * Finds the nearest active entity of {@code type} within eighty tiles of {@code base}.
      * <p>
-     * This method first checks a broader local area around {@code base}. If no result is found, it falls back to a
-     * global iterable when one is available for the requested type. As a final fallback, it performs a bounded outward
-     * chunk-ring search.
+     * Searches use the same plane and square tile-distance rules as {@link Position#isWithinDistance(Position, int)}.
+     * Use {@link #findNearest(EntityType, Locatable, int, Predicate)} to specify a different maximum distance.
      *
      * @param type The entity type to search for.
      * @param base The origin of the search.
      * @param filter Additional filter that matching entities must satisfy.
      * @param <T> The entity type being searched for.
-     * @return The nearest matching entity, or {@code null} if none is found.
-     */ // todo@0.5.0 needs to be maybe request style, but 100% needs a radius cap
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     */
     public <T extends Entity> T findNearest(EntityType type, Locatable base, Predicate<T> filter) {
-        // Check if entity is within twice the viewable distance first.
-        Position abs = base.abs();
-        Set<T> viewableResult = find(type, base, Position.VIEWING_DISTANCE * 2, true, filter);
-        if (!viewableResult.isEmpty()) {
-            return viewableResult.iterator().next();
-        }
-
-        // Search global lists instead.
-        Iterable<? extends Entity> iterable = null;
-        switch (type) {
-            case ITEM:
-                iterable = world.getItems();
-                break;
-            case NPC:
-                iterable = world.getNpcs();
-                break;
-            case PLAYER:
-                iterable = world.getPlayers();
-                break;
-        }
-
-        Set<T> found = new TreeSet<>(new LocatableDistanceComparator(base));
-        if (iterable != null) {
-            // Do an optimized check when possible.
-            for (Entity entity : iterable) {
-                if (entity.getState() != EntityState.ACTIVE) {
-                    // A dead NPC waits in the list for its respawn.
-                    continue;
-                }
-                if (entity.getPosition().getZ() == abs.getZ() && filter.test((T) entity)) {
-                    found.add((T) entity);
-                }
-            }
-            return !found.isEmpty() ? found.iterator().next() : null;
-        } else {
-            // Worst case scenario, exhaustive outward chunk search.
-            return unsafeFindNearest(type, abs, filter);
-        }
+        return findNearest(type, base, DEFAULT_NEAREST_DISTANCE, filter);
     }
 
     /**
-     * Finds the nearest ground item relative to {@code base} that satisfies {@code filter}.
+     * Finds the nearest active entity of {@code type} within {@code distance} tiles of {@code base}.
+     * <p>
+     * Only chunks intersecting the padded search area are inspected; this method never falls back to a world-wide
+     * scan. Candidates must be on the same plane and within the inclusive square tile radius. Equally distant
+     * candidates are ordered by {@link LocatableDistanceComparator}.
+     *
+     * @param type The entity type to search for.
+     * @param base The origin of the search.
+     * @param distance The maximum tile distance, including zero for a same-tile search.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @param <T> The entity type being searched for.
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    public <T extends Entity> T findNearest(EntityType type, Locatable base, int distance, Predicate<T> filter) {
+        checkArgument(distance >= 0, "Distance must be non-negative.");
+        Set<T> candidates = find(type, base, distance,
+                entity -> entity.getState() == EntityState.ACTIVE && filter.test(entity));
+        LocatableDistanceComparator comparator = new LocatableDistanceComparator(base);
+        T nearest = null;
+        for (T candidate : candidates) {
+            if (nearest == null || comparator.compare(candidate, nearest) < 0) {
+                nearest = candidate;
+            }
+        }
+        return nearest;
+    }
+
+    /**
+     * Finds the nearest ground item within eighty tiles of {@code base} that satisfies {@code filter}.
      *
      * @param base The origin of the search.
      * @param filter Additional filter that matching items must satisfy.
@@ -664,7 +656,20 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest ground item with the given id relative to {@code base}.
+     * Finds the nearest active ground item within {@code distance} tiles on the same plane.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum inclusive tile distance.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    public GroundItem findNearestItem(Locatable base, int distance, Predicate<GroundItem> filter) {
+        return findNearest(EntityType.ITEM, base, distance, filter);
+    }
+
+    /**
+     * Finds the nearest ground item with the given id within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param id The item id to match.
@@ -675,7 +680,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest ground item with the given name relative to {@code base}.
+     * Finds the nearest ground item with the given name within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param name The case-insensitive item name to match.
@@ -686,7 +691,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest NPC relative to {@code base} that satisfies {@code filter}.
+     * Finds the nearest NPC within eighty tiles of {@code base} that satisfies {@code filter}.
      *
      * @param base The origin of the search.
      * @param filter Additional filter that matching NPCs must satisfy.
@@ -697,7 +702,20 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest NPC with the given id relative to {@code base}.
+     * Finds the nearest active NPC within {@code distance} tiles on the same plane.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum inclusive tile distance.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    public Npc findNearestNpc(Locatable base, int distance, Predicate<Npc> filter) {
+        return findNearest(EntityType.NPC, base, distance, filter);
+    }
+
+    /**
+     * Finds the nearest NPC with the given id within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param id The NPC id to match.
@@ -708,7 +726,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest NPC with the given name relative to {@code base}.
+     * Finds the nearest NPC with the given name within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param name The case-insensitive NPC name to match.
@@ -719,7 +737,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest object relative to {@code base} that satisfies {@code filter}.
+     * Finds the nearest object within eighty tiles of {@code base} that satisfies {@code filter}.
      *
      * @param base The origin of the search.
      * @param filter Additional filter that matching objects must satisfy.
@@ -730,7 +748,20 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest object with the given id relative to {@code base}.
+     * Finds the nearest active object within {@code distance} tiles on the same plane.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum inclusive tile distance.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    public GameObject findNearestObject(Locatable base, int distance, Predicate<GameObject> filter) {
+        return findNearest(EntityType.OBJECT, base, distance, filter);
+    }
+
+    /**
+     * Finds the nearest object with the given id within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param id The object id to match.
@@ -741,7 +772,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest object with the given name relative to {@code base}.
+     * Finds the nearest object with the given name within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param name The case-insensitive object name to match.
@@ -752,7 +783,7 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest player relative to {@code base} that satisfies {@code filter}.
+     * Finds the nearest player within eighty tiles of {@code base} that satisfies {@code filter}.
      *
      * @param base The origin of the search.
      * @param filter Additional filter that matching players must satisfy.
@@ -763,7 +794,20 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest player with the given username relative to {@code base}.
+     * Finds the nearest active player within {@code distance} tiles on the same plane.
+     *
+     * @param base The origin of the search.
+     * @param distance The maximum inclusive tile distance.
+     * @param filter Additional filter that matching entities must satisfy.
+     * @return The nearest matching entity within range, or {@code null} if none is found.
+     * @throws IllegalArgumentException If {@code distance} is negative.
+     */
+    public Player findNearestPlayer(Locatable base, int distance, Predicate<Player> filter) {
+        return findNearest(EntityType.PLAYER, base, distance, filter);
+    }
+
+    /**
+     * Finds the nearest player with the given username within eighty tiles of {@code base}.
      *
      * @param base The origin of the search.
      * @param name The case-insensitive username to match.
@@ -774,10 +818,10 @@ public final class WorldLocator {
     }
 
     /**
-     * Finds the nearest player.
+     * Finds the nearest active player within eighty tiles.
      *
      * @param base The origin of the search.
-     * @return The nearest player, or {@code null} if no player is online.
+     * @return The nearest active player within eighty tiles, or {@code null} if none is found.
      */
     public Player findNearestPlayer(Locatable base) {
         return findNearest(EntityType.PLAYER, base, player -> true);
@@ -818,93 +862,6 @@ public final class WorldLocator {
     private <T extends Mob> List<T> computeVisibleMobsFor(EntityType type, Player player) {
         return find(type, player.getPosition(), Position.VIEWING_DISTANCE, mob -> mob.isViewableFrom(player),
                 ArrayList::new);
-    }
-
-    /**
-     * Performs a bounded outward chunk-ring search for the nearest entity of {@code type} that satisfies
-     * {@code filter}.
-     * <p>
-     * This method is used as the fallback nearest-search path when a broader global iterable is not available for the
-     * requested entity type.
-     * <p>
-     * The search scans the base chunk first, then expands outward in square rings up to
-     * {@link #MAXIMUM_SCAN_RADIUS}. All matching entities discovered within the current search scope are accumulated
-     * into a distance-sorted set, and the nearest match is returned as soon as at least one candidate is found.
-     *
-     * @param type The entity type to search for.
-     * @param base The base position to search outward from.
-     * @param filter Additional filter that matching entities must satisfy.
-     * @param <T> The entity type being searched for.
-     * @return The nearest matching entity found within the bounded scan radius, or {@code null} if none is found.
-     */
-    private <T extends Entity> T unsafeFindNearest(EntityType type, Position base, Predicate<T> filter) {
-        ChunkManager chunks = world.getChunks();
-        Chunk baseChunk = base.getChunk();
-        Set<T> found = new TreeSet<>(new LocatableDistanceComparator(base));
-
-        // Scan the base chunk first.
-        collectMatchingEntities(found, chunks.load(baseChunk), base.getZ(), type, filter);
-        if (!found.isEmpty()) {
-            return found.iterator().next();
-        }
-
-        for (int r = 1; r <= MAXIMUM_SCAN_RADIUS; r++) {
-            // Top edge: y = -r.
-            for (int x = -r; x <= r; x++) {
-                collectMatchingEntities(found, chunks.load(baseChunk.translate(x, -r)), base.getZ(), type, filter);
-            }
-
-            // Bottom edge: y = +r.
-            for (int x = -r; x <= r; x++) {
-                collectMatchingEntities(found, chunks.load(baseChunk.translate(x, r)), base.getZ(), type, filter);
-            }
-
-            // Left edge: x = -r.
-            for (int y = -r + 1; y <= r - 1; y++) {
-                collectMatchingEntities(found, chunks.load(baseChunk.translate(-r, y)), base.getZ(), type, filter);
-            }
-
-            // Right edge: x = +r.
-            for (int y = -r + 1; y <= r - 1; y++) {
-                collectMatchingEntities(found, chunks.load(baseChunk.translate(r, y)), base.getZ(), type, filter);
-            }
-
-            if (!found.isEmpty()) {
-                return found.iterator().next();
-            }
-        }
-
-        // Scan exhausted, nothing was found.
-        return null;
-    }
-
-    /**
-     * Adds all matching entities from {@code repository} to {@code found}.
-     * <p>
-     * An entity is added when:
-     * <ul>
-     *     <li>It belongs to the requested {@code type}</li>
-     *     <li>It is on plane {@code z}</li>
-     *     <li>It satisfies {@code filter}</li>
-     * </ul>
-     *
-     * @param found The set that matching entities will be added to.
-     * @param repository The chunk repository to inspect.
-     * @param z The required plane.
-     * @param type The entity type to search for.
-     * @param filter Additional filter that matching entities must satisfy.
-     * @param <T> The entity type being searched for.
-     */
-    private <T extends Entity> void collectMatchingEntities(Set<T> found, ChunkRepository repository, int z,
-                                                            EntityType type, Predicate<T> filter) {
-        Set<T> entities = repository.getAll(type);
-        if (!entities.isEmpty()) {
-            for (T entity : entities) {
-                if (entity.getPosition().getZ() == z && filter.test(entity)) {
-                    found.add(entity);
-                }
-            }
-        }
     }
 
     /**

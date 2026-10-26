@@ -53,9 +53,7 @@ enum class Zone(val price: Int,
             anchor = Position(3494, 3473),
             regions = SimpleBoxArea.ofRadius(3473, 3461, 47, 57).touchedRegions),
 
-    /**
-     * Gnome Stronghold travel destination and western bank anchors.
-     */
+
     GNOME_STRONGHOLD(price = 1500,
                      anchor = Position(2459, 3397),
                      regions = setOf(9781, 9525, 9782, 9526, 9783, 9527),
@@ -71,7 +69,6 @@ enum class Zone(val price: Int,
                             TeleportTravelStrategy(TeleportSpell.LUMBRIDGE),
                             HomeTravelStrategy,
                             WalkingTravelStrategy)),
-    /** Tirannwn travel destination and Lletya banking anchors for western activities. */
     TIRANNWN(price = 2000,
              anchor = Position(2351, 3172),
              regions = setOf(8756, 9012, 8755, 8754, 8753, 9009, 9265, 9010, 9011),
@@ -188,8 +185,7 @@ enum class Zone(val price: Int,
                   regions = setOf(10806, 10805),
                   bankAnchors = listOf(Position(2728, 3494, 0),
                                        Position(2729, 3494, 0),
-                                       // TODO Bots use this corner booth through the west wall, since they skip reach checks. Uncomment when pathfinding and interactions aree fixed.
-                                       // Position(2721, 3494, 0),
+                                       Position(2721, 3494, 0),
                                        Position(2722, 3494, 0),
                                        Position(2727, 3494, 0),
                                        Position(2724, 3494, 0)),

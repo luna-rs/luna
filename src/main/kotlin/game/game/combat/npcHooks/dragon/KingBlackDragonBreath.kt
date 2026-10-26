@@ -7,6 +7,7 @@ import engine.combat.status.hooks.ImmobilizedStatusEffect
 import engine.combat.status.hooks.PoisonStatusEffect
 import game.player.Sound
 import io.luna.game.model.LocalProjectile
+import io.luna.game.model.Position
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -25,7 +26,13 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * Attacks use a five-tick cooldown. Ordinary fire supports shield, prayer and antifire protection;
  * special breaths ignore antifire and can poison, freeze or drain every skill except Hitpoints.
  * Secondary effects require an accurate hit, including accurate hits that roll zero damage.
- * Delivered hits run the shared magic impact visuals before applying breath-specific effects.
+ * Close breath resolves during the attack tick, with special effects before damage as in Lost City's zero-delay
+ * player queues. The original accuracy roll gates these effects, including accurate zero-damage hits.
+ * Distant fire is launched from the facing head tile and uses its distance-based projectile arrival for damage.
+ * Shocking breath subtracts two current levels, including from boosted skills, with a floor of zero.
+ * Breath sounds are sent at launch with a thirty-client-cycle delay, independently of the damage arrival.
+ * Shocking breath displays its target graphic with a sixty-client-cycle delay, independently of accuracy.
+ * Icy breath expires eleven world ticks after application, matching Lost City's current tick plus ten plus one.
  *
  * @param npc The attacking King Black Dragon.
  * @param other The target receiving the breath.
@@ -34,12 +41,12 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  *
  * @author lare96
  */
-class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distant: Boolean = false) :
+class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, private val distant: Boolean = false) :
     MagicCombatAttack<Npc>(npc, other, Animation(if (distant) 84 else kind.animation),
         if (distant) null else kind.graphic?.let { Graphic(it, 92, 0) },
         if (distant) PROJECTILE else null,
-        if (distant) Graphic(131, 124, 0) else if (kind == Kind.SHOCK) Graphic(197) else null,
-        kind.sound, null, 5, if (distant) 10 else 1) {
+        if (distant) Graphic(131, 124, 0) else null,
+        null, null, 5, if (distant) 10 else 1) {
 
     /**
      * Breath visuals and sounds in the revision 377 pack.
@@ -55,12 +62,35 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distan
 
     companion object {
         /**
-         * Builds the revision 377 fire projectile for targets outside melee reach.
+         * Builds Lost City's distant fire profile from the facing head tile. The launch delay is fifty-one
+         * client cycles, with a flight length of minus five plus ten cycles per tile to the target.
          */
         private val PROJECTILE: (Mob, Mob) -> LocalProjectile = { attacker, victim ->
-            LocalProjectile.followEntity(ctx).setSourceEntity(attacker).setTargetEntity(victim)
-                .setId(54).setTicksToEnd(51).setTicksToStart(16).setStartHeight(92)
-                .setEndHeight(31).setInitialSlope(-5).build()
+            val source = projectileSource(attacker, victim)
+            val duration = 51 - 5 + source.computeLongestDistance(victim.position) * 10
+            LocalProjectile.followEntity(attacker.context).setSourceEntity(attacker).setSourcePosition(source)
+                .setTargetEntity(victim).setId(54).setTiming(51, duration).setLaunchOffset(64)
+                .setStartHeight(92).setEndHeight(31).setInitialSlope(16).build()
+        }
+
+        /**
+         * Selects the launch tile around the dragon's centre using Lost City's corner-first direction checks.
+         * Integer division deliberately retains the reference's boundary rounding.
+         */
+        private fun projectileSource(attacker: Mob, victim: Mob): Position {
+            val centre = attacker.position.translate(2, 2)
+            val x = centre.x - victim.position.x
+            val y = centre.y - victim.position.y
+            return when {
+                y / 2 <= x && x / 2 <= y -> centre.translate(-1, -1)
+                y / 2 <= -x && x / 2 >= -y -> centre.translate(1, -1)
+                x / 2 >= y && y / 2 >= x -> centre.translate(1, 1)
+                y / 2 >= -x && -(y / 2) >= x -> centre.translate(-1, 1)
+                x / 2 <= y && y / 2 >= x -> centre.translate(0, -1)
+                x / 2 <= y && x / 2 <= -y -> centre.translate(1, 0)
+                y / 2 <= x && -(y / 2) >= x -> centre.translate(0, 1)
+                else -> centre.translate(-1, 0)
+            }
         }
 
         /**
@@ -98,6 +128,24 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distan
      */
     private var prayer = false
 
+    override fun usesProjectileTiming(): Boolean = distant
+
+    override fun attack() {
+        if (victim is Player) victim.playSound(kind.sound, 1)
+        if (!distant && kind == Kind.SHOCK) victim.graphic(Graphic(197, 0, 60))
+        super.attack()
+    }
+
+    override fun scheduleHit() {
+        if (distant) {
+            super.scheduleHit()
+        } else {
+            applyBreathEffect()
+            onProjectileReached()
+            onProjectileFinished(false)
+        }
+    }
+
     override fun calculateDamage(other: Mob): CombatDamage {
         val player = other as? Player
         shield = player?.equipment?.shield?.id == 1540
@@ -110,18 +158,22 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, distan
         return damage
     }
 
-    override fun onDamageApplied(damage: CombatDamage?) {
-        if (damage != null) super.onDamageApplied(damage)
+    /**
+     * Applies a successful special-breath roll before the close-range hit. Lost City queues poison and freezing
+     * before its zero-delay damage request, while shocking stat drains happen directly in the attack script.
+     * This is a launch effect: a later damage-only defensive modification does not reroll or undo it.
+     */
+    private fun applyBreathEffect() {
         if (!accurate || victim !is Player || !victim.isAlive || kind == Kind.FIRE) return
         val protected = shield && (kind != Kind.SHOCK || prayer)
         if (rand().nextInt(if (protected) 8 else 2) != 0) return
         when (kind) {
             Kind.POISON -> if (!victim.status.isAntiPoison()) victim.status.add(PoisonStatusEffect(victim, 36))
-            Kind.ICE -> victim.status.add(ImmobilizedStatusEffect(victim, 10.ticks))
+            Kind.ICE -> victim.status.add(ImmobilizedStatusEffect(victim, 11.ticks))
             Kind.SHOCK -> {
                 victim.sendMessage("You're zapped by the dragon's shocking breath!")
                 victim.skills.filter { it.id != Skill.HITPOINTS }.forEach {
-                    it.level = (it.level - 2).coerceAtLeast(if (it.id == Skill.PRAYER) 0 else 1)
+                    it.adjustLevel(-2)
                 }
             }
             Kind.FIRE -> Unit

@@ -4,6 +4,8 @@ import api.combat.CombatHandler.displayCombatOverlay
 import engine.controllers.Controllers.inMultiArea
 import io.luna.game.model.area.Area
 import engine.combat.status.hooks.ImmobilizedStatusEffect
+import engine.combat.prayer.CombatPrayer
+import api.predef.ext.ticks
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
@@ -34,6 +36,29 @@ object CombatSpellHandler {
     private val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
 
     /**
+     * Applies a standard stat-draining curse after an accurate hit has been delivered.
+     *
+     * Eligibility is checked again at impact because another hit may have drained the stat during flight.
+     * Lost City's standard curses subtract one plus the percentage: players use their current level, while NPCs
+     * use their base level for the percentage. The amount is subtracted from the current level in both cases,
+     * preserving any remaining boost instead of forcing the stat below its base level.
+     *
+     * @param mob The surviving recipient of the spell.
+     * @param skill The affected combat skill.
+     * @param percent The drain fraction, either 0.05 or 0.10 for the standard curses.
+     */
+    fun drainCurse(mob: Mob, skill: Skill, percent: Double) {
+        if (!mob.isAlive || skill.level < skill.staticLevel) return
+        val oldLevel = skill.level
+        val percentageLevel = if (mob is Player) oldLevel else skill.staticLevel
+        val amount = 1 + floor(percentageLevel * percent).toInt()
+        skill.adjustLevel(-amount)
+        if (mob is Player && skill.level < oldLevel) {
+            mob.sendMessage("You have been weakened!")
+        }
+    }
+
+    /**
      * Applies a weakening effect to a mob's skill level.
      *
      * If the target is a [Player] and the skill is successfully reduced, the standard weakened message is sent
@@ -55,15 +80,38 @@ object CombatSpellHandler {
     /**
      * Applies an immobilization effect to a mob.
      *
-     * If the mob is not already immobilized by an active matching action, a new [ImmobilizationAction] is submitted
-     * for the supplied duration.
+     * Player spells respect the original freeze deadline and five-tick immunity window. PvP spell freezes retain
+     * their caster so movement can release when the caster leaves range. NPC spells do not grant an extra immunity
+     * check beyond an existing hold. Rejected effects leave all deadlines unchanged.
      *
+     * @param attacker The caster of the spell.
      * @param mob The mob to immobilize.
      * @param duration The immobilization duration.
      */
-    fun immobilize(mob: Mob, duration: Duration) {
-        if (!mob.isAlive) return
-        mob.status.add(ImmobilizedStatusEffect(mob, duration))
+    fun immobilize(attacker: Mob, mob: Mob, duration: Duration) {
+        if (!mob.isAlive || mob.status.isHeldBySpell() || (attacker is Player && mob.status.isFreezeImmune())) return
+        mob.status.add(ImmobilizedStatusEffect(mob, duration, attacker as? Player))
+    }
+
+    /**
+     * Applies accurate Bind, Snare, and Entangle at cast time, matching Lost City's standard spell scripts.
+     * Protect from Magic halves their PvP duration at this point; switching prayer during flight cannot change it.
+     * NPC casts and holds against NPCs include the reference's extra deadline tick. Ancient ice effects are separate
+     * impact effects and do not receive this standard-spell prayer reduction.
+     */
+    fun holdAtCast(attacker: Mob, victim: Mob, spell: CombatSpell) {
+        var ticks = when (spell) {
+            CombatSpell.BIND -> 8
+            CombatSpell.SNARE -> 16
+            CombatSpell.ENTANGLE -> 24
+            else -> return
+        }
+        if (attacker is Player && victim is Player) {
+            if (victim.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) ticks /= 2
+        } else {
+            ticks++
+        }
+        immobilize(attacker, victim, ticks.ticks)
     }
 
     /**

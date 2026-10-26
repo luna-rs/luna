@@ -86,12 +86,15 @@ class TanHideBotScript(
         /** Shared by all tanning scripts, with at most one entry per configured zone. */
         private val tanners = mutableMapOf<SubZone, Npc>()
 
+        /** Maximum tile distance from a tanning zone anchor to its tanner. */
+        private const val TANNER_SEARCH_DISTANCE = 80
+
         private fun findTanner(zone: SubZone): Npc? {
             tanners[zone]?.let {
                 if (it.state == EntityState.ACTIVE && it.id in TanInterface.TANNER_IDS &&
-                    it.position.z == zone.inside.z) return it
+                    it.position.isWithinDistance(zone.inside, TANNER_SEARCH_DISTANCE)) return it
             }
-            return world.locator.findNearestNpc(zone.inside) {
+            return world.locator.findNearestNpc(zone.inside, TANNER_SEARCH_DISTANCE) {
                 it.state == EntityState.ACTIVE && it.id in TanInterface.TANNER_IDS
             }.also { if (it == null) tanners.remove(zone) else tanners[zone] = it }
         }

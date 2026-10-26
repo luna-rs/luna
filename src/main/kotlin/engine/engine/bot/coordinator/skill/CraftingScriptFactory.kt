@@ -36,10 +36,10 @@ import io.luna.util.RandomUtils.roll
 /**
  * Creates crafting scripts for bots.
  *
- * Training and profit selection first have a 25% chance to attempt precious-gem cutting, battlestaff assembly,
- * or jewellery stringing
- * when the bot owns the required inputs and tools. Selection uses the inherited level/personality rules and
- * excludes semi-precious gems. Battlestaff recipes require matching charged orbs rather than an orb-charging route.
+ * Training and profit selection first have a 25% chance to attempt gem cutting, battlestaff assembly,
+ * or jewellery stringing when the bot owns the required inputs and tools. Selection uses the inherited
+ * level/personality rules and includes owned opal, jade and red topaz; their native crushing outcomes remain
+ * possible. Battlestaff recipes require matching charged orbs rather than an orb-charging route.
  * Stringing accepts existing unstrung gold amulets or silver symbols with wool at Crafting level one.
  * Non-training mode can also prepare soft clay using owned clay and filled water containers, without experience.
  * The existing cowhide collection, tanning, armour, bowstring, and flax branches remain the fallback activities.
@@ -51,6 +51,7 @@ import io.luna.util.RandomUtils.roll
  * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
+ * Non-training production can first fill owned empty buckets at a sandpit when soda ash is already available.
  * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
  * Owned soft clay and unfired pottery enable all existing shaping/firing recipes in Barbarian Village.
  * Owned wool, jute, and willow branches also enable existing loom recipes in Falador and Iorwerth camp.
@@ -148,16 +149,19 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      */
     fun getBasicScript(bot: Bot): CraftArmorBotScript = getBasicScript(bot, Textile.BOWSTRING.level)
 
-    /** Trains only through the existing glove recipe until the pending activity's real level gate is reached. */
+    /**
+     * Trains only through the existing glove recipe until the pending activity's real level gate is reached.
+     */
     fun getBasicScript(bot: Bot, targetLevel: Int): CraftArmorBotScript =
         CraftArmorBotScript(bot, HideArmor.LEATHER_GLOVES, getDuration(bot), targetLevel = targetLevel)
 
     /**
      * Selects an owned Crafting production recipe or non-training soft-clay preparation activity.
      *
-     * Semi-precious recipes are excluded. Candidates pass their permanent level and owned-supply checks before
-     * the inherited level/personality selector chooses one. All candidates share the same session duration and
-     * use the script's default processing zones. Actual current-level and safety checks occur at startup/execution.
+     * All native gem recipes are supported, including semi-precious gems. Candidates pass their permanent level
+     * and owned-supply checks before the inherited level/personality selector chooses one. All candidates share
+     * the same session duration and use the script's default processing zones. Actual current-level and safety
+     * checks occur at startup/execution.
      *
      * @param bot The bot whose inventory, bank, and personality determine eligibility and selection.
      * @param level The Crafting level supplied by the coordinator to the inherited recipe selector.
@@ -167,7 +171,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
     internal fun getProductionScript(bot: Bot, level: Int, training: Boolean): InventoryBotScript? {
         val duration = getDuration(bot)
         val candidates = buildList<Pair<Int, InventoryBotScript>> {
-            addAll(Gem.entries.filter { !it.isSemiPrecious() }.map { CutGemBotScript(bot, it, duration) }
+            addAll(Gem.entries.map { CutGemBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             addAll(HideArmor.ALL.map { CraftArmorBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
@@ -189,7 +193,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .map { WeaveTextileBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
-            if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)
+            if (moltenGlass.isEligible() || (!training && moltenGlass.canPrepareSand()))
+                add(moltenGlass.requiredLevel to moltenGlass)
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
                     .filter { it.isEligible() || it.canPrepareWater() }.map { it.requiredLevel to it })

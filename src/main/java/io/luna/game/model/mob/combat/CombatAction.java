@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat;
 
 import api.combat.player.PlayerCombatHandler;
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionPhase;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
@@ -12,6 +13,9 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.movement.NavigationRequest;
+import io.luna.game.model.mob.movement.NavigationResult;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * An {@link Action} that drives a mob's active combat loop against its current
@@ -28,8 +32,14 @@ import io.luna.game.model.mob.movement.NavigationRequest;
  *     <li>runs per-tick combat processing hooks, and</li>
  *     <li>fires the attack once the combat delay is ready.</li>
  * </ul>
- * The action remains active while combat should continue and finishes once the
- * target is cleared or combat otherwise ends.
+ * <p>
+ * This weak action executes in {@link ActionPhase#COMBAT}, after incoming effects and ordinary actions. If its
+ * selected attack is out of range, {@link #runAfterMovement()} may retry that attack after walking without
+ * repeating attack selection or per-tick processing hooks. Attack readiness belongs to {@link CombatContext}
+ * and continues advancing independently of this action's interruption lifecycle.
+ * <p>
+ * Clearing a target stops pursuit immediately. The action may remain registered until recent-combat status
+ * expires, after which normal completion performs the remaining combat cleanup.
  *
  * @author lare96
  */
@@ -40,11 +50,41 @@ public final class CombatAction extends Action<Mob> {
      */
     private final CombatContext<?> combat;
 
-    /** Give a pending engagement 30 ticks without movement or an attack before abandoning it. */
+    /**
+     * The number of stalled ticks allowed before an engagement outside recent combat is abandoned.
+     */
     private static final int MAX_STALLED_TICKS = 30;
+
+    /**
+     * The last position observed while tracking progress toward a pending attack.
+     */
     private Position lastProgressPosition;
+
+    /**
+     * The target whose pending attack is being checked for stalled progress.
+     */
     private Mob pendingTarget;
+
+    /**
+     * The consecutive processing cycles without target or position progress.
+     */
     private int stalledTicks;
+
+    /**
+     * The out-of-range attack selected before walking, or {@code null} when no reach retry is pending.
+     */
+    private CombatAttack<?> pendingAttack;
+
+    /**
+     * The target captured with {@link #pendingAttack}, used to reject a retry after a target change.
+     */
+    private Mob pendingAttackTarget;
+
+    /**
+     * Identifies the player navigation request used by this combat action. Cleanup compares the pending result by
+     * identity so that a newer movement request is not cancelled when this combat action ends.
+     */
+    private CompletableFuture<NavigationResult> playerPursuit;
 
     /**
      * Creates a new {@link CombatAction} for the specified mob.
@@ -52,13 +92,55 @@ public final class CombatAction extends Action<Mob> {
      * @param mob The mob executing combat.
      */
     public CombatAction(Mob mob) {
-        // TODO@0.5.0 Combat should be taken outside of the action system. It needs to run BEFORE all actions.
         super(mob, ActionType.WEAK);
         combat = mob.getCombat();
     }
 
+    /**
+     * @return {@link ActionPhase#COMBAT}, after effects and reach-based interaction listeners.
+     */
+    @Override
+    public ActionPhase getPhase() {
+        return ActionPhase.COMBAT;
+    }
+
+    /**
+     * Rechecks the selected attack's reach and legality after walking.
+     * <p>
+     * Only an attack that was out of range before walking is eligible. The pending reference is consumed before
+     * retrying, preventing a second swing from another retry call. A changed target discards the retry.
+     *
+     * @return {@code true} if combat should finish, otherwise {@code false}.
+     */
+    @Override
+    public boolean runAfterMovement() {
+        CombatAttack<?> attack = pendingAttack;
+        pendingAttack = null;
+        Mob target = combat.getTarget();
+        if (attack == null || target != pendingAttackTarget) {
+            return false;
+        }
+        if (!mob.isAlive() || !target.isAlive() || combat.isDisabled() ||
+                !mob.isWithinDistance(target, Position.VIEWING_DISTANCE + 5) ||
+                (mob instanceof Player player && !player.getCombat().canAttackCurrentTarget()) ||
+                (mob instanceof Npc npc && !npc.getCombat().isWithinLeash(target))) {
+            return clearTarget();
+        }
+        if (!mob.getWorld().getCollisionManager().reached(mob.getPosition(), target,
+                attack.getInteractionPolicy())) {
+            return false;
+        }
+        if (mob instanceof Player) {
+            updatePlayerPursuit(target, attack.getInteractionPolicy(), true);
+        } else if (mob instanceof Npc) {
+            updateNpcPursuit(attack.getInteractionPolicy(), true);
+        }
+        return tryAttack(attack);
+    }
+
     @Override
     public boolean run() {
+        pendingAttack = null;
 
         // End the action immediately if the attacker is dead.
         if (!mob.isAlive()) {
@@ -111,6 +193,8 @@ public final class CombatAction extends Action<Mob> {
 
         // Continue pursuing until the target is inside interaction range.
         if (!reached) {
+            pendingAttack = attack;
+            pendingAttackTarget = target;
             if (mob.getWalking().isEmpty() && mob instanceof Npc) {
                 // We are stationary and still not in range, so re-initiate pursuit.
                 mob.interact(target);
@@ -120,6 +204,20 @@ public final class CombatAction extends Action<Mob> {
             return pendingAttackExpired(target);
         }
 
+        return tryAttack(attack);
+    }
+
+    /**
+     * Performs final combat checks and applies an already-selected attack when its cooldown permits it.
+     * <p>
+     * Single-combat ownership, same-tile movement, and player stop-attack listeners are checked here for both
+     * the initial attempt and the post-movement retry.
+     *
+     * @param attack The attack selected for the current target.
+     * @return {@code true} if combat should finish, otherwise {@code false}.
+     */
+    private boolean tryAttack(CombatAttack<?> attack) {
+        Mob target = combat.getTarget();
         // Run final close-range combat checks before attacking.
         if (!check()) {
             return clearTarget();
@@ -158,11 +256,28 @@ public final class CombatAction extends Action<Mob> {
                 navigator.cancel();
                 mob.getWalking().clear();
             }
+            playerPursuit = null;
             return;
         }
         if (!navigator.isFollowing(target, policy)) {
             var request = NavigationRequest.builder(mob).policy(policy).continuous(true).target(target).build();
             navigator.submit(request);
+        }
+        playerPursuit = navigator.getCurrentPending();
+    }
+
+    /**
+     * Cancels this combat action's active player chase and queued steps, including paths still being computed.
+     * A replacement request belongs to a newer movement command and is left untouched.
+     */
+    private void cancelPlayerPursuit() {
+        if (playerPursuit != null) {
+            var navigator = mob.getNavigator();
+            if (navigator.getCurrentPending() == playerPursuit) {
+                navigator.cancel();
+                mob.getWalking().clear();
+            }
+            playerPursuit = null;
         }
     }
 
@@ -186,7 +301,15 @@ public final class CombatAction extends Action<Mob> {
         }
     }
 
-    /** The combat timer starts after an attack; it cannot decide whether a first attack is still pending. */
+    /**
+     * Tracks progress while waiting to reach a target or finish an attack cooldown.
+     * <p>
+     * Target changes, position changes, and successful attacks reset the stalled count. A pending engagement is
+     * abandoned only after {@link #MAX_STALLED_TICKS} stalled cycles and when recent-combat status has expired.
+     *
+     * @param target The target of the pending attack.
+     * @return {@code true} if the action should finish, otherwise {@code false}.
+     */
     private boolean pendingAttackExpired(Mob target) {
         Position position = mob.getPosition();
         if (pendingTarget != target || !position.equals(lastProgressPosition)) {
@@ -197,9 +320,6 @@ public final class CombatAction extends Action<Mob> {
             stalledTicks++;
         }
         if (stalledTicks >= MAX_STALLED_TICKS && !combat.inCombat()) {
-            if (target.equals(mob.getNavigator().getCurrentTarget()) && mob.getNavigator().isCurrentContinuous()) {
-                mob.getNavigator().cancel();
-            }
             return clearTarget();
         }
         return false;
@@ -207,6 +327,8 @@ public final class CombatAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
+        pendingAttack = null;
+        cancelPlayerPursuit();
         combat.onCombatFinished();
         combat.setTarget(null);
         combat.setAutoRetaliateTarget(null);
@@ -236,12 +358,14 @@ public final class CombatAction extends Action<Mob> {
 
     /**
      * Clears the current combat target without performing full combat teardown.
+     * Cancels pursuit immediately even if the combat timer keeps this action alive for subsequent ticks.
      * <p>
      * The remaining cleanup is expected to occur when the action finishes.
      *
      * @return {@code true} if the action should finish now, otherwise {@code false}.
      */
     private boolean clearTarget() {
+        cancelPlayerPursuit();
         if (mob instanceof Npc) {
             PursuitAction pursuit = mob.getActions().first(PursuitAction.class);
             if (pursuit != null && !pursuit.isFinished()) {

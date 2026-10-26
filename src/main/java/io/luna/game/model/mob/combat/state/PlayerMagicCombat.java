@@ -1,11 +1,16 @@
 package io.luna.game.model.mob.combat.state;
 
+import game.content.duelArena.DuelController;
+import game.content.duelArena.DuelRules;
 import game.skill.magic.Magic;
 import game.skill.magic.Staff;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.Equipment;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.Weapon;
@@ -13,6 +18,7 @@ import io.luna.game.model.mob.varp.Varp;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.List;
+import java.util.Locale;
 
 import static io.luna.game.model.def.CombatSpellDefinition.NONE;
 import static java.util.Objects.requireNonNullElse;
@@ -60,6 +66,80 @@ public class PlayerMagicCombat {
      */
     public PlayerMagicCombat(Player player) {
         this.player = player;
+    }
+
+    /**
+     * Checks Bind, Snare, and Entangle target restrictions before rune consumption and cast experience.
+     * Held targets, the five-tick post-freeze immunity window, Castle Wars barricades, and no-movement duels reject
+     * these effect-only spells. Leaving the caster's range releases movement but retains the original freeze window.
+     * Damaging ice spells remain castable against frozen targets because their damage is still useful.
+     *
+     * @param spell The spell about to be cast.
+     * @param target The intended recipient.
+     * @return Whether these hold-spell restrictions permit the cast.
+     */
+    public boolean canHoldTarget(CombatSpellDefinition spell, Mob target) {
+        if (spell == null || spell == NONE) {
+            return true;
+        }
+        CombatSpell type = spell.getSpell();
+        if (type != CombatSpell.BIND && type != CombatSpell.SNARE && type != CombatSpell.ENTANGLE) {
+            return true;
+        }
+        if (target instanceof Npc npc && npc.getId() >= 1532 && npc.getId() <= 1535) {
+            player.sendMessage("You can't " + type.name().toLowerCase(Locale.ROOT) + " that.");
+            return false;
+        }
+        if (target.getStatus().isHeldBySpell()) {
+            player.sendMessage("Your target is already held by a magical force.");
+            return false;
+        }
+        if (target.getStatus().isFreezeImmune()) {
+            player.sendMessage("Your target is currently immune to that spell.");
+            return false;
+        }
+        if (player.getControllers().getPrimary() instanceof DuelController duel &&
+                DuelRules.NO_MOVEMENT.enabled(duel.getDuel().getRules())) {
+            player.sendMessage("You can not use a hold spell in a no movement duel.");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks target eligibility for the six standard stat-draining curses before consuming runes or awarding
+     * cast experience. A stat must have recovered to at least its base level before another curse can be cast,
+     * even if a stronger curse would lower it further. Castle Wars barricades cannot be weakened.
+     * Other spells, including damaging spells with secondary drains, retain their own effect rules.
+     *
+     * @param spell The spell about to be cast.
+     * @param target The intended recipient.
+     * @return Whether this target permits the cast.
+     */
+    public boolean canCurseTarget(CombatSpellDefinition spell, Mob target) {
+        if (spell == null || spell == NONE) {
+            return true;
+        }
+        int skillId = switch (spell.getSpell()) {
+            case CONFUSE, STUN -> Skill.ATTACK;
+            case WEAKEN, ENFEEBLE -> Skill.STRENGTH;
+            case CURSE, VULNERABILITY -> Skill.DEFENCE;
+            default -> -1;
+        };
+        if (skillId == -1) {
+            return true;
+        }
+        if (target instanceof Npc && ((Npc) target).getId() >= 1532 && ((Npc) target).getId() <= 1535) {
+            player.sendMessage("You can't weaken that.");
+            return false;
+        }
+        Skill skill = target.skill(skillId);
+        if (skill.getLevel() < skill.getStaticLevel()) {
+            player.sendMessage("Your foe's " + skill.getName().toLowerCase(Locale.ROOT) +
+                    " has already been weakened.");
+            return false;
+        }
+        return true;
     }
 
     /**

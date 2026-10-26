@@ -7,6 +7,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import engine.combat.status.StatusAction.Companion.statusEffectData
 import engine.combat.status.hooks.PoisonStatusEffect
+import engine.combat.status.hooks.ImmobilizedStatusEffect
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
@@ -21,6 +22,8 @@ import kotlin.reflect.full.isSubclassOf
  *
  * This action runs every game tick and checks each active [StatusEffect]. When an effect becomes ready, its [StatusEffect.run]
  * method is called. Effects that return `true` from [StatusEffect.run] are removed.
+ * Effects with an absolute expiry deadline stop participating in queries and replacement checks as soon as that
+ * deadline passes, even when player input or another mob's actions run before this action's cleanup.
  *
  * Player status effects can save persistent data into [statusEffectData] and later be restored through [load].
  *
@@ -50,10 +53,27 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
     private val effects = EnumMap<StatusEffectType, StatusEffect<out Mob>>(StatusEffectType::class.java)
 
     /**
+     * Original freeze deadline, retained after movement release or normal expiry. Player spells cannot freeze again
+     * until five ticks after this deadline. Explicit status removal, including respawn cleanup, resets it.
+     */
+    private var freezeUntil = -1L
+
+    /**
+     * Checks the original freeze window even if leaving the caster's range has already released movement.
+     */
+    fun isHeldBySpell(): Boolean = mob.world.currentTick < freezeUntil || isImmobilized()
+
+    /**
+     * Checks the freeze window and its five-tick immunity period without extending either on a rejected spell.
+     */
+    fun isFreezeImmune(): Boolean = freezeUntil >= 0 && mob.world.currentTick < freezeUntil + 5
+
+    /**
      * Adds a status effect to this mob.
      *
      * If an effect of the same type already exists, [onlyIfAbsent], [StatusEffect.refreshable], and remaining duration
      * decide whether the new effect can replace it.
+     * An expired effect permits replacement immediately and receives its completion callback once when replaced.
      * Poison is rejected before replacement checks when antipoison is active, the NPC definition grants immunity,
      * or the NPC is awaiting a finishing item. This also blocks poison reapplied by the hit that prepared execution.
      * Existing poison accepts only a stronger severity and retains its countdown instead of restarting the effect.
@@ -70,20 +90,25 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
         val current = effects[listener.type]
 
         if (current != null) {
-            if (onlyIfAbsent) {
-                return false
-            } else if (!current.refreshable) {
-                return false
-            } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
-                return current.strengthenFrom(listener)
-            } else if (current.countdown > listener.countdown) {
-                return false
+            if (!current.hasExpired()) {
+                if (onlyIfAbsent) {
+                    return false
+                } else if (!current.refreshable) {
+                    return false
+                } else if (current is PoisonStatusEffect && listener is PoisonStatusEffect) {
+                    return current.strengthenFrom(listener)
+                } else if (current.countdown > listener.countdown) {
+                    return false
+                }
             }
             current.complete()
         }
 
         effects[listener.type] = listener
         listener.start(false)
+        if (listener is ImmobilizedStatusEffect) {
+            freezeUntil = listener.expiresAt
+        }
         return true
     }
 
@@ -94,7 +119,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      * @return `true` if [type] is active.
      */
     operator fun contains(type: StatusEffectType): Boolean {
-        return effects.containsKey(type)
+        return effects[type]?.hasExpired() == false
     }
 
     /**
@@ -106,6 +131,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun remove(type: StatusEffectType) {
         effects.remove(type)?.complete()
+        if (type == StatusEffectType.IMMOBILIZED) freezeUntil = -1L
     }
 
     /**
@@ -117,7 +143,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun has(type: StatusEffectType, classType: Class<out StatusEffect<out Mob>>): Boolean {
         val effect = effects[type] ?: return false
-        return effect::class.isSubclassOf(classType.kotlin)
+        return !effect.hasExpired() && effect::class.isSubclassOf(classType.kotlin)
     }
 
     /**
@@ -129,7 +155,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      */
     fun has(type: StatusEffectType, classType: KClass<out StatusEffect<out Mob>>): Boolean {
         val effect = effects[type] ?: return false
-        return effect::class.isSubclassOf(classType)
+        return !effect.hasExpired() && effect::class.isSubclassOf(classType)
     }
 
     /**
