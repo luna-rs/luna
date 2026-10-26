@@ -76458,6 +76458,7 @@
       "y": 3442,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
@@ -76471,6 +76472,7 @@
       "y": 3445,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
