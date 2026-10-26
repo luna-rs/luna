@@ -249,13 +249,14 @@ public final class InteractionAction extends Action<Player> {
         }
         if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
-            if (mob.getStatus().isImmobilized()) {
-                // We need to move in order to interact, but we're immobilized.
+            Position current = mob.getPosition();
+            Set<Direction> directions = getClosestNESW();
+            boolean needsMovement = (!directions.isEmpty() && target.isWithinDistance(mob, 1)) ||
+                    target.getPosition().equals(current);
+            if (needsMovement && mob.getStatus().isImmobilized()) {
                 interrupt();
                 return false;
             }
-            Position current = mob.getPosition();
-            Set<Direction> directions = getClosestNESW();
             if (!directions.isEmpty() && target.isWithinDistance(mob, 1)) {
                 /*
                  * We are diagonal to the target: walk one step to the closest cardinal (NESW) tile so the player
