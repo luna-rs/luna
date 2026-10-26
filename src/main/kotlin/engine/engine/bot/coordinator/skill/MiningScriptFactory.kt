@@ -5,6 +5,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.MineBotScript
 import game.content.miningGuild.MiningGuild
+import game.content.craftingGuild.CraftingGuild
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.mining.Ore
 import game.skill.mining.Ore.*
 import io.luna.game.model.mob.bot.Bot
@@ -13,7 +15,8 @@ import io.luna.game.model.mob.bot.Bot
  * Mining methods keep each mine's rocks together with its access and personality preferences.
  * Training retains iron-focused efficient personalities and broader casual routes. Profit progresses
  * from essence/basic ores to gold, coal, gems, and high-tier metals. Shilo gem rocks are available to
- * casual trainers and profit miners at level 40. The guild is preferred once accessible.
+ * casual trainers and profit miners at level 40. Crafting Guild rocks also require current Crafting 40 and
+ * an owned brown apron. The Mining Guild retains its existing preference once accessible.
  *
  * @author lare96
  */
@@ -26,6 +29,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.VARROCK_SE_MINE to setOf(COPPER, TIN, IRON),
         SubZone.FALADOR_WEST_MINE to setOf(COPPER, TIN, IRON, COAL),
         SubZone.DWARVEN_MINE to setOf(CLAY, COPPER, TIN, IRON, COAL, GOLD, MITHRIL, ADAMANT),
+        SubZone.CRAFTING_GUILD_MINE to setOf(CLAY, SILVER, GOLD),
         SubZone.MINING_GUILD to setOf(IRON, COAL, MITHRIL, ADAMANT, RUNE),
         SubZone.LEGENDS_GUILD_MINE to setOf(IRON, COAL),
         SubZone.SOUTH_EAST_ARDOUGNE_MINE to setOf(IRON, COAL),
@@ -63,6 +67,10 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         }
         val activities = ArrayList<BotSkillingActivity<Ore>>()
         for ((zone, supported) in rocks) {
+            if (zone == SubZone.CRAFTING_GUILD_MINE &&
+                (bot.crafting.level < CraftingGuild.REQUIRED_LEVEL || !bot.itemTracker.contains(CraftingGuild.BROWN_APRON))) {
+                continue
+            }
             if (zone == SubZone.MINING_GUILD &&
                 (level < MiningGuild.REQUIRED_LEVEL || bot.mining.level < MiningGuild.REQUIRED_LEVEL)) {
                 continue

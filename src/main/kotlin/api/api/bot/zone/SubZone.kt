@@ -334,6 +334,15 @@ enum class SubZone(
         area = SimpleBoxArea.ofRadius(2994, 9697, 73, 60),
         parent = { FALADOR }),
 
+    /**
+     * Ground-floor Crafting Guild mine: six clay, six silver and seven gold rocks in the 377 reference map.
+     * The existing guild door crossing owns entry; miners prepare the required apron before travelling.
+     */
+    CRAFTING_GUILD_MINE(
+        inside = Position(2940, 3287),
+        area = SimpleBoxArea.of(2936, 3275, 2944, 3292),
+        parent = { FALADOR }, plane = 0),
+
     // TODO rimmington mine
 
     /**
