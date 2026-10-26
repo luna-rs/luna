@@ -3,6 +3,7 @@ package game.player.command
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.primitives.Ints
+import game.skill.farming.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.Position
 import io.luna.game.model.Region
@@ -295,4 +296,116 @@ cmd("item", RIGHTS_ADMIN) {
     val id = asInt(0)
     val amount = if (args.size == 2) asInt(1) else 1
     plr.inventory.add(Item(id, amount))
+}
+
+/**
+ * A command that moves a player to a different location by name.
+ */
+cmd("tele", RIGHTS_ADMIN) {
+    var x = -1
+    var y = -1
+    var z = 0
+    var target = getInputFrom(0).lowercase()
+    var foundTarget : Boolean = false
+
+    when(target) {
+        "varrock" -> {
+            x = 3210
+            y = 3424
+            foundTarget = true
+        }
+        "falador" -> {
+            x = 2964
+            y = 3378
+            foundTarget = true
+        }
+        "edgeville" -> {
+            x = 3093
+            y = 3493
+            foundTarget = true
+        }
+        "port_sarim" -> {
+            x = 3023
+            y = 3208
+            foundTarget = true
+        }
+        "al_kharid" -> {
+            x = 3293
+            y = 3174
+            foundTarget = true
+        }
+        "catherby" -> {
+            x = 2813
+            y = 3447
+            foundTarget = true;
+        }
+        "seers_village" -> {
+            x = 2708
+            y = 3492
+            foundTarget = true;
+        }
+        "canifis" -> {
+            x = 3506
+            y = 3496
+            foundTarget = true;
+        }
+        "rimmington" -> {
+            x = 2957
+            y = 3214
+            foundTarget = true;
+        }
+        "tzhaar" -> {
+            x = 2480
+            y = 5175
+            foundTarget = true;
+        }
+        "lumbridge" -> {
+            x = 3222
+            y = 3218
+            foundTarget = true;
+        }
+        "ardy_farm" -> {
+            x = 2669
+            y = 3375
+            foundTarget = true;
+        }
+        "catherby_farm" -> {
+            x = 2812
+            y = 3463
+            foundTarget = true;
+        }
+        "falador_farm" -> {
+            x = 3058
+            y = 3310
+            foundTarget = true;
+        }
+        "ghost_farm" -> {
+            x = 3605
+            y = 3528
+            foundTarget = true;
+        }
+        else -> {
+            plr.sendMessage("Unkown location $target")
+        }
+    }
+    if (foundTarget) {
+        plr.move(Position(x, y, z))
+    }
+}
+/**
+ * A command that teleports the player to a farm with allotment patches (1-4).
+ */
+cmd("farmtele", RIGHTS_ADMIN) {
+    val farms = listOf(
+        Position(3052, 3302, 0), // Falador
+        Position(2811, 3464, 0), // Catherby
+        Position(2662, 3370, 0), // Ardougne
+        Position(3600, 3523, 0)  // Port Phasmatys
+    )
+    val index = asInt(0)
+    if (index in 1..farms.size) {
+        plr.move(farms[index - 1])
+    } else {
+        plr.sendMessage("Usage: ::farmtele 1-${farms.size} (1=Falador, 2=Catherby, 3=Ardougne, 4=Phasmatys)")
+    }
 }

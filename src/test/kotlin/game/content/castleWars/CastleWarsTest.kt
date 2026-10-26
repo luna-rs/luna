@@ -543,12 +543,49 @@ class CastleWarsTest {
         }
     }
 
-    @Test fun spawnLadderRejectsEnemyAndCarriedFlags() {
-        val position = Position(2427, 3076)
-        assertNull(CastleWarsRoutes.destination(6280, position, position, Team.ZAMORAK, null))
-        assertNull(CastleWarsRoutes.destination(6280, position, position, Team.SARADOMIN, Team.ZAMORAK))
-        assertEquals(Team.SARADOMIN.spawn,
-            CastleWarsRoutes.destination(6280, position, position, Team.SARADOMIN, null))
+    @Test fun spawnLaddersClimbFromBothRespawnRoomsToTheFloorAbove() {
+        for ((team, id, origin) in listOf(
+            Triple(Team.SARADOMIN, 6280, Position(2429, 3075, 1)),
+            Triple(Team.ZAMORAK, 6281, Position(2370, 3132, 1))
+        )) {
+            val ladder = team.home.translate(0, 0, -2)
+            assertTrue(CastleWarsGame.inSpawnRoom(origin))
+            assertEquals(origin.translate(0, 0, 1),
+                CastleWarsRoutes.destination(id, ladder, origin, team, null))
+            assertNull(CastleWarsRoutes.destination(id, ladder, origin, team.enemy, null))
+            for (flag in Team.entries) {
+                assertNull(CastleWarsRoutes.destination(id, ladder, origin, team, flag))
+            }
+            for (plane in listOf(0, 2, 3)) {
+                assertNull(CastleWarsRoutes.destination(id, Position(ladder.x, ladder.y, plane),
+                    Position(origin.x, origin.y, plane), team, null))
+            }
+        }
+    }
+
+    @Test fun spawnLadderRoutesMoveBothTeamsDuringAMatch() {
+        val game = CastleWars.game
+        val sara = player()
+        val zam = player()
+        try {
+            start(game, sara, zam)
+            for ((player, id, origin) in listOf(
+                Triple(sara, 6280, Position(2429, 3075, 1)),
+                Triple(zam, 6281, Position(2370, 3132, 1))
+            )) {
+                val team = game.match.team(player)!!
+                val ladder = io.luna.game.model.`object`.GameObject.createDynamic(
+                    mock(LunaContext::class.java), id, team.home.translate(0, 0, -2),
+                    ObjectType.DEFAULT, ObjectDirection.WEST, ChunkUpdatableView.globalView())
+                player.move(origin)
+                CastleWars.route(player, ladder)
+                assertEquals(origin.translate(0, 0, 1), player.position)
+            }
+        } finally {
+            game.exit(sara)
+            game.exit(zam)
+            repeat(2000) { game.tick() }
+        }
     }
 
     @Test fun castleCacheContainsStandardsSuppliesAndSourceStaircases() {
@@ -566,6 +603,9 @@ class CastleWarsTest {
             for (team in Team.entries) {
                 assertTrue(objects.any { it.position == team.home && it.objectId in 4902..4907 },
                     "Missing ${team.name} standard")
+                val ladderId = if (team == Team.SARADOMIN) 6280 else 6281
+                assertTrue(objects.any { it.position == team.home.translate(0, 0, -2) && it.objectId == ladderId },
+                    "Missing ${team.name} respawn-room ladder")
             }
             for (id in CastleWarsGame.TABLES.keys + listOf(4387, 4388, 4408, 4469, 4470)) {
                 assertTrue(objects.any { it.objectId == id }, "Missing Castle Wars object $id")

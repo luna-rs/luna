@@ -3,6 +3,7 @@ package game.npc.spawn.draynor
 import api.predef.*
 import api.predef.ext.*
 import api.shop.dsl.ShopHandler
+import game.npc.spawn.GeneralStore
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
@@ -28,19 +29,27 @@ ShopHandler.create("General Store") {
         "Anti-dragon shield" x 50
         "Lobster" x 150
     }
+}
 
-    open {
-        npc2 += 520
+/**
+ * Dialogue for "Talk" option. This keeper shares the Lumbridge shop keeper's id, so both stores check which keeper was
+ * clicked.
+ */
+npc1(520) {
+    if (GeneralStore.isDraynorKeeper(targetNpc)) {
+        plr.newDialogue()
+            .npc(targetNpc.id, "Hi, here's what I have in stock for today!")
+            .then { it.overlays.open(ShopInterface(world, "General Store")) }.open()
     }
 }
 
 /**
- * Dialogue for "Talk" option.
+ * The "Trade" option.
  */
-npc1(520) {
-    plr.newDialogue()
-        .npc(targetNpc.id, "Hi, here's what I have in stock for today!")
-        .then { it.overlays.open(ShopInterface(world, "General Store")) }.open()
+npc2(520) {
+    if (GeneralStore.isDraynorKeeper(targetNpc)) {
+        plr.overlays.open(ShopInterface(world, "General Store"))
+    }
 }
 
 /**
@@ -48,6 +57,6 @@ npc1(520) {
  */
 on(ServerLaunchEvent::class) {
     world.addNpc(id = 520,
-                 x = 3091,
-                 y = 3250)
+                 x = GeneralStore.DRAYNOR_KEEPER_SPAWN.x,
+                 y = GeneralStore.DRAYNOR_KEEPER_SPAWN.y)
 }

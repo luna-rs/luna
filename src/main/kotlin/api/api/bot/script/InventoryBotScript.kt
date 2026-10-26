@@ -188,10 +188,12 @@ abstract class InventoryBotScript(
      * Closing interfaces, progress detection, retries, and optional dexterity pacing are shared.
      * Unavailable targets fail without closing an interface or starting an interaction.
      * Optional output tracking also accepts newly produced items, including spells with beta-mode cost bypasses.
+     * State-only activities can supply [progressCondition], such as clearing a dead farming patch with a reusable tool.
      * The callback starts normal gameplay; it must not directly create products or award experience.
      */
     protected suspend fun attemptProduction(
         inputId: Int, dexterityDelay: Boolean = true, available: Boolean = true, outputId: Int? = null,
+        progressCondition: () -> Boolean = { false },
         start: suspend (amount: Int) -> Boolean
     ) {
         if (!isActionSafe()) return
@@ -202,7 +204,7 @@ abstract class InventoryBotScript(
         } == true
         val progressed = started && waitFor(10.seconds) {
             bot.inventory.computeAmountForId(inputId) < before ||
-                (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore)
+                (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore) || progressCondition()
         }
         if (progressed) failures = 0 else if (isActionSafe() && ++failures >= maxFailures) stop()
         if (dexterityDelay) bot.naturalDexterityDelay()
@@ -272,7 +274,13 @@ abstract class InventoryBotScript(
 
     final override suspend fun onBankOpen(initial: Boolean) {
         withdraw = bankWithdraw()
-        if (isTerminated() || withdraw.isEmpty()) return
+        if (isTerminated()) return
+        if (withdraw.isEmpty()) {
+            // Some harvesting visits need only empty inventory space after depositing their produce.
+            bankFailures = 0
+            if (verifiedProductionWithdrawals) forceBanking = false
+            return
+        }
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("We no longer have the required withdraw items. Stopping script.")
             stop()

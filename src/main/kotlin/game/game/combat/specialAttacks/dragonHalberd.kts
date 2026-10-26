@@ -76,7 +76,8 @@ attack(type = DRAGON_HALBERD,
                 world.locator.findViewableNpcs(victim, cond)
             var targets = if (victim is Player) MAX_PLAYER_TARGETS else MAX_NPC_TARGETS
             for (other in local) {
-                // Apply damage to filtered targets.
+                // Commit each secondary target before delivery, including engagement and Wilderness skull rules.
+                other.combat.markAttackedBy(attacker)
                 other.submitAction(CombatDamageAction(resolveDamage(attacker, other), attack, false))
                 if (--targets < 1) {
                     // Maximum number of targets damaged.

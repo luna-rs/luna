@@ -2,8 +2,10 @@ package io.luna.game.model.mob.combat.attack;
 
 import engine.combat.status.hooks.PoisonStatusEffect;
 import game.combat.BarrowsEquipmentSet;
+import game.player.Sound;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.EquipmentPoisonDefinition;
+import io.luna.game.model.def.WeaponSoundDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
@@ -19,9 +21,10 @@ import io.luna.util.Rational;
 /**
  * A {@link MeleeCombatAttack} implementation for player-performed melee attacks.
  * <p>
- * This type adds player-specific melee behavior on top of the generic melee attack flow, including poisoned weapon
- * checks and combat experience rewards based on the stance captured when the attack begins. Rewards and poison are
- * applied only after damage is delivered and capped to the victim's remaining health.
+ * This type adds player-specific melee behavior on top of the generic melee attack flow, including verified launch
+ * sound selection, poisoned weapon checks, and combat experience rewards based on the stance captured when the
+ * attack begins. Rewards and poison are applied only after damage is delivered and capped to the victim's
+ * remaining health.
  * <p>
  * If the equipped weapon has a matching {@link EquipmentPoisonDefinition}, successful melee hits may apply poison to
  * the victim.
@@ -84,6 +87,18 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
      */
     public PlayerMeleeCombatAttack(Player attacker, Mob victim, int animationId, int range, int delay) {
         super(attacker, victim, animationId, range, delay);
+    }
+
+    /**
+     * Resolves the verified ordinary melee sound from equipment and style before attack processing.
+     * Special attack builders override this selection with their configured launch sound.
+     *
+     * @return The ordinary launch sound, or {@code null} when this weapon or style is unverified.
+     */
+    @Override
+    protected Sound getAttackSound() {
+        return WeaponSoundDefinition.resolve(attacker.getEquipment().computeIdForIndex(Equipment.WEAPON),
+                attacker.getCombat().getStyleDef(), CombatDamageType.MELEE);
     }
 
     @Override

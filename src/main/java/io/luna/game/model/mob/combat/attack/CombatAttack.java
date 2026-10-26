@@ -1,8 +1,11 @@
 package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
+import game.player.Sound;
+import engine.combat.prayer.CombatPrayer;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -15,16 +18,14 @@ import java.time.Instant;
  * <p>
  * Subclasses are responsible for calculating a base damage result in {@link #calculateDamage(Mob)} and for
  * implementing the concrete attack behavior in {@link #attack()}. This base class handles the shared combat pipeline,
- * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, combat timer refreshes,
+ * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, player launch audio,
+ * combat timer refreshes,
  * attack delay application, and recipient-owned projectile timing callbacks.
  *
  * @param <T> The mob type performing this attack.
  * @author lare96
  */
 public abstract class CombatAttack<T extends Mob> {
-
-    // TODO@0.5.0 Correct weapon sounds. Think this can be done with other combat weapons though through JSON.
-    //  Or it might be randomized, some tests need to be done.
 
     /**
      * The mob performing the attack.
@@ -52,7 +53,9 @@ public abstract class CombatAttack<T extends Mob> {
      * The final prepared damage for this attack.
      * <p>
      * This value is assigned during {@link #apply()} after the result from {@link #calculateDamage(Mob)} has been
-     * passed through {@link #onAttack(CombatDamage)}.
+     * passed through {@link #onAttack(CombatDamage)}. Defensive changes and health capping belong to each delivered
+     * hit and do not replace this launch value. Secondary recipients receive independently resolved damage while
+     * sharing the source attack's launch context.
      */
     protected CombatDamage nextDamage;
 
@@ -71,6 +74,18 @@ public abstract class CombatAttack<T extends Mob> {
      * Gameplay recency checks use this value independently of the wall-clock timestamp.
      */
     private long launchTick = -1;
+
+    /**
+     * Smite state captured at launch, shared by every delivered hit from this attack.
+     */
+    private boolean smiteActive;
+
+    /**
+     * Returns the launch-time Smite state. Secondary attack wrappers may delegate to their original source.
+     */
+    public boolean isSmiteActive() {
+        return smiteActive;
+    }
 
     /**
      * Creates a new {@link CombatAttack}.
@@ -113,14 +128,15 @@ public abstract class CombatAttack<T extends Mob> {
      * <p>
      * This method calculates the base damage, passes it through {@link #onAttack(CombatDamage)} to allow subclasses
      * to modify or cancel the result, then applies the standard combat delay and timer updates before invoking {@link #attack()}.
-     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it.
+     * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it. An optional
+     * player launch sound is captured before preparation can consume equipment, then played once immediately before
+     * the attack behavior. Misses and accurate zero hits still play the sound; cancellation suppresses it.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
      */
     public final void apply() {
-        // todo onAttack is redundant, do anything within calculate damage?
-        // todo maybe just only pass the builder until attack is ready to run?
+        Sound attackSound = getAttackSound();
         nextDamage = onAttack(calculateDamage(victim));
         if (nextDamage == null) {
             attacker.getCombat().setTarget(null);
@@ -137,7 +153,28 @@ public abstract class CombatAttack<T extends Mob> {
         victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
+        smiteActive = attacker instanceof Player player && player.skill(Skill.PRAYER).getLevel() > 0 &&
+                player.getCombat().getPrayers().isActive(CombatPrayer.SMITE);
+        if (attackSound != null && attacker instanceof Player player) {
+            player.playSound(attackSound);
+            if (victim instanceof Player other && other != player) {
+                other.playSound(attackSound);
+            }
+        }
         attack();
+    }
+
+    /**
+     * Selects an optional player attack launch sound before damage preparation or ammunition consumption.
+     * <p>
+     * The captured sound is sent once to the attacking player and a player victim only after the attack commits,
+     * including inaccurate and zero-damage attacks. Cancelled attacks remain silent. The default leaves spell,
+     * NPC, and custom attack audio on their existing paths; specials may override ordinary weapon selection.
+     *
+     * @return The launch sound, or {@code null} to suppress shared launch playback.
+     */
+    protected Sound getAttackSound() {
+        return null;
     }
 
     /**
@@ -153,9 +190,13 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * Called when the damage from this attack turn is applied to the {@link #victim}.
+     * Called after a hit from this attack has been applied and recorded in combat history.
+     * <p>
+     * The supplied hit has passed defensive hooks and health capping. Its recipient may differ from {@link #victim}
+     * for area or secondary hits. Use this argument for delivered damage and effects; {@link #nextDamage} retains
+     * the primary launch result. Nested callbacks may publish a newer hit before this callback returns.
      *
-     * @param damage The damage that was applied to the victim.
+     * @param damage The applied hit, including its actual recipient, amount, and original accuracy result.
      */
     public void onDamageApplied(CombatDamage damage) {
 
@@ -294,7 +335,9 @@ public abstract class CombatAttack<T extends Mob> {
     }
 
     /**
-     * @return The prepared damage, or {@code null} if not yet assigned or if the attack was cancelled.
+     * Gets the primary launch damage before recipient-side defensive changes and health capping.
+     *
+     * @return The prepared launch hit, or {@code null} if not yet assigned or if the attack was cancelled.
      */
     public CombatDamage getNextDamage() {
         return nextDamage;

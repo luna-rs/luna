@@ -45,12 +45,49 @@ enum class SubZone(
     val plane: Int? = null
 ) {
     /**
+     * Regular farming plots mapped in revision 377 and Lost City; anchors use the paths between plots.
+     */
+    FALADOR_FARM(
+        inside = Position(3055, 3309), area = SimpleBoxArea.of(3047, 3300, 3063, 3315),
+        parent = { FALADOR }, plane = 0),
+    CATHERBY_FARM(
+        inside = Position(2811, 3465), area = SimpleBoxArea.of(2802, 3456, 2818, 3471),
+        parent = { CATHERBY }, plane = 0),
+    ARDOUGNE_FARM(
+        inside = Position(2668, 3376), area = SimpleBoxArea.of(2659, 3367, 2675, 3382),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
+     */
+    YANILLE_HOPS(
+        inside = Position(2573, 3104), area = SimpleBoxArea.of(2571, 3100, 2580, 3109),
+        parent = { YANILLE }, plane = 0),
+    ENTRANA_HOPS(
+        inside = Position(2808, 3336), area = SimpleBoxArea.of(2806, 3332, 2815, 3341),
+        parent = { ENTRANA }, plane = 0),
+    LUMBRIDGE_HOPS(
+        inside = Position(3226, 3315), area = SimpleBoxArea.of(3224, 3310, 3234, 3320),
+        parent = { LUMBRIDGE }, plane = 0),
+    MCGRUBORS_HOPS(
+        inside = Position(2663, 3525), area = SimpleBoxArea.of(2661, 3520, 2672, 3531),
+        parent = { SEERS_VILLAGE }, plane = 0),
+
+    /**
      * Turael's Burthorpe house, used for native Slayer assignment dialogue.
      */
     TURAEL(
         inside = Position(2931, 3536),
         area = SimpleBoxArea.ofRadius(2927, 3533, 9, 8),
         parent = { BURTHORPE }),
+
+    /**
+     * Fountain room below the Heroes' Guild, used to restore glory charges. Shared travel handles its entrance.
+     */
+    HEROES_GUILD_FOUNTAIN(
+        inside = Position(2916, 9893),
+        area = SimpleBoxArea.of(2913, 9890, 2922, 9899),
+        parent = { TAVERLY }, plane = 0),
 
     /**
      * Supplied Canifis town footprint containing Mazchna's configured spawn.
@@ -93,6 +130,38 @@ enum class SubZone(
         inside = Position(2541, 3103),
         area = SimpleBoxArea.of(2538, 3099, 2549, 3109),
         parent = { YANILLE }),
+
+    /**
+     * Fishing Guild docks and bank. All native moving-spot destinations are enclosed; entry requires Fishing 68.
+     */
+    FISHING_GUILD(
+        inside = Position(2586, 3418),
+        area = SimpleBoxArea.of(2578, 3380, 2620, 3430),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Stronghold river fishing and the nearby bank. Uses the supplied Stronghold bank tile for arrival.
+     */
+    GNOME_STRONGHOLD_FISHING(
+        inside = Position(2447, 3424),
+        area = SimpleBoxArea.of(2375, 3400, 2450, 3433),
+        parent = { GNOME_STRONGHOLD }, plane = 0),
+
+    /**
+     * Seers' northern fishing spots and bank, using the existing town arrival anchor.
+     */
+    SEERS_VILLAGE_FISHING(
+        inside = SEERS_VILLAGE.anchor,
+        area = SimpleBoxArea.of(2708, 3484, 2736, 3538),
+        parent = { SEERS_VILLAGE }, plane = 0),
+
+    /**
+     * Fishing on the Ardougne river north of town. Arrival is an existing north-bank anchor.
+     */
+    ARDOUGNE_RIVER_FISHING(
+        inside = Position(2618, 3331),
+        area = SimpleBoxArea.of(2556, 3328, 2624, 3378),
+        parent = { ARDOUGNE }, plane = 0),
 
     /**
      * Dairy cow at (3040, 3301) on the farm south of Falador, used to fill empty buckets with milk.
@@ -456,8 +525,19 @@ enum class SubZone(
     ROCK_CRABS(
         inside = Position(2670, 3715),
         area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
-        parent = { RELLEKKA }), // todo there's also a mine near here??? coal, silver and gold i think?
-    // todo or coal tin and clay
+        parent = { RELLEKKA }),
+
+    /**
+     * The walled mine south of the Rellekka rock crabs, entered through the gate at (2681, 3697). Intended for
+     * low -> mid level miners.
+     * - 4 clay rocks
+     * - 3 silver rocks
+     * - 7 coal rocks
+     */
+    RELLEKKA_MINE(
+        inside = Position(2683, 3700),
+        area = SimpleBoxArea.of(2679, 3698, 2688, 3710),
+        parent = { RELLEKKA }, plane = 0),
 
     /**
      * The chaos druid tower dungeon.

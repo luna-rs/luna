@@ -39566,16 +39566,13 @@
   },
   {
     "id": 3727, // Splatter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 20,
     "maximum_hit": 3,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3891,
     "defence_animation": 3890,
     "death_animation": 3888,
@@ -39583,11 +39580,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -39599,16 +39596,13 @@
   },
   {
     "id": 3728, // Splatter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 30,
     "maximum_hit": 4,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3891,
     "defence_animation": 3890,
     "death_animation": 3888,
@@ -39616,11 +39610,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -39632,16 +39626,13 @@
   },
   {
     "id": 3729, // Splatter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3891,
     "defence_animation": 3890,
     "death_animation": 3888,
@@ -39649,11 +39640,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -39665,16 +39656,13 @@
   },
   {
     "id": 3730, // Splatter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 50,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3891,
     "defence_animation": 3890,
     "death_animation": 3888,
@@ -39682,11 +39670,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -39698,16 +39686,13 @@
   },
   {
     "id": 3731, // Splatter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3891,
     "defence_animation": 3890,
     "death_animation": 3888,
@@ -39715,11 +39700,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -39731,16 +39716,13 @@
   },
   {
     "id": 3732, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 30,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39748,11 +39730,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -39764,16 +39746,13 @@
   },
   {
     "id": 3733, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 30,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39781,11 +39760,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -39797,16 +39776,13 @@
   },
   {
     "id": 3734, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 45,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39814,11 +39790,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -39830,16 +39806,13 @@
   },
   {
     "id": 3735, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 45,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39847,11 +39820,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -39863,16 +39836,13 @@
   },
   {
     "id": 3736, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 12,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39880,11 +39850,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -39896,16 +39866,13 @@
   },
   {
     "id": 3737, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 12,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39913,11 +39880,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -39929,16 +39896,13 @@
   },
   {
     "id": 3738, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 75,
     "maximum_hit": 14,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39946,11 +39910,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -39962,16 +39926,13 @@
   },
   {
     "id": 3739, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 75,
     "maximum_hit": 14,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -39979,11 +39940,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -39995,16 +39956,13 @@
   },
   {
     "id": 3740, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 90,
     "maximum_hit": 16,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -40012,11 +39970,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40028,16 +39986,13 @@
   },
   {
     "id": 3741, // Shifter
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 90,
     "maximum_hit": 16,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3901,
     "defence_animation": 3902,
     "death_animation": 3903,
@@ -40045,11 +40000,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40061,16 +40016,13 @@
   },
   {
     "id": 3742, // Ravager
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 4,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3915,
     "defence_animation": 3916,
     "death_animation": 3917,
@@ -40078,11 +40030,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40094,16 +40046,13 @@
   },
   {
     "id": 3743, // Ravager
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 6,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3915,
     "defence_animation": 3916,
     "death_animation": 3917,
@@ -40111,11 +40060,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -40127,16 +40076,13 @@
   },
   {
     "id": 3744, // Ravager
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 80,
     "maximum_hit": 8,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3915,
     "defence_animation": 3916,
     "death_animation": 3917,
@@ -40144,11 +40090,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -40160,16 +40106,13 @@
   },
   {
     "id": 3745, // Ravager
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 12,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3915,
     "defence_animation": 3916,
     "death_animation": 3917,
@@ -40177,11 +40120,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -40193,16 +40136,13 @@
   },
   {
     "id": 3746, // Ravager
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 120,
     "maximum_hit": 16,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3915,
     "defence_animation": 3916,
     "death_animation": 3917,
@@ -40210,11 +40150,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40226,13 +40166,13 @@
   },
   {
     "id": 3747, // Spinner
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 33,
     "maximum_hit": 3,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3908,
     "defence_animation": 3909,
     "death_animation": 3910,
@@ -40240,11 +40180,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40256,13 +40196,13 @@
   },
   {
     "id": 3748, // Spinner
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 53,
     "maximum_hit": 3,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 3908,
     "defence_animation": 3909,
     "death_animation": 3910,
@@ -40287,13 +40227,13 @@
   },
   {
     "id": 3749, // Spinner
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 73,
     "maximum_hit": 4,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 3908,
     "defence_animation": 3909,
     "death_animation": 3910,
@@ -40318,13 +40258,13 @@
   },
   {
     "id": 3750, // Spinner
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 101,
     "maximum_hit": 4,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 3908,
     "defence_animation": 3909,
     "death_animation": 3910,
@@ -40349,13 +40289,13 @@
   },
   {
     "id": 3751, // Spinner
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 113,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3908,
     "defence_animation": 3909,
     "death_animation": 3910,
@@ -40363,11 +40303,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40379,16 +40319,13 @@
   },
   {
     "id": 3752, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40396,11 +40333,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40412,16 +40349,13 @@
   },
   {
     "id": 3753, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40429,11 +40363,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40445,16 +40379,13 @@
   },
   {
     "id": 3754, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 8,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40462,11 +40393,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -40478,16 +40409,13 @@
   },
   {
     "id": 3755, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40495,11 +40423,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -40511,16 +40439,13 @@
   },
   {
     "id": 3756, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 80,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40528,11 +40453,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -40544,16 +40469,13 @@
   },
   {
     "id": 3757, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 80,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40561,11 +40483,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -40577,16 +40499,13 @@
   },
   {
     "id": 3758, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 11,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40594,11 +40513,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -40610,16 +40529,13 @@
   },
   {
     "id": 3759, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 11,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40627,11 +40543,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -40643,16 +40559,13 @@
   },
   {
     "id": 3760, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 120,
     "maximum_hit": 13,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40660,11 +40573,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40676,16 +40589,13 @@
   },
   {
     "id": 3761, // Torcher
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 120,
     "maximum_hit": 13,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3882,
     "defence_animation": 3880,
     "death_animation": 3881,
@@ -40693,11 +40603,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -40709,16 +40619,13 @@
   },
   {
     "id": 3762, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40726,11 +40633,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40742,16 +40649,13 @@
   },
   {
     "id": 3763, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40759,11 +40663,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -40775,16 +40679,13 @@
   },
   {
     "id": 3764, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40792,11 +40693,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -40808,16 +40709,13 @@
   },
   {
     "id": 3765, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40825,11 +40723,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -40841,16 +40739,13 @@
   },
   {
     "id": 3766, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 80,
     "maximum_hit": 8,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40858,11 +40753,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -40874,16 +40769,13 @@
   },
   {
     "id": 3767, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 80,
     "maximum_hit": 8,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40891,11 +40783,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -40907,16 +40799,13 @@
   },
   {
     "id": 3768, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40924,11 +40813,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -40940,16 +40829,13 @@
   },
   {
     "id": 3769, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40957,11 +40843,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -40973,16 +40859,13 @@
   },
   {
     "id": 3770, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 120,
     "maximum_hit": 11,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -40990,11 +40873,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -41006,16 +40889,13 @@
   },
   {
     "id": 3771, // Defiler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 120,
     "maximum_hit": 11,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3920,
     "defence_animation": 3921,
     "death_animation": 3922,
@@ -41023,11 +40903,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -41039,16 +40919,13 @@
   },
   {
     "id": 3772, // Brawler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 100,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3897,
     "defence_animation": 3895,
     "death_animation": 3894,
@@ -41056,11 +40933,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      20,
+      20,
+      20,
+      20,
+      20
     ],
     "bonuses": [
       0,
@@ -41072,16 +40949,13 @@
   },
   {
     "id": 3773, // Brawler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 150,
     "maximum_hit": 9,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3897,
     "defence_animation": 3895,
     "death_animation": 3894,
@@ -41089,11 +40963,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      40,
+      40,
+      40,
+      40,
+      40
     ],
     "bonuses": [
       0,
@@ -41105,16 +40979,13 @@
   },
   {
     "id": 3774, // Brawler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 200,
     "maximum_hit": 13,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3897,
     "defence_animation": 3895,
     "death_animation": 3894,
@@ -41122,11 +40993,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      60,
+      60,
+      60,
+      60,
+      60
     ],
     "bonuses": [
       0,
@@ -41138,16 +41009,13 @@
   },
   {
     "id": 3775, // Brawler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 250,
     "maximum_hit": 17,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3897,
     "defence_animation": 3895,
     "death_animation": 3894,
@@ -41155,11 +41023,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      80,
+      80,
+      80,
+      80,
+      80
     ],
     "bonuses": [
       0,
@@ -41171,16 +41039,13 @@
   },
   {
     "id": 3776, // Brawler
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 300,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 3897,
     "defence_animation": 3895,
     "death_animation": 3894,
@@ -41188,11 +41053,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      100,
+      100
     ],
     "bonuses": [
       0,
@@ -41204,25 +41069,25 @@
   },
   {
     "id": 3777, // Portal
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
-    "immune_poison": true,
+    "immune_poison": false,
     "hitpoints": 250,
     "maximum_hit": 0,
     "attack_speed": 7,
     "attack_animation": -1,
     "defence_animation": -1,
-    "death_animation": -1,
+    "death_animation": 3930,
     "attack_bonus": 0,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
+      1,
+      1,
       120,
-      0,
-      0
+      1,
+      1
     ],
     "bonuses": [
       100,
@@ -41235,25 +41100,25 @@
   },
   {
     "id": 3778, // Portal
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
-    "immune_poison": true,
-    "hitpoints": 200,
+    "immune_poison": false,
+    "hitpoints": 250,
     "maximum_hit": 0,
     "attack_speed": 7,
     "attack_animation": -1,
     "defence_animation": -1,
-    "death_animation": -1,
+    "death_animation": 3930,
     "attack_bonus": 0,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
+      1,
+      1,
       120,
-      0,
-      0
+      1,
+      1
     ],
     "bonuses": [
       100,
@@ -41266,25 +41131,25 @@
   },
   {
     "id": 3779, // Portal
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 250,
     "maximum_hit": 0,
     "attack_speed": 7,
     "attack_animation": -1,
     "defence_animation": -1,
-    "death_animation": -1,
+    "death_animation": 3930,
     "attack_bonus": 0,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      120,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -41296,25 +41161,25 @@
   },
   {
     "id": 3780, // Portal
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 250,
     "maximum_hit": 0,
     "attack_speed": 7,
     "attack_animation": -1,
     "defence_animation": -1,
-    "death_animation": -1,
+    "death_animation": 3930,
     "attack_bonus": 0,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      120,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -41323,6 +41188,24 @@
       0,
       0
     ]
+  },
+  {
+    "id": 3782, // Pest Control Void Knight; attacked only by round-owned pests.
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": true,
+    "hitpoints": 200,
+    "maximum_hit": 0,
+    "attack_speed": 5,
+    "attack_animation": 3926,
+    "defence_animation": -1,
+    "death_animation": 836,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [1, 1, 100, 1, 100],
+    "bonuses": [0, 0, 0, 0, 0, 0]
   },
   {
     "id": 3808, // Tortoise

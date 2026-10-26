@@ -19,7 +19,10 @@ import io.luna.game.model.mob.combat.attack.CombatAttack;
  *     <li>Retaliates against a living attacker when enabled and no active engagement with a living target remains.</li>
  *     <li>Checks NPC escape thresholds after each incoming hit, including during an existing engagement.</li>
  * </ul>
- * This action completes after a single execution.
+ * This action completes after a single execution. Defensive hooks may replace or cancel its incoming hit before
+ * application. Its stored damage retains that incoming result; source callbacks, events, and combat history receive
+ * the separate health-capped applied hit. A source attack can be shared by several recipients, so each delivery uses
+ * its own damage participants rather than the source's primary victim.
  * <p>
  * Delayed instances execute in {@link ActionPhase#EFFECT}, before outgoing combat. Instant instances execute
  * during submission; recipient-owned impact callbacks use them to apply a hit at its scheduled arrival.
@@ -41,7 +44,8 @@ public final class CombatDamageAction extends Action<Mob> {
     private final Mob victim;
 
     /**
-     * The resolved combat damage to apply.
+     * The incoming hit, initially the launch result and subsequently the defensive override, or {@code null} when
+     * cancelled. Applying its health cap does not replace this value.
      */
     private CombatDamage damage;
 
@@ -117,14 +121,30 @@ public final class CombatDamageAction extends Action<Mob> {
         return true;
     }
 
+    /**
+     * Gets the incoming damage after any defensive override. This value is not the health-capped applied result.
+     *
+     * @return The incoming hit, or {@code null} if defensive hooks cancelled it.
+     */
     public CombatDamage getDamage() {
         return damage;
     }
 
+    /**
+     * Replaces or cancels the hit before application. Replacements must retain this action's attacker and victim.
+     *
+     * @param damage The replacement incoming hit, or {@code null} to cancel delivery.
+     */
     public void setDamage(CombatDamage damage) {
         this.damage = damage;
     }
 
+    /**
+     * Gets the source attack used for launch metadata and applied-hit callbacks. Secondary hits may have a different
+     * recipient from the source's primary victim.
+     *
+     * @return The source attack for this delivery.
+     */
     public CombatAttack<?> getSource() {
         return source;
     }

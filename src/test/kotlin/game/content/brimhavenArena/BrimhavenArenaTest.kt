@@ -3,6 +3,14 @@ package game.content.brimhavenArena
 import api.bot.script.InventoryProductionFixtures
 import api.predef.*
 import game.content.brimhavenArena.BrimhavenArena.paid
+import game.bot.scripts.BrimhavenArenaBotScript
+import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
+import game.bot.scripts.BrimhavenArenaRoute
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.controller.ControllerManager
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelAndJoin
 import io.luna.game.action.Action
 import io.luna.game.action.ActionState
 import io.luna.game.model.EntityState
@@ -126,6 +134,17 @@ class BrimhavenArenaTest {
         `when`(world.locator.findObjectsOnTile(any(io.luna.game.model.Locatable::class.java), any<Predicate<GameObject>>()))
             .thenAnswer { call -> objects.filter { it.position == call.getArgument<Position>(0) &&
                 call.getArgument<Predicate<GameObject>>(1).test(it) }.toSet() }
+        `when`(world.locator.findObjects(any(io.luna.game.model.Locatable::class.java), anyInt(), any<Predicate<GameObject>>()))
+            .thenAnswer { call -> objects.filter { it.position.isWithinDistance(call.getArgument<Position>(0),
+                call.getArgument<Int>(1)) && call.getArgument<Predicate<GameObject>>(2).test(it) }.toSet() }
+    }
+
+    private fun visitor(position: Position = BrimhavenArena.LANDING): Bot = (player(position) as Bot).also {
+        `when`(it.asPlr()).thenReturn(it)
+        `when`(it.controllers).thenReturn(ControllerManager(it))
+        `when`(it.health).thenReturn(40); `when`(it.totalHealth).thenReturn(40)
+        `when`(it.walking.isEmpty).thenReturn(true)
+        `when`(it.actionHandler.inventory.hasAnyFood()).thenReturn(true)
     }
     private fun finish(p: Player) {
         val action = pending.getValue(p)
@@ -414,5 +433,238 @@ class BrimhavenArenaTest {
         assertEquals(1, traders.size)
         val trader = traders.single().getAsJsonObject("position")
         assertEquals(2811, trader.get("x").asInt); assertEquals(3192, trader.get("y").asInt)
+    }
+
+    @Test fun botRoutesReachEveryPillarAndExitUsingNativePlacementsAtEveryTrapTier() {
+        val p = visitor(); locateObjects()
+        map.objectSet.objects.filter { BrimhavenArena.inside(it.position) }.forEach { obj(it) }
+        for (level in listOf(1, 20, 40)) {
+            `when`(p.agility.level).thenReturn(level)
+            val edges = BrimhavenArenaRoute.crossings(p, objects)
+            for (from in 0..24) for (to in 0..24) {
+                val path = BrimhavenArenaRoute.path(from, to, edges)
+                assertNotNull(path, "No path $from -> $to at level $level")
+                for (edge in path!!) {
+                    assertFalse(map.getTile(edge.start).isBlocked, "Blocked start $edge")
+                    assertFalse(map.getTile(edge.end).isBlocked, "Blocked landing $edge")
+                    assertEquals(edge.from, BrimhavenArenaRoute.platform(edge.start))
+                    assertEquals(edge.to, BrimhavenArenaRoute.platform(edge.end))
+                }
+            }
+        }
+    }
+
+    @Test fun botEligibilityRequiresOwnedFeeFoodAndSafeControllerButAllowsNativeRecovery() {
+        val p = visitor(BrimhavenArena.ENTRANCE)
+        assertFalse(BrimhavenArenaBotScript.eligible(p))
+        p.inventory.add(Item(385)); p.inventory.add(Item(995, 199))
+        assertFalse(BrimhavenArenaBotScript.eligible(p))
+        p.bank.add(Item(995))
+        assertTrue(BrimhavenArenaBotScript.eligible(p))
+        `when`(p.health).thenReturn(5)
+        assertFalse(BrimhavenArenaBotScript.eligible(p))
+        p.move(BrimhavenArena.LANDING); enter(p)
+        assertTrue(BrimhavenArenaBotScript.eligible(p))
+        p.lock(); assertFalse(BrimhavenArenaBotScript.eligible(p)); p.unlock()
+        p.controllers.register(object : io.luna.game.model.mob.controller.PlayerController(p) {})
+        assertFalse(BrimhavenArenaBotScript.eligible(p))
+    }
+
+    @Test fun botPauseAndSnapshotsKeepAdmissionAndCannotRepeatTheFeeOrManufactureAVisit() = runBlocking {
+        val p = visitor(); enter(p)
+        val native = BrimhavenArena.session(p)
+        val data = ArenaData().also { it.attempted = true; it.entered = true; it.failures = 2; it.initialTickets = 7 }
+        val script = BrimhavenArenaBotScript(p, data)
+        assertFalse(script.init(true))
+        script.paused(); script.finish()
+        assertSame(native, BrimhavenArena.session(p)); assertTrue(p.paid)
+        verifyNoInteractions(p.actionHandler.banking)
+        val json = com.google.gson.JsonObject(); script.snapshot().save(json)
+        val restored = ArenaData().also { it.load(json) }
+        assertEquals(data.deadline, restored.deadline); assertEquals(2, restored.failures)
+        assertEquals(7, restored.initialTickets); assertTrue(restored.leaving)
+        BrimhavenArena.leave(p); p.move(Position(3200, 3200))
+        assertTrue(BrimhavenArenaBotScript(p, restored).init(true))
+        assertNull(BrimhavenArena.session(p)); assertFalse(p.paid)
+        verifyNoInteractions(p.actionHandler.banking)
+    }
+
+    @Test fun botCrossesAndRecoversThroughInteractionsWithoutManufacturingMovementOrExperience() = runBlocking {
+        val p = visitor(); enter(p); locateObjects()
+        map.objectSet.objects.filter { BrimhavenArena.inside(it.position) }.forEach { obj(it) }
+        val data = ArenaData().also { it.entered = true }
+        val script = BrimhavenArenaBotScript(p, data)
+        assertFalse(script.init(true)); data.leaving = false
+        val edge = BrimhavenArenaRoute.crossings(p, objects).first { it.obj?.id == 3566 }
+        p.move(edge.start)
+        val interactions = p.actionHandler.interactions
+        doAnswer { call ->
+            assertTrue(call.getArgument<() -> Boolean>(3).invoke())
+            assertEquals(2, call.getArgument<io.luna.game.model.mob.interact.InteractionPolicy>(2).distance)
+            assertTrue(ArenaObstacles.cross(p, edge.obj!!, 2.0)); finish(p); true
+        }.`when`(interactions).interact(eq(1), eq(edge.obj),
+            any(io.luna.game.model.mob.interact.InteractionPolicy::class.java)
+                ?: io.luna.game.model.mob.interact.InteractionPolicy.STANDARD_SIZE, any<() -> Boolean>() ?: { false })
+        assertTrue(script.cross(edge, BrimhavenArena.targetIndex)); assertEquals(0, p.z)
+        verify(p.agility, never()).addExperience(anyDouble())
+        val rope = objects.filter { it.id == 3610 }.minBy { it.position.computeLongestDistance(p.position) }
+        p.move(rope.position)
+        doAnswer { call ->
+            assertTrue(call.getArgument<() -> Boolean>(2).invoke())
+            assertTrue(BrimhavenArena.ladder(p, rope)); finish(p); true
+        }.`when`(interactions).interact(eq(1), eq(rope), any<() -> Boolean>() ?: { false })
+        assertTrue(script.recover()); assertEquals(rope.position.translate(0, 0, 3), p.position)
+        verifyNoInteractions(p.botClient.output)
+    }
+
+    @Test fun botTagsOnlyCurrentPillarAndExchangesEarnedTicketsWithNativeWidgets() = runBlocking {
+        val p = visitor(); enter(p); locateObjects()
+        BrimhavenArena.rotate(0); p.move(BrimhavenArena.target.translate(1, 0))
+        val pillar = obj(3608, BrimhavenArena.target)
+        val data = ArenaData().also { it.entered = true; it.initialTickets = 5 }
+        val script = BrimhavenArenaBotScript(p, data)
+        assertFalse(script.init(true)); data.leaving = false
+        val interactions = p.actionHandler.interactions
+        val widgets = p.actionHandler.widgets
+        doAnswer { call ->
+            assertTrue(call.getArgument<() -> Boolean>(2).invoke()); BrimhavenArena.tag(p, pillar)
+        }.`when`(interactions).interact(eq(1), eq(pillar), any<() -> Boolean>() ?: { false })
+        assertFalse(script.run()); assertTrue(BrimhavenArena.session(p)!!.tagged)
+        verify(p.actionHandler.interactions).interact(eq(1), eq(pillar), any<() -> Boolean>() ?: { false })
+        BrimhavenArena.leave(p); p.move(BrimhavenArena.ENTRANCE); data.leaving = true
+        p.inventory.add(Item(2996, 15)); val trader = npc(1055)
+        `when`(world.locator.findNpcs(eq(BrimhavenArena.ENTRANCE), eq(16), any<Predicate<Npc>>())).thenReturn(setOf(trader))
+        doAnswer { BrimhavenArena.openRewards(p, trader); true }.`when`(interactions)
+            .interact(eq(1), eq(trader), any<() -> Boolean>() ?: { false })
+        doAnswer { BrimhavenArena.exchange(p, BrimhavenArena.Reward.XP_TEN) }.`when`(widgets)
+            .clickButton(8292, 8389)
+        assertFalse(script.run()); assertEquals(5, p.inventory.computeAmountForId(2996))
+        verify(p.agility).addExperience(2480.0)
+        assertTrue(script.run()); verifyNoInteractions(p.botClient.output)
+    }
+
+    @Test fun botPaysOwnedCoinsThroughDialogueAndEntersThroughTheNativeLadder() = runBlocking {
+        val p = visitor(BrimhavenArena.ENTRANCE); locateObjects()
+        val clerk = npc(437); val ladder = obj(3617, Position(2809, 3194))
+        p.bank.add(Item(995, 200)); p.bank.add(Item(385, 12))
+        val handler = p.actionHandler; val banking = handler.banking
+        val interactions = handler.interactions; val widgets = handler.widgets
+        `when`(banking.travelToBankDepositAll()).thenReturn(true)
+        doAnswer { p.bank.remove(Item(385, 12)) && p.inventory.add(Item(385, 12)) }.`when`(banking)
+            .withdrawAnyFood(12, minimumHeal = 6, retry = false)
+        doAnswer { p.bank.remove(Item(995, 200)) && p.inventory.add(Item(995, 200)) }.`when`(banking)
+            .withdraw(Item(995, 200))
+        `when`(widgets.clickCloseInterface()).thenReturn(true)
+        `when`(handler.webWalkTo(BrimhavenArena.ENTRANCE, bank = api.bot.webwalk.plan.BankAccess.NONE)).thenReturn(true)
+        `when`(world.locator.findNpcs(eq(BrimhavenArena.ENTRANCE), eq(16), any<Predicate<Npc>>())).thenReturn(setOf(clerk))
+        doAnswer { BrimhavenArena.talk(p, clerk); true }.`when`(interactions)
+            .interact(eq(1), eq(clerk), any<() -> Boolean>() ?: { false })
+        doAnswer {
+            p.overlays.getOverlay(io.luna.game.model.mob.dialogue.OptionDialogue::class.java)!!.first(p); true
+        }.`when`(widgets).clickDialogueOption("Pay 200 coins to enter")
+        doAnswer { BrimhavenArena.ladder(p, ladder).also { if (it) finish(p) } }.`when`(interactions)
+            .interact(eq(1), eq(ladder), any<() -> Boolean>() ?: { false })
+        val script = BrimhavenArenaBotScript(p)
+        assertFalse(script.init(false))
+        assertEquals(0, p.inventory.computeAmountForId(995)); assertEquals(0, p.bank.computeAmountForId(995))
+        assertEquals(BrimhavenArena.LANDING, p.position); assertTrue(p.paid)
+        assertTrue(script.snapshot().entered); assertFalse(script.snapshot().leaving)
+        assertFalse(script.init(true)); assertTrue(script.snapshot().leaving)
+        verify(widgets, times(1)).clickDialogueOption("Pay 200 coins to enter")
+        verifyNoInteractions(p.botClient.output)
+    }
+
+    @Test fun ropePolicyUsesHighLevelInteractionWithoutWalkingIntoTheGap() = runBlocking<Unit> {
+        val placement = map.objectSet.objects.first { it.objectId == 3566 }
+        val p = visitor(); val rope = obj(placement)
+        val route = ArenaObstacles.route(p, rope, 0.0)!!; p.move(route.start)
+        val policy = ArenaObstacles.policy(rope)
+        val handler = api.bot.action.BotInteractionActionHandler(p, p.actionHandler)
+        clearInvocations(p.navigator, p.actionHandler)
+        `when`(world.collisionManager.reached(p, rope, policy)).thenReturn(true)
+        val runTask = io.luna.game.task.Task::class.java.getDeclaredMethod("runTask").apply { isAccessible = true }
+        doAnswer { runTask.invoke(it.getArgument<io.luna.game.task.Task>(0)); null }.`when`(world)
+            .schedule(any(io.luna.game.task.Task::class.java))
+        try {
+            assertTrue(handler.interact(1, rope, policy) { true })
+            verify(p.output).sendObjectInteraction(1, rope)
+            verifyNoInteractions(p.navigator, p.actionHandler)
+            assertFalse(handler.interact(1, rope, policy) { false })
+            verify(p.output, times(1)).sendObjectInteraction(1, rope)
+        } finally { doNothing().`when`(world).schedule(any(io.luna.game.task.Task::class.java)) }
+    }
+
+    @Test fun plannerRechecksBrokenPlanksAndCurrentLevelAfterDartDrain() {
+        val p = visitor(); locateObjects()
+        map.objectSet.objects.filter { BrimhavenArena.inside(it.position) }.forEach { obj(it) }
+        val edges = BrimhavenArenaRoute.crossings(p, objects)
+        val plank = edges.first { it.obj?.id in 3570..3572 }
+        obj(3576, plank.start.translate((plank.end.x - plank.start.x) / 7 * 2, 0))
+        val updated = BrimhavenArenaRoute.crossings(p, objects)
+        assertTrue(updated.none { it.start == plank.start && it.obj === plank.obj })
+        assertNotNull(BrimhavenArenaRoute.path(plank.from, plank.to, updated))
+        `when`(p.agility.level).thenReturn(39)
+        val drained = BrimhavenArenaRoute.crossings(p, objects)
+        assertTrue(drained.none { edge -> edge.obj == null && ArenaTraps.traps[edge.trigger]?.level == 40 })
+    }
+
+    @Test fun centralRegistrationRestoresTheArenaBudget() {
+        val manager = io.luna.game.model.mob.bot.script.BotScriptManager()
+        val previous = world.botManager.scriptManager
+        `when`(world.botManager.scriptManager).thenReturn(manager)
+        val first = scriptListeners.size
+        try {
+            Class.forName("game.bot.scripts.RegisterScripts").getConstructor(Array<String>::class.java)
+                .newInstance(emptyArray<String>() as Any)
+            @Suppress("UNCHECKED_CAST")
+            val listener = scriptListeners.drop(first).single() as
+                io.luna.game.event.EventListener<io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent>
+            listener.apply(mock(io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent::class.java))
+            val data = ArenaData().also { it.attempted = true; it.deadline = 12345; it.failures = 4 }
+            val restored = manager.loadScript(BrimhavenArenaBotScript::class.java.name, visitor(), data) as BrimhavenArenaBotScript
+            assertEquals(12345, restored.snapshot().deadline); assertEquals(4, restored.snapshot().failures)
+            assertTrue(restored.snapshot().attempted)
+        } finally {
+            scriptListeners.subList(first, scriptListeners.size).clear()
+            `when`(world.botManager.scriptManager).thenReturn(previous)
+        }
+    }
+
+    @Test fun cancelledApproachPreservesAdmissionAndDoesNotCancelReplacementNavigation() = runBlocking {
+        for (replace in listOf(false, true)) {
+            val p = visitor(); enter(p); locateObjects()
+            val placement = map.objectSet.objects.first { it.objectId == 3551 }
+            val obstacle = obj(placement)
+            val edge = BrimhavenArenaRoute.crossings(p, listOf(obstacle)).first()
+            p.move(edge.start.translate(1, 0))
+            val data = ArenaData().also { it.entered = true }
+            val script = BrimhavenArenaBotScript(p, data)
+            assertFalse(script.init(true)); data.leaving = false
+            val pending = java.util.concurrent.CompletableFuture<io.luna.game.model.mob.movement.NavigationResult>()
+            `when`(p.navigator.navigate(edge.start, true)).thenReturn(pending)
+            `when`(p.navigator.currentPending).thenReturn(pending)
+            val crossing = launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                script.cross(edge, BrimhavenArena.targetIndex)
+            }
+            if (replace) `when`(p.navigator.currentPending).thenReturn(java.util.concurrent.CompletableFuture())
+            script.paused(); crossing.cancelAndJoin(); script.finish()
+            verify(p.navigator, times(if (replace) 0 else 1)).cancel()
+            assertTrue(p.paid); assertNotNull(BrimhavenArena.session(p)); assertTrue(script.snapshot().leaving)
+            verifyNoInteractions(p.actionHandler.interactions)
+        }
+    }
+
+    @Test fun expiredAndReplacedVisitsCannotDispatchMoreGameplay() = runBlocking {
+        val p = visitor(); enter(p)
+        val expired = ArenaData().also { it.deadline = System.currentTimeMillis() - 121_000 }
+        val old = BrimhavenArenaBotScript(p, expired)
+        assertTrue(old.init(true)); assertTrue(old.run())
+        val script = BrimhavenArenaBotScript(p)
+        assertFalse(script.init(true))
+        BrimhavenArena.leave(p); enter(p)
+        val replacement = BrimhavenArena.session(p)
+        assertTrue(script.run()); script.finish()
+        assertSame(replacement, BrimhavenArena.session(p))
+        verifyNoInteractions(p.actionHandler.interactions, p.actionHandler.banking)
     }
 }

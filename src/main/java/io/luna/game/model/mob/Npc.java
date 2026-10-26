@@ -16,6 +16,7 @@ import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
+import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.movement.wandering.DumbWanderingAction;
 import io.luna.game.model.mob.movement.wandering.PatrolAction;
 import io.luna.game.model.mob.movement.wandering.SmartWanderingAction;
@@ -194,6 +195,15 @@ public class Npc extends Mob {
     @Override
     public int getTotalHealth() {
         return combatDefinition.map(NpcCombatDefinition::getHitpoints).orElse(-1);
+    }
+
+    /**
+     * Receives a combat hit after its damage has been applied and capped to remaining health.
+     *
+     * @param damage The applied hit, including splashes and non-damaging spell effects.
+     */
+    public void onDamageApplied(CombatDamage damage) {
+
     }
 
     @Override

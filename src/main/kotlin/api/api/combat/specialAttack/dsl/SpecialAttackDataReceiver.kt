@@ -1,5 +1,6 @@
 package api.combat.specialAttack.dsl
 
+import game.player.Sound
 import io.luna.game.model.mob.Player
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.combat.attack.CombatAttack
@@ -43,6 +44,13 @@ class SpecialAttackDataReceiver(
     val attackRollPercent: Int = 100,
     val meleeDefenceBonus: EquipmentBonus? = null
 ) {
+
+    /**
+     * The sound sent once when a melee or ranged special commits, including misses and zero hits.
+     * A `null` value suppresses ordinary weapon audio for this special. Secondary hits and projectiles reuse the
+     * original attack without repeating this sound. Magic attacks retain their spell audio.
+     */
+    var launchSound: Sound? = null
 
     /**
      * Builds the combat attack instance that should be executed for this special attack.

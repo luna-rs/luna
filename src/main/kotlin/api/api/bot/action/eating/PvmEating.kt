@@ -1,14 +1,12 @@
 package api.bot.action.eating
 
 import api.attr.Attr
+import api.bot.action.PvmFight
 import api.bot.action.eating.MonsterMemory.Companion.monsterMemory
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
-import kotlinx.coroutines.delay
 import kotlin.random.Random
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Eats for a bot while it fights monsters, the way a player keeping an eye on their hitpoints would.
@@ -19,8 +17,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * point again. How hard it expects to be hit is learned through [MonsterMemory]. Between fights, it may top up to the
  * hitpoints it likes to start a fight with.
  *
- * While a script keeps calling [check] or [watch], it is attending to the bot's hitpoints, and
- * [game.bot.scripts.EatFoodReflexScript] leaves eating to it. If the script stops checking because it was paused or
+ * While a script keeps calling [check], usually through [api.bot.action.PvmTactics], it is attending to the bot's
+ * hitpoints, and [game.bot.scripts.EatFoodReflexScript] leaves eating to it. If the script stops checking because it was paused or
  * is busy elsewhere, attention lapses after [ATTENTION_TICKS] and the reflex looks after the bot again.
  *
  * @param bot The bot to eat for.
@@ -110,9 +108,10 @@ class PvmEating(private val bot: Bot) {
     /**
      * Looks after the bot's hitpoints once: notices damage it has taken, and eats if it's time to.
      *
+     * @param fight The monsters the bot is fighting, or `null` if it isn't fighting.
      * @return `false` if the bot needs to leave and restock food.
      */
-    suspend fun check(): Boolean {
+    suspend fun check(fight: PvmFight?): Boolean {
         val now = bot.world.currentTick
         bot.attendingUntil = now + ATTENTION_TICKS
         val hp = bot.health
@@ -120,31 +119,9 @@ class PvmEating(private val bot: Bot) {
             return true
         }
         val maximumHp = bot.totalHealth
-        val fighting = updateFight()
+        val fighting = updateFight(fight)
         observe(now, hp, maximumHp)
         return if (fighting) duringFight(now, hp, maximumHp) else betweenFights(now, hp, maximumHp)
-    }
-
-    /**
-     * Waits a natural moment while checking the bot's hitpoints every tick, the way a player keeps half an eye on
-     * them between clicks.
-     *
-     * @param min The shortest wait.
-     * @param max The longest wait.
-     * @return `false` if the bot needs to leave and restock food.
-     */
-    suspend fun watch(min: Duration = 1200.milliseconds, max: Duration = 2400.milliseconds): Boolean {
-        val end = System.currentTimeMillis() + Random.nextLong(min.inWholeMilliseconds, max.inWholeMilliseconds + 1)
-        while (true) {
-            if (!check()) {
-                return false
-            }
-            val left = end - System.currentTimeMillis()
-            if (left <= 0) {
-                return true
-            }
-            delay(minOf(left, 600))
-        }
     }
 
     /**
@@ -155,21 +132,16 @@ class PvmEating(private val bot: Bot) {
     }
 
     /**
-     * Works out what the bot is fighting, starting a new fight with a fresh habit when its opponent changes, and how
-     * hard it expects to be hit.
+     * Starts a new fight with a fresh habit when the bot's opponent changes, and works out how hard it expects to be
+     * hit.
      *
      * @return `true` if the bot is fighting a monster.
      */
-    private fun updateFight(): Boolean {
-        val target = (bot.combat.target as? Npc)?.takeIf { it.isAlive }
-        if (target == null && !bot.combat.inCombat()) {
+    private fun updateFight(fight: PvmFight?): Boolean {
+        if (fight == null) {
             return false
         }
-        val attackers = bot.world.locator.findViewableNpcs(bot) { it.isAlive && it.combat.target == bot }
-        val primary = target ?: (bot.combat.lastCombatWith as? Npc)?.takeIf { it in attackers } ?: attackers.firstOrNull()
-        if (primary == null) {
-            return false
-        }
+        val primary = fight.primary
         if (primary !== opponent || primary.spawnCount != opponentLife) {
             opponent = primary
             opponentLife = primary.spawnCount
@@ -179,7 +151,7 @@ class PvmEating(private val bot: Bot) {
             lullDecided = false
         }
         val knowledge = habit!!.knowledge
-        danger = (attackers + primary).sumOf { bot.monsterMemory.expectedMaxHit(it, knowledge) }.coerceAtLeast(1)
+        danger = (fight.attackers + primary).sumOf { bot.monsterMemory.expectedMaxHit(it, knowledge) }.coerceAtLeast(1)
         return true
     }
 

@@ -61,7 +61,7 @@ object ArenaObstacles {
     data class Route(val start: Position, val steps: List<AgilityStep>, val xp: Double, val failed: Boolean,
                      val hurts: Boolean = failed)
 
-    internal fun route(player: Player, obj: GameObject, roll: Double): Route? {
+    internal fun route(player: Player, obj: GameObject, roll: Double, from: Position = player.position): Route? {
         if (obj.id !in ids || obj.position.z != 3 || !BrimhavenArena.inside(obj.position)) return null
         val p = obj.position
         var dx = 0
@@ -107,8 +107,8 @@ object ArenaObstacles {
             }
             3565 -> {
                 // Low walls are two tiles wide; select the end on the player's own platform.
-                if (obj.direction == ObjectDirection.WEST) dy = if (player.y <= p.y) 1 else -1
-                else dx = if (player.x <= p.x) 1 else -1
+                if (obj.direction == ObjectDirection.WEST) dy = if (from.y <= p.y) 1 else -1
+                else dx = if (from.x <= p.x) 1 else -1
                 start = if (dx > 0 || dy > 0) p.translate(-dx, -dy) else p.translate(-dx * 2, -dy * 2)
                 length = 3; xp = 8.0; low = 240; high = 290; walking = -1; animation = 1252
             }
