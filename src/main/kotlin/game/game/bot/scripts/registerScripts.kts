@@ -1,5 +1,8 @@
 package game.bot.scripts
 
+import game.bot.scripts.skills.TeleportTrainingBotScript
+import game.bot.scripts.skills.TeleportTrainingBotScript.Companion.TeleportTrainingData
+
 import game.bot.scripts.combat.PkBotScript
 import game.bot.scripts.skills.SlayerBotScript
 import game.bot.scripts.skills.SlayerBotScript.SlayerData
@@ -124,6 +127,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<TeleportTrainingData>(TeleportTrainingBotScript::class) { bot, data -> TeleportTrainingBotScript(bot, data) }
     scriptManager.addScript<TrailData>(TreasureTrailBotScript::class) { bot, data -> TreasureTrailBotScript(bot, data) }
     scriptManager.addScript<GatheringData>(HerbGatheringScript::class) { bot, data -> HerbGatheringScript(bot, data) }
     scriptManager.addScript<TelegrabData>(TelegrabBotScript::class) { bot, data -> TelegrabBotScript(bot, data) }

@@ -9,6 +9,7 @@ import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.BonesToFoodBotScript
+import game.bot.scripts.skills.TeleportTrainingBotScript
 import game.bot.scripts.skills.TelegrabBotScript
 import game.skill.magic.bonesToItems.BonesToItemsType
 import game.skill.magic.chargeOrb.ChargeOrbType
@@ -29,15 +30,27 @@ import io.luna.game.model.mob.bot.Bot
  * Orb selection uses the existing level/personality policy and the regular spellbook; each script carries
  * its matching obelisk subzone and uses the shared travel and banking system.
  *
- * TODO Add teleportation-based Magic training. Bots should be able to repeatedly cast suitable teleport spells when
- *      their level and rune supply make teleporting a reasonable training method.
+ * Training also has a 25% chance to consider owned city-teleport supplies before production. Supported safe
+ * teleports use the normal level/personality selector; profit selection never spends runes on teleport training.
  *
  * @author lare96
  */
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
         return getProductionScript(bot, level)
+    }
+
+    /**
+     * Selects a safe city teleport from owned rune costs without changing the bot's equipped staff or spellbook.
+     * The inherited policy preserves casual variety and prefers higher-level available spells for efficient bots.
+     */
+    internal fun getTeleportScript(bot: Bot, level: Int): TeleportTrainingBotScript? {
+        val duration = getDuration(bot)
+        val options = TeleportTrainingBotScript.SITES.keys.map { TeleportTrainingBotScript(bot, it, duration) }
+            .filter { it.isEligible() }
+        return getBestActivity(bot, level, { it.spell.level }, options)
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
