@@ -150,7 +150,6 @@ final class NavigationAction extends Action<Mob> {
             // When reached: clear walking queue, cancel pathing, and stop action if tracking isn't required.
             reachedOnce = true;
             if (!request.isContinuous()) {
-                // TODO: More testing around this with following, combat, and normal interactions..
                 mob.getWalking().clear();
             }
             if (current != null) {

@@ -43,7 +43,12 @@ public class NumberUtils {
         return abbreviateCeil(value, 1_000_000, "M", 3);
     }
 
-    //todo docs
+    /**
+     * Formats an integer GP value using {@link #formatPrice(long)}.
+     *
+     * @param value The GP value to format.
+     * @return The formatted GP value.
+     */
     public static String formatPrice(int value) {
         return formatPrice((long) value);
     }

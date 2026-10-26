@@ -45,16 +45,6 @@ import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFacto
  */
 public class WalkingNavigator {
 
-    // TODO@0.5.0 The builder should let you "test" the request to see if its valid (generates a valid path).
-    //  but if the builder is used this way, it passes that pre-computed path onto navigationaction. disabled for
-    //  continuous actions.
-    //  Flow could look like var request = builder.async(true).target(other)
-    //    if(request.test()) { // equivalent to canNavigate (result cached, path generated cached, always true for continuous)
-    //        result.complete() // equivalent to navigate()/submit() (uses generated path on non-continuous requests)
-    //    }
-    //  While the normal utility methods remain unchanged.
-    //  Should save a TON of resources in situations where lots of bots are using the travel system.
-
     /**
      * The logger instance.
      */

@@ -4,14 +4,14 @@ import io.luna.game.model.mob.bot.Bot
 import api.predef.ext.*
 import engine.trade.ConfirmTradeInterface
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.PlayerContextMenuOption
+import io.luna.game.model.mob.PlayerContextMenuOption.TRADE
 
 /**
  * Handles bot actions related to player-to-player trading.
  *
- * This handler covers sending trade requests, accepting or declining trade screens, and offering inventory items into
- * the active trade container. It intentionally performs actions through normal client outputs so bot trades behave like
- * regular player trades.
+ * Provides trade-request, final-confirmation, and window-closing primitives through normal client outputs.
+ * Trade stages handle offer editing, participant ownership, and observing interface transitions. A submitted request
+ * does not by itself establish that a trade screen opened or that either participant accepted.
  *
  * @param bot The bot performing trade actions.
  * @param handler The parent action handler.
@@ -20,19 +20,21 @@ import io.luna.game.model.mob.PlayerContextMenuOption
 class BotTradingActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
-     * Sends a trade request to another player.
+     * Approaches another player and submits the native trade interaction while this bot may trade.
      *
-     * The current implementation only attempts the interaction when the target player has the expected context menu
-     * entry available.
+     * Matches the server's request filter by checking this bot's [TRADE] menu option. The recipient's menu and either
+     * player's Follow option do not determine this permission. The interaction handler rechecks it throughout approach
+     * and immediately before sending the click, so a menu change cannot authorize a stale trade interaction.
+     * Native controller and trade-request validation still decide whether the request opens a trade screen.
      *
      * @param plr The player to trade with.
-     * @return `true` if the trade interaction was submitted.
+     * @return `true` if the interaction handler confirms reach after submitting the click; `false` if permission is
+     * absent or lost, or interaction fails. A successful result does not confirm that a trade interface opened.
      */
     suspend fun sendTradeRequest(plr: Player): Boolean {
-        if (PlayerContextMenuOption.FOLLOW in plr.contextMenu) {
-            return handler.interactions.interact(4, plr)
+        return handler.interactions.interact(TRADE.index, plr) {
+            TRADE in bot.contextMenu
         }
-        return false
     }
 
     /**

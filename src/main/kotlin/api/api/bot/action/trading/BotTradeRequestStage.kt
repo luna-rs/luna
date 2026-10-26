@@ -25,7 +25,11 @@ class BotTradeRequestStage(
 ) : BotTradeStage(bot, other) {
 
     /**
-     * Sends a trade request to the other player and waits for the trade offer interface to open.
+     * Sends a permitted native trade request to the other player and waits for that player's offer interface.
+     *
+     * An already-open offer with the expected participant proceeds without sending another request. Otherwise the
+     * trading helper checks this bot's Trade option during approach and before the click. Reach or click submission
+     * alone does not advance the stage; the matching offer interface must appear within the request timeout.
      *
      * @return The next [BotTradeOfferStage] if the request was sent and the trade interface opened within the
      * timeout, otherwise `null`.
@@ -33,7 +37,7 @@ class BotTradeRequestStage(
     suspend fun sendAndAwait(): BotTradeOfferStage? {
         val existing = bot.overlays[OfferTradeInterface::class]
         if (existing?.other === other) return BotTradeOfferStage(bot, other, this)
-        return if (bot.actionHandler.interactions.interact(4, other)) {
+        return if (bot.actionHandler.trading.sendTradeRequest(other)) {
             if (waitFor(REQUEST_WAIT_SECONDS.seconds) {
                     bot.overlays[OfferTradeInterface::class]?.other === other
                 })
