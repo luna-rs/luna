@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.Suspendable.naturalDelay
+import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.predef.*
 import api.predef.ext.*
@@ -13,6 +14,7 @@ import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Handles bot-driven inventory actions.
@@ -314,6 +316,23 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             }
         }
         return false
+    }
+
+    /**
+     * Eats the food in slot [index] with a single click, and waits for the bite.
+     *
+     * Unlike [eatAnyFood], this never clicks again, so the bot only eats when it means to. The bite counts once the
+     * slot no longer holds [id]: it is either empty or holds what is left of the food, like half a pizza.
+     *
+     * @param index The inventory slot of the food.
+     * @param id The food's item id.
+     * @return `true` if the bot ate the food.
+     */
+    suspend fun eat(index: Int, id: Int): Boolean {
+        if (Food.ID_TO_FOOD[id] == null || !clickItem(1, id, index)) {
+            return false
+        }
+        return waitFor(2.seconds) { bot.inventory[index]?.id != id }
     }
 
     /**
