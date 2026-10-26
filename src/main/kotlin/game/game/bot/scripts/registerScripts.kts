@@ -26,6 +26,7 @@ import engine.bot.speech.BotConversationPool
 import engine.bot.speech.BotScamSpeechPool
 import game.bot.scripts.DepositPartyRoomItemBotScript.DonationData
 import game.bot.scripts.CastleWarsBotScript.MatchData
+import game.bot.scripts.PestControlBotScript.PestControlData
 import game.bot.scripts.GamesRoomBotScript.BoardGameData
 import game.bot.scripts.TreasureTrailBotScript.Companion.TrailData
 import game.bot.scripts.DropPartyBotScript.PartyData
@@ -151,6 +152,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<DonationData>(DepositPartyRoomItemBotScript::class) { bot, data -> DepositPartyRoomItemBotScript(bot, data) }
     scriptManager.addScript<PartyData>(DropPartyBotScript::class) { bot, data -> DropPartyBotScript(bot, data) }
     scriptManager.addScript<MatchData>(CastleWarsBotScript::class) { bot, data -> CastleWarsBotScript(bot, data) }
+    scriptManager.addScript<PestControlData>(PestControlBotScript::class) { bot, data -> PestControlBotScript(bot, data) }
     scriptManager.addScript<BoardGameData>(GamesRoomBotScript::class) { bot, data -> GamesRoomBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }

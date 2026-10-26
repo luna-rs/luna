@@ -13,6 +13,8 @@ import game.bot.scripts.DepositPartyRoomItemBotScript
 import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
 import game.bot.scripts.CastleWarsBotScript
+import game.bot.scripts.PestControlBotScript
+import game.content.pestControl.PestControl
 import game.bot.scripts.GnomeBallBotScript
 import game.bot.scripts.BrimhavenArenaBotScript
 import game.bot.scripts.RangingGuildBotScript
@@ -52,6 +54,8 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
+        if (PestControlBotScript.eligible(bot) && (PestControl.atOutpost(bot.position) ||
+                PestControl.round.waiting().isNotEmpty() || rand(0.25))) return PestControlBotScript(bot)
         if (RangingGuildBotScript.eligible(bot) && (bot.count > 0 || rand(0.25))) return RangingGuildBotScript(bot)
         if (BrimhavenArenaBotScript.eligible(bot) && (BrimhavenArena.inside(bot.position) || rand(0.25)))
             return BrimhavenArenaBotScript(bot)
