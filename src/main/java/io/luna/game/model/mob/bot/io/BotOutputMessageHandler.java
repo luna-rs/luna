@@ -394,6 +394,14 @@ public final class BotOutputMessageHandler {
      * @return {@code true} if successfully queued, otherwise {@code false}.
      */
     public boolean sendInventoryItemClick(int option, int index, int itemId) {
+        return sendItemAction(option, index, 3214, itemId);
+    }
+
+    /**
+     * Sends an item's own action from an inventory-style grid, including puzzle pieces.
+     * Widget-defined container actions use {@link #sendItemWidgetClick(int, int, int, int)} instead.
+     */
+    public boolean sendItemAction(int option, int index, int widgetId, int itemId) {
         if (option < 1 || option > 5) {
             bot.log("Invalid inventory item click option: " + option);
             return false;
@@ -404,13 +412,13 @@ public final class BotOutputMessageHandler {
 
         switch (option) {
             case 1:
-                msg.putShort(3214, ValueType.ADD);
+                msg.putShort(widgetId, ValueType.ADD);
                 msg.putShort(index, ByteOrder.LITTLE);
                 msg.putShort(itemId, ByteOrder.LITTLE);
                 opcode = 203;
                 break;
             case 2:
-                msg.putShort(3214, ByteOrder.LITTLE);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
                 msg.putShort(itemId, ByteOrder.LITTLE);
                 msg.putShort(index, ValueType.ADD);
                 opcode = 24;
@@ -418,19 +426,19 @@ public final class BotOutputMessageHandler {
             case 3:
                 msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
                 msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(3214, ByteOrder.LITTLE);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
                 opcode = 161;
                 break;
             case 4:
                 msg.putShort(index, ByteOrder.LITTLE);
                 msg.putShort(itemId, ValueType.ADD);
-                msg.putShort(3214);
+                msg.putShort(widgetId);
                 opcode = 228;
                 break;
             case 5:
-                msg.putShort(index, ByteOrder.LITTLE);
-                msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(itemId, ValueType.ADD);
+                msg.putShort(widgetId);
+                msg.putShort(index, ValueType.ADD);
                 opcode = 4;
                 break;
             default:

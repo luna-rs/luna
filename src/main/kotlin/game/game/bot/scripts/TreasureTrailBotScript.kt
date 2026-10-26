@@ -39,6 +39,8 @@ import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -296,7 +298,7 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
         if (!handler.inventory.clickItem(1, clue.auxiliary) || !waitFor(3.seconds) { bot.overlays.hasWindow() } ||
             !handler.widgets.clickCloseInterface() || !awaitActionSafety(ActionSafety.NON_COMBAT) ||
             !handler.interactions.interact(1, npc) || !waitFor(5.seconds) { NumberInput::class in bot.overlays }) return false
-        return isActionSafe(ActionSafety.NON_COMBAT) && bot.output.enterAmount(clue.answer)
+        return isActionSafe(ActionSafety.NON_COMBAT) && handler.widgets.enterAmount(clue.answer)
     }
 
     /**
@@ -305,14 +307,14 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
     private suspend fun solvePuzzle(box: Int): Boolean {
         if (!handler.inventory.clickItem(1, box) || !waitFor(5.seconds) { TrailPuzzle.PuzzleInterface::class in bot.overlays }) return false
         val tiles = TrailPuzzle.tiles(bot) ?: return false
-        val moves = TreasureTrailPuzzleSolver.plan(tiles) ?: return false
+        val moves = withContext(Dispatchers.Default) { TreasureTrailPuzzleSolver.plan(tiles) } ?: return false
         var board = tiles
         for (index in moves) {
             if (!isActionSafe(ActionSafety.NON_COMBAT) || TrailPuzzle.PuzzleInterface::class !in bot.overlays) return false
             val blank = board.indexOf(0)
             if (!TrailPuzzle.adjacent(index, blank) || board[index] == 0) return false
             val expected = board.toMutableList().also { it[blank] = it[index]; it[index] = 0 }
-            if (!bot.output.sendItemWidgetClick(5, index, 6980, 2748 + board[index]) ||
+            if (!handler.widgets.clickItemAction(6976, 6980, 5, index, 2748 + board[index]) ||
                 !waitFor(3.seconds) { TrailPuzzle.tiles(bot) == expected }) return false
             board = expected
         }

@@ -47,6 +47,19 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
         ownsComponent(interfaceId, buttonId) && bot.output.clickButton(buttonId)
 
     /**
+     * Selects an item's own action on an open grid. Native readers validate the displayed item and slot.
+     */
+    fun clickItemAction(interfaceId: Int, widgetId: Int, option: Int, index: Int, itemId: Int): Boolean =
+        index in 0..32767 && option in 1..5 && ownsComponent(interfaceId, widgetId) &&
+            WidgetDefinition.ALL[widgetId].orElse(null)?.type == WidgetDefinition.WidgetType.ITEM_GRID &&
+            bot.output.sendItemAction(option, index, widgetId, itemId)
+
+    /**
+     * Answers the current numeric prompt through the native input packet.
+     */
+    fun enterAmount(amount: Int): Boolean = NumberInput::class in bot.overlays && bot.output.enterAmount(amount)
+
+    /**
      * Drags between two slots of an open item grid through the native arrange-item packet.
      * Slot capacity and move legality remain owned by the interface's content handler.
      */
