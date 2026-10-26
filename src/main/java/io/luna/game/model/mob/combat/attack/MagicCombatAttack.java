@@ -29,7 +29,9 @@ import java.util.function.BiFunction;
  * Custom attacks without a spell definition use the attacker's default magic maximum hit. Negative spell maximum
  * hits denote effect-only spells that still check accuracy.
  * Spellbook projectiles are sent with the cast animation and deliver damage on the server tick after their arrival
- * cycle. Spells without a projectile resolve on the following tick. Custom attacks retain their existing timing.
+ * cycle. Spells without a projectile resolve on the following tick. Custom attacks can opt into projectile timing
+ * through {@link #usesProjectileTiming()}, using the arrival cycle's server tick without the spellbook offset.
+ * Other custom attacks retain their existing timing.
  *
  * @param <T> The concrete {@link Mob} type performing the magic attack.
  * @author lare96
@@ -128,12 +130,23 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
-        if (spellEffect != null) {
+        if (usesProjectileTiming()) {
             onProjectileLaunched();
             scheduleProjectileArrival(projectileHitDelay);
         } else {
             launchProjectile(interactionPolicy.getDistance() == 1 ? 0 : 1, interactionPolicy.getDistance() == 1 ? 1 : 3);
         }
+    }
+
+    /**
+     * Selects immediate projectile display and an arrival delay derived from its client cycle.
+     * Spellbook attacks use this by default. Custom attacks may opt in after their projectile profile has been
+     * configured relative to the cast, rather than the legacy delayed launch callback.
+     *
+     * @return Whether this attack uses its displayed projectile to schedule damage.
+     */
+    protected boolean usesProjectileTiming() {
+        return spellEffect != null;
     }
 
     @Override
@@ -153,8 +166,9 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     public final void onProjectileLaunched() {
         if (projectileFunction != null) {
             LocalProjectile projectile = projectileFunction.apply(attacker, victim);
-            // Lost City's spell queues use duration / 30 + 1, including exact cycle boundaries.
-            projectileHitDelay = projectile.getEndCycle() / 30 + 1;
+            // Spellbook queues add one tick; custom NPC projectiles use duration / 30.
+            // The action scheduler requires a positive delay for very short flights.
+            projectileHitDelay = Math.max(1, projectile.getEndCycle() / 30 + (spellEffect == null ? 0 : 1));
             projectile.display();
         }
     }

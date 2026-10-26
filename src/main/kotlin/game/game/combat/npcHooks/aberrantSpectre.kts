@@ -30,29 +30,30 @@ val CAST_ANIMATION = Animation(1507, AnimationPriority.HIGH)
 /**
  * The starting graphic displayed when the attack is cast.
  */
-val START_GRAPHIC = Graphic(334, 600, 0)
+val START_GRAPHIC = Graphic(334, 500, 0)
 
 /**
- * Creates the aberrant spectre magic projectile.
+ * Creates the spectre projectile at cast time using Lost City's player_projectile profile.
+ * Arrival is thirty-two client cycles plus ten per tile from the NPC's position to the target.
  */
 val MAGIC_PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
-    // TODO@0.5.0 Fix projectile values, looks a bit off.
-    LocalProjectile.followEntity(ctx)
+    val duration = 32 + mob.position.computeLongestDistance(other.position) * 10
+    LocalProjectile.followEntity(mob.context)
         .setSourceEntity(mob)
         .setTargetEntity(other)
         .setId(335)
-        .setTicksToEnd(44)
-        .setTicksToStart(3)
-        .setStartHeight(43)
-        .setEndHeight(31)
-        .setInitialSlope(0)
+        .setTiming(32, duration)
+        .setLaunchOffset(4)
+        .setStartHeight(61)
+        .setEndHeight(40)
+        .setInitialSlope(5)
         .build()
 }
 
 /**
  * The ending graphic displayed when the projectile reaches the victim.
  */
-val END_GRAPHIC = Graphic(336, 500, 0)
+val END_GRAPHIC = Graphic(336, 320, 0)
 
 /**
  * Handles the aberrant spectre special magic attack.
@@ -61,7 +62,8 @@ val END_GRAPHIC = Graphic(336, 500, 0)
  * hit that ignores protection prayers. At launch, offensive skills lose eighty percent of their current levels;
  * defence, prayer, and agility lose forty percent. These drains are immediate in Lost City's spectre script.
  * Equipment is checked when the hit is calculated, not when an attack is first selected during pursuit.
- * Delivered hits retain the shared magic impact graphics and sound.
+ * The projectile is sent with the cast, and damage uses its arrival cycle divided by thirty without the spellbook
+ * extra tick. Delivered hits retain the shared magic impact graphics and sound.
  *
  * @author lare96
  */
@@ -81,6 +83,13 @@ class AberrantSpectreMagicAttack(attacker: Npc, victim: Mob) : MagicCombatAttack
      * Protection captured during damage resolution immediately before launch, including the global equipment setting.
      */
     private var protected = true
+
+    override fun usesProjectileTiming(): Boolean = true
+
+    override fun attack() {
+        if (victim is Player) victim.playSound(Sound.SLAYERDOORS_CLOSE)
+        super.attack()
+    }
 
     override fun calculateDamage(other: Mob?): CombatDamage {
         protected = !Luna.settings().skills().slayerEquipmentNeeded() || victim !is Player ||
