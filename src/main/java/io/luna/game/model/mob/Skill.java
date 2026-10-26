@@ -304,11 +304,12 @@ public final class Skill {
     }
 
     /**
-     * Returns the static level derived from total experience.
+     * Returns the static level derived from player experience or assigned from an NPC combat definition.
      * <p>
-     * The value is computed lazily and cached until experience changes.
+     * Experience-based values are computed lazily and cached until experience changes. NPC definitions may
+     * explicitly assign zero, independently of the minimum experience-based player level of one.
      *
-     * @return The static experience-based level.
+     * @return The static level.
      */
     public int getStaticLevel() {
         if (staticLevel == -1) {
@@ -320,13 +321,13 @@ public final class Skill {
     /**
      * Sets the static level by converting the level into its corresponding experience value for players.
      * NPC base levels are stored directly, allowing combat definitions above the player level cap without
-     * manufacturing experience. Hitpoints and prayer may be zero; other NPC skills have a minimum of one.
+     * manufacturing experience. All NPC base skills may be zero; negative values are clamped to zero.
      *
      * @param level The new static level.
      */
     public void setStaticLevel(int level) {
         if (set.getMob() instanceof Npc) {
-            staticLevel = Math.max(id == HITPOINTS || id == PRAYER ? 0 : 1, level);
+            staticLevel = Math.max(0, level);
             return;
         }
         setExperience(SkillSet.experienceForLevel(level));
@@ -345,7 +346,8 @@ public final class Skill {
     /**
      * Sets the dynamic level for this skill.
      * <p>
-     * Values lower than {@code 1} are clamped to {@code 1}, except hitpoints and prayer which may reach zero.
+     * All skills may be drained to zero. Negative values are clamped to zero; the static level is unchanged so
+     * restoration can recover a fully drained skill normally.
      * <p>
      * If the level does not change, no listeners are notified and no restoration is scheduled.
      * <p>
@@ -356,9 +358,7 @@ public final class Skill {
      * @param newLevel The new dynamic level.
      */
     public void setLevel(int newLevel) {
-        if (newLevel < 1) {
-            newLevel = id == Skill.HITPOINTS || id == Skill.PRAYER ? 0 : 1;
-        }
+        newLevel = Math.max(0, newLevel);
 
         int oldLevel = level;
 
@@ -380,7 +380,7 @@ public final class Skill {
      * <p>
      * Positive values restore a drained level up to its static level and leave existing boosts unchanged.
      * Negative values subtract only the requested amount, retaining any remaining boost above the static level.
-     * Hitpoints and prayer have a minimum of zero; other skills have a minimum of one.
+     * All skills have a minimum dynamic level of zero.
      * <p>
      * Zero is a no-op. This method cannot create or increase a boost. Intermediate arithmetic uses a long so
      * extreme adjustments cannot wrap around and reverse the intended change.
@@ -425,18 +425,19 @@ public final class Skill {
     /**
      * Applies a temporary drain relative to the static level.
      * <p>
-     * The target level is {@code getStaticLevel() - amount}. If this skill is already at or below that value,
-     * nothing changes and {@code false} is returned.
+     * The target level is {@code getStaticLevel() - amount}, clamped to zero. If this skill is already at or below
+     * that value, nothing changes and {@code false} is returned. In particular, draining an already-zero skill
+     * does not report a change. Intermediate arithmetic uses a long to avoid overflow.
      *
      * @param amount The amount to drain below the static level.
      * @return {@code true} if the drain was applied, otherwise {@code false}.
      */
     public boolean weaken(int amount) {
-        int newLevel = getStaticLevel() - amount;
+        long newLevel = Math.max(0L, (long) getStaticLevel() - amount);
         if (level <= newLevel) {
             return false;
         }
-        setLevel(newLevel);
+        setLevel((int) newLevel);
         return true;
     }
 
