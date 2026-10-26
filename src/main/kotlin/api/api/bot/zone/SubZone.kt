@@ -87,6 +87,22 @@ enum class SubZone(
         parent = { KARAMJA }),
 
     /**
+     * Yanille's sandpit at (2542, 3103), used to fill owned buckets for glassmaking.
+     */
+    YANILLE_SAND_PIT(
+        inside = Position(2541, 3103),
+        area = SimpleBoxArea.of(2538, 3099, 2549, 3109),
+        parent = { YANILLE }),
+
+    /**
+     * Dairy cow at (3040, 3301) on the farm south of Falador, used to fill empty buckets with milk.
+     */
+    FALADOR_DAIRY_COW(
+        inside = Position(3039, 3301),
+        area = SimpleBoxArea.of(3035, 3297, 3045, 3306),
+        parent = { FALADOR }),
+
+    /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
      * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
      */

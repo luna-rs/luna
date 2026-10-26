@@ -7,11 +7,11 @@ import game.bot.scripts.TreasureTrailBotScript
 import game.bot.scripts.UseLampBotScript
 import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
+import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.SearchNestBotScript
 import game.skill.woodcutting.searchNest.Nest
-import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
@@ -22,17 +22,23 @@ import kotlin.time.Duration.Companion.minutes
  * Selects useful general activities from supplies the bot already owns.
  *
  * Owned crystal keys are used at a loaded chest, matched halves can be assembled, and empty water containers
- * are filled toward their wanted-stock target. Owned unsearched bird nests can also be opened and their contents
- * banked. Owned experience lamps are redeemed in a preferred supported skill. These tasks do not depend on a Crafting or combat preference.
+ * are filled toward their wanted-stock target. Wanted buckets of milk and sand use the same native filling task.
+ * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
+ * in a preferred supported skill. These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
  * @author lare96
  */
 object GeneralActivityCoordinator : BotCoordinator {
-    /** Default total water stock per container type when no wanted-item definition supplies a target. */
+    /**
+     * Default total water stock per container type when no wanted-item definition supplies a target.
+     * Other resources are prepared only when the bot has an explicit wanted-stock target.
+     */
     private const val DEFAULT_WATER_TARGET = 1_000
-    /** Loaded chest positions, discovered once rather than scanning all world objects on every decision. */
+    /**
+     * Loaded chest positions, discovered once rather than scanning all world objects on every decision.
+     */
     private val chestPositions by lazy {
         world.objects.filter { it.id == OpenCrystalChestBotScript.CHEST }.map { it.position }
     }
@@ -41,13 +47,16 @@ object GeneralActivityCoordinator : BotCoordinator {
         getScript(bot)?.let { bot.scriptStack.push(it) }
     }
 
-    /** Counts unnoted stock across bank and inventory using widened arithmetic. */
+    /**
+     * Counts unnoted stock across bank and inventory using widened arithmetic.
+     */
     private fun owned(bot: Bot, id: Int) = bot.bank.computeAmountForId(id).toLong() +
         bot.inventory.computeAmountForId(id)
 
     /**
      * Chooses a supported activity with owned inputs and a bounded session duration.
-     * Filled-water targets preserve the bot's configured quantity, while available empties limit each task.
+     * Filling targets preserve the bot's configured quantity, while available empties limit each task.
+     * Ready sources share selection so a water deficit cannot permanently suppress milk or sand requests.
      *
      * @param bot The bot whose supplies determine readiness.
      * @return A ready general activity, or null when none can currently run.
@@ -71,16 +80,21 @@ object GeneralActivityCoordinator : BotCoordinator {
         Nest.VALUES.filter { owned(bot, it.id) > 0 }.randomOrNull()?.let {
             return SearchNestBotScript(bot, it, duration)
         }
-        for ((empty, filled) in WaterResource.FILLABLES) {
-            val emptyStock = owned(bot, empty)
-            val filledStock = owned(bot, filled)
-            val wanted = bot.preferences.getWantedItem(filled)
-            val desired = wanted?.target() ?: DEFAULT_WATER_TARGET
-            if (emptyStock > 0 && filledStock < desired) {
-                val reachable = minOf(desired.toLong(), filledStock + emptyStock).toInt()
-                return FillWaterBotScript(bot, empty, reachable, duration)
+        val filling = buildList {
+            for (source in Source.entries) {
+                for (empty in source.emptyIds) {
+                    val filled = requireNotNull(source.resource.getFilled(empty))
+                    val desired = bot.preferences.getWantedItem(filled)?.target()
+                        ?: if (source == Source.WATER) DEFAULT_WATER_TARGET else continue
+                    val emptyStock = owned(bot, empty)
+                    val filledStock = owned(bot, filled)
+                    if (emptyStock > 0 && filledStock < desired) {
+                        val reachable = minOf(desired.toLong(), filledStock + emptyStock).toInt()
+                        add(FillWaterBotScript(bot, empty, reachable, duration, source))
+                    }
+                }
             }
         }
-        return null
+        return filling.randomOrNull()
     }
 }

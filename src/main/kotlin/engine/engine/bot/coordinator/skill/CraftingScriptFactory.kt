@@ -51,6 +51,7 @@ import io.luna.util.RandomUtils.roll
  * Owned molten glass and a glassblowing pipe also enable all seven existing glass products at levels 1–49.
  * Glassblowing is available in training and profit selection, using the player interface and configured XP.
  * Owned soda ash and buckets of sand also enable molten-glass production on the existing furnace routes.
+ * Non-training production can first fill owned empty buckets at a sandpit when soda ash is already available.
  * Gold and silver jewellery recipes use the same furnace routes when the required bars, gems, and mould are owned.
  * Owned soft clay and unfired pottery enable all existing shaping/firing recipes in Barbarian Village.
  * Owned wool, jute, and willow branches also enable existing loom recipes in Falador and Iorwerth camp.
@@ -192,7 +193,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
                 .map { WeaveTextileBotScript(bot, it, duration) }
                 .filter { it.isEligible() }.map { it.requiredLevel to it })
             val moltenGlass = MakeMoltenGlassBotScript(bot, duration)
-            if (moltenGlass.isEligible()) add(moltenGlass.requiredLevel to moltenGlass)
+            if (moltenGlass.isEligible() || (!training && moltenGlass.canPrepareSand()))
+                add(moltenGlass.requiredLevel to moltenGlass)
             if (!training) {
                 addAll(WaterResource.FILLED_IDS.map { MakeSoftClayBotScript(bot, it, duration) }
                     .filter { it.isEligible() || it.canPrepareWater() }.map { it.requiredLevel to it })
