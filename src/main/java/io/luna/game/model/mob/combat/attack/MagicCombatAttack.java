@@ -130,6 +130,16 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         if (start != null) {
             attacker.graphic(start);
         }
+        scheduleHit();
+    }
+
+    /**
+     * Schedules damage after the cast visuals have been displayed. Spellbook and opted-in custom projectiles use
+     * their flight timing; other custom attacks retain the legacy launch scheduler. Custom attacks with immediate
+     * damage can override this hook and deliver through {@link #onProjectileReached()} without a dummy projectile.
+     * Such overrides must also notify {@link #onProjectileFinished(boolean)} when delivery completes.
+     */
+    protected void scheduleHit() {
         if (usesProjectileTiming()) {
             onProjectileLaunched();
             scheduleProjectileArrival(projectileHitDelay);

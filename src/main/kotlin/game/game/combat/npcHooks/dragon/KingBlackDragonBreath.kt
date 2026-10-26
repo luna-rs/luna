@@ -26,10 +26,12 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * Attacks use a five-tick cooldown. Ordinary fire supports shield, prayer and antifire protection;
  * special breaths ignore antifire and can poison, freeze or drain every skill except Hitpoints.
  * Secondary effects require an accurate hit, including accurate hits that roll zero damage.
- * Delivered hits run the shared magic impact visuals before applying breath-specific effects.
+ * Close breath resolves during the attack tick, with special effects before damage as in Lost City's zero-delay
+ * player queues. The original accuracy roll gates these effects, including accurate zero-damage hits.
  * Distant fire is launched from the facing head tile and uses its distance-based projectile arrival for damage.
  * Shocking breath subtracts two current levels, including from boosted skills, with a floor of zero.
  * Breath sounds are sent at launch with a thirty-client-cycle delay, independently of the damage arrival.
+ * Shocking breath displays its target graphic with a sixty-client-cycle delay, independently of accuracy.
  *
  * @param npc The attacking King Black Dragon.
  * @param other The target receiving the breath.
@@ -42,7 +44,7 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
     MagicCombatAttack<Npc>(npc, other, Animation(if (distant) 84 else kind.animation),
         if (distant) null else kind.graphic?.let { Graphic(it, 92, 0) },
         if (distant) PROJECTILE else null,
-        if (distant) Graphic(131, 124, 0) else if (kind == Kind.SHOCK) Graphic(197) else null,
+        if (distant) Graphic(131, 124, 0) else null,
         null, null, 5, if (distant) 10 else 1) {
 
     /**
@@ -129,7 +131,18 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
 
     override fun attack() {
         if (victim is Player) victim.playSound(kind.sound, 1)
+        if (!distant && kind == Kind.SHOCK) victim.graphic(Graphic(197, 0, 60))
         super.attack()
+    }
+
+    override fun scheduleHit() {
+        if (distant) {
+            super.scheduleHit()
+        } else {
+            applyBreathEffect()
+            onProjectileReached()
+            onProjectileFinished(false)
+        }
     }
 
     override fun calculateDamage(other: Mob): CombatDamage {
@@ -144,8 +157,12 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
         return damage
     }
 
-    override fun onDamageApplied(damage: CombatDamage?) {
-        if (damage != null) super.onDamageApplied(damage)
+    /**
+     * Applies a successful special-breath roll before the close-range hit. Lost City queues poison and freezing
+     * before its zero-delay damage request, while shocking stat drains happen directly in the attack script.
+     * This is a launch effect: a later damage-only defensive modification does not reroll or undo it.
+     */
+    private fun applyBreathEffect() {
         if (!accurate || victim !is Player || !victim.isAlive || kind == Kind.FIRE) return
         val protected = shield && (kind != Kind.SHOCK || prayer)
         if (rand().nextInt(if (protected) 8 else 2) != 0) return
