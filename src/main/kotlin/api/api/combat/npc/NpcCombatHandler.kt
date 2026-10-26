@@ -89,6 +89,14 @@ object NpcCombatHandler {
     }
 
     /**
+     * Determines if an NPC only ever uses its standard melee attack, because no hook replaces it.
+     *
+     * @param npc The NPC.
+     * @return `true` if [supplyAttack] always returns the NPC's default attack.
+     */
+    fun usesStandardAttack(npc: Npc): Boolean = resolve(npc) { it.replacesAttack } != true
+
+    /**
      * Consumes an incoming hit against an NPC and applies any registered defence hook.
      *
      * If a receiver is registered, its defence hook is invoked. When the defence hook provides an animation
