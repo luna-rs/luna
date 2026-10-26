@@ -2,8 +2,10 @@ package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
 import game.player.Sound;
+import engine.combat.prayer.CombatPrayer;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -70,6 +72,18 @@ public abstract class CombatAttack<T extends Mob> {
      * Gameplay recency checks use this value independently of the wall-clock timestamp.
      */
     private long launchTick = -1;
+
+    /**
+     * Smite state captured at launch, shared by every delivered hit from this attack.
+     */
+    private boolean smiteActive;
+
+    /**
+     * Returns the launch-time Smite state. Secondary attack wrappers may delegate to their original source.
+     */
+    public boolean isSmiteActive() {
+        return smiteActive;
+    }
 
     /**
      * Creates a new {@link CombatAttack}.
@@ -139,6 +153,8 @@ public abstract class CombatAttack<T extends Mob> {
         victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
+        smiteActive = attacker instanceof Player player && player.skill(Skill.PRAYER).getLevel() > 0 &&
+                player.getCombat().getPrayers().isActive(CombatPrayer.SMITE);
         if (attackSound != null && attacker instanceof Player player) {
             player.playSound(attackSound);
             if (victim instanceof Player other && other != player) {

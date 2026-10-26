@@ -114,6 +114,17 @@ public class PlayerController {
     }
 
     /**
+     * Checks whether a dying player may damage this target with Retribution. Ordinary area/team restrictions still
+     * apply; controllers whose combat checks require a living attacker may override this death-specific permission.
+     *
+     * @param victim The potential recipient of Retribution damage.
+     * @return Whether the current area or activity permits this damage.
+     */
+    public boolean retribution(Mob victim) {
+        return combat(victim);
+    }
+
+    /**
      * Called before a generated {@link ControllableEvent} is processed or posted
      * to plugins.
      * <p>

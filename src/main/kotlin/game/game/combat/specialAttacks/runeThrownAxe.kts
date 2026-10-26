@@ -67,6 +67,8 @@ val PROJECTILE: (Mob, Mob) -> LocalProjectile = { mob, other ->
 class ChainHitCombatAttack(private val source: PlayerRangedCombatAttack) :
     CombatAttack<Player>(source.attacker, source.victim, source.interactionPolicy, source.delay) {
 
+    override fun isSmiteActive(): Boolean = source.isSmiteActive
+
     /**
      * The hit delivered by the current synchronous rebound attempt, or null when delivery was skipped or cancelled.
      */

@@ -98,6 +98,7 @@ object DuelArena {
     }
 
     fun blockImpact(player: Player, other: Mob, source: CombatAttack<*>): Boolean {
+        if (source is engine.combat.prayer.RetributionCombatAttack) return !source.canHit()
         val original = attacks[source]
         if (original != null) return other !is Player || !original.fighting(player, other)
         return session(player) != null || (other is Player && session(other) != null)
