@@ -29,6 +29,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
  * Delivered hits run the shared magic impact visuals before applying breath-specific effects.
  * Distant fire is launched from the facing head tile and uses its distance-based projectile arrival for damage.
  * Shocking breath subtracts two current levels, including from boosted skills, with a floor of zero.
+ * Breath sounds are sent at launch with a thirty-client-cycle delay, independently of the damage arrival.
  *
  * @param npc The attacking King Black Dragon.
  * @param other The target receiving the breath.
@@ -42,7 +43,7 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
         if (distant) null else kind.graphic?.let { Graphic(it, 92, 0) },
         if (distant) PROJECTILE else null,
         if (distant) Graphic(131, 124, 0) else if (kind == Kind.SHOCK) Graphic(197) else null,
-        kind.sound, null, 5, if (distant) 10 else 1) {
+        null, null, 5, if (distant) 10 else 1) {
 
     /**
      * Breath visuals and sounds in the revision 377 pack.
@@ -125,6 +126,11 @@ class KingBlackDragonBreath(npc: Npc, other: Mob, private val kind: Kind, privat
     private var prayer = false
 
     override fun usesProjectileTiming(): Boolean = distant
+
+    override fun attack() {
+        if (victim is Player) victim.playSound(kind.sound, 1)
+        super.attack()
+    }
 
     override fun calculateDamage(other: Mob): CombatDamage {
         val player = other as? Player

@@ -788,14 +788,15 @@ public class Player extends Mob {
 
     /**
      * Plays a {@link Sound} enum value with a delay in game ticks.
+     * One game tick is thirty client cycles. The sound packet carries a repeat count of one; the client applies
+     * the player's effects-volume varp separately, so changing volume cannot alter the sound's loop count.
      *
      * @param sound The sound to play.
      * @param delayTicks The delay in game ticks before the sound is played.
      */
     public void playSound(Sound sound, int delayTicks) {
-        int delay = (delayTicks * 600) / 30;
-        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
-        queue(new SoundMessageWriter(sound.getId(), volume, delay));
+        int delay = delayTicks * 30;
+        queue(new SoundMessageWriter(sound.getId(), 1, delay));
     }
 
     /**

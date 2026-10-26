@@ -26,9 +26,9 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
     private final int radius;
 
     /**
-     * The sound volume.
+     * The sound repeat count encoded in the low three bits.
      */
-    private final int volume;
+    private final int loops;
 
     /**
      * The position offset.
@@ -40,13 +40,13 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
      *
      * @param soundId The sound ID.
      * @param radius The sound radius.
-     * @param volume The sound volume.
+     * @param loops The sound repeat count, from one to seven.
      * @param offset The offset.
      */
-    public AddLocalSoundMessageWriter(int soundId, int radius, int volume, int offset) {
+    public AddLocalSoundMessageWriter(int soundId, int radius, int loops, int offset) {
         this.soundId = soundId;
         this.radius = radius;
-        this.volume = volume;
+        this.loops = loops;
         this.offset = offset;
     }
 
@@ -55,7 +55,7 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
         ByteMessage msg = ByteMessage.message(41, buffer);
         msg.put(offset);
         msg.putShort(soundId, ByteOrder.BIG);
-        msg.put((radius << 4) + (volume & 7));
+        msg.put((radius << 4) | (loops & 7));
         return msg;
     }
 }

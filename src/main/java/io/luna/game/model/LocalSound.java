@@ -17,13 +17,15 @@ import static com.google.common.base.Preconditions.checkArgument;
  * only be heard near their source rather than broadcast globally.
  * <p>
  * Common uses include teleport effects, combat sounds, and environmental ambience.
+ * The packet carries a repeat count, not a volume percentage. Each listener's client applies its own effects-volume
+ * setting. Default sounds play once; custom repeats must fit the packet's three-bit field.
  *
  * @author lare96
  */
 public final class LocalSound extends LocalEntity {
 
     /**
-     * Creates a {@link LocalSound} centered on the given target using default radius and maximum volume.
+     * Creates a {@link LocalSound} centered on the given target using default radius and one playback.
      * <p>
      * The sound is emitted from the target's current position, uses {@link ChunkUpdatableView#globalView()}, and
      * defaults to half of {@link Position#VIEWING_DISTANCE} for its audible radius.
@@ -39,12 +41,12 @@ public final class LocalSound extends LocalEntity {
                 target.getPosition(),
                 ChunkUpdatableView.globalView(),
                 Position.VIEWING_DISTANCE / 2,
-                100
+                1
         );
     }
 
     /**
-     * Creates a {@link LocalSound} with default radius and maximum volume.
+     * Creates a {@link LocalSound} with default radius and one playback.
      * <p>
      * The default radius is half of {@link Position#VIEWING_DISTANCE}, which keeps the sound local to nearby players
      * while still being broadly audible around its source position.
@@ -63,25 +65,25 @@ public final class LocalSound extends LocalEntity {
                 position,
                 view,
                 Position.VIEWING_DISTANCE / 2,
-                100
+                1
         );
     }
 
     /**
-     * Creates a {@link LocalSound} with a custom audible radius and volume.
+     * Creates a {@link LocalSound} with a custom audible radius and repeat count.
      *
      * @param context The active {@link LunaContext}.
      * @param sound The sound to play.
      * @param position The world position where the sound originates.
      * @param view The view used to determine which players can receive the update.
      * @param radius The audible radius in tiles. Must be greater than {@code 0}.
-     * @param volume The playback volume from {@code 0} to {@code 100}, inclusive.
+     * @param loops The repeat count from {@code 1} to {@code 7}, inclusive.
      * @return A new {@link LocalSound} instance.
      */
     public static LocalSound of(LunaContext context, Sound sound,
                                 Position position, ChunkUpdatableView view,
-                                int radius, int volume) {
-        return new LocalSound(context, sound.getId(), position, view, radius, volume);
+                                int radius, int loops) {
+        return new LocalSound(context, sound.getId(), position, view, radius, loops);
     }
 
     /**
@@ -95,13 +97,13 @@ public final class LocalSound extends LocalEntity {
      * @param position The world position where the sound originates.
      * @param view The view used to determine which players can receive the update.
      * @param radius The audible radius in tiles. Must be greater than {@code 0}.
-     * @param volume The playback volume from {@code 0} to {@code 100}, inclusive.
+     * @param loops The repeat count from {@code 1} to {@code 7}, inclusive.
      * @return A new {@link LocalSound} instance.
      */
     public static LocalSound ofId(LunaContext context, int soundId,
                                   Position position, ChunkUpdatableView view,
-                                  int radius, int volume) {
-        return new LocalSound(context, soundId, position, view, radius, volume);
+                                  int radius, int loops) {
+        return new LocalSound(context, soundId, position, view, radius, loops);
     }
 
     /**
@@ -110,9 +112,9 @@ public final class LocalSound extends LocalEntity {
     private final int radius;
 
     /**
-     * The playback volume of the sound, from {@code 0} to {@code 100}.
+     * The repeat count of the sound, from {@code 1} to {@code 7}.
      */
-    private final int volume;
+    private final int loops;
 
     /**
      * Creates a new {@link LocalSound}.
@@ -122,23 +124,23 @@ public final class LocalSound extends LocalEntity {
      * @param position The world position where the sound originates.
      * @param view The view used to determine which players can receive the update.
      * @param radius The audible radius in tiles.
-     * @param volume The playback volume.
+     * @param loops The repeat count.
      */
     private LocalSound(LunaContext context, int id, Position position,
-                       ChunkUpdatableView view, int radius, int volume) {
+                       ChunkUpdatableView view, int radius, int loops) {
         super(context, id, EntityType.SOUND, position, view);
 
         checkArgument(radius > 0, "Radius must be > 0.");
-        checkArgument(volume >= 0 && volume <= 100,
-                "Volume must be between 0-100.");
+        checkArgument(loops >= 1 && loops <= 7,
+                "Loops must be between 1-7.");
 
         this.radius = radius;
-        this.volume = volume;
+        this.loops = loops;
     }
 
     @Override
     public ChunkUpdatableMessage displayMessage(int offset) {
-        return new AddLocalSoundMessageWriter(id, radius, volume, offset);
+        return new AddLocalSoundMessageWriter(id, radius, loops, offset);
     }
 
     @Override
@@ -146,7 +148,7 @@ public final class LocalSound extends LocalEntity {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("radius", radius)
-                .add("volume", volume)
+                .add("loops", loops)
                 .toString();
     }
 
@@ -158,9 +160,9 @@ public final class LocalSound extends LocalEntity {
     }
 
     /**
-     * @return The playback volume from {@code 0} to {@code 100}.
+     * @return The repeat count from {@code 1} to {@code 7}.
      */
-    public int getVolume() {
-        return volume;
+    public int getLoops() {
+        return loops;
     }
 }

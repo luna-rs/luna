@@ -501,7 +501,7 @@ cmd("interface", RIGHTS_DEV) {
  */
 cmd("sound", RIGHTS_DEV) {
     val id = asInt(0)
-    plr.queue(SoundMessageWriter(id, 0, 0))
+    plr.queue(SoundMessageWriter(id, 1, 0))
 }
 
 /**
