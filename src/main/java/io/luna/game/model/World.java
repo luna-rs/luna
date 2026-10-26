@@ -385,11 +385,22 @@ public final class World {
      * Responsibilities:
      * <ul>
      *     <li>decode and handle incoming client messages (for non-logging-out players)</li>
-     *     <li>process NPC walking and actions (skipping locked NPCs)</li>
-     *     <li>process player controllers, walking, actions, and bot "brain" logic</li>
+     *     <li>advance combat cooldowns once before input</li>
+     *     <li>process each active NPC's incoming impacts, phased actions, walking, and reach retry</li>
+     *     <li>process player controllers, incoming impacts, phased actions, walking, reach retry, and bot logic</li>
      * </ul>
      */
     private void preSynchronize() {
+
+        // Advance readiness once, before input can add food delays or incoming hits can set retaliation delays.
+        for (Npc npc : npcList) {
+            if (npc.getState() == EntityState.ACTIVE) {
+                npc.getCombat().processAttackDelay();
+            }
+        }
+        for (Player player : playerList) {
+            player.getCombat().processAttackDelay();
+        }
 
         // First handle all client input from players.
         for (Player player : playerList) {
@@ -408,9 +419,9 @@ public final class World {
             }
             try {
                 npc.getAggression().process();
-                npc.getCombat().processAttackDelay();
                 npc.getActions().process();
                 npc.getWalking().process();
+                npc.getActions().processAfterMovement();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn("{} could not complete pre-synchronization.", npc, e);
@@ -425,9 +436,9 @@ public final class World {
             try {
                 player.getControllers().process();
                 player.getTolerance().process();
-                player.getCombat().processAttackDelay();
                 player.getActions().process();
                 player.getWalking().process();
+                player.getActions().processAfterMovement();
 
                 if (player.isBot()) {
                     player.asBot().process();

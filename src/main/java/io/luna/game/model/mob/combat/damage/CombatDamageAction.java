@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.damage;
 
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionPhase;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -62,6 +63,11 @@ public final class CombatDamageAction extends Action<Mob> {
         this.source = source;
         attacker = damage.getAttacker();
         victim = damage.getVictim();
+    }
+
+    @Override
+    public ActionPhase getPhase() {
+        return ActionPhase.EFFECT;
     }
 
     @Override

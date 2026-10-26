@@ -28,7 +28,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <h3>Instant execution</h3>
  * <p>If {@link #instant} is {@code true}, the action attempts to execute on its first eligible cycle.
  * However, actions submitted <em>from within another action</em> (nested submission) are still not executed
- * until a subsequent queue cycle, because {@link ActionQueue} snapshots and processes actions per tick.
+ * until a subsequent queue cycle in the same phase. An action submitted into a later {@link ActionPhase}
+ * can run when that phase is reached.
  *
  * <h3>Lifecycle hooks</h3>
  * <ul>
@@ -178,6 +179,21 @@ public abstract class Action<T extends Mob> {
      * @return {@code true} if the action has completed and should be removed from the queue.
      */
     public abstract boolean run();
+
+    /**
+     * Returns when this action executes within the mob's turn, independently of its interruption type.
+     */
+    public ActionPhase getPhase() {
+        return ActionPhase.NORMAL;
+    }
+
+    /**
+     * Retries reach after walking, without advancing the action counter or calling {@link #onProcess()} again.
+     * Only interaction and combat phases receive this hook. Return true to complete the action.
+     */
+    public boolean runAfterMovement() {
+        return false;
+    }
 
     /**
      * Completes this action normally.

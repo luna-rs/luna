@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.interact;
 
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionPhase;
 import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
@@ -106,6 +107,19 @@ public final class InteractionAction extends Action<Player> {
     private List<InteractionActionListener> listeners;
 //todo docs
     private boolean retry;
+
+    /** Position of the last reach attempt; a post-movement retry is useful only after an actual step. */
+    private Position lastAttemptPosition;
+
+    @Override
+    public ActionPhase getPhase() {
+        return ActionPhase.INTERACTION;
+    }
+
+    @Override
+    public boolean runAfterMovement() {
+        return !mob.getPosition().equals(lastAttemptPosition) && run();
+    }
     /**
      * Creates a new {@link InteractionAction}.
      *
@@ -158,6 +172,7 @@ public final class InteractionAction extends Action<Player> {
      */
     @Override
     public boolean run() {
+        lastAttemptPosition = mob.getPosition();
         if (listeners.isEmpty()) {
             mob.sendMessage("Nothing interesting happens.");
             return true;

@@ -4,7 +4,7 @@ import api.predef.*
 import game.player.Sound
 import game.player.item.consume.food.Food
 import game.player.item.consume.food.Food.Companion.lastEat
-import io.luna.game.action.impl.ThrottledAction
+import io.luna.game.action.impl.ConsumeAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -18,7 +18,7 @@ val eatAnimation = Animation(829)
  * Consumes food and restores health, plus any other effects.
  */
 fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
-    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastEat, food.delay) {
+    plr.submitAction(object : ConsumeAction(plr, plr.lastEat, food.delay) {
         override fun execute() {
             val inv = plr.inventory
             if (inv.remove(index, eatItem)) {

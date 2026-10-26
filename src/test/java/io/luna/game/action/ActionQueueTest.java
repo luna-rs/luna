@@ -11,6 +11,32 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ActionQueueTest {
+    @Test void modalBlockingRetainsProcessingHooksWithoutAdvancingTheExecutionCounter() {
+        var mob = mock(io.luna.game.model.mob.Player.class, RETURNS_DEEP_STUBS);
+        when(mob.getType()).thenReturn(EntityType.PLAYER);
+        when(mob.asPlr()).thenReturn(mob);
+        when(mob.getOverlays().hasWindow()).thenReturn(true);
+        ActionQueue queue = new ActionQueue(mob);
+        int[] processCalls = {0};
+        int[] executed = {0};
+        Action<?> action = new Action<>(mob, ActionType.NORMAL, false, 1) {
+            @Override public void onProcess() { processCalls[0]++; }
+            @Override public boolean run() { executed[0]++; return true; }
+        };
+        queue.submit(action);
+        queue.process();
+        queue.processAfterMovement();
+        queue.normalize();
+        assertEquals(1, processCalls[0]);
+        assertEquals(0, executed[0]);
+        when(mob.getOverlays().hasWindow()).thenReturn(false);
+        queue.process();
+        queue.normalize();
+        assertEquals(0, executed[0]);
+        queue.process();
+        assertEquals(1, executed[0]);
+    }
+
     private static class PersistentAction extends Action<Mob> {
         private int submissions;
 

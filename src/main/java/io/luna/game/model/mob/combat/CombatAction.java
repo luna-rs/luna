@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat;
 
 import api.combat.player.PlayerCombatHandler;
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionPhase;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
@@ -49,6 +50,10 @@ public final class CombatAction extends Action<Mob> {
     private Mob pendingTarget;
     private int stalledTicks;
 
+    /** Attack selected before walking, reused for the reach retry without repeating selection hooks. */
+    private CombatAttack<?> pendingAttack;
+    private Mob pendingAttackTarget;
+
     /**
      * Identifies the player navigation request used by this combat action. Cleanup compares the pending result by
      * identity so that a newer movement request is not cancelled when this combat action ends.
@@ -61,13 +66,44 @@ public final class CombatAction extends Action<Mob> {
      * @param mob The mob executing combat.
      */
     public CombatAction(Mob mob) {
-        // TODO@0.5.0 Combat should be taken outside of the action system. It needs to run BEFORE all actions.
         super(mob, ActionType.WEAK);
         combat = mob.getCombat();
     }
 
     @Override
+    public ActionPhase getPhase() {
+        return ActionPhase.COMBAT;
+    }
+
+    @Override
+    public boolean runAfterMovement() {
+        CombatAttack<?> attack = pendingAttack;
+        pendingAttack = null;
+        Mob target = combat.getTarget();
+        if (attack == null || target != pendingAttackTarget) {
+            return false;
+        }
+        if (!mob.isAlive() || !target.isAlive() || combat.isDisabled() ||
+                !mob.isWithinDistance(target, Position.VIEWING_DISTANCE + 5) ||
+                (mob instanceof Player player && !player.getCombat().canAttackCurrentTarget()) ||
+                (mob instanceof Npc npc && !npc.getCombat().isWithinLeash(target))) {
+            return clearTarget();
+        }
+        if (!mob.getWorld().getCollisionManager().reached(mob.getPosition(), target,
+                attack.getInteractionPolicy())) {
+            return false;
+        }
+        if (mob instanceof Player) {
+            updatePlayerPursuit(target, attack.getInteractionPolicy(), true);
+        } else if (mob instanceof Npc) {
+            updateNpcPursuit(attack.getInteractionPolicy(), true);
+        }
+        return tryAttack(attack);
+    }
+
+    @Override
     public boolean run() {
+        pendingAttack = null;
 
         // End the action immediately if the attacker is dead.
         if (!mob.isAlive()) {
@@ -120,6 +156,8 @@ public final class CombatAction extends Action<Mob> {
 
         // Continue pursuing until the target is inside interaction range.
         if (!reached) {
+            pendingAttack = attack;
+            pendingAttackTarget = target;
             if (mob.getWalking().isEmpty() && mob instanceof Npc) {
                 // We are stationary and still not in range, so re-initiate pursuit.
                 mob.interact(target);
@@ -129,6 +167,12 @@ public final class CombatAction extends Action<Mob> {
             return pendingAttackExpired(target);
         }
 
+        return tryAttack(attack);
+    }
+
+    /** Validates and executes one already-selected attack without repeating per-tick selection hooks. */
+    private boolean tryAttack(CombatAttack<?> attack) {
+        Mob target = combat.getTarget();
         // Run final close-range combat checks before attacking.
         if (!check()) {
             return clearTarget();
@@ -230,6 +274,7 @@ public final class CombatAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
+        pendingAttack = null;
         cancelPlayerPursuit();
         combat.onCombatFinished();
         combat.setTarget(null);

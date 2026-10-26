@@ -129,6 +129,11 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public boolean onCombatProcess(boolean reached) {
         // Handle combat hooks and check controllers to make sure we can attack.
         PlayerCombatHandler.INSTANCE.consumeCombat(player);
+        return canAttackCurrentTarget();
+    }
+
+    /** Rechecks legality after movement without repeating script processing hooks or attack selection. */
+    public boolean canAttackCurrentTarget() {
         return target != null && target.getCombat().isAttackable() &&
                 (!(target instanceof Player) || isAttackable()) && player.getControllers().checkCombat(target);
     }

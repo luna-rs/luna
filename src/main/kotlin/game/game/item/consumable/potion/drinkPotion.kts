@@ -4,7 +4,7 @@ import api.attr.Attr
 import api.predef.*
 import game.player.Sound
 import game.player.item.consume.potion.Potion
-import io.luna.game.action.impl.ThrottledAction
+import io.luna.game.action.impl.ConsumeAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -33,7 +33,7 @@ val consumeDelay = 3
  * Drinks a potion and applies the appropriate effects to the player.
  */
 fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
-    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastDrink, consumeDelay) {
+    plr.submitAction(object : ConsumeAction(plr, plr.lastDrink, consumeDelay) {
         override fun execute() {
             val id = drinkItem.id
             val inv = plr.inventory
