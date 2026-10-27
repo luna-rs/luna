@@ -19,6 +19,7 @@ object KalphiteQueen {
 
     /**
      * Changes form while retaining drained combat stats, healing only hitpoints and clearing phase-one credit.
+     * The second-form timeout belongs to this spawn and cannot expire a later fight after respawn.
      */
     fun rise(npc: Npc) {
         val levels = npc.skills.map { it.level }
@@ -29,9 +30,10 @@ object KalphiteQueen {
         npc.combat.target = null
         npc.combat.autoRetaliateTarget = null
         npc.animation(Animation(1181))
+        val spawnCount = npc.spawnCount
         npc.world.scheduleOnce(2000) {
             // A removed/dead Queen must not replace the normal death respawn.
-            if (npc.state == EntityState.ACTIVE && npc.id == 1160 && npc.isAlive) {
+            if (npc.spawnCount == spawnCount && npc.state == EntityState.ACTIVE && npc.id == 1160 && npc.isAlive) {
                 val replacement = Npc(npc.context, 1158, npc.basePosition)
                 replacement.respawnTicks = npc.respawnTicks
                 npc.world.npcs.remove(npc)
