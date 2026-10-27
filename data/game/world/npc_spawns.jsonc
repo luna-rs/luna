@@ -38855,12 +38855,60 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x4
+  // Chaos druid (id 181) x12
   {
     "id": 181,
     "position": {
       "x": 2611,
       "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2611,
+      "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2611,
+      "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2611,
+      "y": 9487,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2611,
+      "y": 9487,
       "z": 0
     },
     "wander": {
@@ -38895,6 +38943,54 @@
   {
     "id": 181,
     "position": {
+      "x": 2612,
+      "y": 9488,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2612,
+      "y": 9488,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2613,
+      "y": 9482,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2613,
+      "y": 9482,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
       "x": 2613,
       "y": 9482,
       "z": 0
@@ -38917,7 +39013,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181)
+  // Chaos druid (id 181) x3
+  {
+    "id": 181,
+    "position": {
+      "x": 2613,
+      "y": 9521,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2613,
+      "y": 9521,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -38943,12 +39063,60 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x6
+  // Chaos druid (id 181) x18
   {
     "id": 181,
     "position": {
       "x": 2614,
       "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2614,
+      "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2614,
+      "y": 9483,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2614,
+      "y": 9521,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2614,
+      "y": 9521,
       "z": 0
     },
     "wander": {
@@ -38983,6 +39151,54 @@
   {
     "id": 181,
     "position": {
+      "x": 2614,
+      "y": 9525,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2614,
+      "y": 9525,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2615,
+      "y": 9487,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2615,
+      "y": 9487,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
       "x": 2615,
       "y": 9487,
       "z": 0
@@ -38997,6 +39213,54 @@
     "position": {
       "x": 2616,
       "y": 9484,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2616,
+      "y": 9484,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2616,
+      "y": 9484,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2616,
+      "y": 9522,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2616,
+      "y": 9522,
       "z": 0
     },
     "wander": {
@@ -44872,12 +45136,60 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x2
+  // Chaos druid (id 181) x6
   {
     "id": 181,
     "position": {
       "x": 2561,
       "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2561,
+      "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2561,
+      "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2561,
+      "y": 3357,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2561,
+      "y": 3357,
       "z": 0
     },
     "wander": {
@@ -44931,12 +45243,60 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x2
+  // Chaos druid (id 181) x6
   {
     "id": 181,
     "position": {
       "x": 2563,
       "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2563,
+      "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2563,
+      "y": 3355,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2563,
+      "y": 3358,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2563,
+      "y": 3358,
       "z": 0
     },
     "wander": {
@@ -80743,7 +81103,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181)
+  // Chaos druid (id 181) x3
+  {
+    "id": 181,
+    "position": {
+      "x": 2929,
+      "y": 9848,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2929,
+      "y": 9848,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -80781,7 +81165,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181)
+  // Chaos druid (id 181) x3
+  {
+    "id": 181,
+    "position": {
+      "x": 2931,
+      "y": 9846,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2931,
+      "y": 9846,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -80807,7 +81215,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181)
+  // Chaos druid (id 181) x3
+  {
+    "id": 181,
+    "position": {
+      "x": 2932,
+      "y": 9852,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2932,
+      "y": 9852,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -80859,7 +81291,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x3
+  // Chaos druid (id 181) x9
+  {
+    "id": 181,
+    "position": {
+      "x": 2936,
+      "y": 9846,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2936,
+      "y": 9846,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -80877,6 +81333,54 @@
     "position": {
       "x": 2936,
       "y": 9852,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2936,
+      "y": 9852,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2936,
+      "y": 9852,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2937,
+      "y": 9849,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 2937,
+      "y": 9849,
       "z": 0
     },
     "wander": {
@@ -102306,7 +102810,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181)
+  // Chaos druid (id 181) x3
+  {
+    "id": 181,
+    "position": {
+      "x": 3104,
+      "y": 9942,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3104,
+      "y": 9942,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -102344,7 +102872,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x3
+  // Chaos druid (id 181) x9
+  {
+    "id": 181,
+    "position": {
+      "x": 3105,
+      "y": 9936,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3105,
+      "y": 9936,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -102362,6 +102914,54 @@
     "position": {
       "x": 3105,
       "y": 9940,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3105,
+      "y": 9940,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3105,
+      "y": 9940,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3107,
+      "y": 9943,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3107,
+      "y": 9943,
       "z": 0
     },
     "wander": {
@@ -102406,7 +103006,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x4
+  // Chaos druid (id 181) x12
+  {
+    "id": 181,
+    "position": {
+      "x": 3109,
+      "y": 9931,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3109,
+      "y": 9931,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -102434,8 +103058,80 @@
   {
     "id": 181,
     "position": {
+      "x": 3110,
+      "y": 9941,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3110,
+      "y": 9941,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
       "x": 3111,
       "y": 9936,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3111,
+      "y": 9936,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3111,
+      "y": 9936,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3111,
+      "y": 9939,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3111,
+      "y": 9939,
       "z": 0
     },
     "wander": {
@@ -102480,7 +103176,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Chaos druid (id 181) x3
+  // Chaos druid (id 181) x9
+  {
+    "id": 181,
+    "position": {
+      "x": 3114,
+      "y": 9929,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3114,
+      "y": 9929,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
   {
     "id": 181,
     "position": {
@@ -102498,6 +103218,54 @@
     "position": {
       "x": 3115,
       "y": 9925,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3115,
+      "y": 9925,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3115,
+      "y": 9925,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3115,
+      "y": 9932,
+      "z": 0
+    },
+    "wander": {
+      "radius": 5,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 181,
+    "position": {
+      "x": 3115,
+      "y": 9932,
       "z": 0
     },
     "wander": {
