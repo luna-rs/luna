@@ -247,7 +247,7 @@ fun BotPreference.allSuitableFood(): List<Food> {
         else -> 3
     }
     if (bot.personality.isDumb) {
-        tier--
+        tier = (tier - 1).coerceAtLeast(0)
     }
     return when (tier) {
         0 -> all.filter { it.heal <= 3 }
