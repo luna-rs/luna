@@ -45,6 +45,32 @@ enum class SubZone(
     val plane: Int? = null
 ) {
     /**
+     * Mainland bush patches from the revision 377 maps. Rimmington uses Falador's existing travel and bank parent.
+     */
+    CHAMPIONS_GUILD_BUSH_PATCH(
+        inside = Position(3180, 3357), area = SimpleBoxArea.of(3178, 3354, 3185, 3361),
+        parent = { VARROCK }, plane = 0),
+    RIMMINGTON_BUSH_PATCH(
+        inside = Position(2939, 3221), area = SimpleBoxArea.of(2937, 3218, 2944, 3225),
+        parent = { FALADOR }, plane = 0),
+    ARDOUGNE_BUSH_PATCH(
+        inside = Position(2616, 3225), area = SimpleBoxArea.of(2614, 3222, 2621, 3229),
+        parent = { ARDOUGNE }, plane = 0),
+
+    /**
+     * Native cactus, bittercap and belladonna plots reached through shared webwalking and travel fallback.
+     */
+    AL_KHARID_CACTUS_PATCH(
+        inside = Position(3314, 3202), area = SimpleBoxArea.of(3312, 3199, 3319, 3206),
+        parent = { AL_KHARID }, plane = 0),
+    CANIFIS_MUSHROOM_PATCH(
+        inside = Position(3450, 3472), area = SimpleBoxArea.of(3448, 3469, 3455, 3476),
+        parent = { CANIFIS }, plane = 0),
+    DRAYNOR_BELLADONNA_PATCH(
+        inside = Position(3085, 3354), area = SimpleBoxArea.of(3083, 3351, 3090, 3358),
+        parent = { DRAYNOR }, plane = 0),
+
+    /**
      * Native revision 377 tree patch locations; arrival anchors stand beside their multi-tile tree objects.
      */
     TAVERLEY_TREE_PATCH(

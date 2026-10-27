@@ -12,6 +12,8 @@ import game.content.sailing.Entrana
 import game.skill.farming.Farming
 import game.skill.farming.allotment.AllotmentPatchLocation
 import game.skill.farming.allotment.AllotmentSeed
+import game.skill.farming.bush.BushPatch
+import game.skill.farming.bush.BushPatchLocation
 import game.skill.farming.flower.FlowerPatch
 import game.skill.farming.flower.FlowerPatchLocation
 import game.skill.farming.flower.FlowerSeed
@@ -20,7 +22,11 @@ import game.skill.farming.hops.HopsPatchLocation
 import game.skill.farming.patch.CompostType
 import game.skill.farming.patch.Crop
 import game.skill.farming.patch.FarmingPatch
+import game.skill.farming.patch.HealthCheckPatch
 import game.skill.farming.patch.PatchLocation
+import game.skill.farming.patch.PickablePatch
+import game.skill.farming.special.BelladonnaPatch
+import game.skill.farming.special.SpecialPatchLocation
 import game.skill.farming.tree.AbstractTreePatch
 import game.skill.farming.tree.ChopPatchTreeAction
 import game.skill.farming.tree.TreePatchLocation
@@ -32,10 +38,11 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 
 /**
- * Visits one native allotment, herb, flower, hops, tree or fruit-tree patch through normal player packets.
+ * Visits native farming plots through normal player packets, sharing the same inventory and travel lifecycle.
  * Dead crops are cleared, weeds raked, disease cured and mature crops harvested before replanting owned seeds.
  * Owned compost and charged watering cans are optional. Native handlers alone consume supplies, change patch
  * state and award experience. The visit ends when no useful work remains; it never waits for crops to grow.
@@ -46,7 +53,9 @@ import kotlin.time.Duration
  * native equipment restriction. Trees use native pruning, one-time health checks, chopping and stump digging.
  * Fruit is picked before considering replacement; profit visits preserve healthy trees for produce regrowth.
  * Training can replace mature trees only with an owned, plantable sapling and usable tools. Raw seeds must first
- * become saplings through native pot preparation, which is a separate activity. Bush and special patches are deferred.
+ * become saplings through native pot preparation, which is a separate activity. Bushes and cactus have health checked
+ * once, then are picked and left standing for native produce regrowth. Mushrooms and belladonna use normal finite
+ * harvests. Belladonna visits preserve existing hand gear or equip suitable owned hand gear through the equipment API.
  *
  * @param bot The farmer.
  * @property location Native persistent patch identity, independent of its changing appearance.
@@ -93,8 +102,15 @@ class FarmingBotScript(
             TreePatchLocation.LUMBRIDGE to SubZone.LUMBRIDGE_TREE_PATCH,
             FruitTreePatchLocation.GNOME_STRONGHOLD to SubZone.GNOME_STRONGHOLD_FRUIT_PATCH,
             FruitTreePatchLocation.BRIMHAVEN to SubZone.BRIMHAVEN_FRUIT_PATCH,
-            FruitTreePatchLocation.CATHERBY to SubZone.CATHERBY_FRUIT_PATCH
+            FruitTreePatchLocation.CATHERBY to SubZone.CATHERBY_FRUIT_PATCH,
+            BushPatchLocation.CHAMPIONS_GUILD to SubZone.CHAMPIONS_GUILD_BUSH_PATCH,
+            BushPatchLocation.RIMMINGTON to SubZone.RIMMINGTON_BUSH_PATCH,
+            BushPatchLocation.ARDOUGNE to SubZone.ARDOUGNE_BUSH_PATCH,
+            SpecialPatchLocation.CACTUS to SubZone.AL_KHARID_CACTUS_PATCH,
+            SpecialPatchLocation.MUSHROOM to SubZone.CANIFIS_MUSHROOM_PATCH,
+            SpecialPatchLocation.BELLADONNA to SubZone.DRAYNOR_BELLADONNA_PATCH
             // TODO Gnome Village fruit patch (2489, 3179): needs its parent travel zone data.
+            // TODO Etceteria bush patch (2591, 3863): needs its island parent travel zone data.
         )
 
         /**
@@ -193,11 +209,16 @@ class FarmingBotScript(
         return when {
             patch is FlowerPatch && patch.scarecrow -> null
             patch.dead -> Work(Item(Farming.SPADE), progressCondition = { !patch.dead && !patch.isOccupied() })
-            patch.diseased -> if (patch is AbstractTreePatch) {
+            patch.diseased -> if (patch is AbstractTreePatch || patch is BushPatch) {
                 listOf(Farming.MAGIC_SECATEURS, Farming.SECATEURS).firstOrNull { owns(Item(it)) }
                     ?.let { Work(Item(it), progressCondition = { !patch.diseased }) }
             } else if (owns(Item(Farming.PLANT_CURE))) Work(Item(Farming.PLANT_CURE)) else null
             patch is AbstractTreePatch && patch.harvestReady() -> treeWork(patch, crop)
+            patch is HealthCheckPatch && patch.harvestReady() -> when {
+                patch.canCheckHealth() -> Work(null, progressCondition = { !patch.canCheckHealth() })
+                patch is PickablePatch && patch.canPick() -> Work(null, output = patch.crop?.produce)
+                else -> null
+            }
             patch.harvestReady() -> if (protectsAllotment()) null else {
                 val planted = patch.crop ?: return null
                 val amount = (planted as? FlowerSeed)?.amount(bot.farming.level) ?: planted.produce.amount
@@ -256,7 +277,22 @@ class FarmingBotScript(
      * Requires useful work and owned mandatory supplies before selecting or resuming this visit.
      */
     fun isEligible(): Boolean = (location != HopsPatchLocation.ENTRANA || !Entrana.isCarryingForbidden(bot)) &&
+        (!needsGloves() || bot.equipment[Equipment.HANDS] != null || harvestGloves() != null) &&
         nextWork()?.supplies?.all(::owns) == true
+
+    /**
+     * Only picking mature, healthy belladonna needs worn hand gear; raking, planting and treatment do not.
+     */
+    private fun needsGloves(): Boolean = patch is BelladonnaPatch && patch.harvestReady() && !patch.diseased
+
+    /**
+     * Selects a carried or banked hand-slot item the bot meets the native equipment requirements to wear.
+     * This follows belladonna's actual hand-slot rule rather than inventing a separate glove whitelist.
+     */
+    private fun harvestGloves(): Int? = sequenceOf(bot.inventory, bot.bank).flatMap { it.asSequence() }
+        .filterNotNull().firstOrNull { item ->
+            item.equipDef?.let { it.index == Equipment.HANDS && it.meetsAllRequirements(bot) } == true
+        }?.id
 
     /**
      * Packs the next action plus an optional replant and care supplies, leaving ample room for native harvests.
@@ -268,7 +304,7 @@ class FarmingBotScript(
             addAll(work.supplies)
             plantingCrop()?.let {
                 if (patch.dead || !patch.isOccupied() ||
-                    patch.harvestReady() && (patch !is AbstractTreePatch || replantTrees)) {
+                    patch.harvestReady() && patch !is HealthCheckPatch && (patch !is AbstractTreePatch || replantTrees)) {
                     add(Item(it.seedId, patch.seedsRequired(it)))
                     add(Item(patch.plantTool))
                     if (patch.needsRaking()) add(Item(Farming.RAKE))
@@ -277,6 +313,7 @@ class FarmingBotScript(
                     }
                 }
             }
+            if (needsGloves() && bot.equipment[Equipment.HANDS] == null) harvestGloves()?.let { add(Item(it)) }
             if (!protectsAllotment()) {
                 listOf(CompostType.SUPERCOMPOST.itemId, CompostType.COMPOST.itemId)
                     .firstOrNull { owns(Item(it)) }?.let { add(Item(it)) }
@@ -295,12 +332,23 @@ class FarmingBotScript(
         (location != HopsPatchLocation.ENTRANA || !Entrana.isCarryingForbidden(bot)) && super.travelToWorkZone(zone, bank)
 
     override fun withdraw(): List<Item> = productionWithdraw(visitSupplies(), requestMissing = false)
-    override fun bankWithdraw(): List<Item> = visitSupplies().also { if (nextWork() == null) stop() }
+    override fun bankWithdraw(): List<Item> = visitSupplies().also { if (!isEligible()) stop() }
+
+    override suspend fun withdrawBankItems(items: List<Item>): Boolean {
+        if (!super.withdrawBankItems(items)) return false
+        if (!needsGloves() || bot.equipment[Equipment.HANDS] != null) return true
+        val gloves = harvestGloves()?.takeIf { bot.inventory.contains(it) } ?: return false
+        return withTimeoutOrNull(15_000) {
+            handler.widgets.clickCloseInterface() && isActionSafe() && handler.equipment.equip(gloves) &&
+                bot.equipment[Equipment.HANDS] != null
+        } == true
+    }
 
     /**
      * Tests capacity for the whole flower yield, not only its first item; other native harvests produce one at a time.
      */
     private fun canWork(work: Work): Boolean = bot.inventory.containsAll(work.supplies) &&
+        (!needsGloves() || bot.equipment[Equipment.HANDS] != null) &&
         (work.output == null || bot.inventory.hasSpaceFor(work.output))
 
     override suspend fun onInventoryBankRequested(): Boolean = nextWork()?.let {
