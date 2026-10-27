@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.combat.state;
 
+import game.combat.spells.GodSpells;
 import game.content.duelArena.DuelController;
 import game.content.duelArena.DuelRules;
 import game.skill.magic.Magic;
@@ -33,7 +34,7 @@ import static java.util.Objects.requireNonNullElse;
  *     <li>The configured autocast spell.</li>
  *     <li>Whether autocasting is currently enabled.</li>
  * </ul>
- * It also provides helpers for rune consumption and autocast interface updates.
+ * It also provides helpers for rune consumption, spell maximum hits, and autocast interface updates.
  */
 public class PlayerMagicCombat {
 
@@ -66,6 +67,26 @@ public class PlayerMagicCombat {
      */
     public PlayerMagicCombat(Player player) {
         this.player = player;
+    }
+
+    /**
+     * Resolves the player's spell maximum before protection prayers and the random damage roll.
+     * Magic Dart uses the current Magic level, including boosts and drains. Chaos gauntlets add three to the
+     * four elemental bolt spells only while worn in the hands slot. Other spells retain their configured
+     * maximum, with the existing equipment and Charge requirements applied to god spells.
+     * Both spellbook attacks and default magic damage requests use this calculation when preparing damage;
+     * later equipment or level changes do not alter an already prepared hit.
+     *
+     * @param spell The combat spell being resolved.
+     * @return The spell's maximum hit, or its negative effect-only sentinel.
+     */
+    public int getMaxHit(CombatSpellDefinition spell) {
+        return switch (spell.getSpell()) {
+            case MAGIC_DART -> 10 + player.skill(Skill.MAGIC).getLevel() / 10;
+            case WIND_BOLT, WATER_BOLT, EARTH_BOLT, FIRE_BOLT -> spell.getMaxHit() +
+                    (player.getEquipment().computeIdForIndex(Equipment.HANDS) == 777 ? 3 : 0);
+            default -> GodSpells.INSTANCE.maxHit(player, spell);
+        };
     }
 
     /**

@@ -105,7 +105,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
 
     @Override
     protected int spellMaxHit() {
-        return GodSpells.INSTANCE.maxHit(attacker, spellEffect);
+        return magic.getMaxHit(spellEffect);
     }
 
     @Override

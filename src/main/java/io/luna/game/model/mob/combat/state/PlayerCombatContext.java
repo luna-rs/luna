@@ -149,9 +149,9 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     public int getDefaultMaxHit(CombatDamageType type) {
         if (type == CombatDamageType.MAGIC) {
             if (magic.getSelectedSpell() != NONE) {
-                return magic.getSelectedSpell().getMaxHit();
+                return magic.getMaxHit(magic.getSelectedSpell());
             } else if (magic.getAutocastSpell() != NONE) {
-                return magic.getAutocastSpell().getMaxHit();
+                return magic.getMaxHit(magic.getAutocastSpell());
             } else {
                 throw new IllegalStateException("No selected or autocasted combat spell to get the max hit from.");
             }
