@@ -41,6 +41,7 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         int respawnTicks = token.get("respawn_ticks").getAsInt();
         NpcAggressionProfile aggression = readProfile(token.get("aggression"));
         boolean poisonous = token.get("poisonous").getAsBoolean();
+        int poisonSeverity = token.has("poison_severity") ? token.get("poison_severity").getAsInt() : 0;
         boolean immunePoison = token.get("immune_poison").getAsBoolean();
         int hitpoints = token.get("hitpoints").getAsInt();
         int maximumHit = token.get("maximum_hit").getAsInt();
@@ -59,7 +60,7 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
                 movement.get("retreat_hitpoints").getAsInt());
         return new NpcCombatDefinition(id, respawnTicks, aggression, poisonous, immunePoison, hitpoints, maximumHit,
                 attackSpeed, attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus,
-                rangedBonus, skills, bonuses, rules);
+                rangedBonus, skills, bonuses, rules, poisonSeverity);
     }
 
     @Override

@@ -99,7 +99,8 @@ public final class CombatDamage {
      * hits. Hits against victims that are already dead are discarded without updating history or invoking callbacks.
      * <p>
      * Smite uses delivered damage and launch-time prayer state before the hit can trigger death or Redemption.
-     * Lethal combat hits notify Retribution through its separate, non-recursive damage source.
+     * Lethal combat hits notify Retribution through its separate, non-recursive damage source. Configured NPC poison
+     * uses the accepted, health-capped hit before custom callbacks can change the recipient again.
      *
      * @param source The non-null source attack notified after damage and history are applied.
      */
@@ -123,6 +124,7 @@ public final class CombatDamage {
         attacker.getCombat().setLastAttackSent(source);
         victim.getCombat().setLastAttackReceived(source);
         victim.getCombat().setLastDamageReceived(applied);
+        source.applyNpcPoison(applied);
         if (victim instanceof Npc npc) {
             npc.onDamageApplied(applied);
         }

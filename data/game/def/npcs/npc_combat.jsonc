@@ -1,6 +1,9 @@
 /*
   Resolves combat data related to NPCs.
 
+  Optional poison_severity enables shared poison on positive delivered hits. Values below are imported from
+  Lost City 377 NPC parameters; poisonous alone does not invent a severity. Custom attack poison remains in scripts.
+
   Use this file when NPCs display incorrect combat data (bad max hit, hp level, animations, etc).
  */
 [
@@ -2967,6 +2970,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 15,
     "immune_poison": false,
     "hitpoints": 23,
     "maximum_hit": 3,
@@ -3839,6 +3843,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 27,
     "immune_poison": false,
     "hitpoints": 64,
     "maximum_hit": 7,
@@ -5117,6 +5122,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 55,
     "immune_poison": false,
     "hitpoints": 39,
     "maximum_hit": 4,
@@ -7020,7 +7026,8 @@
     "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
-    "poisonous": false,
+    "poisonous": true,
+    "poison_severity": 10,
     "immune_poison": false,
     "hitpoints": 10,
     "maximum_hit": 0,
@@ -14163,6 +14170,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 20,
     "immune_poison": false,
     "hitpoints": 90,
     "maximum_hit": 8,
@@ -14198,6 +14206,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 30,
     "immune_poison": false,
     "hitpoints": 170,
     "maximum_hit": 12,
@@ -14267,6 +14276,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 30,
     "immune_poison": false,
     "hitpoints": 170,
     "maximum_hit": 12,
@@ -19702,6 +19712,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 36,
     "immune_poison": false,
     "hitpoints": 22,
     "maximum_hit": 3,
@@ -19736,6 +19747,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 36,
     "immune_poison": false,
     "hitpoints": 22,
     "maximum_hit": 3,
@@ -19770,6 +19782,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 36,
     "immune_poison": false,
     "hitpoints": 22,
     "maximum_hit": 3,
@@ -19804,6 +19817,7 @@
       "tolerance_minutes": 10
     },
     "poisonous": true,
+    "poison_severity": 36,
     "immune_poison": false,
     "hitpoints": 22,
     "maximum_hit": 3,

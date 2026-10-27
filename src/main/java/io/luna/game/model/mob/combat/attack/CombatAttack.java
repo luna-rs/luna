@@ -3,7 +3,9 @@ package io.luna.game.model.mob.combat.attack;
 import api.bot.action.BotCombatActionHandler;
 import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
+import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -81,6 +83,12 @@ public abstract class CombatAttack<T extends Mob> {
     private boolean smiteActive;
 
     /**
+     * Ordinary NPC poison severity captured when the attack commits. Transformation or removal during flight
+     * cannot change an already launched hit. Custom poison attacks leave this at zero in their NPC definition.
+     */
+    private int npcPoisonSeverity;
+
+    /**
      * Returns the launch-time Smite state. Secondary attack wrappers may delegate to their original source.
      */
     public boolean isSmiteActive() {
@@ -153,6 +161,7 @@ public abstract class CombatAttack<T extends Mob> {
         victim.getCombat().markAttackedBy(attacker);
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
+        npcPoisonSeverity = attacker instanceof Npc npc ? npc.combatDef().getPoisonSeverity() : 0;
         smiteActive = attacker instanceof Player player && player.skill(Skill.PRAYER).getLevel() > 0 &&
                 player.getCombat().getPrayers().isActive(CombatPrayer.SMITE);
         if (attackSound != null && attacker instanceof Player player) {
@@ -200,6 +209,21 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public void onDamageApplied(CombatDamage damage) {
 
+    }
+
+    /**
+     * Applies configured NPC poison after defensive hooks and health capping, independently of custom hit callbacks.
+     * Every accurate positive hit poisons a surviving player, matching the reference's lack of an extra chance roll.
+     * Status insertion handles antipoison and stronger-poison refresh without restarting the existing countdown.
+     * Only the original NPC's delivered hits qualify; secondary recipients use their own applied damage.
+     *
+     * @param damage The delivered hit, not the original launch roll.
+     */
+    public final void applyNpcPoison(CombatDamage damage) {
+        if (npcPoisonSeverity > 0 && damage.getAttacker() == attacker && damage.isAccurate() &&
+                damage.getRawAmount() > 0 && damage.getVictim() instanceof Player player && player.isAlive()) {
+            player.getStatus().add(new PoisonStatusEffect(player, npcPoisonSeverity), false);
+        }
     }
 
     /**

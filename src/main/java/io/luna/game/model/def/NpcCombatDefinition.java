@@ -47,6 +47,12 @@ public final class NpcCombatDefinition implements Definition {
     private final boolean poisonous;
 
     /**
+     * Verified poison severity for ordinary positive hits, or zero when absent or handled by a custom attack.
+     * The legacy poisonous flag alone does not supply a severity.
+     */
+    private final int poisonSeverity;
+
+    /**
      * Whether this NPC is immune to poison.
      */
     private final boolean immunePoison;
@@ -170,7 +176,7 @@ public final class NpcCombatDefinition implements Definition {
     ) {
         this(id, respawnTime, aggression, poisonous, immunePoison, hitpoints, maximumHit, attackSpeed,
                 attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus, rangedBonus,
-                skills, bonuses, NpcCombatMovement.DEFAULT);
+                skills, bonuses, NpcCombatMovement.DEFAULT, 0);
     }
 
     /**
@@ -193,6 +199,7 @@ public final class NpcCombatDefinition implements Definition {
      * @param skills The combat skill level array. This array is defensively copied.
      * @param movement The combat leash and escape configuration.
      * @param bonuses The defensive and strength bonus array. This array is defensively copied.
+     * @param poisonSeverity The non-negative ordinary-hit poison severity; zero disables shared delivery.
      */
     public NpcCombatDefinition(
             int id,
@@ -211,13 +218,18 @@ public final class NpcCombatDefinition implements Definition {
             int rangedBonus,
             int[] skills,
             int[] bonuses,
-            NpcCombatMovement movement
+            NpcCombatMovement movement,
+            int poisonSeverity
     ) {
+        if (poisonSeverity < 0 || (poisonSeverity > 0 && !poisonous)) {
+            throw new IllegalArgumentException("Invalid poison severity for NPC " + id + ": " + poisonSeverity);
+        }
         this.movement = Objects.requireNonNull(movement);
         this.id = id;
         this.respawnTime = respawnTime;
         this.aggression = aggression;
         this.poisonous = poisonous;
+        this.poisonSeverity = poisonSeverity;
         this.immunePoison = immunePoison;
         this.hitpoints = hitpoints;
         this.maximumHit = maximumHit;
@@ -256,6 +268,13 @@ public final class NpcCombatDefinition implements Definition {
      */
     public boolean isPoisonous() {
         return poisonous;
+    }
+
+    /**
+     * @return The ordinary-hit poison severity, or zero when no verified shared poison is configured.
+     */
+    public int getPoisonSeverity() {
+        return poisonSeverity;
     }
 
     /**
