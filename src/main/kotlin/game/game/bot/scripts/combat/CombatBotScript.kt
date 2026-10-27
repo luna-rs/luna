@@ -1,6 +1,7 @@
 package game.bot.scripts.combat
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotPotionActionHandler
 import api.bot.action.PkCombatSwitcher
 import api.bot.action.PkRiskBudget
 import api.bot.action.PvmFight
@@ -690,48 +691,12 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     }
 
     /**
-     * Drinks one useful potion for the bot's current combat state.
-     *
-     * The bot builds a set of acceptable potion doses based on unboosted stats and low prayer points, then drinks the
-     * first matching potion found in its inventory.
+     * Drinks one useful potion for the bot's current combat state, then turns back to the fight.
      */
     private suspend fun drinkPotion() {
-        // TODO@0.5.0 Incorporate Saradomin brews, super restores, anti-poison, anti-dragonfire, and other potion types.
-        val potions = HashSet<Int>()
-
-        if (!bot.attack.isBoosted) {
-            potions += Potion.ATTACK_POTION.doses
-            potions += Potion.SUPER_ATTACK.doses
-        }
-
-        if (!bot.defence.isBoosted) {
-            potions += Potion.DEFENCE_POTION.doses
-            potions += Potion.SUPER_DEFENCE.doses
-        }
-
-        if (!bot.strength.isBoosted) {
-            potions += Potion.STRENGTH_POTION.doses
-            potions += Potion.SUPER_STRENGTH.doses
-        }
-
-        if (!bot.ranged.isBoosted) {
-            potions += Potion.RANGING_POTION.doses
-        }
-
-        if (!bot.magic.isBoosted) {
-            potions += Potion.MAGIC_POTION.doses
-        }
-
-        if (bot.prayer.level < 30) {
-            potions += Potion.PRAYER_POTION.doses
-        }
-
-        for ((index, item) in bot.inventory.withIndex()) {
-            if (item != null && item.id in potions) {
-                handler.inventory.clickItem(1, item.id, index)
-                targetEnemy()
-                return
-            }
+        if (handler.potions.drink(fighting = true, dragons = BotPotionActionHandler.breathesFire(focus),
+                                  prayerBelow = 30)) {
+            targetEnemy()
         }
     }
 

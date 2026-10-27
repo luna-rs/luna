@@ -74,6 +74,11 @@ class BotActionHandler(val bot: Bot) {
     val combat = BotCombatActionHandler(bot, this)
 
     /**
+     * Handles when the bot drinks the potions it carries.
+     */
+    val potions = BotPotionActionHandler(bot, this)
+
+    /**
      * Handles trade requests, final confirmation clicks, and closing trade windows through normal client output.
      */
     val trading = BotTradingActionHandler(bot, this)
