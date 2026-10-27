@@ -264,6 +264,11 @@ public class Player extends Mob {
     private final PersistentVarpManager varpManager = new PersistentVarpManager(this);
 
     /**
+     * Area music, manual selections and persistent music unlocks.
+     */
+    private final PlayerMusic music = new PlayerMusic(this);
+
+    /**
      * Cached client-side varp values, keyed by varp id. Used for efficient varbit packing.
      */
     private final Map<Integer, Integer> cachedVarps = new HashMap<>();
@@ -731,6 +736,9 @@ public class Player extends Mob {
      * Sends a {@link RegionMessageWriter} if a region change has occurred. This must happen before player updating.
      */
     public void updateRegion() {
+        if (!isBot()) {
+            music.updatePosition();
+        }
         if (lastRegion == null || needsRegionUpdate()) {
             regionChanged = true;
             lastRegion = position;
@@ -1285,6 +1293,13 @@ public class Player extends Mob {
      */
     public PersistentVarpManager getVarpManager() {
         return varpManager;
+    }
+
+    /**
+     * @return This player's music controller. Use it on the game thread.
+     */
+    public PlayerMusic getMusic() {
+        return music;
     }
 
     /**

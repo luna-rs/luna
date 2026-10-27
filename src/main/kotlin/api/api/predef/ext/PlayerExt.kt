@@ -3,7 +3,6 @@ package api.predef.ext
 import api.attr.Attr
 import game.player.Jingles
 import io.luna.game.model.mob.Player
-import io.luna.net.msg.out.JingleMessageWriter
 
 /**
  * Attribute for jingle throttle.
@@ -15,7 +14,7 @@ private val Player.jingleThrottle by Attr.timer()
  */
 fun Player.playJingle(jingle: Jingles) {
     if (!jingleThrottle.isRunning || jingleThrottle.durationTicks >= 8) {
-        queue(JingleMessageWriter(jingle))
+        music.playJingle(jingle)
         jingleThrottle.reset().start()
     }
 }

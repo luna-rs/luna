@@ -10,6 +10,20 @@ import io.luna.game.model.mob.Player;
  * @author lare96
  */
 public enum PersistentVarp {
+    MUSIC_UNLOCKS_1(20),
+    MUSIC_UNLOCKS_2(21),
+    MUSIC_UNLOCKS_3(22),
+    MUSIC_UNLOCKS_4(23),
+    MUSIC_UNLOCKS_5(24),
+    MUSIC_UNLOCKS_6(25),
+    MUSIC_UNLOCKS_7(298),
+    MUSIC_UNLOCKS_8(311),
+    MUSIC_UNLOCKS_9(346),
+    MUSIC_UNLOCKS_10(414),
+    MUSIC_UNLOCKS_11(464),
+    MUSIC_UNLOCKS_12(598),
+    MUSIC_UNLOCKS_13(662),
+    MUSIC_UNLOCKS_14(721),
     WITHDRAW_AS_NOTE(115),
     BRIGHTNESS_LEVEL(166),
     MUSIC_VOLUME(168),

@@ -3,8 +3,11 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.Region;
+import io.luna.game.model.mob.varp.PersistentVarp;
 
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A cache/data-backed definition describing a single music track in the in-game music tab.
@@ -25,13 +28,6 @@ public final class MusicDefinition implements Definition {
     public static final MapDefinitionRepository<MusicDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
-     * Lazy-built map of region id to music definition.
-     * <p>
-     * Built by {@link #getAllMusicForRegions()} on first access.
-     */
-    private static ImmutableMap<Integer, MusicDefinition> ALL_REGIONS;
-
-    /**
      * Attempts to find the appropriate song for the given region id.
      *
      * @param id The region id to look up.
@@ -42,23 +38,12 @@ public final class MusicDefinition implements Definition {
     }
 
     /**
-     * Returns the backing region-id to music-definition map, building it if necessary.
-     * <p>
-     * This method is intentionally lazy to avoid paying the indexing cost unless region-based music lookup is used.
+     * Returns the general region mappings indexed at startup.
      *
      * @return An immutable region mapping.
      */
     public static ImmutableMap<Integer, MusicDefinition> getAllMusicForRegions() {
-        if (ALL_REGIONS == null) {
-            var builder = ImmutableMap.<Integer, MusicDefinition>builder();
-            for (MusicDefinition def : ALL) {
-                for (Region region : def.regions) {
-                    builder.put(region.getId(), def);
-                }
-            }
-            ALL_REGIONS = builder.build();
-        }
-        return ALL_REGIONS;
+        return MusicLibrary.getLoaded().getRegions();
     }
 
     /**
@@ -86,6 +71,10 @@ public final class MusicDefinition implements Definition {
      */
     private final ImmutableSet<Region> regions;
 
+    private final ImmutableSet<MusicRegion> musicRegions;
+    private final PersistentVarp unlockVarp;
+    private final int unlockBit;
+
     /**
      * Creates a new {@link MusicDefinition}.
      *
@@ -96,11 +85,37 @@ public final class MusicDefinition implements Definition {
      * @param regions The regions that should map to this track.
      */
     public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<Region> regions) {
+        this(id, name, lineId, buttonId, ImmutableSet.copyOf(regions.stream()
+                .map(region -> new MusicRegion(region.getId(), -1)).iterator()), null, -1);
+    }
+
+    /**
+     * Creates a track with cache-compatible unlock metadata and optional plane mappings.
+     *
+     * @param id The MIDI file id.
+     * @param name The display name.
+     * @param lineId The track text component.
+     * @param buttonId The selection component.
+     * @param musicRegions The map squares where this track is discovered.
+     * @param unlockVarp The persistent unlock word, or null for a free track.
+     * @param unlockBit The bit within the word, or -1 for a free track.
+     */
+    public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<MusicRegion> musicRegions,
+                           PersistentVarp unlockVarp, int unlockBit) {
+        checkArgument(id >= 0 && id < 65535, "Invalid music id: %s", id);
+        checkArgument(name != null && !name.isBlank(), "Missing music name for %s", id);
+        checkArgument(lineId >= 0 && buttonId >= 0, "Invalid music component for %s", id);
+        checkArgument(unlockVarp == null ? unlockBit == -1 :
+                        unlockVarp.name().startsWith("MUSIC_UNLOCKS_") && unlockBit >= 0 && unlockBit < 32,
+                "Invalid music unlock metadata for %s", id);
         this.id = id;
         this.name = name;
         this.lineId = lineId;
         this.buttonId = buttonId;
-        this.regions = regions;
+        this.musicRegions = musicRegions;
+        this.regions = ImmutableSet.copyOf(musicRegions.stream().map(region -> new Region(region.id())).iterator());
+        this.unlockVarp = unlockVarp;
+        this.unlockBit = unlockBit;
     }
 
     @Override
@@ -142,5 +157,47 @@ public final class MusicDefinition implements Definition {
      */
     public ImmutableSet<Region> getRegions() {
         return regions;
+    }
+
+    /**
+     * @return Map squares with plane restrictions, where -1 means every plane.
+     */
+    public ImmutableSet<MusicRegion> getMusicRegions() {
+        return musicRegions;
+    }
+
+    /**
+     * @return The persistent unlock word, or null for tracks available to everyone.
+     */
+    public PersistentVarp getUnlockVarp() {
+        return unlockVarp;
+    }
+
+    /**
+     * @return The unlock bit, or -1 for a free track.
+     */
+    public int getUnlockBit() {
+        return unlockBit;
+    }
+
+    /**
+     * A 64-by-64 map square with an optional plane restriction.
+     *
+     * @param id The packed map-square id.
+     * @param plane The plane, or -1 for every plane.
+     * @author lare96
+     */
+    public record MusicRegion(int id, int plane) {
+        public MusicRegion {
+            checkArgument(id >= 0 && id <= 65535, "Invalid music region: %s", id);
+            checkArgument(plane >= -1 && plane <= 3, "Invalid music plane: %s", plane);
+        }
+
+        /**
+         * @return The region/plane lookup key.
+         */
+        public int key() {
+            return (plane << 16) | id;
+        }
     }
 }
