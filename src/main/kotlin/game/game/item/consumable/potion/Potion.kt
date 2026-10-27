@@ -246,8 +246,19 @@ enum class Potion(val fourDose: Int,
          */
         private fun Player.onPrayerPotion() {
             val prayer = skill(SKILL_PRAYER)
-            prayer.adjustLevel(7 + (prayer.staticLevel / 4))
+            prayer.adjustLevel(prayerRestore(prayer.staticLevel))
         }
+
+        /**
+         * The Prayer points one dose of prayer potion restores at [staticLevel].
+         */
+        fun prayerRestore(staticLevel: Int) = 7 + (staticLevel / 4)
+
+        /**
+         * The levels a combat potion boosts above [staticLevel].
+         */
+        fun combatBoost(staticLevel: Int, superPotion: Boolean) =
+            (if (superPotion) 5 + (0.15 * staticLevel) else 3 + (0.10 * staticLevel)).toInt()
 
         /**
          * Invoked when a non-combat skill potion is sipped.
@@ -296,11 +307,8 @@ enum class Potion(val fourDose: Int,
          * Invoked when a combat skill potion is sipped.
          */
         private fun Player.onCombatPotion(skillId: Int, superPotion: Boolean = false) {
-            fun boostAmount(level: Int) = if (superPotion) 5 + (0.15 * level)
-            else 3 + (0.10 * level)
-
             val skill = skill(skillId)
-            skill.boost(boostAmount(skill.staticLevel).toInt())
+            skill.boost(combatBoost(skill.staticLevel, superPotion))
         }
     }
 
