@@ -8,6 +8,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
+import game.bot.scripts.combat.RockCrabBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
@@ -119,14 +120,19 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
             loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
             queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)).shuffled()
+        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
+            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        // Rock crabs sit disguised as rocks, so they need a script that waits for them to wake.
+        if (candidates.firstOrNull()?.zone == SubZone.ROCK_CRABS) {
+            bot.scriptStack.push(RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell))
+            return
+        }
         // Queen trips have their own supplies and must not inherit a dragon camp's shield requirement.
         val selected = if (candidates.firstOrNull()?.zone == SubZone.KALPHITE_QUEEN) candidates.take(1)
-            else candidates.filter { it.zone != SubZone.KALPHITE_QUEEN }.take(4)
+            else candidates.filter { it.zone != SubZone.KALPHITE_QUEEN && it.zone != SubZone.ROCK_CRABS }.take(4)
         if (selected.isEmpty()) return
         val names = HashMultimap.create<SubZone, String>()
         selected.forEach { names.putAll(it.zone, it.names) }
-        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
-            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
         bot.scriptStack.push(NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
             names, purpose, loadout.spell?.spell))
     }
