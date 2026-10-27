@@ -242,7 +242,7 @@ object CannonBotSupport {
             cannon = Cannon.ALL[bot.username]
             if (cannon != null) {
                 val camp = bot.cannonCamp ?: return@withTimeoutOrNull false
-                if (!handler.travelTo(camp, BankAccess.COINS)) return@withTimeoutOrNull false
+                if (!handler.webWalkTo(zone = camp, bank = BankAccess.COINS)) return@withTimeoutOrNull false
                 cannon = Cannon.ALL[bot.username]
             }
             if (cannon != null) {
@@ -251,7 +251,7 @@ object CannonBotSupport {
                     return@withTimeoutOrNull false
                 }
             } else {
-                if (!ActionSafety.NON_COMBAT.allows(bot) || !handler.travelTo(SubZone.ICE_MOUNTAIN, BankAccess.COINS)) {
+                if (!ActionSafety.NON_COMBAT.allows(bot) || !handler.webWalkTo(zone = SubZone.ICE_MOUNTAIN, bank = BankAccess.COINS)) {
                     return@withTimeoutOrNull false
                 }
                 if (!ActionSafety.NON_COMBAT.allows(bot) || Cannon.ALL[bot.username] != null ||

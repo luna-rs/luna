@@ -63,6 +63,7 @@ object BorderGateCrossing : CrossingHandler {
             }
             val walked = context.walk(leg.from, 0)
             if (walked != null) {
+                if (context.interrupted) return walked
                 lastProblem = walked
                 return@repeat
             }

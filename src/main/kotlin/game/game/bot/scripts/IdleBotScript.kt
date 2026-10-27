@@ -159,7 +159,7 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
         var reached = false
         try {
             reached = withTimeoutOrNull(remaining) {
-                if (!handler.widgets.clickCloseInterface() || !handler.travelTo(destination, BankAccess.COINS)) {
+                if (!handler.widgets.clickCloseInterface() || !handler.webWalkTo(zone = destination, bank = BankAccess.COINS)) {
                     return@withTimeoutOrNull false
                 }
                 if (!isActionSafe() || ended()) return@withTimeoutOrNull false

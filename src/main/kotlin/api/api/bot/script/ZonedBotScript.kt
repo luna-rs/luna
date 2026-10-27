@@ -332,7 +332,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * override this rather than duplicating the zone lifecycle or bypassing their entrance on later bank trips.
      */
     protected open suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess = BankAccess.ALL): Boolean =
-        handler.travelTo(zone, bank)
+        handler.webWalkTo(zone = zone, bank = bank)
 
     /**
      * Selects the banking parent when an activity uses an alternative entrance whose bank differs from its work zone.
@@ -610,7 +610,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
-            if (parent.banks.isNotEmpty() && handler.travelTo(parent, BankAccess.COINS)) {
+            if (parent.banks.isNotEmpty() && handler.webWalkTo(zone = parent, bank = BankAccess.COINS)) {
                 val sortedBanks =
                     if (bot.personality.isDextrous || bot.personality.isIntelligent || rand(bot.personality.dexterity)) {
                         parent.banks.sortedWith(LocatableDistanceComparator(bot))
@@ -644,7 +644,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 }
                 if (cachedBank == null) {
                     bot.log("Could not access parent bank anchors. Falling back to home bank. parent=$parent")
-                    if (handler.travelTo(SubZone.HOME, BankAccess.COINS)) {
+                    if (handler.webWalkTo(zone = SubZone.HOME, bank = BankAccess.COINS)) {
                         cachedBank = handler.banking.homeBank()
                         bot.log("Home bank fallback result. cachedBank=$cachedBank")
                     } else {

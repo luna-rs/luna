@@ -168,7 +168,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         }
                         if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
                         bot.overlays.closeWindows()
-                        if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) break
+                        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
                         if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
                         bot.overlays.open(ShopInterface(shop))
                         val before = carried()

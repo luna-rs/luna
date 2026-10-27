@@ -183,7 +183,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * @return `true` if the bot is already at home or the travel action succeeds.
      */
     private suspend fun travelHome(): Boolean {
-        return SubZone.HOME in bot.subZones || handler.travelTo(SubZone.HOME)
+        return SubZone.HOME in bot.subZones || handler.webWalkTo(SubZone.HOME)
     }
 
     /**

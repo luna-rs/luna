@@ -75,7 +75,8 @@ public class SimpleBoxArea extends Area {
      * @param northEastY The inclusive northern y coordinate.
      * @throws IllegalArgumentException if the north-east bounds are smaller than the south-west bounds.
      */
-    SimpleBoxArea(int southWestX, int southWestY, int northEastX, int northEastY) {
+    SimpleBoxArea(int southWestX, int southWestY, int northEastX, int northEastY, int plane) {
+        super(plane);
         checkArgument(northEastX >= southWestX, "northEastX cannot be smaller than southWestX");
         checkArgument(northEastY >= southWestY, "northEastY cannot be smaller than southWestY");
 
@@ -84,10 +85,10 @@ public class SimpleBoxArea extends Area {
         this.northEastX = northEastX;
         this.northEastY = northEastY;
 
-        northEast = new Position(northEastX, northEastY);
-        northWest = new Position(southWestX, northEastY);
-        southEast = new Position(northEastX, southWestY);
-        southWest = new Position(southWestX, southWestY);
+        northEast = new Position(northEastX, northEastY, plane);
+        northWest = new Position(southWestX, northEastY, plane);
+        southEast = new Position(northEastX, southWestY, plane);
+        southWest = new Position(southWestX, southWestY, plane);
 
         touchedRegions = ImmutableSet.of(northEast.getRegionId(), northWest.getRegionId(), southWest.getRegionId(),
                 southEast.getRegionId());
@@ -102,12 +103,13 @@ public class SimpleBoxArea extends Area {
         return southWestX == that.southWestX &&
                 southWestY == that.southWestY &&
                 northEastX == that.northEastX &&
-                northEastY == that.northEastY;
+                northEastY == that.northEastY &&
+                getPlane() == that.getPlane();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(southWestX, southWestY, northEastX, northEastY);
+        return Objects.hashCode(southWestX, southWestY, northEastX, northEastY, getPlane());
     }
 
     @Override
@@ -115,7 +117,8 @@ public class SimpleBoxArea extends Area {
         return position.getX() >= southWestX &&
                 position.getX() <= northEastX &&
                 position.getY() >= southWestY &&
-                position.getY() <= northEastY;
+                position.getY() <= northEastY &&
+                position.getZ() == getPlane();
     }
 
     @Override
@@ -127,7 +130,7 @@ public class SimpleBoxArea extends Area {
     public Position randomPosition() {
         int randomX = RandomUtils.exclusive(width()) + southWestX;
         int randomY = RandomUtils.exclusive(length()) + southWestY;
-        return new Position(randomX, randomY);
+        return new Position(randomX, randomY, getPlane());
     }
 
     @Override
@@ -136,7 +139,7 @@ public class SimpleBoxArea extends Area {
 
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
-                list.add(new Position(x, y));
+                list.add(new Position(x, y, getPlane()));
             }
         }
 
@@ -168,7 +171,7 @@ public class SimpleBoxArea extends Area {
     public Position getCenterPosition() {
         int centerX = southWestX + ((northEastX - southWestX) / 2);
         int centerY = southWestY + ((northEastY - southWestY) / 2);
-        return new Position(centerX, centerY);
+        return new Position(centerX, centerY, getPlane());
     }
 
     /**

@@ -441,7 +441,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         // Travel home, then use home bank. A walk to a bank doesn't stop at a bank for what the walk needs.
         bot.log("Trying to travel home for a bank.")
-        if (handler.travelTo(SubZone.HOME, BankAccess.NONE)) {
+        if (handler.webWalkTo(zone = SubZone.HOME, bank = BankAccess.NONE)) {
             return homeBank()
         }
 

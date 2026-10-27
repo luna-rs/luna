@@ -62,8 +62,8 @@ public class PolygonArea extends Area {
      *
      * @param verticesList The polygon vertices (in intended edge order).
      */
-    PolygonArea(List<Point> verticesList) {
-
+    PolygonArea(List<Point> verticesList, int plane) {
+        super(plane);
         // Deep copy of vertices.
         vertices = new LinkedHashSet<>();
         for (Point point : verticesList) {
@@ -71,7 +71,7 @@ public class PolygonArea extends Area {
         }
 
         // Precompute hashcode.
-        hashCode = Objects.hashCode(vertices);
+        hashCode = Objects.hashCode(vertices, plane);
 
         // Extract primitive coordinate arrays.
         int index = 0;
@@ -97,7 +97,7 @@ public class PolygonArea extends Area {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PolygonArea that = (PolygonArea) o;
-        return Objects.equal(vertices, that.vertices);
+        return getPlane() == that.getPlane() && Objects.equal(vertices, that.vertices);
     }
 
     @Override
@@ -115,6 +115,9 @@ public class PolygonArea extends Area {
      */
     @Override
     public boolean contains(Position position) {
+        if(position.getZ() != getPlane()) {
+            return false;
+        }
         int x = position.getX();
         int y = position.getY();
 
@@ -206,7 +209,7 @@ public class PolygonArea extends Area {
 
         // Enumerate every position inside the bounding rectangle.
         ImmutableList<Position> outerPositions =
-                Area.of(southWestX, southWestY, northEastX, northEastY).getPositions();
+                Area.of(southWestX, southWestY, northEastX, northEastY, getPlane()).getPositions();
 
         // Filter down to only those contained by the polygon.
         ImmutableList.Builder<Position> innerPositions = ImmutableList.builder();

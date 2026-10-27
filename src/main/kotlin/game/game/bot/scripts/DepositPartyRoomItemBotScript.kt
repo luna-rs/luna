@@ -134,7 +134,7 @@ class DepositPartyRoomItemBotScript(
             val quantity = minOf(amount, surplus)
             handler.banking.clickBankingMode(false)
             if (!handler.banking.travelToBankWithdraw(listOf(Item(itemId, quantity)))) return@withTimeoutOrNull
-            if (!handler.widgets.clickCloseInterface() || !handler.travelTo(SubZone.PARTY_ROOM)) return@withTimeoutOrNull
+            if (!handler.widgets.clickCloseInterface() || !handler.webWalkTo(SubZone.PARTY_ROOM)) return@withTimeoutOrNull
             val chest = world.locator.findObjects(PartyRoom.TELEPORT_POSITIONS.first(), 20) { it.id == 2417 }
                 .firstOrNull() ?: return@withTimeoutOrNull
             if (!handler.interactions.interact(1, chest) ||

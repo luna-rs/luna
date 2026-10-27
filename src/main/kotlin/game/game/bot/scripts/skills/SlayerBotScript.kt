@@ -114,7 +114,7 @@ class SlayerBotScript private constructor(
         if (bot.activeSlayerTask != null) return true
         val selected = SlayerScriptFactory.selectMaster(bot) ?: return false
         val zone = SlayerScriptFactory.masterZones.getValue(selected)
-        if (!handler.travelTo(zone) || !awaitActionSafety()) return false
+        if (!handler.webWalkTo(zone) || !awaitActionSafety()) return false
         if (bot.activeSlayerTask != null) return true
         if (selected !in SlayerScriptFactory.eligibleMasters(bot.combatLevel, bot.slayer.level)) return false
         val master = findMaster(selected, zone) ?: return false

@@ -28,6 +28,12 @@ import kotlin.time.Duration.Companion.seconds
  */
 class LegContext(val bot: Bot, val handler: BotActionHandler) {
 
+    /**
+     * Whether another navigation took ownership during this plan. Recovery must not override it.
+     */
+    var interrupted: Boolean = false
+        private set
+
     companion object {
 
         /**
@@ -95,6 +101,7 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
             return null
         }
         if (future.isCancelled) {
+            interrupted = true
             return "the walk to $target was interrupted"
         }
         val result = future.await()

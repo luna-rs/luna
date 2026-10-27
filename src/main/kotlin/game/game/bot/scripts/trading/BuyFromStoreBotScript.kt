@@ -70,7 +70,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
 
     override suspend fun run(): Boolean {
         // Remote shop access is a home-only convenience. Never open a registered shop from somewhere else.
-        if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) {
+        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) {
             bot.log("Could not travel home to shop.")
             return true
         }

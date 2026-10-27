@@ -8,6 +8,8 @@ import io.luna.util.RandomUtils;
 import java.awt.*;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * A geometric region of the game world composed of tile {@link Position} coordinates.
  * <p>
@@ -45,15 +47,46 @@ public abstract class Area implements Locatable {
      * @param northEastY The second y coordinate (treated as north-east y after normalization).
      * @return A new {@link SimpleBoxArea} instance.
      */
-    public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY) {
+    public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY, int plane) {
         int normalizedSwX = Math.min(southWestX, northEastX);
         int normalizedSwY = Math.min(southWestY, northEastY);
         int normalizedNeX = Math.max(southWestX, northEastX);
         int normalizedNeY = Math.max(southWestY, northEastY);
 
-        SimpleBoxArea box = new SimpleBoxArea(normalizedSwX, normalizedSwY, normalizedNeX, normalizedNeY);
-        box.setAnchorPosition(new Position(normalizedSwX, normalizedSwY));
+        SimpleBoxArea box = new SimpleBoxArea(normalizedSwX, normalizedSwY, normalizedNeX, normalizedNeY, plane);
+        box.setAnchorPosition(new Position(normalizedSwX, normalizedSwY, plane));
         return box;
+    }
+
+    /**
+     * Creates a rectangular {@link Area} using south-west and north-east coordinates.
+     * <p>
+     * Coordinates are normalized so callers may pass corners in any order. The resulting {@link SimpleBoxArea}
+     * uses inclusive bounds.
+     *
+     * @param southWestX The first x coordinate (treated as south-west x after normalization).
+     * @param southWestY The first y coordinate (treated as south-west y after normalization).
+     * @param northEastX The second x coordinate (treated as north-east x after normalization).
+     * @param northEastY The second y coordinate (treated as north-east y after normalization).
+     * @return A new {@link SimpleBoxArea} instance.
+     */
+    public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY) {
+        return of(southWestX, southWestY, northEastX, northEastY, 0);
+    }
+
+    /**
+     * Creates a rectangular {@link SimpleBoxArea} from a south-west coordinate using the specified dimensions.
+     *
+     * @param southWestX The x-coordinate of the south-west corner
+     * @param southWestY The y-coordinate of the south-west corner
+     * @param width The width of the area in tiles
+     * @param height The height of the area in tiles
+     * @return The resulting {@link SimpleBoxArea}
+     */
+    public static SimpleBoxArea ofRadius(int southWestX, int southWestY, int width, int height, int plane) {
+        int northEastX = southWestX + width - 1;
+        int northEastY = southWestY + height - 1;
+        return of(southWestX, southWestY, northEastX, northEastY, plane);
     }
 
     /**
@@ -66,9 +99,25 @@ public abstract class Area implements Locatable {
      * @return The resulting {@link SimpleBoxArea}
      */
     public static SimpleBoxArea ofRadius(int southWestX, int southWestY, int width, int height) {
-        int northEastX = southWestX + width - 1;
-        int northEastY = southWestY + height - 1;
-        return of(southWestX, southWestY, northEastX, northEastY);
+        return ofRadius(southWestX, southWestY, width, height, 0);
+    }
+
+    /**
+     * Creates a square {@link SimpleBoxArea} centered around {@code center} with a tile radius.
+     * <p>
+     * The produced box includes the edges at {@code center +/- radius}.
+     *
+     * @param center The center position.
+     * @param radius The radius in tiles.
+     * @return A new {@link SimpleBoxArea}.
+     */
+    public static SimpleBoxArea of(Position center, int radius, int plane) {
+        SimpleBoxArea box = of(
+                center.getX() - radius, center.getY() - radius,
+                center.getX() + radius, center.getY() + radius, plane
+        );
+        box.setAnchorPosition(center.setZ(plane));
+        return box;
     }
 
     /**
@@ -81,12 +130,7 @@ public abstract class Area implements Locatable {
      * @return A new {@link SimpleBoxArea}.
      */
     public static SimpleBoxArea of(Position center, int radius) {
-        SimpleBoxArea box = of(
-                center.getX() - radius, center.getY() - radius,
-                center.getX() + radius, center.getY() + radius
-        );
-        box.setAnchorPosition(center);
-        return box;
+        return of(center, radius, 0);
     }
 
     /**
@@ -96,7 +140,30 @@ public abstract class Area implements Locatable {
      * @return A new {@link PolygonArea}.
      */
     public static PolygonArea of(List<Point> vertices) {
-        return new PolygonArea(vertices);
+        return of(vertices, 0);
+    }
+
+    /**
+     * Creates a polygonal {@link Area} from an ordered vertex list.
+     *
+     * @param vertices The vertices that form the polygon outline.
+     * @return A new {@link PolygonArea}.
+     */
+    public static PolygonArea of(List<Point> vertices, int plane) {
+        return new PolygonArea(vertices, plane);
+    }
+
+    /**
+     * Creates a {@link CircularArea}.
+     *
+     * @param center The center point.
+     * @param radius The radius in tiles (must be {@code >= 1}).
+     * @return A new {@link CircularArea}.
+     */
+    public static CircularArea of(Point center, int radius, int plane) {
+        CircularArea area = new CircularArea(center.x, center.y, radius, plane);
+        area.setAnchorPosition(new Position(center.x, center.y, plane));
+        return area;
     }
 
     /**
@@ -107,10 +174,9 @@ public abstract class Area implements Locatable {
      * @return A new {@link CircularArea}.
      */
     public static CircularArea of(Point center, int radius) {
-        CircularArea area = new CircularArea(center.x, center.y, radius);
-        area.setAnchorPosition(new Position(center.x, center.y));
-        return area;
+        return of(center, radius, 0);
     }
+
 
     /**
      * Cached immutable list of every position contained by this area.
@@ -123,6 +189,21 @@ public abstract class Area implements Locatable {
      * Anchor position used to satisfy {@link #abs()} and {@link Locatable} coordinates.
      */
     private Position anchorPosition;
+
+    /**
+     * The plane this area is on.
+     */
+    private final int plane;
+
+    /**
+     * Creates a new {@link Area}.
+     *
+     * @param plane The plane this area is on.
+     */
+    public Area(int plane) {
+        checkArgument(plane >= 0 && plane < 4, "Plane must be between 0-3.");
+        this.plane = plane;
+    }
 
     /**
      * Returns the area anchor position.
@@ -201,7 +282,7 @@ public abstract class Area implements Locatable {
      */
     public Position getAnchorPosition() {
         if (anchorPosition == null) {
-            anchorPosition = randomPosition();
+            anchorPosition = randomPosition().setZ(plane);
         }
         return anchorPosition;
     }
@@ -215,7 +296,14 @@ public abstract class Area implements Locatable {
      */
     public void setAnchorPosition(Position position) {
         if (contains(position)) {
-            anchorPosition = position;
+            anchorPosition = position.setZ(plane);
         }
+    }
+
+    /**
+     * @return The plane this area is on.
+     */
+    public int getPlane() {
+        return plane;
     }
 }

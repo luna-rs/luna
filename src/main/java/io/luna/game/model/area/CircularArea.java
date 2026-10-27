@@ -34,12 +34,13 @@ public final class CircularArea extends Area {
      * @param radius The radius in tiles (must be {@code >= 1}).
      * @throws IllegalArgumentException if {@code radius < 1}.
      */
-    public CircularArea(int centerX, int centerY, int radius) {
+    public CircularArea(int centerX, int centerY, int radius, int plane) {
+        super(plane);
         if (radius < 1) {
             throw new IllegalArgumentException("Circular radius cannot be less than 1");
         }
         this.radius = radius;
-        this.center = new Position(centerX, centerY);
+        this.center = new Position(centerX, centerY, plane);
 
         // Anchor defaults to the center for circles.
         setAnchorPosition(center);
@@ -47,9 +48,9 @@ public final class CircularArea extends Area {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof CircularArea)) return false;
-        CircularArea that = (CircularArea) o;
-        return radius == that.radius && Objects.equal(center, that.center);
+        if (!(o instanceof CircularArea that)) return false;
+        return getPlane() == that.getPlane() &&
+                radius == that.radius && Objects.equal(center, that.center);
     }
 
     @Override
@@ -102,7 +103,7 @@ public final class CircularArea extends Area {
                 int dx = x - cx;
                 int dy = y - cy;
                 if (dx * dx + dy * dy <= radiusSquared) {
-                    set.add(new Position(x, y));
+                    set.add(new Position(x, y, getPlane()));
                 }
             }
         }

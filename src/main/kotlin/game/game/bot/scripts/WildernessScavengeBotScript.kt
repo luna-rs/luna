@@ -165,7 +165,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
             prepared = true
             destination = null
             // Re-enter by walking from the existing Edgeville zone, never by a deep-Wilderness teleport.
-            if (!handler.travelTo(Zone.EDGEVILLE, BankAccess.NONE)) {
+            if (!handler.webWalkTo(zone = Zone.EDGEVILLE, bank = BankAccess.NONE)) {
                 prepared = false
                 delay(10.seconds)
                 return false

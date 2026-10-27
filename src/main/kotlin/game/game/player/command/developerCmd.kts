@@ -90,20 +90,7 @@ cmd("forcescript", RIGHTS_DEV) {
         }
     }
 }
-cmd("forcetravel", RIGHTS_DEV) {
-    val name = getInputFrom(0).trim().uppercase().replace(' ', '_')
-    for (nextPlr in world.players) {
-        if (nextPlr is Bot) {
-            nextPlr.scriptStack.pushHead(object : DynamicBotScript(nextPlr) {
-                override suspend fun run(): Boolean {
-                    nextPlr.actionHandler.travelTo(SubZone.valueOf(name))
-                    return true
-                }
 
-            })
-        }
-    }
-}
 cmd("setbotcount") {
     val amount = asInt(0)
 

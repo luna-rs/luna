@@ -144,7 +144,7 @@ class GnomeBallBotScript(bot: Bot, private var attempted: Boolean = false,
                 !handler.banking.withdrawAnyFood(8, minimumHeal = 3)) return@withTimeoutOrNull true
             if (!handler.widgets.clickCloseInterface() || !isActionSafe()) return@withTimeoutOrNull true
             entering = true
-            val arrived = handler.travelTo(SubZone.GNOME_BALL_PITCH)
+            val arrived = handler.webWalkTo(SubZone.GNOME_BALL_PITCH)
             ownedSession = GnomeBall.session(bot)
             !arrived || !GnomeBall.inside(bot.position) || ownedSession == null
         } ?: true

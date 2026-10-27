@@ -67,7 +67,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         if (GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
         return object : DynamicBotScript(bot) {
             override suspend fun run(): Boolean {
-                if (handler.travelTo(SubZone.PARTY_ROOM)) delay(30.seconds)
+                if (handler.webWalkTo(SubZone.PARTY_ROOM)) delay(30.seconds)
                 return true
             }
         }

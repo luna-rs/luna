@@ -229,7 +229,7 @@ class TradeBotScript(bot: Bot,
         }
         bot.overlays.closeWindows()
         val tile = marketplace.positions.randomOrNull()
-        prepared = tile != null && handler.travelTo(marketplace.parent) &&
+        prepared = tile != null && handler.webWalkTo(marketplace.parent) &&
                 handler.webWalkTo(tile) && bot.position == tile
         if (!prepared) endSession("Could not return to an available marketplace tile.")
     }

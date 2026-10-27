@@ -75,6 +75,7 @@ object ShipVoyage {
             if (!onDeck(context, route)) {
                 val boarded = board(context, leg, route)
                 if (boarded != null) {
+                    if (context.interrupted) return boarded
                     lastProblem = boarded
                     return@repeat
                 }

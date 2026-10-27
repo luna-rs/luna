@@ -96,7 +96,8 @@ class ZonedActionSafetyTest {
         setZone(script)
         val handler = bot.actionHandler
         var firstWalk = true
-        `when`(handler.webWalkTo(any(Position::class.java) ?: Position(0, 0), eq(0), eq(1), eq(BankAccess.ALL) ?: BankAccess.ALL)).thenAnswer {
+        `when`(handler.webWalkTo(any(Position::class.java) ?: Position(0, 0), eq(0), eq(1),
+                               eq(BankAccess.ALL) ?: BankAccess.ALL, eq(true))).thenAnswer {
             if (firstWalk) {
                 firstWalk = false
                 if (travelSucceeded) position = it.getArgument(0)

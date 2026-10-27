@@ -102,7 +102,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 Purpose.VALUE -> listOf(PkArea.EDGEVILLE_DUNGEON.anchors,
                     PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
                     PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
-                    listOfNotNull(SubZone.KBD_LAIR.outside(bot)))
+                    listOfNotNull(SubZone.KBD_LAIR.entrance(bot)))
                 Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
                     PkArea.DEMONIC_RUINS.anchors)
                 else -> PkArea.ALL.map { it.anchors }

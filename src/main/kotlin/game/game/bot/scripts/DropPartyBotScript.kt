@@ -62,7 +62,7 @@ class DropPartyBotScript(bot: Bot, private val partyId: Long, private val deadli
         bot.actions.interruptWeak()
         bot.combat.target = null
         val arrived = withTimeoutOrNull(120_000) {
-            handler.widgets.clickCloseInterface() && handler.travelTo(SubZone.PARTY_ROOM)
+            handler.widgets.clickCloseInterface() && handler.webWalkTo(SubZone.PARTY_ROOM)
         } == true
         return !arrived || ended()
     }

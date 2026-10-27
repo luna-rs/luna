@@ -242,7 +242,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                             zones.isNotEmpty() &&
                             visiblePlayers > 20
 
-                if (bot !in zone.area && handler.travelTo(zone)) {
+                if (bot !in zone.area && handler.webWalkTo(zone)) {
                     bot.log("No interactable targets found. Moving closer to active zone.")
                     return true
                 }

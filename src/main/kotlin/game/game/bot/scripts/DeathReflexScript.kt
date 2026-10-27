@@ -132,7 +132,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
         for (candidate in subZones) {
             bot.naturalDecisionDelay()
             bot.log("Attempting travel to subzone candidate $candidate.")
-            if (handler.travelTo(candidate) && WebWalker.webWalk(bot, position).success) {
+            if (handler.webWalkTo(candidate) && WebWalker.webWalk(bot, position).success) {
                 return true
             }
         }
@@ -140,7 +140,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
         if (zone != null) {
             bot.naturalDecisionDelay()
             bot.log("Attempting travel to last zone candidate $zone.")
-            if (handler.travelTo(zone) && WebWalker.webWalk(bot, position).success) {
+            if (handler.webWalkTo(zone) && WebWalker.webWalk(bot, position).success) {
                 return true
             }
         }

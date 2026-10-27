@@ -118,7 +118,8 @@ class WebWalkExecutor(private val bot: Bot,
                 return done(plan, index, "Arrived early, before leg ${index + 1} of ${plan.legs.size}.")
             }
             val next = plan.legs.getOrNull(index + 1)
-            val failure = unmet(leg) ?: when (leg.type) {
+            val requirementsFailure = unmet(leg)
+            val failure = requirementsFailure ?: when (leg.type) {
                 EdgeType.WALK -> walk(leg.to, if (next?.type == EdgeType.WALK) WALK_SLACK else 0)
                 EdgeType.DOOR, EdgeType.GATE, EdgeType.CURTAIN -> crossDoor(leg)
                 EdgeType.CROSSING -> crossing(leg)
@@ -130,12 +131,16 @@ class WebWalkExecutor(private val bot: Bot,
             }
             if (failure != null) {
                 return WebWalkResult(false, "Leg ${index + 1} of ${plan.legs.size} (${leg.type} to ${leg.to}) failed: " +
-                        failure, plan, index)
+                        failure, plan, index, failure = when {
+                            context.interrupted -> WebWalkFailure.INTERRUPTED
+                            requirementsFailure == null -> WebWalkFailure.EXECUTION
+                            else -> null
+                        })
             }
         }
         if (!atDestination()) {
             return WebWalkResult(false, "The plan is done, but the bot is at ${bot.position}, not near $destination.",
-                                 plan, plan.legs.size)
+                                 plan, plan.legs.size, failure = WebWalkFailure.EXECUTION)
         }
         return done(plan, plan.legs.size, "Arrived.")
     }
@@ -225,6 +230,7 @@ class WebWalkExecutor(private val bot: Bot,
             if (failure == null) {
                 return null
             }
+            if (context.interrupted) return failure
             lastProblem = failure
         }
         return lastProblem

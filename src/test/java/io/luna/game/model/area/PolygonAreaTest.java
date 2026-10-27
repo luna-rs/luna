@@ -21,7 +21,7 @@ public class PolygonAreaTest {
                 new Point(10, 10),
                 new Point(0, 10)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         assertTrue(area.contains(new Position(5, 5)));
     }
@@ -34,7 +34,7 @@ public class PolygonAreaTest {
                 new Point(10, 10),
                 new Point(0, 10)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         assertFalse(area.contains(new Position(11, 5)));
     }
@@ -48,7 +48,7 @@ public class PolygonAreaTest {
                 new Point(10, 10),
                 new Point(0, 10)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         //on the bottom edge
         assertTrue(area.contains(new Position(5, 0)));
@@ -62,7 +62,7 @@ public class PolygonAreaTest {
                 new Point(10, 10),
                 new Point(0, 10)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         //exactly on a corner
         assertTrue(area.contains(new Position(0, 0)));
@@ -75,7 +75,7 @@ public class PolygonAreaTest {
                 new Point(0, 0),
                 new Point(10, 0)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         assertFalse(area.contains(new Position(5, 0)));
     }
@@ -83,7 +83,7 @@ public class PolygonAreaTest {
     @Test
     public void testDegeneratePolygonPoint() {
         List<Point> vertices = Collections.singletonList(new Point(0, 0));
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         assertFalse(area.contains(new Position(0, 0)));
     }
@@ -98,7 +98,7 @@ public class PolygonAreaTest {
                 new Point(10, 10),
                 new Point(0, 10)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         //inside the "dent"
         assertFalse(area.contains(new Position(5, 2)));
@@ -116,7 +116,7 @@ public class PolygonAreaTest {
                 new Point(4, 3),
                 new Point(0, 3)
         );
-        PolygonArea area = new PolygonArea(vertices);
+        PolygonArea area = new PolygonArea(vertices, 0);
 
         //outside bounding box
         assertFalse(area.contains(new Position(5, 5)));

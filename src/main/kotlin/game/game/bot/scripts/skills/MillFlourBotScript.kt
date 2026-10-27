@@ -243,7 +243,7 @@ class MillFlourBotScript(
      */
     private suspend fun buyPots(): Boolean {
         val wanted = minOf(owned(FlourMill.GRAIN) + bot.flourInBin, POT_PURCHASE.toLong()).toInt()
-        if (SubZone.HOME !in bot.subZones && !handler.travelTo(SubZone.HOME)) return false
+        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
         val banking = bot.actionHandler.banking
         if (!banking.travelToBankOpen() || !banking.depositInventory() || !isActionSafe()) return false
         banking.clickBankingMode(false)
@@ -302,7 +302,7 @@ class MillFlourBotScript(
      */
     private suspend fun openMillBank(): Boolean {
         val arrival = mill.arrival
-        if (arrival != null && arrival !in bot.subZones && !handler.travelTo(arrival)) return false
+        if (arrival != null && arrival !in bot.subZones && !handler.webWalkTo(arrival)) return false
         if (!handler.webWalkTo(mill.bankStand, bank = BankAccess.NONE) || !isActionSafe()) return false
         val bank = if (mill.bankerId != null) {
             world.locator.findNpcs(mill.booth, 8) {

@@ -3,7 +3,7 @@ package game.bot.scripts
 import api.bot.script.TargetingZonedBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
-import api.predef.world
+import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.EntityState
@@ -96,13 +96,6 @@ class CollectGroundItemBotScript(
 
     override suspend fun onBankOpen(initial: Boolean) {
         if (goalReached()) stop()
-    }
-
-    override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
-        val zone = activeZone
-        if (zone != null && zone in bot.subZones &&
-            !zone.leave(bot, zone.parent(bot), zone.outside(bot))) return false
-        return true
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GroundItem> {

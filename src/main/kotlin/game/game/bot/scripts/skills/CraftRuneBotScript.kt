@@ -409,7 +409,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             // Always approach the mage through the configured travel system; never teleport directly into the Abyss.
             if (!inAbyss()) {
                 // The prepared pack fills the inventory. Prevent travel from banking it to make room for jewellery.
-                if (!handler.travelTo(SubZone.ABYSS_ENTRY_MAGE, BankAccess.NONE) || !journeySafe() ||
+                if (!handler.webWalkTo(zone = SubZone.ABYSS_ENTRY_MAGE, bank = BankAccess.NONE) || !journeySafe() ||
                     !hasEssence() || !withinAbyssBudget()) return@withTimeoutOrNull false
                 val mage = world.locator.findNpcs(SubZone.ABYSS_ENTRY_MAGE.inside, 12) { it.id == 2257 }.firstOrNull()
                 if (!handler.interactions.interact(3, mage) { journeySafe() } ||

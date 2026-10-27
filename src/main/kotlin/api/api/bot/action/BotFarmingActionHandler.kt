@@ -75,7 +75,7 @@ class BotFarmingActionHandler(private val bot: Bot, private val handler: BotActi
      * fallback first; optional end-of-visit storage only approaches a leprechaun near the current plot.
      */
     private suspend fun open(zone: SubZone, travel: Boolean, allowed: () -> Boolean): Boolean {
-        if (!allowed() || travel && !handler.travelTo(zone) || !allowed()) return false
+        if (!allowed() || travel && !handler.webWalkTo(zone) || !allowed()) return false
         val npc = leprechaun(zone) ?: return false
         return handler.interactions.interact(2, npc, allowed) && waitFor(3.seconds) {
             allowed() && ToolLeprechaunInterface::class in bot.overlays

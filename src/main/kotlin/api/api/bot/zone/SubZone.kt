@@ -9,15 +9,11 @@ import api.bot.zone.Zone.*
 import api.predef.*
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
-import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.skill.runecrafting.enterAltar.Altar
 import game.bot.scripts.skills.AgilityCourseTravel
-import io.luna.game.model.EntityState
+import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
-import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * A smaller rectangular bot activity area within a broader [Zone].
@@ -31,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Each subzone has:
  * - [inside], the preferred local anchor used after the bot is inside or near the subzone.
- * - [outside], an optional dynamic external anchor for entrances, ladders, gates, portals, levers, or boats.
+ * - [entrance], an optional dynamic external anchor for entrances, ladders, gates, portals, levers, or boats.
  * - [area], the rectangular tile bounds used for containment checks and region indexing.
  * - [parent], the dynamic broader travel zone used for routing and fallback behavior.
  *
@@ -39,94 +35,92 @@ import kotlin.time.Duration.Companion.seconds
  */
 enum class SubZone(
     val inside: Position,
-    val outside: Bot.() -> Position? = { null },
+    val entrance: Bot.() -> Position? = { null },
     val area: SimpleBoxArea,
-    val parent: Bot.() -> Zone,
-    val plane: Int? = null
-) {
+    val parent: Bot.() -> Zone) {
     /**
      * Mainland bush patches from the revision 377 maps. Rimmington uses Falador's existing travel and bank parent.
      */
     CHAMPIONS_GUILD_BUSH_PATCH(
         inside = Position(3180, 3357), area = SimpleBoxArea.of(3178, 3354, 3185, 3361),
-        parent = { VARROCK }, plane = 0),
+        parent = { VARROCK }),
     RIMMINGTON_BUSH_PATCH(
         inside = Position(2939, 3221), area = SimpleBoxArea.of(2937, 3218, 2944, 3225),
-        parent = { FALADOR }, plane = 0),
+        parent = { FALADOR }),
     ARDOUGNE_BUSH_PATCH(
         inside = Position(2616, 3225), area = SimpleBoxArea.of(2614, 3222, 2621, 3229),
-        parent = { ARDOUGNE }, plane = 0),
+        parent = { ARDOUGNE }),
 
     /**
      * Native cactus, bittercap and belladonna plots reached through shared webwalking and travel fallback.
      */
     AL_KHARID_CACTUS_PATCH(
         inside = Position(3314, 3202), area = SimpleBoxArea.of(3312, 3199, 3319, 3206),
-        parent = { AL_KHARID }, plane = 0),
+        parent = { AL_KHARID }),
     CANIFIS_MUSHROOM_PATCH(
         inside = Position(3450, 3472), area = SimpleBoxArea.of(3448, 3469, 3455, 3476),
-        parent = { CANIFIS }, plane = 0),
+        parent = { CANIFIS }),
     DRAYNOR_BELLADONNA_PATCH(
         inside = Position(3085, 3354), area = SimpleBoxArea.of(3083, 3351, 3090, 3358),
-        parent = { DRAYNOR }, plane = 0),
+        parent = { DRAYNOR }),
 
     /**
      * Native revision 377 tree patch locations; arrival anchors stand beside their multi-tile tree objects.
      */
     TAVERLEY_TREE_PATCH(
         inside = Position(2934, 3437), area = SimpleBoxArea.of(2932, 3434, 2940, 3442),
-        parent = { TAVERLY }, plane = 0),
+        parent = { TAVERLY }),
     FALADOR_TREE_PATCH(
         inside = Position(3002, 3372), area = SimpleBoxArea.of(3000, 3369, 3008, 3377),
-        parent = { FALADOR }, plane = 0),
+        parent = { FALADOR }),
     VARROCK_TREE_PATCH(
         inside = Position(3227, 3458), area = SimpleBoxArea.of(3225, 3455, 3233, 3463),
-        parent = { VARROCK }, plane = 0),
+        parent = { VARROCK }),
     LUMBRIDGE_TREE_PATCH(
         inside = Position(3191, 3230), area = SimpleBoxArea.of(3189, 3227, 3197, 3235),
-        parent = { LUMBRIDGE }, plane = 0),
+        parent = { LUMBRIDGE }),
 
     /**
      * Fruit-tree plots with existing travel parents. Shared webwalking handles approach to the actual tree.
      */
     GNOME_STRONGHOLD_FRUIT_PATCH(
         inside = Position(2474, 3445), area = SimpleBoxArea.of(2472, 3442, 2480, 3450),
-        parent = { GNOME_STRONGHOLD }, plane = 0),
+        parent = { GNOME_STRONGHOLD }),
     BRIMHAVEN_FRUIT_PATCH(
         inside = Position(2763, 3212), area = SimpleBoxArea.of(2761, 3209, 2769, 3217),
-        parent = { KARAMJA }, plane = 0),
+        parent = { KARAMJA }),
     CATHERBY_FRUIT_PATCH(
         inside = Position(2859, 3433), area = SimpleBoxArea.of(2857, 3430, 2865, 3438),
-        parent = { CATHERBY }, plane = 0),
+        parent = { CATHERBY }),
 
     /**
      * Regular farming plots mapped in revision 377 and Lost City; anchors use the paths between plots.
      */
     FALADOR_FARM(
         inside = Position(3055, 3309), area = SimpleBoxArea.of(3047, 3300, 3063, 3315),
-        parent = { FALADOR }, plane = 0),
+        parent = { FALADOR }),
     CATHERBY_FARM(
         inside = Position(2811, 3465), area = SimpleBoxArea.of(2802, 3456, 2818, 3471),
-        parent = { CATHERBY }, plane = 0),
+        parent = { CATHERBY }),
     ARDOUGNE_FARM(
         inside = Position(2668, 3376), area = SimpleBoxArea.of(2659, 3367, 2675, 3382),
-        parent = { ARDOUGNE }, plane = 0),
+        parent = { ARDOUGNE }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
      */
     YANILLE_HOPS(
         inside = Position(2573, 3104), area = SimpleBoxArea.of(2571, 3100, 2580, 3109),
-        parent = { YANILLE }, plane = 0),
+        parent = { YANILLE }),
     ENTRANA_HOPS(
         inside = Position(2808, 3336), area = SimpleBoxArea.of(2806, 3332, 2815, 3341),
-        parent = { ENTRANA }, plane = 0),
+        parent = { ENTRANA }),
     LUMBRIDGE_HOPS(
         inside = Position(3226, 3315), area = SimpleBoxArea.of(3224, 3310, 3234, 3320),
-        parent = { LUMBRIDGE }, plane = 0),
+        parent = { LUMBRIDGE }),
     MCGRUBORS_HOPS(
         inside = Position(2663, 3525), area = SimpleBoxArea.of(2661, 3520, 2672, 3531),
-        parent = { SEERS_VILLAGE }, plane = 0),
+        parent = { SEERS_VILLAGE }),
 
     /**
      * Turael's Burthorpe house, used for native Slayer assignment dialogue.
@@ -142,7 +136,7 @@ enum class SubZone(
     HEROES_GUILD_FOUNTAIN(
         inside = Position(2916, 9893),
         area = SimpleBoxArea.of(2913, 9890, 2922, 9899),
-        parent = { TAVERLY }, plane = 0),
+        parent = { TAVERLY }),
 
     /**
      * Supplied Canifis town footprint containing Mazchna's configured spawn.
@@ -192,7 +186,7 @@ enum class SubZone(
     FISHING_GUILD(
         inside = Position(2586, 3418),
         area = SimpleBoxArea.of(2578, 3380, 2620, 3430),
-        parent = { ARDOUGNE }, plane = 0),
+        parent = { ARDOUGNE }),
 
     /**
      * Stronghold river fishing and the nearby bank. Uses the supplied Stronghold bank tile for arrival.
@@ -200,7 +194,7 @@ enum class SubZone(
     GNOME_STRONGHOLD_FISHING(
         inside = Position(2447, 3424),
         area = SimpleBoxArea.of(2375, 3400, 2450, 3433),
-        parent = { GNOME_STRONGHOLD }, plane = 0),
+        parent = { GNOME_STRONGHOLD }),
 
     /**
      * Seers' northern fishing spots and bank, using the existing town arrival anchor.
@@ -208,7 +202,7 @@ enum class SubZone(
     SEERS_VILLAGE_FISHING(
         inside = SEERS_VILLAGE.anchor,
         area = SimpleBoxArea.of(2708, 3484, 2736, 3538),
-        parent = { SEERS_VILLAGE }, plane = 0),
+        parent = { SEERS_VILLAGE }),
 
     /**
      * Fishing on the Ardougne river north of town. Arrival is an existing north-bank anchor.
@@ -216,7 +210,7 @@ enum class SubZone(
     ARDOUGNE_RIVER_FISHING(
         inside = Position(2618, 3331),
         area = SimpleBoxArea.of(2556, 3328, 2624, 3378),
-        parent = { ARDOUGNE }, plane = 0),
+        parent = { ARDOUGNE }),
 
     /**
      * Dairy cow at (3040, 3301) on the farm south of Falador, used to fill empty buckets with milk.
@@ -265,37 +259,25 @@ enum class SubZone(
     GNOME_BALL_PITCH(
         inside = Position(2389, 3488),
         area = SimpleBoxArea.of(2384, 3484, 2407, 3492),
-        parent = { GNOME_STRONGHOLD }, plane = 0),
+        parent = { GNOME_STRONGHOLD }),
 
     /**
      * Barbarian course including its upper platform, entered through the northern pipe.
      */
     BARBARIAN_OUTPOST_AGILITY(
         inside = Position(2551, 3554),
-        outside = { Position(2552, 3561) },
+        entrance = { Position(2552, 3561) },
         area = SimpleBoxArea.of(2530, 3540, 2555, 3558),
-        parent = { SEERS_VILLAGE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
-            AgilityCourseTravel.barbarianPipe(bot, true)
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
-            AgilityCourseTravel.barbarianPipe(bot, false)
-    },
+        parent = { SEERS_VILLAGE }),
 
     /**
      * Wilderness course north of the entrance ridge. Failure pits are recovered by the script.
      */
     WILDERNESS_AGILITY(
         inside = Position(2998, 3933),
-        outside = { Position(2998, 3916) },
+        entrance = { Position(2998, 3916) },
         area = SimpleBoxArea.of(2990, 3933, 3008, 3968),
-        parent = { WILDERNESS }, plane = 0) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
-            AgilityCourseTravel.wildernessRidge(bot, true)
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?) =
-            AgilityCourseTravel.wildernessRidge(bot, false)
-    },
+        parent = { WILDERNESS }),
 
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(
@@ -323,19 +305,9 @@ enum class SubZone(
 
     HAM_CULT(
         inside = Position(3149, 9652),
-        outside = { Position(3167, 3246) },
+        entrance = { Position(3167, 3246) },
         area = SimpleBoxArea.of(3135, 9606, 3189, 9660),
-        parent = { LUMBRIDGE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            // TODO Entrance at Lumbridge goblins between Lumbridge and Draynor. Always fallback to teleportation in the meantime.
-            return false
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.output.sendCommand("home")
-            return true
-        }
-    },
+        parent = { LUMBRIDGE }),
     LUMBRIDGE_CHICKEN_COOP(
         inside = Position(3233, 3294),
         area = SimpleBoxArea.of(3225, 3287, 3236, 3301),
@@ -346,48 +318,22 @@ enum class SubZone(
         parent = { EDGEVILLE }),
     DRAYNOR_SEWERS(
         inside = Position(3117, 9645),
-        outside = { Position(3085, 3271) },
+        entrance = { Position(3085, 3271) },
         area = SimpleBoxArea.of(3077, 9641, 3126, 9697),
-        parent = { DRAYNOR }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return false // TODO Entrance at draynor. Always fallback to teleportation in meantime.
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.output.sendCommand("home")
-            return true
-        }
-    },
+        parent = { DRAYNOR }),
     VARROCK_SEWERS(
         inside = Position(3229, 9904),
-        outside = { Position(3238, 3458) },
+        entrance = { Position(3238, 3458) },
         area = SimpleBoxArea.of(3152, 9870, 3245, 9919),
-        parent = { VARROCK }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return false // TODO Entrance in varrock. Always fallback to teleportation in meantime.
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.output.sendCommand("home")
-            return true
-        }
-    },
+        parent = { VARROCK }),
 
     //todo SKELETAL_WYVERNS(inside = Position())3060, 9553 |3022, 9537, 3071, 9558
     KARAMJA_DUNGEON(
         inside = Position(2856, 9570),
-        outside = { Position(2857, 3166) },
+        entrance = { Position(2857, 3166) },
         area = SimpleBoxArea.of(2823, 9539, 2906, 9661),
-        parent = { KARAMJA }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return false // TODO Entrance in musa point. Always fallback to teleportation in meantime.
-        }
+        parent = { KARAMJA }),
 
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.output.sendCommand("home")
-            return true
-        }
-    },
     WHITE_KNIGHTS_CASTLE(
         inside = Position(2971, 3343),
         area = SimpleBoxArea.of(2965, 3337, 2979, 3347),
@@ -490,7 +436,7 @@ enum class SubZone(
     CRAFTING_GUILD_MINE(
         inside = Position(2940, 3287),
         area = SimpleBoxArea.of(2936, 3275, 2944, 3292),
-        parent = { FALADOR }, plane = 0),
+        parent = { FALADOR }),
 
     // TODO rimmington mine
 
@@ -551,7 +497,7 @@ enum class SubZone(
      */
     YANILLE_DUNGEON_CHAOS_DRUIDS(
         inside = Position(2611, 9485),
-        outside = { Position(2606, 3078) },
+        entrance = { Position(2606, 3078) },
         area = SimpleBoxArea.ofRadius(2595, 9475, 27, 26),
         parent = { YANILLE }),
 
@@ -560,7 +506,7 @@ enum class SubZone(
      */
     EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
         inside = Position(3110, 9937),
-        outside = { Position(3096, 3468) },
+        entrance = { Position(3096, 3468) },
         area = SimpleBoxArea.ofRadius(3102, 9922, 24, 23),
         parent = { EDGEVILLE }),
 
@@ -570,7 +516,7 @@ enum class SubZone(
      */
     TAVERLEY_DUNGEON_CHAOS_DRUIDS(
         inside = Position(2933, 9849),
-        outside = { Position(2885, 3397) },
+        entrance = { Position(2885, 3397) },
         area = SimpleBoxArea.ofRadius(2926, 9843, 15, 13),
         parent = { TAVERLY }),
 
@@ -592,7 +538,7 @@ enum class SubZone(
     RELLEKKA_MINE(
         inside = Position(2683, 3700),
         area = SimpleBoxArea.of(2679, 3698, 2688, 3710),
-        parent = { RELLEKKA }, plane = 0),
+        parent = { RELLEKKA }),
 
     /**
      * The chaos druid tower dungeon.
@@ -601,22 +547,9 @@ enum class SubZone(
      */
     CHAOS_DRUID_TOWER_DUNGEON(
         inside = Position(2565, 9753),
-        outside = { Position(2565, 3355) },
+        entrance = { Position(2565, 3355) },
         area = SimpleBoxArea.of(2559, 9729, 2594, 9761),
-        parent = { ARDOUGNE }) {
-        private val upstairsLadder =
-            lazyVal { world.locator.findObjectsOnTile(Position(2562, 3356)) { it.id == 1754 }.first() }
-        private val downstairsLadder =
-            lazyVal { world.locator.findObjectsOnTile(Position(2562, 9756)) { it.id == 1755 }.first() }
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return bot.actionHandler.interactions.interact(1, upstairsLadder.value)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return bot.actionHandler.interactions.interact(1, downstairsLadder.value)
-        }
-    },
+        parent = { ARDOUGNE }),
 
     /**
      * The Varrock east-bank. Contains ranges nearby which make it a valid cooking area.
@@ -631,67 +564,9 @@ enum class SubZone(
      */
     ESSENCE_MINE(
         inside = Position(2910, 4832),
-        outside = { Position(3253, 3401) },
+        entrance = { Position(3253, 3401) },
         area = SimpleBoxArea.of(2882, 4805, 2939, 4860),
-        parent = { VARROCK }) {
-        private val auburyNpc =
-            lazyVal { world.locator.findViewableNpcs(Position(3253, 3401)) { it.id == 553 }.first() }
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.log("Entering essence mine. Travelling to Aubury.")
-
-            if (!bot.actionHandler.travelTo(VARROCK)) {
-                bot.log("Failed to travel to Varrock for essence mine.")
-                return false
-            }
-
-            val aubury = auburyNpc.value
-            bot.log("Attempting Aubury teleport. aubury=${aubury.position}, bot=${bot.position}")
-
-            while (!area.contains(bot)) {
-                if (!bot.isViewableFrom(aubury)) {
-                    bot.log(
-                        "Aubury is no longer viewable but bot is not inside essence mine. " +
-                                "bot=${bot.position}, subZones=${bot.subZones}"
-                    )
-                    break
-                }
-
-                if (bot.walking.isEmpty) {
-                    bot.log("Clicking Aubury essence teleport. bot=${bot.position}, subZones=${bot.subZones}")
-                    val interacted = bot.actionHandler.interactions.interact(4, aubury)
-                    // A queued teleport can arrive before the interaction confirmation finishes.
-                    if (area.contains(bot)) {
-                        break
-                    }
-                    if (!interacted) {
-                        bot.log("Aubury interaction failed before mine entry. Returning to travel recovery.")
-                        return false
-                    }
-                }
-
-                bot.naturalDecisionDelay()
-            }
-
-            val entered = waitFor { area.contains(bot) }
-            bot.log("Essence mine enter result=$entered, bot=${bot.position}, subZones=${bot.subZones}")
-            return entered
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.log("Locating a portal to leave the area.")
-            bot.naturalDelay()
-            val portals = world.locator.findObjects(inside, area.tileRadius) { it.def().name.equals("Portal") }
-            for (nextPortal in portals) {
-                if (bot.actionHandler.interactions.interact(1, nextPortal)) {
-                    return true
-                }
-                bot.naturalMicroDelay()
-            }
-            bot.log("Could not interact with any of the portals to leave.")
-            return false
-        }
-    },
+        parent = { VARROCK }),
 
     /**
      * The Draynor bank and surrounding areas. Intended mainly for low-level fishers and dexterous/low-level
@@ -751,36 +626,9 @@ enum class SubZone(
      */
     ROGUES_DEN(
         inside = Position(3045, 4972, 1),
-        outside = { Position(2906, 3537) },
-        area = SimpleBoxArea.of(3036, 4961, 3067, 4988),
-        parent = { BURTHORPE }) {
-
-        private val enterTrapdoor =
-            lazyVal { world.locator.findObjectsOnTile(Position(2905, 3537)) { it.id == 7257 }.first() }
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            if (bot.actionHandler.travelTo(BURTHORPE)) {
-                // Walk to the trapdoor that leads us into the dungeon.
-                if (selectedOutside != null) {
-                    bot.actionHandler.webWalkTo(selectedOutside)
-                }
-                if (selectedOutside?.isViewableFrom(bot) == false) {
-                    return false
-                }
-                // Interact with the ladder.
-                if (!bot.actionHandler.interactions.interact(1, enterTrapdoor.value)) {
-                    return false
-                }
-                return true
-            }
-            return false
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            bot.output.sendCommand("home")
-            return true
-        }
-    },
+        entrance = { Position(2906, 3537) },
+        area = SimpleBoxArea.of(3036, 4961, 3067, 4988, 1),
+        parent = { BURTHORPE }),
 
     /**
      * The Edgeville Dungeon mine. Intended for low -> high level money-making miners. They will use the brass key.
@@ -794,58 +642,18 @@ enum class SubZone(
      */
     EDGEVILLE_DUNGEON_MINE(
         inside = Position(3132, 9874),
-        outside = { Position(3115, 3448) },
+        entrance = { Position(3115, 3448) },
         area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
-        parent = { VARROCK }) {
-        private val varrockLadder =
-            lazyVal { world.locator.findObjectsOnTile(Position(3116, 3452)) { it.id == 1754 }.first() }
-        private val dungeonLadder =
-            lazyVal { world.locator.findObjectsOnTile(Position(3116, 9852)) { it.id == 1755 }.first() }
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            if (bot.isViewableFrom(selectedOutside) || bot.actionHandler.travelTo(VARROCK)) {
-
-                // Walk to the ladder that leads us into the dungeon.
-                if (selectedOutside != null) {
-                    bot.actionHandler.webWalkTo(selectedOutside)
-                }
-                if (selectedOutside?.isViewableFrom(bot) == false) {
-                    return false
-                }
-
-                // Interact with the ladder.
-                if (!bot.actionHandler.interactions.interact(1, varrockLadder.value)) {
-                    return false
-                }
-                bot.naturalDecisionDelay()
-                bot.naturalDelay()
-                return true
-            }
-            return false
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            // Interact with the ladder inside the dungeon.
-            return bot.actionHandler.interactions.interact(1, dungeonLadder.value)
-        }
-    },
+        parent = { VARROCK }),
 
     /**
      * The Edgeville Dungeon hill giants area. Intended for mid -> high level combat training.
      */
     EDGEVILLE_DUNGEON_HILL_GIANTS(
         inside = Position(3117, 9849),
-        outside = EDGEVILLE_DUNGEON_MINE.outside,
+        entrance = EDGEVILLE_DUNGEON_MINE.entrance,
         area = SimpleBoxArea.of(3090, 9820, 3128, 9855),
-        parent = { VARROCK }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return EDGEVILLE_DUNGEON_MINE.enter(bot, selectedParent, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return EDGEVILLE_DUNGEON_MINE.leave(bot, selectedParent, selectedOutside)
-        }
-    },
+        parent = { VARROCK }),
 
     /**
      * The yew trees north of Varrock Palace. Intended for money making woodcutters.
@@ -1055,8 +863,8 @@ enum class SubZone(
      */
     YANILLE_WATCHMEN(
         inside = Position(2549, 3112, 1),
-        area = SimpleBoxArea.of(2539, 3107, 2554, 3121),
-        parent = { YANILLE }, plane = 1),
+        area = SimpleBoxArea.of(2539, 3107, 2554, 3121, 1),
+        parent = { YANILLE }),
 
     /**
      * Ground-floor Gnomes west of the Stronghold bank. Bounds include the local civilian spawns and wander range,
@@ -1065,7 +873,7 @@ enum class SubZone(
     GNOME_STRONGHOLD_THIEVING(
         inside = Position(2423, 3426),
         area = SimpleBoxArea.of(2388, 3412, 2432, 3454),
-        parent = { GNOME_STRONGHOLD }, plane = 0),
+        parent = { GNOME_STRONGHOLD }),
 
     /**
      * The Ardougne market square. Intended for dexterous thieving trainers and low -> mid-range level money-makers.
@@ -1350,57 +1158,27 @@ enum class SubZone(
      */
     NORTH_LUMBRIDGE_COW_FIELD(
         inside = Position(3175, 3320),
-        outside = { Position(3174, 3315) },
+        entrance = { Position(3174, 3315) },
         area = SimpleBoxArea.of(3153, 3316, 3200, 3352),
-        parent = { DRAYNOR }) {
-        private val gate = listOf(Position(3174, 3316), Position(3175, 3316))
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return walkThroughGate(bot, gate, inside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
-        }
-    },
+        parent = { DRAYNOR }),
 
     /**
      * The gated cow field around the Crafting Guild.
      */
     CRAFTING_GUILD_COW_FIELD(
         inside = Position(2923, 3289),
-        outside = { Position(2923, 3293) },
+        entrance = { Position(2923, 3293) },
         area = SimpleBoxArea.of(2911, 3264, 2938, 3292),
-        parent = { FALADOR }) {
-        private val gate = listOf(Position(2923, 3292), Position(2924, 3292))
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return walkThroughGate(bot, gate, inside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
-        }
-    },
+        parent = { FALADOR }),
 
     /**
      * The gated cow field north of East Ardougne.
      */
     NORTH_ARDOUGNE_COW_FIELD(
         inside = Position(2671, 3349),
-        outside = { Position(2676, 3349) },
+        entrance = { Position(2676, 3349) },
         area = SimpleBoxArea.of(2642, 3340, 2675, 3359),
-        parent = { ARDOUGNE }) {
-        private val gate = listOf(Position(2675, 3349), Position(2675, 3350))
-
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return walkThroughGate(bot, gate, inside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return !area.contains(bot) || walkThroughGate(bot, gate, selectedOutside ?: return false)
-        }
-    },
+        parent = { ARDOUGNE }),
 
     /**
      * The open cow field north of Yanille.
@@ -1439,18 +1217,9 @@ enum class SubZone(
      */
     AIR_ALTAR(
         inside = Position(2842, 4832),
-        outside = { Position(2985, 3299) },
+        entrance = { Position(2985, 3299) },
         area = SimpleBoxArea.of(2836, 4825, 2851, 4842),
-        parent = { FALADOR }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.AIR, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.AIR, inside)
-            return true
-        }
-    },
+        parent = { FALADOR }),
 
     /**
      * The Water Altar interior.
@@ -1460,18 +1229,9 @@ enum class SubZone(
      */
     WATER_ALTAR(
         inside = Position(2724, 4833),
-        outside = { Position(3192, 3158) },
+        entrance = { Position(3192, 3158) },
         area = SimpleBoxArea.of(2703, 4817, 2733, 4847),
-        parent = { DRAYNOR }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.WATER, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.WATER, inside)
-            return true
-        }
-    },
+        parent = { DRAYNOR }),
 
     /**
      * The Mind Altar interior.
@@ -1481,18 +1241,9 @@ enum class SubZone(
      */
     MIND_ALTAR(
         inside = Position(2786, 4839),
-        outside = { Position(2979, 3511) },
+        entrance = { Position(2979, 3511) },
         area = SimpleBoxArea.of(2760, 4818, 2802, 4855),
-        parent = { EDGEVILLE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.MIND, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.MIND, inside)
-            return true
-        }
-    },
+        parent = { EDGEVILLE }),
 
     /**
      * The Earth Altar interior.
@@ -1502,18 +1253,9 @@ enum class SubZone(
      */
     EARTH_ALTAR(
         inside = Position(2657, 4839),
-        outside = { Position(3305, 3472) },
+        entrance = { Position(3305, 3472) },
         area = SimpleBoxArea.of(2626, 4813, 2685, 4862),
-        parent = { VARROCK }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.EARTH, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.EARTH, inside)
-            return true
-        }
-    },
+        parent = { VARROCK }),
 
     /**
      * The Fire Altar interior.
@@ -1523,18 +1265,9 @@ enum class SubZone(
      */
     FIRE_ALTAR(
         inside = Position(2584, 4836),
-        outside = { Position(3312, 3253) },
+        entrance = { Position(3312, 3253) },
         area = SimpleBoxArea.of(2560, 4806, 2622, 4863),
-        parent = { AL_KHARID }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.FIRE, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.FIRE, inside)
-            return true
-        }
-    },
+        parent = { AL_KHARID }),
 
     /**
      * The Body Altar interior.
@@ -1544,18 +1277,9 @@ enum class SubZone(
      */
     BODY_ALTAR(
         inside = Position(2522, 4838),
-        outside = { Position(3052, 3443) },
+        entrance = { Position(3052, 3443) },
         area = SimpleBoxArea.of(2506, 4822, 2538, 4856),
-        parent = { EDGEVILLE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.BODY, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.BODY, inside)
-            return true
-        }
-    },
+        parent = { EDGEVILLE }),
 
     /**
      * The Cosmic Altar interior.
@@ -1565,18 +1289,9 @@ enum class SubZone(
      */
     COSMIC_ALTAR(
         inside = Position(2141, 4831),
-        outside = { Position(2407, 4375) },
+        entrance = { Position(2407, 4375) },
         area = SimpleBoxArea.of(2116, 4809, 2165, 4857),
-        parent = { ZANARIS }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.COSMIC, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.COSMIC, inside)
-            return true
-        }
-    },
+        parent = { ZANARIS }),
 
     /**
      * The Chaos Altar interior.
@@ -1586,18 +1301,9 @@ enum class SubZone(
      */
     CHAOS_ALTAR(
         inside = Position(2270, 4840),
-        outside = { Position(3059, 3589) },
+        entrance = { Position(3059, 3589) },
         area = SimpleBoxArea.of(2250, 4826, 2294, 4859),
-        parent = { EDGEVILLE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.CHAOS, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.CHAOS, inside)
-            return true
-        }
-    },
+        parent = { EDGEVILLE }),
 
     /**
      * The Nature Altar interior.
@@ -1607,18 +1313,9 @@ enum class SubZone(
      */
     NATURE_ALTAR(
         inside = Position(2399, 4839),
-        outside = { Position(2868, 3017) },
+        entrance = { Position(2868, 3017) },
         area = SimpleBoxArea.of(2378, 4814, 2422, 4858),
-        parent = { KARAMJA }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.NATURE, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.NATURE, inside)
-            return true
-        }
-    },
+        parent = { KARAMJA }),
 
     /**
      * The Law Altar interior.
@@ -1628,18 +1325,9 @@ enum class SubZone(
      */
     LAW_ALTAR(
         inside = Position(2463, 4830),
-        outside = { Position(2857, 3379) },
+        entrance = { Position(2857, 3379) },
         area = SimpleBoxArea.of(2443, 4809, 2486, 4854),
-        parent = { ENTRANA }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.LAW, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.LAW, inside)
-            return true
-        }
-    },
+        parent = { ENTRANA }),
 
     /**
      * The Death Altar interior.
@@ -1649,18 +1337,9 @@ enum class SubZone(
      */
     DEATH_ALTAR(
         inside = Position(2204, 4834),
-        outside = { Position(1859, 4637) },
+        entrance = { Position(1859, 4637) },
         area = SimpleBoxArea.of(2183, 4812, 2231, 4861),
-        parent = { ARDOUGNE }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            return enterAltar(bot, Altar.DEATH, selectedOutside)
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            leaveAltar(bot, Altar.DEATH, inside)
-            return true
-        }
-    },
+        parent = { ARDOUGNE }),
 
     FALADOR_WEST_BANK(
         inside = Position(2945, 3370),
@@ -1711,55 +1390,24 @@ enum class SubZone(
     /**
      * The chaos temple north of Falador and north-west of Goblin Village. Primarily intended for low-level combat
      * training and telegrabbing wines money-making method.
+     *
      * - Zamorak wine
      * - Plenty of lvl 17 monks of Zamorak
      */
-    // TODO Spawn wines (maybe 2? one on each side of the table?)
-    // TODO Make wine pickup dangerous when monks can see the bot.
-    // TODO Test bots telegrabbing wines.
     NORTH_FALADOR_CHAOS_TEMPLE(
         inside = Position(2934, 3515),
         area = SimpleBoxArea.of(2929, 3511, 2942, 3519),
         parent =
             { FALADOR }),
 
-    /*
-     * TODO@0.5.0 Implement Mining Guild access and routing.
-     *
-     * Add the subzone, mining target selection, route behavior, and any entrance/access checks required for bots to use
-     * the Mining Guild safely.
-     */
-
     /**
      * King Black Dragon lair, reached through the Wilderness ladder and dungeon lever.
      */
     KBD_LAIR(
         inside = Position(2271, 4680),
-        outside = { Position(3016, 3849) },
+        entrance = { Position(3016, 3849) },
         area = SimpleBoxArea.of(2249, 4674, 2291, 4717),
-        parent = { WILDERNESS }) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            val ladder = world.locator.findObjectsOnTile(Position(3017, 3849)) {
-                it.def().name.equals("Ladder", true)
-            }.firstOrNull() ?: return false
-            if (!bot.actionHandler.interactions.interact(1, ladder) ||
-                !waitFor { bot.position.y > 10000 }
-            ) return false
-            val lever = world.locator.findViewableObjects(bot) { it.id == 1816 }.firstOrNull() ?: return false
-            return bot.actionHandler.interactions.interact(1, lever) && waitFor { area.contains(bot) }
-        }
-
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            val lever = world.locator.findObjects(inside, 32) { it.id == 1817 }.firstOrNull() ?: return false
-            if (!bot.actionHandler.interactions.interact(1, lever) ||
-                !waitFor { bot.position.y > 10000 }
-            ) return false
-            val ladder = world.locator.findObjectsOnTile(Position(3069, 10256)) {
-                it.def().name.equals("Ladder", true)
-            }.firstOrNull() ?: return false
-            return bot.actionHandler.interactions.interact(1, ladder) && waitFor { bot.position.y < 10000 }
-        }
-    },
+        parent = { WILDERNESS }),
 
     /**
      * Queen chamber reached through both rope entrances. Existing ropes are reused without consuming stock.
@@ -1768,41 +1416,11 @@ enum class SubZone(
      */
     KALPHITE_QUEEN(
         inside = Position(3485, 9498),
-        outside = { Position(3226, 3108) },
+        entrance = { Position(3226, 3108) },
         area = SimpleBoxArea.of(3456, 9472, 3519, 9535),
-        parent = { AL_KHARID }, plane = 0) {
-        override suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            suspend fun descend(anchor: Position, bare: Int, tied: Int, arrived: () -> Boolean): Boolean {
-                fun entrance() = world.locator.findObjects(anchor, 8) { it.id == bare || it.id == tied }.firstOrNull()
-                var tunnel = entrance() ?: return false
-                if (tunnel.id == bare) {
-                    if (!bot.inventory.contains(954) || !bot.actionHandler.inventory.useItem(954).onObject(tunnel) ||
-                        !waitFor { entrance()?.id == tied }) return false
-                    tunnel = entrance() ?: return false
-                }
-                return bot.actionHandler.interactions.interact(1, tunnel) && waitFor { arrived() }
-            }
-            // Re-entry can resume on the upper floor after the first descent.
-            if (bot.position.z != 2 || bot.position.y !in 9472..9535) {
-                if (!descend(Position(3226, 3108), 3827, 3828) {
-                    bot.position.z == 2 && bot.position.y in 9472..9535
-                }) return false
-            }
-            bot.combat.prayers.activateIfOff(engine.combat.prayer.CombatPrayer.PROTECT_FROM_MAGIC)
-            return descend(Position(3508, 9497, 2), 3830, 3831) { bot.position.z == 0 && area.contains(bot) }
-        }
+        parent = { AL_KHARID }),
 
-        override suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-            val exit = world.locator.findObjects(Position(3508, 9493), 8) { it.id == 3832 }.firstOrNull()
-                ?: return false
-            if (!bot.actionHandler.interactions.interact(1, exit) || !waitFor { bot.position.z == 2 }) return false
-            val upperExit = world.locator.findObjects(Position(3483, 9510, 2), 8) { it.id == 3829 }.firstOrNull()
-                ?: return false
-            return bot.actionHandler.interactions.interact(1, upperExit) && waitFor { bot.position.y < 9000 }
-        }
-    },
-
-    /*
+    /**
      * Level 12 Wilderness chaos temple.
      *
      * Used for:
@@ -1816,12 +1434,7 @@ enum class SubZone(
         area = SimpleBoxArea.ofRadius(3221, 3590, 38, 44),
         parent = { EDGEVILLE }),
 
-    /*
-
-
-     */
-
-    /*
+    /**
      * Level 40 Wilderness chaos temple.
      *
      * Used for:
@@ -1856,28 +1469,6 @@ enum class SubZone(
         }
 
         /**
-         * Opens the gate on [gateTiles] if it's closed, then walks [bot] to [destination].
-         *
-         * @param bot The bot passing through the gate.
-         * @param gateTiles The tiles the closed gate stands on.
-         * @param destination Where the bot should end up on the other side.
-         * @return `true` if the bot reached [destination].
-         */
-        suspend fun walkThroughGate(bot: Bot, gateTiles: List<Position>, destination: Position): Boolean {
-            val gate = gateTiles.firstNotNullOfOrNull { tile ->
-                world.locator.findObjectsOnTile(tile) { "Open" in it.def().actions }.firstOrNull()
-            }
-            if (gate != null) {
-                // Ignore a failed click: someone else may have opened the gate first.
-                bot.actionHandler.interactions.interact(gate.def().actions.indexOf("Open") + 1, gate)
-
-                // The gate opens on a later tick, and pathing before then finds no way through.
-                waitFor(3.seconds) { gate.state != EntityState.ACTIVE }
-            }
-            return bot.actionHandler.webWalkTo(destination, bank = api.bot.webwalk.plan.BankAccess.NONE)
-        }
-
-        /**
          * Updates the cached local subzone list for a bot after its region changes.
          *
          * This should be called from movement/region-change handling before [updateSubZone]. The cached list keeps
@@ -1903,71 +1494,10 @@ enum class SubZone(
             bot.subZones.clear()
             if (bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
-                    if (bot in zone.area && (zone.plane == null || bot.position.z == zone.plane)) {
+                    if (bot.position.z == zone.area.plane && bot in zone.area) {
                         bot.subZones.add(zone)
                     }
                 }
-            }
-        }
-
-        /**
-         * Enters a runecrafting altar by using the altar's talisman on its outside ruins.
-         *
-         * The talisman is injected into the bot's inventory when possible so runecrafting bots do not get stuck before
-         * their economy can naturally circulate talismans. If the inventory is full and the bot does not already own
-         * the talisman, the talisman is added to the bank and entry fails so normal banking behavior can recover.
-         *
-         * @param bot The bot entering the altar.
-         * @param altar The altar metadata containing the talisman and outside ruins object id.
-         * @param selectedOutside The outside ruins anchor chosen for this entry attempt.
-         * @return `true` if the talisman was successfully used on the outside ruins, otherwise `false`.
-         */
-        private suspend fun enterAltar(bot: Bot, altar: Altar, selectedOutside: Position?): Boolean {
-            val talisman = altar.talisman
-            if (!bot.inventory.contains(talisman)) {
-                if (bot.inventory.isFull) {
-                    if (!bot.itemTracker.contains(talisman)) {
-                        bot.bank.add(talisman)
-                    }
-                    bot.log("No talisman in inventory.")
-                    return false
-                } else {
-                    bot.inventory.add(talisman)
-                }
-            }
-            val altarObject =
-                world.locator.findViewableObjects(selectedOutside) { it.id == altar.outsideId }.firstOrNull()
-            if (altarObject == null) {
-                bot.log("Could not resolve outside altar object.")
-                return false
-            }
-            repeat(10) {
-                if (bot.actionHandler.inventory.useItem(talisman).onObject(altarObject)) {
-                    bot.naturalDecisionDelay()
-                    return true
-                }
-                bot.naturalDelay()
-            }
-            bot.log("Could not interact with outside altar object.")
-            return false
-        }
-
-        /**
-         * Leaves a runecrafting altar through the portal inside the altar area.
-         *
-         * If the portal cannot be interacted with, the bot falls back to the home command so it does not remain trapped
-         * inside an isolated altar instance.
-         *
-         * @param bot The bot leaving the altar.
-         * @param altar The altar metadata containing the inside portal object id.
-         * @param inside The local altar anchor used to search for the portal.
-         */
-        private suspend fun leaveAltar(bot: Bot, altar: Altar, inside: Position) {
-            val portalObject =
-                world.locator.findViewableObjects(inside) { it.id == altar.portal }.firstOrNull()
-            if (!bot.actionHandler.interactions.interact(1, portalObject)) {
-                bot.naturalDelay()
-                bot.output.sendCommand("home")
             }
         }
     }
@@ -1977,48 +1507,13 @@ enum class SubZone(
      *
      * @param bot The bot to check.
      * @param distance The maximum allowed tile distance.
-     * @return `true` if [bot] is within [distance] of [inside] or [outside].
+     * @return `true` if [bot] is within [distance] of [inside] or [entrance].
      */
     fun isWithinDistance(bot: Bot, distance: Int): Boolean {
         if (this in bot.subZones || inside.isWithinDistance(bot, distance)) {
             return true
         }
-        val outsidePosition = outside(bot)
+        val outsidePosition = entrance(bot)
         return outsidePosition != null && outsidePosition.isWithinDistance(bot, distance)
-    }
-
-    /**
-     * Attempts to move the bot from the selected outside anchor into this subzone.
-     *
-     * Most overworld subzones do not need a custom enter action because the selected parent [Zone] can usually walk
-     * directly to [inside]. Override this for caves, dungeons, guilds, ladders, levers, boats, doors, portals, or any
-     * other area where the bot must perform an interaction before [area] becomes reachable.
-     *
-     * [selectedParent] and [selectedOutside] are passed in because both may be dynamic. For example, the rune essence
-     * mine may choose Varrock/Aubury or Yanille/Distentor depending on the bot's current stats and location.
-     *
-     * @param bot The bot attempting to enter.
-     * @param selectedParent The parent zone chosen for this entry attempt.
-     * @param selectedOutside The outside anchor chosen for this entry attempt, or `null` if none is needed.
-     * @return `true` if the bot entered successfully, otherwise `false`.
-     */
-    open suspend fun enter(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-        return true
-    }
-
-    /**
-     * Attempts to move the bot out of this subzone and back toward the selected parent zone.
-     *
-     * Most overworld subzones do not need a custom leave action. Override this for isolated areas, underground areas,
-     * dangerous areas, guilds, caves, portals, ladders, levers, doors, boats, or any place where normal walking cannot
-     * resume until the bot uses a specific exit.
-     *
-     * @param bot The bot attempting to leave.
-     * @param selectedParent The parent zone the bot should return toward after leaving.
-     * @param selectedOutside The outside anchor associated with the route, or `null` if none is needed.
-     * @return `true` if the bot left successfully, otherwise `false`.
-     */
-    open suspend fun leave(bot: Bot, selectedParent: Zone, selectedOutside: Position?): Boolean {
-        return true
     }
 }
