@@ -1,5 +1,11 @@
 package api.bot.webwalk.plan
 
+import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.EssenceMineCrossing
+import api.bot.zone.SubZone
+import game.skill.runecrafting.essenceMine.EssenceMine
+import game.skill.runecrafting.essenceMine.EssenceMineWizard
+import game.skill.runecrafting.enterAltar.Altar
 import game.content.sailing.ShipSearch
 import game.content.craftingGuild.CraftingGuild
 import io.luna.game.model.mob.bot.Bot
@@ -34,7 +40,11 @@ object BotConditions {
     private val conditions: Map<String, (Bot) -> Boolean> =
         ShipSearch.entries.mapNotNull { search ->
             shipSearchFlag(search)?.let { flag -> flag to { bot: Bot -> !search.turnsAway(bot) } }
-        }.toMap() + mapOf(CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) })
+        }.toMap() + mapOf(CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) }) +
+                Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
+                EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->
+                    SubZone.ESSENCE_MINE.area.contains(bot) && EssenceMine.returnWizard(bot) == wizard
+                } }
 
     /**
      * The names of every condition flag.

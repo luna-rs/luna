@@ -148,6 +148,7 @@ data class WebWalkNode(val id: String,
  * @property option The name of the menu option to use on the object, or `null` to choose by the object's type.
  * @property handler The name of the crossing handler that crosses the edge, for [EdgeType.CROSSING].
  * @property key The name of the [game.content.sailing.ShipRoute] of the edge, for [EdgeType.SHIP].
+ * @property npcId The NPC to interact with for a crossing, instead of an object. [objectPosition] is its search anchor.
  *
  * @author Hydrozoa
  */
@@ -155,7 +156,8 @@ data class EdgeAction(val objectId: Int? = null,
                       val objectPosition: Position? = null,
                       val option: String? = null,
                       val handler: String? = null,
-                      val key: String? = null)
+                      val key: String? = null,
+                      val npcId: Int? = null)
 
 /**
  * A directed connection between two nodes. Data that is travelled both ways is loaded as two edges.

@@ -9,6 +9,13 @@ import api.bot.webwalk.model.TeleportKind
 import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.plan.DoorCrossings
 import api.bot.webwalk.plan.PathfinderWalkEstimator
+import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.RopeEntranceCrossing
+import api.bot.webwalk.walk.crossing.EssenceMineCrossing
+import game.skill.runecrafting.essenceMine.EssenceMine
+import game.skill.runecrafting.essenceMine.EssenceMineWizard
+import game.obj.wildernessLevers.WildernessLever
+import game.skill.runecrafting.enterAltar.Altar
 import api.bot.webwalk.walk.ship.ShipBoarding
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
@@ -223,13 +230,18 @@ object WebWalkLiveGenerator {
             val def = obj.def() ?: continue
             when {
                 // Entrances come first, because they are what the game does with their ids, whatever they are called.
-                obj.id in Entrance.BY_ID -> entrance(obj, climbs, report)
+                obj.id in Altar.OBJECT_TO_ALTAR || obj.id in Altar.PORTAL_TO_ALTAR -> altar(obj, climbs, report)
+                obj.id == EssenceMine.PORTAL -> essencePortal(obj, climbs, report)
+                obj.id == WildernessLever.LAVA_MAZE_DUNGEON.id -> lever(obj, WildernessLever.LAVA_MAZE_DUNGEON, climbs, report)
+                obj.id == WildernessLever.KING_BLACK_DRAGON_LAIR.id -> lever(obj, WildernessLever.KING_BLACK_DRAGON_LAIR, climbs, report)
+                obj.id in Entrance.BY_ID || obj.id in RopeEntranceCrossing.entrances -> entrance(obj, climbs, report)
                 def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER -> ladder(obj, climbs, report)
                 def.name in StairDestination.NAMES -> stairs(obj, climbs, report)
                 obj.id in trapdoors -> trapdoor(obj, trapdoors.getValue(obj.id), climbs, report)
                 obj.id in ShipGangplanks.LEAVING_PLANKS -> leavingPlanks += obj
             }
         }
+        essenceWizards(climbs, report)
         report.count("climbs", climbs.size)
         report.count("entrances", climbs.count { it.type == EdgeType.ENTRANCE })
         val waypoints = waypoints(report)
@@ -400,13 +412,14 @@ object WebWalkLiveGenerator {
      */
     private fun entrance(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
         val what = "entrance ${obj.id} at ${DoorObstacles.describe(obj.position)}"
-        val entrance = Entrance.forObject(obj.id, obj.position)
+        val ropeId = RopeEntranceCrossing.entrances.entries.firstOrNull { obj.id == it.key || obj.id == it.value }?.key
+        val entrance = Entrance.forObject(ropeId?.let { RopeEntranceCrossing.entrances.getValue(it) } ?: obj.id, obj.position)
         if (entrance == null) {
             report.skipped += "$what: no entrance here"
             return
         }
         // Entrances are all used with their first option, see dungeonEntrances.kts.
-        val option = obj.def().actions.getOrNull(0)
+        val option = if (ropeId != null) "Climb-down" else obj.def().actions.getOrNull(0)
         if (option == null) {
             report.skipped += "$what: no option to use it with"
             return
@@ -440,8 +453,87 @@ object WebWalkLiveGenerator {
         }
         val cost = ENTRANCE_TICKS + entrance.delay + if (entrance.arriveDelay) 1 else 0
         for ((from, to) in ways) {
-            climbs += GeneratedObstacle(EdgeType.ENTRANCE, obj.id, obj.position, from, to, option, cost = cost)
+            climbs += if (ropeId == null) {
+                GeneratedObstacle(EdgeType.ENTRANCE, obj.id, obj.position, from, to, option, cost = cost)
+            } else {
+                GeneratedObstacle(EdgeType.CROSSING, ropeId, obj.position, from, to,
+                    handler = RopeEntranceCrossing.ID, cost = cost + 2,
+                    requirements = RopeEntranceCrossing.requirements(ropeId), bidirectional = false)
+            }
         }
+    }
+
+    /**
+     * Links ruins and portals to their scripted destinations. Entry requirements never apply to an exit.
+     */
+    private fun altar(obj: GameObject, crossings: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val entry = Altar.OBJECT_TO_ALTAR[obj.id]
+        val altar = entry ?: Altar.PORTAL_TO_ALTAR.getValue(obj.id)
+        val to = if (entry != null) altar.enter else altar.exit
+        val from = climbingTiles(obj).firstOrNull()
+        if (from == null || !LadderDestination.canLand(to)) {
+            report.skipped += "altar ${obj.id} at ${obj.position}: no interaction tile or landing"
+            return
+        }
+        crossings += GeneratedObstacle(EdgeType.CROSSING, obj.id, obj.position, from, to,
+            handler = AltarCrossing.ID, cost = if (entry != null) 5 else 2,
+            requirements = if (entry != null) Requirements(flags = setOf(AltarCrossing.flag(altar))) else Requirements.NONE,
+            bidirectional = false)
+        report.count("altar crossings")
+    }
+
+    /**
+     * Adds the five NPC teleport shortcuts; their handlers normalize random mine landings to the arrival node.
+     */
+    private fun essenceWizards(crossings: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val to = standableNear(SubZone.ESSENCE_MINE.inside)
+        if (to == null) {
+            report.skipped += "essence mine: no arrival node"
+            return
+        }
+        for (wizard in EssenceMineWizard.entries) {
+            val npc = world.locator.findNpcs(wizard.exit, 16) { it.id == wizard.npcId }.firstOrNull()
+            val from = standableNear(wizard.exit)
+            if (npc == null || from == null) {
+                report.skipped += "essence wizard ${wizard.name}: missing NPC or departure tile"
+                continue
+            }
+            crossings += GeneratedObstacle(EdgeType.CROSSING, null, npc.position, from, to,
+                handler = EssenceMineCrossing.ID, cost = 12, bidirectional = false, npcId = wizard.npcId)
+            report.count("essence wizard crossings")
+        }
+    }
+
+    /**
+     * Adds each possible saved return destination, gated so the planner cannot use the mine to travel between wizards.
+     */
+    private fun essencePortal(obj: GameObject, crossings: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val from = climbingTiles(obj).firstOrNull()
+        if (from == null) {
+            report.skipped += "essence portal at ${obj.position}: no interaction tile"
+            return
+        }
+        for (wizard in EssenceMineWizard.entries) {
+            crossings += GeneratedObstacle(EdgeType.CROSSING, obj.id, obj.position, from, wizard.exit,
+                handler = EssenceMineCrossing.ID, cost = 5, bidirectional = false,
+                requirements = Requirements(flags = setOf(EssenceMineCrossing.exitFlag(wizard))))
+        }
+        report.count("essence portal crossings", EssenceMineWizard.entries.size)
+    }
+
+    /**
+     * Adds the KBD levers as ordinary one-click entrances, using their existing teleport destinations.
+     */
+    private fun lever(obj: GameObject, lever: WildernessLever, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val from = climbingTiles(obj).firstOrNull()
+        val option = obj.def().actions.getOrNull(0)
+        if (from == null || option == null || !LadderDestination.canLand(lever.destination)) {
+            report.skipped += "lever ${obj.id} at ${obj.position}: no interaction tile, option or landing"
+            return
+        }
+        climbs += GeneratedObstacle(EdgeType.ENTRANCE, obj.id, obj.position, from, lever.destination,
+            option, cost = lever.messageDelay + 6, bidirectional = false)
+        report.count("KBD levers")
     }
 
     /**
@@ -609,12 +701,13 @@ object WebWalkLiveGenerator {
         doors.report.counts.forEach { (what, amount) -> gathered.report.count(what, amount) }
         gathered.report.skipped += doors.report.skipped
         sources[WebWalkLoader.OBSTACLES] = doors.obstacles
-        val climbsText = WebWalkWriter.obstacles(gathered.climbs)
+        val climbsText = WebWalkWriter.obstacles(gathered.climbs.filter { it.type != EdgeType.CROSSING })
         sources[WebWalkLoader.CLIMBS] = climbsText
         val crossings = WebWalkCrossingGenerator.generate(ctx.cache.mapIndexTable)
         crossings.report.counts.forEach { (what, amount) -> gathered.report.count(what, amount) }
         gathered.report.skipped += crossings.report.skipped
-        sources[WebWalkLoader.CROSSINGS] = crossings.text
+        val crossingsText = WebWalkWriter.obstacles(crossings.obstacles + gathered.climbs.filter { it.type == EdgeType.CROSSING })
+        sources[WebWalkLoader.CROSSINGS] = crossingsText
         val teleportsText = WebWalkWriter.teleports(gathered.teleports)
         sources[WebWalkLoader.TELEPORTS] = teleportsText
         // The ports are nodes like any other, so they are linked to the walk graph below.
@@ -699,7 +792,7 @@ object WebWalkLiveGenerator {
         WebWalkLoader.fromSources(sources - WebWalkLoader.WAYPOINTS_MANUAL +
                                           mapOf(WebWalkLoader.BANKS to banksText, WebWalkLoader.WALK_GRAPH to walkGraphText))
 
-        return Output(doors.obstacles, climbsText, crossings.text, teleportsText, banksText, walkGraphText, shipsText)
+        return Output(doors.obstacles, climbsText, crossingsText, teleportsText, banksText, walkGraphText, shipsText)
     }
 
     /**

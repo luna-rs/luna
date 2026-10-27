@@ -27,7 +27,7 @@ data class PlacedWall(val objectId: Int, val position: Position, val direction: 
  * An obstacle of `obstacles.jsonc` made by the generator.
  *
  * @property type The type of obstacle.
- * @property objectId The id of the object, in the state that it was found in.
+ * @property objectId The id of the object, in the state that it was found in, or null for an NPC crossing.
  * @property pos The position of the object.
  * @property from The tile to cross it from.
  * @property to The tile that crossing it arrives at.
@@ -37,11 +37,12 @@ data class PlacedWall(val objectId: Int, val position: Position, val direction: 
  * @property requirements What a bot needs to cross it from [from] to [to].
  * @property reverseRequirements What a bot needs to cross it from [to] to [from], or `null` for the same as [requirements].
  * @property bidirectional If it can be crossed back, or `null` for the usual for its [type].
+ * @property npcId The NPC id for a crossing that uses an NPC instead of an object.
  *
  * @author Hydrozoa
  */
 data class GeneratedObstacle(val type: EdgeType,
-                             val objectId: Int,
+                             val objectId: Int?,
                              val pos: Position,
                              val from: Position,
                              val to: Position,
@@ -50,7 +51,8 @@ data class GeneratedObstacle(val type: EdgeType,
                              val cost: Int? = null,
                              val requirements: Requirements = Requirements.NONE,
                              val reverseRequirements: Requirements? = null,
-                             val bidirectional: Boolean? = null)
+                             val bidirectional: Boolean? = null,
+                             val npcId: Int? = null)
 
 /**
  * A waypoint of `walk_graph.jsonc` made by the generator.
@@ -439,7 +441,8 @@ object WebWalkWriter {
             val bidirectional = entry.bidirectional?.let { ", \"bidirectional\": $it" } ?: ""
             val requirements = if (entry.requirements.isEmpty) "" else ", \"requirements\": ${requirements(entry.requirements)}"
             val reverse = entry.reverseRequirements?.let { ", \"reverseRequirements\": ${requirements(it)}" } ?: ""
-            "{ \"type\": \"${entry.type}\"$handler, \"object\": ${entry.objectId}, \"pos\": ${position(entry.pos)}, " +
+            val target = entry.npcId?.let { "\"npc\": $it" } ?: "\"object\": ${entry.objectId}"
+            "{ \"type\": \"${entry.type}\"$handler, $target, \"pos\": ${position(entry.pos)}, " +
                     "\"from\": ${position(entry.from)}, \"to\": ${position(entry.to)}$option$cost$bidirectional" +
                     "$requirements$reverse }"
         }, "[", "]")
