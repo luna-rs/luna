@@ -39,6 +39,12 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
     private CombatStance attackStance;
 
     /**
+     * The weapon item id captured when this swing commits, or {@code -1} before commitment or when unarmed.
+     * Impact-time equipment restrictions use this value so switching weapons cannot change a launched hit.
+     */
+    private int launchedWeaponId = -1;
+
+    /**
      * The weapon's poison definition captured at attack time, or {@code null} for an unpoisoned weapon.
      */
     private EquipmentPoisonDefinition poison;
@@ -114,9 +120,18 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
         attackStance = attacker.getCombat().getStance();
-        int weaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
-        poison = EquipmentPoisonDefinition.ALL.get(weaponId).orElse(null);
+        launchedWeaponId = attacker.getEquipment().computeIdForIndex(Equipment.WEAPON);
+        poison = EquipmentPoisonDefinition.ALL.get(launchedWeaponId).orElse(null);
         return damage;
+    }
+
+    /**
+     * Returns the weapon used for the committed swing, independent of the attacker's current equipment.
+     *
+     * @return The launched weapon item id, or {@code -1} for an unarmed or uncommitted swing.
+     */
+    public int getLaunchedWeaponId() {
+        return launchedWeaponId;
     }
 
     @Override

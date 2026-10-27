@@ -8,8 +8,8 @@ import io.luna.game.model.mob.combat.AmmoType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
-import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
-import io.luna.game.model.mob.combat.attack.RangedCombatAttack
+import io.luna.game.model.mob.combat.attack.PlayerMeleeCombatAttack
+import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack
 
 if (Luna.settings().skills().slayerEquipmentNeeded()) {
 
@@ -29,30 +29,20 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     val LEAF_BLADED_SPEAR = 4158
 
     /**
-     * Determines whether the player is attacking with broad arrows from a ranged weapon.
-     *
-     * This is used as part of the Turoth and Kurask equipment restriction check.
-     *
-     * @param plr The attacking player.
-     * @return `true` if the player is using a ranged weapon with broad arrows, otherwise `false`.
-     */
-    fun usingBroadArrows(plr: Player): Boolean =
-        plr.combat.ranged.ammo.type == AmmoType.BROAD_ARROW && plr.combat.weapon.isRanged
-
-    /**
      * Determines whether an attack can damage a Turoth or Kurask.
      *
      * Melee attacks need a leaf-bladed spear, ranged attacks need broad arrows, and magic attacks need the Magic Dart
-     * spell.
+     * spell. Weapon and ammunition eligibility comes from the committed attack, not current equipment:
+     * switching during the delivery delay cannot enable an invalid hit or cancel a valid one. The final broad arrow
+     * remains eligible after consumption empties the quiver. Normal launch validation already checks bow compatibility.
      *
-     * @param plr The attacking player.
      * @param source The attack being defended against.
      * @return `true` if the attack can deal damage, otherwise `false`.
      */
-    fun canDamage(plr: Player, source: CombatAttack<*>): Boolean =
+    fun canDamage(source: CombatAttack<*>): Boolean =
         when (source) {
-            is MeleeCombatAttack<*> -> plr.equipment.weapon?.id == LEAF_BLADED_SPEAR
-            is RangedCombatAttack<*> -> usingBroadArrows(plr)
+            is PlayerMeleeCombatAttack -> source.launchedWeaponId == LEAF_BLADED_SPEAR
+            is PlayerRangedCombatAttack -> source.launchedAmmo?.type == AmmoType.BROAD_ARROW
             is MagicCombatAttack<*> -> source.spellEffect?.spell == CombatSpell.MAGIC_DART
             else -> false
         }
@@ -64,7 +54,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
          */
         combat(id) {
             defend {
-                if (other is Player && !canDamage(other, source)) {
+                if (other is Player && !canDamage(source)) {
                     damage = null
                     other.sendMessage("Your attack seems to have no effect...")
                 }
