@@ -99,15 +99,29 @@ class PkBotScript(bot: Bot, val duration: Duration,
         internal fun patrolGroups(bot: Bot): List<List<Position>> {
             val groups = when (bot.preferences.pk?.purpose()) {
                 Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION })
-                Purpose.VALUE -> listOf(PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
+                Purpose.VALUE -> listOf(PkArea.EDGEVILLE_DUNGEON.anchors,
+                    PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
                     PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
                     listOfNotNull(SubZone.KBD_LAIR.outside(bot)))
                 Purpose.CLAN -> listOf(PkArea.CHAOS_TEMPLE_LVL_40.anchors, PkArea.LAVA_MAZE.anchors,
                     PkArea.DEMONIC_RUINS.anchors)
                 else -> PkArea.ALL.map { it.anchors }
             }
-            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }.filter { it.isNotEmpty() }
+            val valid = groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }
+                .filter { it.isNotEmpty() }
+            if (!prefersDungeonPatrol(bot)) return valid
+
+            val dungeon = PkArea.EDGEVILLE_DUNGEON.anchors
+            val others = valid.filter { it != dungeon }
+            // Two thirds of low-level resource/general patrol choices visit the herb hunters.
+            return others + List(others.size * 2) { dungeon }
         }
+
+        /**
+         * Low-level resource hunters and general PKers favour the chaos druids without changing their PK identity.
+         */
+        private fun prefersDungeonPatrol(bot: Bot): Boolean = bot.combatLevel <= 60 &&
+            bot.preferences.pk?.purpose() in setOf(Purpose.VALUE, Purpose.GENERIC)
 
         /**
          * The surface region immediately north of Edgeville, covering native Wilderness levels 1 through 8.
@@ -179,6 +193,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * @property anchors Known walkable anchor points inside or near this PK area.
      */
     enum class PkArea(val regions: Set<Int>, val anchors: List<Position>) {
+
+        /**
+         * Chaos-druid herb hunters in the Wilderness section of Edgeville Dungeon.
+         * Reuses the gathering subzone's entrance anchor and the shared dungeon web-walking route.
+         */
+        EDGEVILLE_DUNGEON(regions = setOf(12443),
+                          anchors = listOf(SubZone.EDGEVILLE_DUNGEON_CHAOS_DRUIDS.inside)),
 
         /**
          * Lower Wilderness routes near the ditch and early Wilderness combat levels.
@@ -565,7 +586,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
 
     /**
      * SKILL stays in low Edgeville. VALUE covers resource hunters and obelisk arrivals. CLAN patrols deep surface
-     * Wilderness; GENERIC retains the full existing area selection. Travel is delegated to the shared walker.
+     * Wilderness. Low-level VALUE and GENERIC sessions favour the Edgeville Dungeon herb hunters.
+     * Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
         return patrolGroups(bot).random()
@@ -796,6 +818,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Ensures the bot is inside the Wilderness before searching for targets.
      *
      * A SKILL session starting elsewhere in the Wilderness also returns to low Edgeville before hunting.
+     * Low-level resource and general PKers usually enter directly at the dungeon's herb-gathering hotspot.
      * The existing walking helper owns travel; reaching a destination must satisfy the live hunting boundary.
      *
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
@@ -803,9 +826,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal suspend fun enterWild(): Boolean {
         if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
-            val anchor = if (isSkillSession) patrolAnchors().random() else LOW_LEVEL_ANCHOR_POINTS.random()
+            val anchor = when {
+                isSkillSession -> patrolAnchors().random()
+                prefersDungeonPatrol(bot) && rand(2 of 3) -> PkArea.EDGEVILLE_DUNGEON.anchors.random()
+                else -> LOW_LEVEL_ANCHOR_POINTS.random()
+            }
 
-            bot.log("Bot is outside wilderness. Walking to low level anchor $anchor")
+            bot.log("Bot is outside hunting area. Walking to entry anchor $anchor")
             handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
             if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !clan.wearingCape() || !clanCanHunt() ||
