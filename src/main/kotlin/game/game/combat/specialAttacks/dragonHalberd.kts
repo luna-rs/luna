@@ -10,6 +10,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.SpecialAttackType.DRAGON_HALBERD
+import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest
@@ -19,12 +20,12 @@ val MAX_PLAYER_TARGETS = 3
 val MAX_NPC_TARGETS = 10
 
 /**
- * The dragon mace special attack animation id.
+ * The dragon halberd special attack animation id.
  */
 val ANIMATION = 1203
 
 /**
- * The graphic displayed when the dragon mace special attack is performed.
+ * The graphic displayed when the dragon halberd special attack is performed.
  */
 val GRAPHIC = Graphic(282, 100, 0)
 
@@ -52,6 +53,20 @@ fun resolveDamage(attacker: Player, victim: Mob, reducedAccuracy: Boolean = fals
     return request.build().resolve()
 }
 
+/**
+ * Queues an independently rolled Cleave hit for the same next-world-tick deadline as the primary melee hit.
+ * Recipient turn order cannot add another tick, and clearing ordinary actions cannot discard the swing.
+ * Incoming combat cleanup cancels it before delivery; defence hooks and applied-hit callbacks still run normally.
+ *
+ * @param damage The additional hit, resolved at launch against its own recipient.
+ * @param source The committed special attack that supplies experience and prayer-effect metadata.
+ */
+fun queueAdditionalHit(damage: CombatDamage, source: CombatAttack<Player>?) {
+    damage.victim.combat.impacts.schedule(1, {
+        damage.victim.submitAction(CombatDamageAction(damage, source, true))
+    }, {})
+}
+
 
 attack(type = DRAGON_HALBERD,
        drain = 30,
@@ -62,7 +77,7 @@ attack(type = DRAGON_HALBERD,
     launched {
         if (victim.size() > 1) {
             // Deliver the additional hit through normal defence hooks and retaliation handling.
-            victim.submitAction(CombatDamageAction(resolveDamage(attacker, victim, true), attack, false))
+            queueAdditionalHit(resolveDamage(attacker, victim, true), attack)
         } else if (attacker.inMultiArea() && victim.inMultiArea()) {
             // Deal damage to adjacent targets in multi-combat.
             val (tile1, tile2) = resolveAdjacentTiles(attacker, victim)
@@ -78,7 +93,7 @@ attack(type = DRAGON_HALBERD,
             for (other in local) {
                 // Commit each secondary target before delivery, including engagement and Wilderness skull rules.
                 other.combat.markAttackedBy(attacker)
-                other.submitAction(CombatDamageAction(resolveDamage(attacker, other), attack, false))
+                queueAdditionalHit(resolveDamage(attacker, other), attack)
                 if (--targets < 1) {
                     // Maximum number of targets damaged.
                     break

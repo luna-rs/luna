@@ -26,6 +26,8 @@ import java.util.OptionalInt
 /**
  * Lost City's revision 377 Queen lightning chain and five-target spine attack.
  * Target positions and protection prayers are sampled at launch. Both styles bypass accuracy rolls.
+ * Each recipient owns the calculated world-tick deadline in its incoming combat queue, including zero-delay hits.
+ * Ordinary action changes cannot erase a projectile; incoming cleanup and recipient death discard pending hits.
  *
  * @author lare96
  */
@@ -85,7 +87,9 @@ class KalphiteQueenAttack(npc: Npc, other: Mob, private val magic: Boolean) :
             }
             target.combat.lastCombatWith = attacker
             target.combat.resetCombatTimer()
-            target.submitAction(CombatDamageAction(damage, this, hitDelay == 0, hitDelay.coerceAtLeast(1)))
+            target.combat.impacts.schedule(hitDelay, {
+                target.submitAction(CombatDamageAction(damage, this, true))
+            }, {})
             if (magic) previous = position
         }
     }

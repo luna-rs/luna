@@ -48,9 +48,11 @@ fun findOtherTargets(attacker: Player, victim: Mob): List<Mob> {
 }
 
 /**
- * Applies the Dragon 2h sword special attack's secondary hit to a nearby target.
+ * Queues the Dragon 2h sword special attack's secondary hit to a nearby target.
  *
- * A melee damage roll is resolved immediately and submitted as a [CombatDamageAction].
+ * Damage is rolled at launch and delivered on the recipient's incoming queue one world tick later, like the
+ * primary melee hit. This lets the source finish committing its launch tick and Smite snapshot before callbacks
+ * run. Clearing incoming combat cancels the hit; ordinary action interruption does not erase a committed swing.
  * Living secondary targets enter combat before delivery, even when the hit misses or auto-retaliate is disabled.
  *
  * @param attacker The player performing the special attack.
@@ -61,7 +63,9 @@ fun sendHit(attacker: Player, victim: Mob, attack: CombatAttack<Player>?) {
     if (!victim.isAlive) return
     val otherDamage = CombatDamageRequest.builder(attacker, victim, CombatDamageType.MELEE).build().resolve()
     victim.combat.markAttackedBy(attacker)
-    victim.submitAction(CombatDamageAction(otherDamage, attack, true))
+    victim.combat.impacts.schedule(1, {
+        victim.submitAction(CombatDamageAction(otherDamage, attack, true))
+    }, {})
 }
 
 attack(type = DRAGON_2H_SWORD,
