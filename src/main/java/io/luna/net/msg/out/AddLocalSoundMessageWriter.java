@@ -8,6 +8,8 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 import io.netty.buffer.ByteBuf;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * A {@link GameMessageWriter} implementation that displays a {@link LocalSound}.
  *
@@ -44,6 +46,8 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
      * @param offset The offset.
      */
     public AddLocalSoundMessageWriter(int soundId, int radius, int loops, int offset) {
+        checkArgument(radius >= 0 && radius <= 15, "Invalid sound radius.");
+        checkArgument(loops >= 1 && loops <= 7, "Invalid sound loop count.");
         this.soundId = soundId;
         this.radius = radius;
         this.loops = loops;
@@ -55,7 +59,7 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
         ByteMessage msg = ByteMessage.message(41, buffer);
         msg.put(offset);
         msg.putShort(soundId, ByteOrder.BIG);
-        msg.put((radius << 4) | (loops & 7));
+        msg.put((radius << 4) | loops);
         return msg;
     }
 }
