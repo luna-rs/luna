@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
+import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
@@ -22,8 +23,10 @@ import java.util.function.BiFunction;
 /**
  * A {@link CombatAttack} implementation for magic attacks driven by a {@link CombatSpellDefinition}.
  * <p>
- * Area targets are selected and rolled at impact without applying effects. Each hit passes through its recipient's
- * defensive hooks and health cap before its applied-damage callback displays the impact and runs the spell effect.
+ * Area targets are selected and rolled at impact using the offence captured for the primary hit, without applying
+ * effects. Changing the caster's equipment or level cannot alter an already cast area spell.
+ * Recipient defence and protection are still resolved separately when each hit is rolled. Each hit passes through
+ * its recipient's defensive hooks and health cap before its applied-damage callback displays the impact and spell effect.
  * Cancelled hits have no effect callback; secondary hits cannot recursively select further targets.
  * Each living secondary recipient enters combat before delivery, even when it splashes or auto-retaliate is off.
  * Custom attacks without a spell definition use the attacker's default magic maximum hit. Negative spell maximum
@@ -73,6 +76,21 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
      * Impact delay captured from the displayed projectile, or one tick for a spell without a projectile.
      */
     private int projectileHitDelay = 1;
+
+    /**
+     * Whether a primary area-spell roll has captured its offensive inputs.
+     */
+    private boolean areaOffenceCaptured;
+
+    /**
+     * The area spell's offensive roll, retained for secondary recipients after the caster changes equipment or stats.
+     */
+    private int areaAttackRoll;
+
+    /**
+     * The unprotected spell maximum captured with the primary roll; each recipient applies its own protection.
+     */
+    private int areaMaxHit;
 
     /**
      * Creates a new {@link MagicCombatAttack} using explicit visual and effect data.
@@ -168,7 +186,18 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         // Use spell effect max hit.
         CombatDamageRequest.Builder request = new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC);
         if (spellEffect != null) {
-            request.setBaseMaxHit(spellMaxHit());
+            if (spellEffect.getRadius() > 0) {
+                // Preparing a primary hit refreshes the snapshot, including when an attack instance is reused.
+                if (other == victim || !areaOffenceCaptured) {
+                    areaAttackRoll = CombatFormula.calculateMagicAttackRoll(attacker);
+                    areaMaxHit = spellMaxHit();
+                    areaOffenceCaptured = true;
+                }
+                request.setBaseAccuracy(CombatFormula.calculateMagicHitChance(areaAttackRoll, other));
+                request.setBaseMaxHit(areaMaxHit);
+            } else {
+                request.setBaseMaxHit(spellMaxHit());
+            }
             if (spellEffect.getMaxHit() < 0) {
                 request.disableDamage();
             }

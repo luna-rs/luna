@@ -145,6 +145,7 @@ object CombatSpellHandler {
      *
      * Preserves the existing primary-accuracy gate. Both primary participants and each secondary must be in multi
      * combat. Each secondary must be alive, attackable, and allowed by the attacker's controllers.
+     * Standard area attacks reuse the primary roll's captured offence; each recipient still supplies its own defence.
      *
      * @param attack The primary magic attack whose impact is being processed.
      * @return Independently rolled secondary hits, including splashes.

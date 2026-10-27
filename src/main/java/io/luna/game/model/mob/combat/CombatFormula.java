@@ -143,6 +143,28 @@ public final class CombatFormula {
     }
 
     /**
+     * Captures a caster's magic offensive roll using the shared level and equipment formula.
+     *
+     * @param attacker The casting mob.
+     * @return The magic offensive roll before comparing it with a recipient's defence.
+     */
+    public static int calculateMagicAttackRoll(Mob attacker) {
+        return calculateAttackRoll(attacker, EquipmentBonus.MAGIC_ATTACK, CombatDamageType.MAGIC);
+    }
+
+    /**
+     * Calculates magic hit probability from a captured offensive roll and this recipient's current defence.
+     * Area spells retain the caster's original offence while resolving each secondary recipient independently.
+     *
+     * @param attackRoll The magic offensive roll captured when preparing the primary hit.
+     * @param victim The recipient of this hit.
+     * @return The resulting hit probability.
+     */
+    public static double calculateMagicHitChance(int attackRoll, Mob victim) {
+        return calculateHitChanceFromRolls(attackRoll, calculateMagicDefenceRoll(victim));
+    }
+
+    /**
      * Calculates ranged hit probability using a captured offensive roll and the victim's current defence.
      *
      * @param attackRoll The ranged offensive roll captured before launch.
