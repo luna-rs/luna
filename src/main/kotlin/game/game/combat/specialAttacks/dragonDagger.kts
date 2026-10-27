@@ -2,10 +2,7 @@ package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import game.player.Sound
-import io.luna.game.action.Action
-import io.luna.game.action.ActionType
 import io.luna.game.model.item.Equipment.EquipmentBonus
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.CombatFormula
@@ -40,21 +37,19 @@ val ATTACK_ROLL_MULTIPLIER = 1.15
 /**
  * Queues Puncture's second strike, requiring a living, active attacker when the strike executes.
  * Successful delivery still uses normal defence hooks, damage attribution, and retaliation.
- * Launch callbacks run before the primary melee hit is queued. This strike therefore waits two ticks instead of the
- * primary hit's one tick, ensuring it lands one tick later even though it enters the victim's action queue first.
+ * The recipient's impact queue schedules this strike two world ticks after launch, one tick after the primary hit.
+ * Duel settlement and life resets clear this queue, so the strike cannot survive cleanup and hit in the lobby or
+ * after respawn. The deadline is independent of whether the recipient's ordinary actions ran earlier this tick.
  *
  * @param damage The independently resolved second hit.
  * @param source The original special attack providing the attacker and damage callbacks.
  */
 fun queueSecondHit(damage: CombatDamage, source: CombatAttack<Player>) {
-    damage.victim.submitAction(object : Action<Mob>(damage.victim, ActionType.SOFT, false, 2) {
-        override fun run(): Boolean {
-            if (source.attacker.isAlive) {
-                CombatDamageAction(damage, source, true).run()
-            }
-            return true
+    damage.victim.combat.impacts.schedule(2, {
+        if (source.attacker.isAlive) {
+            damage.victim.submitAction(CombatDamageAction(damage, source, true))
         }
-    })
+    }, {})
 }
 
 /**

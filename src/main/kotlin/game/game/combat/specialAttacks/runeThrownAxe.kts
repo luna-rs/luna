@@ -2,9 +2,6 @@ package game.combat.specialAttacks
 
 import api.combat.specialAttack.SpecialAttackHandler.attack
 import api.predef.*
-import io.luna.game.action.Action
-import io.luna.game.action.ActionState
-import io.luna.game.action.ActionType
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -169,9 +166,11 @@ fun calculateChainDamage(source: PlayerRangedCombatAttack, victim: Mob): CombatD
  * attacks, or insufficient energy end the chain and unlock the bar.
  * A failed accuracy roll also ends the chain after displaying that miss; an accurate zero-damage roll can continue.
  * Before each new rebound, the attacker must still be alive and active. Already launched hits can land after death,
- * but their target-owned actions must not launch more projectiles or spend more of the attacker's energy.
- * Interrupting a delayed rebound releases the special bar, including interruption caused by an action exception.
+ * but their target-owned impacts must not launch more projectiles or spend more of the attacker's energy.
+ * Interrupting a delayed rebound releases the special bar, including interruption caused by an impact callback failure.
  * Normal completion retains the lock when the next rebound has taken over the chain.
+ * Each rebound uses its recipient's impact queue with a one-world-tick delay. Clearing incoming combat during
+ * activity or life cleanup cancels delivery, recovers the axe, and releases the special bar immediately.
  * A skipped or cancelled delivery ends the chain; continuation uses the delivered hit after defence hooks.
  * Range and visibility are rechecked before paying energy because gathered targets can move between rebounds.
  * The search centre stays at the initial target's launch-time position, even if that target moves during flight.
@@ -204,20 +203,15 @@ fun handleChainHit(
         source.recoveryPosition = nextVictim.position
         nextVictim.combat.markAttackedBy(attacker)
         PROJECTILE(lastVictim, nextVictim).display()
-        nextVictim.submitAction(object : Action<Mob>(nextVictim, ActionType.SOFT, false, 1) {
-            override fun run(): Boolean {
-                if (source.applyRebound(nextDamage)) {
-                    handleChainHit(attacker, origin, nextVictim, targets, source, attacksLeft - 1)
-                } else {
-                    source.finish()
-                }
-                return true
+        nextVictim.combat.impacts.schedule(1, {
+            if (source.applyRebound(nextDamage)) {
+                handleChainHit(attacker, origin, nextVictim, targets, source, attacksLeft - 1)
+            } else {
+                source.finish()
             }
-
-            override fun onFinished() {
-                if (state == ActionState.INTERRUPTED) {
-                    source.finish()
-                }
+        }, { interrupted ->
+            if (interrupted) {
+                source.finish()
             }
         })
         return
