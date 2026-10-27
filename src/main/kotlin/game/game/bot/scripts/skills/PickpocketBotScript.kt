@@ -6,6 +6,7 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import api.predef.ext.allSuitableFood
 import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
@@ -107,7 +108,7 @@ class PickpocketBotScript(
     override suspend fun onBankOpenSkilling(initial: Boolean) {
         val remainingSpace = bot.inventory.computeRemainingSize()
         if (!handler.banking.withdrawAnyFood((remainingSpace * 0.25).toInt())) {
-            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
+            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
             bot.log("No food left, ending script.")
             stop()
         }

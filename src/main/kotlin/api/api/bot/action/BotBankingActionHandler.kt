@@ -396,7 +396,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
 
         if (!success) {
             // We have no food. Ensure the bot starts looking for some.
-            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
+            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
         }
         return success
     }

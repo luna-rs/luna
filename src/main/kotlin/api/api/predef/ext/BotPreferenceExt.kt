@@ -2,6 +2,7 @@ package api.predef.ext
 
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.player.item.consume.food.Food
 import game.skill.mining.Pickaxe
 import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.model.def.EquipmentDefinition
@@ -132,7 +133,7 @@ fun BotPreference.wantedItemsToAcquire(): List<WantedItemDefinition> {
 
     // Keep shopping order natural between bots while still preserving minimum-stock urgency.
     return (urgent + normal).sortedWith(compareByDescending<WantedItemDefinition> { bot.canUseWantedItem(it.id) }
-        .thenByDescending { it.priority.level })
+                                            .thenByDescending { it.priority.level })
 }
 
 /**
@@ -220,4 +221,39 @@ fun BotPreference.requireItem(id: Int, amount: Int): Boolean {
     }
 
     return false
+}
+
+/**
+ * Returns the food types this bot considers suitable based on its combat level and personality.
+ *
+ * The initial food tier is determined by combat level:
+ * - Below 25: tier 0, healing at most 3 hitpoints.
+ * - 25 to 49: tier 1, healing 4 to 7 hitpoints.
+ * - 50 to 89: tier 2, healing 8 to 12 hitpoints.
+ * - 90 or higher: tier 3, healing 13 to 22 hitpoints.
+ *
+ * Bots with the `isDumb` personality flag select one tier below their initial tier.
+ * Only food within the selected tier's healing range is included. Ownership and affordability are not checked.
+ *
+ * @return A list of food types matching the selected tier, or an empty list if none match.
+ * @throws IllegalStateException If the selected tier is outside the supported range of 0 to 3.
+ */
+fun BotPreference.allSuitableFood(): List<Food> {
+    val all = Food.ID_TO_FOOD.values
+    var tier = when {
+        bot.combatLevel < 25 -> 0
+        bot.combatLevel < 50 -> 1
+        bot.combatLevel < 90 -> 2
+        else -> 3
+    }
+    if (bot.personality.isDumb) {
+        tier--
+    }
+    return when (tier) {
+        0 -> all.filter { it.heal <= 3 }
+        1 -> all.filter { it.heal in 4..7 }
+        2 -> all.filter { it.heal in 8..12 }
+        3 -> all.filter { it.heal in 13..22 }
+        else -> throw IllegalStateException("Invalid tier $tier.")
+    }
 }

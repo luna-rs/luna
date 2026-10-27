@@ -78,8 +78,6 @@ class BotActionHandler(val bot: Bot) {
      */
     val trading = BotTradingActionHandler(bot, this)
 
-    val supplies = BotSuppliesActionHandler(bot, this)
-
     /**
      * Determines whether the bot owns the requested quantity across all tracked item containers.
      *

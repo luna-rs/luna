@@ -2,6 +2,7 @@ package api.bot.action
 
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
+import api.predef.ext.allSuitableFood
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
@@ -212,7 +213,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             if (!clan.ensureCape()) return false
             val plan = plan() ?: run {
                 if (bot.bank.none { it != null && Food.ID_TO_FOOD.containsKey(it.id) }) {
-                    handler.supplies.getWantedFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }
+                    bot.preferences.allSuitableFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }
                 }
                 return false
             }

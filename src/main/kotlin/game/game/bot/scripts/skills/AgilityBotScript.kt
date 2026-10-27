@@ -6,6 +6,7 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.predef.*
 import api.bot.zone.SubZone
+import api.predef.ext.allSuitableFood
 import game.skill.agility.AgilityCourse
 import game.skill.agility.AgilityObstacle
 import game.skill.agility.AgilityObstacle.*
@@ -148,7 +149,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     override suspend fun onBankOpen(initial: Boolean) {
         if (!handler.banking.withdrawAnyFood(8)) {
-            handler.supplies.getWantedFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
+            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
             stop()
         }
     }
