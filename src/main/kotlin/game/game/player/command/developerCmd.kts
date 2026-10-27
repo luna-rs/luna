@@ -41,6 +41,7 @@ import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
 import io.luna.game.model.mob.varp.Varp
 import io.luna.game.model.`object`.ObjectType
+import io.luna.net.msg.out.FullScreenInterfaceMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
 import io.luna.util.NumberUtils
@@ -481,6 +482,15 @@ cmd("mypos", RIGHTS_DEV) {
 cmd("interface", RIGHTS_DEV) {
     val id = asInt(0)
     plr.overlays.open(StandardInterface(id))
+}
+
+/**
+ * A command that opens a full screen interface, drawn over a full screen background interface.
+ */
+cmd("fsinterface", RIGHTS_DEV) {
+    val primaryId = asInt(0)
+    val secondaryId = asInt(1)
+    plr.queue(FullScreenInterfaceMessageWriter(primaryId, secondaryId))
 }
 
 /**
