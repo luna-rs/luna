@@ -48,6 +48,8 @@ import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.util.GsonUtils
+import kotlinx.coroutines.isActive
+import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -195,6 +197,11 @@ open class NpcCombatScript(bot: Bot,
 
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
+    /**
+     * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
+     */
+    private var cannonPrepared = false
+
     override suspend fun equipment(): BotGearLocator = BotGearLocator(bot, loadout!!.gear)
 
     override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
@@ -206,6 +213,7 @@ open class NpcCombatScript(bot: Bot,
         // combat response available until this script is ready to handle an actual engagement.
         bot.reflex.isDisableCombatReflex = false
         if (!assignmentActive()) return false
+        if (!cannonPrepared && !CannonBotSupport.recover(bot)) return false
         if(bot.personality.type == PersonalityTemplateType.SKILLER) {
             // Skillers do not engage in combat.
             handler.combat.fleeCombat()
@@ -240,6 +248,12 @@ open class NpcCombatScript(bot: Bot,
         if (!isPaused()) {
             clearMagic()
         }
+        if (coroutineContext.isActive) CannonBotSupport.recover(bot)
+    }
+
+    override suspend fun beforeLeavingZone(): Boolean {
+        bot.combat.target = null
+        return CannonBotSupport.recover(bot)
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
@@ -266,7 +280,11 @@ open class NpcCombatScript(bot: Bot,
         combatConfigured = false
         bot.combat.target = null
         clearMagic()
-        return true
+        if (CannonBotSupport.needsRecovery(bot) && bot.emotions.isNervousAboutHp && bot.combat.inCombat()) {
+            handler.banking.travelToNearestBank()
+            return false
+        }
+        return CannonBotSupport.recover(bot)
     }
 
     /** Dragon protection is withdrawn from owned stock rather than generated during banking. */
@@ -334,7 +352,7 @@ open class NpcCombatScript(bot: Bot,
                 stop()
             }
         }
-
+        cannonPrepared = slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {
@@ -380,6 +398,13 @@ open class NpcCombatScript(bot: Bot,
         if (!prepareCombat()) return true
         attend()
         if (queenTrip && (forceBanking || waitingForQueen())) return false
+        if (cannonPrepared && !forceBanking) {
+            val zone = activeZone
+            if (zone != null && !CannonBotSupport.maintain(bot, zone)) {
+                forceBanking = true
+                return true
+            }
+        }
         if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
             lootItems()
             return true

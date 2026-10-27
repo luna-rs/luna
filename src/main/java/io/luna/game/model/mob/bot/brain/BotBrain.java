@@ -2,6 +2,8 @@ package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.BotScript;
 import engine.bot.coordinator.ScavengingCoordinator;
+import game.bot.scripts.CannonBotSupport;
+import game.bot.scripts.RecoverCannonBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -44,6 +46,9 @@ public class BotBrain {
      * @return The coordinator that should run for this decision cycle.
      */
     public BotCoordinator process(Bot bot) {
+        if (CannonBotSupport.needsRecovery(bot)) {
+            return owner -> owner.getScriptStack().push(new RecoverCannonBotScript(owner));
+        }
         if (bot.getPreferences().getScavenging().isIntroductory()) {
             return ScavengingCoordinator.INSTANCE;
         }
