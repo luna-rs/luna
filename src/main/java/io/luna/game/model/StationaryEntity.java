@@ -25,7 +25,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     /**
      * Who this entity can be viewed by.
      */
-    private final ChunkUpdatableView view;
+    private ChunkUpdatableView view;
 
     /**
      * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
@@ -138,6 +138,24 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      */
     public final ChunkUpdatableView getView() {
         return view;
+    }
+
+    /**
+     * Changes visibility without replacing this entity or its world registration.
+     * Existing viewers receive a removal before the new view receives a display update. Queued stationary
+     * requests retain their original view, so the removal cannot affect players who never saw this entity.
+     *
+     * @param nextView The new visibility rules.
+     */
+    protected final void changeView(ChunkUpdatableView nextView) {
+        boolean visible = !hidden;
+        if (visible) {
+            hide();
+        }
+        view = nextView;
+        if (visible) {
+            show();
+        }
     }
 
     /**

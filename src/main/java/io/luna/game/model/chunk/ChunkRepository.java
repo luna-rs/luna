@@ -316,7 +316,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * Determines if {@code request} should be sent to {@code player}.
      * <p>
      * The updatable must be on the player's height level, because the #377 client applies chunk updates to the level
-     * it is on. Its {@link ChunkUpdatable#computeCurrentView()} must also include the player.
+     * it is on. The request's {@link ChunkUpdatableRequest#getView()} must also include the player.
      *
      * @param request The update request.
      * @param player The player.
@@ -327,7 +327,7 @@ public final class ChunkRepository implements Iterable<Entity> {
         if (updatable instanceof Entity entity && entity.getPosition().getZ() != player.getPosition().getZ()) {
             return false;
         }
-        return updatable.computeCurrentView().isViewableFor(player);
+        return request.getView().isViewableFor(player);
     }
 
     /**

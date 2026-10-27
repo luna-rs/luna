@@ -1,5 +1,7 @@
 package io.luna.game.model.chunk;
 
+import io.luna.game.model.StationaryEntity;
+
 /**
  * Represents a pending update request for a {@link ChunkUpdatable} within a {@link Chunk}.
  * <p>
@@ -33,6 +35,13 @@ public final class ChunkUpdatableRequest {
     private final boolean persistent;
 
     /**
+     * The view at creation for stationary updates, or {@code null} for effects with computed visibility.
+     * Replacing an entity's view must not redirect its already-queued removal or display messages.
+     * The view itself may still retain a live viewer set, preserving that existing behavior.
+     */
+    private final ChunkUpdatableView stationaryView;
+
+    /**
      * Creates a new {@link ChunkUpdatableRequest}.
      *
      * @param updatable The updatable this request targets.
@@ -43,6 +52,16 @@ public final class ChunkUpdatableRequest {
         this.updatable = updatable;
         this.message = message;
         this.persistent = persistent;
+        stationaryView = updatable instanceof StationaryEntity ? updatable.computeCurrentView() : null;
+    }
+
+    /**
+     * Returns the stationary request's original view, or computes visibility for other updatables.
+     *
+     * @return The visibility rules for this particular update.
+     */
+    public ChunkUpdatableView getView() {
+        return stationaryView != null ? stationaryView : updatable.computeCurrentView();
     }
 
     /**

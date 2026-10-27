@@ -64,6 +64,12 @@ public class GroundItem extends StationaryEntity {
     private int expireTicks;
 
     /**
+     * The original visibility view, whose bots track this drop until it leaves the world, including after
+     * public promotion. Retaining it allows removal to clear their tracking even when the current view is global.
+     */
+    private final ChunkUpdatableView originalView;
+
+    /**
      * Creates a new {@link GroundItem}.
      *
      * @param context The active {@link LunaContext} instance.
@@ -78,6 +84,7 @@ public class GroundItem extends StationaryEntity {
         checkArgument(amount > 0, "Amount must be above 0.");
         this.id = id;
         this.amount = amount;
+        originalView = view;
     }
 
     /**
@@ -189,13 +196,22 @@ public class GroundItem extends StationaryEntity {
 
     @Override
     protected void onInactive() {
-        if (!getView().isGlobal()) {
-            for (Player player : getView()) {
+        if (!originalView.isGlobal()) {
+            for (Player player : originalView) {
                 if (player.isBot()) {
                     player.asBot().getViewableItems().remove(this);
                 }
             }
         }
+    }
+
+    /**
+     * Starts the public lifetime of this private drop while retaining its identity, subtype and attributes.
+     * Death recovery and pending pickup references continue to identify the same active entity.
+     */
+    final void makePublic() {
+        changeView(ChunkUpdatableView.globalView());
+        expireTicks = 0;
     }
 
     /**

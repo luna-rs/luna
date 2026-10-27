@@ -101,19 +101,9 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                 if (item.isLocal()) {
                     if (isTradeable && expireTicks >= TRADEABLE_LOCAL_TICKS) {
                         /*
-                         * Local + tradeable: convert to global visibility.
+                         * Local + tradeable: publish the same drop, preserving recovery references and item state.
                          */
-                        it.remove();
-                        item.hide();
-                        item.setState(EntityState.INACTIVE);
-
-                        GroundItem globalItem = new GroundItem(
-                                item.getContext(),
-                                item.getId(),
-                                item.getAmount(),
-                                item.getPosition(),
-                                ChunkUpdatableView.globalView());
-                        pending.put(item.getPosition(), globalItem);
+                        item.makePublic();
                     } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
                         /*
                          * Local + untradeable: remove after local-only lifetime.
