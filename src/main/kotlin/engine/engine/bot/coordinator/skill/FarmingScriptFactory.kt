@@ -6,8 +6,10 @@ import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import game.bot.scripts.skills.FarmingBotScript
+import game.bot.scripts.skills.PrepareSaplingBotScript
 import game.skill.farming.Farming
 import game.skill.farming.herb.HerbPatchLocation
+import game.skill.farming.seedling.TreeSeedling
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -16,6 +18,8 @@ import io.luna.game.model.mob.bot.Bot
  * level and personality policy and requires owned stock and tools. Profit visits prefer herb patches among equally
  * urgent work; prices are not fabricated. With no available work the selection completes immediately, allowing
  * another activity while the native growth engine runs. No seeds, equipment or experience are granted.
+ * When no plot needs a supplied visit, owned tree seeds or seedlings can be prepared up to one sapling per mapped
+ * matching tree plot. Watered seedlings already count toward this reserve; native growth never blocks selection.
  *
  * @author lare96
  */
@@ -41,6 +45,13 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
         val urgent = candidates.filter { it.patch.dead || it.patch.diseased || it.patch.harvestReady() }.ifEmpty { candidates }
         val preferred = if (profit) urgent.filter { it.location is HerbPatchLocation }.ifEmpty { urgent } else urgent
         return getBestActivity(bot, 99, { it.patch.crop?.level ?: it.patch.findCrop(it.seedId)?.level ?: 1 }, preferred)
+            ?: getBestActivity(bot, minOf(level, bot.farming.level), { it.seedling.level },
+                TreeSeedling.entries.mapNotNull { seedling ->
+                    val target = FarmingBotScript.SITES.keys.count {
+                        Farming.patches(bot).getValue(it).findCrop(seedling.sapling) != null
+                    }
+                    if (target == 0) null else PrepareSaplingBotScript(bot, seedling, target, duration).takeIf { it.isEligible() }
+                })
             ?: object : DynamicBotScript(bot) {
                 override suspend fun run() = true
             }

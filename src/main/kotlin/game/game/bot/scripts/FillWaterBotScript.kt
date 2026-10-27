@@ -57,7 +57,7 @@ class FillWaterBotScript(
      * @author lare96
      */
     enum class Source(val resource: FillableResource, val emptyIds: Set<Int>, val zones: List<SubZone>) {
-        WATER(WaterResource, WaterResource.EMPTY_IDS.toSet(),
+        WATER(WaterResource, WaterResource.REFILLABLE_IDS.toSet(),
               listOf(SubZone.SOUTH_FALADOR_FARM, SubZone.EDGEVILLE_MAIN, SubZone.VARROCK_SQUARE)),
         SAND(SandResource, setOf(1925), listOf(SubZone.YANILLE_SAND_PIT)),
         MILK(MilkResource, setOf(1925), listOf(SubZone.FALADOR_DAIRY_COW))

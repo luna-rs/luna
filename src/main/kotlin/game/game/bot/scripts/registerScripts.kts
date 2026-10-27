@@ -2,6 +2,8 @@ package game.bot.scripts
 
 import game.bot.scripts.skills.FarmingBotScript
 import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
+import game.bot.scripts.skills.PrepareSaplingBotScript
+import game.bot.scripts.skills.PrepareSaplingBotScript.Companion.SaplingData
 
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
@@ -137,6 +139,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<SaplingData>(PrepareSaplingBotScript::class) { bot, data -> PrepareSaplingBotScript(bot, data) }
     scriptManager.addScript<GloryData>(RechargeGloryBotScript::class) { bot, data -> RechargeGloryBotScript(bot, data) }
     scriptManager.addScript<GnomeBallData>(GnomeBallBotScript::class) { bot, data -> GnomeBallBotScript(bot, data) }
     scriptManager.addScript<ArenaData>(BrimhavenArenaBotScript::class) { bot, data -> BrimhavenArenaBotScript(bot, data) }
