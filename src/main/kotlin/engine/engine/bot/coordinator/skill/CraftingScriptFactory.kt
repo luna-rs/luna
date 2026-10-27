@@ -2,11 +2,13 @@ package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
 import api.bot.script.InventoryBotScript
+import api.bot.action.BotCombatActionHandler
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.HarvestBotScript
+import game.bot.scripts.CollectGroundItemBotScript
 import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.bot.scripts.skills.CollectHidesBotScript
 import game.bot.scripts.skills.CraftArmorBotScript
@@ -31,6 +33,7 @@ import game.skill.crafting.textileCrafting.Textile
 import game.skill.crafting.textileCrafting.TextileType
 import game.obj.resource.fillable.WaterResource
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.Skill
 import io.luna.util.RandomUtils.roll
 
 /**
@@ -127,6 +130,8 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      * Creates a script that collects cowhides.
      *
      * Intelligent bots only use [NEAR_BANK_COW_FIELDS]. Dumb bots sometimes leave the hides on the ground.
+     * Bots whose permanent build rejects every damaging combat skill collect existing ground hides instead.
+     * Their collection always retains hides and uses the same owned-stock goal as the tanning continuation.
      *
      * @param bot The bot that will run the script.
      * @param zones The mutable zone list to populate with cow fields.
@@ -134,9 +139,13 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
      */
     internal fun getCollectHidesScript(
         bot: Bot, zones: MutableList<SubZone>, pickUpHides: Boolean? = null
-    ): CollectHidesBotScript {
-        // TODO Skillers that never train combat should pick up hides other players leave instead of fighting.
+    ): BotScript {
         zones += if (bot.personality.isIntelligent) NEAR_BANK_COW_FIELDS else ALL_COW_FIELDS
+        if (listOf(Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE, Skill.RANGED, Skill.MAGIC)
+                .none { BotCombatActionHandler.mayGainExperience(bot, it) }) {
+            return CollectGroundItemBotScript(bot, CollectHidesBotScript.COWHIDE,
+                CollectHidesBotScript.hideTarget(bot), getDuration(bot), zones)
+        }
         val collect = pickUpHides ?: (!bot.personality.isDumb || !roll(1 of 3))
         return CollectHidesBotScript(bot, getDuration(bot), zones, collect)
     }
