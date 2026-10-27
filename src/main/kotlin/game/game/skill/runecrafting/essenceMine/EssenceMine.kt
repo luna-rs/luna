@@ -99,7 +99,12 @@ object EssenceMine {
      * @param portal The portal emitting the teleport effect.
      */
     fun leave(plr: Player, portal: GameObject) {
-        val wizard = plr.essenceMineExit ?: EssenceMineWizard.AUBURY
+        val wizard = returnWizard(plr)
         plr.submitAction(EssenceMineExitAction(plr, portal, findLandingTile(wizard.exit, EXIT_RADIUS)))
     }
+
+    /**
+     * The wizard a portal will return this player to, including the default for an unset saved destination.
+     */
+    fun returnWizard(plr: Player): EssenceMineWizard = plr.essenceMineExit ?: EssenceMineWizard.AUBURY
 }

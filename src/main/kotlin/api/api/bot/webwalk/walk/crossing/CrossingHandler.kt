@@ -33,7 +33,10 @@ object CrossingHandlers {
      * The handlers. A crossing in the data whose handler is not here is a mistake, which [api.bot.webwalk.walk.WebWalker]
      * reports when the web is loaded.
      */
-    private val handlers: Map<String, CrossingHandler> = mapOf(BorderGateCrossing.ID to BorderGateCrossing,
+    private val handlers: Map<String, CrossingHandler> = mapOf(AltarCrossing.ID to AltarCrossing,
+                                                               EssenceMineCrossing.ID to EssenceMineCrossing,
+                                                               RopeEntranceCrossing.ID to RopeEntranceCrossing,
+                                                               BorderGateCrossing.ID to BorderGateCrossing,
                                                                HamTrapdoorCrossing.ID to HamTrapdoorCrossing,
                                                                ConditionalDoorCrossing.ID to ConditionalDoorCrossing)
 

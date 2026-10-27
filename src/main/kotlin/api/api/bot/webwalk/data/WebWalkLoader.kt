@@ -209,7 +209,7 @@ object WebWalkLoader {
      */
     private class Obstacle(val where: String,
                            val type: EdgeType,
-                           val objectId: Int,
+                           val objectId: Int?,
                            val pos: Position,
                            val from: Position,
                            val to: Position,
@@ -219,7 +219,8 @@ object WebWalkLoader {
                            val handler: String?,
                            var requirements: Requirements,
                            var reverseRequirements: Requirements?,
-                           var disabled: Boolean = false)
+                           var disabled: Boolean = false,
+                           val npcId: Int? = null)
 
     /**
      * One load of the files.
@@ -403,10 +404,10 @@ object WebWalkLoader {
          */
         fun readObstacles() {
             val obstacles = ArrayList<Obstacle>()
-            val seen = HashSet<List<Any>>()
+            val seen = HashSet<List<Any?>>()
             for (entry in entries(OBSTACLES) + entries(CLIMBS) + entries(CROSSINGS)) {
                 val obstacle = readObstacle(entry) ?: continue
-                val key = listOf(obstacle.type, obstacle.objectId, obstacle.pos, obstacle.from, obstacle.to)
+                val key = listOf(obstacle.type, obstacle.objectId, obstacle.npcId, obstacle.pos, obstacle.from, obstacle.to)
                 if (!seen.add(key)) {
                     errors.add(entry.where, "duplicate of an earlier obstacle")
                     continue
@@ -423,7 +424,7 @@ object WebWalkLoader {
                 val to = obstacleNode(obstacle.to)
                 pending += PendingEdge(obstacle.where, from, to, obstacle.type, obstacle.cost, obstacle.bidirectional,
                                        obstacle.requirements,
-                                       EdgeAction(obstacle.objectId, obstacle.pos, obstacle.option, obstacle.handler),
+                                       EdgeAction(obstacle.objectId, obstacle.pos, obstacle.option, obstacle.handler, npcId = obstacle.npcId),
                                        obstacle.reverseRequirements)
             }
         }
@@ -433,7 +434,8 @@ object WebWalkLoader {
          */
         fun readObstacle(entry: FieldReader): Obstacle? {
             val typeName = entry.string("type")
-            val objectId = entry.int("object", min = 0)
+            val objectId = entry.int("object", required = false, min = 0)
+            val npcId = entry.int("npc", required = false, min = 0)
             val pos = entry.position("pos")
             val from = entry.position("from")
             val to = entry.position("to")
@@ -453,7 +455,11 @@ object WebWalkLoader {
                             "but was '$typeName'")
                 }
             }
-            if (type == null || objectId == null || pos == null || from == null || to == null) {
+            if ((objectId == null) == (npcId == null) || (npcId != null && type != EdgeType.CROSSING)) {
+                entry.reject("object", "requires exactly one object or NPC; NPCs are only supported by CROSSING handlers")
+                return null
+            }
+            if (type == null || pos == null || from == null || to == null) {
                 return null
             }
             if (from == to) {
@@ -475,7 +481,7 @@ object WebWalkLoader {
             }
             return Obstacle(entry.where, type, objectId, pos, from, to, cost,
                             bidirectional ?: type.bidirectionalByDefault, option, handler, requirements,
-                            reverseRequirements)
+                            reverseRequirements, npcId = npcId)
         }
 
         /**
