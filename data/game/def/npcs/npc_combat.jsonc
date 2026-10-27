@@ -15773,10 +15773,7 @@
   {
     "id": 1265, // Rock Crab
     "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 50,
@@ -15807,10 +15804,7 @@
   {
     "id": 1267, // Rock Crab
     "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 50,
