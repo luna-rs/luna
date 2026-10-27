@@ -1,7 +1,6 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.naturalMicroDelay
-import api.bot.Suspendable.waitFor
 import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
@@ -184,22 +183,7 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
                     continue
                 }
 
-                val amountBefore = bot.inventory.computeAmountForId(item.id)
-                if (handler.interactions.interact(1, groundItem) {
-                        bot.health > 0 && bot.scriptStack.current()?.allowsLoot(groundItem) != false
-                    }) {
-                    // Interaction success only confirms reaching the item and sending the click.
-                    waitFor {
-                        groundItem.state != EntityState.ACTIVE ||
-                                bot.scriptStack.current()?.allowsLoot(groundItem) == false ||
-                                bot.inventory.computeAmountForId(item.id) > amountBefore
-                    }
-                }
-
-                val collected = bot.inventory.computeAmountForId(item.id) > amountBefore
-                if (collected) {
-                    bot.preferences.rebalanceWantedItems()
-                }
+                val collected = handler.loot.pickup(groundItem)
                 if (groundItem.state != EntityState.ACTIVE) {
                     bot.deathItems.remove(groundItem)
                     iterator.remove()
@@ -251,13 +235,9 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             }
         }
 
-        valuableItems.sortBy {
-            when {
-                it in bot.deathItems -> 0
-                bot.preferences.needsWantedItem(it.id) -> 1
-                else -> 2
-            }
-        }
+        val ordered = handler.loot.ordered(valuableItems)
+        valuableItems.clear()
+        valuableItems.addAll(ordered)
     }
 
     /**

@@ -134,8 +134,6 @@ open class NpcCombatScript(bot: Bot,
             }
         }
 
-        // when looting sort by wanted item, etc etc value
-        //  add all noted versions as well
         val ALL_LOOT_ITEMS = lazyVal { // and if cache value > 10_000
             val items =
                 HashSet<Int>() // todo optional filter if high level and intelligent and only want higher resources
@@ -467,6 +465,10 @@ open class NpcCombatScript(bot: Bot,
         return TreasureTrailBotScript.wantsClue(bot, item.id) || item is DeathGroundItem || item.id in ALL_LOOT_ITEMS.value
     }
 
+    /**
+     * Collects eligible drops in shared recovery, wanted-item and guide-value order, checking actual capacity per drop.
+     * Supply checks still run between attempts; an item that will not fit cannot hide a later compatible stack.
+     */
     private suspend fun lootItems() {
         attend()
         if (queenTrip && forceBanking) return
@@ -477,14 +479,10 @@ open class NpcCombatScript(bot: Bot,
             forceBanking = true
         }
         val groundItems = world.locator.findViewableItems(bot) { isLoot(it) && it.isVisibleTo(bot) }
-        for (item in groundItems) {
-            val inventoryItem = item.toItem()
-            val countBefore = bot.itemTracker.count(inventoryItem.id)
-            if (!bot.inventory.hasSpaceFor(inventoryItem)) {
-                break
-            }
-            handler.interactions.interact(1, item)
-            waitFor { countBefore < bot.itemTracker.count(inventoryItem.id) }
+        for (item in handler.loot.ordered(groundItems)) {
+            if (!isActionSafe() || forceBanking || !assignmentActive()) return
+            if (!handler.loot.canPickup(item)) continue
+            handler.loot.pickup(item) { isActionSafe() && !forceBanking && assignmentActive() }
             attend()
             if (queenTrip && forceBanking) return
             bot.naturalDelay()

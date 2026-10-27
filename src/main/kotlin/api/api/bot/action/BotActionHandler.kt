@@ -89,6 +89,11 @@ class BotActionHandler(val bot: Bot) {
     val farming = BotFarmingActionHandler(bot, this)
 
     /**
+     * Orders ground loot and verifies ordinary pickups for combat scripts and reactive collection.
+     */
+    val loot = BotLootActionHandler(bot, this)
+
+    /**
      * Determines whether the bot owns the requested quantity across all tracked item containers.
      *
      * Uses [Bot.itemTracker] to combine quantities with the same item id across equipment, inventory, and bank storage.

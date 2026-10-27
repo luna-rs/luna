@@ -860,34 +860,25 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     /**
      * Loots nearby food, potions, coins, and valuable items.
      *
-     * Looting currently uses simple filters and stops once inventory space runs out or an item interaction fails.
+     * Personal recovery and wanted supplies retain shared priority; other candidates use total economy guide value.
+     * Actual capacity is rechecked per item, so existing stacks remain collectable after the last free slot is used.
      */
     private suspend fun lootItems() {
         // TODO@1.0 Move looting into its own dynamic system. What a bot wants to loot should depend on its current
         //  intent. PK bots may prefer food and valuables, while PvM bots may prefer stackables, resources, and alchables.
-        // TODO@0.5.0 Sort loot by value so the most expensive items are picked up first.
-        // TODO@0.5.0 Account for remaining inventory space when choosing between stackables, food, potions, and gear.
         val local = world.locator.findViewableItems(bot) {
             it.isWithinDistance(bot, 10) &&
                     (Food.ID_TO_FOOD.containsKey(it.id) ||
                             isValuable(it.id) ||
                             Potion.DOSE_TO_POTION.containsKey(it.id) ||
-                            it.def().value > 5000)
+                            handler.loot.value(it) > 5000)
         }
 
-        var remainingSlots = bot.inventory.computeRemainingSize()
-
-        for (groundItem in local) {
-            val item = groundItem.toItem()
-
-            if (bot.inventory.hasSpaceFor(item)) {
-                if (!handler.interactions.interact(1, groundItem)) {
-                    return
-                }
-
-                if (--remainingSlots < 1) {
-                    break
-                }
+        for (groundItem in handler.loot.ordered(local)) {
+            if (!isActionSafe()) return
+            handler.loot.pickup(groundItem) {
+                isActionSafe() && pkSession?.allowsHuntingAt(bot.position) != false &&
+                    pkSession?.allowsHuntingAt(groundItem.position) != false
             }
         }
     }
