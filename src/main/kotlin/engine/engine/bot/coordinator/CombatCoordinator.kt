@@ -92,7 +92,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
-            .mapNotNull { purpose -> CombatLoadout.find(bot, purpose)?.let { purpose to it } }
+            .mapNotNull { purpose -> CombatLoadout.find(bot, purpose, npcCombat = true)?.let { purpose to it } }
         val (purpose, loadout) = ready.randomOrNull() ?: return
         val level = combatReadiness(bot, purpose)
         val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&

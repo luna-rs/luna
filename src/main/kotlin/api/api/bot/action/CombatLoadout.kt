@@ -3,24 +3,27 @@ package api.bot.action
 import api.predef.*
 
 import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotGearItem
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.magic.RuneRequirement
+import game.skill.magic.EquipmentRequirement
 import game.skill.magic.Staff
 import io.luna.game.model.def.AmmoDefinition
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.Weapon
 
 /**
  * An owned combat outfit and its consumables, shared by NPC preparation and carried PK switches.
- * Ordinary elemental spells use base runes and staff substitution; special spells require separate preparation.
+ * NPC sessions can select any damaging spell with supported rune and weapon requirements.
  *
  * @property gear Equipment slots to pass to the existing gear locator.
- * @property spell Optional standard elemental autocast spell.
+ * @property spell Optional combat spell, cast manually when it has no native autocast button.
  * @author lare96
  */
 internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellDefinition? = null) {
@@ -65,24 +68,41 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
          * Selects usable owned gear without creating supplies or silently changing combat purpose.
          * Carried selection bypasses the locator's bank-oriented fill and free-ammunition fallback.
          * PK planning may exclude expensive preferred weapons or lower the damage-spell tier when a kit exceeds risk.
+         * NPC combat enables varied damage spells and weapon-specific manual casts; utility binds remain excluded.
          */
         fun find(bot: Bot, purpose: BotGearPurpose, requested: CombatSpell? = null,
                  carriedOnly: Boolean = false, excludingWeapons: Set<Int> = emptySet(),
-                 maximumSpellHit: Int = Int.MAX_VALUE): CombatLoadout? {
+                 maximumSpellHit: Int = Int.MAX_VALUE, npcCombat: Boolean = false): CombatLoadout? {
             if (purpose !in setOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) return null
             if (bot.preferences.isSkiller) return null
             if (purpose == BotGearPurpose.MAGIC && !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return null
-            fun spellFor(weapon: Int): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values
-                .filter { definition ->
+            val spellOrder = if (npcCombat) NpcCombatSpellSelection.comparator(bot.usernameHash)
+                else compareBy<CombatSpellDefinition> { it.maxHit }
+            val spellsByWeapon = HashMap<Int, CombatSpellDefinition?>()
+            fun spellFor(weapon: Int): CombatSpellDefinition? = spellsByWeapon.getOrPut(weapon) {
+                CombatSpellDefinition.getSpells().values.filter { definition ->
                     definition.spellbook == bot.spellbook && definition.level <= bot.magic.level && definition.maxHit <= maximumSpellHit &&
-                        definition.spell.name.substringAfterLast('_') in setOf("STRIKE", "BOLT", "BLAST", "WAVE") &&
-                        definition.spell.name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE") &&
+                        (if (npcCombat) definition.maxHit > 0 &&
+                            definition.spell !in setOf(CombatSpell.SNARE, CombatSpell.ENTANGLE) else
+                            definition.spell.name.substringAfterLast('_') in setOf("STRIKE", "BOLT", "BLAST", "WAVE") &&
+                                definition.spell.name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE")) &&
                         (requested == null || definition.spell == requested) &&
-                        definition.required.all { it is RuneRequirement } &&
+                        (definition.button == -1 || definition.spellbook != Spellbook.ANCIENT || weapon in Staff.AUTOCAST_ANCIENTS) &&
+                        definition.required.all { it is RuneRequirement ||
+                            (npcCombat && it is EquipmentRequirement && it.id == weapon) } &&
                         runeCosts(definition, weapon).all { (id, amount) ->
                             (if (carriedOnly) bot.inventory.computeAmountForId(id) else bot.itemTracker.count(id)) >= amount
                         }
-                }.maxByOrNull { it.maxHit }
+                }.maxWithOrNull(spellOrder)
+            }
+            val magicWeapons = if (purpose == BotGearPurpose.MAGIC) {
+                BotGearSelector.ALL_GEAR.value[Equipment.WEAPON].filter { item ->
+                    BotGearPurpose.MAGIC in item.purposes && item.id !in excludingWeapons &&
+                        item.id in bot.itemTracker && (!carriedOnly || carried(bot, item.id) > 0) &&
+                        equipDef(item.id).meetsAllRequirements(bot) &&
+                        WeaponDefinition.ALL[item.id].orElse(null)?.type == Weapon.STAFF && spellFor(item.id) != null
+                }.associateBy { it.id }
+            } else emptyMap()
             val selected = BotGearSelector.find(bot, setOf(purpose)) reject@{ item ->
                 if (carriedOnly && carried(bot, item.id) == 0) true else if (item.index != Equipment.WEAPON) false else {
                     if (item.id in excludingWeapons) return@reject true
@@ -93,10 +113,26 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                     when (purpose) {
                         BotGearPurpose.RANGED -> if (type in thrown) item.id !in AmmoDefinition.NO_AMMO_WEAPONS
                             else type !in bows || ammunition(bot, item.id, carriedOnly) == null
-                        BotGearPurpose.MAGIC -> type != Weapon.STAFF || spellFor(item.id) == null
+                        BotGearPurpose.MAGIC -> item.id !in magicWeapons
                         else -> type in bows || type in thrown
                     }
                 }
+            }
+            if (purpose == BotGearPurpose.MAGIC && npcCombat) {
+                // Compare complete spell/staff pairs, rather than letting a tied gear score pick the spell.
+                val best = magicWeapons.values.maxWithOrNull { first, second ->
+                    val firstSpell = spellFor(first.id)!!
+                    val secondSpell = spellFor(second.id)!!
+                    val spellComparison = spellOrder.compare(firstSpell, secondSpell)
+                    if (spellComparison != 0) spellComparison else {
+                        val staffOrder = compareBy<BotGearItem> {
+                            NpcCombatSpellSelection.runeSavings(firstSpell, it.id)
+                        }.thenBy { it.calculateScore() }
+                            .thenBy { NpcCombatSpellSelection.staffPreference(bot.usernameHash, it.id) }
+                        staffOrder.compare(first, second)
+                    }
+                } ?: return null
+                selected.equipment[Equipment.WEAPON] = best.id
             }
             val weapon = selected.equipment[Equipment.WEAPON]
             if (purpose != BotGearPurpose.MELEE && weapon == null) return null

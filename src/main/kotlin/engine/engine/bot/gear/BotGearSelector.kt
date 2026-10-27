@@ -144,12 +144,13 @@ object BotGearSelector {
             purposes: Set<BotGearPurpose>,
             excluding: (BotGearItem) -> Boolean = { false }
         ): BotGearSelectorFill {
+            val reject = if (index == WEAPON) meleeFallbackFilter(bot, purposes, excluding) else excluding
             if (equipment[index] == null) {
                 val selected = ArrayList<BotGearItem>()
                 val indexGear = ALL_GEAR.value[index]
 
                 for (item in indexGear) {
-                    if (valid(bot, index, item.id) && item.purposes.containsAll(purposes) && !excluding(item)) {
+                    if (valid(bot, index, item.id) && item.purposes.containsAll(purposes) && !reject(item)) {
                         selected += item
                     }
                 }
@@ -282,6 +283,7 @@ object BotGearSelector {
         excluding: (BotGearItem) -> Boolean = { false }
     ): BotGearSelectorFill {
         require(purposes.isNotEmpty()) { "Must have at least one purpose." }
+        val reject = meleeFallbackFilter(bot, purposes, excluding)
 
         // More intelligent bots tend to use gear sets.
         val equipment = arrayOfNulls<Int>(14)
@@ -296,7 +298,7 @@ object BotGearSelector {
                 var count = 0
                 for (id in set.equipment) {
                     val item = ALL_GEAR_IDS.value[id]!!
-                    if (!excluding(item) && valid(bot, item.index, item.id)) {
+                    if (!reject(item) && valid(bot, item.index, item.id)) {
                         count++
                     }
                 }
@@ -321,7 +323,7 @@ object BotGearSelector {
                 // Set all possible pieces.
                 for (id in selected.key.equipment) {
                     val item = ALL_GEAR_IDS.value[id]!!
-                    if (excluding(item) || !valid(bot, item.index, item.id)) {
+                    if (reject(item) || !valid(bot, item.index, item.id)) {
                         continue
                     }
                     equipment[item.index] = item.id
@@ -341,7 +343,7 @@ object BotGearSelector {
         val selection = ArrayListMultimap.create<Int, BotGearItem>()
         for (entry in ALL_GEAR.value.entries()) {
             val item = entry.value
-            if (!valid(bot, entry.key, item.id) || !item.purposes.containsAll(purposes) || excluding(item)) {
+            if (!valid(bot, entry.key, item.id) || !item.purposes.containsAll(purposes) || reject(item)) {
                 continue
             }
             selection.put(entry.key, item)
@@ -447,5 +449,23 @@ object BotGearSelector {
     private fun valid(bot: Bot, index: Int, id: Int): Boolean {
         val def = equipDef(id)
         return bot.itemTracker.contains(id) && def.meetsAllRequirements(bot) && index == def.index
+    }
+
+    /**
+     * Keeps staves available for melee only when no eligible conventional melee weapon is owned.
+     * Caller exclusions also apply to the alternatives, including carried-only and account-build restrictions.
+     */
+    private fun meleeFallbackFilter(bot: Bot, purposes: Set<BotGearPurpose>,
+                                    excluding: (BotGearItem) -> Boolean): (BotGearItem) -> Boolean {
+        if (BotGearPurpose.MELEE !in purposes) return excluding
+        val nonMelee = setOf(Weapon.STAFF, Weapon.SHORTBOW, Weapon.LONGBOW, Weapon.CROSSBOW,
+            Weapon.KNIFE, Weapon.DART, Weapon.JAVELIN, Weapon.THROWN_AXE)
+        val hasWeapon = ALL_GEAR.value[WEAPON].any { item ->
+            val type = WeaponDefinition.ALL[item.id].orElse(null)?.type
+            type != null && type !in nonMelee && item.purposes.containsAll(purposes) &&
+                valid(bot, WEAPON, item.id) && !excluding(item)
+        }
+        return { item -> excluding(item) || (hasWeapon && item.index == WEAPON &&
+            WeaponDefinition.ALL[item.id].orElse(null)?.type == Weapon.STAFF) }
     }
 }

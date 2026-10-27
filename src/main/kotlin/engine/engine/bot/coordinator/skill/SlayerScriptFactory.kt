@@ -70,7 +70,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * The loadout selector also enforces permanent PK build experience restrictions.
      */
     internal fun hasLoadout(bot: Bot): Boolean = canTrain(bot) &&
-        disciplines.any { CombatLoadout.find(bot, it) != null }
+        disciplines.any { CombatLoadout.find(bot, it, npcCombat = true) != null }
 
     /**
      * Matches native task IDs to configured ordinary camps without inheriting the combat coordinator's
@@ -98,7 +98,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         for (purpose in disciplines.shuffled()) {
             val camps = camps(bot, purpose)
             if (camps.isEmpty()) continue
-            val loadout = CombatLoadout.find(bot, purpose) ?: continue
+            val loadout = CombatLoadout.find(bot, purpose, npcCombat = true) ?: continue
             val names = HashMultimap.create<SubZone, String>()
             camps.forEach { (zone, targets) -> names.putAll(zone, targets) }
             return NpcCombatScript(bot, duration, camps.keys.toMutableList(), names, purpose,

@@ -43,6 +43,8 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.CombatAction
+import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.attack.PlayerMagicCombatAttack
 import io.luna.game.model.mob.combat.CombatStance
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.util.GsonUtils
@@ -50,7 +52,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Fights configured NPCs using owned melee, ranged or elemental autocast supplies.
+ * Fights configured NPCs using owned melee, ranged or combat spell supplies.
  * The existing targeting and banking lifecycle handles travel, replenishment and bounded target searches.
  *
  * Sessions including KBD require combat level 100, a one-handed melee loadout and an owned anti-dragon
@@ -59,7 +61,7 @@ import kotlin.time.Duration.Companion.seconds
  * in the lair are retained for profit instead of buried.
  *
  * @property purpose The combat discipline retained throughout this session.
- * @property spell The elemental spell selected for a Magic session, preserved when saving.
+ * @property spell The damaging spell selected for a Magic session, preserved when saving.
  * @property slayerTask Optional native assignment restricting this session to exact task NPC IDs.
  * @property slayerMaster The original assignee; an assignment change ends this combat session.
  * @author lare96
@@ -92,7 +94,9 @@ open class NpcCombatScript(bot: Bot,
 
             /** Legacy sessions default to melee; new sessions retain their discipline and spell. */
             var purpose: BotGearPurpose = BotGearPurpose.MELEE
-            /** Optional elemental autocast spell; absent in older melee sessions. */
+            /**
+             * Optional combat spell; absent in older melee sessions.
+             */
             var spell: CombatSpell? = null
 
             /**
@@ -208,7 +212,7 @@ open class NpcCombatScript(bot: Bot,
 
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
-        loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
+        loadout = CombatLoadout.find(bot, purpose, spell, npcCombat = true) ?: return false
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
@@ -597,7 +601,17 @@ open class NpcCombatScript(bot: Bot,
                 forceBanking = true
                 return false
             }
-            if (!combatConfigured || !bot.combat.magic.isAutocasting || bot.combat.magic.autocastSpell != definition) {
+            if (definition.button == -1) {
+                // Native manual casts clear their target and selected spell after each attack.
+                // Re-select before the normal engagement loop clicks the NPC again.
+                val magic = bot.combat.magic
+                if (magic.isAutocasting || magic.autocastSpell != CombatSpellDefinition.NONE) {
+                    magic.isAutocasting = false
+                    magic.autocastSpell = CombatSpellDefinition.NONE
+                }
+                magic.selectedSpell = definition
+                combatConfigured = true
+            } else if (!combatConfigured || !bot.combat.magic.isAutocasting || bot.combat.magic.autocastSpell != definition) {
                 combatConfigured = handler.combat.setAutocastSpell(definition)
             }
             return combatConfigured
@@ -622,6 +636,16 @@ open class NpcCombatScript(bot: Bot,
             combatConfigured = true
         }
         return true
+    }
+
+    /**
+     * Stops native retaliation from swinging a staff between manual casts or after spell supplies run out.
+     * The script reselects its spell through the normal engagement loop before the next attack.
+     */
+    internal fun acceptsCombatAttack(attack: CombatAttack<*>): Boolean {
+        if (isPaused() || purpose != BotGearPurpose.MAGIC) return true
+        val selected = loadout?.spell ?: return false
+        return attack is PlayerMagicCombatAttack && attack.spellEffect == selected
     }
 
     private fun selectCombatStyle(styles: List<CombatStyleDefinition>): CombatStyleDefinition {
