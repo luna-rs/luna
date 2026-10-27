@@ -6,6 +6,7 @@ import api.bot.zone.SubZone
 import api.predef.*
 import com.google.common.collect.HashMultimap
 import engine.bot.coordinator.CombatCoordinator
+import engine.bot.coordinator.CombatCoordinator.Companion.Camp
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.KalphiteQueenTrip
@@ -26,6 +27,8 @@ import kotlin.time.Duration
  * Boss alternatives reuse ordinary combat preparation: black-dragon tasks may use KBD with an owned one-handed
  * melee loadout and anti-dragon shield, while Kalphite Queen trips require their complete owned melee kit/supplies.
  * Queen sessions contain only the Queen camp so the shared script's entrance and two-form lifecycle remain intact.
+ * Additional ordinary assignments use existing mapped mines, sewers, towns and combat areas without changing the
+ * general combat coordinator's training or profit distribution. Their sessions retain the same owned supply checks.
  * Unsupported assignments are retained until their camps and specialist preparation are available.
  *
  * @author lare96
@@ -41,6 +44,27 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         SlayerMaster.VANNAKA to SubZone.EDGEVILLE_DUNGEON,
         SlayerMaster.CHAELDAR to SubZone.ZANARIS_MAIN,
         SlayerMaster.DURADEL to SubZone.SHILO_VILLAGE
+    )
+
+    /**
+     * Assignment-only camps verified against native task IDs, cache names and the configured spawn footprints.
+     * Shared dungeons retain conservative readiness limits for their other inhabitants: bats in the ogre dungeon
+     * or Karamja do not make those areas low-level destinations. These species need no specialist equipment or
+     * finishing item; assignments that do remain unavailable until their preparation and geography are supported.
+     */
+    private val assignmentCamps = listOf(
+        Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
+        Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Giant bat")),
+        Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Giant bat")),
+        Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
+        Camp(SubZone.DWARVEN_MINE, 35, setOf("Scorpion")),
+        Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Hobgoblin")),
+        Camp(SubZone.ROCK_CRABS, 45, setOf("Hobgoblin")),
+        Camp(SubZone.EDGEVILLE_DUNGEON, 45, setOf("Hobgoblin")),
+        Camp(SubZone.VARROCK_SEWERS, 50, setOf("Ghost")),
+        Camp(SubZone.ARDOUGNE_SQUARE_THIEVING, 50, setOf("Guard dog")),
+        Camp(SubZone.ZANARIS_MAIN, 65, setOf("Otherworldly being")),
+        Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf"))
     )
 
     /**
@@ -92,7 +116,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         val hasDragonShield = bot.itemTracker.contains(1540) &&
             loadout.gear[Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
         val queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)
-        return CombatCoordinator.camps.filter {
+        return (CombatCoordinator.camps + assignmentCamps).filter {
             it.minimum <= readiness && CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady)
         }.mapNotNull { camp ->
             camp.names.intersect(taskNames).takeIf { it.isNotEmpty() }?.let { camp.zone to it }
