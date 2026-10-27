@@ -2,6 +2,7 @@ package game.bot.scripts
 
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotPotionActionHandler
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
@@ -304,6 +305,7 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        if (DRAGON_ZONES.any { it in originalZones }) handler.potions.withdrawAntifire()
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
                 if (!handler.banking.withdraw(Item(id, amount)) || bot.inventory.computeAmountForId(id) < amount) {
@@ -488,6 +490,8 @@ open class NpcCombatScript(bot: Bot,
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
             forceBanking = true
         }
+        handler.potions.drink(fighting = bot.combat.inCombat(), dragons = activeZone in DRAGON_ZONES ||
+            BotPotionActionHandler.breathesFire(bot.combat.lastCombatWith))
     }
 
     override suspend fun beforeZoneWork(): Boolean {
@@ -500,10 +504,7 @@ open class NpcCombatScript(bot: Bot,
         val inChamber = bot.position.z == 0 && SubZone.KALPHITE_QUEEN.area.contains(bot)
         bot.reflex.isDisableCombatReflex = inChamber
         if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)
-        if (bot.prayer.level <= 30) {
-            val potion = KalphiteQueenTrip.prayerPotions.firstOrNull { bot.inventory.contains(it) }
-            if (potion != null) handler.inventory.clickItem(1, potion)
-        }
+        handler.potions.drink(fighting = bot.combat.inCombat(), dragons = false, prayerBelow = 31)
         if (!KalphiteQueenTrip.canContinue(bot) || bot.inventory.isFull) forceBanking = true
         if (forceBanking) {
             bot.combat.target = null

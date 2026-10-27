@@ -73,6 +73,11 @@ class BotActionHandler(val bot: Bot) {
      */
     val combat = BotCombatActionHandler(bot, this)
 
+    /**
+     * Handles when the bot drinks the potions it carries.
+     */
+    val potions = BotPotionActionHandler(bot, this)
+
     // todo work on, docs
     val trading = BotTradingActionHandler(bot, this)
 
