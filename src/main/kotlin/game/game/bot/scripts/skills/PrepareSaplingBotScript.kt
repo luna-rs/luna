@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.script.InventoryBotScript
+import api.bot.action.BotFarmingActionHandler
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.zone.SubZone
@@ -27,6 +28,7 @@ import kotlin.time.Duration
  * remaining doses and the useful stock target. Empty cans use the shared water-filling script, then normal activity
  * selection can resume preparation. Finished batches are banked; native growth runs while the bot does other work.
  * No items, experience or growth timestamps are assigned here. Banking, travel, retries and safety are inherited.
+ * Owned tools, cans or other supported supplies in native leprechaun storage are retrieved before banking or refilling.
  *
  * @param bot The gardener.
  * @property seedling Native recipe, including its level and intermediate item identities.
@@ -52,7 +54,7 @@ class PrepareSaplingBotScript(
          * Entrana is excluded so preparation never needs to alter equipment to obtain soil.
          */
         fun findSoilSite(bot: Bot, seedling: TreeSeedling): PatchLocation? {
-            fun owned(id: Int) = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+            fun owned(id: Int) = BotFarmingActionHandler.stock(bot, id)
             if (owned(seedling.seed) == 0L || owned(Farming.PLANT_POT) == 0L ||
                 owned(seedling.seedling) > 0 || Farming.FILLED_PLANT_POTS.any { owned(it) > 0 }) return null
             return FarmingBotScript.SITES.keys.firstOrNull {
@@ -109,9 +111,9 @@ class PrepareSaplingBotScript(
     }
 
     /**
-     * Counts unnoted stock only; noted inputs are not accepted by the native handlers.
+     * Counts portable unnoted stock and exact leprechaun storage; noted inputs cannot satisfy native requirements.
      */
-    private fun owned(id: Int): Long = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+    private fun owned(id: Int): Long = BotFarmingActionHandler.stock(bot, id)
 
     /**
      * Watered seedlings already satisfy demand, so the script never waits for the next growth boundary.
@@ -182,7 +184,12 @@ class PrepareSaplingBotScript(
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
         Farming.update(bot)
-        return isEligible() && !prepareWater()
+        if (!isEligible()) return false
+        val items = if (Farming.WATERING_CANS.none { owned(it) > 0 }) listOf(Item(Farming.EMPTY_WATERING_CAN))
+            else supplies(::owned)
+        if (BotFarmingActionHandler.needsStorage(bot, items) &&
+            !handler.farming.retrieve(items, soilLocation?.let { FarmingBotScript.SITES.getValue(it) }) { isActionSafe() }) return false
+        return !prepareWater()
     }
     override fun withdraw(): List<Item> = productionWithdraw(supplies(::owned), requestMissing = false)
     override fun bankWithdraw(): List<Item> {

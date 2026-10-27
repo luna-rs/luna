@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.script.InventoryBotScript
+import api.bot.action.BotFarmingActionHandler
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.zone.SubZone
 import api.predef.*
@@ -28,6 +29,7 @@ import kotlin.time.Duration
  * are completed even when that reserve is already met. Closed bins are left to rot while the bot does other work;
  * later visits collect finished compost with owned buckets. Native handlers alone exchange items, set timers and
  * award experience. Shared inventory lifecycle handles banking, travel, safety, retries and saved sessions.
+ * Stored buckets are retrieved through native leprechaun exchanges; stored fertilizer counts toward the reserve.
  *
  * @param bot The gardener.
  * @property location Native persistent compost-bin identity.
@@ -114,9 +116,9 @@ class MakeCompostBotScript(
     }
 
     /**
-     * Counts unnoted stock available to the native item handlers.
+     * Counts portable unnoted stock and genuine leprechaun storage, including buckets and finished fertilizer.
      */
-    private fun owned(id: Int): Long = bot.bank.computeAmountForId(id).toLong() + bot.inventory.computeAmountForId(id)
+    private fun owned(id: Int): Long = BotFarmingActionHandler.stock(bot, id)
 
     /**
      * Includes in-progress contents so three separate bins cannot each start another full reserve.
@@ -159,7 +161,10 @@ class MakeCompostBotScript(
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
         Farming.update(bot)
-        return isEligible()
+        if (!isEligible()) return false
+        val items = supplies(::owned).orEmpty()
+        return !BotFarmingActionHandler.needsStorage(bot, items) ||
+            handler.farming.retrieve(items, SITES.getValue(location)) { isActionSafe() }
     }
     override fun withdraw(): List<Item> = productionWithdraw(supplies(::owned).orEmpty(), requestMissing = false)
     override fun bankWithdraw(): List<Item> = supplies { bot.bank.computeAmountForId(it).toLong() }

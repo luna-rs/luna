@@ -81,6 +81,11 @@ class BotActionHandler(val bot: Bot) {
     val supplies = BotSuppliesActionHandler(bot, this)
 
     /**
+     * Exchanges owned supplies with native farming tool-leprechaun storage.
+     */
+    val farming = BotFarmingActionHandler(bot, this)
+
+    /**
      * Determines whether the bot owns the requested quantity across all tracked item containers.
      *
      * Uses [Bot.itemTracker] to combine quantities with the same item id across equipment, inventory, and bank storage.
