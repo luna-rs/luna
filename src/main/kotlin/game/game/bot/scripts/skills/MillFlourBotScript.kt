@@ -18,6 +18,7 @@ import game.content.flourMill.FlourMill
 import game.content.flourMill.FlourMill.flourInBin
 import game.content.flourMill.FlourMill.hopperFull
 import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.Currency
@@ -33,7 +34,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
- * Grinds owned grain into pots of flour at a flour mill.
+ * Grinds owned grain into pots of flour at the Lumbridge, Ardougne or Zanaris flour mill.
  *
  * Each trip withdraws grain and empty pots, climbs to the hopper, grinds one grain at a time, then climbs down and
  * fills the pots from the flour bin before banking the flour. Flour already in the bot's bin is collected first.
@@ -48,6 +49,7 @@ import kotlin.time.TimeSource
  * @param duration Maximum time allowed for this session.
  * @property supplied If this session follows a wheat-picking session it queued, so it won't queue another.
  * @author TheLining
+ * @author lare96
  */
 class MillFlourBotScript(
     bot: Bot,
@@ -62,7 +64,6 @@ class MillFlourBotScript(
          * The flour mills bots can reach.
          *
          * TODO The Cooks' Guild mill needs the guild door (chef's hat and level 32 Cooking) before bots can walk in.
-         * TODO The Zanaris mill needs a way into Zanaris for bots.
          *
          * @property top The tile beside the hopper and controls.
          * @property hopper The hopper's position.
@@ -70,12 +71,16 @@ class MillFlourBotScript(
          * @property ground The tile beside the flour bin.
          * @property bin The flour bin's position.
          * @property wheat The wheat field beside the mill.
-         * @property bankStand The tile in front of the nearest bank booth.
-         * @property booth That bank booth's position.
+         * @property bankStand The tile in front of the local booth or banker.
+         * @property booth The bank booth's position, or the center of the configured banker search.
+         * @property bankerId The native banker to use where the mill has no ground-floor bank booth.
+         * @property arrival The travel destination to reenter after a supply trip leaves the mill's region.
+         * @author lare96
          */
         enum class BotMill(val top: Position, val hopper: Position, val controls: Position,
                            val ground: Position, val bin: Position, val wheat: SubZone,
-                           val bankStand: Position, val booth: Position) {
+                           val bankStand: Position, val booth: Position,
+                           val bankerId: Int? = null, val arrival: SubZone? = null) {
             LUMBRIDGE(top = Position(3165, 3306, 2),
                       hopper = Position(3166, 3307, 2),
                       controls = Position(3166, 3305, 2),
@@ -91,24 +96,44 @@ class MillFlourBotScript(
                      bin = Position(2632, 3385, 0),
                      wheat = SubZone.ARDOUGNE_MILL_WHEAT,
                      bankStand = Position(2618, 3332),
-                     booth = Position(2618, 3331))
+                     booth = Position(2618, 3331)),
+            ZANARIS(top = Position(2404, 4457, 1),
+                    hopper = Position(2405, 4457, 1),
+                    controls = Position(2404, 4456, 1),
+                    ground = Position(2404, 4457),
+                    bin = Position(2405, 4457),
+                    wheat = SubZone.ZANARIS_MAIN,
+                    bankStand = Position(2388, 4457),
+                    booth = Position(2385, 4457),
+                    bankerId = 498,
+                    arrival = SubZone.ZANARIS_MAIN)
         }
 
-        /** The most grain one trip carries, leaving a slot for each pot. */
+        /**
+         * The most grain one trip carries, leaving a slot for each pot.
+         */
         private const val TRIP_SIZE = 14
 
-        /** Consecutive failed trips before stopping. */
+        /**
+         * Consecutive failed trips before stopping.
+         */
         private const val MAX_FAILURES = 3
 
-        /** The most empty pots one shopping trip buys. */
+        /**
+         * The most empty pots one shopping trip buys.
+         */
         private const val POT_PURCHASE = 28
 
-        /** Coins taken shopping for pots. */
+        /**
+         * Coins taken shopping for pots.
+         */
         private const val POT_COINS = 500
 
         private const val COINS = 995
 
-        /** How long a queued wheat-picking session lasts. */
+        /**
+         * How long a queued wheat-picking session lasts.
+         */
         private val PICKING_TIME = 10.minutes
 
         /**
@@ -144,24 +169,36 @@ class MillFlourBotScript(
             BotMill.entries.minBy { if (it.wheat in bot.subZones) -1 else bot.position.computeLongestDistance(it.bin) }
     }
 
-    /** Monotonic elapsed time for this running instance. */
+    /**
+     * Monotonic elapsed time for this running instance.
+     */
     private val started = TimeSource.Monotonic.markNow()
 
-    /** Consecutive failed trips, reset after a trip that banks flour. */
+    /**
+     * Consecutive failed trips, reset after a trip that banks flour.
+     */
     private var failures = 0
 
-    /** If this session has finished a trip, so running out of grain ends it instead of picking more. */
+    /**
+     * If this session has finished a trip, so running out of grain ends it instead of picking more.
+     */
     private var milled = false
 
-    /** Restores the mill, remaining session time and retry budget. */
+    /**
+     * Restores the mill, remaining session time and retry budget.
+     */
     constructor(bot: Bot, data: MillData) : this(bot, data.mill, data.duration, data.supplied) {
         failures = data.failures
     }
 
-    /** Total of [id] across the inventory and bank. */
+    /**
+     * Total of [id] across the inventory and bank.
+     */
     private fun owned(id: Int) = bot.inventory.computeAmountForId(id).toLong() + bot.bank.computeAmountForId(id)
 
-    /** How much grain the next trip grinds: limited by grain, by pots left after the bin's flour, and by the bin. */
+    /**
+     * How much grain the next trip grinds: limited by grain, by pots left after the bin's flour, and by the bin.
+     */
     private fun tripGrain(): Int {
         val pots = owned(FlourMill.POT) - bot.flourInBin
         val room = FlourMill.BIN_CAPACITY - bot.flourInBin
@@ -259,21 +296,35 @@ class MillFlourBotScript(
         return isActionSafe() && openMillBank() && banking.depositInventory()
     }
 
-    /** Walks to the bank nearest the mill and opens it, so trips never cross the map to a farther bank. */
+    /**
+     * Returns through the existing travel system when necessary, then opens the mill's local booth or banker.
+     * Zanaris bankers are stationary NPCs; its decorative bank object is on another plane and cannot open a bank.
+     */
     private suspend fun openMillBank(): Boolean {
+        val arrival = mill.arrival
+        if (arrival != null && arrival !in bot.subZones && !handler.travelTo(arrival)) return false
         if (!handler.webWalkTo(mill.bankStand, bank = BankAccess.NONE) || !isActionSafe()) return false
-        val booth = world.locator.findObjectsOnTile(mill.booth) { it.def().actions.contains("Use-quickly") }.firstOrNull()
-            ?: return false
-        return bot.actionHandler.banking.open(booth)
+        val bank = if (mill.bankerId != null) {
+            world.locator.findNpcs(mill.booth, 8) {
+                it.id == mill.bankerId && it.state == EntityState.ACTIVE && it.position.z == mill.bankStand.z
+            }.minByOrNull { it.position.computeLongestDistance(bot.position) }
+        } else {
+            world.locator.findObjectsOnTile(mill.booth) { it.def().actions.contains("Use-quickly") }.firstOrNull()
+        } ?: return false
+        return bot.actionHandler.banking.open(bank)
     }
 
-    /** How many empty pots [shop] has in stock. */
+    /**
+     * How many empty pots [shop] has in stock.
+     */
     private fun potStock(shop: Shop): Int {
         val index = shop.items.computeIndexForId(FlourMill.POT)
         return if (index == -1) 0 else shop.items[index]?.amount ?: 0
     }
 
-    /** Puts one grain in the hopper, if it's empty, and pulls the controls. */
+    /**
+     * Puts one grain in the hopper, if it's empty, and pulls the controls.
+     */
     private suspend fun grind(): Boolean {
         if (!bot.hopperFull) {
             val hopper = millObject(mill.hopper, FlourMill.HOPPERS) ?: return false
@@ -289,7 +340,9 @@ class MillFlourBotScript(
         return true
     }
 
-    /** Fills one empty pot from the flour bin. */
+    /**
+     * Fills one empty pot from the flour bin.
+     */
     private suspend fun collect(): Boolean {
         val before = bot.inventory.computeAmountForId(FlourMill.POT_OF_FLOUR)
         val bin = millObject(mill.bin, setOf(FlourMill.FLOUR_BIN)) ?: return false
@@ -299,7 +352,9 @@ class MillFlourBotScript(
         return true
     }
 
-    /** The loaded mill object at [position] with one of [ids]. */
+    /**
+     * The loaded mill object at [position] with one of [ids].
+     */
     private fun millObject(position: Position, ids: Set<Int>): GameObject? =
         world.locator.findObjectsOnTile(position) { it.id in ids }.firstOrNull()
 

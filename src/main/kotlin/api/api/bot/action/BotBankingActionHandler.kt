@@ -469,7 +469,8 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * Opens a bank that the bot is at, a booth or a banker, by interacting with it.
      *
      * Returns immediately if the bank is already open. If the interaction succeeds but [waitFor] returns `false`, opens
-     * the bank directly.
+     * the bank directly. NPCs must be registered native bankers and use their second-click banking handler;
+     * cache action positions do not correspond to bot interaction numbers.
      *
      * @param bank The booth or banker.
      * @return `true` if the bank was already open or the direct-open fallback was executed.
@@ -484,7 +485,8 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         bot.log("Opening bank.")
         val option = when (bank) {
             is GameObject -> 2
-            is Npc -> bank.def().actions.indexOfFirst { it == "Bank" } + 1
+            // Native bankers register npc2; interaction 3 is attack, regardless of the cache action index.
+            is Npc -> if (bank.id in Banking.bankingNpcs) 2 else return false
             else -> throw IllegalStateException("Invalid bank entity type.")
         }
         val interacted = handler.interactions.interact(option, bank)
