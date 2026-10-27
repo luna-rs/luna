@@ -179,8 +179,8 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
      */
     private fun remembers(need: Need): Boolean {
         val now = System.currentTimeMillis()
-        if (now < (remindAt[need] ?: 0L)) return false
         if (need.defensive && bot.emotions.isFeeling(EmotionType.SCARED)) return true
+        if (now < (remindAt[need] ?: 0L)) return false
         if (rand(forgetChance(bot.personality.intelligence))) {
             remindAt[need] = now + rand(20, 60) * 1000L
             bot.log("Forgot about my ${need.name.lowercase()} potion.")
