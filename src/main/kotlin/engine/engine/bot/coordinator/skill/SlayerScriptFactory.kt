@@ -7,11 +7,14 @@ import api.predef.*
 import com.google.common.collect.HashMultimap
 import engine.bot.coordinator.CombatCoordinator
 import engine.bot.gear.BotGearPurpose
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.skills.SlayerBotScript
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import kotlin.time.Duration
@@ -20,6 +23,9 @@ import kotlin.time.Duration
  * Dispatches native Slayer assignments through the ordinary skilling coordinator in both modes.
  * Assignment rolls, streaks and experience remain owned by native Slayer. Existing combat camps
  * supply readiness thresholds and names; exact task NPC IDs remain authoritative during attacks.
+ * Boss alternatives reuse ordinary combat preparation: black-dragon tasks may use KBD with an owned one-handed
+ * melee loadout and anti-dragon shield, while Kalphite Queen trips require their complete owned melee kit/supplies.
+ * Queen sessions contain only the Queen camp so the shared script's entrance and two-form lifecycle remain intact.
  * Unsupported assignments are retained until their camps and specialist preparation are available.
  *
  * @author lare96
@@ -75,14 +81,19 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
     /**
      * Matches native task IDs to configured ordinary camps without inheriting the combat coordinator's
      * preference for high tiers: a strong bot must still be able to finish an assigned chicken task.
+     * Specialist readiness uses the selected owned loadout, rather than rejecting all dragon assignments or
+     * dispatching an unusable ranged/Magic Queen trip. Missing equipment preserves the existing assignment.
      */
-    internal fun camps(bot: Bot, purpose: BotGearPurpose): Map<SubZone, Set<String>> {
+    internal fun camps(bot: Bot, purpose: BotGearPurpose, loadout: CombatLoadout): Map<SubZone, Set<String>> {
         val task = bot.activeSlayerTask ?: return emptyMap()
         if (!canTrain(bot) || task.remaining <= 0 || bot.slayer.level < task.task.level) return emptyMap()
         val taskNames = task.task.npcs.mapNotNull { NpcDefinition.ALL.get(it).orElse(null)?.name }.toSet()
         val readiness = CombatCoordinator.combatReadiness(bot, purpose)
+        val hasDragonShield = bot.itemTracker.contains(1540) &&
+            loadout.gear[Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
+        val queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)
         return CombatCoordinator.camps.filter {
-            it.minimum <= readiness && it.zone !in NpcCombatScript.DRAGON_ZONES
+            it.minimum <= readiness && CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady)
         }.mapNotNull { camp ->
             camp.names.intersect(taskNames).takeIf { it.isNotEmpty() }?.let { camp.zone to it }
         }.toMap()
@@ -96,12 +107,16 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         if (!canTrain(bot)) return null
         val task = bot.activeSlayerTask ?: return null
         for (purpose in disciplines.shuffled()) {
-            val camps = camps(bot, purpose)
-            if (camps.isEmpty()) continue
             val loadout = CombatLoadout.find(bot, purpose) ?: continue
+            val camps = camps(bot, purpose, loadout)
+            if (camps.isEmpty()) continue
+            // The Queen's native entrance, supplies and form transition are one dedicated outing.
+            val selected = if (SubZone.KALPHITE_QUEEN in camps) {
+                mapOf(SubZone.KALPHITE_QUEEN to camps.getValue(SubZone.KALPHITE_QUEEN))
+            } else camps
             val names = HashMultimap.create<SubZone, String>()
-            camps.forEach { (zone, targets) -> names.putAll(zone, targets) }
-            return NpcCombatScript(bot, duration, camps.keys.toMutableList(), names, purpose,
+            selected.forEach { (zone, targets) -> names.putAll(zone, targets) }
+            return NpcCombatScript(bot, duration, selected.keys.toMutableList(), names, purpose,
                 loadout.spell?.spell, task.task, task.assignee)
         }
         return null
