@@ -85,6 +85,28 @@ abstract class TargetingZonedBotScript<E : Entity>(
     /** Maximum discovery travel before abandoning a distant Mob candidate. */
     protected open val targetApproachTimeout: Duration = 30.seconds
 
+    /** Activity-specific camp decisions; other targeting scripts retain their existing policy. */
+    protected open fun shouldLeaveTargetZone(): Boolean = false
+
+    protected open fun shouldLeaveCrowdedZone(visiblePlayers: Int): Boolean =
+        rand(bot.personality.intelligence) && zones.isNotEmpty() && visiblePlayers > 20
+
+    /** Orders candidates before an attempt, including cached options whose ownership may have changed. */
+    protected open fun orderTargets(options: MutableList<E>) {
+        val dexterity = bot.personality.dexterity
+        val sortChance = dexterity * 0.75
+        val sortByDistance = rand(sortChance)
+        bot.log("Target option ordering roll: dexterity=$dexterity, sortChance=$sortChance, " +
+                    "rollPassed=$sortByDistance, options=${options.size}")
+        if (sortByDistance && options.size > 1) {
+            options.sortWith(LocatableDistanceComparator(bot))
+            bot.log("Sorted ${options.size} target option(s) by distance due to dexterity.")
+        } else {
+            options.shuffle()
+            bot.log("Shuffled ${options.size} target option(s); dexterity distance-sort did not trigger.")
+        }
+    }
+
     /** Monotonic clock, overridable for deterministic recovery tests. */
     protected open fun targetSearchTimeNanos(): Long = System.nanoTime()
 
@@ -133,6 +155,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
      */
     final override suspend fun executeInZone(): Boolean {
         if (!targetActionReady()) return true
+        if (shouldLeaveTargetZone()) return false
         if (searchZone != activeZone) {
             clearTargetCache("active zone changed")
             searchZone = activeZone
@@ -166,22 +189,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 bot.log("Found ${lastOptions.size} target option(s) in $zone using search radius $searchRadius.")
             }
 
-            val dexterity = bot.personality.dexterity
-            val sortChance = dexterity * 0.75
-            val sortByDistance = rand(sortChance)
-
-            bot.log(
-                "Target option ordering roll: dexterity=$dexterity, sortChance=$sortChance, " +
-                        "rollPassed=$sortByDistance, options=${lastOptions.size}"
-            )
-
-            if (sortByDistance && lastOptions.size > 1) {
-                lastOptions.sortWith(LocatableDistanceComparator(bot))
-                bot.log("Sorted ${lastOptions.size} target option(s) by distance due to dexterity.")
-            } else {
-                lastOptions.shuffle()
-                bot.log("Shuffled ${lastOptions.size} target option(s); dexterity distance-sort did not trigger.")
-            }
+            orderTargets(lastOptions)
 
             val iterator = lastOptions.iterator()
 
@@ -237,10 +245,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
                 val visiblePlayers =
                     world.locator.findPlayers(zone.area.centerPosition, zone.area.tileRadius) { true }.size
 
-                val shouldLeaveCrowdedZone =
-                    rand(bot.personality.intelligence) &&
-                            zones.isNotEmpty() &&
-                            visiblePlayers > 20
+                val shouldLeaveCrowdedZone = shouldLeaveCrowdedZone(visiblePlayers)
 
                 if (bot !in zone.area && handler.webWalkTo(zone)) {
                     bot.log("No interactable targets found. Moving closer to active zone.")

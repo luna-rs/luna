@@ -8,6 +8,8 @@ import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.TargetingZonedBotScript
+import api.bot.social.CombatCampBehavior
+import api.bot.social.SocialBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
@@ -41,6 +43,7 @@ import io.luna.game.model.item.DeathGroundItem
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
@@ -76,7 +79,7 @@ open class NpcCombatScript(bot: Bot,
                            private var spell: CombatSpell? = null,
                            private val slayerTask: SlayerTaskType? = null,
                            private val slayerMaster: SlayerMaster? = null) :
-    TargetingZonedBotScript<Npc>(bot, duration, zones) {
+    TargetingZonedBotScript<Npc>(bot, duration, zones), SocialBotScript {
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -202,6 +205,26 @@ open class NpcCombatScript(bot: Bot,
      */
     private var cannonPrepared = false
 
+    private val socialCamp: Boolean get() = !queenTrip && activeZone != null && activeZone !in DRAGON_ZONES
+
+    internal val campBehavior = CombatCampBehavior(this) { canAttack(it) }
+
+    override fun canSocialize(): Boolean = canTalkWhileWorking()
+
+    override fun canTalkWhileWorking(): Boolean = socialCamp && isRunning() && !forceBanking && combatConfigured &&
+        activeZone!!.area.contains(bot) && isActionSafe() && !bot.navigator.isActive &&
+        bot.healthPercent > maxOf(50.0, 75.0 * (1.0 - bot.personality.confidence * 0.75)) &&
+        bot.combat.target !is Player && (!bot.combat.inCombat() || bot.combat.lastCombatWith is Npc)
+
+    override fun shouldLeaveTargetZone(): Boolean = socialCamp && campBehavior.shouldLeave()
+
+    // Combat uses actual competition and progress, rather than the shared twenty-player fallback.
+    override fun shouldLeaveCrowdedZone(visiblePlayers: Int): Boolean = false
+
+    override fun orderTargets(options: MutableList<Npc>) {
+        if (socialCamp) campBehavior.order(options) else super.orderTargets(options)
+    }
+
     override suspend fun equipment(): BotGearLocator = BotGearLocator(bot, loadout!!.gear)
 
     override suspend fun onEquipmentFailed(equipmentLocator: BotGearLocator) {
@@ -239,6 +262,7 @@ open class NpcCombatScript(bot: Bot,
 
 
     override suspend fun finish() {
+        campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
         tactics.stopAttending()
         if (queenTrip && !bot.combat.inCombat()) bot.combat.prayers.deactivateAll()
@@ -275,6 +299,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
+        campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
         if (!queenTrip) tactics.leaveFight()
         combatConfigured = false
@@ -413,6 +438,7 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         if (!bot.combat.checkMultiCombat(focus)) {
+            if (socialCamp) campBehavior.lost(focus!!)
             lastOptions.clear()
             if (bot.combat.lastCombatWith is Npc && bot.combat.inCombat() &&
                 (!queenTrip || canAttack(bot.combat.lastCombatWith as Npc))) {
@@ -429,13 +455,18 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
         if (queenTrip && !canAttack(newFocus)) return false
         val allowed = acceptsAssignment(newFocus) && bot.combat.checkMultiCombat(newFocus)
+        if (socialCamp) {
+            if (!allowed) campBehavior.lost(newFocus)
+            if (!campBehavior.acceptsTarget(newFocus)) return false
+        }
         if (!allowed) {
             bot.log("Rejected combat target id=${newFocus.id} at ${newFocus.position}: multi-combat check failed.")
         }
         return allowed
     }
 
-    override val targetSearchTimeout: Duration = 180.seconds
+    override val targetSearchTimeout: Duration
+        get() = if (socialCamp && campBehavior.holdingConversation) Duration.INFINITE else 180.seconds
 
     override suspend fun interactionOption(target: Npc): Int? {
         attend()
@@ -443,9 +474,10 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
-        if (slayerTask == null) return super.interactWithTarget(option, target)
+        if (slayerTask == null && !socialCamp) return super.interactWithTarget(option, target)
         return handler.interactions.interact(option, target) {
-            isActionSafe() && acceptsAssignment(target) && prepareCombat()
+            isActionSafe() && !forceBanking && acceptsAssignment(target) && prepareCombat() &&
+                bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target))
         }
     }
 
@@ -546,7 +578,11 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return true
         }
-        if (!queenTrip) return false
+        if (!queenTrip) {
+            campBehavior.tick(activeZone, focus)
+            if (campBehavior.holdingConversation && duration < 60.seconds) duration = 60.seconds
+            return false
+        }
         val inChamber = bot.position.z == 0 && SubZone.KALPHITE_QUEEN.area.contains(bot)
         bot.reflex.isDisableCombatReflex = inChamber
         if (bot.health <= 65) handler.inventory.eatAnyFood(minimumHeal = 20)

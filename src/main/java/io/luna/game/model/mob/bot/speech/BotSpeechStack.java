@@ -111,6 +111,24 @@ public final class BotSpeechStack {
     private String conversationText;
     private boolean conversationSent;
 
+    /** Context stays attached until a simulated chat packet reaches the normal reader. */
+    private record ConversationDelivery(String text, Object owner) {}
+
+    private final Deque<ConversationDelivery> conversationDeliveries = new ArrayDeque<>();
+
+    /** Drops a queued turn if its conversation or live context ended before packet delivery. */
+    public boolean validateConversationDelivery(String text) {
+        var iterator = conversationDeliveries.iterator();
+        while (iterator.hasNext()) {
+            ConversationDelivery delivery = iterator.next();
+            if (delivery.text().equals(text.trim())) {
+                iterator.remove();
+                return ownsConversation(delivery.owner());
+            }
+        }
+        return true;
+    }
+
     /**
      * Claims conversational speech without changing existing mute flags or discarding ordinary queued speech.
      */
@@ -222,8 +240,14 @@ public final class BotSpeechStack {
                         conversationSpeech.delay--;
                     } else {
                         conversationSent = true;
+                        if (conversationDeliveries.size() >= MAX_LENGTH) conversationDeliveries.removeFirst();
+                        ConversationDelivery delivery = new ConversationDelivery(conversationText, conversationOwner);
+                        conversationDeliveries.addLast(delivery);
                         if (!bot.getOutput().chat(conversationSpeech.getText(), conversationSpeech.getColor(),
-                                conversationSpeech.getEffect())) releaseConversation(conversationOwner);
+                                conversationSpeech.getEffect())) {
+                            conversationDeliveries.remove(delivery);
+                            releaseConversation(conversationOwner);
+                        }
                     }
                 }
                 return;
