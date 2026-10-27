@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat.attack;
 
 import game.player.Sound;
 import game.combat.BarrowsEquipmentSet;
+import game.combat.spells.CrumbleUndead;
 import game.combat.spells.GodSpells;
 import game.combat.spells.IbanStaff;
 import io.luna.game.model.LocalProjectile;
@@ -37,6 +38,8 @@ import java.util.function.BiFunction;
  * after requirements have succeeded. Splashes and rejected casts never drain the target.
  * Iban Blast checks its player-owned staff balance before consuming runes and spends charges once on a successful
  * cast, including splashes. The cost is one charge against NPCs or two against players, independent of impact.
+ * Crumble Undead rejects NPCs without an explicit Lost City undead classification before rune consumption or
+ * cast experience. The current NPC form is checked for both manual casting and autocasting; PvP is unaffected.
  *
  * @author lare96
  */
@@ -119,6 +122,11 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
     @Override
     public CombatDamage onAttack(CombatDamage damage) {
         if (!magic.canHoldTarget(spellEffect, victim) || !magic.canCurseTarget(spellEffect, victim)) {
+            magic.setSelectedSpell(CombatSpellDefinition.NONE);
+            return null;
+        }
+        if (spellEffect != null && spellEffect.getSpell() == CombatSpell.CRUMBLE_UNDEAD &&
+                !CrumbleUndead.INSTANCE.canCast(attacker, victim)) {
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
             return null;
         }
