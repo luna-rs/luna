@@ -16,6 +16,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectType;
 
@@ -191,6 +192,16 @@ public final class InteractionAction extends Action<Player> {
         lastAttemptPosition = mob.getPosition();
         if (listeners.isEmpty()) {
             mob.sendMessage("Nothing interesting happens.");
+            return true;
+        }
+
+        if (event instanceof PlayerFirstClickEvent && mob.getContextMenu().contains(PlayerContextMenuOption.ATTACK)) {
+            // CombatAction owns pursuit and checks attack reach. A client route can end at a moving player's old tile.
+            // Dispatch the whole click so unrelated, filtered challenge listeners cannot leave a pending reach failure.
+            mob.getWalking().clear();
+            List<InteractionActionListener> pending = new ArrayList<>(listeners);
+            listeners.clear();
+            pending.forEach(listener -> listener.getAction().run());
             return true;
         }
 
