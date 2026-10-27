@@ -10,10 +10,14 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
 
+
+// TODO Redo all old draynor ::home content into new ::home at varrock
+
+
 /**
  * General store shop.
  */
-ShopHandler.create("General Store") {
+ShopHandler.create("General Store (old)") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.FAST
     currency = Currency.COINS
@@ -39,7 +43,7 @@ npc1(520) {
     if (GeneralStore.isDraynorKeeper(targetNpc)) {
         plr.newDialogue()
             .npc(targetNpc.id, "Hi, here's what I have in stock for today!")
-            .then { it.overlays.open(ShopInterface(world, "General Store")) }.open()
+            .then { it.overlays.open(ShopInterface(world, "General Store (old)")) }.open()
     }
 }
 
@@ -48,7 +52,7 @@ npc1(520) {
  */
 npc2(520) {
     if (GeneralStore.isDraynorKeeper(targetNpc)) {
-        plr.overlays.open(ShopInterface(world, "General Store"))
+        plr.overlays.open(ShopInterface(world, "General Store (old)"))
     }
 }
 
