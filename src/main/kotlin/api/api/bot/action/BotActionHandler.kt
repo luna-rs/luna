@@ -12,6 +12,7 @@ import api.bot.zone.SubZone
 import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import api.predef.*
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.skill.magic.Magic.teleport
 import io.luna.Luna
@@ -80,34 +81,26 @@ class BotActionHandler(val bot: Bot) {
     val supplies = BotSuppliesActionHandler(bot, this)
 
     /**
-     * Determines whether the bot owns the requested item in equipment, inventory, or bank storage.
+     * Determines whether the bot owns the requested quantity across all tracked item containers.
      *
-     * This is an ownership-style check across all common bot item containers, not just the inventory. It is useful when a
-     * script only cares whether the bot has access to an item somewhere.
+     * Uses [Bot.itemTracker] to combine quantities with the same item id across equipment, inventory, and bank storage.
+     * The requested amount may be split between containers. This checks ownership without moving or reserving items.
      *
-     * @param item The item to search for.
-     * @return `true` if the item exists in equipment, inventory, or bank storage.
+     * @param item The required item id and total quantity.
+     * @return `true` if the tracked total meets the requested amount.
      */
     fun has(item: Item): Boolean {
-        // todo replace with item tracker?
-        if (bot.equipment.contains(item)) {
-            return true
-        } else if (bot.inventory.contains(item)) {
-            return true
-        } else if (bot.bank.contains(item)) {
-            return true
-        }
-        return false
+        return bot.itemTracker.count(item.id) >= item.amount
     }
 
     /**
-     * Determines whether the bot owns at least one of the supplied items.
+     * Determines whether the bot owns the requested quantity of at least one supplied item.
      *
-     * Each candidate is checked across equipment, inventory, and bank storage through [has]. The method returns as soon as
-     * the first owned item is found.
+     * Each candidate uses the combined tracked quantity through [has]. The method returns as soon as one candidate's
+     * requested amount is met.
      *
      * @param items The candidate items to search for.
-     * @return `true` if any supplied item exists in equipment, inventory, or bank storage.
+     * @return `true` if the tracked total meets any candidate's requested amount.
      */
     fun hasAny(items: Iterable<Item>): Boolean {
         for (it in items) {
@@ -119,13 +112,13 @@ class BotActionHandler(val bot: Bot) {
     }
 
     /**
-     * Determines whether the bot owns every supplied item.
+     * Determines whether the bot owns the requested quantity of every supplied item.
      *
-     * Each item is checked across equipment, inventory, and bank storage through [has]. This method checks whether each
-     * item entry can be found somewhere, but it does not currently reserve or count duplicate requirements atomically.
+     * Each entry independently checks the combined tracked quantity through [has]. Repeated item ids are checked
+     * independently; their requested amounts are not added together, and no items are reserved.
      *
      * @param items The required items to search for.
-     * @return `true` if every supplied item exists in equipment, inventory, or bank storage.
+     * @return `true` if the tracked total meets every entry's requested amount.
      */
     fun hasAll(items: Iterable<Item>): Boolean {
         for (it in items) {
@@ -139,21 +132,14 @@ class BotActionHandler(val bot: Bot) {
     /**
      * Determines whether the bot owns an item with the supplied id.
      *
-     * The id is checked across equipment, inventory, and bank storage. Use this overload when item amount, metadata, or
-     * other [Item] fields are not important.
+     * Uses [Bot.itemTracker] to check for a positive combined quantity across equipment, inventory, and bank storage.
+     * Use [has] with an [Item] to require a specific total amount.
      *
      * @param id The item id to search for.
-     * @return `true` if an item with [id] exists in equipment, inventory, or bank storage.
+     * @return `true` if the tracked quantity for [id] is positive.
      */
     fun has(id: Int): Boolean {
-        if (bot.equipment.contains(id)) {
-            return true
-        } else if (bot.inventory.contains(id)) {
-            return true
-        } else if (bot.bank.contains(id)) {
-            return true
-        }
-        return false
+        return bot.itemTracker.contains(id)
     }
 
     /**
