@@ -79,6 +79,18 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         }
 
         /**
+         * Shares specialist camp requirements with assignment-based combat without applying activity or tier bias.
+         * Dragon camps require one-handed melee with an owned anti-dragon shield; the Queen requires a complete
+         * owned melee trip. Callers calculate readiness from their actual selected loadout before dispatch.
+         */
+        internal fun canUseCamp(zone: SubZone, purpose: BotGearPurpose,
+                                hasDragonShield: Boolean, queenReady: Boolean = false): Boolean = when {
+            zone == SubZone.KALPHITE_QUEEN -> purpose == BotGearPurpose.MELEE && queenReady
+            zone in NpcCombatScript.DRAGON_ZONES -> purpose == BotGearPurpose.MELEE && hasDragonShield
+            else -> true
+        }
+
+        /**
          * Restricts camps by offensive readiness, profit intent and boss equipment and supply requirements.
          */
         internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
@@ -86,9 +98,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             val eligible = camps.filter { it.minimum <= level &&
                 (!training || it.zone !in setOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE,
                     SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE)) &&
-                (it.zone != SubZone.KALPHITE_QUEEN || (!training && purpose == BotGearPurpose.MELEE && queenReady)) &&
-                (it.zone !in NpcCombatScript.DRAGON_ZONES ||
-                    (!training && purpose == BotGearPurpose.MELEE && hasDragonShield)) }
+                (!training || (it.zone != SubZone.KALPHITE_QUEEN && it.zone !in NpcCombatScript.DRAGON_ZONES)) &&
+                canUseCamp(it.zone, purpose, hasDragonShield, queenReady) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
             // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
             val threshold = (preferred.maxOfOrNull { it.minimum } ?: 3) - 25

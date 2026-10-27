@@ -6,6 +6,7 @@ import api.bot.action.PkCombatSwitcher
 import api.bot.action.PkRiskBudget
 import api.bot.action.PvmFight
 import api.bot.action.prayer.PvmPrayer
+import api.bot.action.prayer.PvpOverheadStrategy
 import api.combat.death.PlayerDeathItems
 import api.combat.specialAttack.SpecialAttackHandler
 import api.bot.Suspendable.delay
@@ -308,6 +309,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private val monsterPrayer = PvmPrayer(bot)
 
     /**
+     * Fight-owned tactical overhead choices, sharing the native overhead slot with ordinary protection.
+     */
+    private val playerOverhead = PvpOverheadStrategy(bot)
+
+    /**
      * Whether the bot has prayed against a monster in this fight.
      */
     private var prayedAgainstMonsters = false
@@ -359,6 +365,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
 
     override suspend fun run(): Boolean {
         if (running) {
+            if (focus is Player && bot.combat.inCombat()) activatePlayerPrayer()
             return runAway()
         }
         if (usesPkSwitching) {
@@ -419,6 +426,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
         if (!isPaused()) onCombatFinished()
         if (prayedAgainstMonsters && !isPaused()) monsterPrayer.leaveFight()
+        if (!isPaused()) playerOverhead.leaveFight()
         bot.speechStack.clear()
         bot.speechStack.setDisableGeneral(false)
         if (usesPkSwitching && !isPaused()) {
@@ -506,6 +514,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             targetEnemy()
             return
         }
+        // An empty-handed escape may finish this script immediately; consider survival before handing it off.
+        if (nervous && focus is Player && !handler.inventory.hasAnyFood()) activatePlayerPrayer()
         if (pkSession == null) {
             if (!handler.inventory.hasAnyFood() && leavesFight(nervous)) {
                 gaveUp = true
@@ -804,10 +814,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
      * [SAVE_PRAYER_SHARE] of its prayer points, it keeps only Steel Skin and Protect Item on until a restore brings it
      * back to [RESUME_PRAYER_SHARE]. The gap keeps it from switching its other prayers off and on every cycle. Prayers
      * the bot doesn't have the level for are left alone.
+     * Intelligent bots may replace the protection overhead through [PvpOverheadStrategy]; survival choices are
+     * checked before an empty-handed escape, while Smite respects the saving state and its own reaction window.
      */
     private fun activatePlayerPrayer() {
         if (bot.prayer.level > 0) {
-            // TODO@0.5.0 Intelligent bots should use Smite, Retribution, and Redemption strategically.
             val prayerPercent = bot.prayer.level.toDouble() / bot.prayer.staticLevel.toDouble()
 
             if (savingPrayer && prayerPercent >= RESUME_PRAYER_SHARE) {
@@ -819,10 +830,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             if (savingPrayer) {
                 activateIfAble(CombatPrayer.STEEL_SKIN)
                 activateIfAble(CombatPrayer.PROTECT_ITEM)
-                return
             }
 
-            val protectionPrayer =
+            val tactical = (focus as? Player)?.let { playerOverhead.select(it, savingPrayer, running) }
+            playerOverhead.deactivateUnused(tactical)
+            val protectionPrayer = tactical ?: if (savingPrayer) null else
                 when (bot.combat.lastDamageReceived?.type) {
                     CombatDamageType.MELEE -> CombatPrayer.PROTECT_FROM_MELEE
                     CombatDamageType.RANGED -> CombatPrayer.PROTECT_FROM_MISSILES
@@ -837,6 +849,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MISSILES, true)
                 bot.combat.prayers.deactivate(CombatPrayer.PROTECT_FROM_MAGIC, true)
             }
+
+            if (savingPrayer) return
 
             activateIfAble(CombatPrayer.STEEL_SKIN)
             activateIfAble(CombatPrayer.PROTECT_ITEM)
