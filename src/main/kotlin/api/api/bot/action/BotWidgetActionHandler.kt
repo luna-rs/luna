@@ -9,6 +9,7 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 import io.luna.game.model.def.WidgetDefinition
 
 /**
@@ -29,7 +30,10 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     private fun ownsComponent(interfaceId: Int, componentId: Int): Boolean {
         val active = bot.overlays[StandardInterface::class] ?: return false
         if (active.id != interfaceId) return false
-        val pending = ArrayDeque<Int>().apply { add(interfaceId) }
+        val pending = ArrayDeque<Int>().apply {
+            add(interfaceId)
+            if (active is InventoryOverlayInterface) add(active.inventoryId)
+        }
         val visited = mutableSetOf<Int>()
         while (pending.isNotEmpty()) {
             val id = pending.removeFirst()

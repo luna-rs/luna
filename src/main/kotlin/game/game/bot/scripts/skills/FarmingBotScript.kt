@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.script.InventoryBotScript
+import api.bot.action.BotFarmingActionHandler
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.webwalk.plan.BankAccess
 import api.bot.zone.SubZone
@@ -56,6 +57,8 @@ import kotlin.time.Duration
  * become saplings through native pot preparation, which is a separate activity. Bushes and cactus have health checked
  * once, then are picked and left standing for native produce regrowth. Mushrooms and belladonna use normal finite
  * harvests. Belladonna visits preserve existing hand gear or equip suitable owned hand gear through the equipment API.
+ * Stored tools and fertilizer are retrieved through native leprechaun exchanges before the usual banking lifecycle.
+ * Completed plot visits can put carried farming tools away with a nearby leprechaun; seeds and harvests stay carried.
  *
  * @param bot The farmer.
  * @property location Native persistent patch identity, independent of its changing appearance.
@@ -175,10 +178,9 @@ class FarmingBotScript(
     }
 
     /**
-     * Counts unnoted inventory and bank stock, excluding worn equipment and leprechaun storage.
+     * Counts portable unnoted stock and exact native leprechaun storage, excluding worn equipment.
      */
-    private fun owns(item: Item): Boolean = bot.bank.computeAmountForId(item.id).toLong() +
-        bot.inventory.computeAmountForId(item.id) >= item.amount
+    private fun owns(item: Item): Boolean = BotFarmingActionHandler.stock(bot, item.id) >= item.amount
 
     /**
      * Replanting is optional and requires the native seed count, current level and planting tool.
@@ -326,7 +328,10 @@ class FarmingBotScript(
     override suspend fun equipment(): BotGearLocator? = null
     override suspend fun beforeInventoryInit(): Boolean {
         Farming.update(bot)
-        return isEligible()
+        if (!isEligible()) return false
+        val items = visitSupplies()
+        return !BotFarmingActionHandler.needsStorage(bot, items) ||
+            handler.farming.retrieve(items, SITES.getValue(location)) { isActionSafe() }
     }
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
         (location != HopsPatchLocation.ENTRANA || !Entrana.isCarryingForbidden(bot)) && super.travelToWorkZone(zone, bank)
@@ -357,7 +362,10 @@ class FarmingBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         Farming.update(bot)
-        val work = nextWork() ?: return false
+        val work = nextWork() ?: run {
+            handler.farming.store(SITES.getValue(location)) { isActionSafe() }
+            return false
+        }
         if (!productionReady(canWork(work))) return true
         val zone = SITES.getValue(location)
         val target = world.locator.findObjects(zone.inside, zone.area.tileRadius) {
