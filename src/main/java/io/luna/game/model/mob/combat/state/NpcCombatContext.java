@@ -23,7 +23,8 @@ import java.util.Set;
 /**
  * A {@link CombatContext} implementation for {@link Npc}s.
  * <p>
- * This class provides NPC-specific combat behavior.
+ * This class provides NPC-specific combat behavior. NPC respawns reuse this context; resetting it clears
+ * execution preparation and interrupts any player-owned finishing action reserved by the previous life.
  *
  * @author lare96
  */
@@ -69,7 +70,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     private int maxHit = -1;
 
     /**
-     * Whether this NPC has entered the state requiring a finishing item. Respawns receive a new combat context.
+     * Whether this NPC has entered the state requiring a finishing item. Cleared when this context is reset.
      */
     private boolean awaitingExecution;
 
@@ -133,10 +134,26 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public void reset() {
+        resetExecution();
         super.reset();
         retreatPolicy = RetreatPolicy.CONFIGURED;
         attackBonusType = null;
         maxHit = -1;
+    }
+
+    /**
+     * Releases execution state before this reused context begins a new life.
+     * The finishing action belongs to a player, so clearing the NPC's own action queue does not cancel it.
+     * Detach the reservation before interruption invokes its unlock callback, and reject finishing damage
+     * during that callback by clearing preparation first. Completed actions are safe to interrupt again.
+     */
+    private void resetExecution() {
+        awaitingExecution = false;
+        Action<?> previous = executionAction;
+        executionAction = null;
+        if (previous != null) {
+            previous.interrupt();
+        }
     }
 
     @Override
