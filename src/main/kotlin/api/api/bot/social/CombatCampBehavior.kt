@@ -55,6 +55,11 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
         now < talkedUntil && partner?.let { nearby(it) } == true
 
     fun tick(currentZone: SubZone?, focus: Npc?) {
+        if (currentZone == null) {
+            // A pause clears the script's active zone briefly. Keep this camp's timing until another is selected.
+            close()
+            return
+        }
         if (zone != currentZone) {
             close()
             zone = currentZone
@@ -69,7 +74,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
             crowded = false
         }
         BotConversations.tick(bot)
-        if (currentZone == null || !script.canSocialize()) return
+        if (!script.canSocialize()) return
         if (now >= rivalUntil || rival?.let { !nearby(it) } == true) rival = null
         if (now >= nextSample) {
             nextSample = now + 10
@@ -94,7 +99,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
         }
         val players = bot.world.locator.findViewablePlayers(bot) {
             it !== bot && it.isAlive && bot.isWithinDistance(it, 12) &&
-                ((it.combat.target as? Npc) in npcs || npcs.any { npc -> owner(npc) === it })
+                (camper(it) != null || (it.combat.target as? Npc) in npcs || npcs.any { npc -> owner(npc) === it })
         }
         val free = npcs.count { owner(it) == null }
         crowded = players.isNotEmpty() && free <= maxOf(1, players.size / 2)
@@ -159,25 +164,25 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
     }
 
     private fun converse() {
-        nextSpeech = now + Random.nextLong(100, 220)
+        // A temporary reservation or busy partner should not cost another full speech opportunity.
+        nextSpeech = now + 10
         if (!canStartAutomaticChat() || now < availableToChatAt ||
-            !BotConversations.available(bot, allowWorking = true) ||
-            Random.nextDouble() > 0.25 + 0.7 * bot.personality.social) return
+            !BotConversations.available(bot, allowWorking = true)) return
         val people = bot.world.locator.findViewablePlayers(bot) {
-            it !== bot && nearby(it) && (it !is Bot || BotConversations.available(it, allowWorking = true))
+            it !== bot && nearby(it) && (it !is Bot ||
+                (BotConversations.available(it, allowWorking = true) && now >= (camper(it)?.availableToChatAt ?: 0L)))
         }
-        val listener = rival?.takeIf { it in people } ?: people.shuffled().firstOrNull() ?: return
+        val campers = if (crowded) people.filter { camper(it) != null } else emptyList()
+        val listener = rival?.takeIf { it in people } ?: campers.randomOrNull() ?: people.randomOrNull() ?: return
+        nextSpeech = now + Random.nextLong(100, 220)
+        if (Random.nextDouble() > 0.25 + 0.7 * bot.personality.social) return
         val ownTone = tone
         if (listener is Bot) {
             val other = (listener.scriptStack.current() as? NpcCombatScript)?.campBehavior
             if (other != null && now < other.availableToChatAt) return
             if (!BotConversations.available(listener, allowWorking = true)) return
-            // Ordinary conversations remain the usual path. Competition adds occasional contextual exchanges.
-            val campChance = when {
-                rival === listener -> 0.65
-                ownTone == Tone.FRIENDLY -> 0.25
-                else -> 0.50
-            }
+            // A crowded training spot usually produces an exchange about that competition.
+            val campChance = if (rival === listener) 0.90 else 0.75
             val lines = if (crowded && other != null && other.zone == zone && Random.nextDouble() < campChance) {
                 BotCampSpeechPool.exchange(bot, ownTone, listener, other.tone)
             } else BotConversationPool.select(bot, listener)
@@ -186,7 +191,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
                     rememberTalk(listener)
                     other?.rememberTalk(bot)
                 }) != null) {
-                paceCamp()
+                reserveCamp()
                 availableToChatAt = now + 100
                 if (other != null) {
                     other.availableToChatAt = now + 100
@@ -199,11 +204,17 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
             val line = BotCampSpeechPool.line(bot, Line.valueOf("OPEN_$ownTone")) ?: return
             if (BotConversations.say(bot, line, valid = { nearby(listener) },
                     delivered = { paceCamp() }) != null) {
-                paceCamp()
+                reserveCamp()
                 partner = listener
             }
         }
     }
+
+    /** Trainers waiting for a respawn still compete for the same camp's monsters. */
+    private fun camper(player: Player): CombatCampBehavior? =
+        ((player as? Bot)?.scriptStack?.current() as? NpcCombatScript)?.campBehavior?.takeIf {
+            it.zone == zone && zone?.area?.contains(player) == true
+        }
 
     /** One spontaneous exchange gets room to finish; replies to a human are never gated by this budget. */
     private fun canStartAutomaticChat(): Boolean {
@@ -214,6 +225,12 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
                 (BotConversations.engaged(it) ||
                     (it.scriptStack.current() as? NpcCombatScript)?.campBehavior?.holdingConversation == true)
         }.isEmpty()
+    }
+
+    /** Hold the camp only for the opening's delivery deadline until speech is actually acknowledged. */
+    private fun reserveCamp() {
+        val camp = zone ?: return
+        nextCampConversation[camp] = maxOf(nextCampConversation[camp] ?: 0L, now + 50)
     }
 
     /** Refresh after every delivered turn, leaving 75–150 seconds of breathing room after an exchange. */
@@ -331,9 +348,9 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
             if (BotConversations.say(observer.bot, line, valid = {
                     world.currentTick < expires && observer.nearby(player) &&
                         player.health in 1..threshold && player.combat.inCombat()
-                }, typingLimit = 6) != null) {
+                }, typingLimit = 6, delivered = { observer.paceCamp() }) != null) {
                 player.tauntedUntil = now + 150
-                observer.paceCamp()
+                observer.reserveCamp()
                 observer.availableToChatAt = now + 150
                 observer.nextSpeech = now + 150
             }

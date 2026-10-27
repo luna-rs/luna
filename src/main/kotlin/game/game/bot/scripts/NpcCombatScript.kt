@@ -212,7 +212,7 @@ open class NpcCombatScript(bot: Bot,
     override fun canSocialize(): Boolean = canTalkWhileWorking()
 
     override fun canTalkWhileWorking(): Boolean = socialCamp && isRunning() && !forceBanking && combatConfigured &&
-        activeZone!!.area.contains(bot) && isActionSafe() && !bot.navigator.isActive &&
+        activeZone!!.area.contains(bot) && isActionSafe() &&
         bot.healthPercent > maxOf(50.0, 75.0 * (1.0 - bot.personality.confidence * 0.75)) &&
         bot.combat.target !is Player && (!bot.combat.inCombat() || bot.combat.lastCombatWith is Npc)
 
