@@ -17,6 +17,7 @@ import game.skill.cooking.cookFood.Cooking.COOKING_OBJECTS
 import game.skill.cooking.cookFood.CookingInterface
 import game.skill.cooking.cookFood.Food
 import io.luna.game.action.ActionType
+import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.Item
 import io.luna.game.model.`object`.GameObject
@@ -90,7 +91,7 @@ class CookFoodBotScript(
     /**
      * Cached cooking object for the active zone.
      *
-     * Once found, the script reuses this object instead of searching every cycle.
+     * Once found, the script reuses this object until it leaves the world or an attempt to cook on it fails.
      */
     private var cookingObject: GameObject? = null
 
@@ -151,10 +152,12 @@ class CookFoodBotScript(
             return true
         }
 
-        if (cookingObject == null) {
+        // A lit fire burns out and leaves the world, so look again once the cached object is gone.
+        if (cookingObject?.state != EntityState.ACTIVE) {
+            // Ranges and map fires stay put, so they come before fires that other players have lit.
             cookingObject = world.locator
                 .findObjects(zone.area.centerPosition.setZ(zone.inside.z), zone.area.tileRadius) { it.id in COOKING_OBJECTS }
-                .firstOrNull()
+                .minByOrNull { it.isDynamic }
         }
 
         bot.log("Attempting to interact with cooking object.")
@@ -168,6 +171,7 @@ class CookFoodBotScript(
 
         if (!handler.inventory.useItem(cooking!!.raw).onObject(cookObj)) {
             bot.log("Could not interact with cooking object. Trying again next cycle.")
+            cookingObject = null
             return true
         }
 
@@ -175,6 +179,7 @@ class CookFoodBotScript(
 
         if (CookingInterface::class !in bot.overlays) {
             bot.log("Cooking interface was not opened. Trying again next cycle.")
+            cookingObject = null
             return true
         }
 
