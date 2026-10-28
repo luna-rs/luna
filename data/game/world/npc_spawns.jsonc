@@ -20451,17 +20451,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2442,
       "y": 10159,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455)
@@ -20477,29 +20473,21 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2443,
       "y": 10158,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2443,
       "y": 10159,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449)
@@ -20577,30 +20565,22 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2449,
       "y": 10160,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2449,
       "y": 10164,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449) x2
@@ -20653,17 +20633,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2451,
       "y": 10165,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449) x5
@@ -20752,17 +20728,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2454,
       "y": 10159,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455)
@@ -20778,17 +20750,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2455,
       "y": 10164,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455)
@@ -20804,17 +20772,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2456,
       "y": 10161,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455)
@@ -20868,17 +20832,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2458,
       "y": 10160,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449)
@@ -20907,17 +20867,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2459,
       "y": 10166,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449)
@@ -20946,30 +20902,22 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2460,
       "y": 10153,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2460,
       "y": 10155,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449)
@@ -20998,17 +20946,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2461,
       "y": 10154,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455)
@@ -21086,29 +21030,21 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2464,
       "y": 10165,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2464,
       "y": 10167,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Egg (id 2449) x2
@@ -21249,17 +21185,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2470,
       "y": 10164,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455) x3
@@ -21299,17 +21231,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2472,
       "y": 10162,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Dagannoth (id 2455) x3
@@ -36752,30 +36680,22 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2501,
       "y": 3755,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2502,
       "y": 3754,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Hobgoblin (id 122)
@@ -36791,93 +36711,65 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2512,
       "y": 3765,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2512,
       "y": 3766,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2514,
       "y": 3766,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2521,
       "y": 3756,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265) x2
+  // Rock Crab, disguised as Rocks (id 1266) x2
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2522,
       "y": 3716,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2523,
       "y": 3723,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2524,
       "y": 3724,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Hobgoblin (id 122)
@@ -36893,78 +36785,54 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x4
+  // Rock Crab, disguised as Rocks (id 1268) x4
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2529,
       "y": 3740,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2530,
       "y": 3762,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2531,
       "y": 3721,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2532,
       "y": 3760,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265) x2
+  // Rock Crab, disguised as Rocks (id 1266) x2
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2534,
       "y": 3719,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2537,
       "y": 3765,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Askeladden (id 2439)
@@ -36980,29 +36848,21 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2541,
       "y": 3757,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2543,
       "y": 3754,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Jarvald (id 2438)
@@ -37018,30 +36878,22 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2548,
       "y": 3734,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2553,
       "y": 3746,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Penguin (id 131) x3
@@ -53766,55 +53618,39 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2663,
       "y": 3716,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265) x2
+  // Rock Crab, disguised as Rocks (id 1266) x2
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2666,
       "y": 3715,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2667,
       "y": 3727,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2669,
       "y": 3718,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Hobgoblin (id 123)
@@ -53830,68 +53666,48 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2670,
       "y": 3727,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265) x2
+  // Rock Crab, disguised as Rocks (id 1266) x2
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2671,
       "y": 3724,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2672,
       "y": 3732,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2673,
       "y": 3716,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2675,
       "y": 3729,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Hobgoblin (id 123)
@@ -53907,141 +53723,97 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2676,
       "y": 3713,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2677,
       "y": 3717,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2677,
       "y": 3721,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x2
+  // Rock Crab, disguised as Rocks (id 1268) x2
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2677,
       "y": 3733,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2678,
       "y": 3729,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265) x3
+  // Rock Crab, disguised as Rocks (id 1266) x3
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2681,
       "y": 3727,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2681,
       "y": 3733,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2683,
       "y": 3716,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267) x3
+  // Rock Crab, disguised as Rocks (id 1268) x3
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2684,
       "y": 3720,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2686,
       "y": 3713,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2687,
       "y": 3724,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Daero (id 1407)
@@ -61238,17 +61010,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2694,
       "y": 3724,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Gull (id 1322) x2
@@ -61276,17 +61044,13 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2700,
       "y": 3718,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Gull (id 1322)
@@ -61302,56 +61066,40 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2701,
       "y": 3728,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2702,
       "y": 3720,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2703,
       "y": 3716,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2704,
       "y": 3727,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Gull (id 1322)
@@ -61367,30 +61115,22 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2705,
       "y": 3725,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2708,
       "y": 3719,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Gull (id 1322)
@@ -61406,43 +61146,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2711,
       "y": 3715,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2712,
       "y": 3719,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2712,
       "y": 3725,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Gull (id 1322)
@@ -61458,43 +61186,31 @@
       "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2715,
       "y": 3729,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1265)
+  // Rock Crab, disguised as Rocks (id 1266)
   {
-    "id": 1265,
+    "id": 1266,
     "position": {
       "x": 2716,
       "y": 3721,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
-  // Rock Crab (id 1267)
+  // Rock Crab, disguised as Rocks (id 1268)
   {
-    "id": 1267,
+    "id": 1268,
     "position": {
       "x": 2719,
       "y": 3719,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Bronze pickaxe (id 1537) x8

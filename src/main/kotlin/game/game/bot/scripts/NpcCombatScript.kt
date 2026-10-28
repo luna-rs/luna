@@ -188,7 +188,7 @@ open class NpcCombatScript(bot: Bot,
      * Eats and prays the way a player watching their hitpoints and prayer would; the Kalphite Queen trip keeps its own
      * supply and prayer rules.
      */
-    private val tactics = PvmTactics(bot)
+    protected val tactics = PvmTactics(bot)
 
     /** Selected owned gear; resumed sessions validate their actual equipment before attacking. */
     private var loadout: CombatLoadout? = null

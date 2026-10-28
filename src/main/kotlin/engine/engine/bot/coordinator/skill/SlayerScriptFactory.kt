@@ -11,6 +11,7 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.NpcCombatScript
+import game.bot.scripts.combat.RockCrabBotScript
 import game.bot.scripts.skills.SlayerBotScript
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
@@ -135,9 +136,17 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
             val camps = camps(bot, purpose, loadout)
             if (camps.isEmpty()) continue
             // The Queen's native entrance, supplies and form transition are one dedicated outing.
-            val selected = if (SubZone.KALPHITE_QUEEN in camps) {
+            var selected = if (SubZone.KALPHITE_QUEEN in camps) {
                 mapOf(SubZone.KALPHITE_QUEEN to camps.getValue(SubZone.KALPHITE_QUEEN))
             } else camps
+            // Rock crabs sit disguised as rocks, so they need a script that waits for them to wake. The ordinary
+            // script trains at the task's other camps, if it has any.
+            if (selected[SubZone.ROCK_CRABS]?.contains(RockCrabBotScript.NAME) == true) {
+                if (rand(selected.size - 1) == 0) {
+                    return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell, task.task, task.assignee)
+                }
+                selected = selected - SubZone.ROCK_CRABS
+            }
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { (zone, targets) -> names.putAll(zone, targets) }
             return NpcCombatScript(bot, duration, selected.keys.toMutableList(), names, purpose,

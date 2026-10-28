@@ -17,6 +17,8 @@ import game.bot.scripts.DuelArenaBotScript.DuelData
 import game.bot.scripts.skills.TeleportTrainingBotScript.Companion.TeleportTrainingData
 
 import game.bot.scripts.combat.PkBotScript
+import game.bot.scripts.combat.RockCrabBotScript
+import game.bot.scripts.NpcCombatScript.Companion.NpcCombatData
 import game.bot.scripts.skills.SlayerBotScript
 import game.bot.scripts.skills.SlayerBotScript.SlayerData
 import game.bot.scripts.WildernessScavengeBotScript.ScavengeData
@@ -203,6 +205,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
     scriptManager.addScript<CollectionData>(CollectGroundItemBotScript::class) { bot, data -> CollectGroundItemBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(NpcCombatScript::class) { bot, data -> NpcCombatScript(bot, data) }
+    scriptManager.addScript<NpcCombatData>(RockCrabBotScript::class) { bot, data -> RockCrabBotScript(bot, data) }
     scriptManager.addScript<SlayerData>(SlayerBotScript::class) { bot, data -> SlayerBotScript(bot, data) }
     scriptManager.addScript<ScavengeData>(WildernessScavengeBotScript::class) { bot, data -> WildernessScavengeBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
