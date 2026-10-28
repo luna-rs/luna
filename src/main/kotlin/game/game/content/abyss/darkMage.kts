@@ -123,7 +123,7 @@ fun replaceSmallPouch(plr: Player) {
                 pouch.discardContents(it)
                 it.newDialogue()
                     .npc(DARK_MAGE, "Here. Be more careful with your belongings in future.")
-                    .give(Item(pouch.id), "You have been given a pouch.", false)
+                    .give(Item(pouch.id), "You have been given a pouch.", true)
                     .open()
             }
         }

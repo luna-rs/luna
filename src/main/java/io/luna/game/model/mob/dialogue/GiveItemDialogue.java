@@ -7,7 +7,9 @@ import io.luna.net.msg.out.WidgetItemModelMessageWriter;
 import io.luna.util.StringUtils;
 
 /**
- * A {@link DialogueInterface} implementation that opens a dialogue which grants the Player an item.
+ * Displays an item in the chatbox, optionally granting it when the dialogue is reached.
+ * A successful grant belongs to this dialogue instance and is not repeated when it is reopened.
+ * Display-only dialogues never require inventory space or change any item container.
  *
  * @author lare96 
  */
@@ -24,15 +26,24 @@ public final class GiveItemDialogue extends DialogueInterface {
     private final String displayText;
 
     /**
+     * Whether this dialogue owns the inventory grant, rather than displaying an existing transfer.
+     */
+    private final boolean addItem;
+
+    /**
+     * Records a successful grant so replaying the same dialogue cannot duplicate its reward.
+     * A failed inventory insertion leaves the dialogue eligible for another attempt.
+     */
+    private boolean itemGiven;
+
+    /**
      * Creates a new {@link GiveItemDialogue}.
      *
      * @param item The item to give.
      * @param displayText The text to display when giving the item.
      */
     public GiveItemDialogue(Item item, String displayText) {
-        super(306);
-        this.item = item;
-        this.displayText = displayText;
+        this(item, displayText, true);
     }
 
     /**
@@ -41,20 +52,45 @@ public final class GiveItemDialogue extends DialogueInterface {
      * @param item The item to give.
      */
     public GiveItemDialogue(Item item) {
+        this(item, true);
+    }
+
+    /**
+     * Creates an item display with explicit reward ownership.
+     *
+     * @param item The item to display and optionally give.
+     * @param displayText The display text, or {@code null} for the default item description.
+     * @param addItem Whether to grant the item on the first successful opening.
+     */
+    public GiveItemDialogue(Item item, String displayText, boolean addItem) {
         super(306);
         this.item = item;
-        displayText = computeDisplayText();
+        this.displayText = displayText == null ? computeDisplayText() : displayText;
+        this.addItem = addItem;
+    }
+
+    /**
+     * Creates an item display using the default description and explicit reward ownership.
+     *
+     * @param item The item to display and optionally give.
+     * @param addItem Whether to grant the item on the first successful opening.
+     */
+    public GiveItemDialogue(Item item, boolean addItem) {
+        this(item, null, addItem);
     }
 
     @Override
     public boolean init(Player player) {
-        if (player.getInventory().add(item)) {
-            player.sendText(displayText, 308);
-            player.queue(new WidgetItemModelMessageWriter(307, 200, item.getId()));
-            return true;
+        if (addItem && !itemGiven) {
+            if (!player.getInventory().hasSpaceFor(item) || !player.getInventory().add(item)) {
+                player.sendMessage(Messages.INSTANCE.inventoryFull());
+                return false;
+            }
+            itemGiven = true;
         }
-        player.sendMessage(Messages.INSTANCE.inventoryFull());
-        return false;
+        player.sendText(displayText, 308);
+        player.queue(new WidgetItemModelMessageWriter(307, 200, item.getId()));
+        return true;
     }
 
     /**

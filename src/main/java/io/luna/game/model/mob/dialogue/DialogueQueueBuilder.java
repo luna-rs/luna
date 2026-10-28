@@ -293,31 +293,31 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Shortcut to {@link GiveItemDialogue#GiveItemDialogue(Item, String)}.
+     * Appends an item display. When {@code addItem} is true, the dialogue grants the item once
+     * when reached; building an abandoned queue does not grant anything. When false, the caller
+     * owns the transfer and the dialogue only displays it, even with a full inventory.
      *
+     * @param item The item to display and optionally give.
+     * @param displayText The display text, or {@code null} for the default item description.
+     * @param addItem Whether the dialogue should grant the item.
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder give(Item item, String displayText, boolean addItem) {
         checkLocked();
-        if(addItem) {
-            player.giveItem(item);
-        }
-        dialogues.add(new GiveItemDialogue(item, displayText));
+        dialogues.add(new GiveItemDialogue(item, displayText, addItem));
         return this;
     }
 
     /**
-     * Shortcut to {@link GiveItemDialogue#GiveItemDialogue(Item)}.
+     * Appends an item display with the default description and the same transfer policy as
+     * {@link #give(Item, String, boolean)}.
      *
+     * @param item The item to display and optionally give.
+     * @param addItem Whether the dialogue should grant the item.
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder give(Item item, boolean addItem) {
-        checkLocked();
-        if(addItem) {
-            player.giveItem(item);
-        }
-        dialogues.add(new GiveItemDialogue(item));
-        return this;
+        return give(item, null, addItem);
     }
 
     /**
