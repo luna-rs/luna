@@ -31317,6 +31317,7 @@
   },
   {
     "id": 2745, // TzTok-Jad
+    "movement": { "max_range": 64, "attack_range": 15, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
@@ -31331,7 +31332,7 @@
     "defence_animation": 2653,
     "death_animation": 2654,
     "attack_bonus": 0,
-    "magic_bonus": 0,
+    "magic_bonus": 60,
     "ranged_bonus": 0,
     "skills": [
       640,
