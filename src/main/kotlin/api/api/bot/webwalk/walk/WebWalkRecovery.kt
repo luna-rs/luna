@@ -1,6 +1,5 @@
 package api.bot.webwalk.walk
 
-import api.attr.Attr
 import api.bot.Suspendable.waitFor
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportStyle
@@ -20,16 +19,6 @@ import kotlin.coroutines.coroutineContext
 internal object WebWalkRecovery {
 
     /**
-     * Five minutes at the normal 600 ms tick rate, shared by all recovery destinations of a bot.
-     */
-    private const val COOLDOWN_TICKS = 500
-
-    /**
-     * The last recovery attempt, including rejected or cancelled teleports, to prevent repeated recovery loops.
-     */
-    private val Bot.webWalkRecoveryDelay by Attr.timeSource()
-
-    /**
      * Attempts a recovery teleport, preserving the original failure and trip metadata if it cannot finish.
      * The action is owned here so timeout or coroutine cancellation can stop it without touching other actions.
      */
@@ -46,10 +35,6 @@ internal object WebWalkRecovery {
         }
         if (WebWalker.isWithin(bot.position, destination, radius)) {
             return result.copy(success = true, message = "Arrived before recovery was needed.", failure = null)
-        }
-        if (!bot.webWalkRecoveryDelay.ready(COOLDOWN_TICKS)) {
-            bot.log("WebWalk: recovery is on cooldown. ${result.message}")
-            return result
         }
         bot.log("WebWalk: fallback teleport from ${bot.position} to $destination after exhausted attempts. ${result.message}")
         var landed = false
