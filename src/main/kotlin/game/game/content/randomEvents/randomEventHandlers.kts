@@ -1,6 +1,7 @@
 package game.content.randomEvents
 
 import api.predef.*
+import game.content.randomEvents.VisitorRandomEvent.Kind
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.event.impl.PlayerTickEvent
@@ -15,12 +16,17 @@ on(PlayerTickEvent::class) {
     randomEvents.tick(plr)
 }
 
-npc1(409) { RandomEvents.talk(plr, targetNpc) }
+Kind.entries.forEach { kind -> npc1(kind.npcId) { randomEvents.talk(plr, targetNpc) } }
 
 cmd("random_event", RIGHTS_ADMIN) {
-    if (args.firstOrNull()?.equals("genie", true) != true) {
-        plr.sendMessage("Usage: ::random_event genie")
-    } else if (!RandomEvents.startGenie(plr)) {
+    val kind = when (args.firstOrNull()?.lowercase()) {
+        "genie" -> Kind.GENIE
+        "old_man" -> Kind.MYSTERIOUS_OLD_MAN
+        else -> null
+    }
+    if (kind == null) {
+        plr.sendMessage("Usage: ::random_event genie|old_man")
+    } else if (!randomEvents.startVisitor(plr, kind)) {
         plr.sendMessage("A random event cannot start here right now.")
     }
 }

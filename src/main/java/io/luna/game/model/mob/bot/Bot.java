@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import game.bot.scripts.DeathReflexScript;
 import game.bot.scripts.EatFoodReflexScript;
 import game.bot.scripts.LootItemReflexScript;
+import game.bot.scripts.RandomEventReflexScript;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
@@ -296,6 +297,12 @@ public final class Bot extends Player {
     private final BotReflex reflex;
 
     /**
+     * Keeps one visitor-response policy per bot across reconnects. Duplicate reflex instances
+     * would independently roll whether to ignore the same encounter.
+     */
+    private boolean randomEventReflexRegistered;
+
+    /**
      * The brain model used to choose new work when the script stack is idle.
      */
     private final BotBrain brain;
@@ -392,6 +399,10 @@ public final class Bot extends Player {
         reflex.add(new LootItemReflexScript(this));
         reflex.add(new DeathReflexScript(this));
         reflex.add(new EatFoodReflexScript(this));
+        if (!randomEventReflexRegistered) {
+            reflex.add(new RandomEventReflexScript(this));
+            randomEventReflexRegistered = true;
+        }
     }
 
     @Override

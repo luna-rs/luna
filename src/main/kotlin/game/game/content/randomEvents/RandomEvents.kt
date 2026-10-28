@@ -35,6 +35,7 @@ import game.content.castleWars.CastleWarsGame
 import game.content.duelArena.DuelArena
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
+import game.content.randomEvents.VisitorRandomEvent.Kind
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -49,8 +50,8 @@ import kotlin.random.Random
  * Shared selection, ownership and login/logout lifecycle for Lost City random encounters.
  * Native gameplay is shared by players and bots. Bot response policy is a separate consumer.
  *
- * This first stage implements the genie. General selection retains all six slots from the supplied
- * members enum: unimplemented results are skipped rather than rerolled into extra genies. Activity
+ * General selection retains all six slots from the supplied members enum: unimplemented results
+ * are skipped rather than rerolled into extra genies or Old Men. Activity
  * hooks and the remaining encounters are subsequent content additions, not generic XP listeners.
  *
  * @author lare96
@@ -103,20 +104,28 @@ object RandomEvents {
     fun offerGeneral(player: Player): Boolean {
         if (!allowed(player) || !canAct(player) || !player.randomEventClock.consume()) return false
         if (!Luna.settings().game().betaMode() && player.rights >= RIGHTS_ADMIN) return false
-        return if (Random.nextInt(6) == 1) startGenie(player) else false
+        val slot = Random.nextInt(6)
+        val kind = Kind.entries.firstOrNull { it.generalSlot == slot } ?: return false
+        return startVisitor(player, kind)
     }
 
     /**
      * Starts the implemented encounter through the same eligibility and ownership path as natural rolls.
      * Administrators may use the command to inspect behavior without altering event probabilities.
      */
-    fun startGenie(player: Player): Boolean {
+    fun startGenie(player: Player): Boolean = startVisitor(player, Kind.GENIE)
+
+    /**
+     * Creates a visitor with source NPC metadata and retains its stable type for login recovery.
+     * Genie save identifiers remain unchanged as the catalogue grows.
+     */
+    fun startVisitor(player: Player, kind: Kind): Boolean {
         if (!allowed(player) || !canAct(player)) return false
         val position = nearbySquare(player) ?: return false
-        val npc = Npc(ctx, 409, position).also { it.respawnTicks = -1 }
+        val npc = Npc(ctx, kind.npcId, position).also { it.respawnTicks = -1 }
         if (!world.npcs.add(npc)) return false
         encounters.remove(player)?.close()
-        val encounter = GenieRandomEvent(player, npc)
+        val encounter = VisitorRandomEvent(player, npc, kind)
         encounters[player] = encounter
         player.pendingRandomEvent = encounter.resumeKey
         return true
@@ -179,7 +188,7 @@ object RandomEvents {
     fun login(player: Player) {
         player.randomEventClock.consume()
         player.generalEventTicks = 0
-        if (player.pendingRandomEvent != "GENIE") player.pendingRandomEvent = ""
+        if (Kind.entries.none { it.name == player.pendingRandomEvent }) player.pendingRandomEvent = ""
     }
 
     /**
@@ -187,7 +196,8 @@ object RandomEvents {
      */
     fun restore(player: Player) {
         if (!player.isAlive) player.pendingRandomEvent = ""
-        if (player.pendingRandomEvent == "GENIE" && player !in encounters) startGenie(player)
+        val kind = Kind.entries.firstOrNull { it.name == player.pendingRandomEvent }
+        if (kind != null && player !in encounters) startVisitor(player, kind)
     }
 
     /**

@@ -37,17 +37,54 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import kotlin.random.Random
 
 /**
- * Lost City's owner-only genie: one lamp on response, three warnings, then a distant teleport.
+ * Lost City's personal gift visitors: the genie and Mysterious Old Man share following, three
+ * warnings, owner-only rewards and failure teleport behavior. Their speech and rewards remain distinct.
  * The NPC follows across plane changes and long-distance movement while the owner's area permits it.
  * Logout detaches the NPC; an unanswered encounter restarts on login using the saved type alone.
  *
  * @author lare96
  */
-class GenieRandomEvent(override val player: Player, override val npc: Npc) : RandomEventEncounter {
-    override val resumeKey = "GENIE"
+class VisitorRandomEvent(
+    override val player: Player,
+    override val npc: Npc,
+    val kind: Kind = Kind.GENIE
+) : RandomEventEncounter {
+    /**
+     * Source identifiers and reward rules for visitors with this common lifecycle. The general
+     * slot is zero-based within Lost City's six-entry members table; enum names are save identifiers.
+     *
+     * @author lare96
+     */
+    enum class Kind(val npcId: Int, val generalSlot: Int) {
+        GENIE(409, 1),
+        MYSTERIOUS_OLD_MAN(410, 3);
+
+        /**
+         * Chooses one gift from the source members reward table. The old man's 150 equally likely
+         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets.
+         */
+        fun reward(random: (Int) -> Int = { Random.nextInt(it) }): Item = when (this) {
+            GENIE -> Item(2528)
+            MYSTERIOUS_OLD_MAN -> when (random(150)) {
+                in 0..15 -> Item(1971)
+                in 16..29 -> Item(1969)
+                in 30..35 -> Item(995, 240)
+                else -> Item(405)
+            }
+        }
+    }
+
+    override val resumeKey get() = kind.name
     override val blocksNewEvents get() = !answered
+
+    /**
+     * Whether the owner can still claim this visitor's gift. Once failure begins, a late click
+     * cannot reverse the consequence, even while the visitor waits for a safe teleport tick.
+     */
+    val awaitingResponse get() = !answered && !failing
 
     /**
      * Warning age, reward latch and terminal failure state belong only to this live encounter.
@@ -67,8 +104,14 @@ class GenieRandomEvent(override val player: Player, override val npc: Npc) : Ran
         npc.interact(player)
         npc.navigator.follow(player)
         smoke(npc.position)
-        player.playSound(Sound.GENIE_APPEAR)
-        npc.speak("Greetings $address ${player.username}!")
+        if (kind == Kind.GENIE) {
+            player.playSound(Sound.GENIE_APPEAR)
+            npc.speak("Greetings $address ${player.username}!")
+        } else {
+            player.playSound(Sound.SMOKEPUFF)
+            npc.animation(Animation(858))
+            npc.speak("Greetings ${player.username}!")
+        }
     }
 
     override fun tick(): Boolean {
@@ -93,17 +136,26 @@ class GenieRandomEvent(override val player: Player, override val npc: Npc) : Ran
         if (npc.navigator.currentTarget !== player) npc.navigator.follow(player)
         if (++age % 20 != 0) return true
         when (age / 20) {
-            1 -> { npc.animation(Animation(863)); npc.speak("Ehem... $address ${player.username}?") }
-            2 -> { npc.animation(Animation(857)); npc.speak("Are you there, $address ${player.username}?") }
+            1 -> {
+                npc.animation(Animation(863))
+                npc.speak(if (kind == Kind.GENIE) "Ehem... $address ${player.username}?"
+                    else "ehem... Hello ${player.username}!")
+            }
+            2 -> {
+                npc.animation(Animation(857))
+                npc.speak(if (kind == Kind.GENIE) "Are you there, $address ${player.username}?"
+                    else "Hello, are you there ${player.username}!")
+            }
             3 -> {
                 npc.animation(Animation(859))
-                npc.speak("You shouldn't ignore a Genie $address ${player.username}?")
+                npc.speak(if (kind == Kind.GENIE) "You shouldn't ignore a Genie $address ${player.username}?"
+                    else "It's really rude to ignore someone, ${player.username}!")
             }
             else -> {
                 failing = true
                 RandomEvents.answered(this)
                 npc.animation(Animation(714))
-                npc.speak("No one ignores me!")
+                npc.speak(if (kind == Kind.GENIE) "No one ignores me!" else "No-one ignores me!")
             }
         }
         return true
@@ -113,25 +165,34 @@ class GenieRandomEvent(override val player: Player, override val npc: Npc) : Ran
         if (visitor !== player) {
             visitor.newDialogue().npc(npc.id,
                 "Sorry, but I'm trying to talk to ${player.username}.",
-                "However, they appear to be ignoring me...").open()
+                if (kind == Kind.GENIE) "However, they appear to be ignoring me..."
+                else "However ${if (player.appearance.isMale) "he" else "she"} appears to be ignorning me...").open()
             return
         }
         if (RandomEvents.encounter(player) !== this || failing) return
         if (answered) {
-            player.newDialogue().npc(npc.id, "Have a nice day, $address.").open()
+            player.newDialogue().npc(npc.id,
+                if (kind == Kind.GENIE) "Have a nice day, $address." else "Goodbye.").open()
             return
         }
         answered = true
         RandomEvents.answered(this)
         // Source inv_add does not bank gifts. Overflow remains an owned ground reward.
-        val lamp = Item(2528)
-        if (!player.inventory.add(lamp)) world.addItem(lamp, player.position, player)
+        val reward = kind.reward()
+        if (!player.inventory.add(reward)) world.addItem(reward, player.position, player)
         npc.navigator.cancel()
         npc.animation(Animation(863))
-        player.newDialogue().npc(npc.id,
-            "Ah, so you are there $address. I'm so glad you",
-            "summoned me. Please take this lamp, and make your",
-            "wish!").open()
+        if (kind == Kind.GENIE) {
+            player.newDialogue().npc(npc.id,
+                "Ah, so you are there $address. I'm so glad you",
+                "summoned me. Please take this lamp, and make your",
+                "wish!").open()
+        } else {
+            player.newDialogue().npc(npc.id,
+                "Ah, so you are there. I hoped you would talk to me,",
+                "I get so lonely. Here, have a present!",
+                "I must be going now though.").open()
+        }
     }
 
     override fun close() {
