@@ -31,19 +31,26 @@ import api.predef.ext.*
 import game.player.Sound
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocalGraphic
+import io.luna.game.model.LocalProjectile
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.damage.CombatDamageAction
+import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy
 import kotlin.random.Random
 
 /**
- * Lost City's personal gift visitors: the genie and Mysterious Old Man share following, three
- * warnings, owner-only rewards and failure teleport behavior. Their speech and rewards remain distinct.
- * The NPC follows across plane changes and long-distance movement while the owner's area permits it.
- * Logout detaches the NPC; an unanswered encounter restarts on login using the saved type alone.
+ * Lost City's personal gift visitors share following and owner-only rewards. The genie and Old Man
+ * give three warnings before a failure teleport; the Drunken Dwarf gives four before throwing stones.
+ * Friendly visitors follow across plane changes and long-distance movement while the owner's area permits it.
+ * Logout detaches the NPC. Only source-approved visitors restart on login; the dwarf does not.
  *
  * @author lare96
  */
@@ -58,33 +65,37 @@ class VisitorRandomEvent(
      *
      * @author lare96
      */
-    enum class Kind(val npcId: Int, val generalSlot: Int) {
+    enum class Kind(val npcId: Int, val generalSlot: Int, val followsLogout: Boolean = true) {
         GENIE(409, 1),
-        MYSTERIOUS_OLD_MAN(410, 3);
+        MYSTERIOUS_OLD_MAN(410, 3),
+        DRUNKEN_DWARF(956, 2, false);
 
         /**
-         * Chooses one gift from the source members reward table. The old man's 150 equally likely
-         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets.
+         * Chooses gifts from the source members reward tables. The old man's 150 equally likely
+         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets. The dwarf
+         * always gives both a kebab and a beer, without a reward roll.
          */
-        fun reward(random: (Int) -> Int = { Random.nextInt(it) }): Item = when (this) {
-            GENIE -> Item(2528)
-            MYSTERIOUS_OLD_MAN -> when (random(150)) {
+        fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
+            GENIE -> listOf(Item(2528))
+            DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
+            MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
                 in 0..15 -> Item(1971)
                 in 16..29 -> Item(1969)
                 in 30..35 -> Item(995, 240)
                 else -> Item(405)
-            }
+            })
         }
     }
 
     override val resumeKey get() = kind.name
-    override val blocksNewEvents get() = !answered
+    override val blocksNewEvents get() = !answered && !(kind == Kind.DRUNKEN_DWARF && failing)
 
     /**
      * Whether the owner can still claim this visitor's gift. Once failure begins, a late click
-     * cannot reverse the consequence, even while the visitor waits for a safe teleport tick.
+     * cannot reverse a pending failure teleport. The dwarf can still be answered after becoming angry,
+     * matching its source conversation; an already launched stone follows the normal impact lifecycle.
      */
-    val awaitingResponse get() = !answered && !failing
+    val awaitingResponse get() = !answered && !leaving && (!failing || kind == Kind.DRUNKEN_DWARF)
 
     /**
      * Warning age, reward latch and terminal failure state belong only to this live encounter.
@@ -94,6 +105,7 @@ class VisitorRandomEvent(
     private var disappearing = 0
     private var failing = false
     private var failureAge = 0
+    private var leaving = false
 
     /**
      * Gendered source address, shared by the greeting, warnings and reward dialogue.
@@ -103,21 +115,37 @@ class VisitorRandomEvent(
     init {
         npc.interact(player)
         npc.navigator.follow(player)
-        smoke(npc.position)
+        if (kind != Kind.DRUNKEN_DWARF) smoke(npc.position)
         if (kind == Kind.GENIE) {
             player.playSound(Sound.GENIE_APPEAR)
             npc.speak("Greetings $address ${player.username}!")
-        } else {
+        } else if (kind == Kind.MYSTERIOUS_OLD_MAN) {
             player.playSound(Sound.SMOKEPUFF)
             npc.animation(Animation(858))
             npc.speak("Greetings ${player.username}!")
+        } else {
+            npc.animation(Animation(105))
+            npc.speak("'Ello der ${player.username}! *hic*")
         }
     }
 
     override fun tick(): Boolean {
         if (npc.state != EntityState.ACTIVE) return false
         if (answered) return ++disappearing < 2
+        if (leaving) return ++disappearing < 2
         if (failing) {
+            if (kind == Kind.DRUNKEN_DWARF) {
+                if (npc.position.z != player.position.z ||
+                    npc.combat.target == null && !npc.position.isWithinDistance(player.position, 3)) {
+                    leaving = true
+                    npc.combat.target = null
+                    npc.navigator.cancel()
+                    npc.speak("Aww, me is all alone.")
+                } else if (npc.combat.target !== player) {
+                    npc.combat.attack(player)
+                }
+                return true
+            }
             // Player queues in Lost City wait for delays and interfaces before their teleport step.
             if (++failureAge > 1 && RandomEvents.canAct(player)) {
                 smoke(player.position)
@@ -134,6 +162,28 @@ class VisitorRandomEvent(
             player.playSound(Sound.SMOKEPUFF)
         }
         if (npc.navigator.currentTarget !== player) npc.navigator.follow(player)
+        if (kind == Kind.DRUNKEN_DWARF) {
+            if (++age % 10 != 0) return true
+            val warning = when (age / 10) {
+                1 -> 103 to "Aww comeon, talk to ikle me ${player.username}!"
+                2 -> 105 to "Oi, are you der ${player.username}!"
+                3 -> -1 to "Dunt ignore your mate, ${player.username}!"
+                4 -> 103 to "I hates yoo ${player.username}!"
+                else -> null
+            }
+            if (warning != null) {
+                if (warning.first != -1) npc.animation(Animation(warning.first))
+                npc.speak(warning.second)
+            } else {
+                failing = true
+                RandomEvents.answered(this)
+                npc.navigator.cancel()
+                // The hostile source checks loss of its target, rather than returning to its original spawn.
+                npc.combat.retreatPolicy = RetreatPolicy.NONE
+                npc.combat.attack(player)
+            }
+            return true
+        }
         if (++age % 20 != 0) return true
         when (age / 20) {
             1 -> {
@@ -162,6 +212,10 @@ class VisitorRandomEvent(
     }
 
     override fun talk(visitor: Player) {
+        if (kind == Kind.DRUNKEN_DWARF && visitor !== player) {
+            visitor.newDialogue().npc(npc.id, "You're not my matey!").open()
+            return
+        }
         if (visitor !== player) {
             visitor.newDialogue().npc(npc.id,
                 "Sorry, but I'm trying to talk to ${player.username}.",
@@ -169,38 +223,78 @@ class VisitorRandomEvent(
                 else "However ${if (player.appearance.isMale) "he" else "she"} appears to be ignorning me...").open()
             return
         }
-        if (RandomEvents.encounter(player) !== this || failing) return
+        if (!RandomEvents.owns(this) || leaving || failing && kind != Kind.DRUNKEN_DWARF) return
         if (answered) {
             player.newDialogue().npc(npc.id,
-                if (kind == Kind.GENIE) "Have a nice day, $address." else "Goodbye.").open()
+                when (kind) {
+                    Kind.GENIE -> "Have a nice day, $address."
+                    Kind.MYSTERIOUS_OLD_MAN -> "Goodbye."
+                    Kind.DRUNKEN_DWARF -> "'Ave a good 'un buddy!"
+                }).open()
             return
         }
         answered = true
         RandomEvents.answered(this)
         // Source inv_add does not bank gifts. Overflow remains an owned ground reward.
-        val reward = kind.reward()
-        if (!player.inventory.add(reward)) world.addItem(reward, player.position, player)
+        for (reward in kind.rewards()) {
+            if (!player.inventory.add(reward)) world.addItem(reward, player.position, player)
+        }
         npc.navigator.cancel()
-        npc.animation(Animation(863))
+        if (kind == Kind.DRUNKEN_DWARF) npc.combat.target = null
+        if (kind != Kind.DRUNKEN_DWARF) npc.animation(Animation(863))
         if (kind == Kind.GENIE) {
             player.newDialogue().npc(npc.id,
                 "Ah, so you are there $address. I'm so glad you",
                 "summoned me. Please take this lamp, and make your",
                 "wish!").open()
-        } else {
+        } else if (kind == Kind.MYSTERIOUS_OLD_MAN) {
             player.newDialogue().npc(npc.id,
                 "Ah, so you are there. I hoped you would talk to me,",
                 "I get so lonely. Here, have a present!",
                 "I must be going now though.").open()
+        } else {
+            player.newDialogue().npc(npc.id,
+                "I 'new it were you matey!",
+                "'Ere, have some ob the good stuff!").open()
         }
     }
 
     override fun close() {
         npc.navigator.cancel()
+        if (kind == Kind.DRUNKEN_DWARF) npc.combat.target = null
         if (npc.state != EntityState.INACTIVE) {
-            smoke(npc.position)
-            if (player.state == EntityState.ACTIVE) player.playSound(Sound.SMOKEPUFF2)
+            if (kind != Kind.DRUNKEN_DWARF) {
+                smoke(npc.position)
+                if (player.state == EntityState.ACTIVE) player.playSound(Sound.SMOKEPUFF2)
+            }
             world.removeNpc(npc)
+        }
+    }
+
+    /**
+     * Supplies the dwarf's stone through the native combat pipeline. The source uses melee accuracy
+     * and crush defence despite the projectile, with a four-tick attack interval and one-tick damage delay.
+     */
+    internal fun stoneAttack(): MeleeCombatAttack<Npc> {
+        npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
+        return object : MeleeCombatAttack<Npc>(npc, player, 928, 1, 4) {
+            override fun onAttack(damage: CombatDamage?): CombatDamage? =
+                damage?.takeIf { kind == Kind.DRUNKEN_DWARF && failing && !answered && !leaving &&
+                    RandomEvents.owns(this@VisitorRandomEvent) && npc.combat.target === player && npc.state == EntityState.ACTIVE &&
+                    player.state == EntityState.ACTIVE && player.isAlive }
+
+            override fun attack() {
+                npc.animation(Animation(928))
+                player.playSound(Sound.THROWN)
+                val distance = maxOf(kotlin.math.abs(npc.x - player.x), kotlin.math.abs(npc.y - player.y))
+                LocalProjectile.followEntity(ctx).setSourceEntity(npc).setTargetEntity(player)
+                    .setId(33).setStartHeight(45).setEndHeight(40).setTiming(51, 56 + 5 * distance)
+                    .setInitialSlope(25).setLaunchOffset(11).build().display()
+                player.combat.impacts.schedule(1, {
+                    player.overlays.closeWindows()
+                    player.submitAction(CombatDamageAction(nextDamage, this, true))
+                }, { })
+            }
         }
     }
 

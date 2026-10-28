@@ -11255,6 +11255,26 @@
     ]
   },
   {
+    // Lost City macro_dwarf: attack 50, strength 1 and hitpoints 255 are explicitly source estimates.
+    // No ambient aggression; the owned random encounter alone starts its four-tick stone attack.
+    "id": 956, // Drunken Dwarf
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 255,
+    "maximum_hit": 1,
+    "attack_speed": 4,
+    "attack_animation": 928,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [50, 1, 1, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
     "id": 977, // Blessed spider
     "movement": { "max_range": 12, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,

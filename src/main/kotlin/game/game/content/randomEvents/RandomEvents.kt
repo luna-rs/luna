@@ -104,6 +104,12 @@ object RandomEvents {
     private val encounters = mutableMapOf<Player, RandomEventEncounter>()
 
     /**
+     * Encounters that released their personal-event slot but still own a live NPC, such as an angry dwarf.
+     * They keep ticking and receiving identity-checked clicks until their own lifecycle ends.
+     */
+    private val lingering = mutableMapOf<Player, MutableList<RandomEventEncounter>>()
+
+    /**
      * Lost City's shared area restrictions. Castle Wars separately prevents spawning, but does not
      * belong here because existing visitors can follow their owner into its arena in the source.
      */
@@ -171,7 +177,7 @@ object RandomEvents {
     fun startGenie(player: Player): Boolean = startVisitor(player, Kind.GENIE)
 
     /**
-     * Creates a visitor with source NPC metadata and retains its stable type for login recovery.
+     * Creates a visitor with source NPC metadata and saves source-approved following types for login recovery.
      * Genie save identifiers remain unchanged as the catalogue grows.
      */
     fun startVisitor(player: Player, kind: Kind): Boolean {
@@ -179,10 +185,13 @@ object RandomEvents {
         val position = nearbySquare(player) ?: return false
         val npc = Npc(ctx, kind.npcId, position).also { it.respawnTicks = -1 }
         if (!world.npcs.add(npc)) return false
-        encounters.remove(player)?.close()
+        encounters.remove(player)?.let { previous ->
+            if (previous.blocksNewEvents) previous.close()
+            else lingering.getOrPut(player) { mutableListOf() }.add(previous)
+        }
         val encounter = VisitorRandomEvent(player, npc, kind)
         encounters[player] = encounter
-        player.pendingRandomEvent = encounter.resumeKey
+        player.pendingRandomEvent = if (kind.followsLogout) encounter.resumeKey else ""
         return true
     }
 
@@ -197,11 +206,23 @@ object RandomEvents {
     }
 
     /**
-     * Routes a click by exact NPC identity, so unrelated genies and previous encounters cannot pay out.
+     * Routes clicks by exact live NPC identity, so unrelated or finished visitors cannot pay out.
      */
     fun talk(player: Player, npc: Npc) {
-        encounters.values.firstOrNull { it.npc === npc }?.talk(player)
+        ownerOf(npc)?.talk(player)
     }
+
+    /**
+     * Resolves exact live NPC identity across current and lingering encounters, including combat hooks.
+     */
+    internal fun ownerOf(npc: Npc): RandomEventEncounter? =
+        (encounters.values.asSequence() + lingering.values.asSequence().flatten()).firstOrNull { it.npc === npc }
+
+    /**
+     * Confirms that an encounter still owns its NPC even after releasing its player's event slot.
+     */
+    internal fun owns(encounter: RandomEventEncounter): Boolean =
+        encounters[encounter.player] === encounter || lingering[encounter.player]?.any { it === encounter } == true
 
     /**
      * Returns the current owned encounter for bot response and native identity checks.
@@ -228,6 +249,15 @@ object RandomEvents {
             player.pendingRandomEvent = ""
             encounter.close()
         }
+        lingering[player]?.let { retired ->
+            retired.removeAll { previous ->
+                if (!player.isAlive || !areaAllowed(player.position) || !previous.tick()) {
+                    previous.close()
+                    true
+                } else false
+            }
+            if (retired.isEmpty()) lingering.remove(player)
+        }
         if (player.generalEventTicks < GENERAL_TIMER) player.generalEventTicks++
         if (player.generalEventTicks >= GENERAL_TIMER && canAct(player)) {
             player.generalEventTicks = 0
@@ -243,7 +273,7 @@ object RandomEvents {
     fun login(player: Player) {
         player.randomEventClock.consume()
         player.generalEventTicks = 0
-        if (Kind.entries.none { it.name == player.pendingRandomEvent }) player.pendingRandomEvent = ""
+        if (Kind.entries.none { it.followsLogout && it.name == player.pendingRandomEvent }) player.pendingRandomEvent = ""
     }
 
     /**
@@ -251,7 +281,7 @@ object RandomEvents {
      */
     fun restore(player: Player) {
         if (!player.isAlive) player.pendingRandomEvent = ""
-        val kind = Kind.entries.firstOrNull { it.name == player.pendingRandomEvent }
+        val kind = Kind.entries.firstOrNull { it.followsLogout && it.name == player.pendingRandomEvent }
         if (kind != null && player !in encounters) startVisitor(player, kind)
     }
 
@@ -260,5 +290,6 @@ object RandomEvents {
      */
     fun logout(player: Player) {
         encounters.remove(player)?.close()
+        lingering.remove(player)?.forEach { it.close() }
     }
 }

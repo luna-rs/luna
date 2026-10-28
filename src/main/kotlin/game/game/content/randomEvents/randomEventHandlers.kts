@@ -1,6 +1,7 @@
 package game.content.randomEvents
 
 import api.predef.*
+import api.combat.npc.NpcCombatHandler.combat
 import game.content.randomEvents.VisitorRandomEvent.Kind
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
@@ -18,14 +19,23 @@ on(PlayerTickEvent::class) {
 
 Kind.entries.forEach { kind -> npc1(kind.npcId) { randomEvents.talk(plr, targetNpc) } }
 
+combat(Kind.DRUNKEN_DWARF.npcId) {
+    attack {
+        val encounter = randomEvents.ownerOf(npc) as? VisitorRandomEvent
+        if (encounter?.kind == Kind.DRUNKEN_DWARF && other === encounter.player) encounter.stoneAttack()
+        else melee(launch = { null })
+    }
+}
+
 cmd("random_event", RIGHTS_ADMIN) {
     val kind = when (args.firstOrNull()?.lowercase()) {
         "genie" -> Kind.GENIE
         "old_man" -> Kind.MYSTERIOUS_OLD_MAN
+        "dwarf" -> Kind.DRUNKEN_DWARF
         else -> null
     }
     if (kind == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man")
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf")
     } else if (!randomEvents.startVisitor(plr, kind)) {
         plr.sendMessage("A random event cannot start here right now.")
     }
