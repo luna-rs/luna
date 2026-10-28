@@ -37,10 +37,17 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
     private fun advanceWine(item: Item?, container: ItemContainer, index: Int): Boolean {
         if (item != null && item.id == 1995 && item is DynamicItem) {
             if (++item.wineFermentCounter >= 20) {
-                plr.cooking.addExperience(IncompleteFood.UNFERMENTED_WINE.exp)
                 item.wineFermentCounter = 0
-                container[index] = Item(1993)
-                return false
+                // Route finished wine through the container API so it merges into
+                // an existing ordinary stack instead of consuming another slot.
+                // If the container is genuinely full with no matching stack,
+                // retain the dynamic wine and retry on the next tick.
+                if (container.add(Item(1993))) {
+                    container[index] = null
+                    plr.cooking.addExperience(IncompleteFood.UNFERMENTED_WINE.exp)
+                    return false
+                }
+                return true
             }
             return true
         }
