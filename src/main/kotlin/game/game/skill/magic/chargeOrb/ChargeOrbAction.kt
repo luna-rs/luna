@@ -3,6 +3,7 @@ package game.skill.magic.chargeOrb
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.skill.magic.Magic
 import io.luna.game.action.impl.QueuedAction
@@ -20,6 +21,7 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * rune costs, so a full inventory cannot lose the product. Administrator/beta requirement bypasses retain
  * their existing free-cast behavior, but still require output space. Inactive or dead players cannot complete
  * the delayed cast, and the cast lock is released even when completion fails.
+ * A ready general random event can interrupt a valid initial cast before locking or using supplies.
  *
  * @author lare96
  */
@@ -40,6 +42,7 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
 
     override fun execute() {
         if (Magic.checkRequirements(mob, type.level, type.requirements) != null) {
+            if (RandomEvents.offerGeneral(mob)) return
             mob.lock()
             mob.playSound(type.sound)
             world.scheduleOnce(1) {
@@ -52,7 +55,9 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
         }
     }
 
-    /** Revalidates current spell costs and awards experience only after the product is stored successfully. */
+    /**
+     * Revalidates current spell costs and awards experience only after the product is stored successfully.
+     */
     private fun completeCast() {
         val removeItems = Magic.checkRequirements(mob, type.level, type.requirements) ?: return
         if (!mob.inventory.containsAll(removeItems)) return

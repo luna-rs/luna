@@ -3,6 +3,7 @@ package game.skill.magic.bonesToItems
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
@@ -19,6 +20,7 @@ import io.luna.game.model.mob.block.Graphic
  * are rechecked after the one-tick cast delay. Experience and effects require a successful conversion.
  * Beta/administrator rune bypasses still require bones. Inactive/dead players cannot complete the cast,
  * and the cast lock is released even if completion fails.
+ * Lost City's Bones to Bananas event offer precedes the cast lock and any bone or rune consumption.
  *
  * @author lare96
  */
@@ -40,6 +42,7 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
 
     override fun execute() {
         if (Magic.checkRequirements(mob, type.level, type.requirements) == null || !mob.inventory.contains(BONES)) return
+        if (type == BonesToItemsType.BANANAS && RandomEvents.offerGeneral(mob)) return
         mob.lock()
         mob.playSound(Sound.BONES_TO_BANANAS_ALL)
         world.scheduleOnce(1) {
@@ -51,7 +54,9 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
         }
     }
 
-    /** Revalidates the delayed conversion, keeping the bone input separate from the actual rune cost. */
+    /**
+     * Revalidates the delayed conversion, keeping the bone input separate from the actual rune cost.
+     */
     private fun completeCast() {
         val removeItems = Magic.checkRequirements(mob, type.level, type.requirements) ?: return
         if (!mob.inventory.contains(BONES) || !mob.inventory.containsAll(removeItems)) return

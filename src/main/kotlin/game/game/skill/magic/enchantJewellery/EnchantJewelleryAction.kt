@@ -2,6 +2,8 @@ package game.skill.magic.enchantJewellery
 
 import api.attr.Attr
 import api.predef.*
+import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.skill.magic.Magic
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
@@ -9,7 +11,9 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
 /**
- * A [QueuedAction] that handles enchanting rings, necklaces, and amulets.
+ * Enchants jewellery through the native queued action. Successful conversions offer Lost City's
+ * general random-event pool one tick later, after the item replacement, rune cost and experience.
+ * The supplied source handles enchantment levels one through five; onyx retains its general timer.
  *
  * @author lare96
  */
@@ -45,6 +49,9 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
                 mob.sendMessage("You successfully enchant the ${itemName(itemId).lowercase()}.");
             }
             mob.tabs.show(TabIndex.MAGIC)
+            if (type != EnchantJewelleryType.LVL_6) {
+                world.scheduleOnce(1) { RandomEvents.offerGeneral(mob) }
+            }
         }
     }
 }

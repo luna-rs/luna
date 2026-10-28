@@ -3,6 +3,7 @@ package game.skill.magic.lowHighAlch
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.magic.Magic
@@ -13,7 +14,8 @@ import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 
 /**
- * A [QueuedAction] that handles the process of players doing low and high alchemy.
+ * Casts low or high alchemy through the native queued action. Lost City's general random-event
+ * offer follows a successful conversion, so the spell's coins, rune costs and experience apply first.
  *
  * @author lare96
  */
@@ -53,6 +55,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
 
             mob.inventory.add(Item(995, if (goldAmount == 0) 1 else goldAmount))
             mob.tabs.show(TabIndex.MAGIC)
+            RandomEvents.offerGeneral(mob)
         }
     }
 }

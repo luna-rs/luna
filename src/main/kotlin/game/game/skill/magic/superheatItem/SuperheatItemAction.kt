@@ -3,6 +3,7 @@ package game.skill.magic.superheatItem
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.skill.magic.Magic
 import game.skill.magic.Rune
@@ -25,6 +26,8 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * ores and current rune costs are consumed only after successful replacement. Beta/administrator
  * spell-cost bypasses still require the recipe's ores and Smithing level. Inactive or dead players
  * cannot complete the cast; its lock is released even when completion throws.
+ * Successful conversions offer Lost City's general random-event pool one tick later, after
+ * the conversion lock has been released. Failed or interrupted casts do not create an offer.
  *
  * @param plr The player casting Superheat Item.
  * @param index Inventory slot of the ore targeted by the existing spell interaction.
@@ -35,7 +38,9 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
     // TODO@0.5.0 Implement correct sounds: SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support.
     companion object {
 
-        /** Existing spellbook identifier shared by the player handler and bot interaction. */
+        /**
+         * Existing spellbook identifier shared by the player handler and bot interaction.
+         */
         const val SPELL_ID = 1173
 
         /**
@@ -78,7 +83,9 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         }
     }
 
-    /** Revalidates the original recipe and live spell costs before converting ore in its existing slot. */
+    /**
+     * Revalidates the original recipe and live spell costs before converting ore in its existing slot.
+     */
     private fun completeCast(barType: BarType, targetId: Int) {
         if (mob.inventory.computeIdForIndex(index) != targetId || mob.smithing.level < barType.level ||
             !mob.inventory.containsAll(barType.oreList)) return
@@ -91,6 +98,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         mob.graphic(Graphic(148, 100))
         mob.smithing.addExperience(barType.xp)
         mob.tabs.show(TabIndex.MAGIC)
+        world.scheduleOnce(1) { RandomEvents.offerGeneral(mob) }
     }
 
     /**
