@@ -277,7 +277,9 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun beforeLeavingZone(): Boolean {
         bot.combat.target = null
-        return CannonBotSupport.recover(bot)
+        if (!CannonBotSupport.recover(bot)) return false
+        campBehavior.leave()
+        return true
     }
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
