@@ -7054,6 +7054,27 @@
     ]
   },
   {
+    // Lost City macro_swarm: attack 50 and hitpoints 255 are explicitly source estimates.
+    // No Attack option or ambient aggression; owned encounter combat alone targets its player.
+    "id": 411, // Swarm
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 255,
+    "maximum_hit": 2,
+    "attack_speed": 7,
+    "attack_animation": 2,
+    "defence_animation": 1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [50, 10, 1, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
     "id": 412, // Bat
     "movement": { "max_range": 10, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,

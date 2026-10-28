@@ -2,7 +2,9 @@ package game.content.randomEvents
 
 import api.predef.*
 import api.combat.npc.NpcCombatHandler.combat
-import game.content.randomEvents.VisitorRandomEvent.Kind
+import game.content.randomEvents.RandomEvents.Kind
+import game.player.Sound
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.event.impl.PlayerTickEvent
@@ -17,7 +19,9 @@ on(PlayerTickEvent::class) {
     randomEvents.tick(plr)
 }
 
-Kind.entries.forEach { kind -> npc1(kind.npcId) { randomEvents.talk(plr, targetNpc) } }
+Kind.entries.filter { it != Kind.SWARM }.forEach { kind ->
+    npc1(kind.npcId) { randomEvents.talk(plr, targetNpc) }
+}
 
 combat(Kind.DRUNKEN_DWARF.npcId) {
     attack {
@@ -27,16 +31,30 @@ combat(Kind.DRUNKEN_DWARF.npcId) {
     }
 }
 
+combat(Kind.SWARM.npcId) {
+    attack {
+        npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
+        melee {
+            val encounter = randomEvents.ownerOf(npc) as? SwarmRandomEvent
+            if (it != null && encounter?.canAttack(other) == true) {
+                encounter.player.playSound(Sound.SWARM_ATTACK)
+                it
+            } else null
+        }
+    }
+}
+
 cmd("random_event", RIGHTS_ADMIN) {
     val kind = when (args.firstOrNull()?.lowercase()) {
+        "swarm" -> Kind.SWARM
         "genie" -> Kind.GENIE
         "old_man" -> Kind.MYSTERIOUS_OLD_MAN
         "dwarf" -> Kind.DRUNKEN_DWARF
         else -> null
     }
     if (kind == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf")
-    } else if (!randomEvents.startVisitor(plr, kind)) {
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm")
+    } else if (!randomEvents.startEncounter(plr, kind)) {
         plr.sendMessage("A random event cannot start here right now.")
     }
 }

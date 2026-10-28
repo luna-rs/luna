@@ -35,7 +35,6 @@ import game.content.castleWars.CastleWarsGame
 import game.content.duelArena.DuelArena
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
-import game.content.randomEvents.VisitorRandomEvent.Kind
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -58,6 +57,36 @@ import kotlin.random.Random
  * @author lare96
  */
 object RandomEvents {
+    /**
+     * Source identities and gift rules shared by the dispatcher and encounters. The general
+     * slot is zero-based within Lost City's six-entry members table; enum names are save identifiers.
+     *
+     * @author lare96
+     */
+    enum class Kind(val npcId: Int, val generalSlot: Int, val followsLogout: Boolean = true) {
+        SWARM(411, 0, false),
+        GENIE(409, 1),
+        MYSTERIOUS_OLD_MAN(410, 3),
+        DRUNKEN_DWARF(956, 2, false);
+
+        /**
+         * Chooses gifts from the source members reward tables. The old man's 150 equally likely
+         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets. The dwarf
+         * always gives both a kebab and a beer, without a reward roll.
+         */
+        fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
+            SWARM -> emptyList()
+            GENIE -> listOf(Item(2528))
+            DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
+            MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
+                in 0..15 -> Item(1971)
+                in 16..29 -> Item(1969)
+                in 30..35 -> Item(995, 240)
+                else -> Item(405)
+            })
+        }
+    }
+
     /**
      * Extra skill-specific slots preceding the six general members events in Lost City's dispatchers.
      * Rune essence and other rocks without a gas replacement exclude rock gas. Pickpockets and stalls share
@@ -167,20 +196,20 @@ object RandomEvents {
         if (!allowed(player) || !canAct(player) || !player.randomEventClock.consume()) return false
         if (!Luna.settings().game().betaMode() && player.rights >= RIGHTS_ADMIN) return false
         val kind = select() ?: return false
-        return startVisitor(player, kind)
+        return startEncounter(player, kind)
     }
 
     /**
      * Starts the implemented encounter through the same eligibility and ownership path as natural rolls.
      * Administrators may use the command to inspect behavior without altering event probabilities.
      */
-    fun startGenie(player: Player): Boolean = startVisitor(player, Kind.GENIE)
+    fun startGenie(player: Player): Boolean = startEncounter(player, Kind.GENIE)
 
     /**
-     * Creates a visitor with source NPC metadata and saves source-approved following types for login recovery.
+     * Creates an encounter with source NPC metadata and saves source-approved following types for login recovery.
      * Genie save identifiers remain unchanged as the catalogue grows.
      */
-    fun startVisitor(player: Player, kind: Kind): Boolean {
+    fun startEncounter(player: Player, kind: Kind): Boolean {
         if (!allowed(player) || !canAct(player)) return false
         val position = nearbySquare(player) ?: return false
         val npc = Npc(ctx, kind.npcId, position).also { it.respawnTicks = -1 }
@@ -189,7 +218,10 @@ object RandomEvents {
             if (previous.blocksNewEvents) previous.close()
             else lingering.getOrPut(player) { mutableListOf() }.add(previous)
         }
-        val encounter = VisitorRandomEvent(player, npc, kind)
+        val encounter = when (kind) {
+            Kind.SWARM -> SwarmRandomEvent(player, npc)
+            else -> VisitorRandomEvent(player, npc, kind)
+        }
         encounters[player] = encounter
         player.pendingRandomEvent = if (kind.followsLogout) encounter.resumeKey else ""
         return true
@@ -282,7 +314,7 @@ object RandomEvents {
     fun restore(player: Player) {
         if (!player.isAlive) player.pendingRandomEvent = ""
         val kind = Kind.entries.firstOrNull { it.followsLogout && it.name == player.pendingRandomEvent }
-        if (kind != null && player !in encounters) startVisitor(player, kind)
+        if (kind != null && player !in encounters) startEncounter(player, kind)
     }
 
     /**
