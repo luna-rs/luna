@@ -8,6 +8,7 @@ import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.Doors
 import game.obj.doors.JewellersDoor
+import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import kotlin.time.Duration.Companion.seconds
 
@@ -24,8 +25,8 @@ object ConditionalDoorCrossing : CrossingHandler {
         val action = leg.action ?: return "the leg has no object"
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
-        if (id != YanilleDoorAction.DOOR && id != MiningGuild.DOOR && id != CraftingGuild.DOOR &&
-            id != JewellersDoor.DOOR) {
+        if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
+            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
@@ -38,12 +39,18 @@ object ConditionalDoorCrossing : CrossingHandler {
                 return "door $id at $position did not close"
             }
             val door = context.find(position, id) ?: return@repeat
-            val picking = id == YanilleDoorAction.DOOR &&
+            val yanillePick = id == YanilleDoorAction.DOOR &&
                     YanilleDoorAction.isLocked(position, door.direction, bot.position)
-            if (picking && (bot.thieving.level < YanilleDoorAction.REQUIRED_LEVEL ||
+            if (yanillePick && (bot.thieving.level < YanilleDoorAction.REQUIRED_LEVEL ||
                         !bot.inventory.contains(YanilleDoorAction.LOCKPICK))) {
                 return "the door requires level 82 Thieving and a carried lockpick"
             }
+            val towerPick = id == ChaosDruidTowerDoorAction.DOOR &&
+                    ChaosDruidTowerDoorAction.isLocked(position, door.direction, bot.position)
+            if (towerPick && bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL) {
+                return "the door requires level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving"
+            }
+            val picking = yanillePick || towerPick
             if (id == MiningGuild.DOOR && bot.mining.level < MiningGuild.REQUIRED_LEVEL) {
                 return "the door requires level 60 Mining"
             }

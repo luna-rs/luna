@@ -36,7 +36,6 @@ on(ServerLaunchEvent::class) {
         // Theiving chests.
         Position(3190, 3957), // 10 coin
         Position(2641, 3424), // steel arrowtips
-        Position(2565, 3356), // blood rune
 
         // Lumbridge river goblins door.
         Position(3246, 3244),

@@ -502,6 +502,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 return false
             }
 
+            val blocker = newZone.entryBlocker(bot)
+            if (blocker != null) {
+                zones.remove(newZone)
+                bot.log("Skipping candidate zone the bot can't enter. zone=$newZone, reason=$blocker")
+                continue
+            }
+
             bot.log("Trying candidate zone. zone=$newZone, remainingCandidates=${zones.size}")
 
             if (newZone in bot.subZones) {
@@ -536,7 +543,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 }
 
                 val escape = bot.recentEscape
-                zones.addAll(originalZones.filterNot { escape?.avoids(it) == true })
+                zones.addAll(originalZones.filterNot { escape?.avoids(it) == true || it.entryBlocker(bot) != null })
                 if (zones.size > 1) {
                     zones.shuffle()
                 }
