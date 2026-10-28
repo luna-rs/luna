@@ -451,6 +451,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         return true
     }
 
+    /** The default keeps the existing nearest/shuffled choice; resource scripts may retain a preferred mine. */
+    protected open fun selectWorkZone(): SubZone? =
+        if (bot.personality.isDextrous) zones.minByOrNull { bot.position.computeLongestDistance(it.inside) }
+        else zones.firstOrNull()
+
     /**
      * Ensures this script has an active zone selected and starts travel toward it when needed.
      *
@@ -490,12 +495,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         var rebuilt = false
         while (activeZone == null) {
-            val newZone =
-                if (bot.personality.isDextrous) {
-                    zones.minByOrNull { bot.position.computeLongestDistance(it.inside) }
-                } else {
-                    zones.firstOrNull()
-                }
+            val newZone = selectWorkZone()
 
             if (newZone == null) {
                 bot.log("Failed to select active zone because no candidate zones remain.")

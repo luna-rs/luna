@@ -397,8 +397,8 @@ enum class SubZone(
      * - 2 coal rocks
      */
     FALADOR_WEST_MINE(
-        inside = Position(2912, 3355),
-        area = SimpleBoxArea.ofRadius(2898, 3349, 28, 24),
+        inside = Position(2907, 3360),
+        area = SimpleBoxArea.of(2901, 3351, 2912, 3368),
         parent = { FALADOR }),
 
     /**
@@ -418,16 +418,12 @@ enum class SubZone(
         parent = { FALADOR }),
 
     /**
-     * The Mining guild. Intended for high level miners.
-     * - 12 iron
-     * - 57 coal
-     * - 15 mithril
-     * - 10 adamant
-     * - 2 runite
+     * Original revision 377 Mining Guild chamber: 37 coal and 5 mithril rocks, requiring Mining 60.
+     * Bounds cover the guild ladder and chamber below Falador, south of the Dwarven Mine door at 3046,9756.
      */
     MINING_GUILD(
         inside = Position(3053, 9743),
-        area = SimpleBoxArea.ofRadius(2994, 9697, 73, 60),
+        area = SimpleBoxArea.of(3016, 9732, 3055, 9756),
         parent = { FALADOR }),
 
     /**
@@ -482,7 +478,6 @@ enum class SubZone(
         inside = Position(2642, 3447),
         area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
         parent = { SEERS_VILLAGE }),
-
 
     /**
      * The ground-floor room of the chaos druid tower north of Ardougne, behind a door that is picked from outside.
@@ -642,7 +637,7 @@ enum class SubZone(
      * - 2 adamant rocks
      */
     EDGEVILLE_DUNGEON_MINE(
-        inside = Position(3132, 9874),
+        inside = Position(3137, 9875),
         entrance = { Position(3115, 3448) },
         area = SimpleBoxArea.of(3134, 9867, 3143, 9880),
         parent = { VARROCK }),
@@ -716,8 +711,8 @@ enum class SubZone(
      * - 2 adamant rocks
      */
     SOUTH_LUMBRIDGE_MINE(
-        inside = Position(3233, 3150),
-        area = SimpleBoxArea.of(3219, 3139, 3248, 3162),
+        inside = Position(3241, 3165),
+        area = SimpleBoxArea.of(3231, 3155, 3245, 3169),
         parent = { LUMBRIDGE }),
 
     /**
@@ -897,7 +892,7 @@ enum class SubZone(
      * - 4 coal rocks
      */
     SOUTH_EAST_ARDOUGNE_MINE(
-        inside = Position(2601, 3240),
+        inside = Position(2598, 3229),
         area = SimpleBoxArea.of(2579, 3215, 2625, 3240),
         parent =
             { ARDOUGNE }),

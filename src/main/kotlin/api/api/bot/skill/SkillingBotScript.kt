@@ -97,7 +97,8 @@ abstract class SkillingBotScript<E : Entity>(
      * During the initial check, banking is requested if the inventory is full or the selected tool is missing from
      * both inventory and equipment. If no tool is selected and the inventory is not full, banking is not requested.
      *
-     * Every subsequent check returns `true`, requesting banking after the current skilling trip.
+     * Subsequent checks request banking unless the subclass handles its full inventory locally. Forced banking
+     * still collects missing tools or supplies through the normal banking flow.
      *
      * @param initial `true` when performing the initial banking check.
      * @return `true` if banking should be requested, or `false` if it can be skipped.
@@ -125,9 +126,15 @@ abstract class SkillingBotScript<E : Entity>(
             }
             return shouldBank
         }
+        if (!forceBanking && bot.inventory.isFull && handleFullInventory()) {
+            return false
+        }
         bot.log("Requesting bank after a skilling trip.")
         return true
     }
+
+    /** A skill may handle a full inventory locally. True defers banking; ordinary skill scripts bank as before. */
+    protected open suspend fun handleFullInventory(): Boolean = false
 
     /**
      * Performs skilling-related banking while the bank is open.

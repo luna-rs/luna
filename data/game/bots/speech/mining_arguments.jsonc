@@ -1,0 +1,336 @@
+/*
+ * Rock arguments between two bots fighting over the same rock.
+ *
+ * An argument is built from beats, not fixed scripts:
+ *   OPEN (starter) -> REPLY (responder) -> PUSH (starter) -> COMEBACK (responder) -> LAST_WORD (starter) -> CLOSER (responder)
+ * The responder may ignore the opener, in which case the starter says an IGNORED line instead. Either side can stop
+ * early, so an argument is 2, 4 or 6 lines. Starters are MEAN (or COMPLAINER when two complainers meet).
+ *
+ * Every line is said in the speaker's own voice, so lines in a beat must make sense after any line from the beat
+ * before it. Keep them generic to the beat and let the personality carry the joke.
+ *
+ *   KIND         wholesome to the point of being unsettling. ":)", offers food, adds you as a friend
+ *   MEAN         2005 trash talk. noob, my main, meet me wildy, reported
+ *   COMPLAINER   everything is unfair, jagex hates them, they pay 5 dollars for this
+ *   POWER_MINER  every word costs xp. terse, counts everything
+ *   IRON_TRAINER a power miner dropping iron for xp; also uses POWER_MINER lines
+ *   BALANCED     dry and sarcastic, the only adult in the mine
+ *
+ * "{ore}" becomes the rock's chat name (coal, mith, addy, rune, gem...). A line written as
+ * { "text": "...", "ores": ["CLAY"] } is only used on those rocks. Chat is plain text: no colours or effects.
+ * Lines must stay under 80 characters, and the client cannot show "/", "_" or "~".
+ */
+{
+  "OPEN": {
+    "MEAN": [
+      "hop worlds noob this {ore} is mine",
+      "oi get off my {ore} rock",
+      "this {ore} rock is taken noob",
+      "move noob im mining here",
+      "rock stealer!!",
+      "stop stealing my {ore} noob",
+      "find ur own {ore} noob",
+      "u blind? this rock is mine",
+      "lol nice try noob, thats my {ore}",
+      "go mine somewhere else noob",
+      "did i say u could mine here?",
+      "excuse me thats my rock",
+      { "text": "back off my clay noob, i need it for... reasons", "ores": ["CLAY"] },
+      { "text": "this tin is mine. go mine copper like a normal noob", "ores": ["TIN"] },
+      { "text": "this copper is mine. go mine tin like a normal noob", "ores": ["COPPER"] },
+      { "text": "my iron. go back to mining tin noob", "ores": ["IRON"] },
+      { "text": "touch my coal again and see what happens", "ores": ["COAL"] },
+      { "text": "this gold is mine, im making a ring for my gf", "ores": ["GOLD"] },
+      { "text": "off my gem rock noob, i smelled it first", "ores": ["GEM_ROCK"] },
+      { "text": "back off my {ore} rock, ive camped it all week", "ores": ["MITHRIL", "ADAMANT", "RUNE"] },
+      { "text": "thats my rune rock. i have been here since tuesday", "ores": ["RUNE"] }
+    ],
+    "COMPLAINER": [
+      "ugh are u seriously on my {ore} rock",
+      "omg i was about to mine that {ore}",
+      "i was here first!! omg",
+      "every time. EVERY time someone takes my {ore}",
+      "can u not. i was waiting for that {ore}",
+      "why does this always happen to me",
+      "excuse me i have been waiting for that rock for ages",
+      { "text": "ive been waiting for that rune for 2 hours omg", "ores": ["RUNE"] }
+    ]
+  },
+
+  "IGNORED": {
+    "MEAN": [
+      "hello?? noob",
+      "lol ignoring me",
+      "ok ignore me then noob",
+      "rude",
+      "u deaf?",
+      "too scared to talk lol",
+      "ok i win then",
+      "silence. thats what i thought",
+      "im talking to u noob",
+      "fine im telling everyone u ran away"
+    ],
+    "COMPLAINER": [
+      "great now im being ignored",
+      "wow ok. nobody ever listens to me",
+      "this is why i have 0 friends",
+      "fine. im posting about this on the forums",
+      "ok just ignore me like everyone else does",
+      "even the rocks talk to me more than u"
+    ]
+  },
+
+  "REPLY": {
+    "KIND": [
+      "oh sorry!! ill move",
+      "np, u can have it",
+      "oh is it? sorry i didnt know",
+      "u can have it, i like watching anyway",
+      "sorry! want some of my {ore}?",
+      "aww ok, gl with ur mining!",
+      "sure! do u want to be friends?",
+      "of course, theres enough {ore} for everyone",
+      "i hope u get lots of {ore}",
+      "ur right, ur rock. i love ur energy",
+      "oh hi!! i like ur pickaxe",
+      { "text": "u can have the gold, i dont need riches", "ores": ["GOLD"] },
+      { "text": "oh u like clay too? we have so much in common", "ores": ["CLAY"] }
+    ],
+    "MEAN": [
+      "lol no",
+      "make me noob",
+      "i was here first noob",
+      "ur rock? i dont see ur name on it",
+      "lol who r u",
+      "cry about it",
+      "no u",
+      "my rock now noob",
+      "lol ur so bad",
+      "go away noob im busy",
+      "imagine thinking u own a rock lol"
+    ],
+    "COMPLAINER": [
+      "ugh i was waiting 10 mins for this",
+      "omg why is everyone so mean today",
+      "this always happens to me",
+      "can u not. i havent mined anything all day",
+      "this game is so rigged",
+      "i literally just got here and someone is already yelling",
+      "great. perfect. love this for me",
+      "do u know how long i waited for this {ore}",
+      { "text": "ive been waiting for this rune for 2 hours omg", "ores": ["RUNE"] }
+    ],
+    "POWER_MINER": [
+      "k",
+      "cant talk. mining",
+      "typing costs xp",
+      "busy",
+      "no",
+      "shh im mining",
+      "ur costing me xp per hour",
+      "mining.",
+      "talk to me after 99",
+      "every word u type is a {ore} i mine"
+    ],
+    "IRON_TRAINER": [
+      "im dropping it anyway lol",
+      "u can have the ore, its on the floor",
+      "i dont want the iron i want the xp",
+      "relax i drop it all",
+      "ore is on the floor help urself",
+      "its powermining, the ore is a side effect"
+    ],
+    "BALANCED": [
+      "its a public mine m8",
+      "u dont own rocks lol",
+      "show me the deed then",
+      "theres no name on it",
+      "pretty sure jagex owns it",
+      "ok but its literally a rock",
+      "lol calm down its {ore}",
+      "did u pay for it? no? ok then",
+      "first time in a mine?",
+      { "text": "its {ore} m8. {ore}.", "ores": ["TIN", "COPPER", "CLAY"] },
+      { "text": "ur fighting me over clay. clay.", "ores": ["CLAY"] },
+      { "text": "relax its iron, it respawns before u finish typing", "ores": ["IRON"] }
+    ]
+  },
+
+  "PUSH": {
+    "MEAN": [
+      "my main has 99 mining",
+      "nice bronze pick lol",
+      "ur so bad lol",
+      "what lvl r u, like 3?",
+      "f2p noob",
+      "i could buy ur whole bank",
+      "u mine like my grandma",
+      "ur pickaxe is embarrassing",
+      "meet me in the wildy then",
+      "lol ok noob, im still taking it",
+      "do u even know who i am",
+      "everyone here is laughing at u",
+      "ur mom mines better than u",
+      "u still use a bronze pick dont u",
+      "go back to tutorial island",
+      { "text": "ur not even smelting it, ur just hoarding coal", "ores": ["COAL"] },
+      { "text": "u dont even have the lvl for rune lol", "ores": ["RUNE"] }
+    ],
+    "COMPLAINER": [
+      "do u know how long ive been here",
+      "ive mined 2 ore in an hour",
+      "i pay 5 dollars a month for this",
+      "ive been waiting since lunch",
+      "u dont even need it",
+      "i bet u have a full bank of {ore}",
+      "this is the worst mine in the whole game",
+      "jagex needs to add more rocks",
+      "my pickaxe is older than u",
+      "my mum only lets me play for an hour"
+    ]
+  },
+
+  "COMEBACK": {
+    "KIND": [
+      "u seem stressed, are u ok?",
+      "u should be proud of urself",
+      "thats ok, i still think ur cool",
+      "do u want a hug?",
+      "*hug*",
+      "im sure ur a great miner",
+      "i believe in u!!",
+      "aw thats sad, want some food?",
+      "ill pray for ur rocks",
+      "ur doing ur best",
+      "i still think ur nice"
+    ],
+    "MEAN": [
+      "cool story noob",
+      "and?",
+      "nobody asked",
+      "lol ok",
+      "ur mom",
+      "ur so mad lol",
+      "cry more",
+      "u done?",
+      "sounds like a u problem",
+      "k noob"
+    ],
+    "COMPLAINER": [
+      "this is why i quit last week",
+      "great now im getting yelled at too",
+      "my day was already bad",
+      "i just wanted to mine some {ore}",
+      "everyone in this game is mean",
+      "im telling my mum",
+      "i didnt even want to play today",
+      "i should have been a wizard",
+      "u have no idea what ive been through today"
+    ],
+    "POWER_MINER": [
+      "k",
+      "-1 ore",
+      "that was 12 seconds of xp",
+      "zzz",
+      "still mining",
+      "ur losing xp talking",
+      "brb never",
+      "u talk. i mine. we are not the same"
+    ],
+    "IRON_TRAINER": [
+      "im still dropping it",
+      "ore on the floor if u want it",
+      "the iron is free. the xp is mine",
+      "u can pick up my iron if it makes u feel better"
+    ],
+    "BALANCED": [
+      "sure buddy",
+      "ok",
+      "cool, still mining",
+      "did ur main tell u that",
+      "imagine arguing over {ore}",
+      "this is the most exciting thing all day",
+      "u ok m8?",
+      "u type a lot for a miner",
+      "its a rock not ur girlfriend"
+    ]
+  },
+
+  "LAST_WORD": {
+    "MEAN": [
+      "reported",
+      "whatever noob",
+      "meet me wildy",
+      "ur lucky im on my skiller",
+      "adding u to my ignore list",
+      "ur not even worth my time",
+      "noob",
+      "ok its ur rock. for now",
+      "im telling my clan about u",
+      "this isnt over noob"
+    ],
+    "COMPLAINER": [
+      "fine. im complaining on the forums",
+      "i hate this game",
+      "i quit. for real this time",
+      "ill be back tomorrow and it'll still be taken",
+      "*sigh*",
+      "i hope ur pick breaks",
+      "ill just stand here then. forever"
+    ]
+  },
+
+  "CLOSER": {
+    "KIND": [
+      "have a nice day",
+      "bye friend!",
+      "ill pray for u",
+      "pm me anytime",
+      "ill miss u!",
+      "gl with ur {ore}",
+      "add me",
+      "love u bye"
+    ],
+    "MEAN": [
+      "bye noob",
+      "lol cya",
+      "ok noob",
+      "ur still bad",
+      "cya never",
+      "lol k"
+    ],
+    "COMPLAINER": [
+      "this is why i have 0 friends",
+      "worst day of my life",
+      "great. perfect",
+      "i didnt even want this {ore}",
+      "i knew today was going to be bad",
+      "now i have to log out and think about my life"
+    ],
+    "POWER_MINER": [
+      "k",
+      "k thx bye",
+      "back to mining",
+      "33k xp an hour if nobody talks to me",
+      "noted. ignored"
+    ],
+    "IRON_TRAINER": [
+      "ore on floor if u change ur mind",
+      "*drops iron*"
+    ],
+    "BALANCED": [
+      "ok",
+      "lol k",
+      "good talk",
+      "ill let the rock know",
+      "this was fun lol",
+      "cya"
+    ]
+  },
+
+  "LAUGHS": {
+    "MEAN": ["lol", "rofl", "lmao", "hahaha"],
+    "KIND": ["hehe", ":)", "haha :)"],
+    "BALANCED": ["lol", "haha"]
+  }
+}

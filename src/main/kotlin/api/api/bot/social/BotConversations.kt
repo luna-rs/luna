@@ -47,12 +47,13 @@ object BotConversations {
     private var Bot.conversation: Conversation? by Attr.nullableObj(Conversation::class)
 
     /**
-     * Rejects busy bots even when their current script normally permits social approaches.
+     * Rejects busy bots even when their current script normally permits social approaches. A working bot's own
+     * script judges its work; clicking the next target or rock must not end the exchange.
      */
     private fun ready(bot: Bot, allowMovement: Boolean = false, allowWorking: Boolean = false): Boolean {
         val working = allowWorking && (bot.scriptStack.current() as? SocialBotScript)?.canTalkWhileWorking() == true
         return bot.state == EntityState.ACTIVE &&
-            (if (working) ActionSafety.COMBAT else ActionSafety.NON_COMBAT).allows(bot) &&
+            (if (working) bot.health > 0 && !bot.isLocked else ActionSafety.NON_COMBAT.allows(bot)) &&
             bot.reflex.activeReflex == null &&
             (working || bot.combat.target == null) &&
             (working || allowMovement || bot.walking.isEmpty && !bot.navigator.isActive) &&
@@ -81,7 +82,8 @@ object BotConversations {
     }
 
     /**
-     * Acquires both participants atomically on the game thread. Each line alternates between first and second.
+     * Acquires both participants atomically on the game thread. Each line alternates between first and second,
+     * unless [speakers] names the speaker of every line (0 = first, 1 = second).
      * A caller may retain the returned handle to distinguish full delivery from cancellation in later scenarios.
      */
     fun start(first: Bot, second: Bot, lines: List<String>,
@@ -89,13 +91,16 @@ object BotConversations {
               clock: () -> Long = { System.nanoTime() / 1_000_000 },
               interaction: BotSocialInteractions.Session? = null,
               allowWorking: Boolean = false,
-              delivered: (Bot) -> Unit = {}): Conversation? {
+              delivered: (Bot) -> Unit = {},
+              speakers: List<Int> = emptyList()): Conversation? {
         if (first === second || lines.size !in 2..24 || lines.any { it.isBlank() || it.length > 80 } ||
+            speakers.isNotEmpty() && (speakers.size != lines.size || speakers.any { it !in 0..1 }) ||
             !availableTo(first, interaction, allowMovement, allowWorking) ||
             !availableTo(second, interaction, allowMovement, allowWorking) ||
             !near(first, second)) return null
         val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock, interaction,
-                                   delivered = delivered, allowWorking = allowWorking)
+                                   delivered = delivered, allowWorking = allowWorking,
+                                   speakers = speakers.toList())
         if (!first.speechStack.reserveConversation(session) { session.valid() }) return null
         if (!second.speechStack.reserveConversation(session) { session.valid() }) {
             first.speechStack.releaseConversation(session)
@@ -163,7 +168,8 @@ object BotConversations {
                                              private val contextValid: () -> Boolean = { true },
                                              private val delivered: (Bot) -> Unit = {},
                                              private val typingLimit: Int = 20,
-                                             private val allowWorking: Boolean = false) {
+                                             private val allowWorking: Boolean = false,
+                                             private val speakers: List<Int> = emptyList()) {
         /**
          * Script identities captured at acquisition; a paused or replaced activity cannot keep talking.
          */
@@ -206,7 +212,7 @@ object BotConversations {
             }
             if (pending != null) {
                 if (pending?.isDelivered != true) return
-                delivered(bots[index % bots.size])
+                delivered(bots[if (speakers.isEmpty()) index % bots.size else speakers[index]])
                 index++
                 pending = null
             }
@@ -215,7 +221,7 @@ object BotConversations {
                 close()
                 return
             }
-            val speaker = bots[index % bots.size]
+            val speaker = bots[if (speakers.isEmpty()) index % bots.size else speakers[index]]
             val ticks = (3 + lines[index].length / 6 + (1 - speaker.personality.social) * 6 + (0..3).random())
                 .toInt().coerceIn(4, typingLimit.coerceIn(4, 20))
             val speech = BotSpeech(lines[index], ticks)
