@@ -457,6 +457,13 @@ public class Player extends Mob {
         if (data != null) {
             // Load saved data.
             data.load(this);
+            if (getHealth() < 1) {
+                // Death actions are not persisted. Recover interrupted deaths without replaying item loss,
+                // since the save may already include the main death stage's inventory changes.
+                skills.resetAll();
+                setSkullIcon(SkullIcon.NONE);
+                setPosition(Luna.settings().game().startingPosition());
+            }
         } else {
             // New player!
             setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
