@@ -11,11 +11,18 @@ import io.luna.game.model.mob.Player;
  * actions from running. The player is locked in {@link #onSubmit()} and unlocked in {@link #onFinished()}
  * (even if the action is cancelled/removed).
  * <p>
- * Override {@link #onLock()} and {@link #onUnlock()} for side effects (interfaces, animations, etc.).
+ * Override {@link #beforeLock()} to reject an attempt before acquiring its lock. Override {@link #onLock()} and
+ * {@link #onUnlock()} for side effects (interfaces, animations, etc.). Rejected attempts do not release another
+ * action's lock or invoke unlock side effects.
  *
  * @author lare96
  */
 public abstract class LockedAction extends Action<Player> {
+
+    /**
+     * Whether this submission acquired a lock that must be released when it finishes.
+     */
+    private boolean acquiredLock;
 
     /**
      * Creates a locked action with default scheduling behavior.
@@ -39,14 +46,32 @@ public abstract class LockedAction extends Action<Player> {
 
     @Override
     public final void onSubmit() {
+        if (!beforeLock() || isFinished()) {
+            complete();
+            return;
+        }
         mob.lock();
+        acquiredLock = true;
         onLock();
     }
 
     @Override
     public final void onFinished() {
-        mob.unlock();
-        onUnlock();
+        if (acquiredLock) {
+            acquiredLock = false;
+            mob.unlock();
+            onUnlock();
+        }
+    }
+
+    /**
+     * Validates or interrupts an attempt before this action acquires its lock. Shared content such as random
+     * events can therefore run without being blocked by the very action offering them.
+     *
+     * @return {@code true} to acquire the lock and invoke {@link #onLock()}, or {@code false} to complete immediately.
+     */
+    public boolean beforeLock() {
+        return true;
     }
 
     /**

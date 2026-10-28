@@ -12,7 +12,9 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
- * A [LockedAction] implementation that teleports a player to another destination.
+ * Teleports a player through the native locked action. Teleblock, controller and spell requirements
+ * are checked before locking, allowing a spellbook caller to offer a random event after validation
+ * without spending runes or invoking teleport callbacks. Other teleport callers use the same checks.
  *
  * @author lare96
  */
@@ -52,17 +54,18 @@ open class TeleportAction(plr: Player,
         const val WAXED_SLED = 4084
     }
 
+    /**
+     * Costs checked immediately before locking; validation and consumption run in the same submission.
+     */
+    private var preparedCosts: List<Item>? = null
+
+    override fun beforeLock(): Boolean {
+        preparedCosts = checkCast()
+        return preparedCosts != null
+    }
+
     override fun onLock() {
-        if (mob.status.isTeleBlocked()) {
-            mob.sendMessage("A magical force stops you from teleporting.")
-            complete()
-            return
-        }
-        if (!mob.controllers.checkTeleport(this)) {
-            complete()
-            return
-        }
-        val removeItems = Magic.checkRequirements(mob, level, requirements)
+        val removeItems = preparedCosts ?: checkCast()
         if (removeItems == null) {
             complete()
             return
@@ -74,6 +77,20 @@ open class TeleportAction(plr: Player,
         if (xp > 0.0) {
             mob.magic.addExperience(xp)
         }
+    }
+
+    /**
+     * Applies native teleport restrictions before costs are consumed or teleport side effects begin.
+     */
+    private fun checkCast(): List<Item>? {
+        if (mob.status.isTeleBlocked()) {
+            mob.sendMessage("A magical force stops you from teleporting.")
+            return null
+        }
+        if (!mob.controllers.checkTeleport(this)) {
+            return null
+        }
+        return Magic.checkRequirements(mob, level, requirements)
     }
 
     override fun run(): Boolean = !style.step(this)
