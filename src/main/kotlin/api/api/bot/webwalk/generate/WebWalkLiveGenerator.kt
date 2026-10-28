@@ -34,6 +34,7 @@ import engine.obj.StairDestination
 import engine.obj.Trapdoor
 import engine.obj.TrapdoorLanding
 import io.luna.game.model.Position
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.path.route.RouteStrategy
 import io.luna.game.model.path.route.StepValidator
@@ -525,7 +526,11 @@ object WebWalkLiveGenerator {
      * Adds the KBD levers as ordinary one-click entrances, using their existing teleport destinations.
      */
     private fun lever(obj: GameObject, lever: WildernessLever, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
-        val from = climbingTiles(obj).firstOrNull()
+        // A lever on a wall is pulled from its own tile, so the bot must stand where the pull can reach.
+        val from = (climbingTiles(obj) + obj.position).firstOrNull {
+            world.collisionManager.reached(it, obj, InteractionPolicy.STANDARD_SIZE) &&
+                    (it != obj.position || LadderDestination.canLand(it))
+        }
         val option = obj.def().actions.getOrNull(0)
         if (from == null || option == null || !LadderDestination.canLand(lever.destination)) {
             report.skipped += "lever ${obj.id} at ${obj.position}: no interaction tile, option or landing"
