@@ -4,6 +4,7 @@ import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.LoginService;
 import io.luna.game.LogoutService;
+import io.luna.game.event.impl.PlayerTickEvent;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
@@ -444,6 +445,9 @@ public final class World {
 
                 if (player.isBot()) {
                     player.asBot().process();
+                }
+                if (player.getState() == EntityState.ACTIVE) {
+                    context.getPlugins().post(new PlayerTickEvent(player));
                 }
             } catch (Exception e) {
                 player.logout(true);
