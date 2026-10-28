@@ -45,6 +45,7 @@ val STRING = mapOf(
 fun makeGoldJewellery(plr: Player, itemId: Int, times: Int) {
     val jewelleryItem = GoldJewelleryTable.ID_TO_JEWELLERY[itemId]
     if (jewelleryItem != null) {
+        plr.overlays.closeWindows()
         plr.submitAction(CraftJewelleryAction(plr, BarType.GOLD, jewelleryItem, times))
     }
 }
@@ -55,6 +56,7 @@ fun makeGoldJewellery(plr: Player, itemId: Int, times: Int) {
 fun makeSilverJewellery(plr: Player, itemId: Int, times: Int) {
     val table = SilverJewelleryTable.ID_TO_TABLE[itemId]
     if (table != null) {
+        plr.overlays.closeWindows()
         plr.submitAction(CraftJewelleryAction(plr, BarType.SILVER, table.jewelleryItem, times))
     } else if (SilverJewelleryTable.MOULDS.contains(itemId)) {
         plr.sendMessage("You need ${addArticle(itemId)} to make this.")

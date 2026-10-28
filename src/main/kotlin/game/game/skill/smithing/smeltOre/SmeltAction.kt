@@ -2,6 +2,7 @@ package game.skill.smithing.smeltOre
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.smithing.BarType
@@ -11,7 +12,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
- * An [InventoryAction] implementation that handles the smelting action.
+ * Smelts ore with the native success rolls and experience awards. A ready general random event
+ * can interrupt the initial attempt before ore is consumed; batch continuations do not offer again.
  *
  * @author lare96
  */
@@ -24,6 +26,7 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
                 false
             }
 
+            start && RandomEvents.offerProduction(mob, remove()) -> false
             else -> true
         }
 

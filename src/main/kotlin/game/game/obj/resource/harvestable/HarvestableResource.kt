@@ -1,6 +1,7 @@
 package game.obj.resource.harvestable
 
 import api.predef.*
+import game.content.randomEvents.RandomEvents
 import game.obj.resource.GameResource
 import game.player.Messages
 import io.luna.game.model.def.GameObjectDefinition
@@ -35,12 +36,14 @@ abstract class HarvestableResource : GameResource() {
     open fun computeExhaustionChance(): Double = ALWAYS
 
     /**
-     * Harvests this resource for [plr] and schedules a task to respawn it.
+     * Harvests this resource for [plr] and schedules a task to respawn it. Flax offers Lost City's
+     * general random-event pool on the initial picking interaction, before adding an item.
+     * Other harvestable resources do not have this source hook.
      */
     fun harvest(plr: Player, gameObject: GameObject) {
         if (plr.inventory.isFull) {
             plr.sendMessage(Messages.inventoryFull())
-        } else {
+        } else if (this !== FlaxResource || !RandomEvents.offerGeneral(plr)) {
             plr.submitAction(HarvestActionItem(plr, gameObject, this))
         }
     }

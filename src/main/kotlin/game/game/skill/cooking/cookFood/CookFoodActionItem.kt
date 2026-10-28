@@ -2,6 +2,7 @@ package game.skill.cooking.cookFood
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.Skills
@@ -12,7 +13,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 
 /**
- * An [InventoryAction] that cooks food.
+ * Cooks food through the native inventory action, preserving burn rolls and recipe experience.
+ * A ready general random event can interrupt the initial attempt before any food is consumed.
  *
  * @author lare96
  */
@@ -42,6 +44,7 @@ class CookFoodActionItem(plr: Player,
                 false
             }
 
+            start && RandomEvents.offerProduction(mob, remove()) -> false
             else -> true
         }
 

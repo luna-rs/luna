@@ -42,6 +42,7 @@ import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
 import io.luna.game.model.EntityType
 import io.luna.game.model.Position
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import kotlin.random.Random
@@ -135,6 +136,14 @@ object RandomEvents {
             Kind.entries.firstOrNull { it.generalSlot == slot }
         }
     }
+
+    /**
+     * Offers the general source pool before a valid production attempt consumes its ingredients.
+     * Callers check levels and tools first and invoke this only on initial submission, not each
+     * Make-X cycle. Missing supplies preserve readiness for the next eligible interaction.
+     */
+    fun offerProduction(player: Player, ingredients: List<Item>): Boolean =
+        player.inventory.containsAll(ingredients) && offerGeneral(player)
 
     /**
      * Offers an encounter at a native skill boundary, independently of success rolls and XP changes.

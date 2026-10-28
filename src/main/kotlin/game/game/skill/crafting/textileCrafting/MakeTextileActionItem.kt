@@ -1,12 +1,15 @@
 package game.skill.crafting.textileCrafting
 
 import api.predef.*
+import game.content.randomEvents.RandomEvents
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
 /**
- * An [InventoryAction] implementation that makes textiles.
+ * Converts textile ingredients using the native inventory action. Lost City's wool and flax
+ * spinning entry points offer general random events before starting, once per submitted batch.
+ * Other textile recipes retain their ordinary conversion behavior without an invented event hook.
  *
  * @author lare96
  */
@@ -19,6 +22,8 @@ class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) 
                 false
             }
 
+            start && (textile == Textile.BALL_OF_WOOL || textile == Textile.BOWSTRING) &&
+                RandomEvents.offerProduction(mob, remove()) -> false
             else -> true
         }
 

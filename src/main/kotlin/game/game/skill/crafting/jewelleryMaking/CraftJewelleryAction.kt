@@ -2,6 +2,7 @@ package game.skill.crafting.jewelleryMaking
 
 import api.predef.*
 import api.predef.ext.*
+import game.content.randomEvents.RandomEvents
 import game.player.Animations
 import game.player.Sound
 import game.skill.smithing.BarType
@@ -16,6 +17,7 @@ import io.luna.game.model.mob.Player
  * are checked on submission and before every conversion, so an open interface cannot bypass requirements.
  * Moulds are retained; the inventory action consumes the bar and optional gem only after checking supplies
  * and output space. Successful cycles retain the existing timing, animation, sound, and recipe experience.
+ * Initial attempts offer the source general random-event pool before consuming the bar or gem.
  *
  * @author lare96
  */
@@ -23,7 +25,9 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
                            private val jewellery: JewelleryItem, times: Int) :
     InventoryAction(plr, true, 3, times) {
 
-    /** Mould for this output in the supplied metal table, or null for an unsupported recipe/metal pair. */
+    /**
+     * Mould for this output in the supplied metal table, or null for an unsupported recipe/metal pair.
+     */
     private val requiredMould: Int? = when (barType) {
         BarType.GOLD -> GoldJewelleryTable.VALUES.firstOrNull { table ->
             table.jewelleryItems.any { it.id == jewellery.id }
@@ -45,6 +49,7 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
                 false
             }
 
+            start && RandomEvents.offerProduction(mob, remove()) -> false
             else -> true
         }
 
