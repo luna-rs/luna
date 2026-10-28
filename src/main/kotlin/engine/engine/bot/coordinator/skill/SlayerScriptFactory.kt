@@ -118,7 +118,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
             loadout.gear[Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
         val queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)
         return (CombatCoordinator.camps + assignmentCamps).filter {
-            it.minimum <= readiness && CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady)
+            it.minimum <= readiness && CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady) &&
+                it.zone.entryBlocker(bot) == null
         }.mapNotNull { camp ->
             camp.names.intersect(taskNames).takeIf { it.isNotEmpty() }?.let { camp.zone to it }
         }.toMap()

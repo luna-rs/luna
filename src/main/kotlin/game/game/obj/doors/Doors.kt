@@ -2,6 +2,7 @@ package game.obj.doors
 
 import api.predef.*
 import api.predef.ext.*
+import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.*
 import io.luna.game.model.mob.*
@@ -243,6 +244,10 @@ object Doors {
     fun toggle(world: World, plr: Player, door: GameObject) {
         if (door.id == YanilleDoorAction.DOOR) {
             plr.submitAction(YanilleDoorAction(plr, door, false))
+            return
+        }
+        if (door.id == ChaosDruidTowerDoorAction.DOOR) {
+            plr.submitAction(ChaosDruidTowerDoorAction(plr, door, false))
             return
         }
         if (door in passages) {

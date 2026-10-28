@@ -119,7 +119,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         val level = combatReadiness(bot, purpose)
         val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
             loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
-            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)).shuffled()
+            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout))
+            .filter { it.zone.entryBlocker(bot) == null }.shuffled()
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
         // Rock crabs sit disguised as rocks, so they need a script that waits for them to wake.

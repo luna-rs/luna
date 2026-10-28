@@ -11,6 +11,7 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import game.bot.scripts.skills.AgilityCourseTravel
 import game.skill.runecrafting.enterAltar.Altar
+import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
@@ -484,11 +485,11 @@ enum class SubZone(
 
 
     /**
-     * The chaos druid tower north of Ardougne.
+     * The ground-floor room of the chaos druid tower north of Ardougne, behind a door that is picked from outside.
      */
     CHAOS_DRUID_TOWER(
-        inside = Position(2565, 3355),
-        area = SimpleBoxArea.of(2557, 3349, 2573, 3362),
+        inside = Position(2563, 3356),
+        area = SimpleBoxArea.of(2561, 3355, 2564, 3357),
         parent = { ARDOUGNE }),
 
     /**
@@ -547,7 +548,7 @@ enum class SubZone(
      */
     CHAOS_DRUID_TOWER_DUNGEON(
         inside = Position(2565, 9753),
-        entrance = { Position(2565, 3355) },
+        entrance = { Position(2563, 3356) },
         area = SimpleBoxArea.of(2559, 9729, 2594, 9761),
         parent = { ARDOUGNE }),
 
@@ -1515,5 +1516,19 @@ enum class SubZone(
         }
         val outsidePosition = entrance(bot)
         return outsidePosition != null && outsidePosition.isWithinDistance(bot, distance)
+    }
+
+    /**
+     * Finds what keeps a [Bot] out of this subzone, for zones behind a door that not every bot can open.
+     *
+     * @param bot The bot to check.
+     * @return Why [bot] can't get in, or `null` if nothing stops it.
+     */
+    fun entryBlocker(bot: Bot): String? = when (this) {
+        CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
+            if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
+                CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones)
+                "the tower door needs level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving" else null
+        else -> null
     }
 }

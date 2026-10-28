@@ -8,6 +8,7 @@ import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.JewellersDoor
 import api.bot.webwalk.plan.BotConditions
+import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.mob.Skill
 import api.bot.webwalk.walk.crossing.BorderGateCrossing
@@ -93,6 +94,15 @@ object SpecialCrossings {
                                         items = listOf(ItemRequirement(YanilleDoorAction.LOCKPICK))), cost = 8)
 
     /**
+     * The Chaos Druid Tower door is picked from outside, the side of its own tile, and opens freely from inside.
+     * The cost includes time for failed attempts before a successful pick.
+     */
+    val CHAOS_DRUID_TOWER_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(ChaosDruidTowerDoorAction.DOOR),
+                                              Requirements(skills = mapOf(
+                                                  Skill.THIEVING to ChaosDruidTowerDoorAction.REQUIRED_LEVEL)),
+                                              reverseRequirements = Requirements.NONE, cost = 8)
+
+    /**
      * The guild building needs level 40 Crafting and a worn brown apron on entry only.
      * The nearby cow field uses its own unrestricted gate.
      */
@@ -108,7 +118,8 @@ object SpecialCrossings {
     /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CRAFTING_GUILD, JEWELLERS_DOOR)
+    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
+                     JEWELLERS_DOOR)
 }
 
 /**
