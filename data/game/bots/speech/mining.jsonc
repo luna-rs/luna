@@ -1,0 +1,115 @@
+/*
+ * One-line mining reactions, said out loud to nobody in particular.
+ *
+ *   YIELD      a kind miner sees someone on the rock it wanted and leaves it to them
+ *   CONTEST    a mean miner jumps on a rock someone else is already mining
+ *   CROWDED    every good rock nearby is taken
+ *   LOST_ROCK  someone else got the ore first
+ *
+ * Each reaction is keyed by voice (see mining_arguments.jsonc), so the bot speaks as its personality.
+ * IRON_TRAINER also uses POWER_MINER lines. "{ore}" becomes the rock's chat name, and
+ * { "text": "...", "ores": [...] } limits a line to those rocks. Plain text only, under 80 characters.
+ */
+{
+  "YIELD": {
+    "KIND": [
+      "all yours! ill find another",
+      "oh someone is on that {ore}, np",
+      "ill let u have that one, gl!",
+      "ok ill go find another {ore} rock",
+      "sharing is caring",
+      "go on, u take it. ur doing great",
+      "theres enough {ore} for everyone",
+      { "text": "u have that gold, ur clearly going places", "ores": ["GOLD"] }
+    ]
+  },
+
+  "CONTEST": {
+    "MEAN": [
+      "my {ore} now",
+      "lol mine",
+      "too slow noob",
+      "this {ore} is mine now",
+      "outmined lol",
+      "sorry not sorry",
+      "move noob",
+      "im faster than u lol",
+      { "text": "rune is for people who deserve it. me", "ores": ["RUNE"] }
+    ]
+  },
+
+  "CROWDED": {
+    "COMPLAINER": [
+      "omg every {ore} rock is taken",
+      "this mine is so full",
+      "ugh why is everyone mining {ore} today",
+      "jagex add more rocks plz",
+      "ive been waiting forever for {ore}",
+      "i give up. no i dont. but i want to",
+      "does anyone else even have a life",
+      { "text": "everyone and their mum is on coal today", "ores": ["COAL"] },
+      { "text": "not ONE rune rock free. not one", "ores": ["RUNE"] }
+    ],
+    "MEAN": [
+      "so many noobs in this mine",
+      "all these noobs on my {ore}",
+      "this mine needs a cleanup",
+      "who invited all these noobs",
+      "everyone here is a noob except me"
+    ],
+    "BALANCED": [
+      "busy mine today lol",
+      "everyone wants {ore} today huh",
+      "so this is what a {ore} rush looks like",
+      "wow ok, the whole server is here",
+      "i'll just stand here and look busy"
+    ],
+    "POWER_MINER": [
+      "too many ppl. xp rate dropping",
+      "crowd = lost xp",
+      "need empty rocks",
+      "hop?",
+      "too many miners, not enough {ore}"
+    ]
+  },
+
+  "LOST_ROCK": {
+    "COMPLAINER": [
+      "omg i was about to mine that",
+      "every. single. time.",
+      "someone always gets there first",
+      "i hate this game",
+      "that was MY {ore}",
+      "rigged",
+      "my pickaxe was literally touching it",
+      "jagex hates me personally"
+    ],
+    "MEAN": [
+      "rock stealer!!",
+      "who took my {ore}",
+      "lol ok whoever did that is a noob",
+      "ks much",
+      "enjoy MY {ore} noob"
+    ],
+    "BALANCED": [
+      "rip that {ore}",
+      "well. there goes that one",
+      "almost had it lol",
+      "and its gone",
+      "gz whoever got that"
+    ],
+    "POWER_MINER": [
+      "next.",
+      "-1 rock",
+      "inefficient",
+      "next rock",
+      "should have clicked faster"
+    ],
+    "KIND": [
+      "aw someone got it first, gz to them",
+      "thats ok! ill get the next one",
+      "yay someone got {ore}!",
+      "good for them, they earned it"
+    ]
+  }
+}
