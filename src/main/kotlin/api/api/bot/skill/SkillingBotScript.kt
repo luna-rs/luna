@@ -167,8 +167,9 @@ abstract class SkillingBotScript<E : Entity>(
      * currently carried triggers forced banking. If no replacement is resolved, the selected tool is cleared.
      * In either case, execution returns without invoking [onExecuteSkilling] during that cycle.
      *
-     * When a selected tool is available in inventory and has an equipment definition, this attempts to equip it.
-     * Execution then delegates to [onExecuteSkilling] without verifying whether the equipment attempt succeeded.
+     * When a selected tool is in the inventory and the bot meets its equipment requirements, this attempts to equip
+     * it; otherwise the tool stays in the inventory. Execution then delegates to [onExecuteSkilling] without
+     * verifying whether the equipment attempt succeeded.
      *
      * If no tool is selected at the beginning of the cycle, execution delegates directly to the subclass hook.
      *
@@ -197,7 +198,10 @@ abstract class SkillingBotScript<E : Entity>(
                     tool = null
                 }
                 return
-            } else if (EquipmentDefinition.ALL[toolId].isPresent && toolId !in bot.equipment) {
+            } else if (toolId !in bot.equipment &&
+                EquipmentDefinition.ALL[toolId].map { it.meetsAllRequirements(bot) }.orElse(false)) {
+                // Without the Attack level the tool still works from the inventory; trying to wield it every
+                // cycle only spams the failure message.
                 bot.log("Equipping ${itemName(toolId)} for this skilling script.")
                 handler.equipment.equip(toolId)
             }
