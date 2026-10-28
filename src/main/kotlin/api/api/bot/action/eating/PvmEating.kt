@@ -106,6 +106,11 @@ class PvmEating(private val bot: Bot) {
     private var toppingUp = false
 
     /**
+     * Whether the bot, low on hitpoints with only the food it keeps back, is eating up before it leaves to restock.
+     */
+    private var eatingBeforeRestock = false
+
+    /**
      * Looks after the bot's hitpoints once: notices damage it has taken, and eats if it's time to.
      *
      * @param fight The monsters the bot is fighting, or `null` if it isn't fighting.
@@ -121,7 +126,11 @@ class PvmEating(private val bot: Bot) {
         val maximumHp = bot.totalHealth
         val fighting = updateFight(fight)
         observe(now, hp, maximumHp)
-        return if (fighting) duringFight(now, hp, maximumHp) else betweenFights(now, hp, maximumHp)
+        val fed = if (fighting) duringFight(now, hp, maximumHp) else betweenFights(now, hp, maximumHp)
+        if (!fed) {
+            eatingBeforeRestock = false
+        }
+        return fed
     }
 
     /**
@@ -227,7 +236,8 @@ class PvmEating(private val bot: Bot) {
 
     /**
      * Between fights, decides once whether to top up to the hitpoints the bot likes to start a fight with, and does so
-     * at a relaxed pace. Leaves to restock when the bot is low on hitpoints and down to the food it keeps back.
+     * at a relaxed pace. When the bot is low on hitpoints and down to the food it keeps back, it always tops up, then
+     * leaves to restock.
      *
      * @return `false` if the bot needs to leave and restock food.
      */
@@ -235,23 +245,42 @@ class PvmEating(private val bot: Bot) {
         val habit = habit ?: return true
         val believedHp = hp + misjudged
         val comfortable = habit.comfortableAt(maximumHp, danger)
-        if (believedHp >= comfortable) {
-            return true
-        }
         val foods = CarriedFood.of(bot)
-        if (foods.size <= habit.foodToKeep(danger, foods.maxOfOrNull { it.food.heal } ?: 0)) {
-            bot.log("Low on hitpoints and food between fights, leaving to restock.")
-            return false
+        val keep = habit.foodToKeep(danger, foods.maxOfOrNull { it.food.heal } ?: 0)
+        if (foods.size > keep) {
+            eatingBeforeRestock = false
         }
-        if (!lullDecided) {
-            lullDecided = true
-            toppingUp = Random.nextDouble() >= habit.skipTopUpChance
-        }
-        if (!toppingUp || now < nextBiteAt) {
+        if (believedHp >= comfortable && !eatingBeforeRestock) {
             return true
         }
-        val food = CarriedFood.choose(foods, maximumHp - believedHp, false, habit.picksFoodCarefully())!!
-        if (believedHp + food.food.heal / 2 >= comfortable) {
+        if (foods.size <= keep && !eatingBeforeRestock) {
+            if (foods.isEmpty()) {
+                bot.log("Low on hitpoints and food between fights, leaving to restock.")
+                return false
+            }
+            // The food kept back is for getting away mid-fight. Nothing is attacking, so the bot eats it rather than
+            // walking to the bank and back on low hitpoints.
+            eatingBeforeRestock = true
+            bot.log("Low on hitpoints and food between fights, eating up before leaving to restock.")
+        }
+        if (!eatingBeforeRestock) {
+            if (!lullDecided) {
+                lullDecided = true
+                toppingUp = Random.nextDouble() >= habit.skipTopUpChance
+            }
+            if (!toppingUp) {
+                return true
+            }
+        }
+        if (now < nextBiteAt) {
+            return true
+        }
+        val food = CarriedFood.choose(foods, maximumHp - believedHp, false, habit.picksFoodCarefully())
+        if (food == null || believedHp + food.food.heal / 2 >= comfortable) {
+            if (eatingBeforeRestock) {
+                bot.log("Low on hitpoints and food between fights, leaving to restock.")
+                return false
+            }
             toppingUp = false
             return true
         }
