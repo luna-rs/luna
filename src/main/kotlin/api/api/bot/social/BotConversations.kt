@@ -13,7 +13,8 @@ import io.luna.game.model.mob.bot.speech.BotSpeech
 
 /**
  * Opt-in availability from the current script's actual work state, independent of coordinator or location guesses.
- * Implementations exclude travel, banking, work and active negotiations, but do not test conversation ownership.
+ * Implementations exclude travel, banking and active negotiations, but do not test conversation ownership.
+ * Ordinary training must explicitly opt into conversation while working.
  *
  * @author lare96
  */
@@ -22,6 +23,9 @@ interface SocialBotScript {
      * Whether this script is currently waiting and can accept a social approach.
      */
     fun canSocialize(): Boolean
+
+    /** Explicit opt-in for talking while safely carrying on ordinary training. */
+    fun canTalkWhileWorking(): Boolean = false
 
     /**
      * Invalidates activity-specific stock assumptions after a native social exchange actually completes.
@@ -45,19 +49,26 @@ object BotConversations {
     /**
      * Rejects busy bots even when their current script normally permits social approaches.
      */
-    private fun ready(bot: Bot, allowMovement: Boolean = false): Boolean = bot.state == EntityState.ACTIVE &&
-        ActionSafety.NON_COMBAT.allows(bot) && bot.reflex.activeReflex == null &&
-        bot.combat.target == null && (allowMovement || bot.walking.isEmpty && !bot.navigator.isActive) &&
-        bot.actions.size(ActionType.WEAK) == 0 && !bot.overlays.hasWindow() &&
-        bot.tradingWith == -1 && !bot.speechStack.isAllDisabled
+    private fun ready(bot: Bot, allowMovement: Boolean = false, allowWorking: Boolean = false): Boolean {
+        val working = allowWorking && (bot.scriptStack.current() as? SocialBotScript)?.canTalkWhileWorking() == true
+        return bot.state == EntityState.ACTIVE &&
+            (if (working) ActionSafety.COMBAT else ActionSafety.NON_COMBAT).allows(bot) &&
+            bot.reflex.activeReflex == null &&
+            (working || bot.combat.target == null) &&
+            (working || allowMovement || bot.walking.isEmpty && !bot.navigator.isActive) &&
+            (working || bot.actions.size(ActionType.WEAK) == 0) && !bot.overlays.hasWindow() &&
+            bot.tradingWith == -1 && !bot.speechStack.isAllDisabled
+    }
 
     /**
      * Explicit opt-in from a running script, with invalid previous ownership released before reuse.
      */
-    fun available(bot: Bot): Boolean {
+    fun available(bot: Bot, allowWorking: Boolean = false): Boolean {
         if (BotSocialInteractions.engaged(bot) || engaged(bot)) return false
         val script = bot.scriptStack.current()
-        return script is SocialBotScript && script.isRunning() && ready(bot) && script.canSocialize()
+        return script is SocialBotScript && script.isRunning() &&
+            (allowWorking || !script.canTalkWhileWorking()) &&
+            ready(bot, allowWorking = allowWorking) && script.canSocialize()
     }
 
     /**
@@ -76,11 +87,15 @@ object BotConversations {
     fun start(first: Bot, second: Bot, lines: List<String>,
               allowMovement: Boolean = false,
               clock: () -> Long = { System.nanoTime() / 1_000_000 },
-              interaction: BotSocialInteractions.Session? = null): Conversation? {
+              interaction: BotSocialInteractions.Session? = null,
+              allowWorking: Boolean = false,
+              delivered: (Bot) -> Unit = {}): Conversation? {
         if (first === second || lines.size !in 2..24 || lines.any { it.isBlank() || it.length > 80 } ||
-            !availableTo(first, interaction, allowMovement) || !availableTo(second, interaction, allowMovement) ||
+            !availableTo(first, interaction, allowMovement, allowWorking) ||
+            !availableTo(second, interaction, allowMovement, allowWorking) ||
             !near(first, second)) return null
-        val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock, interaction)
+        val session = Conversation(listOf(first, second), lines.toList(), allowMovement, clock, interaction,
+                                   delivered = delivered, allowWorking = allowWorking)
         if (!first.speechStack.reserveConversation(session) { session.valid() }) return null
         if (!second.speechStack.reserveConversation(session) { session.valid() }) {
             first.speechStack.releaseConversation(session)
@@ -91,15 +106,28 @@ object BotConversations {
         return session
     }
 
+    /** A contextual reply to a human or a short reaction, using the same reservation and delivery loop. */
+    fun say(bot: Bot, text: String, valid: () -> Boolean = { true }, typingLimit: Int = 20,
+            delivered: (Bot) -> Unit = {}): Conversation? {
+        if (text.isBlank() || text.length > 80 || !available(bot, allowWorking = true) || !valid()) return null
+        val session = Conversation(listOf(bot), listOf(text), false,
+                                   { System.nanoTime() / 1_000_000 }, null, valid, delivered, typingLimit, true)
+        if (!bot.speechStack.reserveConversation(session) { session.valid() }) return null
+        bot.conversation = session
+        session.tick()
+        return session
+    }
+
     /**
      * An existing owner may continue talking during its journey without reopening recruitment. It must still own
      * both bots, retain their scripts and meet native speech/safety conditions; unrelated callers cannot bypass a claim.
      */
-    private fun availableTo(bot: Bot, interaction: BotSocialInteractions.Session?, allowMovement: Boolean): Boolean {
-        if (interaction == null) return available(bot)
+    private fun availableTo(bot: Bot, interaction: BotSocialInteractions.Session?, allowMovement: Boolean,
+                            allowWorking: Boolean): Boolean {
+        if (interaction == null) return available(bot, allowWorking)
         val script = bot.scriptStack.current()
         return BotSocialInteractions.owns(bot, interaction) && interaction.valid() &&
-            script is SocialBotScript && script.isRunning() && ready(bot, allowMovement)
+            script is SocialBotScript && script.isRunning() && ready(bot, allowMovement, allowWorking)
     }
 
     /**
@@ -131,7 +159,11 @@ object BotConversations {
     class Conversation internal constructor(private val bots: List<Bot>, private val lines: List<String>,
                                              private val allowMovement: Boolean,
                                              private val clock: () -> Long,
-                                             private val interaction: BotSocialInteractions.Session?) {
+                                             private val interaction: BotSocialInteractions.Session?,
+                                             private val contextValid: () -> Boolean = { true },
+                                             private val delivered: (Bot) -> Unit = {},
+                                             private val typingLimit: Int = 20,
+                                             private val allowWorking: Boolean = false) {
         /**
          * Script identities captured at acquisition; a paused or replaced activity cannot keep talking.
          */
@@ -157,10 +189,10 @@ object BotConversations {
          * Rechecks both live activities, proximity and deadlines before queueing or sending any turn.
          */
         internal fun valid(): Boolean = !ended && clock() < minOf(deadline, turnDeadline) &&
-            near(bots[0], bots[1]) && bots.indices.all {
+            contextValid() && (bots.size == 1 || near(bots[0], bots[1])) && bots.indices.all {
                 val script = bots[it].scriptStack.current()
                 script === scripts[it] && script is SocialBotScript && script.isRunning() &&
-                    ready(bots[it], allowMovement) && (if (interaction == null) script.canSocialize()
+                    ready(bots[it], allowMovement, allowWorking) && (if (interaction == null) script.canSocialize()
                     else BotSocialInteractions.owns(bots[it], interaction) && interaction.valid())
             }
 
@@ -174,6 +206,7 @@ object BotConversations {
             }
             if (pending != null) {
                 if (pending?.isDelivered != true) return
+                delivered(bots[index % bots.size])
                 index++
                 pending = null
             }
@@ -182,9 +215,9 @@ object BotConversations {
                 close()
                 return
             }
-            val speaker = bots[index % 2]
+            val speaker = bots[index % bots.size]
             val ticks = (3 + lines[index].length / 6 + (1 - speaker.personality.social) * 6 + (0..3).random())
-                .toInt().coerceIn(4, 20)
+                .toInt().coerceIn(4, typingLimit.coerceIn(4, 20))
             val speech = BotSpeech(lines[index], ticks)
             if (!speaker.speechStack.speakConversation(this, speech)) {
                 close()
