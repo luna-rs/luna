@@ -39,7 +39,7 @@ public final class FullScreenInterfaceMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player, ByteBuf buffer) {
         ByteMessage msg = ByteMessage.message(253, buffer);
         msg.putShort(primaryId, ByteOrder.LITTLE);
-        msg.put(secondaryId, ValueType.ADD);
+        msg.putShort(secondaryId, ValueType.ADD);
         return msg;
     }
 }
