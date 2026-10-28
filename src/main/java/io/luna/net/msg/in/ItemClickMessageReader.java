@@ -46,9 +46,9 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
                 interfaceId = payload.getShort(true);
                 return new ItemFourthClickEvent(player, id, index, interfaceId);
             case 4:
-                id = payload.getShort(false, ValueType.ADD);
-                interfaceId = payload.getShort(false);
-                index = payload.getShort(false, ValueType.ADD);
+                index = payload.getShort(false, ByteOrder.LITTLE);
+                id = payload.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
+                interfaceId = payload.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
                 return new ItemFifthClickEvent(player, id, index, interfaceId);
         }
         throw new IllegalStateException("invalid opcode");
