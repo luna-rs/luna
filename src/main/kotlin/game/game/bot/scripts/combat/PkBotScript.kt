@@ -478,9 +478,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
         if (isRestocking() || System.currentTimeMillis() >= expireAt) return false
         if (!allowsHuntingAt(bot.position) || !allowsHuntingAt(target.position)) return false
         if (!combatPolicy.pkRiskBudget().withinBudget) return false
-        if (clan.enabled) return clan.wearingCape() &&
-            (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target) || combatPolicy.canRetaliateAgainst(target)) &&
-            (clanCanHunt() || combatPolicy.canRetaliateAgainst(target))
+        if (clan.enabled) {
+            if (!clan.wearingCape()) return false
+            if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target) &&
+                !combatPolicy.canRetaliateAgainst(target)) return false
+            if (clan.clanOuting) return clanCanHunt() || combatPolicy.canRetaliateAgainst(target)
+        }
         if (!isGenericSession()) return true
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
             observations.canProtectAgainst(target) || combatPolicy.canRetaliateAgainst(target)
@@ -501,7 +504,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     /**
      * Clanmates may be anywhere online. A solo decision belongs to this outing and never changes saved allegiance.
      */
-    internal fun clanCanHunt(): Boolean = !clan.enabled || soloClanOuting || clan.onlineMembers(activePkOnly = false).isNotEmpty()
+    internal fun clanCanHunt(): Boolean = !clan.clanOuting || soloClanOuting || clan.onlineMembers(activePkOnly = false).isNotEmpty()
 
     /**
      * Enables fresh attack evidence for kind protection and cape-based clan infighting.
@@ -525,16 +528,19 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * applied separately unless they are stupidly confident. Clan sessions challenge other capes and witnessed
      * friendly initiators, requiring their own cape and an online clanmate unless this is a solo outing.
      */
-    internal fun wantsToAttack(target: Player): Boolean = when (bot.preferences.pk?.purpose()) {
-        Purpose.SKILL -> BotCombatActionHandler.isPker(target)
-        Purpose.VALUE -> true
-        Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
-            levelAt(bot.position) >= 30 && levelAt(target.position) >= 30 &&
-            (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
-        Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
-            (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
-            else !bot.personality.isUncertain && !bot.preferences.isSkiller
-        else -> false
+    internal fun wantsToAttack(target: Player): Boolean {
+        if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target)) return false
+        return when (bot.preferences.pk?.purpose()) {
+            Purpose.SKILL -> BotCombatActionHandler.isPker(target)
+            Purpose.VALUE -> true
+            Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
+                levelAt(bot.position) >= 30 && levelAt(target.position) >= 30 &&
+                (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
+            Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
+                (target.skullIcon != SkullIcon.NONE && !target.combat.inCombat() && target.combat.target == null)
+                else !bot.personality.isUncertain && !bot.preferences.isSkiller
+            else -> false
+        }
     }
 
     /**
@@ -557,7 +563,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * This ranks an already legal candidate list; it never grants permission to interfere in single combat.
      */
     internal fun orderTargets(targets: List<Player>): List<Player> = when {
-        clan.enabled -> {
+        clan.clanOuting -> {
             val assisting = clan.onlineMembers().filter { clan.apparentAlly(it) }
                 .mapNotNull { it.combat.target as? Player }.toSet()
             targets.sortedByDescending { if (observations.canDefendClanAgainst(it)) 2 else if (it in assisting) 1 else 0 }
@@ -574,10 +580,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Native single-combat rules may prevent intervention even when the bot witnessed an attack.
      */
     internal fun protectObservedPlayer(): Boolean {
-        if ((!isKindGenericSession() && !clan.enabled) || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
+        if ((!isKindGenericSession() && !clan.clanOuting) || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
             System.currentTimeMillis() >= expireAt) return false
         val attacker = world.locator.findViewablePlayers(bot).firstOrNull {
-            (if (clan.enabled) observations.canDefendClanAgainst(it) else observations.canProtectAgainst(it)) &&
+            (if (clan.clanOuting) observations.canDefendClanAgainst(it) else observations.canProtectAgainst(it)) &&
                 allowsPursuit(it) && combatPolicy.canAttackWildernessPlayer(it)
         } ?: return false
         bot.scriptStack.pushHead(CombatBotScript(bot, attacker, pkSession = this))
@@ -598,7 +604,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Solo outings choose independently, retaining clan allegiance and local assistance rules.
      */
     internal fun selectPatrolDestination(): Position {
-        if (clan.enabled && !soloClanOuting) {
+        if (clan.clanOuting && !soloClanOuting) {
             val leader = (clan.onlineMembers().filter { clan.apparentAlly(it) } + bot).minBy { it.usernameHash }
             if (leader !== bot) leader.scriptStack.findActive(PkBotScript::class.java).orElse(null)
                 ?.patrolDestination?.takeIf { it.z == 0 && levelAt(it) >= 30 }?.let { return it }

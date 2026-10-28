@@ -86,6 +86,14 @@ public final class PersistenceService extends AbstractIdleService {
     }
 
     /**
+     * Queues external persistent state changes on the same worker as player saves.
+     * Shutdown waits for these operations along with ordinary persistence work.
+     */
+    public CompletableFuture<Void> execute(Runnable action) {
+        return CompletableFuture.runAsync(action, worker);
+    }
+
+    /**
      * Loads a player's data, applies a mutation, and saves or reapplies the result.
      * <p>
      * If the player is online, a fresh save snapshot is created from the live player on the game thread, transformed,
@@ -332,6 +340,7 @@ public final class PersistenceService extends AbstractIdleService {
             Stopwatch timer = Stopwatch.createStarted();
             boolean successful = world.getSerializerManager().getSerializer().deletePlayer(world, username);
             if (successful) {
+                world.getBotManager().getClanRegistry().update(username, false);
                 logger.info("Save record for {} has been deleted (took {}ms).", username, box(timer.elapsed().toMillis()));
             } else {
                 logger.warn("Could not find record to delete for {}.", username);

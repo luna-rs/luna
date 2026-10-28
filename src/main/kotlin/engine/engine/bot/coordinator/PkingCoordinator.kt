@@ -34,7 +34,7 @@ object PkingCoordinator : BotCoordinator {
             bot.scriptStack.size() > 0) return null
         val solo = PkClanPolicy.chooseSolo(bot)
         val clan = PkClanPolicy(bot)
-        if (clan.enabled && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) return null
+        if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) return null
         val preparation = PkLoadoutPreparation(bot, bot.actionHandler)
         if (preparation.plan(allowMissingClanCape = true) == null) return ScavengingCoordinator.detour(bot, preparation)
         val duration = if (bot.preferences.likesActivity(BotActivity.PKING)) rand(45, 120).minutes else rand(15, 45).minutes

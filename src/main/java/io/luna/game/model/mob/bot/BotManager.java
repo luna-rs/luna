@@ -10,6 +10,8 @@ import io.luna.game.model.mob.bot.schedule.BotScheduleService;
 import io.luna.game.model.mob.bot.script.BotScriptManager;
 import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool;
 
+import java.nio.file.Path;
+
 /**
  * Coordinates the global systems used by automated bot behavior.
  * <p>
@@ -22,6 +24,17 @@ import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool;
  * @author lare96
  */
 public final class BotManager {
+
+    /**
+     * External membership roster, independent of permanent PK purpose.
+     */
+    private final BotClanRegistry clanRegistry = new BotClanRegistry(
+            Path.of("data/game/bots/clans.json"));
+
+    /**
+     * World providing the complete saved bot roster and configured account serializer.
+     */
+    private final World world;
 
     /**
      * Manages loading, lookup, and persistence for {@link BotScript} instances.
@@ -54,6 +67,7 @@ public final class BotManager {
      * @param world The world.
      */
     public BotManager(World world) {
+        this.world = world;
         scheduleService = new BotScheduleService(world);
     }
 
@@ -68,6 +82,21 @@ public final class BotManager {
         generalSpeechPool.load();
         BotTradeSpeechPool.INSTANCE.load();
         scheduleService.startAsync();
+    }
+
+    /**
+     * Reconciles offline membership during server startup before the game thread starts.
+     */
+    public void loadClans() {
+        clanRegistry.load(world.getBots().getSavedNames(),
+                name -> world.getSerializerManager().getSerializer().loadPlayer(world, name));
+    }
+
+    /**
+     * @return The authoritative clan membership registry.
+     */
+    public BotClanRegistry getClanRegistry() {
+        return clanRegistry;
     }
 
     /**

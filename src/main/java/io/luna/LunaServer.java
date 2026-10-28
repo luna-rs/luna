@@ -235,7 +235,6 @@ public final class LunaServer {
         taskList.add(new CombatSpellDefinitionFileParser());
         taskList.add(new AmmoDefinitionFileParser());
         taskList.add(new BossFileParser());
-        taskList.add(() -> context.getWorld().getBots().loadNames());
         taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new WeaponAnimationDefinitionFileParser());
         taskList.add(new WeaponSoundDefinitionFileParser());
@@ -252,6 +251,8 @@ public final class LunaServer {
 
         pool.shutdown();
         awaitTerminationUninterruptibly(pool);
+        context.getWorld().getBots().loadNames();
+        context.getWorld().getBotManager().loadClans();
 
         // Wait for cache decoders after launch tasks (keeps startup ordering deterministic).
         context.getCache().waitForDecoders();

@@ -16,15 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * @author lare96
  */
-public record BotPkPreference(Purpose purpose, Styles styles, Build build, int teamCape) {
-
-    /**
-     * Assigns one of the fifty native team capes once when a CLAN identity is created or migrated.
-     * Other purposes have no clan assignment. Explicit assignments use the four-argument constructor.
-     */
-    public BotPkPreference(Purpose purpose, Styles styles, Build build) {
-        this(purpose, styles, build, purpose == Purpose.CLAN ? 4315 + 2 * ThreadLocalRandom.current().nextInt(50) : -1);
-    }
+public record BotPkPreference(Purpose purpose, Styles styles, Build build) {
 
     /**
      * The motivation for seeking Wilderness fights; targeting rules belong to the PK coordinator.
@@ -137,9 +129,6 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build, int t
         if (!build.supports(styles)) {
             throw new IllegalArgumentException("PK build does not support selected styles: " + build + "/" + styles);
         }
-        if (purpose == Purpose.CLAN ? !isTeamCape(teamCape) : teamCape != -1) {
-            throw new IllegalArgumentException("Invalid team cape for PK purpose: " + purpose + "/" + teamCape);
-        }
     }
 
     /**
@@ -169,18 +158,16 @@ public record BotPkPreference(Purpose purpose, Styles styles, Build build, int t
         object.addProperty("purpose", purpose.name());
         object.addProperty("styles", styles.name());
         object.addProperty("build", build.name());
-        object.addProperty("teamCape", teamCape);
         return object;
     }
 
     /**
-     * Restores the exact identity. Invalid data fails visibly rather than silently rerolling a build.
+     * Restores purpose, styles and build. Legacy cape fields are superseded by the external clan registry.
      */
     public static BotPkPreference load(JsonObject object) {
         Purpose purpose = Purpose.valueOf(object.get("purpose").getAsString());
         Styles styles = Styles.valueOf(object.get("styles").getAsString());
         Build build = Build.valueOf(object.get("build").getAsString());
-        return object.has("teamCape") ? new BotPkPreference(purpose, styles, build, object.get("teamCape").getAsInt()) :
-                new BotPkPreference(purpose, styles, build);
+        return new BotPkPreference(purpose, styles, build);
     }
 }

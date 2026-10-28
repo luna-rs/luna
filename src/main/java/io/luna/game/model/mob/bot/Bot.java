@@ -464,7 +464,7 @@ public final class Bot extends Player {
         }
         // Load data for bot based on username.
         return world.getPersistenceService().load(username).
-                thenApplyAsync(data -> {
+                thenComposeAsync(data -> {
                     if (temporary) {
                         data = null;
                     }
@@ -472,6 +472,14 @@ public final class Bot extends Player {
                     if (data == null) {
                         position = spawnPosition;
                         preferences.initializeNewScavenger(Luna.settings().bots().newAccountScavengingChance());
+                    }
+                    PlayerData loadedData = data;
+                    boolean eligible = !preferences.isSkiller() && preferences.getPk() != null;
+                    return world.getPersistenceService().execute(() ->
+                            manager.getClanRegistry().update(username, eligible)).thenApply(ignored -> loadedData);
+                }, service.getGameExecutor()).thenApplyAsync(data -> {
+                    if (world.isFull() || world.getPlayerMap().containsKey(username)) {
+                        throw new IllegalStateException("World filled or account logged in during clan registration.");
                     }
                     if (world.getPlayers().add(this)) {
                         world.getBots().add(this);

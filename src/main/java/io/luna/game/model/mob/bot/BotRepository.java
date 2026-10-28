@@ -86,7 +86,7 @@ public final class BotRepository {
                 loadSqlNames();
             }
         } catch (Exception e) {
-            logger.error("Error while loading the usernames of saved bots.", e);
+            throw new IllegalStateException("Could not load the complete saved bot roster.", e);
         }
     }
 
@@ -157,7 +157,14 @@ public final class BotRepository {
         online.remove(bot.getUsername());
         world.getBotManager().getScheduleService().addLoginRequest(bot.getUsername(), bot.getPersonality());
         if (bot.isTemporary()) {
-            savedNames.remove(bot.getUsername());
+            String username = bot.getUsername();
+            savedNames.remove(username);
+            world.getPersistenceService().execute(() ->
+                    world.getBotManager().getClanRegistry().update(username, false))
+                    .exceptionally(error -> {
+                        logger.error("Could not release temporary bot clan membership.", error);
+                        return null;
+                    });
         }
     }
 

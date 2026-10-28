@@ -12,21 +12,26 @@ import java.util.concurrent.ThreadLocalRandom
 /**
  * Team-cape clan identity and session cooperation, using existing equipment and online bot state.
  * Saved assignments identify real bot members; visible capes identify perceived allies, including disguised humans.
- * Ordinary outings need another assigned member online. Tactical cooperation uses active PK sessions only.
+ * CLAN-purpose outings need another assigned member online. Group patrols use active CLAN sessions only.
  * Confident bots can choose a solo outing once.
  *
  * @author lare96
  */
 internal class PkClanPolicy(private val bot: Bot) {
     /**
-     * Only permanent CLAN identities participate; a worn cape cannot enroll an ordinary bot or skiller.
+     * Every permanent PK identity participates; an outing purpose does not determine membership.
      */
-    val enabled: Boolean get() = !bot.preferences.isSkiller && bot.preferences.pk?.purpose() == Purpose.CLAN
+    val enabled: Boolean get() = !bot.preferences.isSkiller && bot.preferences.pk != null
 
     /**
-     * The immutable unnoted cape ID selected through the original preference lifecycle.
+     * Group departure and patrol rules belong only to CLAN-purpose outings.
      */
-    val cape: Int? get() = bot.preferences.pk?.teamCape()?.takeIf { enabled }
+    val clanOuting: Boolean get() = enabled && bot.preferences.pk?.purpose() == Purpose.CLAN
+
+    /**
+     * The assigned unnoted cape from the external registry, shared by every PK purpose.
+     */
+    val cape: Int? get() = bot.world.botManager.clanRegistry.capeFor(bot.username).takeIf { enabled }
 
     /**
      * Requires the assigned cape rather than treating a different clan's disguise as this bot's membership.
@@ -59,8 +64,9 @@ internal class PkClanPolicy(private val bot: Bot) {
         val id = cape ?: return emptyList()
         return bot.world.players.stream().filter { it is Bot && it !== bot }.map { it as Bot }.filter {
             it.state == EntityState.ACTIVE && it.isAlive && !it.preferences.isSkiller &&
-                it.preferences.pk?.purpose() == Purpose.CLAN && it.preferences.pk?.teamCape() == id &&
-                (!activePkOnly || it.scriptStack.containsActive(PkBotScript::class.java))
+                it.preferences.pk != null && bot.world.botManager.clanRegistry.capeFor(it.username) == id &&
+                (!activePkOnly || (it.preferences.pk?.purpose() == Purpose.CLAN &&
+                    it.scriptStack.containsActive(PkBotScript::class.java)))
         }.toList()
     }
 

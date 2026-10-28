@@ -99,3 +99,5 @@ gradle-app.setting
 /data/game/cache/
 /src/main/kotlin/engine/sandbox/
 /data/game/bots/logs/
+
+/data/game/bots/clans.json
