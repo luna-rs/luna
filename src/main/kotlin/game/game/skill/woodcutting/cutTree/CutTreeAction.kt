@@ -3,6 +3,7 @@ package game.skill.woodcutting.cutTree
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
+import game.content.randomEvents.RandomEvents
 import game.skill.woodcutting.Woodcutting
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.Luna
@@ -19,6 +20,8 @@ import io.luna.game.model.`object`.GameObject
 /**
  * An [InventoryAction] that will enable the cutting of trees. The swing comes on the tick after the click, the first
  * attempt two ticks after the swing, then one attempt every `woodcutting_speed` ticks, each restarting the animation.
+ *
+ * @author lare96
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
     InventoryAction(plr, false, FIRST_ATTEMPT_DELAY, Int.MAX_VALUE) {
@@ -71,6 +74,8 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             Axe.sendNoAxeMessages(mob)
             false
         }
+
+        start && RandomEvents.offerActivity(mob, RandomEvents.Activity.WOODCUTTING) -> false
 
         else -> {
             if (!start) {

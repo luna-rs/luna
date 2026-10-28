@@ -3,6 +3,7 @@ package game.skill.fishing.catchFish
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
+import game.content.randomEvents.RandomEvents
 import game.skill.Skills
 import game.skill.fishing.catchFish.Fish.*
 import io.luna.game.action.Action
@@ -10,6 +11,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
@@ -24,6 +26,13 @@ class CatchFishAction(plr: Player,
                       private val tool: Tool) : Action<Player>(plr, ActionType.WEAK, false, 1) {
 
     companion object {
+
+        /**
+         * The saltfish, freshfish, rarefish and memberfish tables with explicit source event hooks.
+         * Quest, cave and Miscellania fishing retain the ordinary general timer.
+         */
+        private val RANDOM_EVENT_SPOTS = setOf(FishingSpot.NET_BAIT, FishingSpot.LURE_BAIT,
+            FishingSpot.CAGE_HARPOON, FishingSpot.NET_HARPOON)
 
         /**
          * Everything a big net can catch, in the order it's rolled. Each one is rolled on every catch, so one catch can
@@ -73,7 +82,8 @@ class CatchFishAction(plr: Player,
     private var nextRoll = tool.firstRoll
 
     override fun onSubmit() {
-        if (canFish()) {
+        if (canFish() && !(target is Npc && spot in RANDOM_EVENT_SPOTS &&
+                RandomEvents.offerActivity(mob, RandomEvents.Activity.FISHING))) {
             mob.walking.clear()
             mob.interact(target)
         } else {

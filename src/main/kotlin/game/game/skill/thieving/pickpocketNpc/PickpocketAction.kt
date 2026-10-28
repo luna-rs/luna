@@ -6,6 +6,7 @@ import api.predef.ext.*
 import game.player.Animations
 import game.player.Messages
 import game.player.Sound
+import game.content.randomEvents.RandomEvents
 import game.skill.thieving.Thieving
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
@@ -77,6 +78,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
             return
         }
 
+        if (RandomEvents.offerActivity(mob, RandomEvents.Activity.THIEVING)) return
         val rolls = if (Thieving.isDoubleLoot(mob)) 2 else 1
         val loot = ArrayList<Item>()
 

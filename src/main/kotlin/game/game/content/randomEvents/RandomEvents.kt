@@ -51,12 +51,40 @@ import kotlin.random.Random
  * Native gameplay is shared by players and bots. Bot response policy is a separate consumer.
  *
  * General selection retains all six slots from the supplied members enum: unimplemented results
- * are skipped rather than rerolled into extra genies or Old Men. Activity
- * hooks and the remaining encounters are subsequent content additions, not generic XP listeners.
+ * are skipped rather than rerolled into extra genies or Old Men. Native activity hooks retain
+ * each skill's additional hazard slots; remaining encounters are subsequent content additions.
  *
  * @author lare96
  */
 object RandomEvents {
+    /**
+     * Extra skill-specific slots preceding the six general members events in Lost City's dispatchers.
+     * Rune essence and other rocks without a gas replacement exclude rock gas. Pickpockets and stalls share
+     * one watchman slot; trapped chests add poison gas as well. Bone burial
+     * adds zombie and shade slots. Unimplemented outcomes consume readiness without a replacement roll.
+     *
+     * @author lare96
+     */
+    enum class Activity(private val specialSlots: Int) {
+        MINING(3),
+        MINING_WITHOUT_GAS(2),
+        WOODCUTTING(3),
+        FISHING(3),
+        THIEVING(1),
+        THIEVING_CHEST(2),
+        PRAYER(2);
+
+        /**
+         * Preserves the source's two-stage choice: skill hazard versus general pool, then one
+         * of the six general events. A missing native implementation does not favor other events.
+         */
+        internal fun select(random: (Int) -> Int): Kind? {
+            if (random(6 + specialSlots) < specialSlots) return null
+            val slot = random(6)
+            return Kind.entries.firstOrNull { it.generalSlot == slot }
+        }
+    }
+
     /**
      * Lost City's general timer interval, distinct from the world readiness polling boundary.
      */
@@ -99,13 +127,31 @@ object RandomEvents {
 
     /**
      * Consumes a source readiness flag and selects the general event once. Failed selection or an
-     * unavailable spawn tile does not grant another roll. Future skill dispatchers supply their own pool.
+     * unavailable spawn tile does not grant another roll. Activity dispatchers supply their own pool.
      */
     fun offerGeneral(player: Player): Boolean {
+        return offer(player) {
+            val slot = Random.nextInt(6)
+            Kind.entries.firstOrNull { it.generalSlot == slot }
+        }
+    }
+
+    /**
+     * Offers an encounter at a native skill boundary, independently of success rolls and XP changes.
+     * A successful start lets the caller stop its attempt before consuming tools, bait or supplies.
+     * Bone burial instead calls after its normal item consumption and experience award.
+     */
+    fun offerActivity(player: Player, activity: Activity): Boolean =
+        offer(player) { activity.select { Random.nextInt(it) } }
+
+    /**
+     * Applies shared eligibility and consumes one readiness flag before selecting an outcome.
+     * Native locks, modal windows and current encounters defer consumption to a later eligible trigger.
+     */
+    internal fun offer(player: Player, select: () -> Kind?): Boolean {
         if (!allowed(player) || !canAct(player) || !player.randomEventClock.consume()) return false
         if (!Luna.settings().game().betaMode() && player.rights >= RIGHTS_ADMIN) return false
-        val slot = Random.nextInt(6)
-        val kind = Kind.entries.firstOrNull { it.generalSlot == slot } ?: return false
+        val kind = select() ?: return false
         return startVisitor(player, kind)
     }
 

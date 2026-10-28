@@ -4,6 +4,7 @@ import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
+import game.content.randomEvents.RandomEvents
 import game.skill.prayer.Bone
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
@@ -23,14 +24,22 @@ import io.luna.game.model.mob.block.Animation
  */
 class BuryBoneAction(plr: Player, val bone: Bone) : ThrottledAction<Player>(plr, plr.lastBury, DELAY) {
     companion object {
-        /** Existing player cooldown, in game ticks. */
+        /**
+         * Existing player cooldown, in game ticks.
+         */
         const val DELAY = 3
-        /** Shared clock for all bone types buried by a player. */
+        /**
+         * Shared clock for all bone types buried by a player.
+         */
         private val Player.lastBury by Attr.timeSource()
-        /** Existing bone-burying animation. */
+        /**
+         * Existing bone-burying animation.
+         */
         private val ANIMATION = Animation(827)
 
-        /** Checks the player's cooldown without consuming the next allowed execution. */
+        /**
+         * Checks the player's cooldown without consuming the next allowed execution.
+         */
         fun isReady(plr: Player): Boolean = plr.lastBury.let { !it.isRunning || it.durationTicks >= DELAY }
     }
 
@@ -41,5 +50,6 @@ class BuryBoneAction(plr: Player, val bone: Bone) : ThrottledAction<Player>(plr,
         mob.playSound(Sound.BONES_DOWN)
         mob.sendMessage("You dig a hole in the ground...")
         mob.sendMessage("You bury the bones.")
+        RandomEvents.offerActivity(mob, RandomEvents.Activity.PRAYER)
     }
 }
