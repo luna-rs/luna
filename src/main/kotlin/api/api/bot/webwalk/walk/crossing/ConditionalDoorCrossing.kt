@@ -7,6 +7,8 @@ import api.predef.*
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.Doors
+import game.content.gnomeBall.GnomeBall
+import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.JewellersDoor
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
@@ -26,7 +28,8 @@ object ConditionalDoorCrossing : CrossingHandler {
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
-            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR) {
+            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != GnomeBall.GATE &&
+            id != GnomeStrongholdGate.GATE) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot

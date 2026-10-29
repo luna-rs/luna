@@ -8,6 +8,7 @@
     { "id": "draynor_village_manor_path", "pos": [3110, 3294, 0] },
     { "id": "lumbridge_draynor_road", "pos": [3129, 3295, 0] },
     { "id": "falador_south_east", "pos": [3007, 3330, 0] },
-    { "id": "falador_south_of_east_bank", "pos": [3007, 3343, 0] }
+    { "id": "falador_south_of_east_bank", "pos": [3007, 3343, 0] },
+    { "id": "edgeville_dungeon_gate_corridor", "pos": [3117, 9911, 0] }
   ]
 }

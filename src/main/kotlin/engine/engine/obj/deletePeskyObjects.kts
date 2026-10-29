@@ -11,52 +11,18 @@ import io.luna.game.model.`object`.ObjectDirection
 on(ServerLaunchEvent::class) {
     val positions = listOf(
 
-        // King black dragon gates.
-        Position(3008, 3850),
-        Position(3008, 3849),
-
-        // Deep wilderness red dragons.
-        Position(3201, 3856),
-        Position(3202, 3856),
-
         // Edgeville dungeon brass key door.
         Position(3115, 3450),
-
-        // Edgeville dungeon mine gates.
-        Position(3145, 9870),
-        Position(3145, 9871),
 
         // Barbarian village doors.
         Position(3082, 3426),
         Position(3098, 3426),
 
-        // North Falador chaos temple door.
-        Position(2941, 3517),
-
         // Theiving chests.
         Position(3190, 3957), // 10 coin
-        Position(2641, 3424), // steel arrowtips
-
-        // Lumbridge river goblins door.
-        Position(3246, 3244),
-
-        // Deep wilderness entrances.
-        Position(3225, 3904),
-        Position(3224, 3904),
-        Position(3337, 3896),
-        Position(3336, 3896),
-        Position(2948, 3904),
-        Position(2947, 3904),
-      
-        // Varrock range near bank.
-        Position(3241, 3406),
-        Position(3242, 3412),
 
         // HAM cult area door.
-        Position(3158, 9640),
-
-        // Seers' Village spinning wheel house door.
-        Position(2716, 3472)
+        Position(3158, 9640)
     )
 
     for (position in positions) {

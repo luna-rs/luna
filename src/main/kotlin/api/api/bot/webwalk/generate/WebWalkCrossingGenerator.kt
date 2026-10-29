@@ -6,7 +6,9 @@ import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
+import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.JewellersDoor
+import game.content.gnomeBall.GnomeBall
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
@@ -116,10 +118,25 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The Gnome Ball pitch gate is a scripted passage. Going in puts the weapon and shield away, which needs inventory
+     * space for them.
+     */
+    val GNOME_BALL_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeBall.GATE), cost = 4)
+
+    /**
+     * The Tree Gnome Stronghold's main gate, a 5x2 object crossed from the tile in front of its middle to the tile behind it.
+     */
+    val GNOME_STRONGHOLD_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeStrongholdGate.GATE), cost = 6,
+                                             placements = listOf(CrossingPlacement(GnomeStrongholdGate.GATE,
+                                                                                   GnomeStrongholdGate.POSITION,
+                                                                                   GnomeStrongholdGate.SOUTH,
+                                                                                   GnomeStrongholdGate.NORTH)))
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
-                     JEWELLERS_DOOR)
+                     JEWELLERS_DOOR, GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE)
 }
 
 /**
