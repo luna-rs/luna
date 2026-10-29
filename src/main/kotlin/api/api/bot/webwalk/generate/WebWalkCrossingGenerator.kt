@@ -142,6 +142,7 @@ object SpecialCrossings {
                                                 web(3163, 3736, 3163, 3735, 3163, 3737),
                                                 web(3183, 3733, 3183, 3732, 3183, 3734),
                                                 web(3210, 9898, 3210, 9897, 3210, 9899)))
+    /**
      * The house door north of Edgeville, above the hill giants, needs a carried brass key both ways.
      */
     val BRASS_KEY_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(BrassKeyDoor.DOOR),
