@@ -430,12 +430,12 @@ public class Npc extends Mob {
     }
 
     /**
-     * Returns the active {@link NpcCombatDefinition} for this NPC, if any.
+     * Returns the active {@link NpcCombatDefinition} for this NPC, falling back to NPC 1 when absent.
      *
-     * @return An {@link Optional} containing the combat definition, or empty if none exists.
+     * @return The current combat definition, or the default definition for a non-combat NPC.
      */
     public NpcCombatDefinition combatDef() {
-        return combatDefinition.orElse(NpcCombatDefinition.ALL.retrieve(1));
+        return combatDefinition.orElseGet(() -> NpcCombatDefinition.ALL.retrieve(1));
     }
 
     /**

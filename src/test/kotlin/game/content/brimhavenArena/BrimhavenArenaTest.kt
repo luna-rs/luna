@@ -34,7 +34,10 @@ import io.luna.game.cache.codec.MapDecoder
 import io.luna.game.cache.codec.WidgetDefinitionDecoder
 import io.luna.game.cache.map.MapIndex
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.mockito.Mockito.*
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Verifies native arena assets, admission, ticket streaks, rewards and obstacle outcomes.
@@ -50,6 +53,7 @@ class BrimhavenArenaTest {
 
         @Suppress("UNCHECKED_CAST")
         @JvmStatic @BeforeAll fun initialize() {
+            assumeTrue(Files.exists(Path.of("data/game/cache/main_file_cache.dat")), "Local revision 377 cache required")
             InventoryProductionFixtures.initializeCombat()
             itemEntries = ArrayDefinitionRepository::class.java.getDeclaredField("definitions").apply {
                 isAccessible = true

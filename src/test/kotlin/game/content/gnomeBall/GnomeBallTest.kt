@@ -20,7 +20,10 @@ import io.luna.game.model.mob.overlay.AbstractOverlaySet
 import io.luna.game.model.`object`.GameObject
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.mockito.Mockito.*
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Verifies pitch boundaries, native assets, possession, delayed effects and persistent ball returns.
@@ -283,6 +286,7 @@ class GnomeBallTest {
     }
 
     @Test fun nativeCacheContainsScoreboardGoalAndStraightGate() {
+        assumeTrue(Files.exists(Path.of("data/game/cache/main_file_cache.dat")), "Local revision 377 cache required")
         io.luna.game.cache.Cache().use { cache ->
             cache.open()
             val widgets = ImmutableList.builder<WidgetDefinition>()

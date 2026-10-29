@@ -32,6 +32,7 @@ ShopHandler.create("General Store (old)") {
         "Bowl" x 15
         "Anti-dragon shield" x 50
         "Knife" x 50
+        "Brass key" x 50
         "Lobster" x 150
     }
 }

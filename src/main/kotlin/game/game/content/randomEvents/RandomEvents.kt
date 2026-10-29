@@ -35,7 +35,8 @@ import game.content.castleWars.CastleWarsGame
 import game.content.duelArena.DuelArena
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
-import game.content.randomEvents.VisitorRandomEvent.Kind
+import game.skill.fishing.catchFish.FishingSpot
+import game.skill.fishing.fishingSpot.FishingSpotHandler
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -58,6 +59,37 @@ import kotlin.random.Random
  * @author lare96
  */
 object RandomEvents {
+    /**
+     * Source identities and gift rules shared by the dispatcher and encounters. The general
+     * slot is zero-based within Lost City's six-entry members table; enum names are save identifiers.
+     *
+     * @author lare96
+     */
+    enum class Kind(val npcId: Int, val generalSlot: Int, val followsLogout: Boolean = true) {
+        SWARM(411, 0, false),
+        GENIE(409, 1),
+        MYSTERIOUS_OLD_MAN(410, 3),
+        DRUNKEN_DWARF(956, 2, false),
+        STRANGE_PLANT(407, 4, false);
+
+        /**
+         * Chooses gifts from the source members reward tables. The old man's 150 equally likely
+         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets. The dwarf
+         * always gives both a kebab and a beer, without a reward roll.
+         */
+        fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
+            SWARM, STRANGE_PLANT -> emptyList()
+            GENIE -> listOf(Item(2528))
+            DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
+            MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
+                in 0..15 -> Item(1971)
+                in 16..29 -> Item(1969)
+                in 30..35 -> Item(995, 240)
+                else -> Item(405)
+            })
+        }
+    }
+
     /**
      * Extra skill-specific slots preceding the six general members events in Lost City's dispatchers.
      * Rune essence and other rocks without a gas replacement exclude rock gas. Pickpockets and stalls share
@@ -160,38 +192,93 @@ object RandomEvents {
         offer(player) { activity.select { Random.nextInt(it) } }
 
     /**
+     * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
+     * rather than owning a personal visitor slot. River trolls use their owner-bound combat lifecycle;
+     * the big fish outcome remains unimplemented.
+     * Existing whirlpools do not consume another readiness flag when a player clicks them again.
+     */
+    fun offerFishing(player: Player, npc: Npc, spot: FishingSpot): Boolean =
+        offerFishing(player, npc, spot) { Random.nextInt(it) }
+
+    /**
+     * Resolves one fishing outcome after shared eligibility, preserving both source random rolls.
+     * Unavailable and unimplemented outcomes consume readiness without a replacement roll.
+     */
+    internal fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, random: (Int) -> Int): Boolean {
+        if (npc.state != EntityState.ACTIVE || npc.id !in spot.npcs || spot.whirlpoolId == null) return false
+        return offerOutcome(player) {
+            when (random(9)) {
+                0 -> false
+                1 -> startRiverTroll(player)
+                2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
+                else -> {
+                    val slot = random(6)
+                    Kind.entries.firstOrNull { it.generalSlot == slot }
+                        ?.let { startEncounter(player, it) } ?: false
+                }
+            }
+        }
+    }
+
+    /**
      * Applies shared eligibility and consumes one readiness flag before selecting an outcome.
      * Native locks, modal windows and current encounters defer consumption to a later eligible trigger.
      */
     internal fun offer(player: Player, select: () -> Kind?): Boolean {
+        return offerOutcome(player) { select()?.let { startEncounter(player, it) } ?: false }
+    }
+
+    /**
+     * Shares the readiness boundary between personal encounters and changes to world resources.
+     */
+    private fun offerOutcome(player: Player, select: () -> Boolean): Boolean {
         if (!allowed(player) || !canAct(player) || !player.randomEventClock.consume()) return false
         if (!Luna.settings().game().betaMode() && player.rights >= RIGHTS_ADMIN) return false
-        val kind = select() ?: return false
-        return startVisitor(player, kind)
+        return select()
     }
 
     /**
      * Starts the implemented encounter through the same eligibility and ownership path as natural rolls.
      * Administrators may use the command to inspect behavior without altering event probabilities.
      */
-    fun startGenie(player: Player): Boolean = startVisitor(player, Kind.GENIE)
+    fun startGenie(player: Player): Boolean = startEncounter(player, Kind.GENIE)
 
     /**
-     * Creates a visitor with source NPC metadata and saves source-approved following types for login recovery.
+     * Creates an encounter with source NPC metadata and saves source-approved following types for login recovery.
      * Genie save identifiers remain unchanged as the catalogue grows.
      */
-    fun startVisitor(player: Player, kind: Kind): Boolean {
+    fun startEncounter(player: Player, kind: Kind): Boolean =
+        spawnEncounter(player, kind.npcId, kind.followsLogout) { npc ->
+            when (kind) {
+                Kind.SWARM -> SwarmRandomEvent(player, npc)
+                Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
+                else -> VisitorRandomEvent(player, npc, kind)
+            }
+        }
+
+    /**
+     * Starts the source fishing attacker at the owner's current combat bracket. It is absent from
+     * the general visitor pool and never creates a saved gift or following entitlement.
+     */
+    fun startRiverTroll(player: Player): Boolean =
+        spawnEncounter(player, RiverTrollRandomEvent.npcId(player.combatLevel), false) { RiverTrollRandomEvent(player, it) }
+
+    /**
+     * Shares safe placement and exact encounter ownership between general visitors and skill attackers.
+     */
+    private fun spawnEncounter(player: Player, npcId: Int, followsLogout: Boolean,
+                               create: (Npc) -> RandomEventEncounter): Boolean {
         if (!allowed(player) || !canAct(player)) return false
         val position = nearbySquare(player) ?: return false
-        val npc = Npc(ctx, kind.npcId, position).also { it.respawnTicks = -1 }
+        val npc = Npc(ctx, npcId, position).also { it.respawnTicks = -1 }
         if (!world.npcs.add(npc)) return false
         encounters.remove(player)?.let { previous ->
             if (previous.blocksNewEvents) previous.close()
             else lingering.getOrPut(player) { mutableListOf() }.add(previous)
         }
-        val encounter = VisitorRandomEvent(player, npc, kind)
+        val encounter = create(npc)
         encounters[player] = encounter
-        player.pendingRandomEvent = if (kind.followsLogout) encounter.resumeKey else ""
+        player.pendingRandomEvent = if (followsLogout) encounter.resumeKey else ""
         return true
     }
 
@@ -223,6 +310,16 @@ object RandomEvents {
      */
     internal fun owns(encounter: RandomEventEncounter): Boolean =
         encounters[encounter.player] === encounter || lingering[encounter.player]?.any { it === encounter } == true
+
+    /**
+     * Starts an owned hostile NPC using the source's NPC-combat takeover. Recent player-combat
+     * ownership, cooldowns and queued impacts remain under the native combat rules.
+     */
+    internal fun beginHostile(encounter: RandomEventEncounter) {
+        val combat = encounter.player.combat
+        if (combat.lastCombatWith is Npc) combat.lastCombatWith = encounter.npc
+        encounter.npc.combat.attack(encounter.player)
+    }
 
     /**
      * Returns the current owned encounter for bot response and native identity checks.
@@ -282,7 +379,7 @@ object RandomEvents {
     fun restore(player: Player) {
         if (!player.isAlive) player.pendingRandomEvent = ""
         val kind = Kind.entries.firstOrNull { it.followsLogout && it.name == player.pendingRandomEvent }
-        if (kind != null && player !in encounters) startVisitor(player, kind)
+        if (kind != null && player !in encounters) startEncounter(player, kind)
     }
 
     /**

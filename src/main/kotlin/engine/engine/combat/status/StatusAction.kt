@@ -232,7 +232,7 @@ class StatusAction(mob: Mob) : Action<Mob>(mob, ActionType.SOFT, true, 1) {
      * @return `true` if this mob currently has anti-poison protection.
      */
     fun isAntiPoison(): Boolean {
-        return StatusEffectType.ANTIPOISON in this
+        return StatusEffectType.ANTIPOISON in this || StatusEffectType.FRUIT_ANTIPOISON in this
     }
 
     /**

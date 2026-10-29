@@ -263,7 +263,7 @@ public class PlayerRangedCombatAttack extends RangedCombatAttack<Player> {
      * @param damage The applied damage, already capped to the victim's remaining health.
      */
     public final void awardDamageExperience(CombatDamage damage) {
-        int rawAmount = Math.max(0, damage.getRawAmount());
+        double rawAmount = experienceDamage(damage);
         Skill ranged = attacker.skill(Skill.RANGED);
         if (attackStance == CombatStance.DEFENSIVE) {
             // Defensive ranged shares experience between RANGED and DEFENCE.

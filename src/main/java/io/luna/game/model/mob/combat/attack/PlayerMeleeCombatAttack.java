@@ -147,7 +147,8 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
         }
 
         // Award XP depending on the combat stance.
-        double hitpointsXp = rawAmount * 1.33;
+        double experienceDamage = experienceDamage(damage);
+        double hitpointsXp = experienceDamage * 1.33;
         CombatStance stance = attackStance;
 
         Skill attack = attacker.skill(Skill.ATTACK);
@@ -155,13 +156,13 @@ public class PlayerMeleeCombatAttack extends MeleeCombatAttack<Player> {
         Skill defence = attacker.skill(Skill.DEFENCE);
         if (stance == CombatStance.ACCURATE) {
             // ACCURATE, award Attack XP.
-            attack.addExperience(rawAmount * 4);
+            attack.addExperience(experienceDamage * 4);
         } else if (stance == CombatStance.AGGRESSIVE) {
             // AGGRESSIVE, award Strength XP.
-            strength.addExperience(rawAmount * 4);
+            strength.addExperience(experienceDamage * 4);
         } else if (stance == CombatStance.DEFENSIVE) {
             // DEFENSIVE, award Defence XP.
-            defence.addExperience(rawAmount * 4);
+            defence.addExperience(experienceDamage * 4);
         } else if (stance == CombatStance.CONTROLLED) {
             // CONTROLLED, award Attack, Strength, and Defence XP.
             attack.addExperience(hitpointsXp);

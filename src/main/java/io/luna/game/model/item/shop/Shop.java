@@ -48,6 +48,17 @@ import java.util.Set;
 public final class Shop {
 
     /**
+     * Optional pricing for a shop's original stock. Buy prices start at the cache value; sell prices start at
+     * {@code sellMultiplier} of that value, and both change by {@code changePerItem} for each unit of stock.
+     */
+    public record StockPricing(double sellMultiplier, double changePerItem) {
+        public StockPricing {
+            Preconditions.checkArgument(Double.isFinite(sellMultiplier) && sellMultiplier >= 0 && sellMultiplier <= 1);
+            Preconditions.checkArgument(Double.isFinite(changePerItem) && changePerItem > 0 && changePerItem <= 1);
+        }
+    }
+
+    /**
      * Price change per extra unit stocked for uncommon/rare items in specialty shops.
      */
     private static final double SP_RARE_PRICE_CHANGE = 0.02;
@@ -180,6 +191,11 @@ public final class Shop {
     private final Predicate<Bot> botAccess;
 
     /**
+     * Shop-specific pricing for original stock, or {@code null} for the existing specialty-shop defaults.
+     */
+    private final StockPricing stockPricing;
+
+    /**
      * Creates a new {@link Shop}.
      *
      * @param world The world instance used for scheduling restock tasks.
@@ -192,6 +208,14 @@ public final class Shop {
      */
     public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy,
                 Currency currency, Predicate<Bot> botAccess, boolean merchantOnly) {
+        this(world, name, restockPolicy, buyPolicy, currency, botAccess, merchantOnly, null);
+    }
+
+    /**
+     * Creates a shop with optional pricing for its original stock. Other items retain general-store pricing.
+     */
+    public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy,
+                Currency currency, Predicate<Bot> botAccess, boolean merchantOnly, StockPricing stockPricing) {
         this.world = world;
         this.name = name;
         this.restockPolicy = restockPolicy;
@@ -199,6 +223,7 @@ public final class Shop {
         this.currency = currency;
         this.botAccess = botAccess;
         this.merchantOnly = merchantOnly;
+        this.stockPricing = stockPricing;
 
         amountMap = new OptionalInt[40];
         Arrays.fill(amountMap, OptionalInt.empty());
@@ -415,7 +440,8 @@ public final class Shop {
         if (amountMap[index].isPresent()) {
             maxPrice = MAX_PRICE;
             minPrice = SP_MIN_PRICE;
-            priceChange = (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
+            priceChange = stockPricing != null ? stockPricing.changePerItem() :
+                    (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
             itemsToReachMaxPrice = (int) ((maxPrice - 1) / priceChange);
             itemsToReachMinPrice = (int) (((1 - minPrice) / priceChange) - 0.000001);
         } else {
@@ -523,10 +549,11 @@ public final class Shop {
         int amountStocked = (storeIndex != -1) ? items.computeAmountForIndex(storeIndex) : 0;
 
         if (storeIndex != -1 && amountMap[storeIndex].isPresent()) {
-            startingPrice = SP_STARTING_SELL_PRICE;
+            startingPrice = stockPricing != null ? stockPricing.sellMultiplier() : SP_STARTING_SELL_PRICE;
             maxPrice = MAX_PRICE;
             minPrice = SP_MIN_PRICE;
-            priceChange = (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
+            priceChange = stockPricing != null ? stockPricing.changePerItem() :
+                    (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
             itemsToReachMaxPrice = (int) ((maxPrice - 1) / priceChange);
         } else {
             startingPrice = GEN_STARTING_SELL_PRICE;

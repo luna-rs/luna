@@ -162,7 +162,7 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
         if (barrowsSet != null) {
             barrowsSet.onDamageApplied(damage);
         }
-        int rawAmount = Math.max(0, damage.getRawAmount());
+        double rawAmount = experienceDamage(damage);
         if (defensiveCasting) {
             attacker.skill(Skill.MAGIC).addExperience(rawAmount * 1.33);
             attacker.skill(Skill.DEFENCE).addExperience(rawAmount);

@@ -44,7 +44,7 @@ import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy
-import kotlin.random.Random
+import game.content.randomEvents.RandomEvents.Kind
 
 /**
  * Lost City's personal gift visitors share following and owner-only rewards. The genie and Old Man
@@ -59,34 +59,6 @@ class VisitorRandomEvent(
     override val npc: Npc,
     val kind: Kind = Kind.GENIE
 ) : RandomEventEncounter {
-    /**
-     * Source identifiers and reward rules for visitors with this common lifecycle. The general
-     * slot is zero-based within Lost City's six-entry members table; enum names are save identifiers.
-     *
-     * @author lare96
-     */
-    enum class Kind(val npcId: Int, val generalSlot: Int, val followsLogout: Boolean = true) {
-        GENIE(409, 1),
-        MYSTERIOUS_OLD_MAN(410, 3),
-        DRUNKEN_DWARF(956, 2, false);
-
-        /**
-         * Chooses gifts from the source members reward tables. The old man's 150 equally likely
-         * results are 16 kebabs, 14 spinach rolls, six 240-coin gifts and 114 caskets. The dwarf
-         * always gives both a kebab and a beer, without a reward roll.
-         */
-        fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
-            GENIE -> listOf(Item(2528))
-            DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
-            MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
-                in 0..15 -> Item(1971)
-                in 16..29 -> Item(1969)
-                in 30..35 -> Item(995, 240)
-                else -> Item(405)
-            })
-        }
-    }
-
     override val resumeKey get() = kind.name
     override val blocksNewEvents get() = !answered && !(kind == Kind.DRUNKEN_DWARF && failing)
 
@@ -95,7 +67,7 @@ class VisitorRandomEvent(
      * cannot reverse a pending failure teleport. The dwarf can still be answered after becoming angry,
      * matching its source conversation; an already launched stone follows the normal impact lifecycle.
      */
-    val awaitingResponse get() = !answered && !leaving && (!failing || kind == Kind.DRUNKEN_DWARF)
+    override val awaitingResponse get() = !answered && !leaving && (!failing || kind == Kind.DRUNKEN_DWARF)
 
     /**
      * Warning age, reward latch and terminal failure state belong only to this live encounter.
@@ -113,6 +85,7 @@ class VisitorRandomEvent(
     private val address get() = if (player.appearance.isMale) "master" else "mistress"
 
     init {
+        require(kind != Kind.SWARM && kind != Kind.STRANGE_PLANT) { "Swarms use their hostile encounter lifecycle." }
         npc.interact(player)
         npc.navigator.follow(player)
         if (kind != Kind.DRUNKEN_DWARF) smoke(npc.position)
@@ -230,6 +203,7 @@ class VisitorRandomEvent(
                     Kind.GENIE -> "Have a nice day, $address."
                     Kind.MYSTERIOUS_OLD_MAN -> "Goodbye."
                     Kind.DRUNKEN_DWARF -> "'Ave a good 'un buddy!"
+                    Kind.SWARM, Kind.STRANGE_PLANT -> error("Swarms cannot be gift visitors.")
                 }).open()
             return
         }

@@ -28,6 +28,12 @@ interface RandomEventEncounter {
     val blocksNewEvents: Boolean
 
     /**
+     * Whether the owner can currently answer through this NPC's first interaction option.
+     * Hostile encounters without a helpful interaction retain the default false value.
+     */
+    val awaitingResponse: Boolean get() = false
+
+    /**
      * Advances event-specific behavior on the game thread; false ends the encounter.
      */
     fun tick(): Boolean

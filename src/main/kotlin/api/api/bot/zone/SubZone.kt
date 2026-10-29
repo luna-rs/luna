@@ -10,10 +10,13 @@ import api.predef.*
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import game.bot.scripts.skills.AgilityCourseTravel
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.obj.doors.BrassKeyDoor
 import game.skill.runecrafting.enterAltar.Altar
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
+import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -1524,6 +1527,20 @@ enum class SubZone(
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
                 CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones)
                 "the tower door needs level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving" else null
+        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS ->
+            // A bot without a key buys one for a coin.
+            if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
+                !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id))
+                "the house door needs a brass key" else null
         else -> null
     }
+
+    /**
+     * The item that a bot must carry to get into this subzone, which it keeps when banking.
+     */
+    val entryItem: Int?
+        get() = when (this) {
+            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS -> BrassKeyDoor.KEY
+            else -> null
+        }
 }
