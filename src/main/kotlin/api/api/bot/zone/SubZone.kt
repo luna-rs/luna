@@ -505,7 +505,7 @@ enum class SubZone(
      * Chaos druids in the Wilderness section of Edgeville Dungeon.
      */
     EDGEVILLE_DUNGEON_CHAOS_DRUIDS(
-        inside = Position(3110, 9937),
+        inside = Position(3110, 9935),
         entrance = { Position(3096, 3468) },
         area = SimpleBoxArea.ofRadius(3102, 9922, 24, 23),
         parent = { EDGEVILLE }),

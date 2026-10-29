@@ -1,28 +1,30 @@
 package api.bot.webwalk.generate
 
 import api.bot.webwalk.model.EdgeType
-import api.bot.webwalk.model.Requirements
+import game.obj.doors.GnomeStrongholdGate
+import game.content.gnomeBall.GnomeBall
 import api.bot.webwalk.model.ItemRequirement
-import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
-import game.content.miningGuild.MiningGuild
-import game.content.craftingGuild.CraftingGuild
-import game.obj.doors.BrassKeyDoor
-import game.obj.doors.JewellersDoor
-import game.obj.doors.TaverleyJailDoor
-import game.skill.agility.AgilityEntrances
-import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
+import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.plan.BotConditions
-import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
-import game.skill.thieving.lockedDoor.YanilleDoorAction
-import io.luna.game.model.mob.Skill
+import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.walk.crossing.BorderGateCrossing
+import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import api.bot.webwalk.walk.crossing.HamTrapdoorCrossing
 import api.bot.webwalk.walk.crossing.WebCrossing
 import engine.obj.HamTrapdoor
+import game.content.craftingGuild.CraftingGuild
+import game.content.miningGuild.MiningGuild
 import game.npc.spawn.alKharid.BorderGate
+import game.obj.doors.BrassKeyDoor
+import game.obj.doors.JewellersDoor
+import game.obj.doors.TaverleyJailDoor
 import game.obj.webs.Web
+import game.skill.agility.AgilityEntrances
+import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
+import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.cache.map.MapIndexTable
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Skill
 
 /**
  * Where a crossing is, for one whose tiles are given rather than found from a wall, such as a trapdoor that leads into a
@@ -122,12 +124,30 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The Gnome Ball pitch gate is a scripted passage. Going in puts the weapon and shield away, which needs inventory
+     * space for them.
+     */
+    val GNOME_BALL_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeBall.GATE), cost = 4)
+
+    /**
+     * The Tree Gnome Stronghold's main gate, a 5x2 object crossed from the tile in front of its middle to the tile behind it.
+     */
+    val GNOME_STRONGHOLD_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeStrongholdGate.GATE), cost = 6,
+                                             placements = listOf(CrossingPlacement(GnomeStrongholdGate.GATE,
+                                                                                   GnomeStrongholdGate.POSITION,
+                                                                                   GnomeStrongholdGate.SOUTH,
+                                                                                   GnomeStrongholdGate.NORTH)))
+
+    /**
      * The Taverley Dungeon gate into the western section needs a carried dusty key from outside, the side of its own
      * tile, and opens freely from inside.
      */
     val DUSTY_KEY_GATE = TaverleyJailDoor.DUSTY_KEY_GATE.let {
-        CrossingSpec(ConditionalDoorCrossing.ID, setOf(it.closed), Requirements(items = listOf(ItemRequirement(it.key))),
-                     reverseRequirements = Requirements.NONE, cost = 4)
+        CrossingSpec(ConditionalDoorCrossing.ID,
+                     setOf(it.closed),
+                     Requirements(items = listOf(ItemRequirement(it.key))),
+                     reverseRequirements = Requirements.NONE,
+                     cost = 4)
     }
 
     /**
@@ -174,6 +194,7 @@ object SpecialCrossings {
                                                 web(3163, 3736, 3163, 3735, 3163, 3737),
                                                 web(3183, 3733, 3183, 3732, 3183, 3734),
                                                 web(3210, 9898, 3210, 9897, 3210, 9899)))
+
     /**
      * The house door north of Edgeville, above the hill giants, needs a carried brass key both ways.
      */
@@ -184,7 +205,8 @@ object SpecialCrossings {
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
-                     JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR)
+                     JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
@@ -252,7 +274,8 @@ object WebWalkCrossingGenerator {
      * @param placements Where the crossings are.
      * @return The crossings whose objects the map has, and the ones that were left out.
      */
-    private fun place(table: MapIndexTable, placements: List<CrossingPlacement>): Pair<List<GeneratedObstacle>, GenerationReport> {
+    private fun place(table: MapIndexTable,
+                      placements: List<CrossingPlacement>): Pair<List<GeneratedObstacle>, GenerationReport> {
         val report = GenerationReport()
         val placed = ArrayList<GeneratedObstacle>()
         for (placement in placements) {
@@ -260,7 +283,11 @@ object WebWalkCrossingGenerator {
                 report.skipped += "CROSSING ${placement.objectId} at ${DoorObstacles.describe(placement.pos)}: not in the map"
                 continue
             }
-            placed += GeneratedObstacle(EdgeType.CROSSING, placement.objectId, placement.pos, placement.from, placement.to)
+            placed += GeneratedObstacle(EdgeType.CROSSING,
+                                        placement.objectId,
+                                        placement.pos,
+                                        placement.from,
+                                        placement.to)
         }
         return Pair(placed, report)
     }

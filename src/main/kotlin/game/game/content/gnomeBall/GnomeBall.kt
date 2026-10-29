@@ -53,6 +53,7 @@ import io.luna.game.model.`object`.GameObject
  */
 object GnomeBall {
     const val BALL = 751
+    const val GATE = 2394
     val GOAL = Position(2404, 3488)
     val EXIT = Position(2382, 3488)
     val PASS = PlayerContextMenuOption(2, "Pass-to", false)
@@ -120,7 +121,7 @@ object GnomeBall {
     }
 
     fun openGate(player: Player, gate: GameObject) {
-        if (gate.id != 2394 || !gate.position.isWithinDistance(EXIT, 3)) return
+        if (gate.id != GATE || !gate.position.isWithinDistance(EXIT, 3)) return
         if (player.actions.first(Crossing::class.java) == null) player.submitAction(Crossing(player, gate))
     }
 
@@ -130,7 +131,7 @@ object GnomeBall {
      * @author lare96
      */
     private class Crossing(player: Player, gate: GameObject) : DoorPassageAction(player, gate,
-        DoorType(2394, 2395, null, null, null, 3)) {
+        DoorType(GATE, 2395, null, null, null, 3)) {
         override fun checkAccess(entering: Boolean): Boolean = inside(mob.position) || prepare(mob)
     }
 
