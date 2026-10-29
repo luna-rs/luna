@@ -7,6 +7,9 @@ import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.JewellersDoor
+import game.obj.doors.TaverleyJailDoor
+import game.skill.agility.AgilityEntrances
+import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
@@ -116,10 +119,39 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The Taverley Dungeon gate into the western section needs a carried dusty key from outside, the side of its own
+     * tile, and opens freely from inside.
+     */
+    val DUSTY_KEY_GATE = TaverleyJailDoor.DUSTY_KEY_GATE.let {
+        CrossingSpec(ConditionalDoorCrossing.ID, setOf(it.closed), Requirements(items = listOf(ItemRequirement(it.key))),
+                     reverseRequirements = Requirements.NONE, cost = 4)
+    }
+
+    /**
+     * The Taverley Dungeon pipe into the western section, which is two objects. The western half is the placement.
+     */
+    val TAVERLEY_PIPE = with(AgilityEntrances) {
+        CrossingSpec(AgilityShortcutCrossing.ID, setOf(TAVERLEY_PIPE),
+                     Requirements(skills = mapOf(Skill.AGILITY to TAVERLEY_PIPE_LEVEL)), cost = 10,
+                     placements = listOf(CrossingPlacement(TAVERLEY_PIPE, Position(2887, 9799), TAVERLEY_PIPE_WEST,
+                                                           TAVERLEY_PIPE_EAST)))
+    }
+
+    /**
+     * The Taverley Dungeon strange floor into the western section.
+     */
+    val TAVERLEY_STRANGE_FLOOR = with(AgilityEntrances) {
+        CrossingSpec(AgilityShortcutCrossing.ID, setOf(TAVERLEY_FLOOR),
+                     Requirements(skills = mapOf(Skill.AGILITY to TAVERLEY_FLOOR_LEVEL)), cost = 4,
+                     placements = listOf(CrossingPlacement(TAVERLEY_FLOOR, Position(2879, 9813), TAVERLEY_FLOOR_EAST,
+                                                           TAVERLEY_FLOOR_WEST)))
+    }
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
-                     JEWELLERS_DOOR)
+                     JEWELLERS_DOOR, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR)
 }
 
 /**

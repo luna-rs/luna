@@ -8,6 +8,7 @@ import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.Doors
 import game.obj.doors.JewellersDoor
+import game.obj.doors.TaverleyJailDoor
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import kotlin.time.Duration.Companion.seconds
@@ -26,7 +27,8 @@ object ConditionalDoorCrossing : CrossingHandler {
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
-            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR) {
+            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR &&
+            id != TaverleyJailDoor.DUSTY_KEY_GATE.closed) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
@@ -58,7 +60,14 @@ object ConditionalDoorCrossing : CrossingHandler {
                 !CraftingGuild.canEnter(bot)) {
                 return "the door requires level 40 Crafting and a worn brown apron"
             }
-            if (!context.handler.interactions.interactOnLeg(if (picking) 2 else 1, door)) {
+            val gate = TaverleyJailDoor.forId(id)
+            if (gate != null && Doors.isEntering(position, door.direction, bot.position)) {
+                val key = bot.inventory.computeIndexForId(gate.key)
+                if (key == -1) {
+                    return "the gate requires a carried dusty key"
+                }
+                bot.output.useItemOnObject(key, gate.key, door)
+            } else if (!context.handler.interactions.interactOnLeg(if (picking) 2 else 1, door)) {
                 return "could not reach door $id at $position"
             }
             if (context.awaitArrival(leg, 0, 4.seconds)) {

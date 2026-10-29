@@ -3,6 +3,7 @@ package api.bot.webwalk.walk
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
 import api.bot.webwalk.plan.PlanLeg
+import api.bot.webwalk.plan.WebWalkPlanner
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -13,6 +14,7 @@ import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -40,6 +42,12 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
          * The longest a walk of a single leg may take. Legs are short, so this only catches a bot that is stuck.
          */
         val WALK_TIMEOUT: Duration = 60.seconds
+
+        /**
+         * The longest a walk of a single leg in [WebWalkPlanner.TAVERLEY_DUNGEON] may take, where one leg can wind for over a
+         * hundred steps.
+         */
+        val TAVERLEY_WALK_TIMEOUT: Duration = 2.minutes
 
         /**
          * How long to wait for a door to open, a ladder to be climbed, or a dialogue to show.
@@ -81,7 +89,8 @@ class LegContext(val bot: Bot, val handler: BotActionHandler) {
     suspend fun walk(target: Position, slack: Int, stopWhen: () -> Boolean = { false }): String? {
         val future: CompletableFuture<NavigationResult> = bot.navigator.navigate(target, true)
         val finished = try {
-            waitFor(WALK_TIMEOUT) { future.isDone || (slack > 0 && near(target, slack)) || stopWhen() }
+            val timeout = if (target in WebWalkPlanner.TAVERLEY_DUNGEON) TAVERLEY_WALK_TIMEOUT else WALK_TIMEOUT
+            waitFor(timeout) { future.isDone || (slack > 0 && near(target, slack)) || stopWhen() }
         } catch (e: CancellationException) {
             if (bot.navigator.currentPending === future) {
                 bot.navigator.cancel()
