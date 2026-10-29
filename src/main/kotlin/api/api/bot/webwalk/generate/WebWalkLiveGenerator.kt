@@ -219,7 +219,6 @@ object WebWalkLiveGenerator {
      */
     fun gather(directory: Path): Gathered {
         val report = GenerationReport()
-        val npcs = NpcSpawns.load()
         val climbs = ArrayList<GeneratedObstacle>()
         val leavingPlanks = ArrayList<GameObject>()
         val trapdoors = HashMap<Int, Hatch>()
@@ -243,12 +242,12 @@ object WebWalkLiveGenerator {
                 obj.id in ShipGangplanks.LEAVING_PLANKS -> leavingPlanks += obj
             }
         }
-        essenceWizards(npcs, climbs, report)
+        essenceWizards(climbs, report)
         report.count("climbs", climbs.size)
         report.count("entrances", climbs.count { it.type == EdgeType.ENTRANCE })
         val waypoints = waypoints(report)
         return Gathered(climbs, waypoints + scatter(waypoints + manualWaypoints(directory), report), teleports(report),
-                        bankSeeds(report), ships(npcs, leavingPlanks, report), report)
+                        bankSeeds(report), ships(leavingPlanks, report), report)
     }
 
     /**
@@ -257,10 +256,9 @@ object WebWalkLiveGenerator {
      * Routes where one of those can't be found, or that have no [ShipBoarding], are left out and reported. Must be called on
      * the game thread.
      *
-     * @param npcs Where the crews stand.
      * @param leavingPlanks The gangplanks of the map that lead ashore.
      */
-    private fun ships(npcs: NpcSpawns, leavingPlanks: List<GameObject>, report: GenerationReport): List<GeneratedShip> {
+    private fun ships(leavingPlanks: List<GameObject>, report: GenerationReport): List<GeneratedShip> {
         val ships = ArrayList<GeneratedShip>()
         for (route in ShipRoute.entries) {
             val what = "ship ${route.name}"
@@ -274,7 +272,7 @@ object WebWalkLiveGenerator {
                 report.skipped += "$what from ${DoorObstacles.describe(route.departure)}: no tile to stand on nearby"
                 continue
             }
-            if (npcs.near(departure, CREW_RADIUS, route.crew) == null) {
+            if (world.locator.findNpcs(departure, CREW_RADIUS) { it.id in route.crew }.isEmpty()) {
                 report.skipped += "$what from ${DoorObstacles.describe(departure)}: none of its crew ${route.crew} is " +
                         "within $CREW_RADIUS tiles"
                 continue
@@ -488,20 +486,20 @@ object WebWalkLiveGenerator {
     /**
      * Adds the five NPC teleport shortcuts; their handlers normalize random mine landings to the arrival node.
      */
-    private fun essenceWizards(npcs: NpcSpawns, crossings: MutableList<GeneratedObstacle>, report: GenerationReport) {
+    private fun essenceWizards(crossings: MutableList<GeneratedObstacle>, report: GenerationReport) {
         val to = standableNear(SubZone.ESSENCE_MINE.inside)
         if (to == null) {
             report.skipped += "essence mine: no arrival node"
             return
         }
         for (wizard in EssenceMineWizard.entries) {
-            val npc = npcs.near(wizard.exit, 16, setOf(wizard.npcId))
+            val npc = world.locator.findNpcs(wizard.exit, 16) { it.id == wizard.npcId }.firstOrNull()
             val from = standableNear(wizard.exit)
             if (npc == null || from == null) {
                 report.skipped += "essence wizard ${wizard.name}: missing NPC or departure tile"
                 continue
             }
-            crossings += GeneratedObstacle(EdgeType.CROSSING, null, npc, from, to,
+            crossings += GeneratedObstacle(EdgeType.CROSSING, null, npc.position, from, to,
                 handler = EssenceMineCrossing.ID, cost = 12, bidirectional = false, npcId = wizard.npcId)
             report.count("essence wizard crossings")
         }
