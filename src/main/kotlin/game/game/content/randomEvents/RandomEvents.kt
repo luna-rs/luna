@@ -67,7 +67,8 @@ object RandomEvents {
         SWARM(411, 0, false),
         GENIE(409, 1),
         MYSTERIOUS_OLD_MAN(410, 3),
-        DRUNKEN_DWARF(956, 2, false);
+        DRUNKEN_DWARF(956, 2, false),
+        STRANGE_PLANT(407, 4, false);
 
         /**
          * Chooses gifts from the source members reward tables. The old man's 150 equally likely
@@ -75,7 +76,7 @@ object RandomEvents {
          * always gives both a kebab and a beer, without a reward roll.
          */
         fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
-            SWARM -> emptyList()
+            SWARM, STRANGE_PLANT -> emptyList()
             GENIE -> listOf(Item(2528))
             DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
             MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
@@ -220,6 +221,7 @@ object RandomEvents {
         }
         val encounter = when (kind) {
             Kind.SWARM -> SwarmRandomEvent(player, npc)
+            Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
             else -> VisitorRandomEvent(player, npc, kind)
         }
         encounters[player] = encounter
@@ -255,6 +257,16 @@ object RandomEvents {
      */
     internal fun owns(encounter: RandomEventEncounter): Boolean =
         encounters[encounter.player] === encounter || lingering[encounter.player]?.any { it === encounter } == true
+
+    /**
+     * Starts an owned hostile NPC using the source's NPC-combat takeover. Recent player-combat
+     * ownership, cooldowns and queued impacts remain under the native combat rules.
+     */
+    internal fun beginHostile(encounter: RandomEventEncounter) {
+        val combat = encounter.player.combat
+        if (combat.lastCombatWith is Npc) combat.lastCombatWith = encounter.npc
+        encounter.npc.combat.attack(encounter.player)
+    }
 
     /**
      * Returns the current owned encounter for bot response and native identity checks.

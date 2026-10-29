@@ -5,7 +5,7 @@ import api.bot.script.BotScript.ActionSafety
 import api.bot.script.ReflexBotScript
 import api.predef.world
 import game.content.randomEvents.RandomEvents
-import game.content.randomEvents.VisitorRandomEvent
+import game.content.randomEvents.RandomEventEncounter
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.withTimeoutOrNull
@@ -14,7 +14,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Responds to personal random-event visitors through the normal NPC interaction handler.
+ * Responds to helpful personal random-event interactions, including ripe plants, through the normal NPC handler.
  * Intelligence and dexterity determine one ignore decision per encounter. Dexterous bots
  * always intend to respond; danger, locks and unreachable visitors can still prevent success.
  * Reaction time passes while normal work continues, then the reflex briefly pauses that work.
@@ -44,7 +44,7 @@ class RandomEventReflexScript @JvmOverloads constructor(
      * The exact visitor instance owns the decision. Retries cannot reroll an ignored encounter;
      * replacement encounters receive their own decision even when they have the same NPC type.
      */
-    private var observed: VisitorRandomEvent? = null
+    private var observed: RandomEventEncounter? = null
     private var ignoring = false
 
     /**
@@ -53,7 +53,7 @@ class RandomEventReflexScript @JvmOverloads constructor(
     private var respondAt = 0L
 
     override fun shouldReact(): Boolean {
-        val encounter = (RandomEvents.encounter(bot) as? VisitorRandomEvent)
+        val encounter = RandomEvents.encounter(bot)
             ?.takeIf { it.awaitingResponse && it.npc.state == EntityState.ACTIVE }
         if (encounter == null) {
             observed = null
@@ -92,7 +92,7 @@ class RandomEventReflexScript @JvmOverloads constructor(
      * Rechecks ownership, native response eligibility and urgent safety after every suspension.
      * Eating and combat recovery retain priority over collecting a visitor's gift.
      */
-    private fun canRespond(encounter: VisitorRandomEvent): Boolean =
+    private fun canRespond(encounter: RandomEventEncounter): Boolean =
         bot.state == EntityState.ACTIVE && RandomEvents.encounter(bot) === encounter &&
             encounter.awaitingResponse && encounter.npc.state == EntityState.ACTIVE &&
             ActionSafety.NON_COMBAT.allows(bot) && !bot.emotions.isNervousAboutHp

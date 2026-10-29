@@ -67,7 +67,7 @@ class VisitorRandomEvent(
      * cannot reverse a pending failure teleport. The dwarf can still be answered after becoming angry,
      * matching its source conversation; an already launched stone follows the normal impact lifecycle.
      */
-    val awaitingResponse get() = !answered && !leaving && (!failing || kind == Kind.DRUNKEN_DWARF)
+    override val awaitingResponse get() = !answered && !leaving && (!failing || kind == Kind.DRUNKEN_DWARF)
 
     /**
      * Warning age, reward latch and terminal failure state belong only to this live encounter.
@@ -85,7 +85,7 @@ class VisitorRandomEvent(
     private val address get() = if (player.appearance.isMale) "master" else "mistress"
 
     init {
-        require(kind != Kind.SWARM) { "Swarms use their hostile encounter lifecycle." }
+        require(kind != Kind.SWARM && kind != Kind.STRANGE_PLANT) { "Swarms use their hostile encounter lifecycle." }
         npc.interact(player)
         npc.navigator.follow(player)
         if (kind != Kind.DRUNKEN_DWARF) smoke(npc.position)
@@ -203,7 +203,7 @@ class VisitorRandomEvent(
                     Kind.GENIE -> "Have a nice day, $address."
                     Kind.MYSTERIOUS_OLD_MAN -> "Goodbye."
                     Kind.DRUNKEN_DWARF -> "'Ave a good 'un buddy!"
-                    Kind.SWARM -> error("Swarms cannot be gift visitors.")
+                    Kind.SWARM, Kind.STRANGE_PLANT -> error("Swarms cannot be gift visitors.")
                 }).open()
             return
         }

@@ -7022,36 +7022,45 @@
     ]
   },
   {
-    "id": 408, // Strange plant
+    // Lost City labels the plant's combat stats as estimates; both forms keep the same stats.
+    "id": 407, // Strange plant (growing)
     "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 200,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [50, 10, 99, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
+    // Lost City labels the plant's combat stats as estimates; both forms keep the same stats.
+    "id": 408, // Strange plant (hostile)
+    "movement": { "max_range": 3, "attack_range": 0, "retreat_hitpoints": -1 },
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": true,
     "poison_severity": 10,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 0,
-    "attack_speed": 7,
+    "hitpoints": 200,
+    "maximum_hit": 2,
+    "attack_speed": 4,
     "attack_animation": 353,
     "defence_animation": 354,
     "death_animation": 355,
     "attack_bonus": 0,
     "magic_bonus": 0,
     "ranged_bonus": 0,
-    "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
+    "skills": [50, 10, 99, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
   },
   {
     // Lost City macro_swarm: attack 50 and hitpoints 255 are explicitly source estimates.

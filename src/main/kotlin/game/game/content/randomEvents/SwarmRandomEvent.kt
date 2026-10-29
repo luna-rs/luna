@@ -53,9 +53,7 @@ class SwarmRandomEvent(override val player: Player, override val npc: Npc) : Ran
 
     init {
         player.playSound(Sound.SWARM_APPEAR)
-        // Source aggressive_npc replaces NPC combat ownership, while recent PvP remains authoritative.
-        if (player.combat.lastCombatWith is Npc) player.combat.lastCombatWith = npc
-        npc.combat.attack(player)
+        RandomEvents.beginHostile(this)
     }
 
     override fun tick(): Boolean {

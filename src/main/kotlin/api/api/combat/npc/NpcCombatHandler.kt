@@ -135,6 +135,12 @@ object NpcCombatHandler {
     }
 
     /**
+     * Returns damage-experience scaling for this NPC's current form, using the existing type/id hook lookup.
+     * Ordinary NPCs retain full experience when no override is registered.
+     */
+    fun damageExperienceMultiplier(npc: Npc): Double = resolve(npc) { it.damageExperienceMultiplier } ?: 1.0
+
+    /**
      * Limits poison damage for NPCs whose combat registration requires a separate finishing blow.
      * Uses the same type-before-id lookup as attack and defence hooks, including the NPC's current transformed id.
      *
