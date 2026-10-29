@@ -98,24 +98,14 @@ object RandomEvents {
      *
      * @author lare96
      */
-    enum class Activity(private val specialSlots: Int) {
+    enum class Activity(internal val specialSlots: Int) {
         MINING(3),
         MINING_WITHOUT_GAS(2),
         WOODCUTTING(3),
         FISHING(3),
         THIEVING(1),
         THIEVING_CHEST(2),
-        PRAYER(2);
-
-        /**
-         * Preserves the source's two-stage choice: skill hazard versus general pool, then one
-         * of the six general events. A missing native implementation does not favor other events.
-         */
-        internal fun select(random: (Int) -> Int): Kind? {
-            if (random(6 + specialSlots) < specialSlots) return null
-            val slot = random(6)
-            return Kind.entries.firstOrNull { it.generalSlot == slot }
-        }
+        PRAYER(2)
     }
 
     /**
@@ -169,10 +159,7 @@ object RandomEvents {
      * unavailable spawn tile does not grant another roll. Activity dispatchers supply their own pool.
      */
     fun offerGeneral(player: Player): Boolean {
-        return offer(player) {
-            val slot = Random.nextInt(6)
-            Kind.entries.firstOrNull { it.generalSlot == slot }
-        }
+        return offer(player) { generalKind { Random.nextInt(it) } }
     }
 
     /**
@@ -189,21 +176,21 @@ object RandomEvents {
      * Bone burial instead calls after its normal item consumption and experience award.
      */
     fun offerActivity(player: Player, activity: Activity): Boolean =
-        if (activity == Activity.WOODCUTTING) offerWoodcutting(player) { Random.nextInt(it) }
-        else offer(player) { activity.select { Random.nextInt(it) } }
+        offerActivity(player, activity) { Random.nextInt(it) }
 
     /**
-     * Resolves the source woodcutting pool: Tree spirit, Ent, lost axe, then the six general
-     * slots. Unimplemented Ent and axe results consume readiness without another selection.
+     * Resolves one activity-specific slot or the separate six-way general roll after readiness
+     * is consumed. Woodcutting and Prayer share this dispatch with the remaining native skills;
+     * missing hazards keep their original slots without granting a replacement selection.
      */
-    internal fun offerWoodcutting(player: Player, random: (Int) -> Int): Boolean = offerOutcome(player) {
-        when (random(9)) {
-            0 -> startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
-            1, 2 -> false
-            else -> {
-                val slot = random(6)
-                Kind.entries.firstOrNull { it.generalSlot == slot }?.let { startEncounter(player, it) } ?: false
-            }
+    internal fun offerActivity(player: Player, activity: Activity, random: (Int) -> Int): Boolean = offerOutcome(player) {
+        val slot = random(6 + activity.specialSlots)
+        if (slot >= activity.specialSlots) {
+            generalKind(random)?.let { startEncounter(player, it) } ?: false
+        } else when (activity) {
+            Activity.WOODCUTTING -> slot == 0 && startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
+            Activity.PRAYER -> slot == 1 && startGuardian(player, SkillGuardianRandomEvent.Kind.SHADE)
+            else -> false
         }
     }
 
@@ -228,12 +215,18 @@ object RandomEvents {
                 1 -> startRiverTroll(player)
                 2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
                 else -> {
-                    val slot = random(6)
-                    Kind.entries.firstOrNull { it.generalSlot == slot }
-                        ?.let { startEncounter(player, it) } ?: false
+                    generalKind(random)?.let { startEncounter(player, it) } ?: false
                 }
             }
         }
+    }
+
+    /**
+     * Keeps the source's independent general roll consistent across timer and skill triggers.
+     */
+    private fun generalKind(random: (Int) -> Int): Kind? {
+        val slot = random(6)
+        return Kind.entries.firstOrNull { it.generalSlot == slot }
     }
 
     /**

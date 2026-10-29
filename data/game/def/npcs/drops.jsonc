@@ -28106,5 +28106,40 @@
         "table": 1
       }
     ]
+  },
+  // Lost City members Shade: half empty, quarter robe top, quarter robe bottom; no bones or rare table.
+  {
+    "ids": [
+      425,
+      426,
+      427,
+      428,
+      429,
+      430
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": -1,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.5,
+        "table": 1
+      },
+      {
+        "id": 546,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
+      },
+      {
+        "id": 548,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
+      }
+    ]
   }
 ]

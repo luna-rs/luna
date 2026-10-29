@@ -7,6 +7,7 @@ import api.combat.player.PlayerCombatHandler.playerStopAttack
 import api.combat.death.DeathHookHandler
 import engine.bot.speech.BotReactions
 import io.luna.game.model.Position
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -90,7 +91,10 @@ combat(*SkillGuardianRandomEvent.NPC_IDS.toList().toIntArray()) {
         npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
         melee {
             val encounter = randomEvents.ownerOf(npc) as? SkillGuardianRandomEvent
-            it?.takeIf { encounter?.canAttack(other) == true }
+            if (it != null && encounter?.canAttack(other) == true) {
+                encounter.kind.attackSound?.let { sound -> encounter.player.playSound(sound) }
+                it
+            } else null
         }
     }
     defend {
@@ -98,13 +102,21 @@ combat(*SkillGuardianRandomEvent.NPC_IDS.toList().toIntArray()) {
         if (encounter?.canFight(other) != true) {
             damage = null
             animationId = null
+        } else if (damage != null) {
+            encounter.kind.defendSound?.let { encounter.player.playSound(it) }
         }
     }
 }
 
 for (id in SkillGuardianRandomEvent.NPC_IDS) {
     DeathHookHandler.addNpcHook(id) {
-        preDeath { victim.animation(Animation(victim.combatDef().deathAnimation, Animation.AnimationPriority.IMMUTABLE)) }
+        preDeath {
+            victim.animation(Animation(victim.combatDef().deathAnimation, Animation.AnimationPriority.IMMUTABLE))
+            val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
+            encounter?.kind?.deathSound?.let { sound ->
+                world.locator.findPlayers(victim, 12) { it.state == EntityState.ACTIVE }.forEach { it.playSound(sound) }
+            }
+        }
         death {
             val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
             if (encounter?.claimDeath(source) == true) {
@@ -174,10 +186,11 @@ cmd("random_event", RIGHTS_ADMIN) {
     val guardian = when (name) {
         "river_troll" -> SkillGuardianRandomEvent.Kind.RIVER_TROLL
         "tree_spirit" -> SkillGuardianRandomEvent.Kind.TREE_SPIRIT
+        "shade" -> SkillGuardianRandomEvent.Kind.SHADE
         else -> null
     }
     if (kind == null && guardian == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit")
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade")
     } else if (!(if (guardian != null) randomEvents.startGuardian(plr, guardian) else randomEvents.startEncounter(plr, kind!!))) {
         plr.sendMessage("A random event cannot start here right now.")
     }

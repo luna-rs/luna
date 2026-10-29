@@ -43,9 +43,9 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 
 /**
- * Lost City's owner-bound skill attackers. River trolls and Tree spirits share tier selection,
+ * Lost City's owner-bound skill attackers. River trolls, Tree spirits and Shades share tier selection,
  * ordinary melee combat, ownership and native death cleanup. Each retains its source warning,
- * appearance and skill-specific selection slot; neither belongs to the general visitor pool.
+ * appearance and skill-specific selection slot; none belongs to the general visitor pool.
  * The twenty-tick active AI timer removes lost attackers. The supplied source labels their
  * thousand-active-tick lifetime as an estimate. Native death grants loot; escape and logout do not.
  *
@@ -54,14 +54,18 @@ import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 class SkillGuardianRandomEvent(override val player: Player, override val npc: Npc,
                               val kind: Kind) : RandomEventEncounter {
     /**
-     * Source forms and appearance. Delays include the source engine's extra NPC delay tick.
+     * Source forms, appearance and combat sounds. Missing sounds remain silent and each graphic
+     * retains its source height. Delays include the source engine's extra NPC delay tick.
      *
      * @author lare96
      */
     enum class Kind(val npcIds: IntRange, val warningTicks: Int, val speech: String,
-                    val sound: Sound, val appearanceGraphic: Int? = null) {
+                    val sound: Sound?, val appearanceGraphic: Int? = null, val appearanceHeight: Int = 100,
+                    val attackSound: Sound? = null, val defendSound: Sound? = null, val deathSound: Sound? = null) {
         RIVER_TROLL(391..396, 3, "Fishies be mine, leave dem fishies!", Sound.WATERSPLASH),
-        TREE_SPIRIT(438..443, 2, "Leave these woods and never return!", Sound.DRYAD_APPEAR, 180);
+        TREE_SPIRIT(438..443, 2, "Leave these woods and never return!", Sound.DRYAD_APPEAR, 180),
+        SHADE(425..430, 4, "Leave this place mortal!", sound = null, appearanceGraphic = 78, appearanceHeight = 0,
+              attackSound = Sound.GHOST_ATTACK, defendSound = Sound.GHOST_HIT, deathSound = Sound.GHOST_DEATH);
 
         /**
          * Source brackets: below combat 11,21,41,61,91 and the final high-level tier.
@@ -96,9 +100,9 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
     init {
         npc.combat.isDisabled = true
         npc.speak(kind.speech)
-        player.playSound(kind.sound)
+        kind.sound?.let { player.playSound(it) }
         kind.appearanceGraphic?.let {
-            LocalGraphic(ctx, it, 100, 0, npc.position, ChunkUpdatableView.globalView()).display()
+            LocalGraphic(ctx, it, kind.appearanceHeight, 0, npc.position, ChunkUpdatableView.globalView()).display()
         }
     }
 
