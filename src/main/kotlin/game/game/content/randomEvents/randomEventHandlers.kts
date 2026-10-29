@@ -40,6 +40,10 @@ SkillGuardianRandomEvent.Kind.ZOMBIE.npcIds.forEach { id ->
     DropTableHandler.createNpc(id) { tables += ZombieDropTable }
 }
 
+SkillGuardianRandomEvent.Kind.WATCHMAN.npcIds.forEach { id ->
+    DropTableHandler.createNpc(id) { tables += WatchmanDropTable }
+}
+
 on(LoginEvent::class) { randomEvents.login(plr) }
 on(LogoutEvent::class) { randomEvents.logout(plr) }
 on(PlayerTickEvent::class) {
@@ -193,10 +197,11 @@ cmd("random_event", RIGHTS_ADMIN) {
         "tree_spirit" -> SkillGuardianRandomEvent.Kind.TREE_SPIRIT
         "shade" -> SkillGuardianRandomEvent.Kind.SHADE
         "zombie" -> SkillGuardianRandomEvent.Kind.ZOMBIE
+        "watchman" -> SkillGuardianRandomEvent.Kind.WATCHMAN
         else -> null
     }
     if (kind == null && guardian == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade|zombie")
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade|zombie|watchman")
     } else if (!(if (guardian != null) randomEvents.startGuardian(plr, guardian) else randomEvents.startEncounter(plr, kind!!))) {
         plr.sendMessage("A random event cannot start here right now.")
     }

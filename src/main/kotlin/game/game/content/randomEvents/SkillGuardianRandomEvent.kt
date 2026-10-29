@@ -57,7 +57,8 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
                               val kind: Kind) : RandomEventEncounter {
     /**
      * Source forms, appearance and combat sounds. Missing sounds remain silent and each graphic
-     * retains its source height. Delays include the source engine's extra NPC delay tick.
+     * retains its source height. Speech may address the owner with {name}. Delays include the
+     * source engine's extra NPC delay tick.
      *
      * @author lare96
      */
@@ -69,7 +70,10 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
         SHADE(425..430, 4, "Leave this place mortal!", sound = null, appearanceGraphic = 78, appearanceHeight = 0,
               attackSound = Sound.GHOST_ATTACK, defendSound = Sound.GHOST_HIT, deathSound = Sound.GHOST_DEATH),
         ZOMBIE(419..424, 4, "Brainsssss...", Sound.ZOMBIE_MOAN, appearanceGraphic = 78, appearanceHeight = 0,
-               attackSound = Sound.ZOMBIE_ATTACK, defendSound = Sound.ZOMBIE_HIT, deathSound = Sound.ZOMBIE_DEATH);
+               attackSound = Sound.ZOMBIE_ATTACK, defendSound = Sound.ZOMBIE_HIT, deathSound = Sound.ZOMBIE_DEATH),
+        WATCHMAN(431..436, 3, "{name}, you are under arrest!", Sound.SMOKEPUFF,
+                 appearanceGraphic = 86, appearanceHeight = 124, attackSound = Sound.MACE_CRUSH,
+                 defendSound = Sound.HUMAN_HIT4, deathSound = Sound.HUMAN_DEATH);
 
         /**
          * Source brackets: below combat 11,21,41,61,91 and the final high-level tier.
@@ -103,7 +107,7 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
 
     init {
         npc.combat.isDisabled = true
-        npc.speak(kind.speech)
+        npc.speak(kind.speech.replace("{name}", player.username))
         kind.sound?.let { player.playSound(it) }
         kind.appearanceGraphic?.let {
             LocalGraphic(ctx, it, kind.appearanceHeight, 0, npc.position, ChunkUpdatableView.globalView()).display()
@@ -160,6 +164,13 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
 }
 
 /**
+ * Scales a nested table's marginal weights while leaving unrelated rewards untouched. Herb and
+ * jewel consumers share this conversion; their native rolls keep using the same table definitions.
+ */
+private fun DropTable.weighted(mob: Mob?, source: Entity?, chance: Double): DropTableItemList =
+    computeTable(mob, source).map { DropTableItem(it.id, it.amount, it.chance * chance) }
+
+/**
  * Source members Tree spirit loot, including conditional random-herb and random-jewel rolls.
  * Flattening the nested weights preserves a single native drop and native owner privacy.
  * Shared jewel selection preserves Ring of Wealth and underground talisman behavior without
@@ -177,22 +188,35 @@ internal object TreeSpiritDropTable : DropTable() {
         Triple(1963, 1, 12), Triple(946, 1, 1)
     )
 
-    /**
-     * Unidentified herb weights within the source's separate 128-slot herb roll.
-     */
-    private val herbs = listOf(199 to 32, 201 to 24, 203 to 18, 205 to 14, 207 to 11,
-                               209 to 8, 211 to 6, 213 to 5, 215 to 4, 2485 to 3, 217 to 3)
-
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
         return buildList {
             direct.forEach { (id, quantity, weight) -> add(DropTableItem(id, quantity, weight / 128.0)) }
-            herbs.forEach { (id, weight) -> add(DropTableItem(id, 1, 29.0 / 128 * weight / 128)) }
+            addAll(GuardianHerbDropTable.weighted(mob, source, 29.0 / 128))
             addAll(GuardianJewelDropTable.weighted(mob, source, 8.0 / 128))
         }
     }
 
     override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
         DropTableItem(1452, 1, 8.0 / 128 * 4 / 128)
+}
+
+/**
+ * Lost City's members randomherb subtable. Tree spirits and Watchmen share the same 128-slot
+ * unidentified-herb weights; the choice is independent of equipment and Ring of Wealth.
+ *
+ * @author lare96
+ */
+internal object GuardianHerbDropTable : DropTable() {
+    /**
+     * Item identities and source weights, totaling 128 slots.
+     */
+    private val herbs = listOf(199 to 32, 201 to 24, 203 to 18, 205 to 14, 207 to 11,
+                               209 to 8, 211 to 6, 213 to 5, 215 to 4, 2485 to 3, 217 to 3)
+
+    override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList =
+        herbs.map { (id, weight) -> DropTableItem(id, 1, weight / 128.0) }
+
+    override fun computePossibleItems(): DropTableItemList = computeTable(null, null)
 }
 
 /**
@@ -216,12 +240,6 @@ internal object GuardianJewelDropTable : DropTable() {
             if (slots == 128) add(DropTableItem(-1, 1, 63.0 / 128))
         }
     }
-
-    /**
-     * Scales one nested jewel roll for a flattened table without applying its bonus to other loot.
-     */
-    fun weighted(mob: Mob?, source: Entity?, chance: Double): DropTableItemList =
-        computeTable(mob, source).map { DropTableItem(it.id, it.amount, it.chance * chance) }
 
     override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
         DropTableItem(1452, 1, 4.0 / 128)
@@ -276,4 +294,34 @@ internal object ZombieDropTable : DropTable() {
 
     override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
         DropTableItem(1452, 1, 1.0 / 256 * 4 / 128)
+}
+
+/**
+ * Lost City's members Watchman loot. Its source labels these rates as guesses: a default bone
+ * accompanies one 128-slot reward, with uniform one-to-three steel bars and separate herb/jewel
+ * subrolls. Shared subtable weights preserve conditional bonuses without changing direct loot.
+ *
+ * @author lare96
+ */
+internal object WatchmanDropTable : DropTable() {
+    /**
+     * Direct item, quantity-range and weight entries from the supplied script, totaling 120 slots.
+     */
+    private val direct = listOf(
+        Triple(1281, 1..1, 8), Triple(1141, 1..1, 6), Triple(453, 1..1, 6), Triple(2353, 1..3, 8),
+        Triple(995, 2..2, 16), Triple(995, 16..16, 14), Triple(995, 20..20, 12), Triple(995, 30..30, 10),
+        Triple(995, 50..50, 8), Triple(995, 70..70, 6), Triple(995, 105..105, 4),
+        Triple(555, 50..50, 7), Triple(559, 22..22, 5), Triple(563, 3..3, 4), Triple(560, 3..3, 4),
+        Triple(561, 8..8, 2)
+    )
+
+    override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList = buildList {
+        add(DropTableItem(526, 1, 1.0))
+        direct.forEach { (id, amount, weight) -> add(DropTableItem(id, amount, weight / 128.0)) }
+        addAll(GuardianHerbDropTable.weighted(mob, source, 4.0 / 128))
+        addAll(GuardianJewelDropTable.weighted(mob, source, 4.0 / 128))
+    }
+
+    override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
+        DropTableItem(1452, 1, 4.0 / 128 * 4 / 128)
 }
