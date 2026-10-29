@@ -193,7 +193,8 @@ object RandomEvents {
 
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
-     * rather than owning a personal visitor slot. Big fish and river troll outcomes remain unimplemented.
+     * rather than owning a personal visitor slot. River trolls use their owner-bound combat lifecycle;
+     * the big fish outcome remains unimplemented.
      * Existing whirlpools do not consume another readiness flag when a player clicks them again.
      */
     fun offerFishing(player: Player, npc: Npc, spot: FishingSpot): Boolean =
@@ -207,7 +208,8 @@ object RandomEvents {
         if (npc.state != EntityState.ACTIVE || npc.id !in spot.npcs || spot.whirlpoolId == null) return false
         return offerOutcome(player) {
             when (random(9)) {
-                0, 1 -> false
+                0 -> false
+                1 -> startRiverTroll(player)
                 2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
                 else -> {
                     val slot = random(6)
@@ -245,22 +247,38 @@ object RandomEvents {
      * Creates an encounter with source NPC metadata and saves source-approved following types for login recovery.
      * Genie save identifiers remain unchanged as the catalogue grows.
      */
-    fun startEncounter(player: Player, kind: Kind): Boolean {
+    fun startEncounter(player: Player, kind: Kind): Boolean =
+        spawnEncounter(player, kind.npcId, kind.followsLogout) { npc ->
+            when (kind) {
+                Kind.SWARM -> SwarmRandomEvent(player, npc)
+                Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
+                else -> VisitorRandomEvent(player, npc, kind)
+            }
+        }
+
+    /**
+     * Starts the source fishing attacker at the owner's current combat bracket. It is absent from
+     * the general visitor pool and never creates a saved gift or following entitlement.
+     */
+    fun startRiverTroll(player: Player): Boolean =
+        spawnEncounter(player, RiverTrollRandomEvent.npcId(player.combatLevel), false) { RiverTrollRandomEvent(player, it) }
+
+    /**
+     * Shares safe placement and exact encounter ownership between general visitors and skill attackers.
+     */
+    private fun spawnEncounter(player: Player, npcId: Int, followsLogout: Boolean,
+                               create: (Npc) -> RandomEventEncounter): Boolean {
         if (!allowed(player) || !canAct(player)) return false
         val position = nearbySquare(player) ?: return false
-        val npc = Npc(ctx, kind.npcId, position).also { it.respawnTicks = -1 }
+        val npc = Npc(ctx, npcId, position).also { it.respawnTicks = -1 }
         if (!world.npcs.add(npc)) return false
         encounters.remove(player)?.let { previous ->
             if (previous.blocksNewEvents) previous.close()
             else lingering.getOrPut(player) { mutableListOf() }.add(previous)
         }
-        val encounter = when (kind) {
-            Kind.SWARM -> SwarmRandomEvent(player, npc)
-            Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
-            else -> VisitorRandomEvent(player, npc, kind)
-        }
+        val encounter = create(npc)
         encounters[player] = encounter
-        player.pendingRandomEvent = if (kind.followsLogout) encounter.resumeKey else ""
+        player.pendingRandomEvent = if (followsLogout) encounter.resumeKey else ""
         return true
     }
 

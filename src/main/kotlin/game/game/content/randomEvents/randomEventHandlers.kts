@@ -3,6 +3,10 @@ package game.content.randomEvents
 import api.predef.*
 import api.combat.npc.NpcCombatHandler.combat
 import api.combat.player.PlayerCombatHandler.playerStopAttack
+import api.combat.death.DeathHookHandler
+import engine.bot.speech.BotReactions
+import io.luna.game.model.Position
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.item.Item
@@ -74,10 +78,47 @@ combat(408) {
     }
 }
 
+combat(*RiverTrollRandomEvent.NPC_IDS.toList().toIntArray()) {
+    damageExperienceMultiplier = 25.0 / 1000.0
+    attack {
+        npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
+        melee {
+            val encounter = randomEvents.ownerOf(npc) as? RiverTrollRandomEvent
+            it?.takeIf { encounter?.canAttack(other) == true }
+        }
+    }
+    defend {
+        val encounter = randomEvents.ownerOf(npc) as? RiverTrollRandomEvent
+        if (encounter?.canFight(other) != true) {
+            damage = null
+            animationId = null
+        }
+    }
+}
+
+for (id in RiverTrollRandomEvent.NPC_IDS) {
+    DeathHookHandler.addNpcHook(id) {
+        preDeath { victim.animation(Animation(victim.combatDef().deathAnimation, Animation.AnimationPriority.IMMUTABLE)) }
+        death {
+            val encounter = randomEvents.ownerOf(victim) as? RiverTrollRandomEvent
+            if (encounter?.claimDeath(source) == true) {
+                if (source is Bot) BotReactions.reactToKill(source, victim)
+                drop()
+            }
+            victim.move(Position(1, 1))
+        }
+        postDeath { }
+    }
+}
+
 playerStopAttack { attack ->
     val target = attack.victim as? Npc
-    if (target?.id != 408) false
-    else if ((randomEvents.ownerOf(target) as? StrangePlantRandomEvent)?.canFight(this) == true) false
+    val allowed = when (target?.id) {
+        408 -> (randomEvents.ownerOf(target) as? StrangePlantRandomEvent)?.canFight(this) == true
+        in RiverTrollRandomEvent.NPC_IDS -> (randomEvents.ownerOf(target!!) as? RiverTrollRandomEvent)?.canFight(this) == true
+        else -> null
+    }
+    if (allowed != false) false
     else {
         sendMessage("It's not after you.")
         true
@@ -115,7 +156,8 @@ fun consumeFruit(player: Player, slot: Int) {
 item1(464) { consumeFruit(plr, index) }
 
 cmd("random_event", RIGHTS_ADMIN) {
-    val kind = when (args.firstOrNull()?.lowercase()) {
+    val name = args.firstOrNull()?.lowercase()
+    val kind = when (name) {
         "plant" -> Kind.STRANGE_PLANT
         "swarm" -> Kind.SWARM
         "genie" -> Kind.GENIE
@@ -123,9 +165,9 @@ cmd("random_event", RIGHTS_ADMIN) {
         "dwarf" -> Kind.DRUNKEN_DWARF
         else -> null
     }
-    if (kind == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant")
-    } else if (!randomEvents.startEncounter(plr, kind)) {
+    if (kind == null && name != "river_troll") {
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll")
+    } else if (!(if (kind == null) randomEvents.startRiverTroll(plr) else randomEvents.startEncounter(plr, kind))) {
         plr.sendMessage("A random event cannot start here right now.")
     }
 }
