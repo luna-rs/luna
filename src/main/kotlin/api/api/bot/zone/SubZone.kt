@@ -521,7 +521,7 @@ enum class SubZone(
      */
     ROCK_CRABS(
         inside = Position(2670, 3715),
-        area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
+        area = SimpleBoxArea.of(2648, 3711, 2722, 3742),
         parent = { RELLEKKA }),
 
     /**
