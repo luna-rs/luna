@@ -3,9 +3,7 @@ package engine.obj
 import api.predef.*
 import api.predef.ext.*
 import engine.obj.TrapdoorLanding.Companion.BELOW
-import engine.obj.TrapdoorLanding.Companion.byTrapdoor
 import engine.obj.TrapdoorLanding.Companion.floorsDown
-import engine.obj.TrapdoorLanding.Companion.tile
 import game.player.Sound
 import game.skill.Skills
 import io.luna.game.action.impl.LockedAction
@@ -68,11 +66,6 @@ val FADE_OUT = 1377
  * Fading back in from black.
  */
 val FADE_IN = 1378
-
-/**
- * Where the rat pit manholes lead.
- */
-val RAT_PITS = byTrapdoor(BELOW, Position(3018, 3232) to tile(2962, 9650), Position(3267, 3400) to tile(2894, 5097))
 
 /**
  * Picking a lock.
@@ -277,8 +270,8 @@ object1(881) {
     change(gameObject.position.translate(0, -1), gameObject.objectType, gameObject.direction, 883, MANHOLE_TICKS)
 }
 object1(882) {
-    climbDown(plr, BELOW.from(gameObject.position, plr.position), "You climb down through the manhole.", bend = false,
-              delay = 0)
+    climbDown(plr, Manhole.SEWERS.landing.from(gameObject.position, plr.position),
+              "You climb down through the manhole.", bend = false, delay = 0)
 }
 object1(883) {
     plr.sendMessage("You place the cover back over the manhole.")
@@ -288,8 +281,8 @@ object1(883) {
 
 // Manholes into the Port Sarim and Varrock rat pits, which are left open.
 object1(10321) {
-    climbDown(plr, RAT_PITS.from(gameObject.position, plr.position), "You climb down through the manhole.", bend = false,
-              delay = 0)
+    climbDown(plr, Manhole.RAT_PITS.landing.from(gameObject.position, plr.position),
+              "You climb down through the manhole.", bend = false, delay = 0)
 }
 
 // West Ardougne manhole into the sewer pipe (Plague City).
@@ -298,7 +291,8 @@ object1(2543) {
     change(gameObject.position.translate(0, -1), ObjectType.DEFAULT, gameObject.direction, 2545, TRAPDOOR_TICKS)
 }
 object1(2544) {
-    climbDown(plr, Position(2514, 9739), "You climb down through the manhole.", face = Direction.NORTH)
+    climbDown(plr, Manhole.PLAGUE_CITY.landing.from(gameObject.position, plr.position),
+              "You climb down through the manhole.", face = Direction.NORTH)
 }
 object1(2545) {
     change(gameObject, null, TRAPDOOR_TICKS)

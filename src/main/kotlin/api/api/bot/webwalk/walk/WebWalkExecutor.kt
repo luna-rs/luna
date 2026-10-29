@@ -13,7 +13,7 @@ import api.bot.webwalk.walk.crossing.CrossingHandlers
 import api.bot.webwalk.walk.ship.ShipVoyage
 import api.predef.*
 import api.predef.ext.*
-import engine.obj.Trapdoor
+import engine.obj.Hatch
 import game.item.degradable.jewellery.TeleportJewellery
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.game.model.Position
@@ -269,7 +269,7 @@ class WebWalkExecutor(private val bot: Bot,
     }
 
     /**
-     * Opens a trapdoor if it is closed, then climbs down it.
+     * Opens a trapdoor or manhole if it is closed, then climbs down it.
      *
      * @return `null` if the bot arrived, or why it didn't.
      */
@@ -277,8 +277,7 @@ class WebWalkExecutor(private val bot: Bot,
         val action = leg.action ?: return "the leg has no object"
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
-        val trapdoor = Trapdoor.entries.firstOrNull { it.closed == id || it.open == id }
-            ?: return "object $id is not a known trapdoor"
+        val trapdoor = Hatch.forObject(id) ?: return "object $id is not a known trapdoor"
         val ids = listOfNotNull(trapdoor.closed, trapdoor.open).toIntArray()
 
         var obj = find(position, *ids) ?: return "there is no trapdoor $id at $position"
