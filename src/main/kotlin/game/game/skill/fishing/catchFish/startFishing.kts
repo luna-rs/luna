@@ -144,7 +144,7 @@ for (spot in FishingSpot.entries) {
         else -> FISHING_TOOLS
     }
     val reach = if (spot == FishingSpot.LAVA_EEL) LAVA_REACH else InteractionPolicy.STANDARD_SIZE_BIF
-    for (id in spot.npcs) {
+    for (id in spot.npcs + listOfNotNull(spot.whirlpoolId)) {
         if (firstOption != null) {
             npc1(id, reach, false) { fish(plr, targetNpc, spot, firstOption) }
         }

@@ -15,6 +15,8 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
+import game.skill.fishing.fishingSpot.FishingSpotHandler
+import game.bot.scripts.RandomEventReflexScript
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -33,6 +35,8 @@ import kotlin.time.Duration.Companion.seconds
  * Fishing spots are resolved from both first-click and second-click spot maps, allowing the same tool to support NPCs
  * that require different interaction options. Guild trips recheck current Fishing 68 before every work-zone
  * trip, including returns from banking. The normal player fishing action retains its per-cast level checks.
+ * Whirlpool avoidance reuses the random-event intelligence/dexterity policy. A decision belongs
+ * to one hazard lifetime; bots that ignore it can reclick the spot and lose their fishing tool.
  *
  * @author lare96
  */
@@ -85,7 +89,7 @@ class FishBotScript(
             for (spot in FishingSpot.entries) {
                 val tool = option(spot)
                 if (tool != null && spot != FishingSpot.MISCELLANIA) {
-                    spots.putAll(tool, spot.npcs)
+                    spots.putAll(tool, spot.npcs + listOfNotNull(spot.whirlpoolId))
                 }
             }
             return spots.build()
@@ -150,6 +154,28 @@ class FishBotScript(
     private var spotClicks = 0
 
     /**
+     * One ignore decision per live whirlpool. Weak keys do not retain removed fishing NPCs.
+     * A later transformation of the same NPC receives a new decision through its expiry token.
+     */
+    private val whirlpoolDecisions = WeakHashMap<Npc, Pair<Long, Boolean>>()
+
+    /**
+     * Rechecks live spot types while searching, before clicking and during navigation. Dexterous
+     * bots always avoid whirlpools; lower intelligence and dexterity increase deliberate ignorance.
+     */
+    internal fun canFishSpot(npc: Npc): Boolean {
+        if (npc.id !in fishingSpotIds.value) return false
+        val expiry = FishingSpotHandler.whirlpoolExpiry(npc) ?: return true
+        val decision = whirlpoolDecisions[npc]?.takeIf { it.first == expiry }?.second ?: run {
+            val chance = RandomEventReflexScript.ignoreChance(bot.personality.intelligence, bot.personality.dexterity)
+            val ignore = kotlin.random.Random.nextDouble() < chance
+            whirlpoolDecisions[npc] = expiry to ignore
+            ignore
+        }
+        return decision
+    }
+
+    /**
      * Vessel bait is loaded before casting, rather than consumed by the catch action.
      */
     private val baitId = if (selectedTool == Tool.KARAMBWAN_VESSEL) Fish.KARAMBWANJI.id else selectedTool.bait
@@ -197,7 +223,7 @@ class FishBotScript(
 
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
         return world.locator.findNpcs(searchBase, searchRadius) {
-            it.id in fishingSpotIds.value
+            canFishSpot(it)
         }
     }
 
@@ -212,6 +238,7 @@ class FishBotScript(
     }
 
     override suspend fun interactionOption(target: Npc): Int? {
+        if (!canFishSpot(target)) return null
         if (selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id !in bot.inventory) {
             if (Fish.KARAMBWANJI.id !in bot.inventory || Tool.EMPTY_KARAMBWAN_VESSEL !in bot.inventory) {
                 forceBanking = true
@@ -233,6 +260,7 @@ class FishBotScript(
 
     override suspend fun refocus(): Boolean {
         val spot = focus
+        if (spot != null && !canFishSpot(spot)) return true
         if (spot !== clickedSpot || bot.actions.size(ActionType.WEAK) > 0) {
             clickedSpot = spot
             spotClicks = 0
@@ -246,6 +274,11 @@ class FishBotScript(
         }
         return super.refocus()
     }
+
+    override suspend fun onAssignFocus(newFocus: Npc): Boolean = canFishSpot(newFocus)
+
+    override suspend fun interactWithTarget(option: Int, target: Npc): Boolean =
+        handler.interactions.interact(option, target) { canFishSpot(target) }
 
     override fun snapshot(): BotScriptData {
         val data = FishData()

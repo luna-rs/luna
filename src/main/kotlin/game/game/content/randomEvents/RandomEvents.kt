@@ -35,6 +35,8 @@ import game.content.castleWars.CastleWarsGame
 import game.content.duelArena.DuelArena
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
+import game.skill.fishing.catchFish.FishingSpot
+import game.skill.fishing.fishingSpot.FishingSpotHandler
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -190,14 +192,47 @@ object RandomEvents {
         offer(player) { activity.select { Random.nextInt(it) } }
 
     /**
+     * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
+     * rather than owning a personal visitor slot. Big fish and river troll outcomes remain unimplemented.
+     * Existing whirlpools do not consume another readiness flag when a player clicks them again.
+     */
+    fun offerFishing(player: Player, npc: Npc, spot: FishingSpot): Boolean =
+        offerFishing(player, npc, spot) { Random.nextInt(it) }
+
+    /**
+     * Resolves one fishing outcome after shared eligibility, preserving both source random rolls.
+     * Unavailable and unimplemented outcomes consume readiness without a replacement roll.
+     */
+    internal fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, random: (Int) -> Int): Boolean {
+        if (npc.state != EntityState.ACTIVE || npc.id !in spot.npcs || spot.whirlpoolId == null) return false
+        return offerOutcome(player) {
+            when (random(9)) {
+                0, 1 -> false
+                2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
+                else -> {
+                    val slot = random(6)
+                    Kind.entries.firstOrNull { it.generalSlot == slot }
+                        ?.let { startEncounter(player, it) } ?: false
+                }
+            }
+        }
+    }
+
+    /**
      * Applies shared eligibility and consumes one readiness flag before selecting an outcome.
      * Native locks, modal windows and current encounters defer consumption to a later eligible trigger.
      */
     internal fun offer(player: Player, select: () -> Kind?): Boolean {
+        return offerOutcome(player) { select()?.let { startEncounter(player, it) } ?: false }
+    }
+
+    /**
+     * Shares the readiness boundary between personal encounters and changes to world resources.
+     */
+    private fun offerOutcome(player: Player, select: () -> Boolean): Boolean {
         if (!allowed(player) || !canAct(player) || !player.randomEventClock.consume()) return false
         if (!Luna.settings().game().betaMode() && player.rights >= RIGHTS_ADMIN) return false
-        val kind = select() ?: return false
-        return startEncounter(player, kind)
+        return select()
     }
 
     /**

@@ -4,26 +4,30 @@ import game.skill.fishing.catchFish.Tool.*
 
 /**
  * An enum representing the kinds of fishing spot, and the [Tool] each of their options uses. [firstOption] is the
- * first menu option, and [secondOption] is the one after it.
+ * first menu option, and [secondOption] is the one after it. [whirlpoolId] is the temporary source
+ * hazard form for ordinary fishing categories; quest and specialist spots have no such form.
+ *
+ * @author lare96
  */
 enum class FishingSpot(val npcs: Set<Int>,
                        val objects: Set<Int> = emptySet(),
                        val firstOption: Tool?,
-                       val secondOption: Tool? = null) {
+                       val secondOption: Tool? = null,
+                       val whirlpoolId: Int? = null) {
 
     NET_BAIT(npcs = setOf(316, 319, 320, 323, 325, 326, 327, 330, 332, 1331),
              firstOption = SMALL_NET,
-             secondOption = FISHING_ROD),
+             secondOption = FISHING_ROD, whirlpoolId = 404),
     LURE_BAIT(npcs = setOf(309, 310, 311, 314, 315, 317, 318, 328, 329, 331, 927, 1189, 1190, 3019),
               objects = setOf(2027),
               firstOption = FLY_FISHING_ROD,
-              secondOption = PIKE_FISHING_ROD),
+              secondOption = PIKE_FISHING_ROD, whirlpoolId = 403),
     CAGE_HARPOON(npcs = setOf(312, 321, 324, 333, 1332, 3804),
                  firstOption = LOBSTER_POT,
-                 secondOption = HARPOON),
+                 secondOption = HARPOON, whirlpoolId = 405),
     NET_HARPOON(npcs = setOf(313, 322, 334, 1191, 1333, 1405, 1406, 3574, 3575),
                 firstOption = BIG_NET,
-                secondOption = SHARK_HARPOON),
+                secondOption = SHARK_HARPOON, whirlpoolId = 406),
 
     /**
      * The Miscellania spots. The catch goes to Fisherman Frodi.
