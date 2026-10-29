@@ -121028,6 +121028,7 @@
       "y": 3927,
       "z": 0
     },
+    "respawn_ticks": 250,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
