@@ -20,6 +20,16 @@ class NpcCombatReceiver {
     var poisonCanKill: Boolean = true
 
     /**
+     * Scales damage-based player combat and Hitpoints experience against this NPC. Cast experience
+     * is independent. The source uses 1000 as normal experience, so a value of 25 is 0.025 here.
+     */
+    var damageExperienceMultiplier: Double = 1.0
+        set(value) {
+            require(value.isFinite() && value >= 0.0) { "Invalid combat experience multiplier: $value" }
+            field = value
+        }
+
+    /**
      * Attack hook callback.
      *
      * Defaults to the NPC's standard combat attack when no custom attack hook is registered.

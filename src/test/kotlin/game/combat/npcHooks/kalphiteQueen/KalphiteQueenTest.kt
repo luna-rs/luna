@@ -13,6 +13,7 @@ import io.luna.game.model.mob.MobDeathAction.DeathStage
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.combat.CombatImpactQueue
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.task.Task
 import io.luna.game.task.TaskManager
@@ -68,6 +69,9 @@ class KalphiteQueenTest {
         `when`(player.asPlr()).thenReturn(player)
         `when`(player.position).thenReturn(Position(x, y, z))
         `when`(player.isAlive).thenReturn(true)
+        `when`(player.state).thenReturn(EntityState.ACTIVE)
+        `when`(player.world).thenReturn(npc.world)
+        `when`(player.combat.impacts).thenReturn(CombatImpactQueue(player))
         `when`(player.controllers.contains(MultiCombatAreaListener)).thenReturn(true)
         `when`(player.controllers.checkCombat(npc)).thenReturn(true)
         return player
@@ -180,14 +184,22 @@ class KalphiteQueenTest {
         doReturn(targets.toSet()).`when`(locator)
             .findViewable<Player>(eq(EntityType.PLAYER), same(primary), any())
         KalphiteQueenAttack(npc, primary, true).apply()
-        val delays = targets.map { target ->
+        targets.forEach { verify(it, never()).submitAction(any()) }
+        for (tick in 0L..3L) {
+            `when`(npc.world.currentTick).thenReturn(tick)
+            targets.forEach { it.combat.impacts.process() }
+            for ((index, target) in targets.withIndex()) {
+                val hitTick = if (index < 2) 1 else 3
+                verify(target, times(if (tick >= hitTick) 1 else 0)).submitAction(any())
+            }
+        }
+        targets.forEach { target ->
             val action = ArgumentCaptor.forClass(CombatDamageAction::class.java)
             verify(target).submitAction(action.capture())
             assertSame(target, action.value.damage.victim)
             verify(target.skill(Skill.PRAYER), never()).level = anyInt()
-            action.value.delay
+            assertTrue(action.value.isInstant)
         }
-        assertEquals(listOf(1, 1, 3), delays)
         assertEquals(4, npc.combat.attackDelay)
     }
 
@@ -208,6 +220,10 @@ class KalphiteQueenTest {
         }
         verify(primary.skill(Skill.PRAYER)).level = 11
         verify(protected.skill(Skill.PRAYER), never()).level = anyInt()
+        for (target in listOf(primary, protected)) {
+            verify(target, never()).submitAction(any())
+            target.combat.impacts.process()
+        }
         val action = ArgumentCaptor.forClass(CombatDamageAction::class.java)
         verify(primary).submitAction(action.capture())
         assertEquals(7, action.value.damage.rawAmount)

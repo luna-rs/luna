@@ -85,6 +85,12 @@ abstract class TargetingZonedBotScript<E : Entity>(
     /** Maximum discovery travel before abandoning a distant Mob candidate. */
     protected open val targetApproachTimeout: Duration = 30.seconds
 
+    /** Activities with changing resource priorities can request a fresh view for each selection. */
+    protected open val reuseTargetOptions: Boolean = true
+
+    /** Failed fresh searches before considering a crowded-area departure; ordinary activities keep ten. */
+    protected open val crowdedSearchLimit: Int = 10
+
     /** Activity-specific camp decisions; other targeting scripts retain their existing policy. */
     protected open fun shouldLeaveTargetZone(): Boolean = false
 
@@ -181,7 +187,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
             focus = null
             bot.log("Searching for a new target in $zone because ${invalidReason ?: "refocus was requested"}.")
 
-            if (lastOptions.isEmpty()) {
+            if (lastOptions.isEmpty() || !reuseTargetOptions) {
                 val searchRadius = zone.area.tileRadius
                 lastOptions = find(zone.area.centerPosition, searchRadius).toMutableList()
                 if (!targetActionReady()) return true
@@ -241,7 +247,7 @@ abstract class TargetingZonedBotScript<E : Entity>(
             bot.naturalDecisionDelay()
             if (!targetActionReady()) return true
 
-            if (searchTimes >= 10) {
+            if (searchTimes >= crowdedSearchLimit) {
                 val visiblePlayers =
                     world.locator.findPlayers(zone.area.centerPosition, zone.area.tileRadius) { true }.size
 

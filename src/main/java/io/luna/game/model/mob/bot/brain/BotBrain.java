@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.script.BotScript;
+import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
 import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
@@ -53,6 +54,7 @@ public class BotBrain {
             return ScavengingCoordinator.INSTANCE;
         }
         var map = new HashMap<>(bot.getPreferences().getActivities());
+        map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));
         if (bot.getTimePlayed().toDays() < 2) {
             // New bots have an additional chance to do combat activities.
             map.computeIfPresent(BotActivity.TRAINING_COMBAT, (key, value) -> value + 0.35);
@@ -62,7 +64,8 @@ public class BotBrain {
         BotActivity activity = RandomUtils.weightedRoll(map);
         if (activity == null) {
             activity = RandomUtils.random(BotActivity.ALL.stream()
-                    .filter(bot.getPreferences()::canChooseActivity).toList());
+                    .filter(bot.getPreferences()::canChooseActivity)
+                    .filter(it -> it != BotActivity.PKING || PkingCoordinator.INSTANCE.activityWeight(bot) > 0.0).toList());
         }
         return activity.getCoordinator();
     }

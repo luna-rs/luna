@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.attack;
 
 import api.bot.action.BotCombatActionHandler;
+import api.combat.npc.NpcCombatHandler;
 import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.status.hooks.PoisonStatusEffect;
@@ -196,6 +197,19 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public CombatDamage onAttack(CombatDamage damage) {
         return damage;
+    }
+
+    /**
+     * Computes the delivered damage used for player combat experience after health and defensive caps.
+     * NPC hook metadata may reduce or boost damage experience; player targets retain normal allocation.
+     *
+     * @param damage The applied hit whose recipient and capped damage determine experience.
+     * @return Non-negative experience damage, before the captured stance distributes it to skills.
+     */
+    protected final double experienceDamage(CombatDamage damage) {
+        double multiplier = damage.getVictim() instanceof Npc npc ?
+                NpcCombatHandler.INSTANCE.damageExperienceMultiplier(npc) : 1.0;
+        return Math.max(0, damage.getRawAmount()) * multiplier;
     }
 
     /**

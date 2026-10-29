@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
 import game.content.randomEvents.RandomEvents
+import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.skill.Skills
 import game.skill.fishing.catchFish.Fish.*
 import io.luna.game.action.Action
@@ -26,13 +27,6 @@ class CatchFishAction(plr: Player,
                       private val tool: Tool) : Action<Player>(plr, ActionType.WEAK, false, 1) {
 
     companion object {
-
-        /**
-         * The saltfish, freshfish, rarefish and memberfish tables with explicit source event hooks.
-         * Quest, cave and Miscellania fishing retain the ordinary general timer.
-         */
-        private val RANDOM_EVENT_SPOTS = setOf(FishingSpot.NET_BAIT, FishingSpot.LURE_BAIT,
-            FishingSpot.CAGE_HARPOON, FishingSpot.NET_HARPOON)
 
         /**
          * Everything a big net can catch, in the order it's rolled. Each one is rolled on every catch, so one catch can
@@ -67,6 +61,12 @@ class CatchFishAction(plr: Player,
     private val spotPosition = target.position
 
     /**
+     * The clicked form of the spot. A transformation interrupts an existing cast, while a new
+     * click on the whirlpool starts a separate hazardous fishing attempt.
+     */
+    private val spotId = (target as? Npc)?.id
+
+    /**
      * Ticks since fishing started.
      */
     private var ticks = 0
@@ -82,8 +82,7 @@ class CatchFishAction(plr: Player,
     private var nextRoll = tool.firstRoll
 
     override fun onSubmit() {
-        if (canFish() && !(target is Npc && spot in RANDOM_EVENT_SPOTS &&
-                RandomEvents.offerActivity(mob, RandomEvents.Activity.FISHING))) {
+        if (canFish() && !(target is Npc && RandomEvents.offerFishing(mob, target, spot))) {
             mob.walking.clear()
             mob.interact(target)
         } else {
@@ -93,7 +92,7 @@ class CatchFishAction(plr: Player,
 
     override fun run(): Boolean {
         ticks++
-        if (target.position != spotPosition || !canFish()) {
+        if (target.position != spotPosition || (target is Npc && target.id != spotId) || !canFish()) {
             return true
         }
 
@@ -135,6 +134,8 @@ class CatchFishAction(plr: Player,
      * missing if fishing can't continue.
      */
     private fun canFish(): Boolean {
+        if (target is Npc && (target.state != io.luna.game.model.EntityState.ACTIVE ||
+                (target.id !in spot.npcs && target.id != spot.whirlpoolId))) return false
         // TODO Tai Bwo Wannai Trio: Lubufu teaches Karambwan fishing during the quest. Players he hasn't taught get
         //  "You don't even know how to use the vessel!".
         if (tool == Tool.KARAMBWAN_VESSEL && mob.fishing.level < tool.level) {
@@ -170,6 +171,10 @@ class CatchFishAction(plr: Player,
      * everything they can catch instead.
      */
     private fun roll() {
+        if (target is Npc && FishingSpotHandler.isWhirlpool(target)) {
+            FishingSpotHandler.attemptWhirlpool(mob, tool)
+            return
+        }
         val level = mob.fishing.level
         if (tool == Tool.KARAMBWAN_VESSEL) {
             mob.inventory.remove(Item(tool.id))

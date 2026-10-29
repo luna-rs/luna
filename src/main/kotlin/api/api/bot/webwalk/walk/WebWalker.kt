@@ -291,7 +291,7 @@ object WebWalker {
      * @param radius How close to the destination, in tiles on the same plane, is close enough.
      * @param attempts How many times to try, which is at least 1. Recovery-enabled trips always try at least twice before teleporting.
      * @param bank The most of the bank that the trip may withdraw. [BankAccess.NONE] never goes to the bank.
-     * @param fallback Whether to allow one awaited recovery after all attempts fail. Recovery is rate limited per bot.
+     * @param fallback Whether to allow one awaited recovery after all attempts fail.
      * @return How it went, which is that of the last attempt.
      */
     suspend fun webWalk(bot: Bot, destination: Position, radius: Int = 0, attempts: Int = 1,

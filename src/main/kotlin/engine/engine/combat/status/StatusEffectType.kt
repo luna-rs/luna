@@ -8,6 +8,7 @@ import game.combat.specialAttacks.DragonScimitar
 import game.combat.spells.ChargeStatusEffect
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
+import api.predef.ext.ticks
 
 /**
  * Registered combat status effect types.
@@ -46,6 +47,12 @@ enum class StatusEffectType(val loadFunction: (Player) -> StatusEffect<out Mob>?
      * Protects against poison damage while active.
      */
     ANTIPOISON({ PotionStatusEffect(it, ANTIPOISON) }),
+
+    /**
+     * Thirty ticks of Strange fruit poison resistance. Its saved countdown and silent expiration
+     * remain independent of longer potion effects, which eating fruit must not shorten.
+     */
+    FRUIT_ANTIPOISON({ BasicStatusEffect(it, FRUIT_ANTIPOISON, 30.ticks, persistent = true, refreshable = true) }),
 
     /**
      * Protects against dragonfire-related damage checks while active.

@@ -96,6 +96,11 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             stop()
             return false
         }
+        if (!focus.combat.isAttackable) {
+            bot.combat.target = null
+            running = true
+            return false
+        }
         if (usesPkSwitching) {
             return when (pkSwitcher.prepare(focus as Player)) {
                 PkCombatSwitcher.Result.READY -> true
@@ -330,8 +335,8 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
             escapeTile = null
             return false
         }
-        if(bot.personality.type == PersonalityTemplateType.SKILLER) {
-            // Skillers do not engage in combat.
+        if (bot.personality.type == PersonalityTemplateType.SKILLER || !focus.combat.isAttackable) {
+            // Skillers and targets without an Attack option require escape rather than a fight.
             running = true
             return false
         }
@@ -640,7 +645,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
                 if (next != null) {
                     if (threat.isWithinDistance(bot, 3)) caughtUp++
                     bot.log("Running from $threat to $next.")
-                } else if (!gaveUp && pkSession == null && bot.personality.type != PersonalityTemplateType.SKILLER &&
+                } else if (!gaveUp && pkSession == null && threat.combat.isAttackable && bot.personality.type != PersonalityTemplateType.SKILLER &&
                     !combatPolicy.isThreat(threat) && combatPolicy.prepareTrainingStyle()) {
                     bot.log("${stuck ?: "Nowhere to run from $threat"}, fighting back.")
                     bot.combat.isDisabled = false

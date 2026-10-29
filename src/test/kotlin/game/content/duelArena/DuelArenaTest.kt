@@ -29,7 +29,10 @@ import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.mockito.Mockito.*
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Exercises native duel negotiations, escrow, controller restrictions and delayed combat cleanup.
@@ -542,6 +545,7 @@ class DuelArenaTest {
     }
 
     @Test fun nativeCacheContainsDuelWindowsRulesAndArenaExits() {
+        assumeTrue(Files.exists(Path.of("data/game/cache/main_file_cache.dat")), "Local revision 377 cache required")
         io.luna.game.cache.Cache().use { cache ->
             cache.open()
             val widgets = ImmutableList.builder<WidgetDefinition>()
