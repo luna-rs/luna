@@ -50,11 +50,14 @@ import io.luna.game.model.mob.varp.Varp
 import io.luna.game.model.`object`.GameObject
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import io.luna.net.msg.GameMessage
 import io.luna.net.msg.`in`.WidgetItemClickMessageReader
 import java.util.concurrent.CompletableFuture
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.function.Predicate
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
@@ -77,6 +80,7 @@ class RangingGuildTest {
 
         @Suppress("UNCHECKED_CAST")
         @JvmStatic @BeforeAll fun initialize() {
+            assumeTrue(Files.exists(Path.of("data/game/cache/main_file_cache.dat")), "Local revision 377 cache required")
             InventoryProductionFixtures.initializeCombat()
             itemEntries = ArrayDefinitionRepository::class.java.getDeclaredField("definitions").apply {
                 isAccessible = true

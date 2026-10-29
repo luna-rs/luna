@@ -23,6 +23,7 @@ import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
@@ -932,6 +933,7 @@ class TreasureTrailsTest {
     }
 
     @Test fun nativeCacheContainsEveryObjectTargetAndClueInterface() {
+        assumeTrue(Files.exists(Path.of("data/game/cache/main_file_cache.dat")), "Local revision 377 cache required")
         Cache().use { cache ->
             cache.open()
             val widgets = ImmutableList.builder<WidgetDefinition>()

@@ -17,6 +17,11 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito.*
 import java.lang.reflect.InvocationTargetException
 
+/**
+ * Verifies delayed Superheat Item completion, costs, and interrupted casts.
+ *
+ * @author lare96
+ */
 class SuperheatItemActionTest {
     companion object {
         @JvmStatic @BeforeAll fun fixtures() = InventoryProductionFixtures.initialize()
@@ -55,7 +60,8 @@ class SuperheatItemActionTest {
             assertFalse(bot.inventory.any { it != null && it.id in BarType.ID_TO_BAR })
             verify(bot.magic, never()).addExperience(anyDouble())
             beforeCompletion()
-            for (task in tasks) {
+            // Completion may schedule a random-event offer for a later tick.
+            for (task in tasks.toList()) {
                 assertEquals(2, task.delay)
                 task.javaClass.getDeclaredMethod("execute").apply { isAccessible = true }.invoke(task)
             }
