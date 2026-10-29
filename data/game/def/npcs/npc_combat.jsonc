@@ -7286,13 +7286,13 @@
   {
     "id": 419, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 20,
     "maximum_hit": 2,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7300,11 +7300,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      9,
+      9,
+      9,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -7317,13 +7317,13 @@
   {
     "id": 420, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 3,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7331,11 +7331,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      22,
+      22,
+      22,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -7348,13 +7348,13 @@
   {
     "id": 421, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7362,11 +7362,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      38,
+      38,
+      38,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -7379,13 +7379,13 @@
   {
     "id": 422, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 85,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7393,11 +7393,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      65,
+      65,
+      65,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -7410,13 +7410,13 @@
   {
     "id": 423, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 9,
-    "attack_speed": 7,
+    "hitpoints": 120,
+    "maximum_hit": 11,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7424,11 +7424,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -7441,13 +7441,13 @@
   {
     "id": 424, // Zombie
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 11,
-    "attack_speed": 7,
+    "hitpoints": 170,
+    "maximum_hit": 14,
+    "attack_speed": 4,
     "attack_animation": 299,
     "defence_animation": 300,
     "death_animation": 302,
@@ -7455,11 +7455,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      130,
+      130,
+      130,
+      1,
+      1
     ],
     "bonuses": [
       0,

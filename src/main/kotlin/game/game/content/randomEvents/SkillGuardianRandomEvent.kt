@@ -31,6 +31,8 @@ import api.predef.ctx
 import api.drops.DropTable
 import api.drops.DropTableItem
 import api.drops.DropTableItemList
+import api.drops.ProbabilityTable
+import io.luna.game.model.item.Item
 import io.luna.game.model.Entity
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -43,7 +45,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 
 /**
- * Lost City's owner-bound skill attackers. River trolls, Tree spirits and Shades share tier selection,
+ * Lost City's owner-bound skill attackers share tier selection,
  * ordinary melee combat, ownership and native death cleanup. Each retains its source warning,
  * appearance and skill-specific selection slot; none belongs to the general visitor pool.
  * The twenty-tick active AI timer removes lost attackers. The supplied source labels their
@@ -65,7 +67,9 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
         RIVER_TROLL(391..396, 3, "Fishies be mine, leave dem fishies!", Sound.WATERSPLASH),
         TREE_SPIRIT(438..443, 2, "Leave these woods and never return!", Sound.DRYAD_APPEAR, 180),
         SHADE(425..430, 4, "Leave this place mortal!", sound = null, appearanceGraphic = 78, appearanceHeight = 0,
-              attackSound = Sound.GHOST_ATTACK, defendSound = Sound.GHOST_HIT, deathSound = Sound.GHOST_DEATH);
+              attackSound = Sound.GHOST_ATTACK, defendSound = Sound.GHOST_HIT, deathSound = Sound.GHOST_DEATH),
+        ZOMBIE(419..424, 4, "Brainsssss...", Sound.ZOMBIE_MOAN, appearanceGraphic = 78, appearanceHeight = 0,
+               attackSound = Sound.ZOMBIE_ATTACK, defendSound = Sound.ZOMBIE_HIT, deathSound = Sound.ZOMBIE_DEATH);
 
         /**
          * Source brackets: below combat 11,21,41,61,91 and the final high-level tier.
@@ -158,9 +162,8 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
 /**
  * Source members Tree spirit loot, including conditional random-herb and random-jewel rolls.
  * Flattening the nested weights preserves a single native drop and native owner privacy.
- * Ring of Wealth removes empty jewel slots only; the source underground coordinate selects
- * the talisman. Legends' Quest is not implemented, so its completion-only megarare upgrade
- * remains unavailable rather than being granted to every account.
+ * Shared jewel selection preserves Ring of Wealth and underground talisman behavior without
+ * adding a second reward or changing the direct and herb probabilities.
  *
  * @author lare96
  */
@@ -181,23 +184,96 @@ internal object TreeSpiritDropTable : DropTable() {
                                209 to 8, 211 to 6, 213 to 5, 215 to 4, 2485 to 3, 217 to 3)
 
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
-        // Native NPC death passes the victim as mob and the killer as source.
-        val player = source as? Player
-        val jewelSlots = if (player?.equipment?.contains(2572) == true) 65 else 128
-        val talisman = if ((player?.position?.y ?: 0) > 6400) 1452 else 1462
         return buildList {
             direct.forEach { (id, quantity, weight) -> add(DropTableItem(id, quantity, weight / 128.0)) }
             herbs.forEach { (id, weight) -> add(DropTableItem(id, 1, 29.0 / 128 * weight / 128)) }
-            val jewels = listOf(Triple(1623, 1, 32), Triple(1621, 1, 16), Triple(1619, 1, 8),
-                                Triple(1617, 1, 2), Triple(830, 5, 1), Triple(985, 1, 1),
-                                Triple(987, 1, 1), Triple(talisman, 1, 4))
-            jewels.forEach { (id, quantity, weight) ->
-                add(DropTableItem(id, quantity, 8.0 / 128 * weight / jewelSlots))
-            }
-            if (jewelSlots == 128) add(DropTableItem(-1, 1, 8.0 / 128 * 63 / 128))
+            addAll(GuardianJewelDropTable.weighted(mob, source, 8.0 / 128))
         }
     }
 
     override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
         DropTableItem(1452, 1, 8.0 / 128 * 4 / 128)
+}
+
+/**
+ * Lost City's members randomjewel subtable, shared by skill guardians. Native NPC death passes
+ * the victim as mob and the killer as source. Ring of Wealth removes empty slots within this
+ * subroll only; underground coordinates change its talisman. Legends' Quest is not implemented,
+ * so the completion-only megarare upgrade remains unavailable rather than being given to all.
+ *
+ * @author lare96
+ */
+internal object GuardianJewelDropTable : DropTable() {
+    override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
+        val player = source as? Player
+        val slots = if (player?.equipment?.contains(2572) == true) 65 else 128
+        val talisman = if ((player?.position?.y ?: 0) > 6400) 1452 else 1462
+        return buildList {
+            val jewels = listOf(Triple(1623, 1, 32), Triple(1621, 1, 16), Triple(1619, 1, 8),
+                                Triple(1617, 1, 2), Triple(830, 5, 1), Triple(985, 1, 1),
+                                Triple(987, 1, 1), Triple(talisman, 1, 4))
+            jewels.forEach { (id, quantity, weight) -> add(DropTableItem(id, quantity, weight.toDouble() / slots)) }
+            if (slots == 128) add(DropTableItem(-1, 1, 63.0 / 128))
+        }
+    }
+
+    /**
+     * Scales one nested jewel roll for a flattened table without applying its bonus to other loot.
+     */
+    fun weighted(mob: Mob?, source: Entity?, chance: Double): DropTableItemList =
+        computeTable(mob, source).map { DropTableItem(it.id, it.amount, it.chance * chance) }
+
+    override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
+        DropTableItem(1452, 1, 4.0 / 128)
+}
+
+/**
+ * Lost City's members zombie loot. The source marks its 256-slot rates as estimates, including
+ * the swordfish outcome. Every death gives one default big bone plus one correlated reward
+ * bundle. Duplicate bone entries stay separate as in the source; the final slot rolls randomjewel.
+ * Preview entries show marginal chances, while native rolling preserves whole bundles together.
+ *
+ * @author lare96
+ */
+internal object ZombieDropTable : DropTable() {
+    /**
+     * Source weights and item/quantity pairs. The one-slot empty bundle requests randomjewel;
+     * it never suppresses the default big bone. Stored pairs become fresh item stacks for each roll.
+     */
+    private val bundles: List<Pair<Int, List<Pair<Int, Int>>>> = listOf(
+        36 to listOf(313 to 50),
+        24 to listOf(313 to 27),
+        32 to listOf(562 to 35),
+        8 to listOf(562 to 50),
+        28 to listOf(373 to 1),
+        16 to listOf(564 to 5),
+        16 to listOf(995 to 26),
+        40 to listOf(532 to 1),
+        32 to listOf(532 to 2),
+        8 to listOf(532 to 6, 526 to 3),
+        5 to listOf(536 to 1, 532 to 1),
+        1 to listOf(536 to 2, 532 to 10, 526 to 10),
+        1 to listOf(536 to 3),
+        8 to listOf(532 to 4, 532 to 2),
+        1 to emptyList()
+    )
+
+    override fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
+        val bundle = ProbabilityTable(bundles.map { (weight, items) -> weight / 256.0 to items }).roll().orEmpty()
+        return mutableListOf(Item(532)).apply {
+            if (bundle.isEmpty()) addAll(GuardianJewelDropTable.roll(mob, source))
+            else bundle.forEach { (id, quantity) -> add(Item(id, quantity)) }
+        }
+    }
+
+    override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList = buildList {
+        add(DropTableItem(532, 1, 1.0))
+        bundles.forEach { (weight, items) ->
+            items.forEach { (id, quantity) -> add(DropTableItem(id, quantity, weight / 256.0)) }
+        }
+        addAll(GuardianJewelDropTable.weighted(mob, source, 1.0 / 256))
+    }
+
+    override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
+        DropTableItem(1452, 1, 1.0 / 256 * 4 / 128)
 }

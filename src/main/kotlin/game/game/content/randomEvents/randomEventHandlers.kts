@@ -35,6 +35,11 @@ SkillGuardianRandomEvent.Kind.TREE_SPIRIT.npcIds.forEach { id ->
     DropTableHandler.createNpc(id) { tables += TreeSpiritDropTable }
 }
 
+// Event zombies use correlated source bundles; ordinary zombies retain their existing tables.
+SkillGuardianRandomEvent.Kind.ZOMBIE.npcIds.forEach { id ->
+    DropTableHandler.createNpc(id) { tables += ZombieDropTable }
+}
+
 on(LoginEvent::class) { randomEvents.login(plr) }
 on(LogoutEvent::class) { randomEvents.logout(plr) }
 on(PlayerTickEvent::class) {
@@ -187,10 +192,11 @@ cmd("random_event", RIGHTS_ADMIN) {
         "river_troll" -> SkillGuardianRandomEvent.Kind.RIVER_TROLL
         "tree_spirit" -> SkillGuardianRandomEvent.Kind.TREE_SPIRIT
         "shade" -> SkillGuardianRandomEvent.Kind.SHADE
+        "zombie" -> SkillGuardianRandomEvent.Kind.ZOMBIE
         else -> null
     }
     if (kind == null && guardian == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade")
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade|zombie")
     } else if (!(if (guardian != null) randomEvents.startGuardian(plr, guardian) else randomEvents.startEncounter(plr, kind!!))) {
         plr.sendMessage("A random event cannot start here right now.")
     }

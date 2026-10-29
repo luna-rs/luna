@@ -189,7 +189,8 @@ object RandomEvents {
             generalKind(random)?.let { startEncounter(player, it) } ?: false
         } else when (activity) {
             Activity.WOODCUTTING -> slot == 0 && startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
-            Activity.PRAYER -> slot == 1 && startGuardian(player, SkillGuardianRandomEvent.Kind.SHADE)
+            Activity.PRAYER -> startGuardian(player,
+                if (slot == 0) SkillGuardianRandomEvent.Kind.ZOMBIE else SkillGuardianRandomEvent.Kind.SHADE)
             else -> false
         }
     }
