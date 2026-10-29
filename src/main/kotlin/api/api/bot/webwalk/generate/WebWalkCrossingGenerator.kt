@@ -1,15 +1,15 @@
 package api.bot.webwalk.generate
 
 import api.bot.webwalk.model.EdgeType
-import api.bot.webwalk.model.Requirements
+import game.content.gnomeBall.GnomeBall
 import api.bot.webwalk.model.ItemRequirement
+import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
-import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.GnomeStrongholdGate
+import game.content.miningGuild.MiningGuild
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
-import game.content.gnomeBall.GnomeBall
 import game.obj.doors.TaverleyJailDoor
 import game.skill.agility.AgilityEntrances
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
@@ -124,6 +124,21 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The Gnome Ball pitch gate is a scripted passage. Going in puts the weapon and shield away, which needs inventory
+     * space for them.
+     */
+    val GNOME_BALL_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeBall.GATE), cost = 4)
+
+    /**
+     * The Tree Gnome Stronghold's main gate, a 5x2 object crossed from the tile in front of its middle to the tile behind it.
+     */
+    val GNOME_STRONGHOLD_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeStrongholdGate.GATE), cost = 6,
+                                             placements = listOf(CrossingPlacement(GnomeStrongholdGate.GATE,
+                                                                                   GnomeStrongholdGate.POSITION,
+                                                                                   GnomeStrongholdGate.SOUTH,
+                                                                                   GnomeStrongholdGate.NORTH)))
+
+    /**
      * The Taverley Dungeon gate into the western section needs a carried dusty key from outside, the side of its own
      * tile, and opens freely from inside.
      */
@@ -187,25 +202,11 @@ object SpecialCrossings {
                                       Requirements(items = listOf(ItemRequirement(BrassKeyDoor.KEY))), cost = 4)
 
     /**
-     * The Gnome Ball pitch gate is a scripted passage. Going in puts the weapon and shield away, which needs inventory
-     * space for them.
-     */
-    val GNOME_BALL_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeBall.GATE), cost = 4)
-
-    /**
-     * The Tree Gnome Stronghold's main gate, a 5x2 object crossed from the tile in front of its middle to the tile behind it.
-     */
-    val GNOME_STRONGHOLD_GATE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(GnomeStrongholdGate.GATE), cost = 6,
-                                             placements = listOf(CrossingPlacement(GnomeStrongholdGate.GATE,
-                                                                                   GnomeStrongholdGate.POSITION,
-                                                                                   GnomeStrongholdGate.SOUTH,
-                                                                                   GnomeStrongholdGate.NORTH)))
-    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-                     GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].

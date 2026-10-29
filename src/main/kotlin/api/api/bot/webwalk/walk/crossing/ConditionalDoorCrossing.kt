@@ -6,9 +6,9 @@ import api.bot.webwalk.walk.LegContext
 import api.predef.*
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
+import game.content.gnomeBall.GnomeBall
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.Doors
-import game.content.gnomeBall.GnomeBall
 import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
@@ -30,9 +30,9 @@ object ConditionalDoorCrossing : CrossingHandler {
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
-            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != GnomeBall.GATE &&
-            id != GnomeStrongholdGate.GATE && id != BrassKeyDoor.DOOR &&
-            id != TaverleyJailDoor.DUSTY_KEY_GATE.closed) {
+            id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
+            id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
+            id != GnomeStrongholdGate.GATE) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
