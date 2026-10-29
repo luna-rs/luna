@@ -189,7 +189,23 @@ object RandomEvents {
      * Bone burial instead calls after its normal item consumption and experience award.
      */
     fun offerActivity(player: Player, activity: Activity): Boolean =
-        offer(player) { activity.select { Random.nextInt(it) } }
+        if (activity == Activity.WOODCUTTING) offerWoodcutting(player) { Random.nextInt(it) }
+        else offer(player) { activity.select { Random.nextInt(it) } }
+
+    /**
+     * Resolves the source woodcutting pool: Tree spirit, Ent, lost axe, then the six general
+     * slots. Unimplemented Ent and axe results consume readiness without another selection.
+     */
+    internal fun offerWoodcutting(player: Player, random: (Int) -> Int): Boolean = offerOutcome(player) {
+        when (random(9)) {
+            0 -> startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
+            1, 2 -> false
+            else -> {
+                val slot = random(6)
+                Kind.entries.firstOrNull { it.generalSlot == slot }?.let { startEncounter(player, it) } ?: false
+            }
+        }
+    }
 
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
@@ -261,7 +277,14 @@ object RandomEvents {
      * the general visitor pool and never creates a saved gift or following entitlement.
      */
     fun startRiverTroll(player: Player): Boolean =
-        spawnEncounter(player, RiverTrollRandomEvent.npcId(player.combatLevel), false) { RiverTrollRandomEvent(player, it) }
+        startGuardian(player, SkillGuardianRandomEvent.Kind.RIVER_TROLL)
+
+    /**
+     * Places a skill guardian from its current combat bracket. These attackers never save a
+     * gift entitlement or follow a player across logout; shared ownership guards their combat.
+     */
+    fun startGuardian(player: Player, kind: SkillGuardianRandomEvent.Kind): Boolean =
+        spawnEncounter(player, kind.npcId(player.combatLevel), false) { SkillGuardianRandomEvent(player, it, kind) }
 
     /**
      * Shares safe placement and exact encounter ownership between general visitors and skill attackers.

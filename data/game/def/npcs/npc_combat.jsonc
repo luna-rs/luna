@@ -7844,11 +7844,8 @@
   {
     "id": 438, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 25,
@@ -7879,11 +7876,8 @@
   {
     "id": 439, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 40,
@@ -7914,11 +7908,8 @@
   {
     "id": 440, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 60,
@@ -7949,11 +7940,8 @@
   {
     "id": 441, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 85,
@@ -7984,11 +7972,8 @@
   {
     "id": 442, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
@@ -8019,11 +8004,8 @@
   {
     "id": 443, // Tree spirit
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "respawn_ticks": -1,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 170,

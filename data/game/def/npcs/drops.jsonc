@@ -17142,13 +17142,7 @@
   },
   {
     "ids": [
-      655, // Tree spirit
-      438, // Tree spirit
-      439, // Tree spirit
-      440, // Tree spirit
-      441, // Tree spirit
-      442, // Tree spirit
-      443 // Tree spirit
+      655 // Tree spirit
     ],
     "rare": "GEM",
     "drops": [
