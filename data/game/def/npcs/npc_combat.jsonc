@@ -33800,6 +33800,7 @@
   },
   {
     "id": 3200, // Chaos Elemental
+    "movement": { "max_range": 7, "attack_range": 10, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": {
       "policy": "ALWAYS",
