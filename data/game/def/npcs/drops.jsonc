@@ -17142,13 +17142,7 @@
   },
   {
     "ids": [
-      655, // Tree spirit
-      438, // Tree spirit
-      439, // Tree spirit
-      440, // Tree spirit
-      441, // Tree spirit
-      442, // Tree spirit
-      443 // Tree spirit
+      655 // Tree spirit
     ],
     "rare": "GEM",
     "drops": [
@@ -28109,6 +28103,41 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0234375,
+        "table": 1
+      }
+    ]
+  },
+  // Lost City members Shade: half empty, quarter robe top, quarter robe bottom; no bones or rare table.
+  {
+    "ids": [
+      425,
+      426,
+      427,
+      428,
+      429,
+      430
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": -1,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.5,
+        "table": 1
+      },
+      {
+        "id": 546,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
+      },
+      {
+        "id": 548,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
         "table": 1
       }
     ]

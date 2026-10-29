@@ -98,24 +98,14 @@ object RandomEvents {
      *
      * @author lare96
      */
-    enum class Activity(private val specialSlots: Int) {
+    enum class Activity(internal val specialSlots: Int) {
         MINING(3),
         MINING_WITHOUT_GAS(2),
         WOODCUTTING(3),
         FISHING(3),
         THIEVING(1),
         THIEVING_CHEST(2),
-        PRAYER(2);
-
-        /**
-         * Preserves the source's two-stage choice: skill hazard versus general pool, then one
-         * of the six general events. A missing native implementation does not favor other events.
-         */
-        internal fun select(random: (Int) -> Int): Kind? {
-            if (random(6 + specialSlots) < specialSlots) return null
-            val slot = random(6)
-            return Kind.entries.firstOrNull { it.generalSlot == slot }
-        }
+        PRAYER(2)
     }
 
     /**
@@ -169,10 +159,7 @@ object RandomEvents {
      * unavailable spawn tile does not grant another roll. Activity dispatchers supply their own pool.
      */
     fun offerGeneral(player: Player): Boolean {
-        return offer(player) {
-            val slot = Random.nextInt(6)
-            Kind.entries.firstOrNull { it.generalSlot == slot }
-        }
+        return offer(player) { generalKind { Random.nextInt(it) } }
     }
 
     /**
@@ -189,7 +176,23 @@ object RandomEvents {
      * Bone burial instead calls after its normal item consumption and experience award.
      */
     fun offerActivity(player: Player, activity: Activity): Boolean =
-        offer(player) { activity.select { Random.nextInt(it) } }
+        offerActivity(player, activity) { Random.nextInt(it) }
+
+    /**
+     * Resolves one activity-specific slot or the separate six-way general roll after readiness
+     * is consumed. Woodcutting and Prayer share this dispatch with the remaining native skills;
+     * missing hazards keep their original slots without granting a replacement selection.
+     */
+    internal fun offerActivity(player: Player, activity: Activity, random: (Int) -> Int): Boolean = offerOutcome(player) {
+        val slot = random(6 + activity.specialSlots)
+        if (slot >= activity.specialSlots) {
+            generalKind(random)?.let { startEncounter(player, it) } ?: false
+        } else when (activity) {
+            Activity.WOODCUTTING -> slot == 0 && startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
+            Activity.PRAYER -> slot == 1 && startGuardian(player, SkillGuardianRandomEvent.Kind.SHADE)
+            else -> false
+        }
+    }
 
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
@@ -212,12 +215,18 @@ object RandomEvents {
                 1 -> startRiverTroll(player)
                 2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
                 else -> {
-                    val slot = random(6)
-                    Kind.entries.firstOrNull { it.generalSlot == slot }
-                        ?.let { startEncounter(player, it) } ?: false
+                    generalKind(random)?.let { startEncounter(player, it) } ?: false
                 }
             }
         }
+    }
+
+    /**
+     * Keeps the source's independent general roll consistent across timer and skill triggers.
+     */
+    private fun generalKind(random: (Int) -> Int): Kind? {
+        val slot = random(6)
+        return Kind.entries.firstOrNull { it.generalSlot == slot }
     }
 
     /**
@@ -261,7 +270,14 @@ object RandomEvents {
      * the general visitor pool and never creates a saved gift or following entitlement.
      */
     fun startRiverTroll(player: Player): Boolean =
-        spawnEncounter(player, RiverTrollRandomEvent.npcId(player.combatLevel), false) { RiverTrollRandomEvent(player, it) }
+        startGuardian(player, SkillGuardianRandomEvent.Kind.RIVER_TROLL)
+
+    /**
+     * Places a skill guardian from its current combat bracket. These attackers never save a
+     * gift entitlement or follow a player across logout; shared ownership guards their combat.
+     */
+    fun startGuardian(player: Player, kind: SkillGuardianRandomEvent.Kind): Boolean =
+        spawnEncounter(player, kind.npcId(player.combatLevel), false) { SkillGuardianRandomEvent(player, it, kind) }
 
     /**
      * Shares safe placement and exact encounter ownership between general visitors and skill attackers.

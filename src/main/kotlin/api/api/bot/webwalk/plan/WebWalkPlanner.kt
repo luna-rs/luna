@@ -12,6 +12,7 @@ import api.bot.webwalk.model.WebWalkGraph
 import api.bot.webwalk.model.WebWalkNode
 import engine.controllers.WildernessLocatableController
 import io.luna.game.model.Position
+import io.luna.game.model.area.SimpleBoxArea
 import java.util.PriorityQueue
 import java.util.Random
 import java.util.SplittableRandom
@@ -69,6 +70,12 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
          * The width and length of the squares that nodes are sorted into, so that the ones nearby can be found quickly.
          */
         private const val CELL_SIZE = 32
+
+        /**
+         * Taverley Dungeon, whose tunnels wind so far that a node a few tiles away can be over a hundred steps off. Walks
+         * there are never joined, and each one is given longer (see [api.bot.webwalk.walk.LegContext.walk]).
+         */
+        val TAVERLEY_DUNGEON = SimpleBoxArea.of(2816, 9664, 2943, 9870)
     }
 
     /**
@@ -323,7 +330,7 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
     /**
      * Skips nodes of a trip that don't need to be walked through. Each walk goes straight to the farthest node, among the walks
      * that follow it in a row, that is within [PlannerCosts.shortcutRadius] and can be walked to for no more than the walks
-     * that it replaces.
+     * that it replaces. Walks in or into [TAVERLEY_DUNGEON] are kept as they are.
      *
      * @param legs The legs of the trip.
      * @return The legs, with the walks that were skipped joined.
@@ -345,7 +352,8 @@ class WebWalkPlanner(private val graph: WebWalkGraph,
             var end = last
             while (end > index) {
                 val to = legs[end].to
-                if (leg.from.z == to.z && leg.from.computeLongestDistance(to) <= costs.shortcutRadius) {
+                if (leg.from.z == to.z && leg.from.computeLongestDistance(to) <= costs.shortcutRadius &&
+                    leg.from !in TAVERLEY_DUNGEON && to !in TAVERLEY_DUNGEON) {
                     val shortcut = walk(leg.from, to)
                     if (shortcut != null && shortcut.cost <= (index..end).sumOf { legs[it].cost } + 1e-9) {
                         joined = shortcut

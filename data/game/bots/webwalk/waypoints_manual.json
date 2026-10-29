@@ -9,6 +9,27 @@
     { "id": "lumbridge_draynor_road", "pos": [3129, 3295, 0] },
     { "id": "falador_south_east", "pos": [3007, 3330, 0] },
     { "id": "falador_south_of_east_bank", "pos": [3007, 3343, 0] },
+    { "id": "taverley_dungeon_north_passage", "pos": [2885, 9815, 0] },
+    { "id": "taverley_dungeon_north_bend", "pos": [2885, 9835, 0] },
+    { "id": "taverley_dungeon_north_corridor", "pos": [2890, 9848, 0] },
+    { "id": "taverley_dungeon_north_east_corridor", "pos": [2910, 9848, 0] },
+    { "id": "taverley_dungeon_druid_approach", "pos": [2919, 9837, 0] },
+    { "id": "taverley_dungeon_druid_south", "pos": [2935, 9833, 0] },
+    { "id": "taverley_dungeon_east_passage", "pos": [2937, 9815, 0] },
+    { "id": "taverley_dungeon_east_bend", "pos": [2942, 9800, 0] },
+    { "id": "taverley_dungeon_south_east_corner", "pos": [2951, 9789, 0] },
+    { "id": "taverley_dungeon_south_east_passage", "pos": [2946, 9774, 0] },
+    { "id": "taverley_dungeon_lesser_demon_junction", "pos": [2935, 9771, 0] },
+    { "id": "taverley_dungeon_black_knight_approach", "pos": [2932, 9754, 0] },
+    { "id": "taverley_dungeon_black_knight_tunnel", "pos": [2922, 9744, 0] },
+    { "id": "taverley_dungeon_black_knight_tunnel_south", "pos": [2912, 9734, 0] },
+    { "id": "taverley_dungeon_black_knight_corridor", "pos": [2907, 9719, 0] },
+    { "id": "taverley_dungeon_black_knight_doors", "pos": [2907, 9699, 0] },
+    { "id": "taverley_dungeon_lesser_demon_west", "pos": [2923, 9767, 0] },
+    { "id": "taverley_dungeon_lesser_demon_north", "pos": [2930, 9780, 0] },
+    { "id": "taverley_dungeon_dusty_key_gate_east", "pos": [2935, 9795, 0] },
+    { "id": "taverley_dungeon_dusty_key_gate_west", "pos": [2909, 9797, 0] },
+    { "id": "taverley_dungeon_blue_dragon_passage", "pos": [2894, 9792, 0] }
     { "id": "varrock_sewers_manhole_corridor", "pos": [3243, 9874, 0] }
   ]
 }

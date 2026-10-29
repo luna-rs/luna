@@ -633,12 +633,12 @@ object WebWalkLiveGenerator {
     }
 
     /**
-     * Spreads waypoints over the overworld, which is the ground floor above the dungeons, so that no walk of the graph is longer
-     * than the range of the route pathfinder. Cells that already have a waypoint, which [waypoints] are, are left alone.
+     * Spreads waypoints over the ground floor, both the overworld and the dungeons below it, so that no walk of the graph is
+     * longer than the range of the route pathfinder. Cells that already have a waypoint, which [waypoints] are, are left alone.
      */
     private fun scatter(waypoints: List<GeneratedWaypoint>, report: GenerationReport): List<GeneratedWaypoint> {
         val table = ctx.cache.mapIndexTable
-        val regions = table.allRegions.map { it.absPosition }.filter { it.y < LadderType.CELLAR_OFFSET }
+        val regions = table.allRegions.map { it.absPosition }
         if (regions.isEmpty()) {
             return emptyList()
         }
