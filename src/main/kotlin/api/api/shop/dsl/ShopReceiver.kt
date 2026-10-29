@@ -31,6 +31,11 @@ class ShopReceiver(val name: String) {
     var currency = Currency.COINS
 
     /**
+     * Optional pricing for original stock; null preserves the usual specialty-shop prices.
+     */
+    var stockPricing: Shop.StockPricing? = null
+
+    /**
      * If a bot can access this shop.
      */
     var botAccess: Bot.() -> Boolean = { true }
@@ -81,7 +86,7 @@ class ShopReceiver(val name: String) {
      */
     fun register() {
         // The shop registry remains the single source of truth. Bot shopping discovers shops from ShopManager later.
-        val shop = Shop(world, name, restock, buy, currency, botAccess, merchantOnly)
+        val shop = Shop(world, name, restock, buy, currency, botAccess, merchantOnly, stockPricing)
         shop.init(items)
 
         // Normal players can still discover this shop through its configured NPC, object, or button listeners.

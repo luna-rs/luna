@@ -56,7 +56,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
 
     fun tick(currentZone: SubZone?, focus: Npc?) {
         if (currentZone == null) {
-            // A pause clears the script's active zone briefly. Keep this camp's timing until another is selected.
+            // A pause clears the script's active zone briefly. Keep this camp's timing until the bot leaves it.
             close()
             return
         }
@@ -287,6 +287,15 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
     private fun nearby(player: Player): Boolean = player !== bot && player.state == EntityState.ACTIVE &&
         player.isAlive && bot.isWithinDistance(player, 8) &&
         !bot.ignores.contains(player.usernameHash) && !player.ignores.contains(bot.usernameHash)
+
+    /** Leaving ends this visit, so a return to the same camp starts with fresh timing. */
+    fun leave() {
+        close()
+        zone = null
+        // The script can reselect this camp and ask shouldLeave before the next tick resets it.
+        poorSince = -1L
+        crowded = false
+    }
 
     fun close() {
         BotConversations.cancel(bot)
