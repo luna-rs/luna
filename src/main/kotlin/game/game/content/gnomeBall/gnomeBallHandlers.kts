@@ -10,7 +10,7 @@ import io.luna.game.model.mob.interact.InteractionPolicy
 on(ServerLaunchEvent::class) { GnomeBall.launch() }
 on(LoginEvent::class) { GnomeBall.login(plr) }
 on(LogoutEvent::class) { GnomeBall.leave(plr) }
-object1(2394) { GnomeBall.openGate(plr, gameObject) }
+object1(GnomeBall.GATE) { GnomeBall.openGate(plr, gameObject) }
 object1(2393, InteractionPolicy.STANDARD_LINE_OF_SIGHT_BIF) { GnomeBall.shoot(plr, gameObject) }
 npc1(635) {
     // The existing general clue listener answers the challenge; do not open a competing dialogue.
