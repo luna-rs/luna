@@ -28,10 +28,10 @@ import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
 import engine.bank.Banking
+import engine.obj.Hatch
 import engine.obj.LadderDestination
 import engine.obj.LadderType
 import engine.obj.StairDestination
-import engine.obj.Trapdoor
 import engine.obj.TrapdoorLanding
 import io.luna.game.model.Position
 import io.luna.game.model.mob.interact.InteractionPolicy
@@ -57,7 +57,7 @@ import java.util.concurrent.Executor
  *   leaves of the Al Kharid toll gate, or the fixed tiles of their placements, such as the H.A.M. Hideout trapdoor, made by
  *   [WebWalkCrossingGenerator].
  * - The ladders, stairs, trapdoors and entrances of `climbs.jsonc` land where [LadderDestination], [StairDestination],
- *   [Trapdoor] and [Entrance] say that they do, which is what players get.
+ *   [Hatch] and [Entrance] say that they do, which is what players get.
  * - The teleports of `teleports.jsonc` are the teleport spells, the destinations of the teleport jewellery, and the home
  *   teleport, so that they are never written out by hand.
  * - The ships of `ships.jsonc` are the [ShipRoute]s, each boarded where its crew stands and left by its gangplank, with
@@ -221,8 +221,8 @@ object WebWalkLiveGenerator {
         val report = GenerationReport()
         val climbs = ArrayList<GeneratedObstacle>()
         val leavingPlanks = ArrayList<GameObject>()
-        val trapdoors = HashMap<Int, Trapdoor>()
-        for (trapdoor in Trapdoor.entries) {
+        val trapdoors = HashMap<Int, Hatch>()
+        for (trapdoor in Hatch.ALL) {
             trapdoor.closed?.let { trapdoors[it] = trapdoor }
             trapdoors[trapdoor.open] = trapdoor
         }
@@ -389,9 +389,9 @@ object WebWalkLiveGenerator {
     }
 
     /**
-     * Makes the obstacle of a trapdoor, which only goes down.
+     * Makes the obstacle of a trapdoor or manhole, which only goes down.
      */
-    private fun trapdoor(obj: GameObject, trapdoor: Trapdoor, climbs: MutableList<GeneratedObstacle>,
+    private fun trapdoor(obj: GameObject, trapdoor: Hatch, climbs: MutableList<GeneratedObstacle>,
                          report: GenerationReport) {
         for (from in climbingTiles(obj)) {
             val to = trapdoor.landing.from(obj.position, from)?.let { TrapdoorLanding.land(it) }
