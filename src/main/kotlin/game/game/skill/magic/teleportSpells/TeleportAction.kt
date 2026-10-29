@@ -9,6 +9,7 @@ import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.MobDeathAction
 import io.luna.game.model.mob.Player
 
 /**
@@ -83,6 +84,9 @@ open class TeleportAction(plr: Player,
      * Applies native teleport restrictions before costs are consumed or teleport side effects begin.
      */
     private fun checkCast(): List<Item>? {
+        if (!canTeleport()) {
+            return null
+        }
         if (mob.status.isTeleBlocked()) {
             mob.sendMessage("A magical force stops you from teleporting.")
             return null
@@ -93,7 +97,13 @@ open class TeleportAction(plr: Player,
         return Magic.checkRequirements(mob, level, requirements)
     }
 
-    override fun run(): Boolean = !style.step(this)
+    override fun run(): Boolean = !canTeleport() || !style.step(this)
+
+    /**
+     * Checks that the player is alive and has no unfinished death sequence.
+     */
+    private fun canTeleport(): Boolean =
+        mob.isAlive && mob.actions.getAll(MobDeathAction::class.java).none { !it.isFinished }
 
     override fun onUnlock() {
          mob.teleportDelay.reset()
@@ -104,7 +114,7 @@ open class TeleportAction(plr: Player,
      * died during the teleport.
      */
     fun land() {
-        if (!mob.isAlive) {
+        if (!canTeleport()) {
             return
         }
         removeSled()

@@ -19,8 +19,10 @@ import api.bot.webwalk.walk.WebWalker.planTrip
 import api.bot.webwalk.walk.WebWalker.planner
 import api.bot.webwalk.walk.WebWalker.webWalk
 import api.bot.webwalk.walk.crossing.CrossingHandlers
+import api.bot.webwalk.walk.crossing.WebCrossing
 import api.predef.*
 import game.content.sailing.ShipRoute
+import game.obj.webs.Web
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.future.await
@@ -192,6 +194,7 @@ object WebWalker {
                 tiers[access] = BotCapabilities.snapshot(bot, graph.teleports, bank = access, banked = banked)
             }
         }
+        val expected = expected(bot, destination, carried, tiers[BankAccess.ALL])
         val intelligence = bot.personality.intelligence
         return CompletableFuture.supplyAsync({
                                                  trips.plan(start,
@@ -200,9 +203,36 @@ object WebWalker {
                                                             tiers,
                                                             view,
                                                             intelligence,
-                                                            random)
+                                                            random,
+                                                            expected)
                                              },
                                              planPool)
+    }
+
+    /**
+     * Finds the conditions that a bot should meet at [destination] and doesn't yet, but that its bank can give it, such
+     * as a knife for a zone with a web in it (see [WebCrossing.expected]). A bot whose bank can't give it a knife
+     * either wants one, so that it buys one when it next goes shopping.
+     *
+     * @param bot The bot.
+     * @param destination Where it is going.
+     * @param carried What the bot can do with what it carries.
+     * @param all What it can do with its bank, or `null` if the trip may not withdraw from it.
+     * @return The conditions that the trip should withdraw for.
+     */
+    private fun expected(bot: Bot,
+                         destination: Position,
+                         carried: CapabilitySnapshot,
+                         all: CapabilitySnapshot?): Set<String> {
+        val unmet = WebCrossing.expected(destination) - carried.flags
+        if (unmet.isEmpty() || all != null && all.flags.containsAll(unmet)) {
+            return unmet
+        }
+        if (bot.bank.computeAmountForId(Web.KNIFE) == 0) {
+            bot.log("WebWalk: a web is expected near $destination and the bot can't cut it, so it wants a knife.")
+            bot.preferences.addWantedItem(Web.KNIFE, 1)
+        }
+        return emptySet()
     }
 
     /**
@@ -224,6 +254,7 @@ object WebWalker {
         val view = BankWithdrawal.view(bot, banked)
         val carried = BotCapabilities.snapshot(bot, graph.teleports)
         val snapshot = BotCapabilities.snapshot(bot, graph.teleports, bank = access, banked = banked)
+        val expected = (WebCrossing.expected(destination) - carried.flags).filter { it in snapshot.flags }.toSet()
         val intelligence = bot.personality.intelligence
         return CompletableFuture.supplyAsync({
                                                  trips.fromBank(stand,
@@ -231,7 +262,8 @@ object WebWalker {
                                                                 snapshot,
                                                                 carried,
                                                                 view,
-                                                                intelligence)
+                                                                intelligence,
+                                                                expected = expected)
                                              },
                                              planPool)
     }

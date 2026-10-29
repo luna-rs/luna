@@ -2,11 +2,13 @@ package api.bot.webwalk.walk
 
 import api.bot.webwalk.model.BankDefinition
 import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.plan.CapabilitySnapshot
 import api.bot.webwalk.plan.Spend
 import api.bot.webwalk.plan.TripNeeds
 import api.bot.webwalk.plan.WebWalkPlanner
 import api.predef.*
+import game.obj.webs.Web
 import io.luna.game.model.Position
 import java.util.Random
 
@@ -24,6 +26,8 @@ import java.util.Random
  * - The trip by the bank is taken if there is no trip without it, or if it costs less: both trips and
  *   [api.bot.webwalk.plan.PlannerCosts.bankTicks]. The free home teleport goes to Varrock west bank, so for most bots that is
  *   the nearest bank and the walk there is short, and the question is whether the trip from Varrock is cheaper.
+ * - The trip by the bank is also taken, whatever it costs, to withdraw a knife for a trip that ends where a web is
+ *   expected, because the cost of the trip doesn't count the webs past its end.
  *
  * The costs that are compared vary a little with the intelligence of the bot, which may be given a trip that is not the best
  * (see [WebWalkPlanner]), so a less intelligent bot's choice is a little noisy. They are the costs of the trips as the search
@@ -51,6 +55,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
      * @param view What the bot has in its inventory and bank.
      * @param intelligence How intelligent the bot is, from `0.0` to `1.0`.
      * @param random Where the variation of the route comes from.
+     * @param expected The conditions that the bot should meet when it arrives, which the bank can give it (see
+     * [api.bot.webwalk.walk.crossing.WebCrossing.expected]).
      * @return The trip.
      */
     fun plan(start: Position,
@@ -59,7 +65,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
              tiers: Map<BankAccess, CapabilitySnapshot>,
              view: BankView,
              intelligence: Double = 1.0,
-             random: Random = Random()): TripPlan {
+             random: Random = Random(),
+             expected: Set<String> = emptySet()): TripPlan {
         val route = "No trip from $start to $destination"
         val fitting = BankWithdrawal.highestFitting(view, tiers.keys.firstOrNull() ?: BankAccess.NONE)
         val usable = tiers.filterKeys { it <= fitting }
@@ -75,7 +82,7 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
         // The trips that are compared are only refined (shortened and scattered) if they are the one that is walked.
         val first = planner.plan(start, destination, top, intelligence, random, refine = false)
             ?: return TripPlan.NoTrip("$route.")
-        if (TripNeeds.of(first, top).withdrawal(carried) == null) {
+        if (TripNeeds.of(first, top, expected).withdrawal(carried) == null) {
             return TripPlan.Direct(planner.refine(first, random))
         }
 
@@ -90,7 +97,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
         var candidate: TripPlan.ViaBank? = null
         var tooBig: Spend? = null
         for ((access, snapshot) in usable) {
-            val fromBank = fromBank(stand, destination, snapshot, carried, view, intelligence, random, refine = false) ?: continue
+            val fromBank = fromBank(stand, destination, snapshot, carried, view, intelligence, random, refine = false,
+                                    expected = expected) ?: continue
             val items = if (fromBank.withdrawal == null) emptyList() else fromBank.items
             if (items == null) {
                 if (tooBig == null) {
@@ -110,7 +118,8 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
             return direct(tooBig?.let { "with what the bot carries, and ${describe(it)} from the bank doesn't fit in the inventory" }
                               ?: "with what the bot carries")
         }
-        if (direct != null && candidate.cost >= direct.cost) {
+        val fetchesBlade = BotConditions.SLASH_WEB in expected && candidate.withdrawal.any { it.id == Web.KNIFE }
+        if (direct != null && candidate.cost >= direct.cost && !fetchesBlade) {
             return TripPlan.Direct(planner.refine(direct, random), candidate)
         }
         // The trip from the bank is planned again at the bank, and refined then.
@@ -129,6 +138,7 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
      * @param random Where the variation of the route comes from.
      * @param refine Whether to shorten and scatter the trip, which is only worth it for a trip that is walked: the one
      * planned at the bank, not the one planned before setting off to compare with the direct trip.
+     * @param expected The conditions that the bot should meet when it arrives.
      * @return The trip and what it would withdraw, or `null` if there is no trip from the bank.
      */
     fun fromBank(stand: Position,
@@ -138,9 +148,10 @@ class TripPlanner(private val planner: WebWalkPlanner, private val banks: List<B
                  view: BankView,
                  intelligence: Double = 1.0,
                  random: Random = Random(),
-                 refine: Boolean = true): BankStandPlan? {
+                 refine: Boolean = true,
+                 expected: Set<String> = emptySet()): BankStandPlan? {
         val plan = planner.plan(stand, destination, snapshot, intelligence, random, refine) ?: return null
-        val needs = TripNeeds.of(plan, snapshot)
+        val needs = TripNeeds.of(plan, snapshot, expected)
         val withdrawal = needs.withdrawal(carried) ?: return BankStandPlan(plan, needs, null, null)
         // Worn jewellery is taken off into the inventory to be rubbed, so a slot is kept for it.
         val keepFree = if (needs.spend.charges.keys.any { it in view.wornJewellery }) 1 else 0

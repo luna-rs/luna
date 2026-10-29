@@ -6,6 +6,7 @@ import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
+import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -13,8 +14,10 @@ import game.skill.thieving.lockedDoor.YanilleDoorAction
 import io.luna.game.model.mob.Skill
 import api.bot.webwalk.walk.crossing.BorderGateCrossing
 import api.bot.webwalk.walk.crossing.HamTrapdoorCrossing
+import api.bot.webwalk.walk.crossing.WebCrossing
 import engine.obj.HamTrapdoor
 import game.npc.spawn.alKharid.BorderGate
+import game.obj.webs.Web
 import io.luna.game.cache.map.MapIndexTable
 import io.luna.game.model.Position
 
@@ -116,10 +119,45 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The 16 webs that the map places, each crossed from the tile on one side to the tile on the other. 13 of them
+     * separate one area from another, and the 3 in the ruins of the east Wilderness can be walked around. The Yanille
+     * hut's east web (2574,3124) has a wall east of it, so it's crossed from inside the hut to the tile south of it.
+     * Slashing takes two tries on average, then the web opens 2 ticks later.
+     */
+    val WEBS = CrossingSpec(WebCrossing.ID, setOf(Web.WEB), Requirements(flags = setOf(BotConditions.SLASH_WEB)),
+                            cost = 8,
+                            placements = listOf(web(2565, 3124, 2564, 3124, 2566, 3124),
+                                                web(2569, 3118, 2569, 3117, 2569, 3119),
+                                                web(2570, 3118, 2570, 3117, 2570, 3119),
+                                                web(2574, 3124, 2573, 3124, 2574, 3123),
+                                                web(2654, 9766, 2654, 9765, 2654, 9767),
+                                                web(3030, 3852, 3029, 3852, 3031, 3852),
+                                                web(3093, 3957, 3092, 3957, 3094, 3957),
+                                                web(3095, 3957, 3094, 3957, 3096, 3957),
+                                                web(3105, 3958, 3105, 3957, 3105, 3959),
+                                                web(3106, 3958, 3106, 3957, 3106, 3959),
+                                                web(3115, 3859, 3115, 3858, 3115, 3860),
+                                                web(3147, 3727, 3147, 3726, 3147, 3728),
+                                                web(3158, 3951, 3158, 3950, 3158, 3952),
+                                                web(3163, 3736, 3163, 3735, 3163, 3737),
+                                                web(3183, 3733, 3183, 3732, 3183, 3734),
+                                                web(3210, 9898, 3210, 9897, 3210, 9899)))
+     * The house door north of Edgeville, above the hill giants, needs a carried brass key both ways.
+     */
+    val BRASS_KEY_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(BrassKeyDoor.DOOR),
+                                      Requirements(items = listOf(ItemRequirement(BrassKeyDoor.KEY))), cost = 4)
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
-                     JEWELLERS_DOOR)
+                     JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS)
+
+    /**
+     * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
+     */
+    private fun web(x: Int, y: Int, fromX: Int, fromY: Int, toX: Int, toY: Int) =
+        CrossingPlacement(Web.WEB, Position(x, y), Position(fromX, fromY), Position(toX, toY))
 }
 
 /**

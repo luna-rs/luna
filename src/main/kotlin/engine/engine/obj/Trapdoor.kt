@@ -7,7 +7,7 @@ import engine.obj.TrapdoorLanding.Companion.tile
 import io.luna.game.model.Position
 
 /**
- * Trapdoors that are opened, climbed down and closed the usual way. Trapdoors that work differently (manholes and
+ * Trapdoors that are opened, climbed down and closed the usual way. Trapdoors that work differently ([Manhole]s and
  * some quest trapdoors) are handled in trapdoors.kts instead.
  *
  * Quest and item requirements aren't checked because Luna doesn't have that content yet. Trapdoors added after 2004
@@ -19,7 +19,7 @@ import io.luna.game.model.Position
  *
  * @author TheLining
  */
-enum class Trapdoor(val closed: Int?, val open: Int, val landing: TrapdoorLanding) {
+enum class Trapdoor(override val closed: Int?, override val open: Int, override val landing: TrapdoorLanding) : Hatch {
 
     // Trapdoors into the cellar below, such as Edgeville dungeon's.
     CELLAR(closed = 1568, open = 1570, landing = BELOW),

@@ -2,61 +2,18 @@ package game.obj.webs
 
 import api.predef.*
 import api.predef.ext.*
+import game.obj.webs.Web.OPEN_DELAY
+import game.obj.webs.Web.SLASHED_TICKS
+import game.obj.webs.Web.SLASHED_WEB
+import game.obj.webs.Web.WEB
+import game.obj.webs.Web.slashAnimation
 import game.player.Sound
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
-import io.luna.game.model.def.WeaponAnimationDefinition
-import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
-
-/**
- * The web that blocks the way until it's slashed.
- */
-val WEB = 733
-
-/**
- * The web after it's been slashed, which can be walked through.
- */
-val SLASHED_WEB = 734
-
-/**
- * How many ticks a slashed web stays open.
- */
-val SLASHED_TICKS = 100
-
-/**
- * How many ticks after a successful slash the web opens.
- */
-val OPEN_DELAY = 2
-
-/**
- * The knife, which can be used on a web.
- */
-val KNIFE = 946
-
-/**
- * Slashing a web with a knife.
- */
-val KNIFE_SLASH = Animation(3747)
-
-/**
- * Returns the animation for slashing a web with [itemId], or `null` if it can't cut one. A knife can, and so can any
- * weapon with a slash attack.
- */
-fun slashAnimation(itemId: Int): Animation? {
-    if (itemId == KNIFE) {
-        return KNIFE_SLASH
-    }
-    val styles = WeaponDefinition.ALL[itemId].map { it.typeDef.styles }.orElse(emptyList())
-    val style = styles.firstOrNull { it.bonus == EquipmentBonus.SLASH_ATTACK } ?: return null
-    val animation = WeaponAnimationDefinition.ALL[itemId]?.getAttackAnimation(style.type) ?: -1
-    return Animation(if (animation != -1) animation else style.attackAnimation)
-}
 
 /**
  * Tries to slash [web] with [itemId], which is either the weapon [plr] is wielding or the item they used on it. Half
