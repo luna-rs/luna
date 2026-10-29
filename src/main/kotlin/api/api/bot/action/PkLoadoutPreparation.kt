@@ -58,12 +58,13 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
 
     /**
      * Separates absent physical supplies from a rejected risk budget or another departure restriction.
+     * Legal unarmed training does not satisfy the PK session's owned-weapon requirement.
      * Scavenging detours may address stock shortages, but must not bypass unrelated PK policies.
      */
     fun missingSupplies(): Boolean = purposes().let { purposes ->
         purposes.isNotEmpty() && ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
             bot.bank.filterNotNull()).none { Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true } ||
-            purposes.any { CombatLoadout.find(bot, it) == null })
+            purposes.any { CombatLoadout.find(bot, it)?.gear?.get(Equipment.WEAPON) == null })
     }
 
     /**
@@ -229,13 +230,31 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             handler.banking.clickBankingMode(noted = false)
             for (item in plan.equipment) {
                 if (!safe() || !bot.bank.isOpen || !handler.banking.withdraw(item) || !safe() ||
-                    bot.inventory.computeAmountForId(item.id) < item.amount || !handler.equipment.equip(item.id) || !safe() ||
-                    bot.equipment.computeAmountForId(item.id) != item.amount) return false
+                    bot.inventory.computeAmountForId(item.id) < item.amount) {
+                    bot.log("PK preparation failed while withdrawing equipment ${item.id}.")
+                    return false
+                }
             }
+            // Native equip clicks close the bank. Withdraw the whole outfit before equipping any of it.
+            for (item in plan.equipment) {
+                if (!safe() || !handler.equipment.equip(item.id) || !safe() ||
+                    bot.equipment.computeAmountForId(item.id) != item.amount) {
+                    bot.log("PK preparation failed while equipping ${item.id}.")
+                    return false
+                }
+            }
+            if (!safe() || !handler.banking.travelToBankOpen() || !safe()) {
+                bot.log("PK preparation failed while reopening the bank for supplies.")
+                return false
+            }
+            handler.banking.clickBankingMode(noted = false)
             val withdraw = plan.inventory.groupBy { it.id }.map { (id, items) -> Item(id, items.sumOf { it.amount }) }
             for (item in withdraw) {
                 if (!safe() || !bot.bank.isOpen || !handler.banking.withdraw(item) || !safe() ||
-                    bot.inventory.computeAmountForId(item.id) < item.amount) return false
+                    bot.inventory.computeAmountForId(item.id) < item.amount) {
+                    bot.log("PK preparation failed while withdrawing supplies ${item.id}.")
+                    return false
+                }
             }
             fun counts(items: List<Item>) = items.groupBy { it.id }.mapValues { (_, stacks) -> stacks.sumOf { it.amount.toLong() } }
             return safe() && ready() && bot.equipment.filterNotNull() == plan.equipment &&
