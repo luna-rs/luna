@@ -17,6 +17,7 @@ import game.bot.scripts.HarvestBotScript.Companion.Harvestable
 import game.content.flourMill.FlourMill
 import game.content.flourMill.FlourMill.flourInBin
 import game.content.flourMill.FlourMill.hopperFull
+import game.content.cookingGuild.CookingGuild
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -34,12 +35,14 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
- * Grinds owned grain into pots of flour at the Lumbridge, Ardougne or Zanaris flour mill.
+ * Grinds owned grain into pots of flour at Lumbridge, Ardougne, Zanaris or the Cooks' Guild.
+ * Guild trips require current Cooking level 32 and an owned chef's hat. The hat is equipped before
+ * loading a full batch, and the bot crosses the native guarded door before using the upstairs mill.
  *
  * Each trip withdraws grain and empty pots, climbs to the hopper, grinds one grain at a time, then climbs down and
  * fills the pots from the flour bin before banking the flour. Flour already in the bot's bin is collected first.
  *
- * Missing grain queues one wheat-picking session in the mill's own field, with the mill session queued again once
+ * Missing grain queues one wheat-picking session in the mill's assigned field, with the mill session queued again once
  * behind it. Missing pots are bought at home from the general stores that stock them. Once a session has milled,
  * running out of grain ends it, and so does a shopping trip that finds no pots. Finished
  * flour stays banked for the market, or a dough session follows for bots that like to see a job through.
@@ -62,8 +65,6 @@ class MillFlourBotScript(
 
         /**
          * The flour mills bots can reach.
-         *
-         * TODO The Cooks' Guild mill needs the guild door (chef's hat and level 32 Cooking) before bots can walk in.
          *
          * @property top The tile beside the hopper and controls.
          * @property hopper The hopper's position.
@@ -106,7 +107,15 @@ class MillFlourBotScript(
                     bankStand = Position(2388, 4457),
                     booth = Position(2385, 4457),
                     bankerId = 498,
-                    arrival = SubZone.ZANARIS_MAIN)
+                    arrival = SubZone.ZANARIS_MAIN),
+            COOKS_GUILD(top = Position(3140, 3449, 2),
+                        hopper = Position(3140, 3450, 2),
+                        controls = Position(3141, 3449, 2),
+                        ground = Position(3140, 3450),
+                        bin = Position(3139, 3450),
+                        wheat = SubZone.LUMBRIDGE_MILL_WHEAT,
+                        bankStand = Position(3185, 3436),
+                        booth = Position(3186, 3436))
         }
 
         /**
@@ -163,10 +172,22 @@ class MillFlourBotScript(
         }
 
         /**
-         * Picks a mill for [bot], preferring the one in its current area.
+         * Picks an eligible mill, preferring its local wheat field or current mill footprint. The
+         * guild shares Lumbridge's existing wheat prerequisite but is preferred only near the guild.
          */
         fun pickMill(bot: Bot): BotMill =
-            BotMill.entries.minBy { if (it.wheat in bot.subZones) -1 else bot.position.computeLongestDistance(it.bin) }
+            BotMill.entries.filter { it != BotMill.COOKS_GUILD || guildEligible(bot) }.minBy {
+                val local = if (it == BotMill.COOKS_GUILD) CookingGuild.inside(bot.position) else it.wheat in bot.subZones
+                if (local) -1 else bot.position.computeLongestDistance(it.bin)
+            }
+
+        /**
+         * Guild selection requires a usable current level and a real owned hat, without buying or
+         * generating one. A carried/banked hat is equipped through the normal preparation flow.
+         */
+        internal fun guildEligible(bot: Bot): Boolean = bot.cooking.level >= CookingGuild.REQUIRED_LEVEL &&
+            (CookingGuild.CHEFS_HAT in bot.equipment || CookingGuild.CHEFS_HAT in bot.inventory ||
+                CookingGuild.CHEFS_HAT in bot.bank)
     }
 
     /**
@@ -208,6 +229,7 @@ class MillFlourBotScript(
     override suspend fun run(): Boolean {
         if (failures >= MAX_FAILURES || started.elapsedNow() >= duration) return true
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) return false
+        if (mill == BotMill.COOKS_GUILD && !guildEligible(bot)) return true
         if (owned(FlourMill.GRAIN) == 0L && bot.flourInBin == 0) return milled || queueWheat()
         if (owned(FlourMill.POT) == 0L) {
             if (owned(COINS) == 0L) return true
@@ -276,11 +298,13 @@ class MillFlourBotScript(
     private suspend fun trip(grain: Int): Boolean {
         val banking = bot.actionHandler.banking
         if (!openMillBank() || !banking.depositInventory() || !isActionSafe()) return false
+        if (mill == BotMill.COOKS_GUILD && !prepareGuildHat()) return false
         banking.clickBankingMode(false)
         val pots = minOf(owned(FlourMill.POT), (grain + bot.flourInBin).toLong()).toInt()
         val wanted = listOfNotNull(if (grain > 0) Item(FlourMill.GRAIN, grain) else null, Item(FlourMill.POT, pots))
         if (!banking.withdrawAll(wanted) || !isActionSafe()) return false
         if (!bot.actionHandler.widgets.clickCloseInterface() || !isActionSafe()) return false
+        if (mill == BotMill.COOKS_GUILD && !enterGuild()) return false
 
         if (grain > 0) {
             if (!handler.webWalkTo(mill.top, bank = BankAccess.NONE) || !isActionSafe()) return false
@@ -294,6 +318,34 @@ class MillFlourBotScript(
             if (!collect()) return false
         }
         return isActionSafe() && openMillBank() && banking.depositInventory()
+    }
+
+    /**
+     * Equips the owned hat while the bank is open, then banks the displaced headgear before loading
+     * fourteen grain and fourteen pots. Failed or interrupted preparation cannot start milling.
+     */
+    private suspend fun prepareGuildHat(): Boolean {
+        if (!guildEligible(bot)) return false
+        if (CookingGuild.CHEFS_HAT in bot.equipment) return true
+        val banking = bot.actionHandler.banking
+        banking.clickBankingMode(false)
+        if (!banking.withdraw(Item(CookingGuild.CHEFS_HAT)) || !isActionSafe()) return false
+        if (!bot.actionHandler.widgets.clickCloseInterface() || !isActionSafe()) return false
+        if (!handler.equipment.equip(CookingGuild.CHEFS_HAT) || !isActionSafe() || !CookingGuild.canEnter(bot)) return false
+        return openMillBank() && banking.depositInventory() && isActionSafe()
+    }
+
+    /**
+     * Walks to the exterior and clicks the guarded door before any upstairs travel. The normal
+     * webwalker handles stairs; entry is accepted only after the native passage moves the bot inside.
+     */
+    private suspend fun enterGuild(): Boolean {
+        if (CookingGuild.inside(bot.position)) return true
+        if (!handler.webWalkTo(CookingGuild.OUTSIDE, bank = BankAccess.NONE) || !isActionSafe() ||
+            !CookingGuild.canEnter(bot)) return false
+        val door = millObject(CookingGuild.DOOR_POSITION, setOf(CookingGuild.DOOR)) ?: return false
+        if (!handler.interactions.interact(1, door)) return false
+        return waitFor(5.seconds) { CookingGuild.inside(bot.position) } && isActionSafe()
     }
 
     /**
