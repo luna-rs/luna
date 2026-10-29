@@ -9647,7 +9647,7 @@
   {
     "id": 6722, // Zombie head
     "weight": 0.0,
-    "tradeable": false
+    "tradeable": true
   },
   {
     "id": 6724, // Seercull
