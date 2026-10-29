@@ -30,5 +30,6 @@
     { "id": "taverley_dungeon_dusty_key_gate_east", "pos": [2935, 9795, 0] },
     { "id": "taverley_dungeon_dusty_key_gate_west", "pos": [2909, 9797, 0] },
     { "id": "taverley_dungeon_blue_dragon_passage", "pos": [2894, 9792, 0] }
+    { "id": "varrock_sewers_manhole_corridor", "pos": [3243, 9874, 0] }
   ]
 }

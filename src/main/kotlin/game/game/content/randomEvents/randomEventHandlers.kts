@@ -1,8 +1,14 @@
 package game.content.randomEvents
 
 import api.predef.*
+import api.drops.DropTableHandler
 import api.combat.npc.NpcCombatHandler.combat
 import api.combat.player.PlayerCombatHandler.playerStopAttack
+import api.combat.death.DeathHookHandler
+import engine.bot.speech.BotReactions
+import io.luna.game.model.Position
+import io.luna.game.model.EntityState
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.item.Item
@@ -23,6 +29,11 @@ import io.luna.game.event.impl.PlayerTickEvent
 
 // Register persistent attribute keys while loading scripts, before any player files are read.
 val randomEvents = RandomEvents
+
+// Event forms use the source table; the quest Tree spirit (655) retains its separate static loot.
+SkillGuardianRandomEvent.Kind.TREE_SPIRIT.npcIds.forEach { id ->
+    DropTableHandler.createNpc(id) { tables += TreeSpiritDropTable }
+}
 
 on(LoginEvent::class) { randomEvents.login(plr) }
 on(LogoutEvent::class) { randomEvents.logout(plr) }
@@ -74,10 +85,58 @@ combat(408) {
     }
 }
 
+combat(*SkillGuardianRandomEvent.NPC_IDS.toList().toIntArray()) {
+    damageExperienceMultiplier = 25.0 / 1000.0
+    attack {
+        npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
+        melee {
+            val encounter = randomEvents.ownerOf(npc) as? SkillGuardianRandomEvent
+            if (it != null && encounter?.canAttack(other) == true) {
+                encounter.kind.attackSound?.let { sound -> encounter.player.playSound(sound) }
+                it
+            } else null
+        }
+    }
+    defend {
+        val encounter = randomEvents.ownerOf(npc) as? SkillGuardianRandomEvent
+        if (encounter?.canFight(other) != true) {
+            damage = null
+            animationId = null
+        } else if (damage != null) {
+            encounter.kind.defendSound?.let { encounter.player.playSound(it) }
+        }
+    }
+}
+
+for (id in SkillGuardianRandomEvent.NPC_IDS) {
+    DeathHookHandler.addNpcHook(id) {
+        preDeath {
+            victim.animation(Animation(victim.combatDef().deathAnimation, Animation.AnimationPriority.IMMUTABLE))
+            val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
+            encounter?.kind?.deathSound?.let { sound ->
+                world.locator.findPlayers(victim, 12) { it.state == EntityState.ACTIVE }.forEach { it.playSound(sound) }
+            }
+        }
+        death {
+            val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
+            if (encounter?.claimDeath(source) == true) {
+                if (source is Bot) BotReactions.reactToKill(source, victim)
+                drop()
+            }
+            victim.move(Position(1, 1))
+        }
+        postDeath { }
+    }
+}
+
 playerStopAttack { attack ->
-    val target = attack.victim as? Npc
-    if (target?.id != 408) false
-    else if ((randomEvents.ownerOf(target) as? StrangePlantRandomEvent)?.canFight(this) == true) false
+    val target = attack.victim as? Npc ?: return@playerStopAttack false
+    val allowed = when (target.id) {
+        408 -> (randomEvents.ownerOf(target) as? StrangePlantRandomEvent)?.canFight(this) == true
+        in SkillGuardianRandomEvent.NPC_IDS -> (randomEvents.ownerOf(target) as? SkillGuardianRandomEvent)?.canFight(this) == true
+        else -> null
+    }
+    if (allowed != false) false
     else {
         sendMessage("It's not after you.")
         true
@@ -115,7 +174,8 @@ fun consumeFruit(player: Player, slot: Int) {
 item1(464) { consumeFruit(plr, index) }
 
 cmd("random_event", RIGHTS_ADMIN) {
-    val kind = when (args.firstOrNull()?.lowercase()) {
+    val name = args.firstOrNull()?.lowercase()
+    val kind = when (name) {
         "plant" -> Kind.STRANGE_PLANT
         "swarm" -> Kind.SWARM
         "genie" -> Kind.GENIE
@@ -123,9 +183,15 @@ cmd("random_event", RIGHTS_ADMIN) {
         "dwarf" -> Kind.DRUNKEN_DWARF
         else -> null
     }
-    if (kind == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant")
-    } else if (!randomEvents.startEncounter(plr, kind)) {
+    val guardian = when (name) {
+        "river_troll" -> SkillGuardianRandomEvent.Kind.RIVER_TROLL
+        "tree_spirit" -> SkillGuardianRandomEvent.Kind.TREE_SPIRIT
+        "shade" -> SkillGuardianRandomEvent.Kind.SHADE
+        else -> null
+    }
+    if (kind == null && guardian == null) {
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade")
+    } else if (!(if (guardian != null) randomEvents.startGuardian(plr, guardian) else randomEvents.startEncounter(plr, kind!!))) {
         plr.sendMessage("A random event cannot start here right now.")
     }
 }

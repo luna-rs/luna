@@ -17142,13 +17142,7 @@
   },
   {
     "ids": [
-      655, // Tree spirit
-      438, // Tree spirit
-      439, // Tree spirit
-      440, // Tree spirit
-      441, // Tree spirit
-      442, // Tree spirit
-      443 // Tree spirit
+      655 // Tree spirit
     ],
     "rare": "GEM",
     "drops": [
@@ -27985,6 +27979,166 @@
         "noted": false,
         "rarity": 0.0390625,
         "table": 2
+      }
+    ]
+  },
+  // River troll: Lost City members 128-slot table; exactly one roll, no default bones.
+  {
+    "ids": [
+      391,
+      392,
+      393,
+      394,
+      395,
+      396
+    ],
+    "drops": [
+      {
+        "id": 313,
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.2109375,
+        "table": 1
+      },
+      {
+        "id": 313,
+        "quantity": "30",
+        "noted": false,
+        "rarity": 0.1015625,
+        "table": 1
+      },
+      {
+        "id": 313,
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 313,
+        "quantity": "50",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 314,
+        "quantity": "20",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 314,
+        "quantity": "40",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 359,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 371,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.1484375,
+        "table": 1
+      },
+      {
+        "id": 383,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 349,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.046875,
+        "table": 1
+      },
+      {
+        "id": 331,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 327,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 345,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 407,
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.09375,
+        "table": 1
+      },
+      {
+        "id": 405,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 151,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      }
+    ]
+  },
+  // Lost City members Shade: half empty, quarter robe top, quarter robe bottom; no bones or rare table.
+  {
+    "ids": [
+      425,
+      426,
+      427,
+      428,
+      429,
+      430
+    ],
+    "rare": null,
+    "drops": [
+      {
+        "id": -1,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.5,
+        "table": 1
+      },
+      {
+        "id": 546,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
+      },
+      {
+        "id": 548,
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.25,
+        "table": 1
       }
     ]
   }

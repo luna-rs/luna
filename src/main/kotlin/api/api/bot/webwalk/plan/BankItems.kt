@@ -1,6 +1,7 @@
 package api.bot.webwalk.plan
 
 import game.item.degradable.jewellery.TeleportJewellery
+import game.obj.webs.Web
 import game.skill.magic.CombinationRune
 import game.skill.magic.ItemRequirement
 import game.skill.magic.Rune
@@ -13,9 +14,9 @@ import io.luna.game.model.mob.bot.Bot
  * reading the whole bank again for each thing that it counts (see [BotCapabilities.snapshot], [TeleportAvailability] and
  * [api.bot.webwalk.walk.BankWithdrawal.view]).
  *
- * Only the following items are kept: coins, runes and combination runes, teleport jewellery, and the other items that
- * teleport spells take. They are kept in the order of the bank, so that the runes a spell would take from them are the
- * same as from the whole bank.
+ * Only the following items are kept: coins, runes and combination runes, teleport jewellery, the other items that
+ * teleport spells take, and knives, which cut webs. They are kept in the order of the bank, so that the runes a spell
+ * would take from them are the same as from the whole bank.
  *
  * @property items The items, in the order of the bank.
  *
@@ -34,6 +35,7 @@ class BankItems(val items: List<Item>) {
             CombinationRune.entries.forEach { add(it.id) }
             TeleportJewellery.entries.forEach { addAll(it.items) }
             TeleportSpell.entries.forEach { spell -> spell.requirements.filterIsInstance<ItemRequirement>().forEach { add(it.id) } }
+            add(Web.KNIFE)
         }
 
         /**

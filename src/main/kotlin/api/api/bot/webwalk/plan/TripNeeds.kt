@@ -2,6 +2,7 @@ package api.bot.webwalk.plan
 
 import api.bot.webwalk.model.EdgeType
 import api.bot.webwalk.model.TeleportKind
+import game.obj.webs.Web
 
 /**
  * What a trip spends, as the planner counted it, and the buffer that a bot withdraws on top of it when it goes to its bank
@@ -14,10 +15,12 @@ import api.bot.webwalk.model.TeleportKind
  * of its teleport jewellery.
  * @property buffer What is withdrawn on top of [spend]: the coins of the largest fare or toll, what each teleport spell
  * takes once, and a charge of each jewellery.
+ * @property blade Whether the trip crosses a web, or ends where one is expected, so that a bot that carries nothing
+ * that cuts webs withdraws a knife (see [BotConditions.SLASH_WEB]). A knife isn't spent, so it's not in [spend].
  *
  * @author Hydrozoa
  */
-data class TripNeeds(val spend: Spend, val buffer: Spend) {
+data class TripNeeds(val spend: Spend, val buffer: Spend, val blade: Boolean = false) {
 
     companion object {
 
@@ -29,9 +32,11 @@ data class TripNeeds(val spend: Spend, val buffer: Spend) {
          *
          * @param plan The plan.
          * @param snapshot The snapshot that the plan was made with, which says what each of its teleports spends.
+         * @param expected The conditions that the bot should meet when it arrives (see
+         * [api.bot.webwalk.walk.crossing.WebCrossing.expected]).
          * @return What the plan spends.
          */
-        fun of(plan: WebWalkPlan, snapshot: CapabilitySnapshot): TripNeeds {
+        fun of(plan: WebWalkPlan, snapshot: CapabilitySnapshot, expected: Set<String> = emptySet()): TripNeeds {
             val items = HashMap<Int, Int>()
             val charges = HashMap<String, Int>()
             val bufferItems = HashMap<Int, Int>()
@@ -55,7 +60,9 @@ data class TripNeeds(val spend: Spend, val buffer: Spend) {
                 }
                 spend.charges.keys.forEach { bufferCharges[it] = 1 }
             }
-            return TripNeeds(Spend(items, charges), Spend(bufferItems, bufferCharges))
+            val blade = BotConditions.SLASH_WEB in expected ||
+                    plan.legs.any { BotConditions.SLASH_WEB in it.requirements.flags }
+            return TripNeeds(Spend(items, charges), Spend(bufferItems, bufferCharges), blade)
         }
 
         /**
@@ -76,15 +83,16 @@ data class TripNeeds(val spend: Spend, val buffer: Spend) {
      * Works out what a bot would have to withdraw from its bank for the trip.
      *
      * For each item and jewellery, what is required is what the trip spends less what the bot carries, and what is wanted
-     * is that with the [buffer] added. The buffer never makes a bot go to its bank: there is no withdrawal unless
-     * something is required.
+     * is that with the [buffer] added. A knife is required too if the trip needs a [blade] and the bot carries none.
+     * The buffer never makes a bot go to its bank: there is no withdrawal unless something is required.
      *
      * @param carried What the bot carries, as a snapshot that doesn't count its bank.
      * @return What to withdraw, or `null` if the bot carries everything that the trip spends.
      */
     fun withdrawal(carried: CapabilitySnapshot): Withdrawal? {
+        val knife = if (blade && BotConditions.SLASH_WEB !in carried.flags) mapOf(Web.KNIFE to 1) else emptyMap()
         val requiredItems = spend.items.mapValues { (id, amount) -> short(amount.toLong(), carried.items[id]) }
-            .filterValues { it > 0 }
+            .filterValues { it > 0 } + knife
         val requiredCharges = spend.charges.mapValues { (name, amount) -> short(amount.toLong(), carried.charges[name]) }
             .filterValues { it > 0 }
         if (requiredItems.isEmpty() && requiredCharges.isEmpty()) {
@@ -92,7 +100,7 @@ data class TripNeeds(val spend: Spend, val buffer: Spend) {
         }
         val wantedItems = (spend.items.keys + buffer.items.keys).associateWith { id ->
             short((spend.items[id] ?: 0).toLong() + (buffer.items[id] ?: 0), carried.items[id])
-        }.filterValues { it > 0 }
+        }.filterValues { it > 0 } + knife
         val wantedCharges = (spend.charges.keys + buffer.charges.keys).associateWith { name ->
             short((spend.charges[name] ?: 0).toLong() + (buffer.charges[name] ?: 0), carried.charges[name])
         }.filterValues { it > 0 }

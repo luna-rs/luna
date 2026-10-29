@@ -2,6 +2,7 @@ package api.bot.webwalk.plan
 
 import api.bot.webwalk.model.TeleportDefinition
 import engine.controllers.WildernessLocatableController.wildernessLevel
+import game.obj.webs.Web
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
@@ -22,7 +23,8 @@ object BotCapabilities {
      *
      * - [BankAccess.COINS]: the coins in the bank.
      * - [BankAccess.ALL]: the coins, the runes (and combination runes) that teleport spells would take from the bank after
-     *   the inventory, and the charges of the teleport jewellery in the bank.
+     *   the inventory, and the charges of the teleport jewellery in the bank. A knife in the bank meets
+     *   [BotConditions.SLASH_WEB] too, for a bot that carries nothing that cuts webs, and [TripNeeds] withdraws it.
      *
      * Keys, staves and other items in the bank never count, so the items that an edge asks for are still met by what is
      * carried. Whether a withdrawal would fit in the inventory isn't looked at here, see
@@ -62,7 +64,11 @@ object BotCapabilities {
                 add(items, id, banked.amount(id))
             }
         }
-        return CapabilitySnapshot(skills, items, flags + BotConditions.met(bot), bot.wildernessLevel, usable,
+        val met = BotConditions.met(bot).let {
+            val bankKnife = fromBank != null && fromBank.amount(Web.KNIFE) > 0
+            if (bankKnife && BotConditions.SLASH_WEB !in it) it + BotConditions.SLASH_WEB else it
+        }
+        return CapabilitySnapshot(skills, items, flags + met, bot.wildernessLevel, usable,
                                   TeleportAvailability.charges(bot, fromBank), spends)
     }
 

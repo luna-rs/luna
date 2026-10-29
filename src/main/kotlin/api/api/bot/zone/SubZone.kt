@@ -11,6 +11,7 @@ import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
 import game.bot.scripts.skills.AgilityCourseTravel
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.obj.doors.BrassKeyDoor
 import game.skill.runecrafting.enterAltar.Altar
 import game.obj.doors.TaverleyJailDoor
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -524,7 +525,7 @@ enum class SubZone(
      */
     ROCK_CRABS(
         inside = Position(2670, 3715),
-        area = SimpleBoxArea.of(2648, 3711, 2687, 3742),
+        area = SimpleBoxArea.of(2648, 3711, 2722, 3742),
         parent = { RELLEKKA }),
 
     /**
@@ -1530,6 +1531,11 @@ enum class SubZone(
         TAVERLEY_DUNGEON_ZAMORAK_MONKS ->
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
+        EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS ->
+            // A bot without a key buys one for a coin.
+            if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
+                !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id))
+                "the house door needs a brass key" else null
         else -> null
     }
 
@@ -1539,6 +1545,7 @@ enum class SubZone(
     val entryItem: Int?
         get() = when (this) {
             TAVERLEY_DUNGEON_ZAMORAK_MONKS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
+            EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS -> BrassKeyDoor.KEY
             else -> null
         }
 

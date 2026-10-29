@@ -39,7 +39,8 @@ object CrossingHandlers {
                                                                BorderGateCrossing.ID to BorderGateCrossing,
                                                                HamTrapdoorCrossing.ID to HamTrapdoorCrossing,
                                                                ConditionalDoorCrossing.ID to ConditionalDoorCrossing,
-                                                               AgilityShortcutCrossing.ID to AgilityShortcutCrossing)
+                                                               AgilityShortcutCrossing.ID to AgilityShortcutCrossing,
+                                                               WebCrossing.ID to WebCrossing)
 
     /**
      * The names of every handler.

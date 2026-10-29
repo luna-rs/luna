@@ -105,6 +105,7 @@ public final class GameService extends AbstractScheduledService {
             runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
             // Runs once every launch listener is done, so that these tasks can rely on the world that they have set up.
+            runSynchronizationTasks(); // Drain pending tasks again before server is ready.
             runKotlinTasks(ServerReadyEvent::new, "Waiting for Kotlin post-launch tasks to complete...");
 
             // Release the lock in LunaServer so networking can begin accepting logins.
