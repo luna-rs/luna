@@ -19,9 +19,6 @@ on(ServerLaunchEvent::class) {
         Position(3201, 3856),
         Position(3202, 3856),
 
-        // Edgeville dungeon brass key door.
-        Position(3115, 3450),
-
         // Edgeville dungeon mine gates.
         Position(3145, 9870),
         Position(3145, 9871),

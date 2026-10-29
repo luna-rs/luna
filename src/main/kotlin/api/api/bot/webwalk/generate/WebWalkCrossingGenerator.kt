@@ -6,6 +6,7 @@ import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.miningGuild.MiningGuild
 import game.content.craftingGuild.CraftingGuild
+import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -116,10 +117,16 @@ object SpecialCrossings {
     val JEWELLERS_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(JewellersDoor.DOOR), cost = 4)
 
     /**
+     * The house door north of Edgeville, above the hill giants, needs a carried brass key both ways.
+     */
+    val BRASS_KEY_DOOR = CrossingSpec(ConditionalDoorCrossing.ID, setOf(BrassKeyDoor.DOOR),
+                                      Requirements(items = listOf(ItemRequirement(BrassKeyDoor.KEY))), cost = 4)
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
-                     JEWELLERS_DOOR)
+                     JEWELLERS_DOOR, BRASS_KEY_DOOR)
 }
 
 /**
