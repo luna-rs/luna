@@ -88,11 +88,15 @@ class CastleWarsBotScript(bot: Bot, private var entered: Boolean = false,
         if (System.currentTimeMillis() >= deadline) return true
         if (entered) return CastleWars.game.match.team(bot) == null
         if (!eligible(bot)) return true
-        return withTimeoutOrNull(180_000) {
-            if (!handler.banking.travelToBankDepositAll()) return@withTimeoutOrNull true
-            if (!handler.widgets.clickCloseInterface() || !handler.equipment.unequip(Equipment.HEAD) ||
-                !handler.equipment.unequip(Equipment.CAPE) || !handler.banking.travelToBankOpen() ||
-                !handler.banking.depositInventory() || !handler.widgets.clickCloseInterface()) return@withTimeoutOrNull true
+        val banked = withTimeoutOrNull(180_000) {
+            if (!handler.banking.travelToBankDepositAll()) return@withTimeoutOrNull false
+            handler.widgets.clickCloseInterface() && handler.equipment.unequip(Equipment.HEAD) &&
+                handler.equipment.unequip(Equipment.CAPE) && handler.banking.travelToBankOpen() &&
+                handler.banking.depositInventory() && handler.widgets.clickCloseInterface()
+        } ?: false
+        if (!banked) return true
+        // The walk from the bank can take longer than the banking steps, so it gets its own limit.
+        return withTimeoutOrNull(900_000) {
             if (!handler.webWalkTo(CastleWarsGame.LOBBY, radius = 3)) return@withTimeoutOrNull true
             val portal = world.locator.findObjects(CastleWarsGame.LOBBY, 16) { it.id == 4408 }.firstOrNull()
                 ?: return@withTimeoutOrNull true
