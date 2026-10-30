@@ -571,8 +571,8 @@ public final class CollisionManager {
      *     <li>Targets outside {@link Position#VIEWING_DISTANCE} are rejected before type-specific checks run.</li>
      *     <li>{@link InteractionType#LINE_OF_SIGHT} requires the target to be within policy distance and visible
      *     through a successful {@link #raycast(Position, Position)}.</li>
-     *     <li>{@link InteractionType#SIZE} uses collision-aware reach checks for adjacent mobs and objects, object
-     *     box-distance checks for larger distances, and falls back to line-of-sight for other targets.</li>
+     *     <li>{@link InteractionType#SIZE} uses collision-aware reach checks for adjacent ground items, mobs and objects,
+     *     object box-distance checks for larger distances, and falls back to line-of-sight for other targets.</li>
      * </ul>
      *
      * @param source The entity or position attempting to interact.
@@ -611,11 +611,11 @@ public final class CollisionManager {
                 // Line of sight requires raycast and being within the distance.
                 return start.isWithinDistance(end, distance) && raycast(start, end);
             case SIZE:
-                if (target instanceof GroundItem) {
-                    return start.isWithinDistance(end, distance) && raycast(start, end)
-                            && !world.getLocator().findObjectsOnTile(end, it -> it.getObjectType() == ObjectType.DEFAULT).isEmpty();
-                } else if (distance == 1) {
-                    if (target instanceof Mob) {
+                if (distance == 1) {
+                    if (target instanceof GroundItem) {
+                        // The 377 client retries ground-item routes with a 1-by-1 rectangle, without an object lookup.
+                        return matrices.reachedFacingEntity(start, (GroundItem) target, 1, 1, OptionalInt.empty());
+                    } else if (target instanceof Mob) {
                         // Check if we're right beside a mob.
                         return matrices.reachedFacingEntity(start, (Mob) target,
                                 ((Mob) target).sizeX(), ((Mob) target).sizeY(), OptionalInt.empty());
