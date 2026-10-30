@@ -250,6 +250,10 @@ public final class CombatAction extends Action<Mob> {
      */
     private void updatePlayerPursuit(Mob target, InteractionPolicy policy, boolean reached) {
         var navigator = mob.getNavigator();
+        if (((Player) mob).getCombat().isPursuitHeld(target)) {
+            cancelPlayerPursuit();
+            return;
+        }
         boolean chasingTarget = target.equals(navigator.getCurrentTarget());
         if (reached) {
             if (chasingTarget) {

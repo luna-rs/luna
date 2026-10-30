@@ -373,6 +373,7 @@ class TrawlerControllerTest {
 
     @Test fun sharedTeleportPreflightRejectsBeforeRequirementsExperienceAndItemCallbacks() {
         val player = InventoryProductionFixtures.bot()
+        `when`(player.isAlive).thenReturn(true)
         `when`(player.position).thenReturn(FishingTrawler.START)
         val controllers = ControllerManager(player)
         `when`(player.controllers).thenReturn(controllers)

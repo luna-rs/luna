@@ -109,19 +109,38 @@ class PkBotScript(bot: Bot, val duration: Duration,
             }
             val valid = groups.map { group -> group.filter { it.z == 0 && levelAt(it) > 0 } }
                 .filter { it.isNotEmpty() }
-            if (!prefersDungeonPatrol(bot)) return valid
+            val hotspots = hotspotGroups(bot)
+            if (hotspots.isEmpty()) return valid
 
-            val dungeon = PkArea.EDGEVILLE_DUNGEON.anchors
-            val others = valid.filter { it != dungeon }
-            // Two thirds of low-level resource/general patrol choices visit the herb hunters.
-            return others + List(others.size * 2) { dungeon }
+            val others = valid.filter { it !in hotspots }
+            if (others.isEmpty()) return hotspots
+            // Two thirds of choices visit level-appropriate hotspots, with equal weight for each hotspot group.
+            return others.flatMap { group -> List(hotspots.size) { group } } +
+                hotspots.flatMap { group -> List(others.size * 2) { group } }
         }
 
         /**
-         * Low-level resource hunters and general PKers favour the chaos druids without changing their PK identity.
+         * Resource camps attract PKers below combat level 70. Stronger PKers favour dragons, greater demons,
+         * deep Wilderness and the agility course approach. Recreational SKILL sessions retain low Edgeville.
+         * Clan outings retain their existing minimum hunting depth of Wilderness level 30.
          */
-        private fun prefersDungeonPatrol(bot: Bot): Boolean = bot.combatLevel <= 60 &&
-            bot.preferences.pk?.purpose() in setOf(Purpose.VALUE, Purpose.GENERIC)
+        internal fun hotspotGroups(bot: Bot): List<List<Position>> {
+            if (bot.preferences.pk?.purpose() == Purpose.SKILL) return emptyList()
+            val groups = if (bot.combatLevel < 70) {
+                listOf(PkArea.EDGEVILLE_DUNGEON.anchors,
+                    listOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE.inside),
+                    listOf(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE.inside))
+            } else {
+                listOf(listOfNotNull(SubZone.KBD_LAIR.entrance(bot)),
+                    PkArea.GREEN_DRAGONS.anchors, PkArea.GREEN_DRAGONS_WEST.anchors,
+                    PkArea.GREEN_DRAGONS_NORTH.anchors, PkArea.GREEN_DRAGONS_EAST.anchors,
+                    PkArea.RED_DRAGONS.anchors, PkArea.DEMONIC_RUINS.anchors, PkArea.LAVA_MAZE.anchors,
+                    listOfNotNull(SubZone.WILDERNESS_AGILITY.entrance(bot)))
+            }
+            val minimumDepth = if (bot.preferences.pk?.purpose() == Purpose.CLAN) 30 else 1
+            return groups.map { group -> group.filter { it.z == 0 && levelAt(it) >= minimumDepth } }
+                .filter { it.isNotEmpty() }
+        }
 
         /**
          * The surface region immediately north of Edgeville, covering native Wilderness levels 1 through 8.
@@ -282,6 +301,31 @@ class PkBotScript(bot: Bot, val duration: Duration,
                                        Position(3176, 3696, 0),
                                        Position(3188, 3699, 0),
                                        Position(3082, 3681, 0))),
+
+        /**
+         * Green dragon hunters in the western level-13 Wilderness camp.
+         */
+        GREEN_DRAGONS_WEST(regions = setOf(11832),
+                           anchors = listOf(Position(2977, 3611), Position(2982, 3618))),
+
+        /**
+         * Green dragon hunters north of the Lava Maze's southern approach.
+         */
+        GREEN_DRAGONS_NORTH(regions = setOf(12347),
+                            anchors = listOf(Position(3098, 3821), Position(3118, 3820))),
+
+        /**
+         * Green dragon hunters in the eastern Wilderness camp.
+         */
+        GREEN_DRAGONS_EAST(regions = setOf(13369),
+                           anchors = listOf(Position(3339, 3694), Position(3346, 3707))),
+
+        /**
+         * Red dragon hunters on Red Dragon Isle.
+         */
+        RED_DRAGONS(regions = setOf(12603, 12859, 12604),
+                    anchors = listOf(Position(3190, 3834), Position(3180, 3850),
+                                     Position(3213, 3819), Position(3222, 3829))),
 
         /**
          * Bandit Camp and nearby west Wilderness routes.
@@ -608,9 +652,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * SKILL stays in low Edgeville. VALUE covers resource hunters and obelisk arrivals. CLAN patrols deep surface
-     * Wilderness. Low-level VALUE and GENERIC sessions favour the Edgeville Dungeon herb hunters.
-     * Travel is delegated to the shared walker.
+     * SKILL stays in low Edgeville. Other purposes favour resource camps below combat level 70 and the dragon,
+     * demon and deep Wilderness hotspots from level 70 onward. Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
         return patrolGroups(bot).random()
@@ -626,8 +669,10 @@ class PkBotScript(bot: Bot, val duration: Duration,
             val leader = clan.patrolLeader(members)
             if (leader !== bot) return leader.position
             if (members.isEmpty()) {
-                val anchors = patrolGroups(bot).flatten()
-                return anchors[((clan.cape ?: 4315) - 4315) / 2 % anchors.size]
+                val groups = hotspotGroups(bot).ifEmpty { patrolGroups(bot) }
+                val capeIndex = ((clan.cape ?: 4315) - 4315) / 2
+                val anchors = groups[capeIndex % groups.size]
+                return anchors[capeIndex / groups.size % anchors.size]
             }
         }
         return patrolAnchors().random()
@@ -903,7 +948,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Ensures the bot is inside the Wilderness before searching for targets.
      *
      * A SKILL session starting elsewhere in the Wilderness also returns to low Edgeville before hunting.
-     * Low-level resource and general PKers usually enter directly at the dungeon's herb-gathering hotspot.
+     * Other solo hunters usually enter at a hotspot appropriate to their combat level.
      * The existing walking helper owns travel; reaching a destination must satisfy the live hunting boundary.
      *
      * @return `true` if the bot is in the Wilderness, otherwise `false`.
@@ -914,7 +959,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             val anchor = when {
                 isGroupOuting() -> selectPatrolDestination()
                 isSkillSession -> patrolAnchors().random()
-                prefersDungeonPatrol(bot) && rand(2 of 3) -> PkArea.EDGEVILLE_DUNGEON.anchors.random()
+                rand(2 of 3) -> hotspotGroups(bot).random().random()
                 else -> LOW_LEVEL_ANCHOR_POINTS.random()
             }
 

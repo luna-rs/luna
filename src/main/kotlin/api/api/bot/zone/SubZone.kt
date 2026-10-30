@@ -135,6 +135,13 @@ enum class SubZone(
     SLAYER_TOWER_GROUND(
         inside = Position(3429, 3538), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56),
         parent = { PORT_PHASMATYS }),
+    /**
+     * Reuses the supplied Tower footprint on its first upper floor. Arrival is an existing Infernal Mage spawn;
+     * native target IDs distinguish the assignment from other monsters sharing this floor.
+     */
+    SLAYER_TOWER_FIRST_FLOOR(
+        inside = Position(3434, 3563, 1), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56, 1),
+        parent = { PORT_PHASMATYS }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.

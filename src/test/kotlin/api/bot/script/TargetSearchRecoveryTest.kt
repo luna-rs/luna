@@ -1,10 +1,16 @@
 package api.bot.script
 
 import api.bot.zone.SubZone
+import api.bot.action.BotInteractionActionHandler
+import engine.bot.gear.BotGearPurpose
+import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -26,6 +32,7 @@ class TargetSearchRecoveryTest {
         var accepted = false
         var candidateCount = 20
         var scanSeconds = 0L
+        var approachRule = InteractionPolicy.STANDARD_SIZE
         val target = mock(Npc::class.java).also {
             `when`(it.state).thenReturn(EntityState.ACTIVE)
             `when`(it.isAlive).thenReturn(true)
@@ -42,6 +49,8 @@ class TargetSearchRecoveryTest {
         }
 
         override fun targetSearchTimeNanos() = now
+        override fun targetApproachPolicy(target: Npc) = approachRule
+        suspend fun discover() = approachTarget(target)
         override suspend fun refocus() = true
         override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<Npc> {
             now += scanSeconds * 1_000_000_000
@@ -144,5 +153,42 @@ class TargetSearchRecoveryTest {
         script.attemptSeconds = 3600
         `when`(bot.actionHandler.interactions.interact(3, script.target)).thenReturn(true)
         assertTrue(script.executeInZone())
+    }
+
+    @Test
+    fun distantDiscoveryPassesTheActivitiesReachPolicyToItsBoundedApproach() = runBlocking {
+        val bot = bot()
+        val script = SearchScript(bot)
+        val ranged = InteractionPolicy(InteractionType.LINE_OF_SIGHT, 7)
+        script.approachRule = ranged
+        `when`(script.target.position).thenReturn(Position(3290, 3244))
+        var observed: InteractionPolicy? = null
+        val interactions = mock(BotInteractionActionHandler::class.java) { call ->
+            if (call.method.name.startsWith("approach")) {
+                observed = call.getArgument(1)
+                true
+            } else RETURNS_DEFAULTS.answer(call)
+        }
+        `when`(bot.actionHandler.interactions).thenReturn(interactions)
+        assertTrue(script.discover())
+        assertSame(ranged, observed)
+    }
+
+    @Test
+    fun npcDiscoveryKeepsRangedAndMagicReachWhileMeleeStillApproachesAdjacent() {
+        val bot = bot()
+        val npc = mock(Npc::class.java)
+        val ranged = InteractionPolicy(InteractionType.LINE_OF_SIGHT, 7)
+        val attack = mock(CombatAttack::class.java)
+        `when`(attack.interactionPolicy).thenReturn(ranged)
+        val combat = bot.combat
+        doReturn(attack).`when`(combat).getDefaultAttack(npc)
+        for (purpose in listOf(BotGearPurpose.RANGED, BotGearPurpose.MAGIC, BotGearPurpose.MELEE)) {
+            val script = object : NpcCombatScript(bot, 60.seconds, mutableListOf(), purpose = purpose) {
+                fun discoveryPolicy() = targetApproachPolicy(npc)
+            }
+            assertSame(if (purpose == BotGearPurpose.MELEE) InteractionPolicy.STANDARD_SIZE else ranged,
+                script.discoveryPolicy())
+        }
     }
 }

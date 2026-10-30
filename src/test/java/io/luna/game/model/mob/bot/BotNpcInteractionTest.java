@@ -7,6 +7,8 @@ import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.mob.movement.NavigationResult;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.task.Task;
@@ -48,6 +50,7 @@ class BotNpcInteractionTest {
         when(bot.getWorld()).thenReturn(world);
         when(bot.getNavigator().getCurrentPending()).thenReturn(null);
         when(bot.getCombat().getLastAttackSent()).thenReturn(null);
+        when(bot.getCombat().getDefaultAttack(target)).thenReturn(null);
         when(bot.getNavigator().submit(any())).thenReturn(CompletableFuture.completedFuture(NavigationResult.REACHED));
         doAnswer(invocation -> {
             Task task = invocation.getArgument(0);
@@ -112,5 +115,29 @@ class BotNpcInteractionTest {
             return true;
         });
         assertEquals(false, handler.interact(3, target, continuation));
+    }
+
+    @Test void rangedAttackKeepsWeaponRangeInsteadOfApproachingMelee() {
+        assertAttackFromRange(new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 7));
+    }
+
+    @Test void magicAttackKeepsSpellRangeInsteadOfApproachingMelee() {
+        assertAttackFromRange(InteractionPolicy.STANDARD_LINE_OF_SIGHT);
+    }
+
+    private void assertAttackFromRange(InteractionPolicy policy) {
+        var attack = mock(CombatAttack.class);
+        when(attack.getVictim()).thenReturn(target);
+        when(attack.getInteractionPolicy()).thenReturn(policy);
+        when(bot.getCombat().getDefaultAttack(target)).thenReturn(attack);
+        when(world.getCollisionManager().reached(bot, target, policy)).thenReturn(true);
+        when(bot.getOutput().sendNpcInteraction(3, target)).thenAnswer(invocation -> {
+            when(bot.getCombat().getLastAttackSent()).thenReturn(attack);
+            return true;
+        });
+
+        assertEquals(true, handler.interact(3, target, continuation));
+        verify(actions, never()).webWalkToAny(anyCollection(), null);
+        verify(bot.getOutput()).sendNpcInteraction(3, target);
     }
 }
