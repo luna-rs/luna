@@ -38,6 +38,10 @@ on(ServerLaunchEvent::class) {
     }
 }
 
+// Arnold Lydspor keeps the Piscatoris Fishing Colony's bank. His "Bank" is the third click, after "Trade".
+// TODO Once Swan Song is added, his bank only opens once the quest is done.
+npc3(3824) { plr.bank.open() }
+
 /**
  * Opens the NPC main banker dialogue.
  */
