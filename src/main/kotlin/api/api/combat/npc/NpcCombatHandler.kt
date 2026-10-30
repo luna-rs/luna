@@ -6,6 +6,7 @@ import api.combat.npc.dsl.NpcDefenceCombatHookReceiver
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
@@ -103,6 +104,14 @@ object NpcCombatHandler {
      */
     fun consumeAppliedDamage(npc: Npc, damage: CombatDamage) {
         resolve(npc) { it.afterDamage(npc, damage) }
+    }
+
+    /**
+     * Dispatches a newly accepted retaliation with the action that already owns the native encounter. Failed
+     * retaliation and ordinary hits in an existing fight never reach this callback.
+     */
+    fun consumeRetaliation(npc: Npc, enemy: Mob, action: CombatAction) {
+        resolve(npc) { it.afterRetaliate(npc, enemy, action) }
     }
 
     /**

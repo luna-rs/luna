@@ -239,6 +239,10 @@ public final class NpcCombatContext extends CombatContext<Npc> {
             attack(enemy);
             if (target == enemy) {
                 setAttackDelay(Math.max(0, mob.combatDef().getAttackSpeed() / 2));
+                CombatAction acceptedAction = mob.getActions().first(CombatAction.class);
+                if (!engaged && acceptedAction != null) {
+                    NpcCombatHandler.INSTANCE.consumeRetaliation(mob, enemy, acceptedAction);
+                }
             }
         }
     }

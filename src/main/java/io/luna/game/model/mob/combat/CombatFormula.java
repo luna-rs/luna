@@ -146,6 +146,25 @@ public final class CombatFormula {
     }
 
     /**
+     * Calculates magic offence against a specified physical defence bonus, as used by ordinary dragonfire.
+     * Only the defending roll changes; callers retain the magic attacker's current level and accuracy bonus.
+     *
+     * @param attacker The casting NPC.
+     * @param victim The defending mob.
+     * @param defenceBonus The stab, slash, or crush defence bonus to check.
+     * @return The resulting hit probability.
+     */
+    public static double calculatePhysicalDefendedMagicHitChance(Npc attacker, Mob victim,
+                                                                EquipmentBonus defenceBonus) {
+        if (defenceBonus != EquipmentBonus.STAB_DEFENCE && defenceBonus != EquipmentBonus.SLASH_DEFENCE &&
+                defenceBonus != EquipmentBonus.CRUSH_DEFENCE) {
+            throw new IllegalArgumentException("Physical defence must select stab, slash, or crush defence.");
+        }
+        return calculateHitChanceFromRolls(calculateMagicAttackRoll(attacker),
+                calculatePhysicalDefenceRoll(victim, defenceBonus.getOpposite()));
+    }
+
+    /**
      * Captures a player's ranged offensive roll, including current level, prayer, stance, and equipment bonuses.
      * Delayed secondary attacks can retain this value without reading equipment changed after launch.
      *

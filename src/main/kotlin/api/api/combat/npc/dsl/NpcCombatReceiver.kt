@@ -1,6 +1,8 @@
 package api.combat.npc.dsl
 
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 
@@ -62,6 +64,20 @@ class NpcCombatReceiver {
      */
     fun afterDamage(listener: Npc.(CombatDamage) -> Unit) {
         afterDamage = listener
+    }
+
+    /**
+     * Observes a newly accepted native retaliation after its target, combat action and initial delay are established.
+     * Ordinary hits within an existing encounter and rejected retaliation attempts do not invoke this callback.
+     */
+    var afterRetaliate: Npc.(Mob, CombatAction) -> Unit = { _, _ -> }
+        private set
+
+    /**
+     * Registers an encounter-start reaction without repeating native retaliation eligibility or timer decisions.
+     */
+    fun afterRetaliate(listener: Npc.(Mob, CombatAction) -> Unit) {
+        afterRetaliate = listener
     }
 
     /**
