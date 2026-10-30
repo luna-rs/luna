@@ -8,6 +8,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
+import game.bot.scripts.GiantMoleTrip
 import game.bot.scripts.combat.RockCrabBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
@@ -25,6 +26,7 @@ import kotlin.time.Duration.Companion.minutes
  * assignments reuse the same camp and retain their exact NPC-ID restriction.
  * Taverly Blue Dragons are a profit and Slayer destination at readiness 75, using the same owned
  * one-handed melee and anti-dragon shield requirements as the existing dragon camps.
+ * Giant Mole outings are isolated profit sessions with an owned spade, a mud-safe lit light and stronger food.
  *
  * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
@@ -75,6 +77,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS, 75, setOf("Blue dragon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
             Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
+            Camp(SubZone.GIANT_MOLE_LAIR, 110, setOf("Giant Mole"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
 
@@ -94,8 +97,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
          * owned melee trip. Callers calculate readiness from their actual selected loadout before dispatch.
          */
         internal fun canUseCamp(zone: SubZone, purpose: BotGearPurpose,
-                                hasDragonShield: Boolean, queenReady: Boolean = false): Boolean = when {
+                                hasDragonShield: Boolean, queenReady: Boolean = false,
+                                moleReady: Boolean = false): Boolean = when {
             zone == SubZone.KALPHITE_QUEEN -> purpose == BotGearPurpose.MELEE && queenReady
+            zone == SubZone.GIANT_MOLE_LAIR -> moleReady
             zone in NpcCombatScript.DRAGON_ZONES -> purpose == BotGearPurpose.MELEE && hasDragonShield
             else -> true
         }
@@ -104,16 +109,21 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
          * Restricts camps by offensive readiness, profit intent and boss equipment and supply requirements.
          */
         internal fun eligibleCamps(level: Int, training: Boolean, purpose: BotGearPurpose,
-                                   hasDragonShield: Boolean, queenReady: Boolean = false): List<Camp> {
+                                   hasDragonShield: Boolean, queenReady: Boolean = false,
+                                   moleReady: Boolean = false): List<Camp> {
             val eligible = camps.filter { it.minimum <= level &&
                 (!training || it.zone !in setOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE,
                     SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE)) &&
-                (!training || (it.zone != SubZone.KALPHITE_QUEEN && it.zone !in NpcCombatScript.DRAGON_ZONES)) &&
-                canUseCamp(it.zone, purpose, hasDragonShield, queenReady) }
+                (!training || (it.zone !in setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR) &&
+                    it.zone !in NpcCombatScript.DRAGON_ZONES)) &&
+                canUseCamp(it.zone, purpose, hasDragonShield, queenReady, moleReady) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
             // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
-            val threshold = (preferred.maxOfOrNull { it.minimum } ?: 3) - 25
-            return preferred.filter { it.minimum >= threshold || (training && it.zone == SubZone.ROCK_CRABS) }
+            // Adding a supplied Mole outing must not remove the ordinary camps this discipline already used.
+            val ordinary = preferred.filter { it.zone != SubZone.GIANT_MOLE_LAIR }.ifEmpty { preferred }
+            val threshold = (ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            return preferred.filter { it.zone == SubZone.GIANT_MOLE_LAIR || it.minimum >= threshold ||
+                (training && it.zone == SubZone.ROCK_CRABS) }
         }
     }
 
@@ -128,7 +138,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         val level = combatReadiness(bot, purpose)
         val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
             loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
-            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout))
+            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout),
+            moleReady = GiantMoleTrip.ready(bot))
             .filter { it.zone.entryBlocker(bot) == null }.shuffled()
         val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
             bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
@@ -137,9 +148,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             bot.scriptStack.push(RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell))
             return
         }
-        // Queen trips have their own supplies and must not inherit a dragon camp's shield requirement.
-        val selected = if (candidates.firstOrNull()?.zone == SubZone.KALPHITE_QUEEN) candidates.take(1)
-            else candidates.filter { it.zone != SubZone.KALPHITE_QUEEN && it.zone != SubZone.ROCK_CRABS }.take(4)
+        // Dedicated boss outings keep their supplies and recovery separate from ordinary multi-camp sessions.
+        val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
+        val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
+            else candidates.filter { it.zone !in dedicated && it.zone != SubZone.ROCK_CRABS }.take(4)
         if (selected.isEmpty()) return
         val names = HashMultimap.create<SubZone, String>()
         selected.forEach { names.putAll(it.zone, it.names) }

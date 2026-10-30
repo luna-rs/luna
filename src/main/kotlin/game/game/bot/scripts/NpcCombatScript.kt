@@ -25,6 +25,8 @@ import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
+import game.combat.npcHooks.giantMole.GiantMole
+import game.combat.npcHooks.giantMole.GiantMole.burrowing
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
 import game.skill.fishing.catchFish.Fish
@@ -72,6 +74,8 @@ import kotlin.time.Duration.Companion.seconds
  * including after banking and restored sessions.
  * Gargoyle visits also retain an owned rock hammer in inventory. Weakened stone forms use native adjacent
  * finishing reach, releasing any ranged or magic safespot without changing the saved combat discipline.
+ * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
+ * position across the full lair. Their banking uses the stronger food policy shared with other boss trips.
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
@@ -256,6 +260,11 @@ open class NpcCombatScript(bot: Bot,
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     /**
+     * Mole outings keep their owned light and digging tool through every bank visit and restored session.
+     */
+    private val moleTrip: Boolean get() = SubZone.GIANT_MOLE_LAIR in originalZones
+
+    /**
      * Prepares dragon protection for the entire candidate set, before a work zone is selected.
      */
     private val dragonTrip: Boolean get() = originalZones.any { it in DRAGON_ZONES }
@@ -314,6 +323,8 @@ open class NpcCombatScript(bot: Bot,
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
+        if (moleTrip && (originalZones.size != 1 || !GiantMoleTrip.suppliesOwned(bot) ||
+                (!resumed && !GiantMoleTrip.ready(bot)))) return false
         if (SubZone.KBD_LAIR in originalZones && bot.combatLevel < 100) return false
         if (dragonTrip) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
@@ -354,7 +365,7 @@ open class NpcCombatScript(bot: Bot,
         attend()
         if (!prepareCombat()) return mutableListOf()
         if (bot.combat.inCombat() && bot.combat.lastCombatWith is Npc &&
-            (!queenTrip || canAttack(bot.combat.lastCombatWith as Npc))) {
+            ((!queenTrip && !moleTrip) || canAttack(bot.combat.lastCombatWith as Npc))) {
             return (bot.combat.lastCombatWith as Npc).takeIf { acceptsAssignment(it) }
                 ?.let { mutableListOf(it) } ?: mutableListOf()
         }
@@ -396,6 +407,10 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        if (moleTrip && !GiantMoleTrip.collect(bot)) {
+            stop()
+            return
+        }
         for ((id, amount) in requiredSlayerItems) {
             val missing = amount - bot.inventory.computeAmountForId(id)
             if (missing > 0 && (!handler.banking.withdraw(Item(id, missing)) ||
@@ -444,14 +459,16 @@ open class NpcCombatScript(bot: Bot,
                 }
             }
         } else {
-            if (!handler.inventory.hasAnyFood()) {
-                // todo change minimum heal scaling to combat level
-                val kbd = SubZone.KBD_LAIR in originalZones
-                if (!handler.banking.withdrawAnyFood(amount = if (kbd) 20 else restockFood(),
-                        minimumHeal = if (kbd) 16 else 0, retry = !kbd) && kbd) {
+            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip
+            if (strongFood) {
+                val carried = strongFoodCount()
+                if (carried < 20 && (!handler.banking.withdrawAnyFood(amount = 20 - carried,
+                        minimumHeal = 16, retry = false) || strongFoodCount() < 20)) {
                     stop()
                     return
                 }
+            } else if (!handler.inventory.hasAnyFood()) {
+                handler.banking.withdrawAnyFood(amount = restockFood())
             }
             if (!handler.inventory.hasAnyFood() && tactics.needsFood()) {
                 // Without food it would turn back for the bank as soon as it arrived.
@@ -478,6 +495,13 @@ open class NpcCombatScript(bot: Bot,
     }
 
     /**
+     * Counts physically carried food meeting the shared boss-trip healing threshold; withdrawal success alone may
+     * represent a partial transfer and cannot prove that the required reserve arrived.
+     */
+    private fun strongFoodCount(): Int = bot.inventory.filterNotNull()
+        .filter { (Food.ID_TO_FOOD[it.id]?.heal ?: 0) >= 16 }.sumOf { it.amount }
+
+    /**
      * Wields the session's weapon, ammunition, task protection and dragon shield after everything is withdrawn: an
      * equip click closes the bank, so a player closes it first and wields after.
      *
@@ -489,7 +513,8 @@ open class NpcCombatScript(bot: Bot,
                                   ammo?.takeIf { it != weapon && bot.equipment.computeAmountForId(it) == 0 }) +
                 requiredSlayerGear.filter { (slot, id) -> bot.equipment[slot]?.id != id }.values +
                 listOfNotNull(1540.takeIf { shield })
-        if (wield.isEmpty()) return true
+        val needsLight = moleTrip && !GiantMoleTrip.carried(bot)
+        if (wield.isEmpty() && !needsLight) return true
         if (!handler.widgets.clickCloseInterface()) return false
         for (id in wield) {
             if (!handler.equipment.equip(id)) {
@@ -498,6 +523,7 @@ open class NpcCombatScript(bot: Bot,
                 return false
             }
         }
+        if (moleTrip && !GiantMoleTrip.ensureLit(bot)) return false
         return !shield || bot.equipment.weapon != null
     }
 
@@ -516,9 +542,9 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun onExecuteInZone(searching: Boolean) {
         if (!prepareCombat()) return
         attend()
-        if (forceBanking || (queenTrip && waitingForQueen())) return
+        if (forceBanking || (queenTrip && waitingForQueen()) || waitingForMole()) return
         if (bot.combat.lastCombatWith?.isAlive == true &&
-            (!queenTrip || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
+            ((!queenTrip && !moleTrip) || bot.combat.lastCombatWith?.let { it is Npc && canAttack(it) } == true) && bot.combat.inCombat() &&
             !bot.actions.contains(CombatAction::class.java)
         ) {
             val opponent = bot.combat.lastCombatWith
@@ -537,6 +563,13 @@ open class NpcCombatScript(bot: Bot,
         }
     }
 
+    /**
+     * Keeps the known boss focus through its short native underground phase, then follows its updated position.
+     */
+    private fun waitingForMole(): Boolean = moleTrip && focus?.let {
+        it.id == GiantMole.ID && it.burrowing
+    } == true
+
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) {
             safespotCombat.release()
@@ -545,6 +578,10 @@ open class NpcCombatScript(bot: Bot,
         attend()
         if (forceBanking) safespotCombat.release()
         if (queenTrip && (forceBanking || waitingForQueen())) return false
+        if (waitingForMole()) {
+            safespotCombat.release()
+            return false
+        }
         if (cannonPrepared && !forceBanking && !safespotCombat.isHolding) {
             val zone = activeZone
             if (zone != null && !CannonBotSupport.maintain(bot, zone)) {
@@ -581,7 +618,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onAssignFocus(newFocus: Npc): Boolean {
-        if (queenTrip && !canAttack(newFocus)) return false
+        if ((queenTrip || moleTrip) && !canAttack(newFocus)) return false
         val allowed = acceptsAssignment(newFocus) && bot.combat.checkMultiCombat(newFocus)
         if (socialCamp) {
             if (!allowed) campBehavior.lost(newFocus)
@@ -614,6 +651,7 @@ open class NpcCombatScript(bot: Bot,
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
         val allowed = {
             isActionSafe() && !forceBanking && acceptsAssignment(target) && prepareCombat() &&
+                (!moleTrip || canAttack(target)) &&
                 bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target))
         }
         if (option == 3 && needsFinishingReach(target)) {
@@ -625,7 +663,7 @@ open class NpcCombatScript(bot: Bot,
             purpose in setOf(BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) {
             safespotCombat.engage(target, zone, allowed)?.let { return it }
         }
-        if (slayerTask == null && !socialCamp) return super.interactWithTarget(option, target)
+        if (slayerTask == null && !socialCamp && !moleTrip) return super.interactWithTarget(option, target)
         return handler.interactions.interact(option, target, allowed)
     }
 
@@ -645,6 +683,7 @@ open class NpcCombatScript(bot: Bot,
     private fun canAttack(npc: Npc): Boolean {
         if (!acceptsAssignment(npc)) return false
         if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
+        if (moleTrip) return npc.id == GiantMole.ID && !npc.burrowing
         if (npc.id == 50) {
             return activeZone == SubZone.KBD_LAIR && bot.combatLevel >= 100 &&
                 bot.equipment.shield?.id == 1540 && bot.equipment.weapon != null && handler.inventory.hasAnyFood()
@@ -810,7 +849,8 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private fun configureCombat(): Boolean {
-        if (requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
+        if ((moleTrip && !GiantMoleTrip.carried(bot)) ||
+            requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
             requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount }) {
             combatConfigured = false
             bot.combat.target = null

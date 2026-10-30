@@ -14,6 +14,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.obj.doors.BrassKeyDoor
 import game.skill.runecrafting.enterAltar.Altar
 import game.obj.doors.TaverleyJailDoor
+import game.item.teleport.SpadeDigSpot
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -149,6 +150,14 @@ enum class SubZone(
     SLAYER_TOWER_SECOND_FLOOR(
         inside = Position(3435, 3548, 2), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56, 2),
         parent = { PORT_PHASMATYS }),
+
+    /**
+     * Matches the native Giant Mole darkness bounds and spade landing. The full lair includes every native surfacing
+     * spot, so existing targeting and travel recovery can find the boss again after it burrows.
+     */
+    GIANT_MOLE_LAIR(
+        inside = SpadeDigSpot.FALADOR_MOLE_HILLS.landing,
+        area = SimpleBoxArea.of(1732, 5133, 1787, 5244), parent = { FALADOR }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
