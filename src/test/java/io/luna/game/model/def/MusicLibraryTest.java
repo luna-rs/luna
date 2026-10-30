@@ -31,11 +31,13 @@ final class MusicLibraryTest {
         }
         MusicLibrary library = new MusicLibrary(tracks);
         assertEquals(383, tracks.size());
-        assertEquals(296, tracks.stream().mapToInt(track -> track.getMusicRegions().size()).sum());
+        assertEquals(298, tracks.stream().mapToInt(track -> track.getMusicRegions().size()).sum());
         assertEquals(377, tracks.stream().filter(track -> track.getUnlockVarp() != null).count());
         assertEquals(76, library.getMusic(new Position(3222, 3218)).orElseThrow().id());
         assertEquals(76, library.getMusic(new Position(3222, 3218, 1)).orElseThrow().id());
         assertEquals(35, library.getMusic(new Position(3048, 3236)).orElseThrow().id());
+        assertEquals(573, library.getMusic(new Position(1750, 5150)).orElseThrow().id());
+        assertEquals(573, library.getMusic(new Position(1750, 5200)).orElseThrow().id());
         assertEquals("Forgotten", library.getMusic(new Position(2700, 4880, 0)).orElseThrow().getName());
         assertEquals("Throne of the Demon", library.getMusic(new Position(2700, 4880, 2)).orElseThrow().getName());
         assertTrue(library.getMusic(new Position(2700, 4880, 1)).isEmpty());
