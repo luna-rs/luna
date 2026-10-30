@@ -351,6 +351,15 @@ enum class SubZone(
         area = SimpleBoxArea.of(2823, 9539, 2906, 9661),
         parent = { KARAMJA }),
 
+    /**
+     * Supplied Brimhaven Dungeon Fire Giant camp, covering the five configured ground-floor giants.
+     * Combat and assignment sessions share ordinary webwalking and the existing travel fallback.
+     */
+    BRIMHAVEN_DUNGEON_FIRE_GIANTS(
+        inside = Position(2651, 9502),
+        area = SimpleBoxArea.ofRadius(2632, 9473, 56, 35),
+        parent = { KARAMJA }),
+
     WHITE_KNIGHTS_CASTLE(
         inside = Position(2971, 3343),
         area = SimpleBoxArea.of(2965, 3337, 2979, 3347),

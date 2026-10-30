@@ -21,16 +21,24 @@ import kotlin.time.Duration.Companion.minutes
  * 100, profit mode, a one-handed melee loadout and an owned anti-dragon shield. The combat script
  * equips protection and withdraws stronger food before travelling to the lair. Wilderness Zamorak monks
  * are profit-only camps, with readiness 35 for the lower temple and 55 for the stronger level-40 group.
+ * Brimhaven Fire Giants join ordinary training and profit selection at readiness 65; native Slayer
+ * assignments reuse the same camp and retain their exact NPC-ID restriction.
  *
  * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
  */
 class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     companion object {
-        /** A configured spawn group and the minimum combat readiness needed for deliberate attacks. */
+        /**
+         * A configured spawn group and the minimum combat readiness needed for deliberate attacks.
+         *
+         * @author lare96
+         */
         internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>, val profit: Boolean = false)
 
-        /** Existing subzones and exact names verified against the configured spawn list. */
+        /**
+         * Existing subzones and exact names verified against the configured spawn list.
+         */
         internal val camps = listOf(
             Camp(SubZone.LUMBRIDGE_CHICKEN_COOP, 3, setOf("Chicken")),
             Camp(SubZone.LUMBRIDGE_COW_PEN, 3, setOf("Cow", "Cow calf")),
@@ -60,13 +68,13 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.TAVERLEY_DUNGEON_ZAMORAK_MONKS, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, 65, setOf("Fire giant"), true),
             Camp(SubZone.IORWERTH_CAMP, 75, setOf("Elf warrior"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
             Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
-        // TODO Add Fire Giant and Blue Dragon camps when lare96 supplies subzone data.
-        // Camp(SubZone.FIRE_GIANT_CAMP, 65, setOf("Fire giant"), true)
+        // TODO Add the Blue Dragon camp.
         // Camp(SubZone.BLUE_DRAGON_CAMP, 75, setOf("Blue dragon"), true)
 
         /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
