@@ -54,6 +54,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * the shared combat script's task-equipment policy. Other unsupported specialist assignments remain unavailable.
      * Native bears already inhabit the mapped East Edgeville woods and Legends' Guild mine; exact assignment IDs
      * keep nearby guards, townspeople and spiders out of these visits without changing ordinary combat selection.
+     * The northern Edgeville Dungeon's Black Demons require readiness 110 for their level-172 melee encounters
+     * in the Wilderness section; native Wilderness rules and normal combat recovery remain authoritative.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
@@ -71,7 +73,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.VARROCK_SEWERS, 50, setOf("Ghost")),
         Camp(SubZone.ARDOUGNE_SQUARE_THIEVING, 50, setOf("Guard dog")),
         Camp(SubZone.ZANARIS_MAIN, 65, setOf("Otherworldly being")),
-        Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf"))
+        Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf")),
+        Camp(SubZone.EDGEVILLE_DUNGEON, 110, setOf("Black Demon"))
     )
 
     /**
