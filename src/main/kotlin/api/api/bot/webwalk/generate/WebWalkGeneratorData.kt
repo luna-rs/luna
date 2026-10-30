@@ -133,30 +133,33 @@ data class GeneratedShip(val key: String,
 }
 
 /**
- * A bank booth that the generator found, before the tile to stand on in front of it has been chosen.
+ * A booth or banking NPC that the generator found, before its nearby stand has been chosen.
  *
  * @property id The id of the bank.
- * @property booth Where the booth is.
- * @property candidates The tiles next to the booth that can be stood on, which are on either side of its counter.
+ * @property booth Where the booth is, or the immutable spawn anchor of a banking NPC.
+ * @property candidates The nearby tiles that can be stood on; a booth's candidates are on either side of its counter.
+ * @property npcId The banking NPC's definition id, or `null` for a booth.
  *
  * @author Hydrozoa
  */
-data class BankSeed(val id: String, val booth: Position, val candidates: List<Position>)
+data class BankSeed(val id: String, val booth: Position, val candidates: List<Position>, val npcId: Int? = null)
 
 /**
  * A bank of `banks.jsonc` made by the generator.
  *
  * @property id The id of the bank.
- * @property booth Where the booth is.
- * @property stand The tile in front of the booth, that a bot walks to.
+ * @property booth Where the booth is, or the immutable spawn anchor of a banking NPC.
+ * @property stand The tile next to the bank that a bot walks to.
  * @property links The walks to [stand] from the nodes nearest to it, which [BankLinks] finds.
+ * @property npcId The banking NPC's definition id, or `null` for a booth.
  *
  * @author Hydrozoa
  */
 data class GeneratedBank(val id: String,
                          val booth: Position,
                          val stand: Position,
-                         val links: List<BankLink> = emptyList())
+                         val links: List<BankLink> = emptyList(),
+                         val npcId: Int? = null)
 
 /**
  * What the generator did, for people to read.
@@ -336,7 +339,7 @@ object BankStands {
                 // Nothing tells the sides apart, so the first one is used. Somebody should look at these.
                 report.count("banks with both sides in the web")
             }
-            banks += GeneratedBank(seed.id, seed.booth, seed.candidates[counts.indexOf(best)])
+            banks += GeneratedBank(seed.id, seed.booth, seed.candidates[counts.indexOf(best)], npcId = seed.npcId)
         }
         return banks
     }
@@ -494,7 +497,8 @@ object WebWalkWriter {
     fun banks(banks: Collection<GeneratedBank>): String {
         return lines(banks.sortedBy { it.id }.map { bank ->
             val links = bank.links.joinToString(", ") { "{ \"node\": ${quote(it.nodeId)}, \"cost\": ${it.ticks} }" }
-            "{ \"id\": ${quote(bank.id)}, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)}, " +
+            val npcId = bank.npcId?.let { ", \"npcId\": $it" } ?: ""
+            "{ \"id\": ${quote(bank.id)}$npcId, \"booth\": ${position(bank.booth)}, \"pos\": ${position(bank.stand)}, " +
                     "\"links\": [$links] }"
         }, "[", "]")
     }

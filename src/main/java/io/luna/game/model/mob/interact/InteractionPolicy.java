@@ -118,8 +118,8 @@ public final class InteractionPolicy {
      * @throws IllegalArgumentException If the distance is not valid for the supplied interaction type.
      */
     private void checkDistance(InteractionType type, int distance) {
-        if (distance < 1 && type == InteractionType.LINE_OF_SIGHT) {
-            throw new IllegalArgumentException("LINE_OF_SIGHT interaction type must have a distance >= 1.");
+        if (distance < 1 && (type == InteractionType.LINE_OF_SIGHT || type == InteractionType.DISTANCE)) {
+            throw new IllegalArgumentException(type + " interaction type must have a distance >= 1.");
         } else if (distance == 0 && type != InteractionType.SIZE) {
             throw new IllegalArgumentException("Only the SIZE interaction type can have a distance == 0.");
         } else if ((distance == -1 && type != InteractionType.UNSPECIFIED) ||

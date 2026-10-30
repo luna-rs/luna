@@ -2,6 +2,8 @@ package engine.bank
 
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 
 /**
  * Holds utility functions related to banking.
@@ -12,6 +14,13 @@ object Banking {
      * ID of the default banker npc.
      */
     const val DEFAULT_BANKER = 494
+
+    /**
+     * The two-tile bank-teller approach range used by the 377 bank scripts. Registered bankers can serve customers
+     * over a counter; walking to that range still uses ordinary collision, and other NPC interactions keep their
+     * own reach policies.
+     */
+    val BANKER_POLICY = InteractionPolicy(InteractionType.DISTANCE, 2)
 
     /**
      * The mutable set of banking objects.

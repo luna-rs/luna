@@ -41,8 +41,9 @@ import java.nio.file.Path
  *   no obstacle is a problem, so overrides can't quietly rot after the obstacles are generated again.
  * - `teleports.jsonc` (generated): teleports, each with an `id`, `kind`, `dest`, `cost`, and the `key` (and for jewellery
  *   the `option`) that says which spell or jewellery it is.
- * - `banks.jsonc` (generated): bank booths, each with an `id`, the `booth` position and the `pos` to stand on in front of it,
- *   which is next to the booth. They are not nodes of the graph, only places for a trip to end at, see
+ * - `banks.jsonc` (generated): bank booths or banking NPCs, each with an `id`, the `booth` position (the spawn anchor for an
+ *   NPC) and the adjacent `pos` to stand on. An NPC bank also has its definition's `npcId`. They are not nodes of the graph,
+ *   only places for a trip to end at, see
  *   [api.bot.webwalk.plan.WebWalkPlanner.planToNearestBank]. A bank also has `links`, which are the walks to its `pos` from
  *   the nodes nearest to it (`node`, the id of a node on the same plane, and `cost`, the time of the walk in game ticks).
  *   At least one is needed to arrive at the bank.
@@ -197,7 +198,8 @@ object WebWalkLoader {
                               val id: String,
                               val booth: Position,
                               val stand: Position,
-                              val links: List<PendingBankLink>)
+                              val links: List<PendingBankLink>,
+                              val npcId: Int?)
 
     /**
      * A link of a bank whose node has not been checked yet.
@@ -590,6 +592,7 @@ object WebWalkLoader {
                 val id = readId(entry)
                 val booth = entry.position("booth")
                 val stand = entry.position("pos")
+                val npcId = entry.int("npcId", required = "npcId" in entry.keys(), min = 0)
                 val links = readBankLinks(entry)
                 entry.finish()
 
@@ -604,7 +607,7 @@ object WebWalkLoader {
                     errors.add(entry.where, "duplicate bank id '$id'")
                     continue
                 }
-                pendingBanks += PendingBank(entry.where, id, booth, stand, links)
+                pendingBanks += PendingBank(entry.where, id, booth, stand, links, npcId)
             }
         }
 
@@ -644,7 +647,7 @@ object WebWalkLoader {
                     links += BankLink(link.nodeId, link.ticks)
                 }
             }
-            return BankDefinition(bank.id, bank.booth, bank.stand, links)
+            return BankDefinition(bank.id, bank.booth, bank.stand, links, bank.npcId)
         }
 
         /**

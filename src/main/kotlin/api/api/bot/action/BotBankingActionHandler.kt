@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.walk.BankWithdrawal
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
 import api.predef.*
@@ -433,7 +434,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
 
         bot.log("Web-walking to the nearest bank.")
-        val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS) // TODO Add support for NPC bankers as well
+        val bank = handler.webWalkToNearestBank(attempts = BotActionHandler.WEB_WALK_ATTEMPTS)
         if (!ActionSafety.COMBAT.await(bot)) return null
         if (bank != null) {
             return bank
@@ -468,12 +469,12 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Opens a bank that the bot is at, a booth or a banker, by interacting with it.
      *
-     * Returns immediately if the bank is already open. If the interaction succeeds but [waitFor] returns `false`, opens
-     * the bank directly. NPCs must be registered native bankers and use their second-click banking handler;
+     * Returns immediately if the bank is already open. Object interactions retain their direct-open fallback after a
+     * safe interface timeout. NPCs require the native bank window and use their second-click banking handler;
      * cache action positions do not correspond to bot interaction numbers.
      *
      * @param bank The booth or banker.
-     * @return `true` if the bank was already open or the direct-open fallback was executed.
+     * @return `true` if the bank opened, or an object's safe direct-open fallback was executed.
      */
     suspend fun open(bank: Entity): Boolean {
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
@@ -486,14 +487,18 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         val option = when (bank) {
             is GameObject -> 2
             // Native bankers register npc2; interaction 3 is attack, regardless of the cache action index.
-            is Npc -> if (bank.id in Banking.bankingNpcs) 2 else return false
+            is Npc -> if (bankerAvailable(bank)) 2 else return false
             else -> throw IllegalStateException("Invalid bank entity type.")
         }
         val interacted = handler.interactions.interact(option, bank)
         if (!ActionSafety.NON_COMBAT.await(bot)) return false
         if (interacted) {
-            val opened = waitFor(3.seconds) { bot.bank.isOpen }
+            if (bank is Npc && !bankerAvailable(bank, requireReach = true)) return false
+            val opened = waitFor(3.seconds) {
+                bot.bank.isOpen || bank is Npc && !bankerAvailable(bank, requireReach = true)
+            }
             if (!ActionSafety.NON_COMBAT.await(bot)) return false
+            if (bank is Npc) return bot.bank.isOpen && bankerAvailable(bank, requireReach = true)
             if (!opened) {
                 bot.bank.open()
             }
@@ -502,6 +507,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         bot.log("Could not interact with $bank.")
         return false
     }
+
+    /**
+     * Rechecks the native banker's identity and live registration after suspended work. Only arrival checks require
+     * reach here; the ordinary interaction handler still owns approaching and sending the bank click.
+     */
+    private fun bankerAvailable(npc: Npc, requireReach: Boolean = false): Boolean =
+        npc.world === bot.world && BankWithdrawal.isBanker(npc) && bot.world.npcs[npc.index] === npc &&
+            (!requireReach || bot.world.collisionManager.reached(bot, npc, Banking.BANKER_POLICY))
 
     /**
      * Travels to a bank, opens it, and withdraws every item in [items].

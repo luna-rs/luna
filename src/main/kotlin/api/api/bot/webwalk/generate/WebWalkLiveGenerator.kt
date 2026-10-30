@@ -9,6 +9,7 @@ import api.bot.webwalk.model.TeleportKind
 import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.plan.DoorCrossings
 import api.bot.webwalk.plan.PathfinderWalkEstimator
+import api.bot.webwalk.walk.BankWithdrawal
 import api.bot.webwalk.walk.crossing.AltarCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthCrossing
@@ -38,7 +39,9 @@ import engine.obj.LadderDestination
 import engine.obj.LadderType
 import engine.obj.StairDestination
 import engine.obj.TrapdoorLanding
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.World
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.path.route.RouteStrategy
@@ -68,8 +71,8 @@ import java.util.concurrent.Executor
  * - The ships of `ships.jsonc` are the [ShipRoute]s, each boarded where its crew stands and left by its gangplank, with
  *   their fares and searches as requirements, so that they are never written out by hand either. Their ports are nodes
  *   that the walk edges link like the others.
- * - The banks of `banks.jsonc` are the bank booths at the bank anchors of the zones, each with the tile in front of it, on the
- *   side of the counter that customers use. They are not waypoints, because nothing is walked through them: they are where a
+ * - The banks of `banks.jsonc` are the booths or registered bankers at the bank anchors of the zones, each with a reachable
+ *   customer stand. They are not waypoints, because nothing is walked through them: they are where a
  *   trip to the nearest bank ends. Each is linked to the nodes nearest to it, which is where a trip walks the last stretch
  *   from. See [BankStands] and [BankLinks].
  * - The waypoints of `walk_graph.jsonc` are made from the zones and the sub-zones, moved onto a tile that can be stood
@@ -191,7 +194,7 @@ object WebWalkLiveGenerator {
      * @property climbs The ladders, stairs, trapdoors and entrances.
      * @property waypoints The waypoints.
      * @property teleports The teleports.
-     * @property banks The bank booths, whose tiles to stand on are chosen by [finish].
+     * @property banks The bank destinations, whose tiles to stand on are chosen by [finish].
      * @property ships The ships.
      * @property report What was made and what was left out.
      */
@@ -309,33 +312,64 @@ object WebWalkLiveGenerator {
     }
 
     /**
-     * Finds the bank booths at the bank anchors of the zones. Zones that share the anchors of another zone don't make them
-     * twice. Anchors with no bank booth on them, or with no tile next to them to stand on, are left out and reported. Must be
-     * called on the game thread.
+     * Finds bank objects or registered bankers at the zones' bank anchors, without duplicating shared anchors.
+     * Missing destinations and destinations without a reachable stand are left out and reported.
+     * Must be called on the game thread.
      */
     private fun bankSeeds(report: GenerationReport): List<BankSeed> {
         val seeds = ArrayList<BankSeed>()
-        val booths = HashSet<Position>()
+        val anchors = HashSet<Position>()
         for (zone in Zone.entries) {
             zone.bankAnchors.forEachIndexed { index, booth ->
-                if (!booths.add(booth)) {
+                if (!anchors.add(booth)) {
                     return@forEachIndexed
                 }
                 val id = "${zone.name.lowercase()}_$index"
-                if (world.locator.findObjectsOnTile(booth) { it.id in Banking.bankingObjects }.isEmpty()) {
-                    report.skipped += "bank $id at ${DoorObstacles.describe(booth)}: no bank booth here"
-                    return@forEachIndexed
-                }
-                val candidates = listOf(booth.translate(-1, 0), booth.translate(0, -1), booth.translate(0, 1), booth.translate(1, 0))
-                    .filter { it.x >= 0 && it.y >= 0 && LadderDestination.canLand(it) }
-                if (candidates.isEmpty()) {
-                    report.skipped += "bank $id at ${DoorObstacles.describe(booth)}: no tile next to the booth to stand on"
-                    return@forEachIndexed
-                }
-                seeds += BankSeed(id, booth, candidates)
+                bankSeed(id, booth, report)?.let { seeds += it }
             }
         }
         return seeds
+    }
+
+    /**
+     * Snapshots one anchored bank on the game thread. Existing bank objects take precedence over bankers.
+     * NPC candidates must pass the same reach policy as the native second-click banking handler. Customer-side
+     * access is then selected by ordinary walk connectivity; only ids and positions leave this method.
+     * A banker already away from its spawn anchor is reported instead of generating a stale customer stand.
+     *
+     * @param id The generated bank id.
+     * @param anchor The zone's bank anchor, or a banker's exact spawn position.
+     * @param report Where unavailable destinations are reported.
+     * @param canStand Whether a candidate has floor and can be walked onto.
+     * @param bankerIds The registered native second-click banking NPC ids.
+     * @param world The world to inspect.
+     * @return An immutable seed, or `null` when this anchor cannot currently be used.
+     */
+    internal fun bankSeed(id: String, anchor: Position, report: GenerationReport,
+                          canStand: (Position) -> Boolean = LadderDestination::canLand,
+                          bankerIds: Set<Int> = Banking.bankingNpcs,
+                          world: World = api.predef.world): BankSeed? {
+        val bankObject = world.locator.findObjectsOnTile(anchor) { it.id in Banking.bankingObjects }.isNotEmpty()
+        val bankers = if (bankObject) emptyList() else world.npcs.filter {
+            it.basePosition == anchor && it.position == anchor && it.id in bankerIds &&
+                    it.state == EntityState.ACTIVE && it.isAlive
+        }
+        val banker = bankers.firstOrNull { BankWithdrawal.isBanker(it, bankerIds) }
+        val what = "bank $id at ${DoorObstacles.describe(anchor)}"
+        if (!bankObject && banker == null) {
+            val reason = if (bankers.isEmpty()) "no bank object or active registered banker at this anchor" else
+                "registered banker has no direct Bank action"
+            report.skipped += "$what: $reason"
+            return null
+        }
+        val candidates = listOf(anchor.translate(-1, 0), anchor.translate(0, -1), anchor.translate(0, 1), anchor.translate(1, 0))
+            .filter { it.x >= 0 && it.y >= 0 && canStand(it) &&
+                    (banker == null || world.collisionManager.reached(it, banker, Banking.BANKER_POLICY)) }
+        if (candidates.isEmpty()) {
+            report.skipped += "$what: no reachable customer stand next to the ${if (bankObject) "bank object" else "banker"}"
+            return null
+        }
+        return BankSeed(id, anchor, candidates, npcId = banker?.id)
     }
 
     /**

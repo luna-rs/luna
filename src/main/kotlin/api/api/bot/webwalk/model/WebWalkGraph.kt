@@ -259,21 +259,23 @@ data class FairyRing(val id: String,
 data class BankLink(val nodeId: String, val ticks: Int)
 
 /**
- * A bank booth, with the tile in front of it to stand on. Banks are not nodes of the graph: they are only places for a trip to
- * end, so that the planner can find the nearest one. A bot at [stand] is the right side of the counter to use the booth.
+ * A bank booth or banking NPC, with a nearby tile to stand on. Banks are not nodes of the graph: they are only places for a
+ * trip to end, so that the planner can find the nearest one. A booth's [stand] is on the customer's side of the counter.
  *
  * @property id The unique id of the bank.
- * @property booth Where the booth is.
- * @property stand The tile in front of the booth, that a bot walks to.
+ * @property booth Where the booth is, or the immutable spawn anchor of a banking NPC.
+ * @property stand The tile next to the bank that a bot walks to.
  * @property links The walks to [stand] from the nodes nearest to it, which are the only ways that a trip arrives at the bank
  * by walking. A bank that was loaded has at least one.
+ * @property npcId The banking NPC's definition id, or `null` for a booth.
  *
  * @author Hydrozoa
  */
 data class BankDefinition(val id: String,
                           val booth: Position,
                           val stand: Position,
-                          val links: List<BankLink> = emptyList())
+                          val links: List<BankLink> = emptyList(),
+                          val npcId: Int? = null)
 
 /**
  * The immutable web-walker graph, which is safe to share between threads.

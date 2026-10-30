@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
+import engine.bank.Banking
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.Entity
@@ -65,6 +66,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         target is GroundItem && option == 1 -> InteractionPolicy.EQUAL_POSITION
         combatClick(option, target) -> bot.combat.getDefaultAttack(target as Npc)?.interactionPolicy
             ?: InteractionPolicy.STANDARD_SIZE
+        target is Npc && option in 1..2 && target.id in Banking.bankingNpcs -> Banking.BANKER_POLICY
         else -> InteractionPolicy.STANDARD_SIZE
     }
 

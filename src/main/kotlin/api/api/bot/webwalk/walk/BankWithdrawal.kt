@@ -9,8 +9,12 @@ import api.bot.webwalk.plan.Withdrawal
 import api.predef.*
 import engine.bank.Banking
 import game.item.degradable.jewellery.TeleportJewellery
+import io.luna.game.model.Entity
+import io.luna.game.model.EntityState
+import io.luna.game.model.World
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 
@@ -195,13 +199,40 @@ object BankWithdrawal {
      * @return `true` if the bank is open.
      */
     suspend fun openBank(bot: Bot, handler: BotActionHandler, bank: BankDefinition): Boolean {
-        val booth = booth(bank)
-        if (booth == null) {
-            bot.log("WebWalk: there is no booth at ${bank.booth}.")
+        val target = resolve(bank, bot.world)
+        if (target == null) {
+            bot.log("WebWalk: the bank at ${bank.booth} is unavailable.")
             return false
         }
-        return handler.banking.open(booth) && bot.bank.isOpen
+        return handler.banking.open(target) && bot.bank.isOpen
     }
+
+    /**
+     * Resolves a planned destination on the game thread. Plans retain only an id and spawn anchor, never an NPC
+     * reference. A banker that moved beyond reach of the planned customer stand is unavailable for this attempt.
+     *
+     * @param bank The planned bank.
+     * @param currentWorld The world whose live entities should be resolved.
+     * @return A banking object or active native banker, or `null` when the destination is unavailable.
+     */
+    fun resolve(bank: BankDefinition, currentWorld: World = world): Entity? {
+        val npcId = bank.npcId ?: return currentWorld.locator.findObjectsOnTile(bank.booth) {
+            it.id in Banking.bankingObjects
+        }.firstOrNull()
+        return currentWorld.locator.findViewableNpcs(bank.booth).firstOrNull { npc ->
+            npc.id == npcId && npc.basePosition == bank.booth && isBanker(npc) &&
+                currentWorld.npcs[npc.index] === npc &&
+                currentWorld.collisionManager.reached(bank.stand, npc, Banking.BANKER_POLICY)
+        }
+    }
+
+    /**
+     * Restricts generated NPC destinations to active native bankers with a direct Bank cache action. Registered
+     * NPCs that require dialogue instead are deliberately excluded from this routing flow.
+     */
+    internal fun isBanker(npc: Npc, bankerIds: Set<Int> = Banking.bankingNpcs): Boolean =
+        npc.state == EntityState.ACTIVE && npc.isAlive && npc.id in bankerIds &&
+            npc.def().actions.any { it.equals("Bank", ignoreCase = true) }
 
     /**
      * Finds the booth of a bank of the web.
@@ -210,7 +241,7 @@ object BankWithdrawal {
      * @return The booth, or `null` if there is no bank object on its tile.
      */
     fun booth(bank: BankDefinition): GameObject? =
-        world.locator.findObjectsOnTile(bank.booth) { it.id in Banking.bankingObjects }.firstOrNull()
+        if (bank.npcId == null) resolve(bank) as? GameObject else null
 
     /**
      * Counts the amount of each item in a container.

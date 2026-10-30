@@ -14,6 +14,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.controllers.WildernessLocatableController.wildernessLevel
 import game.skill.magic.Magic.teleport
 import io.luna.Luna
+import io.luna.game.model.Entity
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.`object`.GameObject
@@ -373,21 +374,21 @@ class BotActionHandler(val bot: Bot) {
      * Walks this bot to the nearest bank with the web-walker, in one call from a script:
      * ```
      * val bank = handler.webWalkToNearestBank() ?: return true
-     * handler.interactions.interact(2, bank)
+     * handler.banking.open(bank)
      * ```
      *
      * The nearest bank is the one that the cheapest trip ends at, for what the bot carries and can do right now, so a bot
-     * that has a teleport and the runes for it may take that. The bot stops in front of a booth, on the side of the counter
-     * that customers use. [BotBankingActionhandler.webWalkToNearestBank] uses this too, and falls back to going home.
+     * that has a teleport and the runes for it may take that. The bot stops at the customer stand for a booth or NPC
+     * banker. [BotBankingActionHandler.travelToNearestBank] uses this too, and falls back to going home.
      *
      * @param radius How close to the tile in front of the booth, in tiles, is close enough. The default is the exact tile.
      * @param attempts How many times to try, planning again each time. Recovery-enabled trips try at least twice.
      * @param fallback Whether exhausted route failures may use an awaited, rate-limited recovery teleport.
-     * @return The bank booth that the bot walked to, or `null` if it couldn't get to a bank. The log of the bot says why.
+     * @return The live banking object or NPC, or `null` if travel or arrival resolution failed.
      */
-    suspend fun webWalkToNearestBank(radius: Int = 0, attempts: Int = 1, fallback: Boolean = true): GameObject? {
+    suspend fun webWalkToNearestBank(radius: Int = 0, attempts: Int = 1, fallback: Boolean = true): Entity? {
         val bank = WebWalker.webWalkToNearestBank(bot, radius, attempts, fallback).takeIf { it.success }?.bank ?: return null
-        return BankWithdrawal.booth(bank)
+        return BankWithdrawal.resolve(bank, bot.world)
     }
 
     companion object {

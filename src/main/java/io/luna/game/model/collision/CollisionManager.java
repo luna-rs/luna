@@ -569,6 +569,7 @@ public final class CollisionManager {
      *     <li>{@link InteractionType#UNSPECIFIED} always succeeds after the distance sanity check.</li>
      *     <li>A distance of {@code 0} requires the source and target to occupy the exact same tile.</li>
      *     <li>Targets outside {@link Position#VIEWING_DISTANCE} are rejected before type-specific checks run.</li>
+     *     <li>{@link InteractionType#DISTANCE} requires only the same plane and the configured distance.</li>
      *     <li>{@link InteractionType#LINE_OF_SIGHT} requires the target to be within policy distance and visible
      *     through a successful {@link #raycast(Position, Position)}.</li>
      *     <li>{@link InteractionType#SIZE} uses collision-aware reach checks for adjacent ground items, mobs and objects,
@@ -602,6 +603,8 @@ public final class CollisionManager {
         } else if (distance == 0) {
             // Distance of 0 always requires player to occupy tile.
             return start.equals(end);
+        } else if (policy.getType() == InteractionType.DISTANCE) {
+            return start.isWithinDistance(end, distance);
         }
 
         // The reach checks read the flags of the start tile, so they need the matrix of the chunk the start is in.

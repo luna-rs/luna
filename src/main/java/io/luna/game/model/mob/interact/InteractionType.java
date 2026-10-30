@@ -32,4 +32,10 @@ public enum InteractionType {
      * elsewhere.
      */
     UNSPECIFIED,
+
+    /**
+     * Requires only the same plane and an explicit distance, without line-of-sight or adjacent wall checks.
+     * Approach-range handlers such as bank tellers opt into this rule; walking collision remains unchanged.
+     */
+    DISTANCE,
 }
