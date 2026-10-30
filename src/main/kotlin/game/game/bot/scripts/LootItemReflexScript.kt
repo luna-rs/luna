@@ -1,6 +1,7 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.script.BotScript.ActionSafety
 import api.bot.script.ReflexBotScript
 import api.combat.death.DeathHookHandler.deathItems
 import api.predef.*
@@ -39,6 +40,11 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
          * The minimum coin pile considered worthwhile unless it is wanted or belongs to the bot's death pile.
          */
         const val MINIMUM_LOOT_GP_VALUE = 1000.0
+
+        /**
+         * How long, in ticks, the bot leaves an item alone after failing to pick it up.
+         */
+        const val FAILED_PICKUP_TICKS = 100
 
         /**
          * Item types eligible for dropping when their value is below the bot's loot threshold.
@@ -127,10 +133,17 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
      */
     private var droppedJunk = false
 
+    /**
+     * Items the bot failed to pick up, and the tick until which it leaves each alone. Otherwise the reflex would pause
+     * the bot's script for the same item again as soon as it resumed.
+     */
+    private val failedPickups = HashMap<GroundItem, Long>()
+
     override fun shouldReact(): Boolean {
         valuableItems.clear()
 
-        if (bot.health < 1) {
+        // A locked or busy bot can't pick anything up yet.
+        if (bot.health < 1 || !ActionSafety.COMBAT.allows(bot)) {
             return false
         }
         if (!bot.inventory.isFull) {
@@ -197,6 +210,13 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
             }
         }
 
+        // What's left wasn't collected: a lost race, a refused click, or a walk that didn't get there.
+        val until = bot.world.currentTick + FAILED_PICKUP_TICKS
+        for (groundItem in valuableItems) {
+            if (groundItem.state == EntityState.ACTIVE) {
+                failedPickups[groundItem] = until
+            }
+        }
         valuableItems.clear()
         return true
     }
@@ -208,10 +228,13 @@ class LootItemReflexScript(bot: Bot) : ReflexBotScript(bot) {
      * Junk that cannot fit is skipped, while existing inventory stacks can still accept loot when all slots are used.
      */
     private fun findValuableItems() {
+        val now = bot.world.currentTick
+        failedPickups.entries.removeIf { (groundItem, until) -> until <= now || groundItem.state != EntityState.ACTIVE }
         for (groundItem in bot.viewableItems) {
+            // The pickup refuses an item the bot can't see, such as one beyond its viewing distance.
             if (groundItem.state != EntityState.ACTIVE ||
                 !groundItem.isWithinDistance(bot, Position.VIEWING_DISTANCE * 2) ||
-                groundItem.id in ignored) {
+                groundItem.id in ignored || !groundItem.isVisibleTo(bot) || groundItem in failedPickups) {
                 continue
             }
             if (bot.scriptStack.current()?.allowsLoot(groundItem) == false) continue
