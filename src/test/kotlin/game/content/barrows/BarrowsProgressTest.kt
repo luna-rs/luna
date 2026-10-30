@@ -12,6 +12,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.MobDeathAction.DeathStage
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.combat.state.NpcCombatContext
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.PersistentVarpManager
 import io.luna.game.model.mob.varp.Varp
@@ -75,6 +76,7 @@ class BarrowsProgressTest {
         val npc = mock(Npc::class.java)
         `when`(npc.id).thenReturn(id)
         `when`(npc.position).thenReturn(position)
+        `when`(npc.combat).thenReturn(mock(NpcCombatContext::class.java))
         return npc
     }
 
