@@ -268,6 +268,8 @@ abstract class SkillingBotScript<E : Entity>(
 
     /**
      * Preserves configured preference and personality shuffling, filtering by current skill level.
+     * Suitable owned tools are considered before shopping, so missing upgrades cannot delay a bot that already
+     * has usable equipment. The same order is retained when acquisition is actually necessary.
      * Actual ownership is verified after acquisition, including after its suspensions; a successful
      * shop return alone cannot invent a tool. Existing emergency provisioning remains a fallback,
      * but an unusable fallback or a failed bank insertion cannot satisfy readiness.
@@ -279,7 +281,9 @@ abstract class SkillingBotScript<E : Entity>(
             addAll(configured)
             removeIf { skill.level < it.skillLevel }
         }
-        for (candidate in if (bot.personality.isDumb) candidates.shuffled() else candidates) {
+        val ordered = if (bot.personality.isDumb) candidates.shuffled() else candidates.toList()
+        ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }?.let { return it }
+        for (candidate in ordered) {
             if (skill.level < candidate.skillLevel) continue
             if (!ownsTool(candidate.id)) handler.shop.obtainWantedItem(candidate.id)
             if (skill.level >= candidate.skillLevel && ownsTool(candidate.id)) {
