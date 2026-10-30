@@ -25170,14 +25170,14 @@
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 25,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
@@ -25192,7 +25192,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25205,20 +25206,20 @@
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 25,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
       120,
-      80,
+      120,
+      100,
       1,
       1
     ],
@@ -25227,7 +25228,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25239,21 +25241,21 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 100,
+    "maximum_hit": 21,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
+      100,
+      100,
       120,
-      80,
       1,
       1
     ],
@@ -25262,7 +25264,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25274,21 +25277,21 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 90,
+    "maximum_hit": 23,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
-      120,
-      80,
+      110,
+      110,
+      110,
       1,
       1
     ],
@@ -25297,7 +25300,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25309,21 +25313,21 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 100,
+    "maximum_hit": 21,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
+      100,
+      100,
       120,
-      80,
       1,
       1
     ],
@@ -25332,7 +25336,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25344,21 +25349,21 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 100,
+    "maximum_hit": 21,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
+      100,
+      100,
       120,
-      80,
       1,
       1
     ],
@@ -25367,7 +25372,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -25379,21 +25385,21 @@
     },
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 80,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 90,
+    "maximum_hit": 23,
+    "attack_speed": 4,
     "attack_animation": 284,
     "defence_animation": 285,
     "death_animation": 287,
     "attack_sound": 959,
     "death_sound": 101,
-    "attack_bonus": 0,
+    "attack_bonus": 60,
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      140,
-      120,
-      80,
+      110,
+      110,
+      110,
       1,
       1
     ],
@@ -25402,7 +25408,8 @@
       60,
       30,
       0,
-      0
+      0,
+      60
     ]
   },
   {
@@ -26228,8 +26235,8 @@
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 62,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 6,
+    "attack_speed": 4,
     "attack_animation": 2039,
     "defence_animation": 2035,
     "death_animation": 2038,
