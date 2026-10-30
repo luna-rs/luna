@@ -66,7 +66,8 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
     /**
      * Approaches through the web, then confirms native collision reach. Moving targets are replanned
      * at most three times within one deadline. Target loss, caller safety, cancellation and locks
-     * abort the trip; a walking lock still permits interaction with an already reached target.
+     * abort the trip; a walking lock still permits interaction with an already reached target. While
+     * the walk runs, a lock is waited out, since teleport and climb legs lock the bot until they land.
      * Approaches cannot acquire bank supplies or disable those caller checks.
      */
     suspend fun approach(target: Entity, policy: InteractionPolicy = InteractionPolicy.STANDARD_SIZE,
@@ -88,7 +89,8 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
                 val walk = async(start = CoroutineStart.UNDISPATCHED) { handler.webWalkToAny(stands) }
                 try {
                     while (!walk.isCompleted) {
-                        if (!eligible()) { walk.cancelAndJoin(); return@coroutineScope false }
+                        // The walk's own teleport and climb legs lock the bot until it lands; judge it once it's free.
+                        if (!bot.isLocked && !eligible()) { walk.cancelAndJoin(); return@coroutineScope false }
                         delay(100)
                     }
                     walk.await()

@@ -20,6 +20,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.player.item.consume.food.Food
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
@@ -362,31 +363,24 @@ open class NpcCombatScript(bot: Bot,
         }
         val selected = loadout ?: return
         for ((slot, id) in requiredSlayerGear) {
-            if (bot.equipment[slot]?.id != id &&
-                (!handler.banking.withdraw(Item(id)) || !handler.equipment.equip(id))) {
+            if (bot.equipment[slot]?.id != id && id !in bot.inventory && !handler.banking.withdraw(Item(id))) {
                 stop()
                 return
             }
         }
         val weapon = selected.gear[Equipment.WEAPON]
+        val thrown = purpose == BotGearPurpose.RANGED && selected.gear[Equipment.AMMUNITION] == null
         if (weapon != null && bot.equipment.weapon?.id != weapon &&
-            (!handler.banking.withdraw(Item(weapon, if (purpose == BotGearPurpose.RANGED &&
-                selected.gear[Equipment.AMMUNITION] == null) 500 else 1)) || !handler.equipment.equip(weapon))) {
-            bot.preferences.addWantedItem(weapon, if (purpose == BotGearPurpose.RANGED &&
-                selected.gear[Equipment.AMMUNITION] == null) 1000 else 3)
+            !handler.banking.withdraw(Item(weapon, if (thrown) 500 else 1))) {
+            bot.preferences.addWantedItem(weapon, if (thrown) 1000 else 3)
             stop()
             return
         }
-        if (dragonTrip && bot.equipment.shield?.id != 1540 &&
-            (!handler.equipment.equip(1540) || bot.equipment.weapon == null)) {
-            stop()
-            return
-        }
+        val ammo = if (purpose == BotGearPurpose.RANGED) selected.gear[Equipment.AMMUNITION] ?: weapon else null
         if (purpose == BotGearPurpose.RANGED) {
-            val id = selected.gear[Equipment.AMMUNITION] ?: weapon
-            if (id == null || (bot.equipment.computeAmountForId(id) == 0 &&
-                    (!handler.banking.withdraw(Item(id, 500)) || !handler.equipment.equip(id)))) {
-                id?.let { bot.preferences.addWantedItem(it, 1000) }
+            if (ammo == null || (bot.equipment.computeAmountForId(ammo) == 0 && ammo !in bot.inventory &&
+                    !handler.banking.withdraw(Item(ammo, 500)))) {
+                ammo?.let { bot.preferences.addWantedItem(it, 1000) }
                 stop()
                 return
             }
@@ -398,10 +392,6 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        if (!configureCombat()) {
-            stop()
-            return
-        }
         if (dragonTrip) handler.potions.withdrawAntifire()
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
@@ -411,18 +401,62 @@ open class NpcCombatScript(bot: Bot,
                     return
                 }
             }
-            if (!KalphiteQueenTrip.equipped(bot)) stop()
+        } else {
+            if (!handler.inventory.hasAnyFood()) {
+                // todo change minimum heal scaling to combat level
+                val kbd = SubZone.KBD_LAIR in originalZones
+                if (!handler.banking.withdrawAnyFood(amount = if (kbd) 20 else restockFood(),
+                        minimumHeal = if (kbd) 16 else 0, retry = !kbd) && kbd) {
+                    stop()
+                    return
+                }
+            }
+            if (!handler.inventory.hasAnyFood() && tactics.needsFood()) {
+                // Without food it would turn back for the bank as soon as it arrived.
+                bot.log("No food in the bank and too hurt to fight without it. Ending this session.")
+                stop()
+                return
+            }
+            cannonPrepared = slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
+        }
+        if (!wieldAtBank(weapon, ammo, thrown) || !configureCombat()) {
+            stop()
             return
         }
-        if (!handler.inventory.hasAnyFood()) {
-            // todo change minimum heal scaling to combat level
-            val kbd = SubZone.KBD_LAIR in originalZones
-            if (!handler.banking.withdrawAnyFood(amount = if (kbd) 20 else 8,
-                    minimumHeal = if (kbd) 16 else 0, retry = !kbd) && kbd) {
-                stop()
+        if (queenTrip && !KalphiteQueenTrip.equipped(bot)) stop()
+    }
+
+    /**
+     * Food for one trip: what the bot keeps back for getting away, plus some to eat while fighting. A fixed amount can
+     * be all reserve, which sends the bot back to the bank as soon as it arrives.
+     */
+    private fun restockFood(): Int {
+        val heal = bot.bank.firstNotNullOfOrNull { it?.let { item -> Food.ID_TO_FOOD[item.id]?.heal } } ?: 0
+        return tactics.foodToCarry(heal, fighting = 8)
+    }
+
+    /**
+     * Wields the session's weapon, ammunition, task protection and dragon shield after everything is withdrawn: an
+     * equip click closes the bank, so a player closes it first and wields after.
+     *
+     * @return `false` if something couldn't be wielded, or the shield took the place of a two-handed weapon.
+     */
+    private suspend fun wieldAtBank(weapon: Int?, ammo: Int?, thrown: Boolean): Boolean {
+        val shield = dragonTrip && bot.equipment.shield?.id != 1540
+        val wield = listOfNotNull(weapon?.takeIf { bot.equipment.weapon?.id != it },
+                                  ammo?.takeIf { it != weapon && bot.equipment.computeAmountForId(it) == 0 }) +
+                requiredSlayerGear.filter { (slot, id) -> bot.equipment[slot]?.id != id }.values +
+                listOfNotNull(1540.takeIf { shield })
+        if (wield.isEmpty()) return true
+        if (!handler.widgets.clickCloseInterface()) return false
+        for (id in wield) {
+            if (!handler.equipment.equip(id)) {
+                if (id == weapon) bot.preferences.addWantedItem(id, if (thrown) 1000 else 3)
+                if (id == ammo) bot.preferences.addWantedItem(id, 1000)
+                return false
             }
         }
-        cannonPrepared = slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
+        return !shield || bot.equipment.weapon != null
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {

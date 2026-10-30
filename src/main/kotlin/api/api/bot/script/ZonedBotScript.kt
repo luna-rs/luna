@@ -11,6 +11,7 @@ import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
+import game.player.item.consume.food.Food
 import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
@@ -18,6 +19,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -55,6 +57,16 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, data.duration, data.zones)
 
     companion object {
+
+        /**
+         * How many bank trips in a row, each with no work done since the one before, end a script.
+         */
+        const val MAX_FUTILE_BANK_TRIPS = 3
+
+        /**
+         * How many bank attempts in a row that fail outright end a script.
+         */
+        const val MAX_FAILED_BANK_ATTEMPTS = 5
 
         /**
          * Serializable state shared by all [ZonedBotScript] implementations.
@@ -147,6 +159,26 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         private set
 
     /**
+     * The zone whose bank trip the last pause interrupted. The trip carries on for it when the script resumes.
+     */
+    private var interruptedBankTrip: SubZone? = null
+
+    /**
+     * What the bot had as it left the bank last time, to tell whether it worked before it needed the bank again.
+     */
+    private var leftBank: BankTripMark? = null
+
+    /**
+     * Bank trips in a row that the bot made without having worked since the trip before.
+     */
+    private var futileBankTrips = 0
+
+    /**
+     * Bank attempts in a row that failed outright, since the last one that finished.
+     */
+    private var failedBankAttempts = 0
+
+    /**
      * The original candidate-zone list used for one retry pass after travel-based selection failures.
      *
      * Runtime selection may remove zones from [zones]. This snapshot lets the script make one rebuilt retry pass
@@ -230,6 +262,10 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             return false
         }
 
+        if (forceBanking && activeZone == null) {
+            resumeBankTrip()
+        }
+
         // A failed banking attempt keeps forceBanking set. Retry it from here instead of travelling
         // back to the work zone without the supplies that sent us to the bank.
         if (forceBanking && activeZone != null) {
@@ -284,10 +320,23 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         bot.log("Pausing script. Clearing cached bank and active zone.")
 
         interruptedZone = activeZone ?: travelZone
+        interruptedBankTrip = if (forceBanking) interruptedZone else null
         cachedBank = null
         activeZone = null
         travelZone = null
         onPaused()
+    }
+
+    /**
+     * A pause clears the active zone. If it came during a bank trip, the trip carries on to that zone's bank instead of
+     * walking back to the zone first, unless the bot has since escaped from the zone or can no longer enter it.
+     */
+    private fun resumeBankTrip() {
+        val zone = interruptedBankTrip ?: return
+        interruptedBankTrip = null
+        if (zone !in zones || zone.entryBlocker(bot) != null) return
+        activeZone = zone
+        bot.log("Resuming the bank trip the pause interrupted. activeZone=$zone")
     }
 
     /**
@@ -603,6 +652,12 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
             "Banking required. reason=${if (forceBanking) "forceBanking" else "inventoryFull"}, " +
                     "activeZone=$activeZone"
         )
+        if (futileTrip()) {
+            bot.log("Ending the script: the last $futileBankTrips bank trips came with no work in between. " +
+                        "activeZone=$activeZone")
+            stop()
+            return
+        }
 
         forceBanking = true
         if (!awaitActionSafety()) return
@@ -611,7 +666,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         val bank = cachedBank
         if (bank != null && !bot.bank.isOpen) {
             val targetPosition = bank.position
-            val reachable = handler.interactions.approach(bank) {
+            // The cached bank can be a long walk from the far end of a dungeon or the Wilderness.
+            val reachable = handler.interactions.approach(bank, timeout = 3.minutes) {
                 ActionSafety.NON_COMBAT.allows(bot)
             }
             if (!awaitActionSafety()) return
@@ -676,6 +732,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Banking aborted because no usable bank was resolved. activeZone=$activeZone")
             forceBanking = true
+            bankAttemptFailed()
             return
         }
 
@@ -686,6 +743,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
                 cachedBank = null
                 forceBanking = true
+                bankAttemptFailed()
                 return
             }
 
@@ -694,6 +752,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 bot.log("Banking aborted because the bank never opened. Clearing cached bank. cachedBank=$cachedBank")
                 cachedBank = null
                 forceBanking = true
+                bankAttemptFailed()
                 return
             }
         }
@@ -702,6 +761,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (depositInventoryWhenBanking && !handler.banking.depositInventory(setOfNotNull(activeZone.entryItem))) {
             bot.log("Auto-inventory deposit failed. Will retry banking next cycle. activeZone=$activeZone")
             forceBanking = true
+            bankAttemptFailed()
             return
         }
         if (!bankActionReady()) return
@@ -710,7 +770,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         bot.log("Banking hook complete. Returning to active zone. activeZone=$activeZone")
         if (!bankActionReady()) return
         forceBanking = false
-        
+        failedBankAttempts = 0
+        leftBank = BankTripMark(bot)
+
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
         if (BotMarketplace.forZone(activeZone) == null) travelToZone(activeZone, BankAccess.COINS)
     }
@@ -724,5 +786,51 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (isActionSafe(ActionSafety.NON_COMBAT)) return true
         forceBanking = true
         return false
+    }
+
+    /**
+     * Counts a bank attempt that failed outright: no bank to use, a click that didn't reach it, a bank that never opened
+     * or a deposit that didn't go through. A bot that can't bank after this many tries in a row ends the script.
+     */
+    private fun bankAttemptFailed() {
+        if (++failedBankAttempts < MAX_FAILED_BANK_ATTEMPTS) return
+        bot.log("Ending the script: the last $failedBankAttempts bank attempts failed. activeZone=$activeZone")
+        stop()
+    }
+
+    /**
+     * Counts a new bank trip as futile when the bot did no work since it left the bank last time. Whatever sends a bot
+     * back to the bank without its supplies, or back before it can use them, ends here instead of looping.
+     *
+     * @return `true` once [MAX_FUTILE_BANK_TRIPS] futile trips came in a row.
+     */
+    private fun futileTrip(): Boolean {
+        val mark = leftBank ?: return false
+        leftBank = null
+        futileBankTrips = if (mark.workedSince(bot)) 0 else futileBankTrips + 1
+        return futileBankTrips >= MAX_FUTILE_BANK_TRIPS
+    }
+
+    /**
+     * What a bot has as it leaves the bank. It worked since if it gained experience, or gained items other than by
+     * eating: a bite of cake leaves a smaller cake, so food counts as one total.
+     */
+    private class BankTripMark(bot: Bot) {
+
+        private val experience = experience(bot)
+        private val items = items(bot)
+        private val food = food(bot)
+
+        fun workedSince(bot: Bot): Boolean = experience(bot) != experience || food(bot) > food ||
+                items(bot).any { (id, amount) -> amount > (items[id] ?: 0L) }
+
+        private fun experience(bot: Bot): Double = bot.skills.sumOf { it.experience }
+
+        private fun items(bot: Bot): Map<Int, Long> = bot.inventory.filterNotNull()
+            .filter { it.id !in Food.ID_TO_FOOD }
+            .groupingBy { it.id }
+            .fold(0L) { total, item -> total + item.amount }
+
+        private fun food(bot: Bot): Int = bot.inventory.count { it != null && it.id in Food.ID_TO_FOOD }
     }
 }

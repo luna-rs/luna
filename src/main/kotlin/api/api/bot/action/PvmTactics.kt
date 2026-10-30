@@ -73,4 +73,14 @@ class PvmTactics(private val bot: Bot) {
     fun stopAttending() {
         eating.stopAttending()
     }
+
+    /**
+     * How much food to take from the bank. See [PvmEating.foodToCarry].
+     */
+    fun foodToCarry(heal: Int, fighting: Int): Int = eating.foodToCarry(heal, fighting)
+
+    /**
+     * Whether the bot is too hurt to start a fight without food. See [PvmEating.needsFood].
+     */
+    fun needsFood(): Boolean = eating.needsFood()
 }

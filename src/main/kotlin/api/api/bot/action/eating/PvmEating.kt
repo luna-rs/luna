@@ -141,6 +141,24 @@ class PvmEating(private val bot: Bot) {
     }
 
     /**
+     * How much food to take from the bank: the pieces the bot keeps back for getting away, as of its last fight, plus
+     * [fighting] pieces to eat. With only the reserve, it would leave to restock as soon as it got back.
+     *
+     * @param heal How much the food heals.
+     * @param fighting How many pieces to eat while fighting.
+     */
+    fun foodToCarry(heal: Int, fighting: Int): Int = (habit?.foodToKeep(danger, heal) ?: 0) + fighting
+
+    /**
+     * Whether the bot, as of its last fight, is below the hitpoints it likes to start a fight with. With no food it
+     * would leave to restock as soon as it got back, as [betweenFights] does.
+     */
+    fun needsFood(): Boolean {
+        val habit = habit ?: return false
+        return bot.health + misjudged < habit.comfortableAt(bot.totalHealth, danger)
+    }
+
+    /**
      * Starts a new fight with a fresh habit when the bot's opponent changes, and works out how hard it expects to be
      * hit.
      *
