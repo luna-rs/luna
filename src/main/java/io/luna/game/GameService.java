@@ -226,6 +226,11 @@ public final class GameService extends AbstractScheduledService {
     private volatile Thread thread;
 
     /**
+     * The world tick when the system update countdown ends, or {@code -1} if no update is scheduled.
+     */
+    private long systemUpdateTick = -1;
+
+    /**
      * Creates a new {@link GameService} for the supplied {@link LunaContext}.
      *
      * @param context The server context.
@@ -438,8 +443,9 @@ public final class GameService extends AbstractScheduledService {
         var saveResult = world.getPersistenceService().saveAll();
 
         // Send out system update messages.
+        systemUpdateTick = world.getCurrentTick() + ticks;
         for (Player player : world.getPlayers()) {
-            player.queue(new SystemUpdateMessageWriter(ticks));
+            sendSystemUpdate(player);
         }
 
         // Schedule a graceful shutdown once the system update timer completes.
@@ -458,6 +464,19 @@ public final class GameService extends AbstractScheduledService {
                 }
             }
         });
+    }
+
+    /**
+     * Sends the remaining system update countdown to a player, if an update is scheduled.
+     *
+     * @param player The player receiving the countdown.
+     */
+    public void sendSystemUpdate(Player player) {
+        if (systemUpdateTick != -1) {
+            // One tick keeps 0:00 visible while shutdown is pending; zero hides the timer.
+            int ticks = (int) Math.max(1, systemUpdateTick - world.getCurrentTick());
+            player.queue(new SystemUpdateMessageWriter(ticks));
+        }
     }
 
     /**

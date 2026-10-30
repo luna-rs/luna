@@ -36,6 +36,7 @@ on(LoginEvent::class, EventPriority.HIGH) {
 
     plr.queue(UpdateRunEnergyMessageWriter())
     plr.queue(UpdatePrivacyOptionMessageWriter())
+    gameService.sendSystemUpdate(plr)
 
     plr.skills.forEach { plr.queue(SkillUpdateMessageWriter(it.id)) }
     CombatPrayer.VALUES.forEach { plr.sendVarp(Varp(it.varp, 0)) }
