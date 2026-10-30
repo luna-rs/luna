@@ -59,12 +59,15 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * in the Wilderness section; native Wilderness rules and normal combat recovery remain authoritative.
      * Infernal Mage visits use the Tower's first upper floor and native spellcasting, with no special equipment
      * or scripted finishing action beyond the normal owned combat kit and supplies.
+     * Gargoyle visits require an owned rock hammer carried through every bank visit; the native finishing attack
+     * remains responsible for the kill and its task credit.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
         Camp(SubZone.SLAYER_TOWER_GROUND, 35, setOf("Banshee")),
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 75, setOf("Infernal Mage")),
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 90, setOf("Aberrant specter")),
+        Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 100, setOf("Gargoyle")),
         Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
         Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
@@ -128,6 +131,9 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         if (!canTrain(bot) || task.remaining <= 0 || bot.slayer.level < task.task.level) return emptyMap()
         if (NpcCombatScript.requiredSlayerEquipment(task.task).values.any {
                 !bot.itemTracker.contains(it) || !equipDef(it).meetsAllRequirements(bot)
+            }) return emptyMap()
+        if (NpcCombatScript.requiredSlayerInventory(task.task).any { (id, amount) ->
+                bot.itemTracker.count(id) < amount
             }) return emptyMap()
         val taskNames = task.task.npcs.mapNotNull { NpcDefinition.ALL.get(it).orElse(null)?.name }.toSet()
         val readiness = CombatCoordinator.combatReadiness(bot, purpose)

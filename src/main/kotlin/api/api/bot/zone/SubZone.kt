@@ -142,6 +142,13 @@ enum class SubZone(
     SLAYER_TOWER_FIRST_FLOOR(
         inside = Position(3434, 3563, 1), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56, 1),
         parent = { PORT_PHASMATYS }),
+    /**
+     * Reuses the supplied Tower footprint on its second upper floor, arriving at a configured Gargoyle spawn.
+     * Assignment filtering keeps the other monsters on this floor out of deliberate target selection.
+     */
+    SLAYER_TOWER_SECOND_FLOOR(
+        inside = Position(3435, 3548, 2), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56, 2),
+        parent = { PORT_PHASMATYS }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.

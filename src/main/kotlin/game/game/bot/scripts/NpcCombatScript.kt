@@ -69,6 +69,8 @@ import kotlin.time.Duration.Companion.seconds
  * Specialist assignments replace ordinary outfit slots with mandatory owned protection: earmuffs for banshees
  * and a nose peg for aberrant spectres. Protection is equipped before travel and rechecked before every attack,
  * including after banking and restored sessions.
+ * Gargoyle visits also retain an owned rock hammer in inventory. Weakened stone forms use native adjacent
+ * finishing reach, releasing any ranged or magic safespot without changing the saved combat discipline.
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
@@ -105,6 +107,18 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun requiredSlayerEquipment(task: SlayerTaskType?): Map<Int, Int> =
             task?.let { SLAYER_EQUIPMENT[it] }.orEmpty()
+
+        /**
+         * Minimum carried tool quantities for native specialist finishes. Rock hammers are reusable;
+         * keeping one in inventory is sufficient and does not create or consume a replacement here.
+         */
+        private val SLAYER_INVENTORY = mapOf(SlayerTaskType.GARGOYLE to mapOf(4162 to 1))
+
+        /**
+         * Shares carried-tool prerequisites between factory admission and the live inventory lifecycle.
+         */
+        internal fun requiredSlayerInventory(task: SlayerTaskType?): Map<Int, Int> =
+            task?.let { SLAYER_INVENTORY[it] }.orEmpty()
 
         /**
          * Camps that require an equipped anti-dragon shield before fighting.
@@ -233,6 +247,11 @@ open class NpcCombatScript(bot: Bot,
      */
     private val requiredSlayerGear = requiredSlayerEquipment(slayerTask)
 
+    /**
+     * Native finishing tools must remain carried, including after inventory deposits or saved-session restoration.
+     */
+    private val requiredSlayerItems = requiredSlayerInventory(slayerTask)
+
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     /**
@@ -286,6 +305,7 @@ open class NpcCombatScript(bot: Bot,
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
         loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
+        if (requiredSlayerItems.any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
         for ((slot, id) in requiredSlayerGear) {
             if (!bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot)) return false
             loadout!!.gear[slot] = id
@@ -375,6 +395,14 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        for ((id, amount) in requiredSlayerItems) {
+            val missing = amount - bot.inventory.computeAmountForId(id)
+            if (missing > 0 && (!handler.banking.withdraw(Item(id, missing)) ||
+                    bot.inventory.computeAmountForId(id) < amount)) {
+                stop()
+                return
+            }
+        }
         for ((slot, id) in requiredSlayerGear) {
             if (bot.equipment[slot]?.id != id &&
                 (!handler.banking.withdraw(Item(id)) || !handler.equipment.equip(id))) {
@@ -495,6 +523,7 @@ open class NpcCombatScript(bot: Bot,
             lootItems()
             return true
         }
+        if (needsFinishingReach(focus)) safespotCombat.release()
         if (safespotCombat.isHolding && !safespotCombat.maintain(focus, activeZone) {
                 isActionSafe() && !forceBanking && acceptsAssignment(focus!!) && prepareCombat() &&
                     bot.combat.checkMultiCombat(focus) && (!socialCamp || campBehavior.acceptsTarget(focus!!))
@@ -539,13 +568,23 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override fun targetApproachPolicy(target: Npc): InteractionPolicy =
-        if (purpose == BotGearPurpose.RANGED || purpose == BotGearPurpose.MAGIC)
+        if (needsFinishingReach(target)) InteractionPolicy.STANDARD_SIZE
+        else if (purpose == BotGearPurpose.RANGED || purpose == BotGearPurpose.MAGIC)
             bot.combat.getDefaultAttack(target).interactionPolicy else InteractionPolicy.STANDARD_SIZE
+
+    /**
+     * Stone gargoyles use a native adjacent hammer attack regardless of the session's ordinary weapon style.
+     */
+    private fun needsFinishingReach(target: Npc?): Boolean = target?.id == 1611
 
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
         val allowed = {
             isActionSafe() && !forceBanking && acceptsAssignment(target) && prepareCombat() &&
                 bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target))
+        }
+        if (option == 3 && needsFinishingReach(target)) {
+            safespotCombat.release()
+            return handler.interactions.interact(option, target, InteractionPolicy.STANDARD_SIZE, allowed)
         }
         val zone = activeZone
         if (option == 3 && !queenTrip && zone != null &&
@@ -737,7 +776,8 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private fun configureCombat(): Boolean {
-        if (requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id }) {
+        if (requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
+            requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount }) {
             combatConfigured = false
             bot.combat.target = null
             clearMagic()
