@@ -15,6 +15,7 @@ import game.skill.thieving.searchForTraps.ThievingChest
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Handles bots that thieve chests by searching them for traps.
@@ -82,6 +83,9 @@ class SearchBotScript(
         }
         ids
     }
+
+    // Move on if chests stay unavailable or unreachable, rather than waiting until the entire script expires.
+    override val targetSearchTimeout: Duration = 180.seconds
 
     override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {
