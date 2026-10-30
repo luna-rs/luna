@@ -65,6 +65,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * defence while the bot retains its selected owned combat discipline.
      * Abyssal demons share the second upper floor and use native teleport reactions; sessions retain ordinary
      * target recovery rather than assuming a verified terrain safespot can hold them away.
+     * Nechryael use that floor's native summoned death spawns. Canifis assignments include both citizen and wolf
+     * names so the same target remains eligible through its native transformation.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
@@ -73,7 +75,9 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 80, setOf("Bloodveld")),
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 90, setOf("Aberrant specter")),
         Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 100, setOf("Gargoyle")),
+        Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 110, setOf("Nechryael")),
         Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 110, setOf("Abyssal demon")),
+        Camp(SubZone.CANIFIS_MAIN, 80, setOf("Man", "Woman", "Wolfman", "Wolfwoman")),
         Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
         Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
@@ -131,6 +135,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * preference for high tiers: a strong bot must still be able to finish an assigned chicken task.
      * Specialist readiness uses the selected owned loadout, rather than rejecting all dragon assignments or
      * dispatching an unusable ranged/Magic Queen trip. Missing equipment preserves the existing assignment.
+     * Matching entries in a shared subzone contribute all of their assignment names instead of replacing one another.
      */
     internal fun camps(bot: Bot, purpose: BotGearPurpose, loadout: CombatLoadout): Map<SubZone, Set<String>> {
         val task = bot.activeSlayerTask ?: return emptyMap()
@@ -151,7 +156,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
                 it.zone.entryBlocker(bot) == null
         }.mapNotNull { camp ->
             camp.names.intersect(taskNames).takeIf { it.isNotEmpty() }?.let { camp.zone to it }
-        }.toMap()
+        }.groupBy({ it.first }, { it.second }).mapValues { (_, names) -> names.flatten().toSet() }
     }
 
     /**
