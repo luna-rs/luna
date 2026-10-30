@@ -171,6 +171,26 @@ object SpecialCrossings {
     }
 
     /**
+     * The ridge into the Wilderness Agility Course, entered through door 2309 at its south end with level 52 Agility.
+     * It is left through gate 2307 at its north end with no level, so each way is its own crossing. A fall drops the
+     * bot in the wolf pit beside the ridge, outside the course.
+     */
+    val WILDERNESS_RIDGE_IN = CrossingSpec(AgilityShortcutCrossing.ID, setOf(2309),
+                                           Requirements(skills = mapOf(Skill.AGILITY to 52)),
+                                           bidirectional = false, cost = 20,
+                                           placements = listOf(CrossingPlacement(2309, Position(2998, 3917),
+                                                                                 Position(2998, 3916),
+                                                                                 Position(2998, 3933))))
+
+    /**
+     * The way back over the Wilderness ridge, from the course to the door.
+     */
+    val WILDERNESS_RIDGE_OUT = CrossingSpec(AgilityShortcutCrossing.ID, setOf(2307), bidirectional = false, cost = 20,
+                                            placements = listOf(CrossingPlacement(2307, Position(2998, 3931),
+                                                                                  Position(2998, 3932),
+                                                                                  Position(2998, 3916))))
+
+    /**
      * The 16 webs that the map places, each crossed from the tile on one side to the tile on the other. 13 of them
      * separate one area from another, and the 3 in the ruins of the east Wilderness can be walked around. The Yanille
      * hut's east web (2574,3124) has a wall east of it, so it's crossed from inside the hut to the tile south of it.
@@ -206,7 +226,7 @@ object SpecialCrossings {
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
