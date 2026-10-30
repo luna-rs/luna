@@ -569,6 +569,7 @@ public final class Equipment extends ItemContainer {
      * <ul>
      *     <li>validates the inventory slot and ensures the item is equippable</li>
      *     <li>checks equipment requirements and sends failure messages if needed</li>
+     *     <li>combines matching stackable items up to the maximum integer amount, leaving excess in inventory</li>
      *     <li>enforces the two-handed weapon rule with the shield slot</li>
      *     <li>moves any displaced item back into the inventory (if space permits)</li>
      * </ul>
@@ -598,6 +599,22 @@ public final class Equipment extends ItemContainer {
             return false;
         }
 
+        Item currentlyEquipped = get(equipIndex);
+        if (currentlyEquipped != null && currentlyEquipped.getId() == inventoryItem.getId()
+                && inventoryItem.getItemDef().isStackable()
+                && !inventoryItem.isDynamic() && !currentlyEquipped.isDynamic()) {
+            int transferAmount = Math.min(inventoryItem.getAmount(),
+                    Integer.MAX_VALUE - currentlyEquipped.getAmount());
+            if (transferAmount == 0) {
+                return false;
+            }
+
+            int remainingAmount = inventoryItem.getAmount() - transferAmount;
+            inventory.set(inventoryIndex, remainingAmount == 0 ? null : inventoryItem.withAmount(remainingAmount));
+            set(equipIndex, currentlyEquipped.addAmount(transferAmount));
+            return true;
+        }
+
         int unequipIndex = -1;
         if (equipIndex == WEAPON && equipDef.isTwoHanded()) {
             unequipIndex = SHIELD;
@@ -625,7 +642,7 @@ public final class Equipment extends ItemContainer {
             unequip(unequipIndex);
         }
 
-        Item currentlyEquipped = get(equipIndex);
+        currentlyEquipped = get(equipIndex);
         if (currentlyEquipped != null) {
             inventory.add(currentlyEquipped);
         }
