@@ -153,6 +153,14 @@ enum class SubZone(
         parent = { PORT_PHASMATYS }),
 
     /**
+     * Supplied shared footprint for the Fremennik Slayer Dungeon. Exact assignment IDs select each room's monsters;
+     * native combat and the shared Slayer preparation policy enforce their equipment and finishing requirements.
+     */
+    FREMENNIK_SLAYER_DUNGEON(
+        inside = Position(2803, 9999), entrance = { Position(2631, 10016) },
+        area = SimpleBoxArea.ofRadius(2685, 9949, 131, 99), parent = { RELLEKKA }),
+
+    /**
      * Matches the native Giant Mole darkness bounds and spade landing. The full lair includes every native surfacing
      * spot, so existing targeting and travel recovery can find the boss again after it burrows.
      */

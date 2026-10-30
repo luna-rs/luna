@@ -67,6 +67,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * target recovery rather than assuming a verified terrain safespot can hold them away.
      * Nechryael use that floor's native summoned death spawns. Canifis assignments include both citizen and wolf
      * names so the same target remains eligible through its native transformation.
+     * Fremennik assignments share the supplied dungeon footprint and keep their individual readiness thresholds.
+     * The shared combat preparation policy requires owned protection, finishing supplies and specialist weapons.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
@@ -78,6 +80,14 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 110, setOf("Nechryael")),
         Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 110, setOf("Abyssal demon")),
         Camp(SubZone.CANIFIS_MAIN, 80, setOf("Man", "Woman", "Wolfman", "Wolfwoman")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 40, setOf("Cave crawler")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 45, setOf("Rockslug")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 50, setOf("Cockatrice")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 55, setOf("Pyrefiend")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 70, setOf("Basilisk")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 80, setOf("Jelly")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 90, setOf("Turoth")),
+        Camp(SubZone.FREMENNIK_SLAYER_DUNGEON, 100, setOf("Kurask")),
         Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
         Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
@@ -140,12 +150,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
     internal fun camps(bot: Bot, purpose: BotGearPurpose, loadout: CombatLoadout): Map<SubZone, Set<String>> {
         val task = bot.activeSlayerTask ?: return emptyMap()
         if (!canTrain(bot) || task.remaining <= 0 || bot.slayer.level < task.task.level) return emptyMap()
-        if (NpcCombatScript.requiredSlayerEquipment(task.task).values.any {
-                !bot.itemTracker.contains(it) || !equipDef(it).meetsAllRequirements(bot)
-            }) return emptyMap()
-        if (NpcCombatScript.requiredSlayerInventory(task.task).any { (id, amount) ->
-                bot.itemTracker.count(id) < amount
-            }) return emptyMap()
+        if (!NpcCombatScript.acceptsSlayerLoadout(bot, purpose, task.task, loadout)) return emptyMap()
         val taskNames = task.task.npcs.mapNotNull { NpcDefinition.ALL.get(it).orElse(null)?.name }.toSet()
         val readiness = CombatCoordinator.combatReadiness(bot, purpose)
         val hasDragonShield = bot.itemTracker.contains(1540) &&
@@ -167,7 +172,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         if (!canTrain(bot)) return null
         val task = bot.activeSlayerTask ?: return null
         for (purpose in disciplines.shuffled()) {
-            val loadout = CombatLoadout.find(bot, purpose) ?: continue
+            val loadout = NpcCombatScript.slayerLoadout(bot, purpose, task.task) ?: continue
             val camps = camps(bot, purpose, loadout)
             if (camps.isEmpty()) continue
             // The Queen's native entrance, supplies and form transition are one dedicated outing.

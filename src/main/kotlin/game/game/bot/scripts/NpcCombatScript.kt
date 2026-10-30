@@ -21,6 +21,7 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.player.item.consume.food.Food
+import game.player.item.consume.potion.Potion
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
@@ -32,6 +33,7 @@ import io.luna.game.model.EntityState
 import game.skill.fishing.catchFish.Fish
 import game.skill.herblore.identifyHerb.Herb
 import game.skill.magic.Magic
+import game.skill.magic.SpellCost
 import game.skill.magic.Staff
 import game.skill.mining.Ore
 import game.skill.prayer.Bone
@@ -41,6 +43,8 @@ import game.skill.woodcutting.cutTree.Tree
 import io.luna.game.model.Position
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
+import io.luna.game.model.def.AmmoDefinition
+import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.item.DeathGroundItem
@@ -53,6 +57,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
+import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.util.GsonUtils
@@ -74,6 +79,8 @@ import kotlin.time.Duration.Companion.seconds
  * including after banking and restored sessions.
  * Gargoyle visits also retain an owned rock hammer in inventory. Weakened stone forms use native adjacent
  * finishing reach, releasing any ranged or magic safespot without changing the saved combat discipline.
+ * Fremennik assignments retain owned mirror shields, salt and antipoison as needed. Turoth and kurask trips select
+ * their native spear, broad-arrow or Magic Dart loadout before equipment is chosen, with no ordinary-ammo fallback.
  * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
  * position across the full lair. Their banking uses the stronger food policy shared with other boss trips.
  *
@@ -104,7 +111,9 @@ open class NpcCombatScript(bot: Bot,
          */
         private val SLAYER_EQUIPMENT = mapOf(
             SlayerTaskType.BANSHEE to mapOf(Equipment.HEAD to 4166),
-            SlayerTaskType.ABERRANT_SPECTRE to mapOf(Equipment.HEAD to 4168)
+            SlayerTaskType.ABERRANT_SPECTRE to mapOf(Equipment.HEAD to 4168),
+            SlayerTaskType.COCKATRICE to mapOf(Equipment.SHIELD to 4156),
+            SlayerTaskType.BASILISK to mapOf(Equipment.SHIELD to 4156)
         )
 
         /**
@@ -114,10 +123,101 @@ open class NpcCombatScript(bot: Bot,
             task?.let { SLAYER_EQUIPMENT[it] }.orEmpty()
 
         /**
-         * Minimum carried tool quantities for native specialist finishes. Rock hammers are reusable;
-         * keeping one in inventory is sufficient and does not create or consume a replacement here.
+         * Minimum carried tool quantities for native specialist finishes. Rock hammers are reusable, while salt is
+         * replenished in owned batches and rechecked after every native consumption.
          */
-        private val SLAYER_INVENTORY = mapOf(SlayerTaskType.GARGOYLE to mapOf(4162 to 1))
+        private val SLAYER_INVENTORY = mapOf(
+            SlayerTaskType.GARGOYLE to mapOf(4162 to 1),
+            SlayerTaskType.ROCKSLUG to mapOf(4161 to 1)
+        )
+
+        /**
+         * Owned cure doses for poisonous cave crawlers, strongest first. Active immunity can finish its remaining
+         * duration, but a fresh unprotected visit must carry a real dose before any attack is allowed.
+         */
+        private val SLAYER_ANTIPOISONS = listOf(Potion.ANTIDOTE_PLUS_PLUS, Potion.ANTIDOTE_PLUS,
+            Potion.SUPER_ANTIPOISON, Potion.ANTIPOISON_POTION).flatMap { it.doses.reversed() }
+
+        /**
+         * These dungeon assignments use the supplied Fremennik camp and require their real selected weapon to be
+         * owned and usable even when a caller supplies an explicit loadout for admission.
+         */
+        private val FREMENNIK_TASKS = setOf(SlayerTaskType.CAVE_CRAWLER, SlayerTaskType.ROCKSLUG,
+            SlayerTaskType.COCKATRICE, SlayerTaskType.PYREFIEND, SlayerTaskType.BASILISK,
+            SlayerTaskType.JELLY, SlayerTaskType.TUROTH, SlayerTaskType.KURASK)
+
+        /**
+         * Validates the shared assignment kit before factory dispatch and script initialization. Supplies are owned;
+         * this check never grants items, cancels assignments or replaces a selected weapon to make a shield fit.
+         */
+        internal fun acceptsSlayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
+                                         loadout: CombatLoadout): Boolean {
+            if (requiredSlayerEquipment(task).any { (slot, id) -> loadout.gear[slot] != id ||
+                    !bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot) }) return false
+            if (requiredSlayerInventory(task).any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
+            if (task == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+                SLAYER_ANTIPOISONS.none { bot.itemTracker.contains(it) }) return false
+            val weapon = loadout.gear[Equipment.WEAPON]
+            if (task in FREMENNIK_TASKS && (weapon == null || !bot.itemTracker.contains(weapon) ||
+                    !equipDef(weapon).meetsAllRequirements(bot))) return false
+            if (task in FREMENNIK_TASKS) {
+                val definition = WeaponDefinition.ALL.get(weapon!!).orElse(null) ?: return false
+                when (purpose) {
+                    BotGearPurpose.MAGIC -> {
+                        val cast = loadout.spell ?: return false
+                        if (definition.type != Weapon.STAFF || bot.spellbook != cast.spellbook ||
+                            !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC) ||
+                            Magic.spellCost(bot.magic.level, bot.inventory + bot.bank + bot.equipment,
+                                { it in loadout.gear }, weapon, cast.level, cast.required) !is SpellCost.Castable) return false
+                    }
+                    BotGearPurpose.RANGED -> {
+                        val ammo = loadout.gear[Equipment.AMMUNITION] ?: weapon
+                        if (!bot.itemTracker.contains(ammo) ||
+                            (definition.type !in CombatLoadout.thrown &&
+                                AmmoDefinition.ALL.values.none { ammo in it.ammo && weapon in it.weapons })) return false
+                        if (BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isEmpty()) return false
+                    }
+                    BotGearPurpose.MELEE -> if (definition.type in CombatLoadout.thrown ||
+                        definition.type in setOf(Weapon.SHORTBOW, Weapon.LONGBOW, Weapon.CROSSBOW) ||
+                        BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isEmpty()) return false
+                    else -> return false
+                }
+            }
+            if (Equipment.SHIELD in requiredSlayerEquipment(task) &&
+                (weapon == null || equipDef(weapon).isTwoHanded)) return false
+            if (task !in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK)) return true
+            return when (purpose) {
+                BotGearPurpose.MELEE -> weapon == 4158
+                BotGearPurpose.RANGED -> weapon != null && loadout.gear[Equipment.AMMUNITION] == 4160 &&
+                    bot.itemTracker.contains(4160) && equipDef(4160).meetsAllRequirements(bot) &&
+                    AmmoDefinition.ALL.values.any { 4160 in it.ammo && weapon in it.weapons }
+                BotGearPurpose.MAGIC -> weapon == 4170 && loadout.spell?.spell == CombatSpell.MAGIC_DART &&
+                    loadout.runes.all { (id, amount) -> bot.itemTracker.count(id) >= amount }
+                else -> false
+            }
+        }
+
+        /**
+         * Selects a compatible owned assignment loadout through the ordinary gear resolver. Mirror shields restrict
+         * weapons before scoring. Turoth and kurask sessions explicitly select their spear, broad arrows or native
+         * Magic Dart staff and rune requirements. Salt demand is a standing stock target, independent of trip size.
+         */
+        internal fun slayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
+                                   requested: CombatSpell? = null): CombatLoadout? {
+            if (task == SlayerTaskType.ROCKSLUG && bot.itemTracker.count(4161) < 50) {
+                bot.preferences.addWantedItem(4161, 500)
+            }
+            val restricted = task in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK)
+            val dart = restricted && purpose == BotGearPurpose.MAGIC
+            if (dart && requested != null && requested != CombatSpell.MAGIC_DART) return null
+            val equipment = requiredSlayerEquipment(task) + if (dart) mapOf(Equipment.WEAPON to 4170) else emptyMap()
+            val loadout = CombatLoadout.find(bot, purpose, if (dart) CombatSpell.MAGIC_DART else requested,
+                requiredEquipment = equipment,
+                requiredAmmo = 4160.takeIf { restricted && purpose == BotGearPurpose.RANGED },
+                allowedWeapons = if (restricted && purpose == BotGearPurpose.MELEE) setOf(4158) else emptySet())
+                ?: return null
+            return loadout.takeIf { acceptsSlayerLoadout(bot, purpose, task, it) }
+        }
 
         /**
          * Shares carried-tool prerequisites between factory admission and the live inventory lifecycle.
@@ -314,12 +414,7 @@ open class NpcCombatScript(bot: Bot,
 
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
-        loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
-        if (requiredSlayerItems.any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
-        for ((slot, id) in requiredSlayerGear) {
-            if (!bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot)) return false
-            loadout!!.gear[slot] = id
-        }
+        loadout = slayerLoadout(bot, purpose, slayerTask, spell) ?: return false
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
@@ -412,9 +507,20 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         for ((id, amount) in requiredSlayerItems) {
-            val missing = amount - bot.inventory.computeAmountForId(id)
+            val stock = if (slayerTask == SlayerTaskType.ROCKSLUG && id == 4161)
+                minOf(50, assignment?.remaining ?: 1, bot.itemTracker.count(id)).coerceAtLeast(amount) else amount
+            val missing = stock - bot.inventory.computeAmountForId(id)
             if (missing > 0 && (!handler.banking.withdraw(Item(id, missing)) ||
                     bot.inventory.computeAmountForId(id) < amount)) {
+                if (id == 4161) bot.preferences.addWantedItem(id, 500)
+                stop()
+                return
+            }
+        }
+        if (slayerTask == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+            SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) }) {
+            val cure = SLAYER_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
+            if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
                 stop()
                 return
             }
@@ -851,7 +957,9 @@ open class NpcCombatScript(bot: Bot,
     private fun configureCombat(): Boolean {
         if ((moleTrip && !GiantMoleTrip.carried(bot)) ||
             requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
-            requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount }) {
+            requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount } ||
+            (slayerTask == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+                SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) })) {
             combatConfigured = false
             bot.combat.target = null
             clearMagic()
