@@ -9,6 +9,7 @@ import engine.bank.Banking
 import game.item.degradable.jewellery.TeleportJewellery
 import game.skill.magic.teleportSpells.TeleportSpell
 import io.luna.Luna
+import io.luna.game.model.Entity
 import io.luna.game.model.EntityType
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
@@ -33,7 +34,8 @@ import io.luna.game.model.`object`.GameObject
  *
  * @property anchor A representative position inside this zone.
  * @property regions The region ids that belong to this zone.
- * @property bankAnchors Known bank object or bank-adjacent positions inside this zone.
+ * @property bankAnchors Known bank object or bank-adjacent positions inside this zone, or the spawn tiles of bankers
+ * where a bank has no booth.
  * @property travel Ordered travel strategies that can be used to reach this zone.
  * @property safe Whether this zone is considered safe for normal bot activity.
  *
@@ -59,7 +61,7 @@ enum class Zone(val price: Int,
     MISCELLANIA_AND_ETCETERIA(price = 5000,
                              anchor = Position(2527, 3859),
                              regions = setOf(9788, 10044, 10300, 10043),
-                             bankAnchors = listOf(Position(2620, 3894))),
+                             bankAnchors = listOf(Position(2620, 3895))),
 
     /**
      * Supplied Tree Gnome Village travel hub. Its farming visits use ordinary bank discovery;
@@ -164,7 +166,11 @@ enum class Zone(val price: Int,
                             11565,
                             11823,
                             11822,
-                            11821)),
+                            11821),
+            // Shilo Village's bankers, for bots in the village. Camps outside it bank on the mainland (see
+            // SubZone.bankZone).
+            // TODO Once Shilo Village is added, only bots that have finished it can get in to bank here.
+            bankAnchors = listOf(Position(2851, 2954, 0), Position(2853, 2955, 0))),
     LUMBRIDGE(price = 250,
               anchor = Position(3222, 3219),
               regions = setOf(12594, 12850, 12849, 12593),
@@ -190,7 +196,7 @@ enum class Zone(val price: Int,
     PISCATORIS_FISHING_COLONY(price = 7500,
                               anchor = Position(2335, 3687),
                               regions = setOf(9273),
-                              bankAnchors = listOf(Position(2327, 3690))),
+                              bankAnchors = listOf(Position(2330, 3691))),
     CATHERBY(price = 1000,
              anchor = Position(2809, 3435),
              regions = setOf(11061, 11317),
@@ -209,7 +215,9 @@ enum class Zone(val price: Int,
                                   Position(2656, 3286, 0))),
     ZANARIS(price = 7500,
             anchor = Position(2388, 4457),
-            regions = setOf(9285, 9541, 9797, 9540, 9796)),
+            regions = setOf(9285, 9541, 9797, 9540, 9796),
+            bankAnchors = listOf(Position(2382, 4457, 0), Position(2385, 4457, 0),
+                                 Position(2385, 4459, 0), Position(2386, 4460, 0))),
     YANILLE(price = 1750,
             anchor = Position(2612, 3101),
             regions = setOf(10288, 10032),
@@ -364,13 +372,17 @@ enum class Zone(val price: Int,
     }
 
     /**
-     * A set of cached bank [GameObject]s from the [bankAnchors]. Generated lazily on first invocation.
+     * A set of cached banks from the [bankAnchors]: the booth on each, or the banker that spawns there. Generated
+     * lazily on first invocation.
      */
-    val banks = HashSet<GameObject>()
+    val banks = HashSet<Entity>()
         get() {
             if (field.isEmpty()) {
                 bankAnchors.map { position ->
                     world.locator.findObjectsOnTile(position) { it.id in Banking.bankingObjects }.firstOrNull()
+                        ?: world.locator.findNpcs(position, Position.VIEWING_DISTANCE) {
+                            it.basePosition == position && it.def().actions.contains("Bank")
+                        }.firstOrNull()
                 }.forEach {
                     if (it != null) {
                         field.add(it)

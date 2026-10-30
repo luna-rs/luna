@@ -30,6 +30,7 @@ import io.luna.game.model.mob.bot.Bot
  * - [entrance], an optional dynamic external anchor for entrances, ladders, gates, portals, levers, or boats.
  * - [area], the rectangular tile bounds used for containment checks and region indexing.
  * - [parent], the dynamic broader travel zone used for routing and fallback behavior.
+ * - [bankZone], the zone whose banks bots use, which is [parent] unless a nearer bank lies in another zone.
  *
  * @author lare96
  */
@@ -37,7 +38,8 @@ enum class SubZone(
     val inside: Position,
     val entrance: Bot.() -> Position? = { null },
     val area: SimpleBoxArea,
-    val parent: Bot.() -> Zone) {
+    val parent: Bot.() -> Zone,
+    val bankZone: Bot.() -> Zone = parent) {
     /**
      * Mainland bush patches from the revision 377 maps. Rimmington uses Falador's existing travel and bank parent.
      */
@@ -102,7 +104,7 @@ enum class SubZone(
         parent = { TREE_GNOME_VILLAGE }),
     BRIMHAVEN_FRUIT_PATCH(
         inside = Position(2763, 3212), area = SimpleBoxArea.of(2761, 3209, 2769, 3217),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
     CATHERBY_FRUIT_PATCH(
         inside = Position(2859, 3433), area = SimpleBoxArea.of(2857, 3430, 2865, 3438),
         parent = { CATHERBY }),
@@ -384,7 +386,7 @@ enum class SubZone(
         inside = Position(2856, 9570),
         entrance = { Position(2857, 3166) },
         area = SimpleBoxArea.of(2823, 9539, 2906, 9661),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * Supplied Brimhaven Dungeon Fire Giant camp, covering the five configured ground-floor giants.
@@ -393,7 +395,7 @@ enum class SubZone(
     BRIMHAVEN_DUNGEON_FIRE_GIANTS(
         inside = Position(2651, 9502),
         area = SimpleBoxArea.ofRadius(2632, 9473, 56, 35),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
 
     WHITE_KNIGHTS_CASTLE(
         inside = Position(2971, 3343),
@@ -790,7 +792,7 @@ enum class SubZone(
     MUSA_POINT_FISHING(
         inside = Position(2924, 3173),
         area = SimpleBoxArea.of(2922, 3173, 2928, 3181),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * The Lumbridge swamp. Intended for low-level combat training.
@@ -911,7 +913,7 @@ enum class SubZone(
     KARAMJA_KARAMBWAN_FISHING(
         inside = Position(2905, 3117),
         area = SimpleBoxArea.of(2895, 3112, 2916, 3121),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * The warrior women west of Ardougne market. Intended for level 25-39 pickpocket training.
@@ -1380,7 +1382,9 @@ enum class SubZone(
         inside = Position(2399, 4839),
         entrance = { Position(2868, 3017) },
         area = SimpleBoxArea.of(2378, 4814, 2422, 4858),
-        parent = { KARAMJA }),
+        // Shilo Village's bank is behind its gate.
+        // TODO Once Shilo Village is added, bots that have finished it bank in the village (KARAMJA).
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * The Law Altar interior.
