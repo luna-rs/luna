@@ -50,10 +50,12 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
     /**
      * Assignment-only camps verified against native task IDs, cache names and the configured spawn footprints.
      * Shared dungeons retain conservative readiness limits for their other inhabitants: bats in the ogre dungeon
-     * or Karamja do not make those areas low-level destinations. These species need no specialist equipment or
-     * finishing item; assignments that do remain unavailable until their preparation and geography are supported.
+     * or Karamja do not make those areas low-level destinations. Tower banshees require owned earmuffs through
+     * the shared combat script's task-equipment policy. Other unsupported specialist assignments remain unavailable.
      */
     private val assignmentCamps = listOf(
+        Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
+        Camp(SubZone.SLAYER_TOWER_GROUND, 35, setOf("Banshee")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
         Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Giant bat")),
         Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Giant bat")),
@@ -112,6 +114,9 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
     internal fun camps(bot: Bot, purpose: BotGearPurpose, loadout: CombatLoadout): Map<SubZone, Set<String>> {
         val task = bot.activeSlayerTask ?: return emptyMap()
         if (!canTrain(bot) || task.remaining <= 0 || bot.slayer.level < task.task.level) return emptyMap()
+        if (NpcCombatScript.requiredSlayerEquipment(task.task).values.any {
+                !bot.itemTracker.contains(it) || !equipDef(it).meetsAllRequirements(bot)
+            }) return emptyMap()
         val taskNames = task.task.npcs.mapNotNull { NpcDefinition.ALL.get(it).orElse(null)?.name }.toSet()
         val readiness = CombatCoordinator.combatReadiness(bot, purpose)
         val hasDragonShield = bot.itemTracker.contains(1540) &&

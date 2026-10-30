@@ -64,6 +64,8 @@ import kotlin.time.Duration.Companion.seconds
  * shield. Banking equips that shield before travel and withdraws up to twenty food items healing at
  * least sixteen Hitpoints. Missing protection or food requests another bank visit. Bones collected
  * in the lair are retained for profit instead of buried.
+ * Specialist assignments replace ordinary outfit slots with mandatory owned protection. Banshee visits equip
+ * earmuffs before travel and recheck them before every attack, including after banking and restored sessions.
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
@@ -85,6 +87,20 @@ open class NpcCombatScript(bot: Bot,
 
     // todo zone selection should happen BEFORE equipment/banking. so that we can prepare for the zone to travel to
     companion object {
+
+        /**
+         * Mandatory task equipment shared by assignment selection, banking and live attack checks.
+         * Entries override ordinary outfit choices; native monster mechanics remain authoritative.
+         */
+        private val SLAYER_EQUIPMENT = mapOf(
+            SlayerTaskType.BANSHEE to mapOf(Equipment.HEAD to 4166)
+        )
+
+        /**
+         * Returns mandatory equipment slots for a supported specialist assignment, or none for ordinary combat.
+         */
+        internal fun requiredSlayerEquipment(task: SlayerTaskType?): Map<Int, Int> =
+            task?.let { SLAYER_EQUIPMENT[it] }.orEmpty()
 
         /** Camps that require an equipped anti-dragon shield before fighting. */
         val DRAGON_ZONES = setOf(
@@ -198,6 +214,11 @@ open class NpcCombatScript(bot: Bot,
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
+    /**
+     * Saved assignment metadata selects the same protection after restoration; equipped items are checked live.
+     */
+    private val requiredSlayerGear = requiredSlayerEquipment(slayerTask)
+
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     /**
@@ -246,6 +267,10 @@ open class NpcCombatScript(bot: Bot,
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
         loadout = CombatLoadout.find(bot, purpose, spell) ?: return false
+        for ((slot, id) in requiredSlayerGear) {
+            if (!bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot)) return false
+            loadout!!.gear[slot] = id
+        }
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
@@ -325,6 +350,13 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        for ((slot, id) in requiredSlayerGear) {
+            if (bot.equipment[slot]?.id != id &&
+                (!handler.banking.withdraw(Item(id)) || !handler.equipment.equip(id))) {
+                stop()
+                return
+            }
+        }
         val weapon = selected.gear[Equipment.WEAPON]
         if (weapon != null && bot.equipment.weapon?.id != weapon &&
             (!handler.banking.withdraw(Item(weapon, if (purpose == BotGearPurpose.RANGED &&
@@ -650,6 +682,13 @@ open class NpcCombatScript(bot: Bot,
     }
 
     private fun configureCombat(): Boolean {
+        if (requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id }) {
+            combatConfigured = false
+            bot.combat.target = null
+            clearMagic()
+            forceBanking = true
+            return false
+        }
         // Existing melee callers retain their click behavior before initialization.
         val selected = loadout ?: return purpose == BotGearPurpose.MELEE
         val weapon = selected.gear[Equipment.WEAPON]

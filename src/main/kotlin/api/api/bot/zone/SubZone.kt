@@ -116,6 +116,12 @@ enum class SubZone(
     PORT_PHASMATYS_FARM(
         inside = Position(3636, 3527), area = SimpleBoxArea.ofRadius(3584, 3516, 53, 21),
         parent = { PORT_PHASMATYS }),
+    /**
+     * Ground-floor Slayer Tower assignments, using Port Phasmatys as the supplied travel and banking parent.
+     */
+    SLAYER_TOWER_GROUND(
+        inside = Position(3429, 3538), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56),
+        parent = { PORT_PHASMATYS }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.
