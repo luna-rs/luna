@@ -388,6 +388,19 @@ public final class CollisionManager {
     }
 
     /**
+     * Returns whether {@code object} sits one level above {@code height} on a bridged tile. Object positions are map
+     * coordinates, and the client shows everything on a bridged tile one level lower, so such an object appears on
+     * {@code height}.
+     *
+     * @param object The object.
+     * @param height The height to test.
+     * @return {@code true} if the object is shown on {@code height} from the level above it.
+     */
+    public boolean isLoweredOnto(GameObject object, int height) {
+        return object.getPosition().getZ() == height + 1 && isBridged(object.getPosition());
+    }
+
+    /**
      * Returns whether an entity of {@code type} may move one step from {@code position} in {@code direction}.
      * <p>
      * This method performs a collision lookup in the appropriate {@link ChunkRepository}. For diagonal movement, both
@@ -574,12 +587,16 @@ public final class CollisionManager {
 
         Position start = source.abs();
         Position end = target.abs();
+        if (target instanceof GameObject && isLoweredOnto((GameObject) target, start.getZ())) {
+            // The client shows it on the level below, where the player can reach it.
+            end = new Position(end.getX(), end.getY(), start.getZ());
+        }
         if (policy.getType() == InteractionType.UNSPECIFIED) {
             // No checks.
             return true;
         } else if (start.getZ() != end.getZ()) {
             return false;
-        } else if (!start.isWithinDistance(target, Position.VIEWING_DISTANCE)) {
+        } else if (!start.isWithinDistance(end, Position.VIEWING_DISTANCE)) {
             // Can't interact if the entity isn't visible.
             return false;
         } else if (distance == 0) {

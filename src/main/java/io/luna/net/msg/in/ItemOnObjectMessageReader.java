@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
@@ -31,6 +32,18 @@ public final class ItemOnObjectMessageReader extends GameMessageReader<ItemOnObj
                 filter(nextObject -> nextObject.getId() == objectId &&
                         nextObject.getPosition().equals(objectPosition) &&
                         nextObject.isVisibleTo(player)).findFirst().orElse(null);
+        if (gameObject == null && Position.HEIGHT_LEVELS.contains(objectPosition.getZ() + 1)) {
+            // Objects on a bridged tile show one level lower than they're stored.
+            Position above = objectPosition.translate(0, 0, 1);
+            CollisionManager collision = player.getWorld().getCollisionManager();
+            gameObject = player.getWorld().getObjects().findAll(above).
+                    filter(nextObject -> nextObject.getId() == objectId &&
+                            nextObject.getPosition().equals(above) &&
+                            collision.isLoweredOnto(nextObject, objectPosition.getZ()) &&
+                            player.isViewableFrom(objectPosition) &&
+                            (nextObject.isGlobal() || nextObject.getView().isViewableFor(player))).
+                    findFirst().orElse(null);
+        }
         return new ItemOnObjectEvent(player, itemId, itemIndexId, itemInterfaceId, gameObject);
     }
 

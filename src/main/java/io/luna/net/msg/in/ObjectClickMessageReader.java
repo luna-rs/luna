@@ -7,6 +7,7 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectFourthClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteMessage;
@@ -81,8 +82,18 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
      */
     private GameObject findObject(Player player, int objectX, int objectY, int objectId) {
         Position objectPosition = new Position(objectX, objectY, player.getZ());
-        return player.getWorld().getObjects().findAll(objectPosition).
+        GameObject found = player.getWorld().getObjects().findAll(objectPosition).
                 filter(object -> object.getId() == objectId && object.isVisibleTo(player)).
                 findFirst().orElse(null);
+        if (found == null && Position.HEIGHT_LEVELS.contains(player.getZ() + 1)) {
+            // Objects on a bridged tile show one level lower than they're stored.
+            CollisionManager collision = player.getWorld().getCollisionManager();
+            found = player.getWorld().getObjects().findAll(objectPosition.translate(0, 0, 1)).
+                    filter(object -> object.getId() == objectId && collision.isLoweredOnto(object, player.getZ()) &&
+                            player.isViewableFrom(objectPosition) &&
+                            (object.isGlobal() || object.getView().isViewableFor(player))).
+                    findFirst().orElse(null);
+        }
+        return found;
     }
 }
