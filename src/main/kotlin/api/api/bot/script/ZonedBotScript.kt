@@ -685,7 +685,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
-            if (parent.banks.isNotEmpty() && handler.webWalkTo(zone = parent, bank = BankAccess.COINS)) {
+            // A parent with no bank of its own lists the nearest one in another zone. Its anchor would be a detour,
+            // so the bot walks straight to the booth, which can take minutes.
+            val banksElsewhere = parent.banks.none { it in parent }
+            if (parent.banks.isNotEmpty() &&
+                (banksElsewhere || handler.webWalkTo(zone = parent, bank = BankAccess.COINS))) {
                 val sortedBanks =
                     if (bot.personality.isDextrous || bot.personality.isIntelligent || rand(bot.personality.dexterity)) {
                         parent.banks.sortedWith(LocatableDistanceComparator(bot))
@@ -695,6 +699,16 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
                 for (bank in sortedBanks) {
                     if (!bankActionReady()) return
+                    if (banksElsewhere) {
+                        val reached = handler.interactions.approach(bank, timeout = 3.minutes) {
+                            ActionSafety.NON_COMBAT.allows(bot)
+                        }
+                        if (!reached) {
+                            bot.log("No web approach confirmed to parent bank. parent=$parent, bank=$bank")
+                            break
+                        }
+                        if (!bankActionReady()) return
+                    }
                     val option: Int = bank.def().actions.filter { it != "null" }.size
                     if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
