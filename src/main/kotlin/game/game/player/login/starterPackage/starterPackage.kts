@@ -4,8 +4,8 @@ import api.predef.*
 import game.player.login.firstLogin
 import game.skill.crafting.jewelleryMaking.GoldJewelleryTable
 import game.skill.crafting.jewelleryMaking.SilverJewelleryTable
+import game.skill.farming.Farming
 import game.skill.fishing.catchFish.Tool
-import game.skill.magic.Rune
 import game.skill.runecrafting.enterAltar.Altar
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
@@ -16,64 +16,54 @@ import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface
  * Inventory starter items.
  */
 val inventoryStarter = listOf(
-    item("Coins", 10_000),
-    item("Air rune", 250),
-    item("Water rune", 250),
-    item("Fire rune", 250),
-    item("Earth rune", 250),
-    item("Mind rune", 500),
-    item("Iron 2h sword"),
+    item("Coins", 25_000),
+    item("Iron scimitar"),
     item("Shortbow"))
 
 /**
  * Equipment starter items.
  */
 val equipmentStarter = listOf(
-    item("Iron full helm"),
-    item("Iron platebody"),
-    item("Iron platelegs"),
-    item("Iron longsword"),
-    item("Iron kiteshield"),
-    item("Amulet of strength"),
-    item("Iron boots"),
-    item("Leather vambraces"),
-    item("Ring of life"),
-    Item(1019), // Black cape
-    item("Bronze arrow", 750))
+    item("Bronze arrow", 150))
 
 /**
  * Bank starter items. Only applicable to [Bot] types.
  */
 val bankStarter = listOf(
-    item("Anti-dragon shield", 5),
-    item("Cake", 1000),
-    item("Staff of air", 2),
-    item("Staff of water", 2),
-    item("Staff of earth", 2),
-    item("Staff of fire", 2),
+    item("Anti-dragon shield", 1),
+    item("Air rune", 250),
+    item("Water rune", 250),
+    item("Fire rune", 250),
+    item("Earth rune", 250),
+    item("Mind rune", 500),
+    item("Cake", 100),
     item("Chisel", 5),
     item("Knife", 5),
     item("Needle", 5),
     item("Thread", 500),
-    item("Iron pickaxe", 5),
-    item("Iron axe", 5),
+    item("Bronze pickaxe", 5),
+    item("Bronze axe", 5),
     item("Hammer", 5),
     item("Tinderbox", 5),
     item("Fishing bait", 500),
     item("Feather", 250)
-    // TODO@0.5.0 Farming starter bot items.
 )
+
+/**
+ * All farming bot starter items.
+ */
+val farmingItems = setOf(Farming.RAKE, Farming.SPADE, Farming.SEED_DIBBER, Farming.SECATEURS, Farming.EMPTY_WATERING_CAN, Farming.GARDENING_TROWEL).map { Item(it) }
 
 /**
  * Adds starter items specific to bots.
  */
 fun addBotItems(plr: Player) {
     plr.bank.addAll(bankStarter)
-    Rune.ID_TO_RUNE.keys.forEach { plr.bank.add(Item(it, 500)) }
     Tool.ALL_IDS.forEach { plr.bank.add(Item(it)) }
     SilverJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
     GoldJewelleryTable.MOULDS.forEach { plr.bank.add(Item(it)) }
     Altar.entries.forEach { plr.bank.add(Item(it.talisman)) }
+    plr.bank.addAll(farmingItems)
 }
 
 /**
