@@ -132,6 +132,20 @@ public final class CombatFormula {
     }
 
     /**
+     * Calculates an NPC melee hit chance against magic defence, as used by bloodvelds.
+     * The offensive roll still uses Attack and the NPC's melee accuracy bonus. Only the defending roll uses the
+     * shared magic defence formula; callers retain melee damage, reach, timing, and protection prayer handling.
+     *
+     * @param attacker The NPC making the melee attack.
+     * @param victim The defending mob.
+     * @return The resulting hit probability.
+     */
+    public static double calculateMagicDefendedMeleeHitChance(Npc attacker, Mob victim) {
+        int attackRoll = calculateAttackRoll(attacker, attacker.getCombat().getAttackStyleBonus(), CombatDamageType.MELEE);
+        return calculateHitChanceFromRolls(attackRoll, calculateMagicDefenceRoll(victim));
+    }
+
+    /**
      * Captures a player's ranged offensive roll, including current level, prayer, stance, and equipment bonuses.
      * Delayed secondary attacks can retain this value without reading equipment changed after launch.
      *
