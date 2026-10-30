@@ -41,7 +41,6 @@ import kotlin.time.Duration.Companion.seconds
 class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones: MutableList<SubZone>) :
     SkillingBotScript<GameObject>(bot, duration, zones, bot.woodcutting) {
 
-    /** Rotate away from a zone after three minutes without selecting an interactable tree. */
     override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
@@ -129,7 +128,7 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     }
 
     override fun tools(): SortedSet<SkillingTool> =
-        Axe.VALUES.values.filter { skill.staticLevel >= it.level }
+        Axe.VALUES.values
             .mapTo(TreeSet()) { SkillingTool(it.id, it.level) }
 
 

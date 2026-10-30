@@ -26,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The script provides the common targeting loop:
  *
+ * - Validate activity prerequisites before retrying a focus or discovering targets.
  * - Reuse a focused target while it remains valid.
  * - Invoke [refocus] every cycle before deciding whether a new target is needed.
  * - Clear stale focus state when a new target search is required.
@@ -131,36 +132,15 @@ abstract class TargetingZonedBotScript<E : Entity>(
     }
 
     /**
-     * Executes one targeting cycle inside the active zone.
-     *
-     * This method always calls [refocus] before deciding whether a new target search is needed. This is intentional, even
-     * when the current focus is already invalid or missing, because subclasses may use [refocus] as a general per-cycle
-     * hook for cleanup, state updates, retry logic, or forced target switching.
-     *
-     * After [refocus] runs, this method searches for a new target when either:
-     *
-     * - The current [focus] is missing, inactive, or too far away.
-     * - [refocus] returns `true`.
-     *
-     * When a new target is needed, this method:
-     *
-     * - Calls [onExecuteInZone] with `searching` set to `true`.
-     * - Clears the current focus.
-     * - Reuses cached target options when available.
-     * - Performs a fresh search through [find] when no cached options remain.
-     * - Orders cached options based on bot dexterity.
-     * - Attempts each target until one interaction succeeds.
-     * - Stores the first successful target as the new focus.
-     *
-     * If repeated searches fail, the bot may move closer to the zone or abandon the zone when the area appears crowded.
-     *
-     * If no new target is needed, this method calls [onExecuteInZone] with `searching` set to `false`.
-     *
-     * @return `true` if this zone should remain active, or `false` if this script should abandon the zone and allow
-     * [ZonedBotScript] to choose another one.
+     * Prepares activity prerequisites before any subclass can retry a focus or discover targets.
+     * Returning false defers this cycle while preserving the work zone. Implementations may request
+     * banking or stop the session when their prerequisites cannot be recovered.
      */
+    protected open suspend fun onPrepareTargeting(): Boolean = true
+
     final override suspend fun executeInZone(): Boolean {
         if (!targetActionReady()) return true
+        if (!onPrepareTargeting() || !targetActionReady()) return true
         if (shouldLeaveTargetZone()) return false
         if (searchZone != activeZone) {
             clearTargetCache("active zone changed")
@@ -171,10 +151,6 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val refocus = refocus()
         if (!targetActionReady()) return true
         val zone = activeZone!!
-        if(forceBanking) {
-            // Don't proceed if we need to bank.
-            return true
-        }
         if (invalidReason != null || refocus) {
             if (searchStartedAt == null) {
                 searchStartedAt = targetSearchTimeNanos()
@@ -220,9 +196,6 @@ abstract class TargetingZonedBotScript<E : Entity>(
                     val stillAccepted = onAssignFocus(target)
                     if (!targetActionReady(target)) return true
                     if (!stillAccepted) continue
-                }
-                if (forceBanking) {
-                    return true
                 }
                 val option = interactionOption(target)
                 if (!targetActionReady(target)) return true
@@ -278,11 +251,12 @@ abstract class TargetingZonedBotScript<E : Entity>(
     }
 
     /**
-     * Preserves the current zone and unattempted candidate when another activity interrupts targeting.
-     * Recovery time is not treated as a failed search or included in its abandonment timeout.
+     * Preserves the zone and unattempted candidate when safety, cancellation or a banking request
+     * interrupts targeting. Rechecks after every callback prevent further clicks by a stopped script.
+     * Recovery time is excluded from the search timeout.
      */
     private fun targetActionReady(candidate: E? = null): Boolean {
-        if (isActionSafe()) return true
+        if (!isTerminated() && !isPaused() && !forceBanking && isActionSafe()) return true
         searchStartedAt = null
         searchTimes = 0
         if (candidate != null) lastOptions.add(candidate)
@@ -314,24 +288,10 @@ abstract class TargetingZonedBotScript<E : Entity>(
         }
     }
 
-    /**
-     * Clears targeting state when this script is paused.
-     */
     final override fun onPaused() {
         clearTargetCache("script paused")
     }
 
-    /**
-     * Handles a banking request and clears targeting state when banking should continue.
-     *
-     * Subclasses can override [onBankRequestedTargeting] to decide whether banking is actually required. If banking is
-     * required, the current focus and cached options are cleared so the script does not resume stale targeting state
-     * after banking completes.
-     *
-     * @param initial `true` if this is the first banking check for the current banking request.
-     *
-     * @return `true` if banking should continue, or `false` if no banking is required.
-     */
     final override suspend fun onBankRequested(initial: Boolean): Boolean {
         if (onBankRequestedTargeting(initial)) {
             clearTargetCache("banking required")

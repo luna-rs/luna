@@ -93,13 +93,8 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
 
     internal val miningZone: SubZone? get() = activeZone
 
-    /** Rock-side chat only; idle and trade recruitment skip a miner because it is working. */
     override fun canSocialize(): Boolean = canTalkWhileWorking()
 
-    /**
-     * Rock-side chat never stops mining, continues under attack, or follows a miner to the bank. Stepping to the
-     * next rock in the same mine keeps an exchange going.
-     */
     override fun canTalkWhileWorking(): Boolean = !forceBanking && !bot.inventory.isFull &&
         bot.combat.target == null && !bot.combat.inCombat() &&
         duration > Duration.ZERO && cluster != null && activeZone?.area?.contains(bot.position) == true
@@ -175,7 +170,6 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         return super.travelToWorkZone(zone, bank)
     }
 
-    /** Retains the factory's preferred destination even when the base initialization shuffles candidate zones. */
     override fun selectWorkZone(): SubZone? = originalZones.firstOrNull {
         it in zones && (it != SubZone.MINING_GUILD || bot.mining.level >= MiningGuild.REQUIRED_LEVEL)
     }
@@ -200,7 +194,6 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         behavior.settle()
     }
 
-    /** Dropped training ore must not trigger the loot reflex to pick it straight back up. */
     override fun allowsLoot(item: GroundItem): Boolean = !powerMining || item.id != Ore.IRON.item
 
     override suspend fun handleFullInventory(): Boolean {
@@ -225,7 +218,6 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         return !bot.inventory.isFull
     }
 
-    /** Observes only visible rocks and players. The mine boundary also excludes neighboring chambers. */
     override suspend fun find(searchBase: Position, searchRadius: Int): MutableCollection<GameObject> {
         if (!isActionSafe() || forceBanking || bot.inventory.isFull) return mutableListOf()
         val zone = activeZone ?: return mutableListOf()
@@ -288,13 +280,10 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         return mutableListOf()
     }
 
-    /** find already ranked these rocks; the generic distance/shuffle ordering would lose ore preferences. */
     override fun orderTargets(options: MutableList<GameObject>) = Unit
 
-    /** A working rock remains the focus even if a better ore respawns during an unsuccessful swing. */
     override suspend fun refocus(): Boolean = bot.actions.first(MineOreAction::class.java) == null
 
-    /** Preserve ongoing mining on resume, and empty a power-miner's inventory before another target search. */
     override suspend fun beforeZoneWork(): Boolean {
         BotConversations.tick(bot)
         if (bot.actions.first(MineOreAction::class.java) != null) return true
@@ -431,7 +420,7 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     }
 
     override fun tools(): TreeSet<SkillingTool> =
-        Pickaxe.ID_TO_PICKAXE.values.filter { skill.staticLevel >= it.level }
+        Pickaxe.ID_TO_PICKAXE.values
             .mapTo(TreeSet<SkillingTool>()) { SkillingTool(it.id, it.level) }
 
     override fun emergencyTool(): SkillingTool = SkillingTool(Pickaxe.BRONZE.id, Pickaxe.BRONZE.level)

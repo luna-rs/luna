@@ -21,8 +21,9 @@ import kotlin.time.Duration
  * necessary, checks tool availability during execution, and delegates skill-specific behaviour to subclasses.
  *
  * Tool selection considers the bot's skill level, available items, and personality. If no suitable tool can be resolved,
- * an optional emergency tool may be added to the bot's bank. A selected tool can also be replaced during execution if
- * the bot no longer carries it.
+ * an optional emergency tool may be added to the bot's bank. Required tools must actually be owned
+ * and usable at the current level; failed provisioning stops the session. Selected tools are replaced
+ * after loss or a level drain, and banked replacements are collected before native interactions.
  *
  * Subclasses define the required level, available tools, optional emergency tool, additional requirements, and
  * skill-specific execution and banking behaviour.
@@ -59,22 +60,12 @@ abstract class SkillingBotScript<E : Entity>(
      */
     private var tool: SkillingTool? = null
 
-    /**
-     * Initializes this skilling script.
-     *
-     * This checks the required skill level and subclass-specific requirements before resolving a usable tool.
-     * Initialization succeeds even when no tool is selected, provided the requirements are satisfied.
-     *
-     * @param resumed `true` if this script is being restored from a saved snapshot. This implementation does not
-     * inspect the parameter.
-     * @return `true` if the bot satisfies the requirements, or `false` otherwise.
-     */
     final override suspend fun onInit(resumed: Boolean): Boolean {
         val requiredLevel = levelRequired()
 
         // Check any level or subclass-defined requirements before doing setup work.
-        if (skill.staticLevel < requiredLevel) {
-            bot.log("I need $skill level $requiredLevel, but I only have ${skill.staticLevel}.")
+        if (skill.level < requiredLevel) {
+            bot.log("I need $skill level $requiredLevel, but I only have ${skill.level}.")
             return false
         } else if (!requirements()) {
             bot.log("I don't meet the requirements for this skilling script.")
@@ -82,27 +73,17 @@ abstract class SkillingBotScript<E : Entity>(
         }
 
         tool = resolveTool()
+        if (skill.level < requiredLevel) return false
         val toolId = tool?.id
         if (toolId != null) {
             bot.log("Skilling setup complete. Using ${itemName(toolId)}.")
-        } else {
-            bot.log("Skilling setup complete. No tool was selected.")
+        } else if (tools().isNotEmpty()) {
+            bot.log("Skilling setup failed. No usable required tool could be obtained.")
+            return false
         }
         return true
     }
 
-    /**
-     * Determines whether banking should be requested for this skilling script.
-     *
-     * During the initial check, banking is requested if the inventory is full or the selected tool is missing from
-     * both inventory and equipment. If no tool is selected and the inventory is not full, banking is not requested.
-     *
-     * Subsequent checks request banking unless the subclass handles its full inventory locally. Forced banking
-     * still collects missing tools or supplies through the normal banking flow.
-     *
-     * @param initial `true` when performing the initial banking check.
-     * @return `true` if banking should be requested, or `false` if it can be skipped.
-     */
     final override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
         if (initial) {
             val toolId = tool?.id
@@ -133,108 +114,77 @@ abstract class SkillingBotScript<E : Entity>(
         return true
     }
 
-    /** A skill may handle a full inventory locally. True defers banking; ordinary skill scripts bank as before. */
+    /**
+     * A skill may handle a full inventory locally. True defers banking; other skills bank as before.
+     */
     protected open suspend fun handleFullInventory(): Boolean = false
 
-    /**
-     * Performs skilling-related banking while the bank is open.
-     *
-     * If a tool is selected but missing from inventory and equipment, this attempts to withdraw it from the bank.
-     * The tool is not equipped here; equipping is handled during [onExecuteInZone].
-     *
-     * After tool handling, [onBankOpenSkilling] is invoked for subclass-specific banking. If the required withdrawal
-     * fails, this method returns without invoking the subclass hook.
-     *
-     * @param initial `true` when this is considered the initial bank-open call.
-     */
     final override suspend fun onBankOpen(initial: Boolean) {
-        // Withdraw the selected tool if the bot is not already carrying it.
-        val toolId = tool?.id
+        if (skill.level < levelRequired() || tools().isNotEmpty() && tool == null ||
+            tool?.let { skill.level < it.skillLevel } == true) {
+            stop()
+            return
+        }
+        val selected = tool
+        val toolId = selected?.id
         if (toolId != null && !hasCarriedItem(toolId)) {
-            val toolItem = Item(toolId)
-            bot.log("Withdrawing ${toolItem.name} for this skilling script.")
             val withdrawalId = toolIds(toolId).firstOrNull { it in bot.bank } ?: toolId
-            if (!handler.banking.withdraw(Item(withdrawalId))) {
-                bot.log("I wasn't able to withdraw the ${toolItem.name}.")
+            if (!handler.banking.withdraw(Item(withdrawalId)) || !hasCarriedItem(toolId) ||
+                skill.level < levelRequired() || skill.level < selected.skillLevel) {
+                bot.log("I couldn't collect a usable ${itemName(toolId)}.")
+                stop()
                 return
             }
-
-            bot.log("Withdrew ${toolItem.name}.")
-        } else if (toolId != null) {
-            bot.log("No tool withdrawal needed; I am already carrying ${itemName(toolId)}.")
         }
-
+        if (!isActionSafe() || isTerminated() || isPaused()) return
         onBankOpenSkilling(initial)
     }
 
-    /**
-     * Performs one execution cycle while operating inside a skilling zone.
-     *
-     * If the selected tool is no longer carried, this attempts to resolve a replacement. A replacement that is not
-     * currently carried triggers forced banking. If no replacement is resolved, the selected tool is cleared.
-     * In either case, execution returns without invoking [onExecuteSkilling] during that cycle.
-     *
-     * When a selected tool is in the inventory and the bot meets its equipment requirements, this attempts to equip
-     * it; otherwise the tool stays in the inventory. Execution then delegates to [onExecuteSkilling] without
-     * verifying whether the equipment attempt succeeded.
-     *
-     * If no tool is selected at the beginning of the cycle, execution delegates directly to the subclass hook.
-     *
-     * @param searching `true` when the targeting layer is searching for a new focus.
-     */
     final override suspend fun onExecuteInZone(searching: Boolean) {
-        val toolId = tool?.id
-        if (toolId != null) {
-            if (!hasCarriedItem(toolId)) {
-                // The previously selected tool is no longer carried.
-                bot.log("I lost or no longer have ${itemName(toolId)}, resolving another skilling tool.")
-
-                val newTool = resolveTool()
-                if (newTool != null) {
-                    // Select the replacement and request banking if it is not carried.
-                    tool = newTool
-                    if (!hasCarriedItem(newTool.id)) {
-                        bot.log("Resolved ${itemName(newTool.id)}, but I need to bank before using it.")
-                        forceBanking = true
-                    } else {
-                        bot.log("Resolved replacement skilling tool: ${itemName(newTool.id)}.")
-                    }
-                } else {
-                    // No replacement was resolved; continue without a selected tool on a later cycle.
-                    bot.log("I couldn't resolve another skilling tool, so I'm continuing without one.")
-                    tool = null
-                }
-                return
-            } else if (toolId !in bot.equipment &&
-                EquipmentDefinition.ALL[toolId].map { it.meetsAllRequirements(bot) }.orElse(false)) {
-                // Without the Attack level the tool still works from the inventory; trying to wield it every
-                // cycle only spams the failure message.
-                bot.log("Equipping ${itemName(toolId)} for this skilling script.")
-                handler.equipment.equip(toolId)
-            }
+        if (!prepareCarriedTool()) return
+        val selected = tool
+        if (selected != null && selected.id !in bot.equipment &&
+            EquipmentDefinition.ALL[selected.id].map { it.meetsAllRequirements(bot) }.orElse(false)) {
+            // A tool still works from inventory when its wielding requirements are unmet.
+            handler.equipment.equip(selected.id)
         }
-
-        // Run normal execution hook for subclasses.
+        if (!isActionSafe() || isTerminated() || isPaused()) return
+        if (skill.level < levelRequired() || selected?.let {
+                skill.level < it.skillLevel || !hasCarriedItem(it.id)
+            } == true) {
+            stop()
+            return
+        }
         onExecuteSkilling(searching)
     }
 
+    final override suspend fun onPrepareTargeting(): Boolean = prepareCarriedTool()
+
     /**
-     * Refocuses the targeting script, requesting banking if the selected tool is no longer carried.
-     *
-     * If a selected tool is missing from both inventory and equipment, this sets [forceBanking] and returns `true`
-     * without delegating to the targeting layer. Otherwise, normal refocusing is performed by the superclass.
-     *
-     * @return `true` when banking is forced because the selected tool is missing, or the superclass result otherwise.
+     * Resolves lost or unusable tools before the targeting layer can retry an existing focus.
+     * A banked replacement requests ordinary banking; no viable replacement ends this session.
+     * Tool-free activities retain their ordinary targeting flow.
      */
-    override suspend fun refocus(): Boolean {
-        val toolId = tool?.id
-        if (toolId != null) {
-            if (!hasCarriedItem(toolId)) {
-                forceBanking = true
-                return true
-            }
+    private suspend fun prepareCarriedTool(): Boolean {
+        if (skill.level < levelRequired()) {
+            stop()
+            return false
         }
-        return super.refocus()
+        if (tools().isEmpty()) return true
+        val selected = tool
+        if (selected == null || skill.level < selected.skillLevel || !hasCarriedItem(selected.id)) {
+            tool = resolveTool()
+        }
+        val usable = tool
+        if (usable == null || skill.level < levelRequired()) {
+            stop()
+            return false
+        }
+        if (!hasCarriedItem(usable.id)) {
+            forceBanking = true
+            return false
+        }
+        return true
     }
 
     /**
@@ -275,9 +225,9 @@ abstract class SkillingBotScript<E : Entity>(
     /**
      * Returns the tools available for selection by this skilling script.
      *
-     * The set's ordering determines tool preference for bots that do not use randomized selection. Subclasses should
-     * therefore order tools from most preferred to least preferred. Tools exceeding the bot's skill level are filtered
-     * out during selection.
+     * The set's ordering determines preference for bots that do not use personality-based shuffling.
+     * Subclasses order tools from most preferred to least preferred. Current skill levels, ownership
+     * and successful acquisition determine which candidates can actually be selected.
      *
      * Scripts that require no tool may return [EMPTY_TOOL_SET].
      *
@@ -293,8 +243,8 @@ abstract class SkillingBotScript<E : Entity>(
      * If no eligible configured tool can be found or obtained, [resolveTool] may add this tool to the bot's bank and
      * select it for the current skilling session.
      *
-     * The fallback is not separately checked against the bot's skill level, so subclasses should return a tool that
-     * the bot can use at the minimum level required by this script.
+     * The fallback must meet the current skill level and be owned or successfully added to the bank.
+     * Subclasses should return a tool usable at this script's minimum level.
      *
      * Returning `null` disables emergency tool provisioning.
      *
@@ -317,53 +267,39 @@ abstract class SkillingBotScript<E : Entity>(
     }
 
     /**
-     * Resolves a tool for the current skilling session.
-     *
-     * This copies the configured tools and removes those exceeding the bot's current skill level. The remaining
-     * candidates are checked in sorted order, unless the bot's personality is considered dumb, in which case the
-     * candidates are shuffled.
-     *
-     * A candidate is selected if the bot's item handler reports it as available or the shop handler successfully
-     * handles its acquisition through [api.bot.script.BotScriptHandler.Shop.obtainWantedItem].
-     *
-     * If no candidate qualifies, an optional [emergencyTool] is added to the bot's bank and selected. The emergency
-     * tool is not checked against the skill level filter applied to normal candidates.
-     *
-     * @return The selected skilling tool, or `null` if no tool can be resolved.
+     * Preserves configured preference and personality shuffling, filtering by current skill level.
+     * Actual ownership is verified after acquisition, including after its suspensions; a successful
+     * shop return alone cannot invent a tool. Existing emergency provisioning remains a fallback,
+     * but an unusable fallback or a failed bank insertion cannot satisfy readiness.
      */
     private suspend fun resolveTool(): SkillingTool? {
-        // Copy configured tools and remove candidates above the bot's current skill level.
-        val configuredTools = tools()
-        if (configuredTools.isEmpty()) {
-            bot.log("No skilling tools are configured for this script.")
-            return null
+        val configured = tools()
+        if (configured.isEmpty()) return null
+        val candidates = TreeSet(configured.comparator()).apply {
+            addAll(configured)
+            removeIf { skill.level < it.skillLevel }
         }
-
-        val candidates = TreeSet(configuredTools.comparator())
-
-        candidates.addAll(configuredTools)
-        candidates.removeIf { skill.staticLevel < it.skillLevel }
-
-        for (candidate in (if (bot.personality.isDumb) candidates.shuffled() else candidates)) {
-            if (hasCarriedItem(candidate.id) || toolIds(candidate.id).any { handler.has(it) } ||
-                handler.shop.obtainWantedItem(candidate.id)) {
+        for (candidate in if (bot.personality.isDumb) candidates.shuffled() else candidates) {
+            if (skill.level < candidate.skillLevel) continue
+            if (!ownsTool(candidate.id)) handler.shop.obtainWantedItem(candidate.id)
+            if (skill.level >= candidate.skillLevel && ownsTool(candidate.id)) {
                 bot.log("Resolved skilling tool: ${itemName(candidate.id)}.")
                 return candidate
             }
         }
-
-        // No eligible candidate was found or obtained, so try the emergency fallback.
-        val emergencyTool = emergencyTool()
-        if (emergencyTool == null) {
-            bot.log("I don't own any usable tools for $skill, and no emergency tool is configured.")
+        val emergency = emergencyTool() ?: return null
+        if (skill.level < emergency.skillLevel) return null
+        if (!ownsTool(emergency.id) && !bot.bank.add(Item(emergency.id))) {
+            bot.log("I couldn't add the emergency ${itemName(emergency.id)} to my bank.")
             return null
         }
-
-        val emergencyItem = Item(emergencyTool.id)
-        bot.log("I don't own any usable tools for $skill, so I'm adding ${emergencyItem.name} to my bank.")
-        bot.bank.add(emergencyItem)
-        return emergencyTool
+        return emergency
     }
+
+    /**
+     * Checks live carried and banked forms, including a fishing vessel temporarily loaded with bait.
+     */
+    private fun ownsTool(id: Int): Boolean = hasCarriedItem(id) || toolIds(id).any { it in bot.bank }
 
     /**
      * Checks whether the bot currently carries the specified item.
