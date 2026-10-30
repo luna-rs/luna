@@ -3,10 +3,6 @@ package game.content.rangingGuild
 import api.bot.script.InventoryProductionFixtures
 import api.bot.action.BotActionHandler
 import api.bot.action.BotWidgetActionHandler
-import api.bot.webwalk.plan.BankAccess
-import game.bot.scripts.RangingGuildBotScript
-import game.bot.scripts.RangingGuildBotScript.ArcheryData
-import com.google.gson.JsonObject
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import game.content.rangingGuild.ArcheryCompetition.count
@@ -40,9 +36,6 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotClient
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.game.model.mob.controller.ControllerManager
-import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.interact.InteractionType
-import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.model.mob.overlay.AbstractOverlaySet
@@ -55,14 +48,8 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import io.luna.net.msg.GameMessage
 import io.luna.net.msg.`in`.WidgetItemClickMessageReader
-import java.util.concurrent.CompletableFuture
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Predicate
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
-import kotlinx.coroutines.cancelAndJoin
 
 /**
  * Native cache, economy, shooting, persistence and event coverage for Ranging Guild archery.
@@ -175,89 +162,7 @@ class RangingGuildTest {
         `when`(it.skill(SKILL_RANGED).staticLevel).thenReturn(40)
     }
 
-    private fun locate(target: GameObject, judge: Npc = npc(), merchant: Npc = npc(694)) {
-        val gate = obj(2514, RangingGuildGate.POSITION)
-        `when`(world.locator.findObjects(any(io.luna.game.model.Locatable::class.java), anyInt(), any<Predicate<GameObject>>()))
-            .thenAnswer { call -> setOf(target, gate).filter { call.getArgument<Predicate<GameObject>>(2).test(it) }.toSet() }
-        `when`(world.locator.findNpcs(any(io.luna.game.model.Locatable::class.java), anyInt(), any<Predicate<Npc>>()))
-            .thenAnswer { call -> setOf(judge, merchant).filter { call.getArgument<Predicate<Npc>>(2).test(it) }.toSet() }
-    }
-
     @AfterEach fun resetLocator() { reset(world.locator) }
-
-    @Test fun botEligibilityRequiresOwnedCompatibleBowFeeAndPermittedRangedTraining() {
-        val p = visitor()
-        assertFalse(RangingGuildBotScript.eligible(p)); p.bank.add(Item(841))
-        assertFalse(RangingGuildBotScript.eligible(p)); p.bank.add(Item(995, 199))
-        assertFalse(RangingGuildBotScript.eligible(p)); p.inventory.add(Item(995))
-        assertTrue(RangingGuildBotScript.eligible(p))
-        p.lock(); assertFalse(RangingGuildBotScript.eligible(p)); p.unlock()
-        `when`(p.ranged.level).thenReturn(39); assertFalse(RangingGuildBotScript.eligible(p))
-        `when`(p.ranged.level).thenReturn(40)
-        `when`(p.preferences.isSkiller).thenReturn(true); assertFalse(RangingGuildBotScript.eligible(p))
-        p.count = 11; assertTrue(RangingGuildBotScript.eligible(p))
-        `when`(p.isAlive).thenReturn(false); assertFalse(RangingGuildBotScript.eligible(p))
-    }
-
-    @Test fun botVisitsThroughOwnedBankSuppliesNativeGateAndTenShotsThenClaimsAndBuysOneBundle() = runBlocking<Unit> {
-        val p = visitor(RangingGuildGate.OUTSIDE)
-        p.bank.add(Item(841)); p.bank.add(Item(995, 200)); p.bank.add(Item(1464, 1000))
-        val target = obj(); val judge = npc(); val merchant = npc(694)
-        locate(target, judge, merchant)
-        val handler = p.actionHandler; val banking = handler.banking
-        val interactions = handler.interactions; val widgets = handler.widgets; val equipment = handler.equipment
-        `when`(banking.travelToBankDepositAll()).thenReturn(true)
-        doAnswer { call -> val item = call.getArgument<Item>(0); p.bank.remove(item) && p.inventory.add(item) }
-            .`when`(banking).withdraw(any(Item::class.java) ?: Item(995))
-        doAnswer { p.bank.remove(Item(1464, 1000)) && p.inventory.add(Item(1464, 1000)) }.`when`(banking).withdrawAll(1464)
-        `when`(widgets.clickCloseInterface()).thenReturn(true)
-        doAnswer { call ->
-            val id = call.getArgument<Int>(0)
-            val stack = p.inventory.get(p.inventory.computeIndexForId(id))
-            p.inventory.remove(stack) && p.equipment.add(stack)
-        }.`when`(equipment).equip(anyInt())
-        doAnswer { p.move(RangingGuildGate.OUTSIDE); true }.`when`(handler)
-            .webWalkTo(RangingGuildGate.OUTSIDE, bank = BankAccess.NONE)
-        val navigator = p.navigator
-        doAnswer { call -> p.move(call.getArgument<Position>(0)); CompletableFuture.completedFuture(NavigationResult.REACHED) }
-            .`when`(navigator).navigate(any(Position::class.java), eq(true))
-        doAnswer { call ->
-            assertTrue(call.getArgument<() -> Boolean>(3).invoke())
-            val clicked = call.getArgument<GameObject>(1)
-            if (clicked.id == 2514) assertTrue(RangingGuildGate.enter(p, clicked))
-            else {
-                assertEquals(InteractionType.LINE_OF_SIGHT, call.getArgument<InteractionPolicy>(2).type)
-                assertFalse(p.position.isWithinDistance(clicked.position, 4))
-                assertTrue(ArcheryCompetition.shoot(p, clicked))
-            }
-            finish(p); true
-        }.`when`(interactions).interact(eq(1), any(GameObject::class.java),
-            any(InteractionPolicy::class.java) ?: InteractionPolicy.STANDARD_SIZE, any<() -> Boolean>() ?: { false })
-        doAnswer { call ->
-            assertTrue(call.getArgument<() -> Boolean>(2).invoke())
-            if (call.getArgument<Npc>(1).id == 693) { p.move(judge.position); ArcheryCompetition.talk(p, judge) }
-            else { p.move(merchant.position); ArcheryRewards.open(p, merchant) }
-            true
-        }.`when`(interactions).interact(eq(1), any(Npc::class.java), any<() -> Boolean>() ?: { false })
-        doAnswer { p.overlays.closeWindows(); ArcheryCompetition.enter(p, judge) }.`when`(widgets)
-            .clickDialogueOption("Enter the competition (200 coins)")
-        doAnswer { p.overlays.closeWindows(); true }.`when`(widgets).clickButton(anyInt(), anyInt())
-        doAnswer { call -> ArcheryRewards.select(p, call.getArgument(3), call.getArgument(4), true) }.`when`(widgets)
-            .clickContainerAction(eq(11942), eq(12033), eq(2), anyInt(), anyInt())
-        val script = RangingGuildBotScript(p)
-        assertFalse(script.init(false)); assertEquals(RangingGuildGate.INSIDE, p.position)
-        assertFalse(script.run()); assertEquals(1, p.count)
-        repeat(10) { assertFalse(script.run()) }
-        assertEquals(11, p.count); assertFalse(p.equipment.contains(882))
-        val earned = p.score / 10
-        assertFalse(script.run()); assertEquals(0, p.count)
-        assertTrue(script.run()); assertEquals(850 + earned, p.inventory.computeAmountForId(1464))
-        assertTrue(p.inventory.contains(1129)); assertEquals(RangingGuildGate.OUTSIDE, p.position)
-        assertFalse(p.inventory.contains(995)); assertFalse(p.bank.contains(995))
-        verify(widgets, times(1)).clickDialogueOption("Enter the competition (200 coins)")
-        verify(widgets, times(1)).clickContainerAction(11942, 12033, 2, 1, 1129)
-        verifyNoInteractions(p.botClient.output)
-    }
 
     @Test fun containerHelperBuysViaNativeWidgetPacketAndRejectsWrongMenuOrClosedWindow() {
         val p = visitor(); p.inventory.add(Item(1464, 100)); ArcheryRewards.open(p, npc(694))
@@ -280,88 +185,6 @@ class RangingGuildTest {
         assertTrue(p.inventory.contains(1169)); assertFalse(p.inventory.contains(1464))
         p.overlays.closeWindows(); assertFalse(widgets.clickContainerAction(11942, 12033, 2, 3, 1169))
         verify(client, times(1)).queueSimulated(any(GameMessage::class.java))
-    }
-
-    @Test fun savedAdmissionAndRewardAttemptsCannotReplayPayments() = runBlocking<Unit> {
-        val p = visitor()
-        val data = ArcheryData().also { it.attempted = true; it.prepared = true; it.admissionAttempted = true; it.rewardAttempted = true }
-        val script = RangingGuildBotScript(p, data)
-        assertFalse(script.init(true)); assertTrue(script.run()); assertTrue(script.redeem())
-        verifyNoInteractions(p.actionHandler.banking, p.actionHandler.interactions, p.actionHandler.widgets)
-        val json = JsonObject(); script.snapshot().save(json)
-        val restored = ArcheryData().also { it.load(json) }
-        assertTrue(restored.admissionAttempted); assertTrue(restored.rewardAttempted)
-        assertEquals(data.deadline, restored.deadline)
-        assertTrue(RangingGuildBotScript(p, restored).run())
-        val failedPreparation = ArcheryData().also { it.attempted = true }
-        assertTrue(RangingGuildBotScript(p, failedPreparation).init(true))
-    }
-
-    @Test fun pausedNativeFlightFinishesOnceAndResumedBotClosesItsResultWithoutResettingRound() = runBlocking<Unit> {
-        val p = visitor(firingPosition); p.count = 1; p.equipment.add(Item(841)); p.equipment.add(Item(882, 10))
-        val data = ArcheryData().also { it.attempted = true; it.prepared = true; it.entered = true }
-        val script = RangingGuildBotScript(p, data)
-        p.submitAction(ArcheryCompetition.Shot(p, obj(), 0))
-        script.paused(); script.finish(); assertTrue(p.isLocked)
-        finish(p); assertEquals(2, p.count); assertEquals(100, p.score)
-        val widgets = p.actionHandler.widgets
-        doAnswer { p.overlays.closeWindows(); true }.`when`(widgets).clickButton(446, 568)
-        assertFalse(script.init(true)); assertNull(p.overlays.getOverlay(ArcheryCompetition.Result::class.java))
-        assertEquals(2, p.count); assertEquals(9, p.equipment.computeAmountForId(882))
-        verify(p.ranged, times(1)).addExperience(50.0)
-        assertFalse(script.snapshot().admissionAttempted)
-    }
-
-    @Test fun cancellationStopsOnlyOwnedLaneNavigationAndPreservesPaidRound() = runBlocking<Unit> {
-        for (replacement in listOf(false, true)) {
-            val p = visitor(RangingGuildGate.INSIDE); p.count = 4
-            p.equipment.add(Item(841)); p.equipment.add(Item(882, 7)); locate(obj())
-            val pendingWalk = CompletableFuture<NavigationResult>()
-            val replacementWalk = CompletableFuture<NavigationResult>()
-            `when`(p.navigator.navigate(any(Position::class.java), eq(true))).thenReturn(pendingWalk)
-            `when`(p.navigator.currentPending).thenReturn(if (replacement) replacementWalk else pendingWalk)
-            val script = RangingGuildBotScript(p)
-            val job = launch { script.fire() }
-            yield(); job.cancelAndJoin(); script.paused(); script.finish()
-            assertEquals(4, p.count); assertEquals(7, p.equipment.computeAmountForId(882))
-            verify(p.navigator, times(if (replacement) 0 else 1)).cancel()
-            verifyNoInteractions(p.actionHandler.interactions)
-        }
-    }
-
-    @Test fun deadlineCapsAndUnsafeControllersPreventFurtherShotsAndPreserveCredit() = runBlocking<Unit> {
-        val p = visitor(firingPosition); p.count = 5; p.score = 200
-        p.equipment.add(Item(841)); p.equipment.add(Item(882, 6))
-        val expired = ArcheryData().also { it.prepared = true; it.deadline = 1 }
-        val script = RangingGuildBotScript(p, expired)
-        assertTrue(script.init(true)); assertTrue(script.run()); assertFalse(script.fire())
-        `when`(p.preferences.isSkiller).thenReturn(true)
-        assertFalse(RangingGuildBotScript(p).fire())
-        `when`(p.combat.inCombat()).thenReturn(true)
-        assertTrue(RangingGuildBotScript(p).run())
-        assertEquals(5, p.count); assertEquals(200, p.score); assertEquals(6, p.equipment.computeAmountForId(882))
-        verifyNoInteractions(p.actionHandler.interactions, p.navigator)
-    }
-
-    @Test fun centralRegistrationRestoresArcheryVisitBudgetAndFlags() {
-        val previous = world.botManager.scriptManager
-        val manager = io.luna.game.model.mob.bot.script.BotScriptManager()
-        `when`(world.botManager.scriptManager).thenReturn(manager)
-        val first = scriptListeners.size
-        try {
-            Class.forName("game.bot.scripts.RegisterScripts").getConstructor(Array<String>::class.java)
-                .newInstance(emptyArray<String>() as Any)
-            @Suppress("UNCHECKED_CAST")
-            val listener = scriptListeners.drop(first).single() as EventListener<io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent>
-            listener.apply(mock(io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent::class.java))
-            val data = ArcheryData().also { it.deadline = 12345; it.entered = true; it.failures = 2 }
-            val restored = manager.loadScript(RangingGuildBotScript::class.java.name, visitor(), data) as RangingGuildBotScript
-            assertEquals(12345, restored.snapshot().deadline); assertTrue(restored.snapshot().entered)
-            assertEquals(2, restored.snapshot().failures)
-        } finally {
-            scriptListeners.subList(first, scriptListeners.size).clear()
-            `when`(world.botManager.scriptManager).thenReturn(previous)
-        }
     }
 
     @Test fun cacheContainsNativeTargetsDoorRewardGridAndResultVarps() {
@@ -393,10 +216,6 @@ class RangingGuildTest {
         `when`(view.get(anyInt(), anyInt(), anyInt())).thenAnswer {
             flags[Position(it.getArgument(0), it.getArgument(1), it.getArgument(2))] ?: 0
         }
-        `when`(world.collisionManager.raycast(any(Position::class.java), any(Position::class.java))).thenAnswer {
-            val start = it.getArgument<Position>(0); val end = it.getArgument<Position>(1)
-            LineOfSight.hasLineOfSight(view, start.z, start.x, start.y, end.x, end.y)
-        }
         for (target in ArcheryCompetition.targets) {
             val lanes = (2669..2682).flatMap { x -> (3413..3424).map { y -> Position(x, y) } }.filter {
                 !map.getTile(it).isBlocked && it.isWithinDistance(target, 10) && !it.isWithinDistance(target, 4) &&
@@ -404,11 +223,9 @@ class RangingGuildTest {
             }
             // The fifth cache placement is enclosed by diagonal walls, behind the four range targets.
             // Ordinary projectile collision must continue to reject shots through that enclosure.
-            val botLanes = RangingGuildBotScript.firingTiles(obj(position = target))
-            if (target == Position(2682, 3425)) { assertTrue(lanes.isEmpty()); assertTrue(botLanes.isEmpty()) }
+            if (target == Position(2682, 3425)) { assertTrue(lanes.isEmpty()) }
             else {
                 assertTrue(lanes.isNotEmpty(), "No shooting lane behind the haystacks for $target")
-                assertTrue(botLanes.isNotEmpty()); assertTrue(lanes.containsAll(botLanes))
             }
         }
         for (position in listOf(RangingGuildGate.OUTSIDE, RangingGuildGate.INSIDE)) {

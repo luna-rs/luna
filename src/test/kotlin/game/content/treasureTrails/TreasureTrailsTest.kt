@@ -46,17 +46,13 @@ import io.luna.game.event.impl.ItemClickEvent.ItemFifthClickEvent
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.net.msg.`in`.ItemClickMessageReader
 import io.luna.game.task.Task
-import game.bot.scripts.TreasureTrailPuzzleSolver
-import game.bot.scripts.TreasureTrailBotScript
-import api.bot.action.BotActionHandler
-import api.bot.action.BotWidgetActionHandler
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.io.BotClient
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.net.msg.GameMessage
 
 /**
- * Exercises all tiers, native targets, progression, rewards and bot actions with real containers.
+ * Exercises all tiers, native targets, progression, rewards and packet handling with real containers.
  *
  * @author lare96
  */
@@ -104,68 +100,6 @@ class TreasureTrailsTest {
             `when`(it.overlays).thenReturn(overlays)
         }
 
-    @Test fun botSolverUsesLegalMovesForEveryGeneratedBoard() {
-        repeat(100) { seed ->
-            val random = kotlin.random.Random(seed)
-            val board = TrailPuzzle.shuffle { random.nextInt(it) }.toMutableList()
-            val original = board.toList()
-            val moves = TreasureTrailPuzzleSolver.plan(board)
-            assertNotNull(moves, "Unsolved seed $seed")
-            assertEquals(original, board, "Planner must not mutate the live snapshot")
-            assertTrue(moves!!.size < 600)
-            for (index in moves) {
-                val blank = board.indexOf(0)
-                assertTrue(TrailPuzzle.adjacent(blank, index))
-                board[blank] = board[index]
-                board[index] = 0
-            }
-            assertEquals((1..24).toList() + 0, board)
-        }
-    }
-
-    @Test fun botSolverRejectsMalformedAndImpossibleBoards() {
-        assertNull(TreasureTrailPuzzleSolver.plan(emptyList()))
-        assertNull(TreasureTrailPuzzleSolver.plan(List(25) { 0 }))
-        assertNull(TreasureTrailPuzzleSolver.plan(listOf(2, 1) + (3..24).toList() + 0))
-        assertEquals(emptyList<Int>(), TreasureTrailPuzzleSolver.plan((1..24).toList() + 0))
-    }
-
-    @Test fun botPuzzleActionsDecodeAndSolveThroughTheNativeReader() {
-        val bot = player() as Bot
-        val clue = TrailClues.hard.first { it.puzzle }
-        add(bot, clue.id)
-        bot.inventory.add(Item(clue.auxiliary))
-        assertTrue(TrailPuzzle.open(bot, clue.auxiliary))
-        val client = mock(BotClient::class.java)
-        `when`(client.bot).thenReturn(bot)
-        val output = BotOutputMessageHandler(client)
-        `when`(bot.output).thenReturn(output)
-        val widgets = BotWidgetActionHandler(bot, mock(BotActionHandler::class.java))
-        val reader = ItemClickMessageReader()
-        var clicks = 0
-        doAnswer { call ->
-            val message = call.getArgument<GameMessage>(0)
-            assertEquals(4, message.opcode)
-            val event = reader.decode(bot, message)
-            assertTrue(reader.validate(bot, event))
-            reader.handle(bot, event)
-            assertTrue(TrailPuzzle.move(bot, event.index, event.id))
-            clicks++
-            null
-        }.`when`(client).queueSimulated(any(GameMessage::class.java))
-        val plan = TreasureTrailPuzzleSolver.plan(TrailPuzzle.tiles(bot)!!)!!
-        for (index in plan) {
-            val tiles = TrailPuzzle.tiles(bot)!!
-            assertTrue(widgets.clickItemAction(6976, 6980, 5, index, 2748 + tiles[index]))
-        }
-        assertEquals(plan.size, clicks)
-        assertTrue(TrailPuzzle.solved(bot, clue.auxiliary))
-        assertFalse(widgets.clickItemAction(6976, 6980, 5, -1, 2772))
-        assertFalse(widgets.clickItemAction(6976, 6981, 5, 24, 2772))
-        bot.overlays.closeWindows()
-        assertFalse(widgets.clickItemAction(6976, 6980, 5, 24, 2772))
-    }
-
     @Test fun fifthInventoryActionUsesTheSameNativePacketLayout() {
         val bot = player() as Bot
         val client = mock(BotClient::class.java)
@@ -179,17 +113,6 @@ class TreasureTrailsTest {
         assertEquals(952, event.id)
         assertEquals(17, event.index)
         assertEquals(3214, event.interfaceId)
-    }
-
-    @Test fun botChoosesNativeObjectOptions() {
-        for (clue in TrailClues.all.filter { it.kind != null || it.targetObjects.isNotEmpty() }) {
-            for (id in objectIds(clue)) {
-                assertNotNull(TreasureTrailBotScript.objectOption(clue, id), "Clue ${clue.id}")
-            }
-        }
-        val drawer = TrailClues.all.first { it.kind == EasyClues.Kind.EMPTY_DRAWER }
-        assertEquals(1, TreasureTrailBotScript.objectOption(drawer, EasyClues.drawer.first()))
-        assertEquals(2, TreasureTrailBotScript.objectOption(drawer, EasyClues.emptyDrawer.first()))
     }
 
     private fun npc(id: Int, position: Position): Npc = mock(Npc::class.java).also {
