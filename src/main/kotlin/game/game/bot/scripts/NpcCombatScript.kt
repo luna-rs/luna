@@ -66,8 +66,9 @@ import kotlin.time.Duration.Companion.seconds
  * Losing that protection blocks further attack clicks and requests banking. KBD additionally requires combat
  * level 100 and up to twenty food items healing at least sixteen Hitpoints. Bones collected in the lair
  * are retained for profit instead of buried.
- * Specialist assignments replace ordinary outfit slots with mandatory owned protection. Banshee visits equip
- * earmuffs before travel and recheck them before every attack, including after banking and restored sessions.
+ * Specialist assignments replace ordinary outfit slots with mandatory owned protection: earmuffs for banshees
+ * and a nose peg for aberrant spectres. Protection is equipped before travel and rechecked before every attack,
+ * including after banking and restored sessions.
  *
  * @property purpose The combat discipline retained throughout this session.
  * @property spell The elemental spell selected for a Magic session, preserved when saving.
@@ -95,7 +96,8 @@ open class NpcCombatScript(bot: Bot,
          * Entries override ordinary outfit choices; native monster mechanics remain authoritative.
          */
         private val SLAYER_EQUIPMENT = mapOf(
-            SlayerTaskType.BANSHEE to mapOf(Equipment.HEAD to 4166)
+            SlayerTaskType.BANSHEE to mapOf(Equipment.HEAD to 4166),
+            SlayerTaskType.ABERRANT_SPECTRE to mapOf(Equipment.HEAD to 4168)
         )
 
         /**
