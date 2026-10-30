@@ -2,7 +2,7 @@ package game.player
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.StandardInterface
-import java.util.*
+import io.luna.net.msg.out.WidgetScrollPositionMessageWriter
 
 /**
  * A [StandardInterface] implementation representing the quest journal interface.
@@ -24,40 +24,43 @@ class QuestJournalInterface(private val title: String) : StandardInterface(8134)
         const val FIRST_LINE = 8145
 
         /**
-         * Subsequent line ids.
+         * Subsequent line ids in the revision 377 journal's scroll container.
          */
-        val CONTENT_LINES = 8147..8247
+        val CONTENT_LINES = (8147..8195).toList() + (12174..12223).toList()
+
+        /**
+         * All one hundred body widgets, in display order.
+         */
+        private val LINE_IDS = listOf(FIRST_LINE) + CONTENT_LINES
     }
 
     /**
-     * The queue of lines to display.
+     * The lines to display, retained when the journal is closed and reopened.
      */
-    private var lines = ArrayDeque<Any>()
+    private val lines = ArrayList<Any>(100)
 
     /**
      * The amount of lines displayed.
      */
-    var size = 0
-        private set
+    val size: Int
+        get() = lines.size
 
     override fun onOpen(plr: Player) {
+        plr.queue(WidgetScrollPositionMessageWriter(8143, 0))
+        // The client discards widget state when an interface is closed. Refresh the
+        // server's text cache too, and overwrite unused rows from longer journals.
+        plr.clearText(TITLE_LINE)
         plr.sendText(title, TITLE_LINE)
-        if (size > 0) {
-            plr.sendText(lines.poll(), FIRST_LINE)
-            for (line in CONTENT_LINES) {
-                plr.sendText(lines.poll() ?: break, line)
-            }
+        for ((index, id) in LINE_IDS.withIndex()) {
+            plr.clearText(id)
+            plr.sendText(lines.getOrNull(index) ?: "", id)
         }
     }
 
     override fun onClose(plr: Player) {
         plr.sendText("", TITLE_LINE)
-        plr.sendText("", FIRST_LINE)
-
-        if (size > 1) {
-            for (line in CONTENT_LINES.first..(CONTENT_LINES.first + size)) {
-                plr.sendText("", line)
-            }
+        for (id in LINE_IDS) {
+            plr.sendText("", id)
         }
     }
 
@@ -65,11 +68,10 @@ class QuestJournalInterface(private val title: String) : StandardInterface(8134)
      * Adds a line to be displayed.
      */
     fun addLine(obj: Any) {
-        if(size == 100) {
+        if (size == 100) {
             throw IllegalStateException("Maximum lines reached! (100)")
         }
         lines.add(obj)
-        size++
     }
 
     /**

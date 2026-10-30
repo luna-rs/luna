@@ -319,6 +319,15 @@ public final class BotScriptStack {
     }
 
     /**
+     * Copies the current and queued scripts in execution order without serializing their state.
+     *
+     * @return An immutable snapshot of the script buffer. Must be called on the game thread.
+     */
+    public List<BotScript> getScripts() {
+        return List.copyOf(buffer);
+    }
+
+    /**
      * Finds an active or paused script of the supplied type anywhere in this stack.
      * A paused parent still owns its session while a child runs. Idle queued work and completed or terminated
      * scripts do not describe the bot's current activity. Call on the game thread, as with other stack operations.
