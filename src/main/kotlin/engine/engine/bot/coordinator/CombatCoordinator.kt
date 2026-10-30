@@ -23,6 +23,8 @@ import kotlin.time.Duration.Companion.minutes
  * are profit-only camps, with readiness 35 for the lower temple and 55 for the stronger level-40 group.
  * Brimhaven Fire Giants join ordinary training and profit selection at readiness 65; native Slayer
  * assignments reuse the same camp and retain their exact NPC-ID restriction.
+ * Taverly Blue Dragons are a profit and Slayer destination at readiness 75, using the same owned
+ * one-handed melee and anti-dragon shield requirements as the existing dragon camps.
  *
  * @property training Whether to select training camps instead of camps with useful resource drops.
  * @author lare96
@@ -70,12 +72,11 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, 65, setOf("Fire giant"), true),
             Camp(SubZone.IORWERTH_CAMP, 75, setOf("Elf warrior"), true),
+            Camp(SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS, 75, setOf("Blue dragon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
             Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
-        // TODO Add the Blue Dragon camp.
-        // Camp(SubZone.BLUE_DRAGON_CAMP, 75, setOf("Blue dragon"), true)
 
         /** Caps camp difficulty by the current offensive levels used by this session, including melee pures. */
         internal fun combatReadiness(bot: Bot, purpose: BotGearPurpose): Int {

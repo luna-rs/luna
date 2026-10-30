@@ -60,10 +60,10 @@ import kotlin.time.Duration.Companion.seconds
  * Fights configured NPCs using owned melee, ranged or elemental autocast supplies.
  * The existing targeting and banking lifecycle handles travel, replenishment and bounded target searches.
  *
- * Sessions including KBD require combat level 100, a one-handed melee loadout and an owned anti-dragon
- * shield. Banking equips that shield before travel and withdraws up to twenty food items healing at
- * least sixteen Hitpoints. Missing protection or food requests another bank visit. Bones collected
- * in the lair are retained for profit instead of buried.
+ * Dragon sessions require a one-handed melee loadout and an owned anti-dragon shield, equipped before travel.
+ * Losing that protection blocks further attack clicks and requests banking. KBD additionally requires combat
+ * level 100 and up to twenty food items healing at least sixteen Hitpoints. Bones collected in the lair
+ * are retained for profit instead of buried.
  * Specialist assignments replace ordinary outfit slots with mandatory owned protection. Banshee visits equip
  * earmuffs before travel and recheck them before every attack, including after banking and restored sessions.
  *
@@ -102,9 +102,12 @@ open class NpcCombatScript(bot: Bot,
         internal fun requiredSlayerEquipment(task: SlayerTaskType?): Map<Int, Int> =
             task?.let { SLAYER_EQUIPMENT[it] }.orEmpty()
 
-        /** Camps that require an equipped anti-dragon shield before fighting. */
+        /**
+         * Camps that require an equipped anti-dragon shield before fighting.
+         */
         val DRAGON_ZONES = setOf(
             SubZone.GREEN_DRAGONS,
+            SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS,
             SubZone.KBD_LAIR
         )
 
@@ -222,6 +225,11 @@ open class NpcCombatScript(bot: Bot,
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     /**
+     * Prepares dragon protection for the entire candidate set, before a work zone is selected.
+     */
+    private val dragonTrip: Boolean get() = originalZones.any { it in DRAGON_ZONES }
+
+    /**
      * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
      */
     private var cannonPrepared = false
@@ -274,9 +282,10 @@ open class NpcCombatScript(bot: Bot,
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
-        if (SubZone.KBD_LAIR in originalZones) {
+        if (SubZone.KBD_LAIR in originalZones && bot.combatLevel < 100) return false
+        if (dragonTrip) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
-            if (bot.combatLevel < 100 || purpose != BotGearPurpose.MELEE ||
+            if (purpose != BotGearPurpose.MELEE ||
                 equipDef(weapon).isTwoHanded || !bot.itemTracker.contains(1540)) return false
             loadout!!.gear[Equipment.SHIELD] = 1540
         }
@@ -339,11 +348,13 @@ open class NpcCombatScript(bot: Bot,
         return CannonBotSupport.recover(bot)
     }
 
-    /** Dragon protection is withdrawn from owned stock rather than generated during banking. */
+    /**
+     * Dragon protection is withdrawn from owned stock rather than generated during banking.
+     */
     private val antiDragonShield = item("Anti-dragon shield")
     override suspend fun onBankOpen(initial: Boolean) {
 
-        if (DRAGON_ZONES.any { it in originalZones } && 1540 !in bot.equipment &&
+        if (dragonTrip && 1540 !in bot.equipment &&
             !handler.banking.withdraw(antiDragonShield)) {
             bot.preferences.addWantedItem(1540, 3)
             stop()
@@ -366,7 +377,7 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
-        if (SubZone.KBD_LAIR in originalZones && bot.equipment.shield?.id != 1540 &&
+        if (dragonTrip && bot.equipment.shield?.id != 1540 &&
             (!handler.equipment.equip(1540) || bot.equipment.weapon == null)) {
             stop()
             return
@@ -391,7 +402,7 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
-        if (DRAGON_ZONES.any { it in originalZones }) handler.potions.withdrawAntifire()
+        if (dragonTrip) handler.potions.withdrawAntifire()
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
                 if (!handler.banking.withdraw(Item(id, amount)) || bot.inventory.computeAmountForId(id) < amount) {
@@ -651,7 +662,9 @@ open class NpcCombatScript(bot: Bot,
         bot.combat.magic.refreshAutocast()
     }
 
-    /** Validates actual equipment and one attack's supplies before permitting any attack click. */
+    /**
+     * Validates actual equipment, dragon protection and one attack's supplies before permitting attack clicks.
+     */
     internal fun prepareCombat(): Boolean {
         if (!assignmentActive()) {
             bot.combat.target = null
@@ -668,6 +681,16 @@ open class NpcCombatScript(bot: Bot,
             return false
         }
         if (bot.preferences.isSkiller) return false
+        if (activeZone in DRAGON_ZONES && (purpose != BotGearPurpose.MELEE ||
+                bot.equipment.shield?.id != 1540 || bot.equipment.weapon?.let {
+                    equipDef(it.id).isTwoHanded
+                } != false)) {
+            bot.combat.target = null
+            clearMagic()
+            forceBanking = true
+            bot.reflex.isDisableCombatReflex = false
+            return false
+        }
         if (queenTrip && (forceBanking || !KalphiteQueenTrip.canContinue(bot))) {
             bot.combat.target = null
             forceBanking = true

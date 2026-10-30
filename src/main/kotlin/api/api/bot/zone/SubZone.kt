@@ -555,6 +555,15 @@ enum class SubZone(
         parent = { TAVERLY }),
 
     /**
+     * Supplied Blue Dragon camp with the confirmed ground-floor arrival inside its native spawn footprint.
+     * Existing travel fallback and shared dragon equipment preparation handle the trip.
+     */
+    TAVERLY_DUNGEON_BLUE_DRAGONS(
+        inside = Position(2908, 9807),
+        area = SimpleBoxArea.ofRadius(2888, 9792, 39, 24),
+        parent = { TAVERLY }),
+
+    /**
      * The rock crabs north of Rellekka. Intended for intelligent mid-level combat training.
      */
     ROCK_CRABS(
