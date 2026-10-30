@@ -166,8 +166,12 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         }")
 
-        val policy = reachPolicy ?: if (target is GroundItem && option == 1) InteractionPolicy.EQUAL_POSITION
-        else InteractionPolicy.STANDARD_SIZE
+        val policy = reachPolicy ?: when {
+            target is GroundItem && option == 1 -> InteractionPolicy.EQUAL_POSITION
+            target is Npc && option == 3 ->
+                bot.combat.getDefaultAttack(target)?.interactionPolicy ?: InteractionPolicy.STANDARD_SIZE
+            else -> InteractionPolicy.STANDARD_SIZE
+        }
         val reached = if (onWebWalkLeg) {
             val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
             val pending = bot.navigator.submit(request.build())

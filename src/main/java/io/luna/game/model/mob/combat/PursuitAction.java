@@ -11,6 +11,8 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
+import java.util.function.Predicate;
+
 /**
  * An {@link Action} that moves a {@link Npc} toward its current combat target.
  * <p>
@@ -143,12 +145,33 @@ public final class PursuitAction extends Action<Npc> {
             return Direction.NONE;
         }
 
+        return nextStep(position, targetPosition, policy.getDistance(), collision.reached(position, target, policy),
+                direction -> collision.traversable(position, EntityType.NPC, direction, mob.size(),
+                        mob.getRouteStrategy()));
+    }
+
+    /**
+     * Selects a chase step without changing game state. Map planning uses the same directional choices as live pursuit.
+     * Overlapping tiles have no step here; live pursuit handles their random separation before calling this method.
+     *
+     * @param position The pursuer's current south west tile.
+     * @param targetPosition The target's tile.
+     * @param distance The selected attack's reach distance.
+     * @param reached Whether the selected attack can already reach the target.
+     * @param traversable Tests a single step under the caller's collision rules.
+     * @return The next chase direction, or {@link Direction#NONE} when no step is possible or needed.
+     */
+    public static Direction nextStep(Position position, Position targetPosition, int distance, boolean reached,
+                                     Predicate<Direction> traversable) {
+        if (position.getZ() != targetPosition.getZ() || position.equals(targetPosition)) {
+            return Direction.NONE;
+        }
         Direction nextDirection = Direction.between(position, targetPosition);
 
         // When diagonally adjacent, attempt to step into one of the cardinal components.
-        if (policy.getDistance() == 1 && position.isWithinDistance(targetPosition, 1) && nextDirection.isDiagonal()) {
+        if (distance == 1 && position.isWithinDistance(targetPosition, 1) && nextDirection.isDiagonal()) {
             for (Direction dir : Direction.diagonalComponents(nextDirection)) {
-                if (collision.traversable(position, EntityType.NPC, dir, mob.size(), mob.getRouteStrategy())) {
+                if (traversable.test(dir)) {
                     return dir;
                 }
             }
@@ -156,7 +179,7 @@ public final class PursuitAction extends Action<Npc> {
         }
 
         // No movement is needed if the target is already reachable.
-        if (collision.reached(position, target, policy)) {
+        if (reached) {
             return Direction.NONE;
         }
 
@@ -166,19 +189,17 @@ public final class PursuitAction extends Action<Npc> {
         Direction directionY = dy > 0 ? Direction.NORTH : dy < 0 ? Direction.SOUTH : Direction.NONE;
 
         // Try the direct diagonal or straight-line direction first.
-        if (collision.traversable(position, EntityType.NPC, nextDirection, mob.size(), mob.getRouteStrategy())) {
+        if (traversable.test(nextDirection)) {
             return nextDirection;
         }
 
         // Fall back to the x-axis component.
-        if (directionX != Direction.NONE &&
-                collision.traversable(position, EntityType.NPC, directionX, mob.size(), mob.getRouteStrategy())) {
+        if (directionX != Direction.NONE && traversable.test(directionX)) {
             return directionX;
         }
 
         // Fall back to the y-axis component.
-        if (directionY != Direction.NONE &&
-                collision.traversable(position, EntityType.NPC, directionY, mob.size(), mob.getRouteStrategy())) {
+        if (directionY != Direction.NONE && traversable.test(directionY)) {
             return directionY;
         }
 

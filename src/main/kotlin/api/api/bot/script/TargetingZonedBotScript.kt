@@ -14,6 +14,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.interact.InteractionPolicy
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -281,12 +282,18 @@ abstract class TargetingZonedBotScript<E : Entity>(
         val timeout = minOf(targetApproachTimeout, remainingSearch)
         if (timeout <= Duration.ZERO || forceBanking || bot.navigator.isActive) return false
 
-        return handler.interactions.approach(target, timeout = timeout, allowOutOfView = true) {
+        return handler.interactions.approach(target, policy = targetApproachPolicy(target),
+            timeout = timeout, allowOutOfView = true) {
             isActionSafe() && !forceBanking &&
                     (searchStartedAt == null ||
                         (targetSearchTimeNanos() - searchStartedAt!!).nanoseconds < targetSearchTimeout)
         }
     }
+
+    /**
+     * Selects native reach for a distant discovery before its activity-specific interaction begins.
+     */
+    protected open fun targetApproachPolicy(target: E): InteractionPolicy = InteractionPolicy.STANDARD_SIZE
 
     final override fun onPaused() {
         clearTargetCache("script paused")

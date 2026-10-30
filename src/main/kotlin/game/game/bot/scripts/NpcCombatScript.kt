@@ -23,6 +23,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
+import game.bot.scripts.combat.NpcSafespotCombat
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
 import game.skill.fishing.catchFish.Fish
@@ -49,6 +50,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.CombatStance
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.util.GsonUtils
 import kotlinx.coroutines.isActive
@@ -218,6 +220,13 @@ open class NpcCombatScript(bot: Bot,
     private var combatConfigured = false
 
     /**
+     * Temporary positioning state is rebuilt after banking or restoration and never persisted as a trusted spot.
+     */
+    val safespotCombat = NpcSafespotCombat(bot) {
+        isRunning() && !isPaused() && !forceBanking && activeZone != null
+    }
+
+    /**
      * Saved assignment metadata selects the same protection after restoration; equipped items are checked live.
      */
     private val requiredSlayerGear = requiredSlayerEquipment(slayerTask)
@@ -296,6 +305,7 @@ open class NpcCombatScript(bot: Bot,
 
 
     override suspend fun finish() {
+        safespotCombat.release()
         campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
         tactics.stopAttending()
@@ -310,6 +320,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun beforeLeavingZone(): Boolean {
+        safespotCombat.release()
         bot.combat.target = null
         if (!CannonBotSupport.recover(bot)) return false
         campBehavior.leave()
@@ -335,6 +346,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onBankRequestedTargeting(initial: Boolean): Boolean {
+        safespotCombat.release()
         campBehavior.close()
         bot.reflex.isDisableCombatReflex = false
         if (!queenTrip) tactics.leaveFight()
@@ -426,6 +438,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun onNewActiveZone(lastZone: SubZone?) {
+        safespotCombat.release()
         if (activeZone in DRAGON_ZONES && 1540 !in bot.equipment &&
             (1540 !in bot.inventory || !handler.equipment.equip(1540) || bot.equipment.weapon == null)) {
             stop()
@@ -434,10 +447,6 @@ open class NpcCombatScript(bot: Bot,
     // todo auto bury bones after each kill
     // todo use potions, etc. when available and needed
     // todo dumb bots collect all loot, smart bots only collect good loot
-    // todo safespotting (map of combat sub-zones and all known safespots??)
-    //  ^^ SAFESPOT_MAGIC, SAFESPOT_RANGED, MAGIC, RANGED, MELEE
-    //  safespot logic: select npc, within 10 squares of safespot, attack it, once in combat, immediately run to safespot and attack from there
-    //  random chance to safespot based on intelligence (highest intelligence)
 
     // todo discard focus if not reachable.
     override suspend fun onExecuteInZone(searching: Boolean) {
@@ -449,10 +458,10 @@ open class NpcCombatScript(bot: Bot,
             !bot.actions.contains(CombatAction::class.java)
         ) {
             val opponent = bot.combat.lastCombatWith
-            if (slayerTask == null) {
-                handler.interactions.interact(3, opponent)
-            } else if (opponent is Npc && acceptsAssignment(opponent)) {
+            if (opponent is Npc && acceptsAssignment(opponent)) {
                 interactWithTarget(3, opponent)
+            } else if (slayerTask == null) {
+                handler.interactions.interact(3, opponent)
             }
             if (queenTrip) {
                 bot.naturalDelay()
@@ -465,10 +474,14 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun refocus(): Boolean {
-        if (!prepareCombat()) return true
+        if (!prepareCombat()) {
+            safespotCombat.release()
+            return true
+        }
         attend()
+        if (forceBanking) safespotCombat.release()
         if (queenTrip && (forceBanking || waitingForQueen())) return false
-        if (cannonPrepared && !forceBanking) {
+        if (cannonPrepared && !forceBanking && !safespotCombat.isHolding) {
             val zone = activeZone
             if (zone != null && !CannonBotSupport.maintain(bot, zone)) {
                 forceBanking = true
@@ -476,9 +489,14 @@ open class NpcCombatScript(bot: Bot,
             }
         }
         if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
+            safespotCombat.release()
             lootItems()
             return true
         }
+        if (safespotCombat.isHolding && !safespotCombat.maintain(focus, activeZone) {
+                isActionSafe() && !forceBanking && acceptsAssignment(focus!!) && prepareCombat() &&
+                    bot.combat.checkMultiCombat(focus) && (!socialCamp || campBehavior.acceptsTarget(focus!!))
+            }) return true
         if (bot.combat.target == focus && bot.actions.contains(CombatAction::class.java)) {
             return false
         }
@@ -518,12 +536,22 @@ open class NpcCombatScript(bot: Bot,
         return if (prepareCombat() && acceptsAssignment(target)) 3 else null
     }
 
+    override fun targetApproachPolicy(target: Npc): InteractionPolicy =
+        if (purpose == BotGearPurpose.RANGED || purpose == BotGearPurpose.MAGIC)
+            bot.combat.getDefaultAttack(target).interactionPolicy else InteractionPolicy.STANDARD_SIZE
+
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
-        if (slayerTask == null && !socialCamp) return super.interactWithTarget(option, target)
-        return handler.interactions.interact(option, target) {
+        val allowed = {
             isActionSafe() && !forceBanking && acceptsAssignment(target) && prepareCombat() &&
                 bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target))
         }
+        val zone = activeZone
+        if (option == 3 && !queenTrip && zone != null &&
+            purpose in setOf(BotGearPurpose.RANGED, BotGearPurpose.MAGIC)) {
+            safespotCombat.engage(target, zone, allowed)?.let { return it }
+        }
+        if (slayerTask == null && !socialCamp) return super.interactWithTarget(option, target)
+        return handler.interactions.interact(option, target, allowed)
     }
 
     override fun snapshot(): NpcCombatData {
@@ -572,6 +600,7 @@ open class NpcCombatScript(bot: Bot,
      * Supply checks still run between attempts; an item that will not fit cannot hide a later compatible stack.
      */
     private suspend fun lootItems() {
+        safespotCombat.release()
         attend()
         if (queenTrip && forceBanking) return
         // Wait for the drop to appear.
@@ -618,6 +647,7 @@ open class NpcCombatScript(bot: Bot,
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (forceBanking || !bot.isAlive || !isRunning()) safespotCombat.release()
         if (!assignmentActive()) {
             bot.combat.target = null
             stop()

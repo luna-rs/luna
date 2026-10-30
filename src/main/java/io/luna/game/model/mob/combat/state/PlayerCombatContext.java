@@ -9,10 +9,13 @@ import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.WeaponAnimationDefinition;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.AmmoType;
@@ -26,6 +29,8 @@ import io.luna.game.model.mob.combat.attack.PlayerRangedCombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 import io.luna.game.model.mob.varp.PersistentVarp;
+
+import java.util.function.BooleanSupplier;
 
 import static io.luna.game.model.def.CombatSpellDefinition.NONE;
 
@@ -85,6 +90,55 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * Selection state captured when the first attack is cached, or {@code null} when no attack is cached.
      */
     private AttackSelection firstAttackSelection;
+
+    /**
+     * A temporary, target-specific movement lease owned by a bot combat script.
+     */
+    private Object pursuitOwner;
+    private Mob pursuitTarget;
+    private BooleanSupplier pursuitActive;
+    private long pursuitLeaseTick;
+
+    /**
+     * Keeps ordinary combat pursuit from replacing a bot script's positioning movement.
+     * The lease must be refreshed within twenty game ticks and never applies to human players or PvP.
+     */
+    public void holdPursuit(Object owner, Npc target, BooleanSupplier active) {
+        if (!(player instanceof Bot)) {
+            return;
+        }
+        pursuitOwner = java.util.Objects.requireNonNull(owner);
+        pursuitTarget = java.util.Objects.requireNonNull(target);
+        pursuitActive = java.util.Objects.requireNonNull(active);
+        pursuitLeaseTick = player.getWorld().getCurrentTick();
+    }
+
+    /**
+     * Releases only the requesting script's movement lease, leaving a replacement owner untouched.
+     */
+    public void releasePursuit(Object owner) {
+        if (pursuitOwner == owner) {
+            pursuitOwner = null;
+            pursuitTarget = null;
+            pursuitActive = null;
+        }
+    }
+
+    /**
+     * Validates the lease against its exact live target and owning activity before suppressing a chase.
+     */
+    public boolean isPursuitHeld(Mob target) {
+        if (pursuitOwner == null) {
+            return false;
+        }
+        if (!(player instanceof Bot) || target != pursuitTarget || player.getState() != EntityState.ACTIVE ||
+                target.getState() != EntityState.ACTIVE || !player.isAlive() || !target.isAlive() ||
+                player.getWorld().getCurrentTick() - pursuitLeaseTick > 20 || !pursuitActive.getAsBoolean()) {
+            releasePursuit(pursuitOwner);
+            return false;
+        }
+        return true;
+    }
 
     /**
      * The attack-selection inputs that must remain unchanged before a prepared first attack can be reused.
@@ -223,6 +277,13 @@ public final class PlayerCombatContext extends CombatContext<Player> {
     @Override
     public void onCombatFinished() {
         setFirstAttack(null);
+        releasePursuit(pursuitOwner);
+    }
+
+    @Override
+    public void reset() {
+        releasePursuit(pursuitOwner);
+        super.reset();
     }
 
     @Override
