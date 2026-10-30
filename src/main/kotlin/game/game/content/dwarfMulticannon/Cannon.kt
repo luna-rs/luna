@@ -3,6 +3,7 @@ package game.content.dwarfMulticannon
 import api.predef.*
 import api.predef.ext.*
 import engine.controllers.Controllers.inMultiArea
+import game.combat.npcHooks.giantMole.GiantMole
 import game.content.dwarfMulticannon.DwarfMulticannon.CANNONBALL
 import game.content.dwarfMulticannon.DwarfMulticannon.DECAY_TICKS
 import game.content.dwarfMulticannon.DwarfMulticannon.cannonPosition
@@ -79,6 +80,11 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
          * The King Black Dragon and Kalphite Queen, which destroy a cannon 1 in 4 shots.
          */
         private val DESTROYERS = setOf(50, 1158, 1160)
+
+        /**
+         * The NPCs cannonballs can't hit: the Giant Mole.
+         */
+        private val IMMUNE = setOf(GiantMole.ID)
     }
 
     /**
@@ -205,7 +211,7 @@ class Cannon(val owner: String, val position: Position) : Task(false, 1) {
      */
     private fun hunt(search: Position, radius: Int): Npc? {
         return world.locator.findNpcs(search, radius) {
-            it.combat.isAttackable && world.collisionManager.raycast(search, it.position)
+            it.combat.isAttackable && it.id !in IMMUNE && world.collisionManager.raycast(search, it.position)
         }.minByOrNull {
             val dx = it.position.x - search.x
             val dy = it.position.y - search.y

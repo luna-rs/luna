@@ -3,6 +3,7 @@ package game.item.teleport
 import api.predef.*
 import api.predef.ext.*
 import game.content.treasureTrails.TreasureTrails
+import game.skill.firemaking.lightSource.LightSource
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 
@@ -33,11 +34,16 @@ fun Player.digWithSpade(spot: SpadeDigSpot?) {
         sendMessage("Nothing interesting happens.")
         return
     }
+    if (spot.dark && LightSource.brightness(this) == 0) {
+        sendMessage("It's going to be dark down there, I should bring a light source.")
+        return
+    }
     lock()
     world.scheduleOnce(SPADE_FALL_DELAY) {
         unlock()
         if (isAlive) {
             move(spot.landing)
+            spot.arrival?.let { sendMessage(it) }
         }
     }
 }
