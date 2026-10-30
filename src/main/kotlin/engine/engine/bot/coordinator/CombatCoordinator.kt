@@ -9,6 +9,7 @@ import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
+import game.bot.scripts.BarrowsBotScript
 import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.combat.RockCrabBotScript
@@ -132,6 +133,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     override fun accept(bot: Bot) {
         if (bot.personality.type == PersonalityTemplateType.SKILLER) {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
+            return
+        }
+        if (!training && BarrowsBotScript.eligible(bot) && rand(0.20)) {
+            bot.scriptStack.push(BarrowsBotScript(bot))
             return
         }
         if (!training && DagannothKingsTrip.ready(bot) && rand(0.25)) {

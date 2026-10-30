@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import game.bot.scripts.BarrowsBotScript.BarrowsData
+
 import game.bot.scripts.skills.FarmingBotScript
 import game.bot.scripts.skills.FarmingBotScript.Companion.FarmingData
 import game.bot.scripts.skills.PrepareSaplingBotScript
@@ -144,6 +146,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<BarrowsData>(BarrowsBotScript::class) { bot, data -> BarrowsBotScript(bot, data) }
     scriptManager.addScript<CompostData>(MakeCompostBotScript::class) { bot, data -> MakeCompostBotScript(bot, data) }
     scriptManager.addScript<SaplingData>(PrepareSaplingBotScript::class) { bot, data -> PrepareSaplingBotScript(bot, data) }
     scriptManager.addScript<GloryData>(RechargeGloryBotScript::class) { bot, data -> RechargeGloryBotScript(bot, data) }
