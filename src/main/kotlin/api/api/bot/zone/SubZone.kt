@@ -259,10 +259,10 @@ enum class SubZone(
         parent = { SEERS_VILLAGE }),
 
     /**
-     * Fishing on the Ardougne river north of town. Arrival is an existing north-bank anchor.
+     * Fishing on the Ardougne river north of town. Arrival is the customer tile in front of the north bank booth.
      */
     ARDOUGNE_RIVER_FISHING(
-        inside = Position(2618, 3331),
+        inside = Position(2618, 3332),
         area = SimpleBoxArea.of(2556, 3328, 2624, 3378),
         parent = { ARDOUGNE }),
 
