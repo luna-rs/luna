@@ -12,6 +12,7 @@ package engine.combat.drops
  * @property noted Whether this drop should be emitted inside a noted block.
  * @property rarity The drop chance represented as a decimal probability.
  * @property table The identifier of the logical sub-table this drop belongs to.
+ * @property shared The optional shared sub-table selected instead of a direct item.
  *
  * @author lare96
  */
@@ -21,5 +22,6 @@ class StaticNpcDrop(
     val quantity: String,
     val noted: Boolean,
     val rarity: Double,
-    val table: Int
+    val table: Int,
+    val shared: String? = null
 )
