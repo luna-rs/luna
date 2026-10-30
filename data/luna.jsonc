@@ -8,7 +8,7 @@
       "y": 3440
     },
     // Global multiplier applied to experience gained from skills and other XP sources.
-    "experience_multiplier": 1.0,
+    "experience_multiplier": 5.0,
     // The serializer implementation used for loading and saving game data.
     "serializer": "JsonGameSerializer",
     // The network port the game server listens on.
