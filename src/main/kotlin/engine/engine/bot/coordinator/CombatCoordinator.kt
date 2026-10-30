@@ -9,6 +9,8 @@ import api.bot.action.CombatLoadout
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
+import game.bot.scripts.DagannothKingsBotScript
+import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.combat.RockCrabBotScript
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
@@ -130,6 +132,10 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     override fun accept(bot: Bot) {
         if (bot.personality.type == PersonalityTemplateType.SKILLER) {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
+            return
+        }
+        if (!training && DagannothKingsTrip.ready(bot) && rand(0.25)) {
+            bot.scriptStack.push(DagannothKingsBotScript(bot))
             return
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)

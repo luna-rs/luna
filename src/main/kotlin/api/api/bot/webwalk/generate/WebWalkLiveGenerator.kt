@@ -10,6 +10,11 @@ import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.plan.DoorCrossings
 import api.bot.webwalk.plan.PathfinderWalkEstimator
 import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.JarvaldCrossing
+import api.bot.webwalk.walk.crossing.WaterbirthCrossing
+import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
+import game.content.waterbirth.Jarvald
+import game.content.waterbirth.Waterbirth
 import api.bot.webwalk.walk.crossing.RopeEntranceCrossing
 import api.bot.webwalk.walk.crossing.EssenceMineCrossing
 import game.skill.runecrafting.essenceMine.EssenceMine
@@ -231,6 +236,8 @@ object WebWalkLiveGenerator {
             val def = obj.def() ?: continue
             when {
                 // Entrances come first, because they are what the game does with their ids, whatever they are called.
+                Waterbirth.Gate.entries.any { it.id == obj.id && it.position == obj.position } ||
+                    obj.id == Waterbirth.BLOCKER && Waterbirth.support(obj.position) != null -> waterbirth(obj, climbs, report)
                 obj.id in Altar.OBJECT_TO_ALTAR || obj.id in Altar.PORTAL_TO_ALTAR -> altar(obj, climbs, report)
                 obj.id == EssenceMine.PORTAL -> essencePortal(obj, climbs, report)
                 obj.id == WildernessLever.LAVA_MAZE_DUNGEON.id -> lever(obj, WildernessLever.LAVA_MAZE_DUNGEON, climbs, report)
@@ -243,6 +250,8 @@ object WebWalkLiveGenerator {
             }
         }
         essenceWizards(climbs, report)
+        jarvald(climbs, report)
+        waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
         report.count("entrances", climbs.count { it.type == EdgeType.ENTRANCE })
         val waypoints = waypoints(report)
@@ -539,6 +548,58 @@ object WebWalkLiveGenerator {
         climbs += GeneratedObstacle(EdgeType.ENTRANCE, obj.id, obj.position, from, lever.destination,
             option, cost = lever.messageDelay + 6, bidirectional = false)
         report.count("KBD levers")
+    }
+
+    /**
+     * Generates the actual pressure-door and support collider crossings; native handlers own their opening rules.
+     */
+    private fun waterbirth(obj: GameObject, climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val gate = Waterbirth.Gate.entries.firstOrNull { it.position == obj.position }
+        val support = Waterbirth.support(obj.position)
+        val from = gate?.west ?: support?.outside ?: return
+        val to = gate?.east ?: support!!.inside
+        if (!LadderDestination.canLand(from) || !LadderDestination.canLand(to)) {
+            report.skipped += "Waterbirth barrier ${obj.id} at ${obj.position}: no stand or landing"
+            return
+        }
+        climbs += GeneratedObstacle(EdgeType.CROSSING, obj.id, obj.position, from, to,
+            handler = WaterbirthCrossing.ID, cost = 80, bidirectional = true)
+        report.count("Waterbirth barriers")
+    }
+
+    /**
+     * Jarvald lands directly on shore, so his two directions are NPC crossings rather than deck voyages.
+     */
+    private fun jarvald(climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        for (route in Jarvald.Route.entries) {
+            val from = standableNear(route.departure)
+            if (from == null || !LadderDestination.canLand(route.destination) ||
+                world.locator.findNpcs(route.departure, 8) { it.id in route.crew }.isEmpty()) {
+                report.skipped += "Jarvald ${route.place}: missing crew, departure stand or landing"
+                continue
+            }
+            climbs += GeneratedObstacle(EdgeType.CROSSING, null, route.departure, from, route.destination,
+                handler = JarvaldCrossing.ID, cost = 12, requirements = Requirements(flags = setOf(JarvaldCrossing.PAYMENT)),
+                bidirectional = false, npcId = route.crew.first())
+            report.count("Jarvald crossings")
+        }
+    }
+
+    /**
+     * The paired outward leg covers two real corridors with a common central-room landing. Return travel uses
+     * the individual native barriers and needs no partner. Existing generated webs are rebuilt on every startup.
+     */
+    private fun waterbirthParty(climbs: MutableList<GeneratedObstacle>, report: GenerationReport) {
+        val from = WaterbirthPartyCrossing.FOYER
+        val to = WaterbirthPartyCrossing.CENTER
+        if (!LadderDestination.canLand(from) || !LadderDestination.canLand(to)) {
+            report.skipped += "Waterbirth party: no foyer stand or central-room landing"
+            return
+        }
+        climbs += GeneratedObstacle(EdgeType.CROSSING, Waterbirth.Gate.MIDDLE.id, Waterbirth.Gate.MIDDLE.position,
+            from, to, handler = WaterbirthPartyCrossing.ID, cost = 130,
+            requirements = Requirements(flags = setOf(WaterbirthPartyCrossing.READY)), bidirectional = false)
+        report.count("Waterbirth paired crossings")
     }
 
     /**

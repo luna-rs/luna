@@ -46,6 +46,29 @@ import kotlin.time.Duration.Companion.seconds
 class BotInteractionActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
+     * Matches the native attack packet or an explicitly configured combat menu action such as Destroy.
+     * Cache menu indexes skip the separate attack packet at option three.
+     */
+    internal fun combatClick(option: Int, target: Entity): Boolean {
+        if (target !is Npc) return false
+        if (option == 3) return true
+        val action = target.combatDef().attackOption ?: "Attack"
+        if (action == "Attack") return false
+        val index = if (option < 3) option - 1 else option - 2
+        return target.def().actions.getOrNull(index) == action
+    }
+
+    /**
+     * Uses native projectile reach for configured combat actions as well as the separate Attack packet.
+     */
+    internal fun interactionPolicy(option: Int, target: Entity): InteractionPolicy = when {
+        target is GroundItem && option == 1 -> InteractionPolicy.EQUAL_POSITION
+        combatClick(option, target) -> bot.combat.getDefaultAttack(target as Npc)?.interactionPolicy
+            ?: InteractionPolicy.STANDARD_SIZE
+        else -> InteractionPolicy.STANDARD_SIZE
+    }
+
+    /**
      * Valid stand tiles, checked with exactly the policy used by the eventual player packet.
      * The square covers both orientations of a rectangular object; collision selects its usable faces.
      */
@@ -168,12 +191,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             }
         }")
 
-        val policy = reachPolicy ?: when {
-            target is GroundItem && option == 1 -> InteractionPolicy.EQUAL_POSITION
-            target is Npc && option == 3 ->
-                bot.combat.getDefaultAttack(target)?.interactionPolicy ?: InteractionPolicy.STANDARD_SIZE
-            else -> InteractionPolicy.STANDARD_SIZE
-        }
+        val policy = reachPolicy ?: interactionPolicy(option, target)
         val reached = if (onWebWalkLeg) {
             val request = NavigationRequest.builder(bot).async(true).continuous(false).policy(policy).target(target)
             val pending = bot.navigator.submit(request.build())
@@ -193,7 +211,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         }
         if (!allowed()) return false
         val previousAttack = bot.combat.lastAttackSent
-        val npcAttack = target is Npc && option == 3
+        val npcAttack = combatClick(option, target)
         var targetGone = false
         val cond = SuspendableCondition {
             val done = if (npcAttack) {

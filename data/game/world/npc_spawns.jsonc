@@ -30738,10 +30738,7 @@
       "y": 10143,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Dagannoth (id 2456)
   {
@@ -30790,10 +30787,7 @@
       "y": 10141,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Door-support (id 2446)
   {
@@ -30803,10 +30797,7 @@
       "y": 10145,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Egg (id 2449) x2
   {
@@ -36874,10 +36865,7 @@
       "y": 3761,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Rock Crab, disguised as Rocks (id 1268)
   {
@@ -46963,10 +46951,7 @@
       "y": 3683,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Warrior (id 1318)
   {
@@ -86912,10 +86897,7 @@
       "y": 4441,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2895)
   {
@@ -86925,10 +86907,7 @@
       "y": 4446,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2893)
   {
@@ -86938,10 +86917,7 @@
       "y": 4451,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2894)
   {
@@ -86951,10 +86927,7 @@
       "y": 4455,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2895)
   {
@@ -86964,10 +86937,7 @@
       "y": 4438,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2892)
   {
@@ -86977,10 +86947,7 @@
       "y": 4458,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2894)
   {
@@ -86990,10 +86957,7 @@
       "y": 4436,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2895)
   {
@@ -87003,10 +86967,7 @@
       "y": 4461,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2892)
   {
@@ -87016,10 +86977,7 @@
       "y": 4463,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2893)
   {
@@ -87029,10 +86987,7 @@
       "y": 4433,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Dagannoth Supreme (id 2881)
   {
@@ -87055,10 +87010,7 @@
       "y": 4464,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2894)
   {
@@ -87068,10 +87020,7 @@
       "y": 4433,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Dagannoth Prime (id 2882)
   {
@@ -87094,10 +87043,7 @@
       "y": 4465,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Dagannoth Rex (id 2883)
   {
@@ -87120,10 +87066,7 @@
       "y": 4433,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2894)
   {
@@ -87133,10 +87076,7 @@
       "y": 4464,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2893)
   {
@@ -87146,10 +87086,7 @@
       "y": 4433,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2892)
   {
@@ -87159,10 +87096,7 @@
       "y": 4463,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2891)
   {
@@ -87172,10 +87106,7 @@
       "y": 4463,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2896) x2
   {
@@ -87185,10 +87116,7 @@
       "y": 4436,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   {
     "id": 2896,
@@ -87197,10 +87125,7 @@
       "y": 4459,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Spinolyp (id 2892)
   {
@@ -87210,10 +87135,7 @@
       "y": 4456,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2893)
   {
@@ -87223,10 +87145,7 @@
       "y": 4440,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2895) x2
   {
@@ -87236,10 +87155,7 @@
       "y": 4446,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   {
     "id": 2895,
@@ -87248,10 +87164,7 @@
       "y": 4450,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Suspicious water (id 2891)
   {
@@ -87261,10 +87174,7 @@
       "y": 4453,
       "z": 0
     },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
+    "default_direction": "NORTH"
   },
   // Soldier (id 35)
   {

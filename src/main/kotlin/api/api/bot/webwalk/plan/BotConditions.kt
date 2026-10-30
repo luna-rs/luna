@@ -1,6 +1,9 @@
 package api.bot.webwalk.plan
 
 import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.JarvaldCrossing
+import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
+import game.content.waterbirth.Jarvald
 import api.bot.webwalk.walk.crossing.EssenceMineCrossing
 import api.bot.zone.SubZone
 import game.skill.runecrafting.essenceMine.EssenceMine
@@ -46,7 +49,10 @@ object BotConditions {
     private val conditions: Map<String, (Bot) -> Boolean> =
         ShipSearch.entries.mapNotNull { search ->
             shipSearchFlag(search)?.let { flag -> flag to { bot: Bot -> !search.turnsAway(bot) } }
-        }.toMap() + mapOf(CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
+        }.toMap() + mapOf(WaterbirthPartyCrossing.READY to { bot: Bot -> WaterbirthPartyCrossing.ready(bot) },
+                         JarvaldCrossing.PAYMENT to { bot: Bot ->
+            Jarvald.fare(bot) == 0 || bot.inventory.computeAmountForId(995) >= Jarvald.FARE
+        }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

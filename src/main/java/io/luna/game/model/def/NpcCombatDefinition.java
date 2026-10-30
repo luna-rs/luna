@@ -137,6 +137,11 @@ public final class NpcCombatDefinition implements Definition {
     private final NpcCombatMovement movement;
 
     /**
+     * The cache context-menu action that permits combat, normally {@code Attack}.
+     */
+    private final String attackOption;
+
+    /**
      * Creates a new {@link NpcCombatDefinition}.
      *
      * @param id The NPC id this definition belongs to.
@@ -221,10 +226,28 @@ public final class NpcCombatDefinition implements Definition {
             NpcCombatMovement movement,
             int poisonSeverity
     ) {
+        this(id, respawnTime, aggression, poisonous, immunePoison, hitpoints, maximumHit, attackSpeed,
+                attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus, rangedBonus,
+                skills, bonuses, movement, poisonSeverity, "Attack");
+    }
+
+    /**
+     * Creates a combat definition with an explicit cache action for destructible props and other combat targets.
+     * The action must still exist in the current NPC definition; this does not make absent menu actions valid.
+     */
+    public NpcCombatDefinition(int id, int respawnTime, NpcAggressionProfile aggression, boolean poisonous,
+                               boolean immunePoison, int hitpoints, int maximumHit, int attackSpeed,
+                               int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus,
+                               int magicBonus, int rangedBonus, int[] skills, int[] bonuses,
+                               NpcCombatMovement movement, int poisonSeverity, String attackOption) {
         if (poisonSeverity < 0 || (poisonSeverity > 0 && !poisonous)) {
             throw new IllegalArgumentException("Invalid poison severity for NPC " + id + ": " + poisonSeverity);
         }
         this.movement = Objects.requireNonNull(movement);
+        this.attackOption = Objects.requireNonNull(attackOption);
+        if (attackOption.isBlank()) {
+            throw new IllegalArgumentException("Empty combat action for NPC " + id);
+        }
         this.id = id;
         this.respawnTime = respawnTime;
         this.aggression = aggression;
@@ -249,6 +272,13 @@ public final class NpcCombatDefinition implements Definition {
      */
     public NpcCombatMovement getMovement() {
         return movement;
+    }
+
+    /**
+     * @return The current cache action required to attack this NPC.
+     */
+    public String getAttackOption() {
+        return attackOption;
     }
 
     @Override
