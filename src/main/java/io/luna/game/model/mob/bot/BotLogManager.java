@@ -125,7 +125,7 @@ public final class BotLogManager {
         /**
          * Formats log timestamps using UTC so bot logs are consistent across server environments.
          */
-        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MMM d, hh:mm:s a")
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MMM d, hh:mm:ss a")
                 .withZone(ZoneId.of("UTC"));
 
         /**
