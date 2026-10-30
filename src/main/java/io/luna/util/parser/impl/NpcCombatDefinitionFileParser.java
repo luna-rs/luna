@@ -54,13 +54,14 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         int rangedBonus = token.get("ranged_bonus").getAsInt();
         int[] skills = GsonUtils.getAsType(token.get("skills"), int[].class);
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
+        String attackOption = token.has("attack_option") ? token.get("attack_option").getAsString() : "Attack";
         JsonObject movement = token.getAsJsonObject("movement");
         NpcCombatMovement rules = movement == null ? NpcCombatMovement.DEFAULT : new NpcCombatMovement(
                 movement.get("max_range").getAsInt(), movement.get("attack_range").getAsInt(),
                 movement.get("retreat_hitpoints").getAsInt());
         return new NpcCombatDefinition(id, respawnTicks, aggression, poisonous, immunePoison, hitpoints, maximumHit,
                 attackSpeed, attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus,
-                rangedBonus, skills, bonuses, rules, poisonSeverity);
+                rangedBonus, skills, bonuses, rules, poisonSeverity, attackOption);
     }
 
     @Override

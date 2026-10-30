@@ -19,6 +19,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
 import java.util.Set;
+import java.util.Objects;
 
 /**
  * A {@link CombatContext} implementation for {@link Npc}s.
@@ -240,7 +241,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     @Override
     public boolean isAttackable() {
         return mob.isAlive() &&
-                mob.def().getActions().contains("Attack");
+                mob.def().getActions().contains(Objects.requireNonNullElse(mob.combatDef().getAttackOption(), "Attack"));
     }
 
     @Override

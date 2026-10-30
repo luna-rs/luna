@@ -1,6 +1,7 @@
 package engine.widget
 
 import api.predef.*
+import game.content.mageArena.MageArena
 import game.item.degradable.DegradableDropWarningDialogue
 import game.item.degradable.DegradableEquipmentHandler
 import game.player.Sound
@@ -27,7 +28,9 @@ val itemDrop = FileOutputType.ITEM_DROP.level
 on(DropItemEvent::class, EventPriority.HIGH) {
     val item = plr.inventory[index]
     val itemDef = item.itemDef
-    if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
+    if (MageArena.dropCape(plr, index)) {
+        plr.overlays.closeWindows()
+    } else if(DegradableEquipmentHandler.isDropRestricted(item.id)) {
         plr.overlays.open(DegradableDropWarningDialogue(index, item.id))
     } else if ((itemDef.isTradeable || EssencePouch.ID_TO_POUCH.containsKey(item.id)) &&
         !itemDef.inventoryActions.contains("Destroy")) {

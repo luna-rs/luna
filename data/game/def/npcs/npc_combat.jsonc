@@ -10565,17 +10565,17 @@
   },
   {
     "id": 907, // Kolodion
-    "movement": { "max_range": 7, "attack_range": 3, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 78,
+    "hitpoints": 3,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 1834,
     "death_animation": 836,
@@ -10583,9 +10583,9 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      28,
-      23,
-      58,
+      15,
+      10,
+      20,
       1,
       30
     ],
@@ -10601,16 +10601,16 @@
   {
     "id": 908, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 3,
+    "hitpoints": 65,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 128,
     "defence_animation": 129,
     "death_animation": 131,
@@ -10618,11 +10618,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      55,
+      70,
+      72,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -10635,16 +10635,16 @@
   {
     "id": 909, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
     "hitpoints": 78,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 143,
     "defence_animation": 144,
     "death_animation": 146,
@@ -10670,16 +10670,16 @@
   {
     "id": 910, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 3,
+    "hitpoints": 78,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 394,
     "defence_animation": 389,
     "death_animation": 843,
@@ -10687,11 +10687,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      28,
+      23,
+      58,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -10704,16 +10704,16 @@
   {
     "id": 911, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
     "hitpoints": 107,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 64,
     "defence_animation": 65,
     "death_animation": 68,
@@ -10740,12 +10740,12 @@
     "id": 912, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 415,
     "death_animation": 836,
@@ -10772,12 +10772,12 @@
     "id": 913, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 415,
     "death_animation": 2304,
@@ -10804,12 +10804,12 @@
     "id": 914, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 191,
     "defence_animation": 193,
     "death_animation": 196,
@@ -27841,6 +27841,63 @@
     ]
   },
   {
+    "id": 2440, // Waterbirth door-support
+    "attack_option": "Destroy",
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": true,
+    "hitpoints": 1,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [1, 1, 1, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 2443, // Waterbirth door-support
+    "attack_option": "Destroy",
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": true,
+    "hitpoints": 1,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [1, 1, 1, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 2446, // Waterbirth door-support
+    "attack_option": "Destroy",
+    "respawn_ticks": -1,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": true,
+    "hitpoints": 1,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [1, 1, 1, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
     "id": 2454, // Dagannoth spawn
     "respawn_ticks": 9,
     "aggression": {
@@ -32260,17 +32317,19 @@
   },
   {
     "id": 2881, // Dagannoth Supreme
-    "respawn_ticks": 59,
+    "movement": { "max_range": 12, "attack_range": 8, "retreat_hitpoints": -1 },
+    "respawn_ticks": 150,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
     "poisonous": true,
+    "poison_severity": 26, // Luna initial-six poison; the amount is not recovered from revision 377 scripts.
     "immune_poison": false,
     "hitpoints": 255,
     "maximum_hit": 30,
     "attack_speed": 4,
-    "attack_animation": 2853,
+    "attack_animation": 2855,
     "defence_animation": 2852,
     "death_animation": 2856,
     "attack_bonus": 0,
@@ -32288,13 +32347,14 @@
       10,
       10,
       255,
-      550,
+      255, // Before the later ranged-defence increase.
       0
     ]
   },
   {
     "id": 2882, // Dagannoth Prime
-    "respawn_ticks": 9,
+    "movement": { "max_range": 12, "attack_range": 8, "retreat_hitpoints": -1 },
+    "respawn_ticks": 150,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
@@ -32304,7 +32364,7 @@
     "hitpoints": 255,
     "maximum_hit": 50,
     "attack_speed": 4,
-    "attack_animation": 2853,
+    "attack_animation": 2854,
     "defence_animation": 2852,
     "death_animation": 2856,
     "attack_bonus": 0,
@@ -32328,7 +32388,8 @@
   },
   {
     "id": 2883, // Dagannoth Rex
-    "respawn_ticks": 9,
+    "movement": { "max_range": 20, "attack_range": 0, "retreat_hitpoints": -1 },
+    "respawn_ticks": 150,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
@@ -32521,17 +32582,46 @@
     ]
   },
   {
-    "id": 2892, // Spinolyp
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "id": 2891, // Suspicious water
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 100,
     "maximum_hit": 1,
-    "attack_speed": 7,
+    "attack_speed": 2,
+    "attack_animation": -1,
+    "defence_animation": 2869,
+    "death_animation": 2866,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [
+      10,
+      10,
+      10,
+      100,
+      1
+    ],
+    "bonuses": [
+      100,
+      100,
+      100,
+      50,
+      50
+    ]
+  },
+  {
+    "id": 2892, // Spinolyp
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 100,
+    "maximum_hit": 10,
+    "attack_speed": 4,
     "attack_animation": 2868,
     "defence_animation": 2869,
     "death_animation": 2866,
@@ -32542,7 +32632,38 @@
       10,
       10,
       10,
-      2,
+      100,
+      1
+    ],
+    "bonuses": [
+      100,
+      100,
+      100,
+      50,
+      50
+    ]
+  },
+  {
+    "id": 2893, // Suspicious water
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 100,
+    "maximum_hit": 1,
+    "attack_speed": 2,
+    "attack_animation": -1,
+    "defence_animation": 2869,
+    "death_animation": 2866,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [
+      10,
+      10,
+      10,
+      100,
       1
     ],
     "bonuses": [
@@ -32555,16 +32676,14 @@
   },
   {
     "id": 2894, // Spinolyp
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 100,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 10,
+    "attack_speed": 4,
     "attack_animation": 2868,
     "defence_animation": 2869,
     "death_animation": 2866,
@@ -32575,7 +32694,38 @@
       10,
       10,
       10,
-      2,
+      100,
+      1
+    ],
+    "bonuses": [
+      100,
+      100,
+      100,
+      50,
+      50
+    ]
+  },
+  {
+    "id": 2895, // Suspicious water
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 100,
+    "maximum_hit": 1,
+    "attack_speed": 2,
+    "attack_animation": -1,
+    "defence_animation": 2869,
+    "death_animation": 2866,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [
+      10,
+      10,
+      10,
+      100,
       1
     ],
     "bonuses": [
@@ -32588,16 +32738,14 @@
   },
   {
     "id": 2896, // Spinolyp
-    "respawn_ticks": 9,
-    "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
-    },
+    "movement": { "max_range": 0, "attack_range": 10, "retreat_hitpoints": -1 },
+    "respawn_ticks": 10,
+    "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 100,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 10,
+    "attack_speed": 4,
     "attack_animation": 2868,
     "defence_animation": 2869,
     "death_animation": 2866,
@@ -32608,7 +32756,7 @@
       10,
       10,
       10,
-      2,
+      100,
       1
     ],
     "bonuses": [

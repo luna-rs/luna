@@ -91,6 +91,7 @@ public class PlayerData {
 
     /**
      * Loads {@code player}'s data from this model.
+     * Bot identity is restored before queued scripts, whose constructors may cache personality or preference choices.
      */
     public void load(Player player) {
         player.getAttributes().load(attributes);
@@ -122,9 +123,9 @@ public class PlayerData {
         player.getTolerance().load(tolerance);
         if (player.isBot()) {
             Bot bot = (Bot) player;
-            bot.getScriptStack().load(scripts);
             bot.setPersonality(personality);
             bot.getPreferences().load(preferences);
+            bot.getScriptStack().load(scripts);
             isBot = true;
         } else {
             isBot = false;

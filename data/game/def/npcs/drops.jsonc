@@ -22464,7 +22464,7 @@
     "ids": [
       2881 // Dagannoth Supreme
     ],
-    "rare": null,
+    "rare": "RARE", // Shared Luna bonus rare-table policy; exact revision 377 odds are not recovered.
     "drops": [
       {
         "id": 6729, // Dagannoth bones
@@ -22800,7 +22800,7 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.023809523809523808,
-        "table": 1
+        "table": 2 // Independent tertiary clue roll under Luna's reconstructed king table policy.
       },
       {
         "id": 3757, // Fremennik blade
@@ -22815,7 +22815,7 @@
     "ids": [
       2882 // Dagannoth Prime
     ],
-    "rare": null,
+    "rare": "RARE", // Shared Luna bonus rare-table policy; exact revision 377 odds are not recovered.
     "drops": [
       {
         "id": 6729, // Dagannoth bones
@@ -23088,21 +23088,21 @@
         "quantity": "25-75",
         "noted": true,
         "rarity": 0.078125,
-        "table": 2
+        "table": 1
       },
       {
         "id": 1438, // Air talisman
         "quantity": "25-75",
         "noted": true,
         "rarity": 0.0546875,
-        "table": 2
+        "table": 1
       },
       {
         "id": 1444, // Water talisman
         "quantity": "1-76",
         "noted": true,
         "rarity": 0.0546875,
-        "table": 2
+        "table": 1
       },
       {
         "id": 385, // Shark
@@ -23172,7 +23172,7 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.023809523809523808,
-        "table": 1
+        "table": 2 // Independent tertiary clue roll under Luna's reconstructed king table policy.
       },
       {
         "id": 3748, // Fremennik helm
@@ -23187,7 +23187,7 @@
     "ids": [
       2883 // Dagannoth Rex
     ],
-    "rare": null,
+    "rare": "RARE", // Shared Luna bonus rare-table policy; exact revision 377 odds are not recovered.
     "drops": [
       {
         "id": 6729, // Dagannoth bones
@@ -23495,7 +23495,7 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.023809523809523808,
-        "table": 1
+        "table": 2 // Independent tertiary clue roll under Luna's reconstructed king table policy.
       },
       {
         "id": 1123, // Adamant platebody
@@ -28291,6 +28291,19 @@
         "quantity": "1",
         "noted": false,
         "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
+  },
+  {
+    "ids": [2891, 2892, 2893, 2894, 2895, 2896], // Suspicious water and Spinolyps.
+    "rare": null,
+    "drops": [
+      {
+        "id": 526, // Bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
         "table": 1
       }
     ]

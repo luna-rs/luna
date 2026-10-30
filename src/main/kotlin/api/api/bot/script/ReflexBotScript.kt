@@ -60,6 +60,8 @@ abstract class ReflexBotScript(bot: Bot) : AbstractBotScript(bot) {
                 GameCoroutineScope.launch {
                     while (bot.reflex.activeReflex == this@ReflexBotScript && bot.state == EntityState.ACTIVE && isActive) {
                         yield()
+                        if (bot.reflex.activeReflex != this@ReflexBotScript ||
+                            bot.state != EntityState.ACTIVE || !isActive) break
                         if (run()) {
                             break
                         }

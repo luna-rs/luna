@@ -1,6 +1,7 @@
 package game.combat.spells
 
 import engine.combat.status.StatusEffectType
+import game.content.mageArena.MageArena
 import game.player.Sound
 import game.skill.magic.Magic
 import game.skill.magic.Rune
@@ -20,7 +21,7 @@ import io.luna.game.model.mob.combat.CombatSpell
  * Revision-377 god spell combat effects and the Charge spell.
  * Matching god capes and staves enable the drains and charged maximum hit. Drains occur on accurate casts,
  * including zero damage, before flight; later equipment changes cannot grant or remove their effects.
- * Mage Arena progression is not implemented here, consistent with the existing god spell access rules.
+ * Mage Arena progression controls access to Charge; combat cast progression is checked before rune removal.
  *
  * @author lare96
  */
@@ -39,6 +40,10 @@ object GodSpells {
     fun charge(player: Player): Boolean {
         if (player.state != EntityState.ACTIVE || !player.isAlive || player.isActionLocked ||
             player.spellbook != Spellbook.REGULAR) return false
+        if (MageArena.stage(player) < MageArena.STAFF_GIVEN) {
+            player.sendMessage("This spell can only be learnt in the Mage Arena.")
+            return false
+        }
         val runes = Magic.checkRequirements(player, 80, chargeRunes) ?: return false
         if (!player.inventory.containsAll(runes)) return false
         player.inventory.removeAll(runes)

@@ -146,6 +146,18 @@ public final class BotReflex {
     }
 
     /**
+     * Cancels the active custom reflex, including an action suspended inside its execution cycle.
+     * Clears ownership before cancellation so queued continuations cannot act after logout.
+     */
+    public void stop() {
+        ReflexBotScript current = activeReflex;
+        activeReflex = null;
+        if (current != null) {
+            current.stop();
+        }
+    }
+
+    /**
      * @return {@code true} if automatic combat reflexes are disabled.
      */
     public boolean isDisableCombatReflex() {

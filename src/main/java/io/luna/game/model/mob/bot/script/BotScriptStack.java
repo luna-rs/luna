@@ -138,9 +138,11 @@ public final class BotScriptStack {
     }
 
     /**
-     * Saves every script currently in the buffer.
+     * Saves resumable scripts currently in the buffer.
      * <p>
-     * Each script is serialized into a {@link BotScriptSnapshot} with its current buffer index. If a script does not
+     * Finished and terminated scripts are omitted even if the next processing tick has not removed them yet.
+     * Running, paused, and pending scripts retain their relative order with consecutive saved indices.
+     * Each retained script is serialized into a {@link BotScriptSnapshot}. If a script does not
      * provide snapshot data, a placeholder snapshot is written so the relative order of persistent scripts can still be
      * maintained during load.
      *
@@ -150,6 +152,9 @@ public final class BotScriptStack {
         int index = 0;
         List<BotScriptSnapshot> snapshots = new ArrayList<>(buffer.size());
         for (BotScript script : buffer) {
+            if (script.isFinished() || script.isTerminated()) {
+                continue;
+            }
             BotScriptData snapshot = script.snapshot();
             if (snapshot == null) {
                 snapshots.add(new BotScriptSnapshot(index++, "null", "null", JsonNull.INSTANCE));

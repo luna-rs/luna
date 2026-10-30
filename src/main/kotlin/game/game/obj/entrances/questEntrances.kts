@@ -1,4 +1,5 @@
 package game.obj.entrances
+import game.content.mageArena.MageArena
 
 import api.attr.Attr
 import api.attr.getValue
@@ -245,10 +246,13 @@ fun jumpIntoPool(plr: Player, pool: GameObject, destination: Position) {
 }
 
 // The sparkling pools under the Mage Arena.
-// TODO Once the Mage Arena is added, players who haven't beaten Kolodion only get their boots wet ("Your boots get
-//  wet.").
 for ((pool, destination) in SPARKLING_POOLS) {
     object1(pool) {
+        if (!MageArena.completed(plr)) {
+            plr.sendMessage("You step into the pool.")
+            plr.sendMessage("Your boots get wet.")
+            return@object1
+        }
         val obj = gameObject
         plr.newDialogue()
             .text("You step into the pool of sparkling water. You feel energy rush",
