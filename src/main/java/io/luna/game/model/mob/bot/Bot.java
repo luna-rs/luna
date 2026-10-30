@@ -409,11 +409,13 @@ public final class Bot extends Player {
     protected void onInactive() {
         super.onInactive();
         scriptStack.shutdown();
+        reflex.stop();
     }
 
     @Override
     public void forceLogout() {
         scriptStack.shutdown();
+        reflex.stop();
         botClient.onInactive();
     }
 
