@@ -188,13 +188,17 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         if (!allowed()) return false
         val previousAttack = bot.combat.lastAttackSent
         val npcAttack = target is Npc && option == 3
+        var targetGone = false
         val cond = SuspendableCondition {
-            if (npcAttack) {
+            val done = if (npcAttack) {
                 val attack = bot.combat.lastAttackSent
                 attack != null && attack !== previousAttack && attack.victim === target
             } else {
                 bot.walking.isEmpty && world.collisionManager.reached(bot, target, policy)
             }
+            // A dead NPC is parked off-map until it respawns, so the wait would always time out.
+            if (!done && target is Npc && !target.isAlive) targetGone = true
+            done || targetGone
         }
         when (target) {
             is Player -> bot.output.sendPlayerInteraction(option, target)
@@ -204,12 +208,12 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             else -> throw IllegalStateException("This entity cannot be interacted with.")
         }
 
-        if (cond.submit(10).await()) {
+        if (cond.submit(10).await() && !targetGone) {
             bot.log("Interaction successful.")
             return true
         }
 
-        bot.log("Interaction failed.")
+        bot.log(if (targetGone) "Interaction failed: the NPC died or despawned." else "Interaction failed.")
         return false
     }
 }

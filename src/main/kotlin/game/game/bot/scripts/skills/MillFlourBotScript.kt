@@ -264,13 +264,14 @@ class MillFlourBotScript(
      * banks them.
      */
     private suspend fun buyPots(): Boolean {
-        val wanted = minOf(owned(FlourMill.GRAIN) + bot.flourInBin, POT_PURCHASE.toLong()).toInt()
         if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
         val banking = bot.actionHandler.banking
         if (!banking.travelToBankOpen() || !banking.depositInventory() || !isActionSafe()) return false
         banking.clickBankingMode(false)
         if (!banking.withdraw(Item(COINS, POT_COINS)) || COINS !in bot.inventory) return false
         if (!bot.actionHandler.widgets.clickCloseInterface()) return false
+        val wanted = minOf(owned(FlourMill.GRAIN) + bot.flourInBin, POT_PURCHASE.toLong(),
+            bot.inventory.computeRemainingSize().toLong()).toInt()
         val shops = world.shops.values().filter { it.currency == Currency.COINS && it.botAccess.apply(bot) && potStock(it) > 0 }
             .sortedByDescending { potStock(it) }
         for (shop in shops) {
