@@ -146,6 +146,19 @@ public final class CombatFormula {
     }
 
     /**
+     * Calculates an NPC ranged hit chance against magic defence, as used by zygomite spores.
+     * Ranged level and accuracy still supply the offensive roll; the damage family and protection prayer stay ranged.
+     *
+     * @param attacker The NPC firing the ranged attack.
+     * @param victim The defending mob.
+     * @return The resulting hit probability.
+     */
+    public static double calculateMagicDefendedRangedHitChance(Npc attacker, Mob victim) {
+        int attackRoll = calculateAttackRoll(attacker, EquipmentBonus.RANGED_ATTACK, CombatDamageType.RANGED);
+        return calculateHitChanceFromRolls(attackRoll, calculateMagicDefenceRoll(victim));
+    }
+
+    /**
      * Calculates magic offence against a specified physical defence bonus, as used by ordinary dragonfire.
      * Only the defending roll changes; callers retain the magic attacker's current level and accuracy bonus.
      *

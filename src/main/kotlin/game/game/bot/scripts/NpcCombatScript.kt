@@ -27,6 +27,7 @@ import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.combat.npcHooks.giantMole.GiantMole
+import game.combat.npcHooks.zygomite.Zygomites
 import game.combat.npcHooks.giantMole.GiantMole.burrowing
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
@@ -79,6 +80,8 @@ import kotlin.time.Duration.Companion.seconds
  * including after banking and restored sessions.
  * Gargoyle visits also retain an owned rock hammer in inventory. Weakened stone forms use native adjacent
  * finishing reach, releasing any ranged or magic safespot without changing the saved combat discipline.
+ * Zygomite visits pick the dormant fungi in place, retain owned charged sprays and refills, and use the native
+ * adjacent item finish without replacing the NPC or its assignment binding.
  * Fremennik assignments retain owned mirror shields, salt and antipoison as needed. Turoth and kurask trips select
  * their native spear, broad-arrow or Magic Dart loadout before equipment is chosen, with no ordinary-ammo fallback.
  * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
@@ -152,6 +155,7 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun acceptsSlayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
                                          loadout: CombatLoadout): Boolean {
+            if (task == SlayerTaskType.ZYGOMITE && !ownsFungicide(bot)) return false
             if (requiredSlayerEquipment(task).any { (slot, id) -> loadout.gear[slot] != id ||
                     !bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot) }) return false
             if (requiredSlayerInventory(task).any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
@@ -204,6 +208,11 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun slayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
                                    requested: CombatSpell? = null): CombatLoadout? {
+            if (task == SlayerTaskType.ZYGOMITE) {
+                if (!ownsFungicide(bot)) bot.preferences.addWantedItem(Zygomites.FULL_SPRAY, 3)
+                if (bot.itemTracker.count(Zygomites.FUNGICIDE) < 10)
+                    bot.preferences.addWantedItem(Zygomites.FUNGICIDE, 100)
+            }
             if (task == SlayerTaskType.ROCKSLUG && bot.itemTracker.count(4161) < 50) {
                 bot.preferences.addWantedItem(4161, 500)
             }
@@ -217,6 +226,15 @@ open class NpcCombatScript(bot: Bot,
                 allowedWeapons = if (restricted && purpose == BotGearPurpose.MELEE) setOf(4158) else emptySet())
                 ?: return null
             return loadout.takeIf { acceptsSlayerLoadout(bot, purpose, task, it) }
+        }
+
+        /**
+         * A charged spray, or an empty spray and refill, must exist in accessible owned stock.
+         */
+        private fun ownsFungicide(bot: Bot): Boolean {
+            val stock = bot.inventory + bot.bank
+            return stock.any { it != null && Zygomites.charges(it.id) > 0 } ||
+                stock.any { it?.id == Zygomites.EMPTY_SPRAY } && stock.any { it?.id == Zygomites.FUNGICIDE }
         }
 
         /**
@@ -327,7 +345,7 @@ open class NpcCombatScript(bot: Bot,
      * Keeps task NPC IDs authoritative even when several monsters share a camp or display name.
      */
     internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
-        (slayerTask == null || npc.id in slayerTask.npcs)
+        (slayerTask == null || (Zygomites.FORMS[npc.id] ?: npc.id) in slayerTask.npcs)
 
     /**
      * Eats and prays the way a player watching their hitpoints and prayer would; the Kalphite Queen trip keeps its own
@@ -465,7 +483,7 @@ open class NpcCombatScript(bot: Bot,
                 ?.let { mutableListOf(it) } ?: mutableListOf()
         }
         val options = world.locator.findNpcs(searchBase, searchRadius, true) {
-            canAttack(it) && it.combat.isAttackable
+            canAttack(it) && (slayerTask == SlayerTaskType.ZYGOMITE && it.id in Zygomites.FORMS || it.combat.isAttackable)
                     && bot.combat.checkMultiCombat(it)
                     && !ctx.cache.mapIndexTable.getTile(it.position).isBlocked
             // todo incorporate checks for ranged/magic, this is for stuff like ducks that move on water
@@ -502,6 +520,10 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
+            stop()
+            return
+        }
         if (moleTrip && !GiantMoleTrip.collect(bot)) {
             stop()
             return
@@ -584,7 +606,8 @@ open class NpcCombatScript(bot: Bot,
             }
             cannonPrepared = slayerTask == null && CannonBotSupport.prepare(bot, originalZones, purpose)
         }
-        if (!wieldAtBank(weapon, ammo, thrown) || !configureCombat()) {
+        if (!wieldAtBank(weapon, ammo, thrown) ||
+            (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) || !configureCombat()) {
             stop()
             return
         }
@@ -676,6 +699,42 @@ open class NpcCombatScript(bot: Bot,
         it.id == GiantMole.ID && it.burrowing
     } == true
 
+    /**
+     * Withdraws an owned spray and a small trip's refill stock; no finishing consumable is manufactured.
+     */
+    private suspend fun collectFungicide(): Boolean {
+        if (Zygomites.carriedSpray(bot) == null && !bot.inventory.contains(Zygomites.EMPTY_SPRAY)) {
+            val spray = (Zygomites.FULL_SPRAY..Zygomites.EMPTY_SPRAY).firstOrNull { bot.bank.contains(it) }
+                ?: return false
+            if (!handler.banking.withdraw(Item(spray)) || !bot.inventory.contains(spray)) return false
+        }
+        val refills = minOf(3, ((assignment?.remaining ?: 10) + 9) / 10,
+            bot.itemTracker.count(Zygomites.FUNGICIDE))
+        val missing = refills - bot.inventory.computeAmountForId(Zygomites.FUNGICIDE)
+        if (missing > 0 && !handler.banking.withdraw(Item(Zygomites.FUNGICIDE, missing))) return false
+        return Zygomites.carriedSpray(bot) != null ||
+            bot.inventory.contains(Zygomites.EMPTY_SPRAY) && bot.inventory.contains(Zygomites.FUNGICIDE)
+    }
+
+    /**
+     * Refills a real empty spray through the native item-on-item packet and checks its new charge state.
+     */
+    private suspend fun refillFungicide(): Boolean {
+        if (Zygomites.carriedSpray(bot) != null) return true
+        if (!bot.inventory.contains(Zygomites.EMPTY_SPRAY) || !bot.inventory.contains(Zygomites.FUNGICIDE) ||
+            !handler.inventory.useItem(Zygomites.FUNGICIDE).onItem(Zygomites.EMPTY_SPRAY)) return false
+        return waitFor(3.seconds) { Zygomites.carriedSpray(bot) != null }
+    }
+
+    override suspend fun onPrepareTargeting(): Boolean {
+        if (slayerTask == SlayerTaskType.ZYGOMITE && !refillFungicide()) {
+            forceBanking = true
+            bot.combat.target = null
+            return false
+        }
+        return true
+    }
+
     override suspend fun refocus(): Boolean {
         if (!prepareCombat()) {
             safespotCombat.release()
@@ -694,6 +753,13 @@ open class NpcCombatScript(bot: Bot,
                 forceBanking = true
                 return true
             }
+        }
+        val weakened = focus
+        if (weakened != null && weakened.isAlive && weakened.id in Zygomites.FORMS.values &&
+            weakened.health <= Zygomites.FINISH_HEALTH) {
+            safespotCombat.release()
+            bot.combat.target = null
+            return !interactWithTarget(3, weakened)
         }
         if (focus?.isAlive != true || !acceptsAssignment(focus!!)) {
             safespotCombat.release()
@@ -741,7 +807,8 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun interactionOption(target: Npc): Int? {
         attend()
-        return if (prepareCombat() && acceptsAssignment(target)) 3 else null
+        return if (prepareCombat() && acceptsAssignment(target))
+            if (target.id in Zygomites.FORMS) 1 else 3 else null
     }
 
     override fun targetApproachPolicy(target: Npc): InteractionPolicy =
@@ -750,15 +817,47 @@ open class NpcCombatScript(bot: Bot,
             bot.combat.getDefaultAttack(target).interactionPolicy else InteractionPolicy.STANDARD_SIZE
 
     /**
-     * Stone gargoyles use a native adjacent hammer attack regardless of the session's ordinary weapon style.
+     * Native activation and finishing items require adjacent reach regardless of the saved combat discipline.
      */
-    private fun needsFinishingReach(target: Npc?): Boolean = target?.id == 1611
+    private fun needsFinishingReach(target: Npc?): Boolean = target?.let {
+        it.id == 1611 || it.id in Zygomites.FORMS ||
+            it.id in Zygomites.FORMS.values && it.health <= Zygomites.FINISH_HEALTH
+    } == true
 
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
+        val expectedId = target.id
+        val active = Zygomites.FORMS[expectedId]
+        val life = target.spawnCount
+        val nativeInteraction = active != null ||
+            expectedId in Zygomites.FORMS.values && target.health <= Zygomites.FINISH_HEALTH
         val allowed = {
             isActionSafe() && !forceBanking && acceptsAssignment(target) && prepareCombat() &&
                 (!moleTrip || canAttack(target)) &&
-                bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target))
+                bot.combat.checkMultiCombat(target) && (!socialCamp || campBehavior.acceptsTarget(target)) &&
+                (!nativeInteraction || target.spawnCount == life &&
+                    (target.id == expectedId || active != null && target.id == active && target.combat.target === bot))
+        }
+        if (nativeInteraction) {
+            safespotCombat.release()
+            if (target.combat.isExecutionPending) return true
+            if (!handler.interactions.approach(target, InteractionPolicy.STANDARD_SIZE,
+                    canContinue = allowed) || !allowed()) return false
+            if (active != null && target.id == active) return true
+            val sent = if (active != null) {
+                handler.interactions.interact(1, target, InteractionPolicy.STANDARD_SIZE, allowed)
+            } else {
+                val spray = Zygomites.carriedSpray(bot) ?: return false
+                val index = bot.inventory.computeIndexForId(spray)
+                if (!allowed() || index < 0) return false
+                bot.output.useItemOnNpc(index, spray, target)
+                true
+            }
+            val completed = sent && waitFor(6.seconds) {
+                !assignmentActive() || target.spawnCount != life || !target.isAlive ||
+                    (active != null && target.id == active) || target.combat.isExecutionPending
+            }
+            return completed && assignmentActive() && target.spawnCount == life &&
+                (active == null || target.id == active && target.combat.target === bot)
         }
         if (option == 3 && needsFinishingReach(target)) {
             safespotCombat.release()
@@ -788,6 +887,7 @@ open class NpcCombatScript(bot: Bot,
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
         if (!acceptsAssignment(npc)) return false
+        if (npc.id in Zygomites.FORMS) return slayerTask == SlayerTaskType.ZYGOMITE
         if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
         if (moleTrip) return npc.id == GiantMole.ID && !npc.burrowing
         if (npc.id == 50) {
@@ -958,6 +1058,7 @@ open class NpcCombatScript(bot: Bot,
         if ((moleTrip && !GiantMoleTrip.carried(bot)) ||
             requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
             requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount } ||
+            (slayerTask == SlayerTaskType.ZYGOMITE && Zygomites.carriedSpray(bot) == null) ||
             (slayerTask == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
                 SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) })) {
             combatConfigured = false

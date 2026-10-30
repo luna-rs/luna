@@ -38230,13 +38230,77 @@
     ]
   },
   {
+    "id": 3344, // Fungi
+    "respawn_ticks": 9,
+    "aggression": null,
+    "movement": { "max_range": 0, "attack_range": 0, "retreat_hitpoints": -1 },
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 1,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3345, // Fungi
+    "respawn_ticks": 9,
+    "aggression": null,
+    "movement": { "max_range": 0, "attack_range": 0, "retreat_hitpoints": -1 },
+    "poisonous": false,
+    "immune_poison": false,
+    "hitpoints": 1,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
     "id": 3346, // Zygomite
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 65,
-    "maximum_hit": 8,
+    "maximum_hit": 7,
     "attack_speed": 4,
     "attack_animation": 3326,
     "defence_animation": 3325,
@@ -38268,7 +38332,7 @@
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 65,
+    "hitpoints": 75,
     "maximum_hit": 8,
     "attack_speed": 4,
     "attack_animation": 3326,
@@ -38280,11 +38344,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      65,
-      65,
-      65,
-      65,
-      65
+      75,
+      75,
+      75,
+      75,
+      75
     ],
     "bonuses": [
       10,

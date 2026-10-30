@@ -101,6 +101,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.VARROCK_SEWERS, 50, setOf("Ghost")),
         Camp(SubZone.ARDOUGNE_SQUARE_THIEVING, 50, setOf("Guard dog")),
         Camp(SubZone.ZANARIS_MAIN, 65, setOf("Otherworldly being")),
+        Camp(SubZone.ZANARIS_MAIN, 85, setOf("Zygomite")),
         Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf")),
         Camp(SubZone.EDGEVILLE_DUNGEON, 110, setOf("Black Demon"))
     )
