@@ -52,10 +52,14 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * Shared dungeons retain conservative readiness limits for their other inhabitants: bats in the ogre dungeon
      * or Karamja do not make those areas low-level destinations. Tower banshees require owned earmuffs through
      * the shared combat script's task-equipment policy. Other unsupported specialist assignments remain unavailable.
+     * Native bears already inhabit the mapped East Edgeville woods and Legends' Guild mine; exact assignment IDs
+     * keep nearby guards, townspeople and spiders out of these visits without changing ordinary combat selection.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
         Camp(SubZone.SLAYER_TOWER_GROUND, 35, setOf("Banshee")),
+        Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
+        Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
         Camp(SubZone.CHAOS_DRUID_TOWER_DUNGEON, 55, setOf("Giant bat")),
         Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Giant bat")),
