@@ -5,6 +5,7 @@ import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
+import game.skill.firemaking.lightSource.LightSource
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
@@ -14,11 +15,6 @@ import io.luna.game.model.mob.dialogue.Expression
  * The skavid map, which shows the way through the skavid caves.
  */
 val SKAVID_MAP = 2376
-
-/**
- * The lit light sources: candles, a torch, lamps and lanterns.
- */
-val LIT_LIGHTS = setOf(32, 33, 594, 4524, 4531, 4534, 4539, 4550, 4702, 7053)
 
 /**
  * The dark cave players without a light end up in, and the rope out of it.
@@ -79,7 +75,7 @@ for (cave in SkavidCave.values()) {
                 plr.move(cave.lost)
             }
 
-            LIT_LIGHTS.none { plr.inventory.contains(it) } -> loseInDark(plr)
+            LightSource.brightness(plr) == 0 -> loseInDark(plr)
 
             else -> {
                 plr.sendMessage("You enter the cave...")

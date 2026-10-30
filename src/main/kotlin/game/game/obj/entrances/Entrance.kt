@@ -64,7 +64,6 @@ enum class Entrance(val id: Int,
     KALPHITE_QUEEN_OUT(id = 3832, landing = tile(3508, 9497, 2)),
 
     // Lumbridge Swamp Caves: the rope back up, and the tunnels to the Tears of Guthix cave.
-    // TODO Once darkness is added, players without a light source get bitten by insects in here.
     LUMBRIDGE_SWAMP_CAVES_UP(id = 5946, landing = shift(0, -6400), delay = 1, animation = 828),
     TEARS_OF_GUTHIX_TUNNEL_IN(id = 6659, landing = tile(3219, 9532, 2), delay = 1),
     TEARS_OF_GUTHIX_TUNNEL_OUT(id = 6658, landing = tile(3226, 9542), delay = 1),
