@@ -209,10 +209,27 @@ public class Npc extends Mob {
 
     @Override
     public void transform(int requestedId) {
+        transform(requestedId, true);
+    }
+
+    /**
+     * Changes form and combat base levels without restoring current health or other dynamic skill levels.
+     * Keeping the existing health avoids clearing kill contributions during a cosmetic or reversible form change.
+     *
+     * @param requestedId The new NPC definition.
+     */
+    public void transformKeepingLevels(int requestedId) {
+        transform(requestedId, false);
+    }
+
+    /**
+     * Applies one native form update, optionally restoring the new definition's current combat levels.
+     */
+    private void transform(int requestedId, boolean resetCurrentLevels) {
         definition = NpcDefinition.ALL.retrieve(requestedId);
         combatDefinition = NpcCombatDefinition.ALL.get(requestedId);
         transformId = requestedId;
-        setSkills();
+        setSkills(resetCurrentLevels);
         flags.flag(UpdateFlag.TRANSFORM);
     }
 
@@ -364,6 +381,13 @@ public class Npc extends Mob {
      * combat damage and drains can recover toward the definition values.
      */
     private void setSkills() {
+        setSkills(true);
+    }
+
+    /**
+     * Updates combat base levels while allowing reversible forms to retain current damage, boosts and drains.
+     */
+    private void setSkills(boolean resetCurrentLevels) {
         // Set the attack, strength, defence, ranged, and magic levels.
         combatDefinition.ifPresent(def -> {
             Skill attack = skill(Skill.ATTACK);
@@ -380,12 +404,14 @@ public class Npc extends Mob {
             magic.setStaticLevel(def.getMagicLevel());
             hitpoints.setStaticLevel(def.getHitpoints());
 
-            attack.setLevel(def.getAttackLevel());
-            strength.setLevel(def.getStrengthLevel());
-            defence.setLevel(def.getDefenceLevel());
-            ranged.setLevel(def.getRangedLevel());
-            magic.setLevel(def.getMagicLevel());
-            hitpoints.setLevel(def.getHitpoints());
+            if (resetCurrentLevels) {
+                attack.setLevel(def.getAttackLevel());
+                strength.setLevel(def.getStrengthLevel());
+                defence.setLevel(def.getDefenceLevel());
+                ranged.setLevel(def.getRangedLevel());
+                magic.setLevel(def.getMagicLevel());
+                hitpoints.setLevel(def.getHitpoints());
+            }
         });
     }
 

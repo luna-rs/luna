@@ -16272,7 +16272,8 @@
   },
   {
     "id": 1240, // Loar Shadow
-    "respawn_ticks": 9,
+    "respawn_ticks": 35,
+    "movement": { "max_range": 60, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": null,
     "poisonous": false,
     "immune_poison": true,
@@ -16303,7 +16304,8 @@
   },
   {
     "id": 1241, // Loar Shade
-    "respawn_ticks": 9,
+    "respawn_ticks": 35,
+    "movement": { "max_range": 60, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": {
       "policy": "COMBAT_LEVEL",
       "tolerance_minutes": 10
@@ -16339,7 +16341,8 @@
   },
   {
     "id": 1243, // Phrin Shadow
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": null,
     "poisonous": false,
     "immune_poison": true,
@@ -16370,7 +16373,8 @@
   },
   {
     "id": 1244, // Phrin Shade
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": {
       "policy": "COMBAT_LEVEL",
       "tolerance_minutes": 10
@@ -16406,7 +16410,8 @@
   },
   {
     "id": 1245, // Riyl Shadow
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": null,
     "poisonous": false,
     "immune_poison": true,
@@ -16437,7 +16442,8 @@
   },
   {
     "id": 1246, // Riyl Shade
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": {
       "policy": "COMBAT_LEVEL",
       "tolerance_minutes": 10
@@ -16473,7 +16479,8 @@
   },
   {
     "id": 1247, // Asyn Shadow
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": null,
     "poisonous": false,
     "immune_poison": true,
@@ -16504,7 +16511,8 @@
   },
   {
     "id": 1248, // Asyn Shade
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": {
       "policy": "COMBAT_LEVEL",
       "tolerance_minutes": 10
@@ -16540,7 +16548,8 @@
   },
   {
     "id": 1249, // Fiyr Shadow
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": null,
     "poisonous": false,
     "immune_poison": true,
@@ -16571,7 +16580,8 @@
   },
   {
     "id": 1250, // Fiyr Shade
-    "respawn_ticks": 9,
+    "respawn_ticks": 50,
+    "movement": { "max_range": 11, "attack_range": 0, "retreat_hitpoints": -1 },
     "aggression": {
       "policy": "COMBAT_LEVEL",
       "tolerance_minutes": 10

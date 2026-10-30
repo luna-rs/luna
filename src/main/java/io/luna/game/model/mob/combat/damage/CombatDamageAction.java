@@ -111,7 +111,8 @@ public final class CombatDamageAction extends Action<Mob> {
 
             // Determine whether the victim should retaliate.
             if (victim.isAlive() && attacker.isAlive() && attacker.getState() == EntityState.ACTIVE &&
-                    victim.getCombat().isAutoRetaliate()) {
+                    victim.getCombat().isAutoRetaliate() &&
+                    (source == null || !source.suppressesCombatEngagement(damage))) {
                 if (victim instanceof Npc || victim.getCombat().getTarget() == null ||
                         !victim.getCombat().getTarget().isAlive() ||
                         !victim.getActions().contains(CombatAction.class)) {

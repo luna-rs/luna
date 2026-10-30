@@ -165,9 +165,11 @@ public abstract class CombatAttack<T extends Mob> {
         if (!ignoreAttackDelay) {
             attacker.getCombat().setAttackDelay(delay);
         }
-        attacker.getCombat().setLastCombatWith(victim);
-        attacker.getCombat().resetCombatTimer();
-        victim.getCombat().markAttackedBy(attacker);
+        if (!suppressesCombatEngagement(nextDamage)) {
+            attacker.getCombat().setLastCombatWith(victim);
+            attacker.getCombat().resetCombatTimer();
+            victim.getCombat().markAttackedBy(attacker);
+        }
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
         npcPoisonSeverity = attacker instanceof Npc npc ? npc.combatDef().getPoisonSeverity() : 0;
@@ -186,6 +188,18 @@ public abstract class CombatAttack<T extends Mob> {
             }
         }
         attack();
+    }
+
+    /**
+     * Allows a specialized attack to deliver its animation and hit without establishing combat ownership or
+     * triggering retaliation. Ordinary attacks retain their existing engagement behavior, including misses.
+     * The same policy is checked again after defensive hit changes when the recipient considers retaliation.
+     *
+     * @param damage The prepared or delivered incoming hit, or {@code null} when a defence hook cancelled it.
+     * @return {@code true} to suppress combat ownership, timer refreshes, and automatic retaliation for this hit.
+     */
+    public boolean suppressesCombatEngagement(CombatDamage damage) {
+        return false;
     }
 
     /**
