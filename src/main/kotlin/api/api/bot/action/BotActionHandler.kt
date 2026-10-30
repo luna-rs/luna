@@ -7,9 +7,7 @@ import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.walk.BankWithdrawal
 import api.bot.webwalk.walk.WebWalkResult
 import api.bot.webwalk.walk.WebWalker
-import api.bot.zone.HomeTravelStrategy
 import api.bot.zone.SubZone
-import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
