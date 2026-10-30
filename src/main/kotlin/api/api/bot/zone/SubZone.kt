@@ -1,20 +1,14 @@
 package api.bot.zone
 
-import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.Suspendable.naturalDelay
-import api.bot.Suspendable.naturalMicroDelay
-import api.bot.Suspendable.waitFor
 import api.bot.zone.SubZone.Companion.updateSubZone
 import api.bot.zone.Zone.*
 import api.predef.*
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableSetMultimap
-import game.bot.scripts.skills.AgilityCourseTravel
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
-import game.obj.doors.BrassKeyDoor
-import game.skill.runecrafting.enterAltar.Altar
-import game.obj.doors.TaverleyJailDoor
 import game.item.teleport.SpadeDigSpot
+import game.obj.doors.BrassKeyDoor
+import game.obj.doors.TaverleyJailDoor
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -99,6 +93,7 @@ enum class SubZone(
     GNOME_STRONGHOLD_FRUIT_PATCH(
         inside = Position(2474, 3445), area = SimpleBoxArea.of(2472, 3442, 2480, 3450),
         parent = { GNOME_STRONGHOLD }),
+
     /**
      * Supplied fruit-tree plot outside Tree Gnome Village, using its own parent travel hub.
      */
@@ -124,18 +119,21 @@ enum class SubZone(
     ARDOUGNE_FARM(
         inside = Position(2668, 3376), area = SimpleBoxArea.of(2659, 3367, 2675, 3382),
         parent = { ARDOUGNE }),
+
     /**
      * Port Phasmatys allotments, flower and herb plots and compost bin share this farm footprint.
      */
     PORT_PHASMATYS_FARM(
         inside = Position(3636, 3527), area = SimpleBoxArea.ofRadius(3584, 3516, 53, 21),
         parent = { PORT_PHASMATYS }),
+
     /**
      * Ground-floor Slayer Tower assignments, using Port Phasmatys as the supplied travel and banking parent.
      */
     SLAYER_TOWER_GROUND(
         inside = Position(3429, 3538), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56),
         parent = { PORT_PHASMATYS }),
+
     /**
      * Reuses the supplied Tower footprint on its first upper floor. Arrival is an existing Infernal Mage spawn;
      * native target IDs distinguish the assignment from other monsters sharing this floor.
@@ -143,6 +141,7 @@ enum class SubZone(
     SLAYER_TOWER_FIRST_FLOOR(
         inside = Position(3434, 3563, 1), area = SimpleBoxArea.ofRadius(3401, 3526, 53, 56, 1),
         parent = { PORT_PHASMATYS }),
+
     /**
      * Reuses the supplied Tower footprint on its second upper floor, arriving at a configured Gargoyle spawn.
      * Assignment filtering keeps the other monsters on this floor out of deliberate target selection.
@@ -446,7 +445,7 @@ enum class SubZone(
      * The edgeville dark wizards' area. Used for mid-level combat training.
      */
     VARROCK_DARK_WIZARDS(
-        inside = Position(3292, 3418),
+        inside = Position(3220, 3363),
         area = SimpleBoxArea.of(3218, 3362, 3237, 3378),
         parent = { VARROCK }),
 
@@ -1592,16 +1591,21 @@ enum class SubZone(
     fun entryBlocker(bot: Bot): String? = when (this) {
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
-                CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones)
+                CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones
+            )
                 "the tower door needs level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving" else null
+
         TAVERLEY_DUNGEON_ZAMORAK_MONKS ->
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
+
         EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS ->
             // A bot without a key buys one for a coin.
             if (this !in bot.subZones && !bot.itemTracker.contains(BrassKeyDoor.KEY) &&
-                !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id))
+                !bot.inventory.contains(Currency.COINS.id) && !bot.bank.contains(Currency.COINS.id)
+            )
                 "the house door needs a brass key" else null
+
         else -> null
     }
 
@@ -1622,5 +1626,5 @@ enum class SubZone(
      */
     private fun canEnterTaverleyWest(bot: Bot): Boolean =
         bot.itemTracker.contains(TaverleyJailDoor.DUSTY_KEY_GATE.key) ||
-            bot.inventory.contains(Currency.COINS.id) || bot.bank.contains(Currency.COINS.id)
+                bot.inventory.contains(Currency.COINS.id) || bot.bank.contains(Currency.COINS.id)
 }
