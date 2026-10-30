@@ -345,7 +345,7 @@
   {"id": 377, "name": "The Golem", "button": 12841, "regions": [[13616, -1], [13872, -1]], "unlock": [10, 7]},
   {"id": 407, "name": "The Lost Melody", "button": 13360, "regions": [], "unlock": [10, 27]},
   {"id": 420, "name": "The Lost Tribe", "button": 13361, "regions": [], "unlock": [11, 2]},
-  {"id": 573, "name": "The Mad Mole", "button": 18175, "regions": [], "unlock": [13, 9]},
+  {"id": 573, "name": "The Mad Mole", "button": 18175, "regions": [[6992, -1], [6993, -1]], "unlock": [13, 9]},
   {"id": 448, "name": "The Monsters Below", "button": 14186, "regions": [], "unlock": [11, 9]},
   {"id": 316, "name": "The Navigator", "button": 10114, "regions": [], "unlock": [8, 31]},
   {"id": 485, "name": "The Noble Rodent", "button": 15495, "regions": [], "unlock": [11, 26]},

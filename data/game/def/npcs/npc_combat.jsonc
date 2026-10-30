@@ -35896,13 +35896,14 @@
   },
   {
     "id": 3340, // Giant Mole
+    "movement": { "max_range": 56, "attack_range": 0, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "hitpoints": 200,
+    "maximum_hit": 21,
+    "attack_speed": 4,
     "attack_animation": 3312,
     "defence_animation": 3311,
     "death_animation": 3310,

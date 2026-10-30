@@ -14,7 +14,8 @@ enum class DarkArea(val darkness: Int, vararg val areas: Area) {
     // TODO Swamp gas, which makes naked flames flare up and explode.
     LUMBRIDGE_SWAMP_CAVES(darkness = 3, Area.of(3145, 9540, 3258, 9600)),
     CAVE_GOBLIN_MINE(darkness = 3, Area.of(3221, 9602, 3325, 9657)),
-    GENIE_CAVE(darkness = 3, Area.of(3369, 9299, 3377, 9312));
+    GENIE_CAVE(darkness = 3, Area.of(3369, 9299, 3377, 9312)),
+    GIANT_MOLE_LAIR(darkness = 3, Area.of(1732, 5133, 1787, 5244));
 
     companion object {
 

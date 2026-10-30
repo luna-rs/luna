@@ -57,6 +57,9 @@ enum class Entrance(val id: Int,
     FREMENNIK_SLAYER_DUNGEON_IN(id = 4499, landing = tile(2808, 10002)),
     FREMENNIK_SLAYER_DUNGEON_OUT(id = 4500, landing = tile(2796, 3615)),
 
+    // Falador, the rope out of the Giant Mole's lair, up to the well south of the White Knights' Castle.
+    GIANT_MOLE_LAIR_ROPE(id = 12230, landing = tile(2985, 3316), delay = 2, animation = 828),
+
     // Kalphite Lair and the Kalphite Queen's chamber, once a rope is tied to the entrance.
     KALPHITE_LAIR_IN(id = 3828, landing = tile(3483, 9510, 2)),
     KALPHITE_LAIR_OUT(id = 3829, landing = tile(3226, 3108)),

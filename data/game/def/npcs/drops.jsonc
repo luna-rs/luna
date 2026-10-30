@@ -28146,5 +28146,153 @@
         "table": 1
       }
     ]
+  },
+  {
+    "ids": [
+      3340 // Giant Mole
+    ],
+    "rare": "RARE",
+    "drops": [
+      {
+        "id": 532, // Big bones
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 7416, // Mole claw
+        "quantity": "1",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 7418, // Mole skin
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 1.0,
+        "table": 1
+      },
+      {
+        "id": 556, // Air rune
+        "quantity": "105",
+        "noted": false,
+        "rarity": 0.15625,
+        "table": 1
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.1484375,
+        "table": 1
+      },
+      {
+        "id": 554, // Fire rune
+        "quantity": "105",
+        "noted": false,
+        "rarity": 0.0859375,
+        "table": 1
+      },
+      {
+        "id": 884, // Iron arrow
+        "quantity": "690",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 563, // Law rune
+        "quantity": "15",
+        "noted": false,
+        "rarity": 0.0390625,
+        "table": 1
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "7",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 1301, // Adamant longsword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 1121, // Mithril platebody
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0703125,
+        "table": 1
+      },
+      {
+        "id": 1725, // Amulet of strength
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0546875,
+        "table": 1
+      },
+      {
+        "id": 1355, // Mithril axe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 1369, // Mithril battleaxe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1147, // Rune med helm
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      },
+      {
+        "id": 1515, // Yew logs
+        "quantity": "100",
+        "noted": true,
+        "rarity": 0.078125,
+        "table": 1
+      },
+      {
+        "id": 385, // Shark
+        "quantity": "4",
+        "noted": false,
+        "rarity": 0.03125,
+        "table": 1
+      },
+      {
+        "id": 2359, // Mithril bar
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0234375,
+        "table": 1
+      },
+      {
+        "id": 440, // Iron ore
+        "quantity": "100",
+        "noted": true,
+        "rarity": 0.015625,
+        "table": 1
+      },
+      {
+        "id": 413, // Oyster pearls
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 1
+      }
+    ]
   }
 ]

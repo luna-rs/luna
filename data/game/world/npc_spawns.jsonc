@@ -284,6 +284,7 @@
       "y": 5189,
       "z": 0
     },
+    "respawn_ticks": 150,
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
