@@ -12,6 +12,9 @@ import engine.controllers.Controllers.inWilderness
 import game.bot.scripts.DepositPartyRoomItemBotScript
 import game.bot.scripts.DropPartyBotScript
 import game.bot.scripts.FishingTrawlerBotScript
+import game.bot.scripts.MageArenaBotScript
+import game.bot.scripts.BlastFurnaceBotScript
+import game.skill.smithing.BarType
 import game.bot.scripts.CastleWarsBotScript
 import game.bot.scripts.PestControlBotScript
 import game.content.pestControl.PestControl
@@ -53,6 +56,9 @@ object MinigameCoordinator : ProgressiveCoordinator() {
             bot.attendedParty = id
             return DropPartyBotScript(bot, id, DropPartyOption.currentPartyDeadline)
         }
+        if (MageArenaBotScript.eligible(bot) && rand(0.25)) return MageArenaBotScript(bot)
+        val furnaceBar = BarType.entries.filter { BlastFurnaceBotScript.eligible(bot, it) }.maxByOrNull { it.level }
+        if (furnaceBar != null) return BlastFurnaceBotScript(bot, furnaceBar)
         if (GamesRoom.inRoom(bot.position) && GamesRoomBotScript.eligible(bot)) return GamesRoomBotScript(bot)
         if (PestControlBotScript.eligible(bot) && (PestControl.atOutpost(bot.position) ||
                 PestControl.round.waiting().isNotEmpty() || rand(0.25))) return PestControlBotScript(bot)

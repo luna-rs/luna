@@ -1,6 +1,7 @@
 package engine.widget
 
 import api.predef.*
+import game.content.mageArena.MageArena
 import game.content.treasureTrails.TreasureTrails
 import game.player.Messages
 import game.player.Sound
@@ -30,6 +31,10 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_
     val pickupItem = groundItem.toItem()
     val pouch = EssencePouch.ID_TO_POUCH[pickupItem.id]
     when {
+        pickupItem.id in MageArena.capes && !MageArena.canTakeCape(plr) -> {
+            plr.sendMessage("You may only possess one sacred cape at a time.")
+            plr.sendMessage("The conflicting powers of the capes drive them apart.")
+        }
         !TreasureTrails.canAcquire(plr, pickupItem.id) -> Unit
         ZamorakWine.onPickup(plr, groundItem) -> Unit
 

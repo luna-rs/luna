@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat.state;
 
 import game.combat.spells.GodSpells;
+import game.content.mageArena.MageArena;
 import game.content.duelArena.DuelController;
 import game.content.duelArena.DuelRules;
 import game.skill.magic.Magic;
@@ -202,6 +203,11 @@ public class PlayerMagicCombat {
             return false;
         }
 
+        if (!MageArena.INSTANCE.canCast(player, spell.getSpell())) {
+            if (spell == selectedSpell) setSelectedSpell(NONE);
+            if (spell == autocastSpell) setAutocastSpell(NONE);
+            return false;
+        }
         List<Item> required = Magic.INSTANCE.checkRequirements(player, spell, false);
         if (required == null) {
             if (spell == autocastSpell) {
@@ -211,6 +217,7 @@ public class PlayerMagicCombat {
         }
 
         player.getInventory().removeAll(required);
+        MageArena.INSTANCE.recordCast(player, spell.getSpell(), player.getCombat().getTarget());
         return true;
     }
 

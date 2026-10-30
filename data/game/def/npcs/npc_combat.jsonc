@@ -10565,17 +10565,17 @@
   },
   {
     "id": 907, // Kolodion
-    "movement": { "max_range": 7, "attack_range": 3, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "movement": { "max_range": 7, "attack_range": 5, "retreat_hitpoints": -1 },
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 78,
+    "hitpoints": 3,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 1834,
     "death_animation": 836,
@@ -10583,9 +10583,9 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      28,
-      23,
-      58,
+      15,
+      10,
+      20,
       1,
       30
     ],
@@ -10601,16 +10601,16 @@
   {
     "id": 908, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 3,
+    "hitpoints": 65,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 128,
     "defence_animation": 129,
     "death_animation": 131,
@@ -10618,11 +10618,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      55,
+      70,
+      72,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -10635,16 +10635,16 @@
   {
     "id": 909, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
     "hitpoints": 78,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 143,
     "defence_animation": 144,
     "death_animation": 146,
@@ -10670,16 +10670,16 @@
   {
     "id": 910, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 3,
+    "hitpoints": 78,
     "maximum_hit": 20,
-    "attack_speed": 7,
+    "attack_speed": 5,
     "attack_animation": 394,
     "defence_animation": 389,
     "death_animation": 843,
@@ -10687,11 +10687,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      28,
+      23,
+      58,
+      1,
+      1
     ],
     "bonuses": [
       0,
@@ -10704,16 +10704,16 @@
   {
     "id": 911, // Kolodion
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": {
       "policy": "ALWAYS",
       "tolerance_minutes": -1
     },
-    "poisonous": true,
+    "poisonous": false,
     "immune_poison": false,
     "hitpoints": 107,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 64,
     "defence_animation": 65,
     "death_animation": 68,
@@ -10740,12 +10740,12 @@
     "id": 912, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 415,
     "death_animation": 836,
@@ -10772,12 +10772,12 @@
     "id": 913, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 811,
     "defence_animation": 415,
     "death_animation": 2304,
@@ -10804,12 +10804,12 @@
     "id": 914, // Battle mage
     "movement": { "max_range": 10, "attack_range": 5, "retreat_hitpoints": -1 },
     "respawn_ticks": 9,
-    "aggression": null,
+    "aggression": { "policy": "MAGE_ARENA", "tolerance_minutes": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 120,
     "maximum_hit": 20,
-    "attack_speed": 4,
+    "attack_speed": 5,
     "attack_animation": 191,
     "defence_animation": 193,
     "death_animation": 196,

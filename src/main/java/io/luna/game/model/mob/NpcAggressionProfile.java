@@ -41,7 +41,12 @@ public final class NpcAggressionProfile {
         /**
          * The NPC is aggressive unless the target is protected by wearing a Zamorak item.
          */
-        WEARING_ZAMORAK
+        WEARING_ZAMORAK,
+
+        /**
+         * Hunts completed Mage Arena participants unless they wear this mage's matching cape and staff.
+         */
+        MAGE_ARENA
     }
 
     /**

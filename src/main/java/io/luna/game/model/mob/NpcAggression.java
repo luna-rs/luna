@@ -1,4 +1,5 @@
 package io.luna.game.model.mob;
+import game.content.mageArena.MageArenaCombat;
 
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.World;
@@ -181,6 +182,8 @@ public class NpcAggression {
      */
     private boolean checkPolicy(Player player, NpcAggressionPolicy policy) {
         switch (policy) {
+            case MAGE_ARENA:
+                return MageArenaCombat.INSTANCE.mayAggress(attacker, player);
             case COMBAT_LEVEL:
                 return player.getCombatLevel() <= attacker.def().getCombatLevel() * 2;
             case WEARING_GUTHIX:

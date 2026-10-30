@@ -1,6 +1,7 @@
 package game.obj.wildernessLevers
 
 import api.predef.*
+import game.content.mageArena.MageArena
 import api.predef.ext.*
 import game.obj.wildernessLevers.WildernessLever.Companion.skipWildernessLeverWarning
 import game.player.Sound
@@ -91,9 +92,10 @@ for (type in WildernessLever.entries) {
         if (type == WildernessLever.ARDOUGNE && !plr.skipWildernessLeverWarning) {
             warn(plr, gameObject)
         } else {
-            // TODO Once the Mage Arena is added, only players who have started it may pull MAGE_ARENA_ENTRANCE. Others
-            //  get Kolodion (905): "You're not allowed in there. Come downstairs if you want to enter my arena."
-            pull(plr, gameObject, type)
+            if (type == WildernessLever.MAGE_ARENA_ENTRANCE && MageArena.stage(plr) == 0) {
+                plr.newDialogue().npc(905, "You're not allowed in there.",
+                    "Come downstairs if you want to enter my arena.").open()
+            } else pull(plr, gameObject, type)
         }
     }
 }
