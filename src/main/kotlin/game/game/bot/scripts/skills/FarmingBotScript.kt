@@ -107,16 +107,16 @@ class FarmingBotScript(
             TreePatchLocation.VARROCK to SubZone.VARROCK_TREE_PATCH,
             TreePatchLocation.LUMBRIDGE to SubZone.LUMBRIDGE_TREE_PATCH,
             FruitTreePatchLocation.GNOME_STRONGHOLD to SubZone.GNOME_STRONGHOLD_FRUIT_PATCH,
+            FruitTreePatchLocation.GNOME_VILLAGE to SubZone.GNOME_VILLAGE_FRUIT_PATCH,
             FruitTreePatchLocation.BRIMHAVEN to SubZone.BRIMHAVEN_FRUIT_PATCH,
             FruitTreePatchLocation.CATHERBY to SubZone.CATHERBY_FRUIT_PATCH,
             BushPatchLocation.CHAMPIONS_GUILD to SubZone.CHAMPIONS_GUILD_BUSH_PATCH,
             BushPatchLocation.RIMMINGTON to SubZone.RIMMINGTON_BUSH_PATCH,
             BushPatchLocation.ARDOUGNE to SubZone.ARDOUGNE_BUSH_PATCH,
+            BushPatchLocation.ETCETERIA to SubZone.ETCETERIA_BUSH_PATCH,
             SpecialPatchLocation.CACTUS to SubZone.AL_KHARID_CACTUS_PATCH,
             SpecialPatchLocation.MUSHROOM to SubZone.CANIFIS_MUSHROOM_PATCH,
             SpecialPatchLocation.BELLADONNA to SubZone.DRAYNOR_BELLADONNA_PATCH
-            // TODO Gnome Village fruit patch (2489, 3179): needs its parent travel zone data.
-            // TODO Etceteria bush patch (2591, 3863): needs its island parent travel zone data.
         )
 
         /**

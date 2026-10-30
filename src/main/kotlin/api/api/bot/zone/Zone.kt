@@ -55,6 +55,22 @@ enum class Zone(val price: Int,
                                         Position(3690, 3465), Position(3691, 3465))),
 
     /**
+     * Supplied island footprint, arrival and banking destination for Miscellania and Etceteria activities.
+     */
+    MISCELLANIA_AND_ETCETERIA(price = 5000,
+                             anchor = Position(2527, 3859),
+                             regions = setOf(9788, 10044, 10300, 10043),
+                             bankAnchors = listOf(Position(2620, 3894))),
+
+    /**
+     * Supplied Tree Gnome Village travel hub. Its farming visits use ordinary bank discovery;
+     * no local bank anchors are configured.
+     */
+    TREE_GNOME_VILLAGE(price = 2000,
+                      anchor = Position(2524, 3168),
+                      regions = setOf(10033)),
+
+    /**
      * Canifis footprint derived from the supplied main-town rectangle. The anchor is user supplied;
      * bank anchors are intentionally empty. Travel costs the supplied 5,000 GP fee.
      */

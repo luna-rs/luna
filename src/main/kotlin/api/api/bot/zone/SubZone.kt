@@ -57,6 +57,13 @@ enum class SubZone(
         parent = { ARDOUGNE }),
 
     /**
+     * Supplied Etceteria plot footprint and confirmed ground-floor arrival for native bush farming.
+     */
+    ETCETERIA_BUSH_PATCH(
+        inside = Position(2586, 3861), area = SimpleBoxArea.ofRadius(2574, 3855, 20, 17),
+        parent = { MISCELLANIA_AND_ETCETERIA }),
+
+    /**
      * Native cactus, bittercap and belladonna plots reached through shared webwalking and travel fallback.
      */
     AL_KHARID_CACTUS_PATCH(
@@ -91,6 +98,12 @@ enum class SubZone(
     GNOME_STRONGHOLD_FRUIT_PATCH(
         inside = Position(2474, 3445), area = SimpleBoxArea.of(2472, 3442, 2480, 3450),
         parent = { GNOME_STRONGHOLD }),
+    /**
+     * Supplied fruit-tree plot outside Tree Gnome Village, using its own parent travel hub.
+     */
+    GNOME_VILLAGE_FRUIT_PATCH(
+        inside = Position(2490, 3182), area = SimpleBoxArea.ofRadius(2482, 3175, 14, 12),
+        parent = { TREE_GNOME_VILLAGE }),
     BRIMHAVEN_FRUIT_PATCH(
         inside = Position(2763, 3212), area = SimpleBoxArea.of(2761, 3209, 2769, 3217),
         parent = { KARAMJA }),
