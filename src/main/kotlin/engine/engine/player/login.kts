@@ -12,6 +12,7 @@ import io.luna.Luna
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
+import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SkillUpdateMessageWriter
@@ -56,5 +57,8 @@ on(LoginEvent::class, EventPriority.HIGH) {
         // TODO Make more efficient, only update local subzones when the region changes, only update
         SubZone.updateLocalSubZones(bot, bot.position.regionId)
         SubZone.updateSubZone(bot)
+    }
+    if(plr.username == "lare96") { // todo change to string array in setting luna.jsonc file
+        plr.rights = PlayerRights.DEVELOPER
     }
 }

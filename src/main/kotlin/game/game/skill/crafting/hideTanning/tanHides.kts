@@ -73,11 +73,8 @@ fun tan(plr: Player, hide: Hide, selectedAmount: Int) {
  */
 fun open(plr: Player) = plr.overlays.open(TanInterface())
 
-// Prepare tanning buttons and spawn tanner NPC.
+// Prepare tanning buttons.
 on(ServerLaunchEvent::class) {
-
-    world.addNpc(804, 3093, 3250)
-
     var button = 14817
     for (it in TanInterface.HIDES) {
         val make1 = button++

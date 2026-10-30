@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import api.bot.zone.Zone;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import engine.controllers.WildernessLocatableController;
@@ -471,7 +472,12 @@ public class Player extends Mob {
             }
         } else {
             // New player!
-            setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
+            if (this instanceof Bot) {
+                // Bots always spawn in Lumbridge.
+                setPosition(Zone.LUMBRIDGE.getAnchor());
+            } else {
+                setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
+            }
             rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
             if (isBot()) {
@@ -1503,4 +1509,6 @@ public class Player extends Mob {
     public PlayerAggressionTolerance getTolerance() {
         return tolerance;
     }
+
+
 }
