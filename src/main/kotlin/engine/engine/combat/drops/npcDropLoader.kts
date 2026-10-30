@@ -50,6 +50,10 @@ fun loadTable(table: StaticNpcDropTable, subTables: ListMultimap<Int, StaticNpcD
             }
 
             for (entry in subTables.asMap().entries) {
+                if (entry.value.any { it.shared != null }) {
+                    tables += StaticNpcDropRoll(entry.value.toList())
+                    continue
+                }
                 // Create a new DSL table for each unique table ID.
                 table {
                     val noted = ArrayList<StaticNpcDrop>()
