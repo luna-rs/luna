@@ -159,15 +159,21 @@ object NpcCombatHandler {
     fun damageExperienceMultiplier(npc: Npc): Double = resolve(npc) { it.damageExperienceMultiplier } ?: 1.0
 
     /**
-     * Limits poison damage for NPCs whose combat registration requires a separate finishing blow.
+     * Limits indirect damage for NPCs whose combat registration requires a separate finishing blow.
      * Uses the same type-before-id lookup as attack and defence hooks, including the NPC's current transformed id.
+     * Poison and recoil must not bypass the finishing item; validated execution damage uses its own attributed path.
      *
-     * @param npc The poisoned NPC.
-     * @param amount The requested poison damage.
-     * @return Non-negative damage that leaves at least one hitpoint when poison is not allowed to kill.
+     * @param npc The receiving NPC.
+     * @param amount The requested indirect damage.
+     * @return Non-negative damage that leaves at least one hitpoint when a finishing item is required.
      */
-    fun capPoisonDamage(npc: Npc, amount: Int): Int {
+    fun capIndirectDamage(npc: Npc, amount: Int): Int {
         val maximum = if (resolve(npc) { it.poisonCanKill } == false) (npc.health - 1).coerceAtLeast(0) else npc.health
         return amount.coerceIn(0, maximum.coerceAtLeast(0))
     }
+
+    /**
+     * Retains the native poison entry point while sharing finishing-item protection with other indirect damage.
+     */
+    fun capPoisonDamage(npc: Npc, amount: Int): Int = capIndirectDamage(npc, amount)
 }

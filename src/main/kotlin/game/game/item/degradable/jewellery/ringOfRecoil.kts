@@ -1,10 +1,12 @@
 package game.item.degradable.jewellery
 
 import api.predef.*
+import api.combat.npc.NpcCombatHandler
 import game.item.degradable.DegradableEquipmentHandler
 import game.item.degradable.DegradableEquipmentHandler.ringOfRecoilCharges
 import io.luna.game.event.impl.CombatDamageReceivedEvent
 import io.luna.game.model.item.Equipment
+import io.luna.game.model.mob.Npc
 import kotlin.math.floor
 
 // Reflect damage whenever the player is wearing the ring and is hit for > 0.
@@ -17,8 +19,12 @@ on(CombatDamageReceivedEvent::class) {
             reflected = charges
         }
         reflected = reflected.coerceAtLeast(0)
+        val npc = damage.attacker as? Npc
+        if (npc != null) reflected = reflected.coerceAtMost(npc.health.coerceAtLeast(0))
         plr.ringOfRecoilCharges -= reflected
-        damage.attacker.damage(reflected)
+        // Native finishing protection preserves one hitpoint without refunding the reflected hit's charge cost.
+        val applied = if (npc != null) NpcCombatHandler.capIndirectDamage(npc, reflected) else reflected
+        damage.attacker.damage(applied)
         if (plr.ringOfRecoilCharges <= 0) {
             plr.equipment[Equipment.RING] = null
             plr.sendMessage("Your Ring of Recoil shatters.")
