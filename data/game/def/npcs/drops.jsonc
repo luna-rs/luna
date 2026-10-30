@@ -19528,78 +19528,8 @@
     "ids": [
       3200 // Chaos Elemental
     ],
-    "rare": null,
+    "rare": "RARE",
     "drops": [
-      {
-        "id": 2297, // Anchovy pizza
-        "quantity": "3",
-        "noted": false,
-        "rarity": 0.1,
-        "table": 1
-      },
-      {
-        "id": 361, // Tuna
-        "quantity": "5",
-        "noted": false,
-        "rarity": 0.1,
-        "table": 1
-      },
-      {
-        "id": 1215, // Dragon dagger
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0859375,
-        "table": 1
-      },
-      {
-        "id": 7158, // Dragon 2h sword
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 556, // Air rune
-        "quantity": "500",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 565, // Blood rune
-        "quantity": "75",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 562, // Chaos rune
-        "quantity": "250",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 560, // Death rune
-        "quantity": "125",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 809, // Mithril dart
-        "quantity": "300",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 892, // Rune arrow
-        "quantity": "150",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
       {
         "id": 534, // Babydragon bones
         "quantity": "2",
@@ -19608,115 +19538,10 @@
         "table": 1
       },
       {
-        "id": 199, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0078125,
-        "table": 1
-      },
-      {
-        "id": 201, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.005858230814294083,
-        "table": 1
-      },
-      {
-        "id": 203, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.004393673110720563,
-        "table": 1
-      },
-      {
-        "id": 205, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.003417634996582365,
-        "table": 1
-      },
-      {
-        "id": 207, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0026852846401718583,
-        "table": 1
-      },
-      {
-        "id": 209, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.001953125,
-        "table": 1
-      },
-      {
-        "id": 211, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0014647722279185586,
-        "table": 1
-      },
-      {
-        "id": 213, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.001220703125,
-        "table": 1
-      },
-      {
-        "id": 215, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0009765625,
-        "table": 1
-      },
-      {
-        "id": 2485, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0007324397568300008,
-        "table": 1
-      },
-      {
         "id": 530, // Bat bones
         "quantity": "5",
         "noted": false,
         "rarity": 0.1,
-        "table": 1
-      },
-      {
-        "id": 217, // Herb
-        "quantity": "1-4",
-        "noted": false,
-        "rarity": 0.0007324397568300008,
-        "table": 1
-      },
-      {
-        "id": 464, // Strange fruit
-        "quantity": "10",
-        "noted": true,
-        "rarity": 0.1015625,
-        "table": 1
-      },
-      {
-        "id": 5952, // Antidote++(4)
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 5940, // Weapon poison(s)
-        "quantity": "1",
-        "noted": false,
-        "rarity": 0.078125,
-        "table": 1
-      },
-      {
-        "id": 995, // Coins
-        "quantity": "7500",
-        "noted": false,
-        "rarity": 0.0625,
         "table": 1
       },
       {
@@ -19741,25 +19566,207 @@
         "table": 1
       },
       {
-        "id": 2436, // Super attack(4)
+        "id": 125, // Attack potion(1)
         "quantity": "1",
         "noted": false,
         "rarity": 0.1,
         "table": 1
       },
       {
-        "id": 2442, // Super defence(4)
+        "id": 137, // Defence potion(1)
         "quantity": "1",
         "noted": false,
         "rarity": 0.1,
         "table": 1
       },
       {
-        "id": 2440, // Super strength(4)
+        "id": 119, // Strength potion(1)
         "quantity": "1",
         "noted": false,
         "rarity": 0.1,
         "table": 1
+      },
+      {
+        "id": 2289, // Plain pizza
+        "quantity": "3",
+        "noted": false,
+        "rarity": 0.1,
+        "table": 1
+      },
+      {
+        "id": 361, // Tuna
+        "quantity": "5",
+        "noted": false,
+        "rarity": 0.1,
+        "table": 1
+      },
+      {
+        "id": 7158, // Dragon 2h sword
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 2
+      },
+      {
+        "id": 1377, // Dragon battleaxe
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 2
+      },
+      {
+        "id": 556, // Air rune
+        "quantity": "500",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 562, // Chaos rune
+        "quantity": "100",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 560, // Death rune
+        "quantity": "40",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 565, // Blood rune
+        "quantity": "50",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 809, // Mithril dart
+        "quantity": "400",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 884, // Iron arrow
+        "quantity": "500",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 892, // Rune arrow
+        "quantity": "200",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 464, // Strange fruit
+        "quantity": "2",
+        "noted": false,
+        "rarity": 0.1015625,
+        "table": 2
+      },
+      {
+        "id": 2446, // Antipoison(4)
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 187, // Weapon poison
+        "quantity": "1",
+        "noted": false,
+        "rarity": 0.078125,
+        "table": 2
+      },
+      {
+        "id": 995, // Coins
+        "quantity": "1000",
+        "noted": false,
+        "rarity": 0.0625,
+        "table": 2
+      },
+      {
+        "id": 199, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0078125,
+        "table": 2
+      },
+      {
+        "id": 201, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.005858230814294083,
+        "table": 2
+      },
+      {
+        "id": 203, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.004393673110720563,
+        "table": 2
+      },
+      {
+        "id": 205, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.003417634996582365,
+        "table": 2
+      },
+      {
+        "id": 207, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0026852846401718583,
+        "table": 2
+      },
+      {
+        "id": 209, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.001953125,
+        "table": 2
+      },
+      {
+        "id": 211, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0014647722279185586,
+        "table": 2
+      },
+      {
+        "id": 213, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.001220703125,
+        "table": 2
+      },
+      {
+        "id": 215, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0009765625,
+        "table": 2
+      },
+      {
+        "id": 2485, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0007324397568300008,
+        "table": 2
+      },
+      {
+        "id": 217, // Herb
+        "quantity": "1-3",
+        "noted": false,
+        "rarity": 0.0007324397568300008,
+        "table": 2
       }
     ]
   },
