@@ -27,7 +27,7 @@ val itemPickup = FileOutputType.ITEM_PICKUP.level
 /**
  * Pickup the item.
  */
-on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_BIF) {
+on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PICKUP_BIF) {
     val pickupItem = groundItem.toItem()
     val pouch = EssencePouch.ID_TO_POUCH[pickupItem.id]
     when {

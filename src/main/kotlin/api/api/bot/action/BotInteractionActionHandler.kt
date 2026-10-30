@@ -63,7 +63,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * Uses native projectile reach for configured combat actions as well as the separate Attack packet.
      */
     internal fun interactionPolicy(option: Int, target: Entity): InteractionPolicy = when {
-        target is GroundItem && option == 1 -> InteractionPolicy.EQUAL_POSITION
+        target is GroundItem && option == 1 -> InteractionPolicy.GROUND_ITEM_PICKUP_BIF.apply(bot, target)
         combatClick(option, target) -> bot.combat.getDefaultAttack(target as Npc)?.interactionPolicy
             ?: InteractionPolicy.STANDARD_SIZE
         target is Npc && option in 1..2 && target.id in Banking.bankingNpcs -> Banking.BANKER_POLICY
@@ -151,7 +151,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      *
      * NPC attacks return `true` only after a new attack against that NPC is recorded. Other interactions return
      * `true` once the bot is stationary and has reached the target according to [InteractionPolicy.STANDARD_SIZE], or
-     * [InteractionPolicy.EQUAL_POSITION] when picking up a ground item; their interface, item pickup, or other
+     * [InteractionPolicy.GROUND_ITEM_PICKUP_BIF] when picking up a ground item; their interface, item pickup, or other
      * post-interaction outcomes are not verified here.
      *
      * @param option The interaction option index to send.

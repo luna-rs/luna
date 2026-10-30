@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.interact;
 
 import io.luna.game.model.Entity;
+import io.luna.game.model.Position;
+import io.luna.game.model.collision.CollisionFlag;
 import io.luna.game.model.mob.Player;
 
 import java.util.function.BiFunction;
@@ -66,6 +68,21 @@ public final class InteractionPolicy {
      */
     public static final BiFunction<Player, Entity, InteractionPolicy> EQUAL_POSITION_BIF =
             (player, target) -> EQUAL_POSITION;
+
+    /**
+     * Allows taking an item from beside a solid object while keeping floor pickups on the item's tile.
+     * Reads live collision data on the game thread. Players already standing on the item use same-tile reach,
+     * avoiding the corrective movement used by adjacent interactions.
+     */
+    public static final BiFunction<Player, Entity, InteractionPolicy> GROUND_ITEM_PICKUP_BIF = (player, target) -> {
+        Position position = target.getPosition();
+        if (player.getPosition().equals(position)) {
+            return EQUAL_POSITION;
+        }
+        int flags = player.getWorld().getCollisionManager().view(false)
+                .get(position.getX(), position.getY(), position.getZ());
+        return (flags & CollisionFlag.LOC) != 0 ? STANDARD_SIZE : EQUAL_POSITION;
+    };
 
     /**
      * A reusable factory that returns a standard line-of-sight interaction policy.
