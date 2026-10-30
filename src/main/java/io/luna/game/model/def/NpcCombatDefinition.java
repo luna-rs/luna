@@ -88,6 +88,21 @@ public final class NpcCombatDefinition implements Definition {
     private final int deathAnimation;
 
     /**
+     * The ordinary melee launch sound, or {@code -1} when silent.
+     */
+    private final int attackSound;
+
+    /**
+     * The ordinary ranged launch sound, or {@code -1} when silent.
+     */
+    private final int rangedAttackSound;
+
+    /**
+     * The sound emitted when the death sequence starts, or {@code -1} when silent.
+     */
+    private final int deathSound;
+
+    /**
      * The NPC's generic attack bonus value.
      */
     private final int attackBonus;
@@ -240,8 +255,31 @@ public final class NpcCombatDefinition implements Definition {
                                int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus,
                                int magicBonus, int rangedBonus, int[] skills, int[] bonuses,
                                NpcCombatMovement movement, int poisonSeverity, String attackOption) {
+        this(id, respawnTime, aggression, poisonous, immunePoison, hitpoints, maximumHit, attackSpeed,
+                attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus, rangedBonus,
+                skills, bonuses, movement, poisonSeverity, attackOption, -1, -1, -1);
+    }
+
+    /**
+     * Creates a combat definition with cache sound ids. A sound id of {@code -1} disables that sound;
+     * attack-specific spells and special attacks may provide their own launch audio.
+     *
+     * @param attackSound The ordinary melee launch sound id.
+     * @param rangedAttackSound The ordinary ranged launch sound id.
+     * @param deathSound The death sound id.
+     */
+    public NpcCombatDefinition(int id, int respawnTime, NpcAggressionProfile aggression, boolean poisonous,
+                               boolean immunePoison, int hitpoints, int maximumHit, int attackSpeed,
+                               int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus,
+                               int magicBonus, int rangedBonus, int[] skills, int[] bonuses,
+                               NpcCombatMovement movement, int poisonSeverity, String attackOption,
+                               int attackSound, int rangedAttackSound, int deathSound) {
         if (poisonSeverity < 0 || (poisonSeverity > 0 && !poisonous)) {
             throw new IllegalArgumentException("Invalid poison severity for NPC " + id + ": " + poisonSeverity);
+        }
+        if (attackSound < -1 || attackSound > 65535 || rangedAttackSound < -1 || rangedAttackSound > 65535 ||
+                deathSound < -1 || deathSound > 65535) {
+            throw new IllegalArgumentException("Invalid combat sound for NPC " + id);
         }
         this.movement = Objects.requireNonNull(movement);
         this.attackOption = Objects.requireNonNull(attackOption);
@@ -260,6 +298,9 @@ public final class NpcCombatDefinition implements Definition {
         this.attackAnimation = attackAnimation;
         this.defenceAnimation = defenceAnimation;
         this.deathAnimation = deathAnimation;
+        this.attackSound = attackSound;
+        this.rangedAttackSound = rangedAttackSound;
+        this.deathSound = deathSound;
         this.attackBonus = attackBonus;
         this.magicBonus = magicBonus;
         this.rangedBonus = rangedBonus;
@@ -354,6 +395,27 @@ public final class NpcCombatDefinition implements Definition {
      */
     public int getDeathAnimation() {
         return deathAnimation;
+    }
+
+    /**
+     * @return The ordinary melee launch sound id, or {@code -1} when silent.
+     */
+    public int getAttackSound() {
+        return attackSound;
+    }
+
+    /**
+     * @return The ordinary ranged launch sound id, or {@code -1} when silent.
+     */
+    public int getRangedAttackSound() {
+        return rangedAttackSound;
+    }
+
+    /**
+     * @return The death sound id, or {@code -1} when silent.
+     */
+    public int getDeathSound() {
+        return deathSound;
     }
 
     /**

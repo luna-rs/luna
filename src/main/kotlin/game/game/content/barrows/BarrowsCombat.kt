@@ -46,6 +46,11 @@ object BarrowsCombat {
     fun attack(npc: Npc, target: Mob, brother: BarrowsBrother,
                random: Random = Random.Default): CombatAttack<Npc> = when (brother) {
         BarrowsBrother.AHRIM -> object : MagicCombatAttack<Npc>(npc, target, ahrimSpell(target, random), 6) {
+            override fun getNpcAttackSound(): Int {
+                val sound = attacker.combatDef()?.attackSound ?: -1
+                return if (sound >= 0) sound else super.getNpcAttackSound()
+            }
+
             override fun onDamageApplied(damage: CombatDamage) {
                 super.onDamageApplied(damage)
                 effect(npc, brother, damage, random)

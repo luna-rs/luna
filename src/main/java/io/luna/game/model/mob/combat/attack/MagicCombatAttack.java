@@ -206,6 +206,11 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
         return request.build().resolve();
     }
 
+    @Override
+    protected int getNpcAttackSound() {
+        return spellEffect != null && spellEffect.getStartSound() != null ? spellEffect.getStartSound().getId() : -1;
+    }
+
     /**
      * Resolves the configured spell maximum before the hit is rolled. Player casts may apply spell-specific buffs.
      *

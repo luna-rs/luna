@@ -60,4 +60,9 @@ public class MeleeCombatAttack<T extends Mob> extends CombatAttack<T> {
     public CombatDamage calculateDamage(Mob other) {
         return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE).build().resolve();
     }
+
+    @Override
+    protected int getNpcAttackSound() {
+        return attacker instanceof Npc npc && npc.combatDef() != null ? npc.combatDef().getAttackSound() : -1;
+    }
 }

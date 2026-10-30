@@ -56,7 +56,7 @@ import io.luna.game.model.mob.movement.wandering.WanderingFrequency
 class SkillGuardianRandomEvent(override val player: Player, override val npc: Npc,
                               val kind: Kind) : RandomEventEncounter {
     /**
-     * Source forms, appearance and combat sounds. Missing sounds remain silent and each graphic
+     * Source forms, appearance and defence sounds. Missing sounds remain silent and each graphic
      * retains its source height. Speech may address the owner with {name}. Delays include the
      * source engine's extra NPC delay tick.
      *
@@ -64,16 +64,15 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
      */
     enum class Kind(val npcIds: IntRange, val warningTicks: Int, val speech: String,
                     val sound: Sound?, val appearanceGraphic: Int? = null, val appearanceHeight: Int = 100,
-                    val attackSound: Sound? = null, val defendSound: Sound? = null, val deathSound: Sound? = null) {
+                    val defendSound: Sound? = null) {
         RIVER_TROLL(391..396, 3, "Fishies be mine, leave dem fishies!", Sound.WATERSPLASH),
         TREE_SPIRIT(438..443, 2, "Leave these woods and never return!", Sound.DRYAD_APPEAR, 180),
         SHADE(425..430, 4, "Leave this place mortal!", sound = null, appearanceGraphic = 78, appearanceHeight = 0,
-              attackSound = Sound.GHOST_ATTACK, defendSound = Sound.GHOST_HIT, deathSound = Sound.GHOST_DEATH),
+              defendSound = Sound.GHOST_HIT),
         ZOMBIE(419..424, 4, "Brainsssss...", Sound.ZOMBIE_MOAN, appearanceGraphic = 78, appearanceHeight = 0,
-               attackSound = Sound.ZOMBIE_ATTACK, defendSound = Sound.ZOMBIE_HIT, deathSound = Sound.ZOMBIE_DEATH),
+               defendSound = Sound.ZOMBIE_HIT),
         WATCHMAN(431..436, 3, "{name}, you are under arrest!", Sound.SMOKEPUFF,
-                 appearanceGraphic = 86, appearanceHeight = 124, attackSound = Sound.MACE_CRUSH,
-                 defendSound = Sound.HUMAN_HIT4, deathSound = Sound.HUMAN_DEATH);
+                 appearanceGraphic = 86, appearanceHeight = 124, defendSound = Sound.HUMAN_HIT4);
 
         /**
          * Source brackets: below combat 11,21,41,61,91 and the final high-level tier.

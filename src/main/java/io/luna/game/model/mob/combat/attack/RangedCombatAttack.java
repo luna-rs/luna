@@ -4,6 +4,7 @@ import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.block.Graphic;
@@ -129,6 +130,11 @@ public class RangedCombatAttack<T extends Mob> extends CombatAttack<T> {
     @Override
     public CombatDamage calculateDamage(Mob other) {
         return new CombatDamageRequest.Builder(attacker, other, CombatDamageType.RANGED).build().resolve();
+    }
+
+    @Override
+    protected int getNpcAttackSound() {
+        return attacker instanceof Npc npc && npc.combatDef() != null ? npc.combatDef().getRangedAttackSound() : -1;
     }
 
     @Override

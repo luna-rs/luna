@@ -252,6 +252,8 @@ class VisitorRandomEvent(
     internal fun stoneAttack(): MeleeCombatAttack<Npc> {
         npc.combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
         return object : MeleeCombatAttack<Npc>(npc, player, 928, 1, 4) {
+            override fun getNpcAttackSound(): Int = -1
+
             override fun onAttack(damage: CombatDamage?): CombatDamage? =
                 damage?.takeIf { kind == Kind.DRUNKEN_DWARF && failing && !answered && !leaving &&
                     RandomEvents.owns(this@VisitorRandomEvent) && npc.combat.target === player && npc.state == EntityState.ACTIVE &&

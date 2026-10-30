@@ -69,7 +69,6 @@ combat(Kind.SWARM.npcId) {
         melee {
             val encounter = randomEvents.ownerOf(npc) as? SwarmRandomEvent
             if (it != null && encounter?.canAttack(other) == true) {
-                encounter.player.playSound(Sound.SWARM_ATTACK)
                 it
             } else null
         }
@@ -83,7 +82,6 @@ combat(408) {
         melee {
             val encounter = randomEvents.ownerOf(npc) as? StrangePlantRandomEvent
             if (it != null && encounter?.canFight(other) == true && npc.combat.target === other) {
-                encounter.player.playSound(Sound.TRIFFID_ATTACK)
                 it
             } else null
         }
@@ -101,7 +99,6 @@ combat(*SkillGuardianRandomEvent.NPC_IDS.toList().toIntArray()) {
         melee {
             val encounter = randomEvents.ownerOf(npc) as? SkillGuardianRandomEvent
             if (it != null && encounter?.canAttack(other) == true) {
-                encounter.kind.attackSound?.let { sound -> encounter.player.playSound(sound) }
                 it
             } else null
         }
@@ -121,10 +118,6 @@ for (id in SkillGuardianRandomEvent.NPC_IDS) {
     DeathHookHandler.addNpcHook(id) {
         preDeath {
             victim.animation(Animation(victim.combatDef().deathAnimation, Animation.AnimationPriority.IMMUTABLE))
-            val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
-            encounter?.kind?.deathSound?.let { sound ->
-                world.locator.findPlayers(victim, 12) { it.state == EntityState.ACTIVE }.forEach { it.playSound(sound) }
-            }
         }
         death {
             val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent

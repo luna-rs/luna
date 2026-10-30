@@ -13,12 +13,9 @@ combat(CHAOS_ELEMENTAL) {
     defend {
         // It has no block animation. Sending its -1 would cut short the attack animation it's playing.
         animationId = null
-        // The player landing the hit hears the boss: its death cry on the killing blow, otherwise its hit sound.
+        // The death cry belongs to the shared death sequence after the hit has committed.
         val player = other as? Player ?: return@defend
         val amount = damage?.rawAmount ?: 0
-        when {
-            amount >= npc.health -> player.playSound(Sound.CHAOS_ELEMENTAL_DEATH)
-            amount > 0 -> player.playSound(Sound.CHAOS_ELEMENTAL_HIT)
-        }
+        if (amount > 0 && amount < npc.health) player.playSound(Sound.CHAOS_ELEMENTAL_HIT)
     }
 }

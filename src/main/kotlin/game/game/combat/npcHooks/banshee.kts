@@ -29,7 +29,13 @@ val GRAPHIC = Graphic(337, 150, 0) // TODO@0.5.0 Projectile looks a bit weird.
  */
 combat(1612) {
     attack {
-        melee {
+        melee(sound = {
+            if (other is Player && other.equipment.head?.id != EARMUFFS && Luna.settings().skills().slayerEquipmentNeeded()) {
+                Sound.BANSHEE_ATTACK_NORMAL.id
+            } else {
+                Sound.BANSHEE_ATTACK_EARMUFFS.id
+            }
+        }) {
             if (other is Player && other.equipment.head?.id != EARMUFFS && Luna.settings().skills().slayerEquipmentNeeded()) {
                 val screechHit = CombatDamageRequest.builder(npc, other, CombatDamageType.MELEE)
                     .setBaseAccuracy(1.0)
@@ -40,7 +46,6 @@ combat(1612) {
                 other.drainCombatSkills(20, 10, drainAgility = false)
                 other.sendMessage("You have been weakened.")
                 npc.graphic(GRAPHIC)
-                other.playSound(Sound.BANSHEE_ATTACK_NORMAL)
                 screechHit
             } else {
                 it

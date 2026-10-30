@@ -7,6 +7,7 @@ import api.combat.player.PlayerCombatHandler.playerDefence
 import api.combat.player.PlayerCombatHandler.playerStopAttack
 import api.predef.*
 import api.predef.ext.*
+import game.player.Sound
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.LocalProjectile
@@ -81,6 +82,8 @@ NpcCombatHandler.typeMap[PestControlNpc::class] = NpcCombatReceiver().apply {
         when (npc.id) {
             in 3752..3761 -> object : MagicCombatAttack<PestControlNpc>(npc as PestControlNpc, other,
                 Animation(3882), Graphic(646), projectile, Graphic(648), null, null, 5, 8) {
+                override fun getNpcAttackSound() = Sound.TORCHER_FIRE.id
+
                 override fun calculateDamage(other: Mob) = CombatDamageRequest.Builder(attacker, other, CombatDamageType.MAGIC)
                     .setBaseMaxHit(attacker.combatDef().maximumHit).build().resolve()
             }

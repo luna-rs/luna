@@ -50,8 +50,9 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 
 
-Kalphite Queen content adaptations (game.combat.npcHooks.kalphiteQueen) and
-player hit-sound behavior and equipment mappings (engine.player.sounds.PlayerHitSounds):
+Kalphite Queen content adaptations (game.combat.npcHooks.kalphiteQueen),
+player hit-sound behavior and equipment mappings (engine.player.sounds.PlayerHitSounds),
+and NPC combat sound mappings (data/game/def/npcs/npc_combat.jsonc):
 MIT License
 
 Copyright (c) 2023-2026 Lost City

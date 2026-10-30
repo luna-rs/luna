@@ -46,6 +46,9 @@ class DagannothAttack(npc: Npc, victim: Mob, val style: Style) : CombatAttack<Np
         SPINOLYP_RANGED(CombatDamageType.RANGED, 2868, 476, null, 0, true)
     }
 
+    override fun getNpcAttackSound(): Int =
+        if (style.type == CombatDamageType.RANGED) attacker.combatDef()?.rangedAttackSound ?: -1 else -1
+
     override fun calculateDamage(other: Mob): CombatDamage {
         val request = CombatDamageRequest.Builder(attacker, other, style.type)
             .setBaseMaxHit(attacker.combatDef().maximumHit)

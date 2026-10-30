@@ -61,7 +61,16 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
                 movement.get("retreat_hitpoints").getAsInt());
         return new NpcCombatDefinition(id, respawnTicks, aggression, poisonous, immunePoison, hitpoints, maximumHit,
                 attackSpeed, attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus,
-                rangedBonus, skills, bonuses, rules, poisonSeverity, attackOption);
+                rangedBonus, skills, bonuses, rules, poisonSeverity, attackOption,
+                readSound(token, "attack_sound"), readSound(token, "ranged_attack_sound"), readSound(token, "death_sound"));
+    }
+
+    /**
+     * Reads an optional cache sound id. Omitted and explicit null values retain silent legacy definitions.
+     */
+    private int readSound(JsonObject token, String name) {
+        JsonElement value = token.get(name);
+        return value == null || value.isJsonNull() ? -1 : value.getAsInt();
     }
 
     @Override

@@ -102,7 +102,7 @@ object JadHealers {
             healer.provoked = true
             healer.foe = player
         }
-        player.playSound(if (amount >= healer.health) Sound.LIZARD_CLERIC_DEATH else Sound.LIZARD_CLERIC_HIT)
+        if (amount < healer.health) player.playSound(Sound.LIZARD_CLERIC_HIT)
     }
 
     /**

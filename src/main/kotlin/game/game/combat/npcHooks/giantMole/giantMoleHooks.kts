@@ -9,10 +9,7 @@ import io.luna.game.model.mob.Player
 combat(GiantMole.ID) {
     attack {
         combat.setAttackBonusType(EquipmentBonus.CRUSH_ATTACK)
-        melee { damage ->
-            (other as? Player)?.playSound(Sound.MOLE_ATTACK)
-            damage
-        }
+        melee()
     }
     defend {
         val hit = damage ?: return@defend
@@ -24,10 +21,7 @@ combat(GiantMole.ID) {
         }
         val player = other as? Player
         val amount = hit.rawAmount
-        when {
-            amount >= npc.health -> player?.playSound(Sound.MOLE_DEATH)
-            amount > 0 -> player?.playSound(Sound.MOLE_HIT)
-        }
+        if (amount > 0 && amount < npc.health) player?.playSound(Sound.MOLE_HIT)
         if (GiantMole.shouldBurrow(npc, hit)) {
             animationId = null
             GiantMole.burrow(npc)

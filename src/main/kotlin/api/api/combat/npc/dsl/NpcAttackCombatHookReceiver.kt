@@ -55,6 +55,7 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
      * @param range The maximum melee distance allowed for the attack.
      * @param speed The attack delay in ticks.
      * @param magicDefence Whether the melee offensive roll is checked against magic defence.
+     * @param sound Selects the launch sound after the attack commits; returning minus one suppresses playback.
      * @param launch The listener applied when the melee attack is actually launched.
      * @return The configured melee combat attack.
      */
@@ -64,8 +65,11 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
         range: Int = 1,
         speed: Int = npc.combatDef().attackSpeed,
         magicDefence: Boolean = false,
+        sound: () -> Int = { npc.combatDef()?.attackSound ?: -1 },
         launch: MeleeCombatAttack<Npc>.(CombatDamage?) -> CombatDamage? = { it },
     ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
+
+        override fun getNpcAttackSound(): Int = sound()
 
         override fun calculateDamage(other: Mob): CombatDamage {
             val request = CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)

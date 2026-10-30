@@ -4,6 +4,8 @@ import api.attr.Attr
 import api.combat.death.dsl.DeathHookReceiver
 import api.predef.*
 import io.luna.game.model.item.GroundItem
+import io.luna.game.model.LocalSound
+import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.MobDeathAction.DeathStage
 import io.luna.game.model.mob.Npc
@@ -115,6 +117,13 @@ object DeathHookHandler {
      */
     fun onDeath(victim: Mob, source: Mob?, stage: DeathStage) {
         if (victim is Npc) {
+            if (stage == DeathStage.PRE_DEATH) {
+                val soundId = victim.combatDef()?.deathSound ?: -1
+                if (soundId >= 0) {
+                    LocalSound.ofId(victim.context, soundId, victim.position,
+                        ChunkUpdatableView.globalView(), 12, 1).display()
+                }
+            }
             val receiver = DeathHookReceiver(victim, source, stage)
             val hook = npcHooks[victim.id]
             if (hook != null) {

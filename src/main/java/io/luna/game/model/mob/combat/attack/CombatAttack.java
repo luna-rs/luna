@@ -5,6 +5,9 @@ import api.combat.npc.NpcCombatHandler;
 import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.status.hooks.PoisonStatusEffect;
+import io.luna.game.model.LocalSound;
+import io.luna.game.model.Position;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -22,7 +25,7 @@ import java.time.Instant;
  * <p>
  * Subclasses are responsible for calculating a base damage result in {@link #calculateDamage(Mob)} and for
  * implementing the concrete attack behavior in {@link #attack()}. This base class handles the shared combat pipeline,
- * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, player launch audio,
+ * including damage preparation, optional cancellation through {@link #onAttack(CombatDamage)}, launch audio,
  * combat timer refreshes,
  * attack delay application, and recipient-owned projectile timing callbacks.
  *
@@ -141,6 +144,7 @@ public abstract class CombatAttack<T extends Mob> {
      * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it. An optional
      * player launch sound is captured before preparation can consume equipment, then played once immediately before
      * the attack behavior. Misses and accurate zero hits still play the sound; cancellation suppresses it.
+     * NPC launch sounds are selected after preparation, allowing attack hooks to choose their committed sound.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -176,7 +180,24 @@ public abstract class CombatAttack<T extends Mob> {
                 other.playSound(attackSound);
             }
         }
+        if (attacker instanceof Npc npc) {
+            int soundId = getNpcAttackSound();
+            if (soundId >= 0) {
+                LocalSound.ofId(npc.getContext(), soundId, npc.getPosition(), ChunkUpdatableView.globalView(),
+                        Position.VIEWING_DISTANCE, 1).display();
+            }
+        }
         attack();
+    }
+
+    /**
+     * Selects an NPC launch sound only after its attack commits. Ordinary melee and ranged attacks use their
+     * respective definition sounds; custom attacks remain silent here unless they opt in.
+     *
+     * @return The cache sound id, or {@code -1} to leave playback to the attack implementation.
+     */
+    protected int getNpcAttackSound() {
+        return -1;
     }
 
     /**
