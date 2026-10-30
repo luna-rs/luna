@@ -7,6 +7,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.EntityType
 import io.luna.game.model.Position
 import io.luna.game.model.def.NpcCombatDefinition
+import io.luna.game.model.def.NpcCombatMovement
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.mob.Npc
@@ -59,6 +60,7 @@ class BarrowsEncountersTest {
                 val definition = mock(NpcCombatDefinition::class.java)
                 `when`(definition.id()).thenReturn(brother.npcId)
                 `when`(definition.hitpoints).thenReturn(100)
+                `when`(definition.movement).thenReturn(NpcCombatMovement.DEFAULT)
                 NpcCombatDefinition.ALL.storeDefinition(definition)
             }
         }

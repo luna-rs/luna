@@ -8,6 +8,7 @@ import io.luna.game.model.EntityType
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.def.NpcCombatDefinition
+import io.luna.game.model.def.NpcCombatMovement
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -57,6 +58,7 @@ class BarrowsTunnelSpawnsTest {
                 val definition = mock(NpcCombatDefinition::class.java)
                 `when`(definition.id()).thenReturn(id)
                 `when`(definition.hitpoints).thenReturn(100)
+                `when`(definition.movement).thenReturn(NpcCombatMovement.DEFAULT)
                 NpcCombatDefinition.ALL.storeDefinition(definition)
             }
         }

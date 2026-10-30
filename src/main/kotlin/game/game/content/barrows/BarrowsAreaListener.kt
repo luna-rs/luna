@@ -48,6 +48,9 @@ object BarrowsAreaListener : PlayerAreaListener() {
     }
 
     override fun computeLocatables(): ImmutableSet<Locatable> = ImmutableSet.of(
-        Area.of(3520, 9664, 3583, 9727)
+        Area.of(3520, 9664, 3583, 9727, 0),
+        Area.of(3520, 9664, 3583, 9727, 1),
+        Area.of(3520, 9664, 3583, 9727, 2),
+        Area.of(3520, 9664, 3583, 9727, 3)
     )
 }

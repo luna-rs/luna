@@ -10,6 +10,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.CombatImpactQueue;
+import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;

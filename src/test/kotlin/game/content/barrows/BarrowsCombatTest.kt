@@ -1,5 +1,7 @@
 package game.content.barrows
 
+import api.bot.script.InventoryProductionFixtures
+import api.combat.magic.CombatSpellHandler
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
@@ -12,6 +14,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageType
 import io.luna.util.RandomUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import java.util.OptionalInt
 import kotlin.random.Random
@@ -40,6 +43,7 @@ class BarrowsCombatTest {
 
     private fun apply(brother: BarrowsBrother, amount: Int, random: Random = proc): CombatDamage {
         `when`(npc.isAlive).thenReturn(true)
+        `when`(player.isAlive).thenReturn(true)
         `when`(npc.combatDef().attackSpeed).thenReturn(5)
         val attack = BarrowsCombat.attack(npc, player, brother, random)
         return damage(amount).also { it.apply(attack) }
@@ -52,7 +56,9 @@ class BarrowsCombatTest {
         `when`(player.health).thenReturn(3)
         val hit = apply(BarrowsBrother.GUTHAN, 24)
         assertEquals(24, hit.rawAmount)
-        assertEquals(3, hit.appliedAmount)
+        val applied = ArgumentCaptor.forClass(CombatDamage::class.java)
+        verify(player.combat).lastDamageReceived = applied.capture()
+        assertEquals(3, applied.value.rawAmount)
         verify(npc).health = 53
         clearInvocations(npc)
         `when`(npc.health).thenReturn(99)
@@ -69,7 +75,7 @@ class BarrowsCombatTest {
         `when`(npc.isAlive).thenReturn(true)
         val hit = mock(CombatDamage::class.java)
         `when`(hit.victim).thenReturn(player)
-        `when`(hit.appliedAmount).thenReturn(10)
+        `when`(hit.rawAmount).thenReturn(10)
         val strength = player.skill(Skill.STRENGTH)
         val agility = player.skill(Skill.AGILITY)
         `when`(strength.level).thenReturn(3)
@@ -82,7 +88,7 @@ class BarrowsCombatTest {
         verify(agility).level = 46
         verify(player).runEnergy = 44.0
         clearInvocations(strength, agility, player)
-        `when`(hit.appliedAmount).thenReturn(0)
+        `when`(hit.rawAmount).thenReturn(0)
         for (brother in BarrowsBrother.entries) BarrowsCombat.effect(npc, brother, hit, proc)
         verify(strength, never()).level = anyInt()
         verify(agility, never()).level = anyInt()
@@ -137,5 +143,30 @@ class BarrowsCombatTest {
             assertEquals(CombatSpell.FIRE_WAVE, BarrowsCombat.ahrimSpell(player, fixed(index)))
         }
         for (roll in 3..15) assertEquals(CombatSpell.FIRE_WAVE, BarrowsCombat.ahrimSpell(player, fixed(roll)))
+    }
+
+    @Test
+    fun ahrimRetainsTheStandardCurseImpactHandler() {
+        InventoryProductionFixtures.initializeCombat()
+        val strength = player.skill(Skill.STRENGTH)
+        `when`(strength.staticLevel).thenReturn(70)
+        `when`(strength.level).thenReturn(70)
+        val hit = mock(CombatDamage::class.java)
+        `when`(hit.victim).thenReturn(player)
+        `when`(hit.isAccurate).thenReturn(true)
+        var delivered: CombatDamage? = null
+        @Suppress("UNCHECKED_CAST")
+        val handlers = CombatSpellHandler::class.java.getDeclaredField("spells").let {
+            it.isAccessible = true
+            it.get(CombatSpellHandler) as MutableMap<CombatSpell, CombatDamage.() -> Unit>
+        }
+        val previous = handlers.put(CombatSpell.WEAKEN) { delivered = this }
+        try {
+            val attack = BarrowsCombat.attack(npc, player, BarrowsBrother.AHRIM, fixed(1))
+            attack.onDamageApplied(hit)
+            assertSame(hit, delivered)
+        } finally {
+            if (previous == null) handlers.remove(CombatSpell.WEAKEN) else handlers[CombatSpell.WEAKEN] = previous
+        }
     }
 }
