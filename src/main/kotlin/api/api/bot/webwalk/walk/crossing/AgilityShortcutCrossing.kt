@@ -4,6 +4,7 @@ import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.walk.LegContext
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Crosses an Agility shortcut, such as a pipe or a jump, by clicking it from the tile where the leg starts. The level
@@ -19,6 +20,11 @@ object AgilityShortcutCrossing : CrossingHandler {
      */
     private const val CLICK_RADIUS = 2
 
+    /**
+     * How long to wait for the bot to land. The longest shortcut, the Wilderness ridge, takes 19 ticks.
+     */
+    private val LANDING_TIMEOUT = 20.seconds
+
     override suspend fun cross(context: LegContext, leg: PlanLeg): String? {
         val action = leg.action ?: return "the shortcut has no object"
         val id = action.objectId ?: return "the shortcut has no object id"
@@ -31,7 +37,7 @@ object AgilityShortcutCrossing : CrossingHandler {
             if (!context.handler.interactions.interactOnLeg(1, shortcut) && !context.arrived(leg, 0)) {
                 return "could not reach shortcut $id at ${shortcut.position}"
             }
-            if (context.awaitArrival(leg, 0)) {
+            if (context.awaitArrival(leg, 0, LANDING_TIMEOUT)) {
                 return null
             }
         }
