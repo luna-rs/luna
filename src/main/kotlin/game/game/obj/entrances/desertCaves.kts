@@ -39,7 +39,6 @@ val SLAVE_CLOTHES = mapOf(Equipment.CHEST to 1844, Equipment.LEGS to 1845, Equip
 val MERCENARIES = setOf(828, 829)
 
 // The crevice west of Nardah, which needs a rope tied to it once (Spirits of the Elid).
-// TODO Once darkness is added, players without a light source get eaten by bugs in the Genie's cave.
 object1(NARDAH_CREVICE) {
     if (plr.nardahCreviceRoped) {
         Entrances.travel(plr, Position(3374, 9305), delay = 1, animation = 827)

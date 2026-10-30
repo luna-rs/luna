@@ -7,6 +7,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
 import game.skill.agility.Agility
+import game.skill.firemaking.lightSource.LightSource
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
@@ -174,10 +175,9 @@ object1(4918) {
     Entrances.sequence(plr, { Entrances.slide(plr, destination, 30, 100, CLIMB_OVER) }, null, null)
 }
 
-// The Haunted Mine's lift down into the flooded chamber, which soaks any tinderbox.
+// The Haunted Mine's lift down into the flooded chamber, which puts out lit lights and soaks any tinderbox.
 // TODO Once Haunted Mine is added, the lift needs the valve open while the quest is at that point ("The lift doesn't
 //  respond, it needs to be powered in some way.").
-// TODO Once lit light sources can be put out, the water puts them out.
 for (lift in listOf(4937, 4938, 4940)) {
     object1(lift) {
         plr.sendMessage("The lift descends further into the mines...")
@@ -186,6 +186,9 @@ for (lift in listOf(4937, 4938, 4940)) {
         Entrances.sequence(plr, null, {
             plr.sendMessage("...plunging you straight into the middle of a chamber flooded with water.")
             plr.move(Position(2725, 4452))
+            if (LightSource.extinguish(plr).isNotEmpty()) {
+                plr.playSound(Sound.SIZZLE)
+            }
             val tinderboxes = plr.inventory.computeAmountForId(590)
             if (tinderboxes > 0 && plr.inventory.remove(Item(590, tinderboxes))) {
                 plr.inventory.add(Item(4073, tinderboxes))

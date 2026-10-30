@@ -6,6 +6,7 @@ import game.content.gamesRoom.GamesRoomAreaListener
 import game.content.duelArena.DuelAreaListener
 import game.content.gnomeBall.GnomeBallAreaListener
 import game.content.brimhavenArena.ArenaAreaListener
+import game.content.darkness.DarknessAreaListener
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 
@@ -22,7 +23,8 @@ object Controllers {
         GamesRoomAreaListener,
         DuelAreaListener,
         GnomeBallAreaListener,
-        ArenaAreaListener
+        ArenaAreaListener,
+        DarknessAreaListener
     )
 
     /**
