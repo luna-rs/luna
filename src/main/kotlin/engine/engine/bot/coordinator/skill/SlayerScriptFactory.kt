@@ -56,10 +56,13 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * keep nearby guards, townspeople and spiders out of these visits without changing ordinary combat selection.
      * The northern Edgeville Dungeon's Black Demons require readiness 110 for their level-172 melee encounters
      * in the Wilderness section; native Wilderness rules and normal combat recovery remain authoritative.
+     * Infernal Mage visits use the Tower's first upper floor and native spellcasting, with no special equipment
+     * or scripted finishing action beyond the normal owned combat kit and supplies.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
         Camp(SubZone.SLAYER_TOWER_GROUND, 35, setOf("Banshee")),
+        Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 75, setOf("Infernal Mage")),
         Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
         Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
