@@ -14,7 +14,7 @@ if (Luna.settings().skills().slayerEquipmentNeeded()) {
     /**
      * The slayer gloves item id.
      */
-    val SLAYER_GLOVES = 6708
+    val SLAYER_GLOVES = 6720
 
     /**
      * Applies the fever spider glove penalty.

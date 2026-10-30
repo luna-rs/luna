@@ -25,7 +25,7 @@ ShopHandler.create("Slayer Equipment") {
         "Spiny helmet" x 50
         "Fishing explosive" x 5000
         "Ice cooler" x 5000
-        "Slayer gloves" x 50
+        6720 x 50 // Wearable Slayer gloves; the same name also belongs to the skill-guide icon.
         "Unlit bug lantern" x 50
         "Fungicide spray 10" x 50
         "Fungicide" x 5000

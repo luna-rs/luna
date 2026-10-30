@@ -24335,7 +24335,7 @@
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 5,
+    "hitpoints": 6,
     "maximum_hit": 1,
     "attack_speed": 4,
     "attack_animation": 1777,
