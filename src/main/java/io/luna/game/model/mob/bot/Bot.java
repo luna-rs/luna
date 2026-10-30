@@ -88,7 +88,7 @@ public final class Bot extends Player {
         private final BotManager manager;
         private boolean temporary;
         private String username;
-        private Position spawnPosition = Luna.settings().game().startingPosition();
+        private Position spawnPosition = Zone.LUMBRIDGE.getAnchor();
         private BotReflex reflex;
         private BotBrain brain;
         private BotPersonality personality;
