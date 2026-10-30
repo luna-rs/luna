@@ -117509,19 +117509,6 @@
       "frequency": "NORMAL"
     }
   },
-  // Elf warrior (id 1183)
-  {
-    "id": 1183,
-    "position": {
-      "x": 3259,
-      "y": 3257,
-      "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
-    }
-  },
   // Goblin (id 1774)
   {
     "id": 1774,
