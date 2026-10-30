@@ -3,6 +3,7 @@ package game.bot.scripts
 import api.attr.Attr
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
+import api.bot.action.BotCombatThreat
 import api.bot.script.ReflexBotScript
 import api.bot.webwalk.walk.WebWalker
 import api.bot.zone.SubZone
@@ -162,6 +163,9 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
      * - An intelligent bot doesn't go back deeper into the Wilderness than it would scavenge.
      * - Any other bot goes back.
      *
+     * Recovery compares full-health capabilities with the equipment the bot still wears; the killer's remaining
+     * health and supplies already lost during the fight do not make returning seem safer.
+     *
      * @param position Where the bot died.
      * @param killer The mob that killed the bot, or `null` if nothing did.
      * @return Whether the bot goes back, and why.
@@ -196,7 +200,7 @@ class DeathReflexScript(bot: Bot) : ReflexBotScript(bot) {
             return false to "I died near there ${earlierDeaths + 1} times in $REPEAT_DEATH_WINDOW"
         }
 
-        val threat = killer != null && handler.combat.isThreat(killer)
+        val threat = killer != null && handler.combat.isThreat(killer, BotCombatThreat.Context.RECOVERY)
         val wildernessLevel = levelAt(position)
         val scared = bot.emotions.isFeeling(EmotionType.SCARED)
         val greedy = bot.emotions.isFeeling(EmotionType.GREEDY)

@@ -45,6 +45,8 @@ import kotlin.time.Duration.Companion.seconds
  */
 class BotCombatActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
+    private val threatAssessment = BotCombatThreat(bot)
+
     /**
      * Shared account-build policy for combat and incidental experience choices.
      *
@@ -304,21 +306,28 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Determines whether the given mob is considered an extreme combat threat to this bot.
-     *
-     * A mob is treated as threatening when its combat level is more than double the bot's combat level. This is a
-     * simple fear check meant for obvious danger cases, such as a low-level bot encountering a much stronger enemy.
+     * Determines whether a matchup is dangerous for the caller's purpose. Live decisions include current endurance
+     * and retain warnings through small changes; recovery and achievement decisions compare full-health capability.
+     * Personality and native combat permission remain the caller's responsibility.
      *
      * @param mob The mob being evaluated.
-     *
-     * @return `true` if [mob] is more than twice this bot's combat level.
+     * @param context The purpose of the assessment.
+     * @return Whether the matchup meets the context's danger threshold.
      */
-    fun isThreat(mob: Mob)
+    @JvmOverloads
+    fun isThreat(mob: Mob, context: BotCombatThreat.Context = BotCombatThreat.Context.COMBAT): Boolean =
+        threatAssessment.isThreat(mob, context)
 
-            : Boolean {
-        // TODO@.5.0 Expand by checking mob type, if it's a boss, equipment, skills, etc.
-        return mob.combatLevel > bot.combatLevel * 2
-    }
+    /**
+     * Exposes the current danger score for inspection without changing the live attack/flee warning.
+     *
+     * @param mob The mob being evaluated.
+     * @param context The purpose of the assessment.
+     * @return The instantaneous score and contributing estimates.
+     */
+    @JvmOverloads
+    fun assessThreat(mob: Mob, context: BotCombatThreat.Context = BotCombatThreat.Context.COMBAT): BotCombatThreat.Assessment =
+        threatAssessment.assess(mob, context)
 
     /**
      * Configures [spell] as the bot's active autocast spell.
