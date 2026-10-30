@@ -12,6 +12,7 @@ import io.luna.Luna
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.TextInput
 
 
@@ -67,7 +68,8 @@ cmd("commands") {
  * A command that tells how many players are currently online.
  */
 cmd("players") {
-    plr.sendMessage("Players online: ${world.players.size()}.")
+    plr.sendMessage("Real players online: ${world.players.count { it != null && it !is Bot }}.")
+    plr.sendMessage("Bots online: ${world.bots.onlineCount}.")
 }
 
 /**
