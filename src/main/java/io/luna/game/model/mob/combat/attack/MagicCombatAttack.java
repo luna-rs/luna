@@ -6,6 +6,8 @@ import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.LocalSound;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
@@ -258,14 +260,30 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
                 recipient.graphic(end);
             }
             if (impactSound != null) {
-                LocalSound.of(recipient, impactSound).display();
+                playImpactSound(recipient, impactSound);
             }
             if (spellEffect != null && damage.isAccurate()) {
                 CombatSpellHandler.INSTANCE.effect(spellEffect.getSpell(), damage);
             }
         } else {
             recipient.graphic(new Graphic(85, 100));
-            LocalSound.of(recipient, Sound.SPELLFAIL).display();
+            playImpactSound(recipient, Sound.SPELLFAIL);
+        }
+    }
+
+    /**
+     * Sends NPC spell audio to the affected player while preserving positional playback for other casters.
+     *
+     * @param recipient The mob receiving this spell impact.
+     * @param sound The impact or splash sound.
+     */
+    private void playImpactSound(Mob recipient, Sound sound) {
+        if (attacker instanceof Npc) {
+            if (recipient instanceof Player player) {
+                player.playSound(sound);
+            }
+        } else {
+            LocalSound.of(recipient, sound).display();
         }
     }
 

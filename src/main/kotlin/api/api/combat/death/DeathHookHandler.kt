@@ -4,13 +4,13 @@ import api.attr.Attr
 import api.combat.death.dsl.DeathHookReceiver
 import api.predef.*
 import io.luna.game.model.item.GroundItem
-import io.luna.game.model.LocalSound
-import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.MobDeathAction.DeathStage
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerController
+import io.luna.net.msg.out.SoundMessageWriter
 import kotlin.reflect.KClass
 
 private typealias DeathHook<T> = DeathHookReceiver<T>.() -> Unit
@@ -119,9 +119,10 @@ object DeathHookHandler {
         if (victim is Npc) {
             if (stage == DeathStage.PRE_DEATH) {
                 val soundId = victim.combatDef()?.deathSound ?: -1
-                if (soundId >= 0) {
-                    LocalSound.ofId(victim.context, soundId, victim.position,
-                        ChunkUpdatableView.globalView(), 12, 1).display()
+                val listener = victim.combat.lastAttackingPlayer
+                if (soundId >= 0 && listener?.state == EntityState.ACTIVE &&
+                    victim.position.computeLongestDistance(listener.position) <= 12) {
+                    listener.queue(SoundMessageWriter(soundId, 1, 0))
                 }
             }
             val receiver = DeathHookReceiver(victim, source, stage)

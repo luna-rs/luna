@@ -388,6 +388,9 @@ public abstract class CombatContext<T extends Mob> {
         if (attacker instanceof Player player && mob instanceof Player victim && player != victim) {
             player.getControllers().getPrimary().pvpAttackCommitted(victim);
         }
+        if (mob instanceof Npc npc && attacker instanceof Player player) {
+            npc.getCombat().setLastAttackingPlayer(player);
+        }
         lastCombatWith = attacker;
         resetCombatTimer();
     }

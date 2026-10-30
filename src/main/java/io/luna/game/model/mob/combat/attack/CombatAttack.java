@@ -5,9 +5,6 @@ import api.combat.npc.NpcCombatHandler;
 import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.status.hooks.PoisonStatusEffect;
-import io.luna.game.model.LocalSound;
-import io.luna.game.model.Position;
-import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -16,6 +13,7 @@ import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.net.msg.out.SoundMessageWriter;
 
 import java.time.Instant;
 
@@ -144,7 +142,8 @@ public abstract class CombatAttack<T extends Mob> {
      * Attacks that ignore the attack delay preserve the existing cooldown instead of replacing it. An optional
      * player launch sound is captured before preparation can consume equipment, then played once immediately before
      * the attack behavior. Misses and accurate zero hits still play the sound; cancellation suppresses it.
-     * NPC launch sounds are selected after preparation, allowing attack hooks to choose their committed sound.
+     * NPC launch sounds are selected after preparation, allowing attack hooks to choose their committed sound,
+     * and sent only to the player being attacked.
      * <p>
      * If {@link #onAttack(CombatDamage)} returns {@code null}, the attack is treated as cancelled and {@link #attack()}
      * will not be executed.
@@ -180,11 +179,10 @@ public abstract class CombatAttack<T extends Mob> {
                 other.playSound(attackSound);
             }
         }
-        if (attacker instanceof Npc npc) {
+        if (attacker instanceof Npc && victim instanceof Player player) {
             int soundId = getNpcAttackSound();
             if (soundId >= 0) {
-                LocalSound.ofId(npc.getContext(), soundId, npc.getPosition(), ChunkUpdatableView.globalView(),
-                        Position.VIEWING_DISTANCE, 1).display();
+                player.queue(new SoundMessageWriter(soundId, 1, 0));
             }
         }
         attack();

@@ -2,18 +2,19 @@ package io.luna.game.model.mob.combat.attack;
 
 import game.content.barrows.BarrowsBrother;
 import game.content.barrows.BarrowsCombat;
-import io.luna.LunaContext;
 import io.luna.game.model.LocalSound;
 import io.luna.game.model.Position;
-import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatImpactQueue;
 import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.net.msg.out.SoundMessageWriter;
+import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,11 +23,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import kotlin.random.Random;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Verifies that NPC launch sounds follow committed attacks, including misses and silent definitions.
+ * Verifies private NPC launch sounds for committed attacks, including misses and silent definitions.
  *
  * @author lare96
  */
@@ -44,16 +46,13 @@ class NpcAttackSoundTest {
      */
     private static final class Fixture {
         final Npc npc = mock(Npc.class, RETURNS_DEEP_STUBS);
-        final Mob victim = mock(Mob.class, RETURNS_DEEP_STUBS);
+        final Player victim = mock(Player.class, RETURNS_DEEP_STUBS);
         final CombatDamage damage = mock(CombatDamage.class);
         final CombatImpactQueue impacts = mock(CombatImpactQueue.class);
-        final LocalSound sound = mock(LocalSound.class);
-        final LunaContext context = mock(LunaContext.class);
         final Position position = new Position(3200, 3200);
 
         Fixture() {
             when(npc.getPosition()).thenReturn(position);
-            when(npc.getContext()).thenReturn(context);
             when(npc.combatDef().getAttackSound()).thenReturn(17);
             when(npc.combatDef().getRangedAttackSound()).thenReturn(269);
             when(damage.getAttacker()).thenReturn(npc);
@@ -76,15 +75,28 @@ class NpcAttackSoundTest {
         }
 
         MockedStatic<LocalSound> sounds() {
-            MockedStatic<LocalSound> sounds = mockStatic(LocalSound.class);
-            sounds.when(() -> LocalSound.ofId(eq(context), anyInt(), eq(position),
-                    any(ChunkUpdatableView.class), anyInt(), eq(1))).thenReturn(sound);
-            return sounds;
+            return mockStatic(LocalSound.class);
+        }
+
+        void verifyPrivateSound(int id) {
+            ArgumentCaptor<SoundMessageWriter> packet = ArgumentCaptor.forClass(SoundMessageWriter.class);
+            verify(victim).queue(packet.capture());
+            var buffer = Unpooled.buffer();
+            try {
+                var message = packet.getValue().write(victim, buffer);
+                assertEquals(26, message.getOpcode());
+                assertEquals(id, buffer.readUnsignedShort());
+                assertEquals(1, buffer.readUnsignedByte());
+                assertEquals(0, buffer.readUnsignedShort());
+                assertFalse(buffer.isReadable());
+            } finally {
+                buffer.release();
+            }
         }
 
         void deliverScheduledHit() {
             ArgumentCaptor<Runnable> arrival = ArgumentCaptor.forClass(Runnable.class);
-            verify(impacts).schedule(eq(1), arrival.capture(), any());
+            verify(impacts).schedule(eq(0), arrival.capture(), any());
             verify(victim, never()).submitAction(any());
             arrival.getValue().run();
             verify(victim).submitAction(any(CombatDamageAction.class));
@@ -99,9 +111,8 @@ class NpcAttackSoundTest {
         when(f.damage.getRawAmount()).thenReturn(0);
         try (var sounds = f.sounds()) {
             f.melee(false).apply();
-            sounds.verify(() -> LocalSound.ofId(eq(f.context), eq(17), eq(f.position),
-                    any(ChunkUpdatableView.class), anyInt(), eq(1)));
-            verify(f.sound).display();
+            f.verifyPrivateSound(17);
+            sounds.verifyNoInteractions();
             f.deliverScheduledHit();
         }
     }
@@ -112,6 +123,7 @@ class NpcAttackSoundTest {
         try (var sounds = f.sounds()) {
             f.melee(true).apply();
             sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
             verifyNoInteractions(f.impacts);
             verify(f.victim, never()).submitAction(any());
         }
@@ -127,6 +139,7 @@ class NpcAttackSoundTest {
         try (var sounds = f.sounds()) {
             attack.apply();
             sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
             verify(attack, never()).calculateDamage(any());
             verifyNoInteractions(f.impacts);
             verify(f.victim, never()).submitAction(any());
@@ -140,7 +153,19 @@ class NpcAttackSoundTest {
         try (var sounds = f.sounds()) {
             f.melee(false).apply();
             sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
             f.deliverScheduledHit();
+        }
+    }
+
+    @Test
+    void soundZeroRemainsAValidPrivateLaunchSound() {
+        Fixture f = new Fixture();
+        when(f.npc.combatDef().getAttackSound()).thenReturn(0);
+        try (var sounds = f.sounds()) {
+            f.melee(false).apply();
+            f.verifyPrivateSound(0);
+            sounds.verifyNoInteractions();
         }
     }
 
@@ -156,10 +181,8 @@ class NpcAttackSoundTest {
         };
         try (var sounds = f.sounds()) {
             attack.apply();
-            sounds.verify(() -> LocalSound.ofId(eq(f.context), eq(269), eq(f.position),
-                    any(ChunkUpdatableView.class), anyInt(), eq(1)));
-            verify(f.sound).display();
-            sounds.verifyNoMoreInteractions();
+            f.verifyPrivateSound(269);
+            sounds.verifyNoInteractions();
         }
     }
 
@@ -179,6 +202,7 @@ class NpcAttackSoundTest {
         try (var sounds = f.sounds()) {
             attack.apply();
             sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
         }
     }
 
@@ -200,10 +224,8 @@ class NpcAttackSoundTest {
         };
         try (var sounds = f.sounds()) {
             attack.apply();
-            sounds.verify(() -> LocalSound.ofId(eq(f.context), eq(startSound), eq(f.position),
-                    any(ChunkUpdatableView.class), eq(Position.VIEWING_DISTANCE), eq(1)));
-            verify(f.sound).display();
-            sounds.verifyNoMoreInteractions();
+            f.verifyPrivateSound(startSound);
+            sounds.verifyNoInteractions();
         }
     }
 
@@ -224,6 +246,7 @@ class NpcAttackSoundTest {
         try (var sounds = f.sounds()) {
             attack.apply();
             sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
         }
     }
 
@@ -241,11 +264,27 @@ class NpcAttackSoundTest {
         int expected = configured ? 1070 : CombatSpell.FIRE_WAVE.getDef().getStartSound().getId();
         try (var sounds = f.sounds()) {
             attack.apply();
-            sounds.verify(() -> LocalSound.ofId(eq(f.context), eq(expected), eq(f.position),
-                    any(ChunkUpdatableView.class), anyInt(), eq(1)));
-            verify(f.sound).display();
+            f.verifyPrivateSound(expected);
             verify(attack).attack();
-            sounds.verifyNoMoreInteractions();
+            sounds.verifyNoInteractions();
+        }
+    }
+
+    @Test
+    void npcVictimDoesNotBroadcastTheAttackSound() {
+        Fixture f = new Fixture();
+        Npc victim = mock(Npc.class, RETURNS_DEEP_STUBS);
+        when(f.damage.getVictim()).thenReturn(victim);
+        MeleeCombatAttack<Npc> attack = new MeleeCombatAttack<>(f.npc, victim, -1, 1, 4) {
+            @Override
+            public CombatDamage calculateDamage(Mob other) {
+                return f.damage;
+            }
+        };
+        try (var sounds = f.sounds()) {
+            attack.apply();
+            sounds.verifyNoInteractions();
+            verify(f.victim, never()).queue(any());
         }
     }
 }

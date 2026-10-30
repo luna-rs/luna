@@ -71,6 +71,12 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     private int maxHit = -1;
 
     /**
+     * The last player to commit an incoming attack during this NPC's current life.
+     * Outgoing attacks do not change the player selected to hear its death sound.
+     */
+    private Player lastAttackingPlayer;
+
+    /**
      * Whether this NPC has entered the state requiring a finishing item. Cleared when this context is reset.
      */
     private boolean awaitingExecution;
@@ -140,6 +146,25 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         retreatPolicy = RetreatPolicy.CONFIGURED;
         attackBonusType = null;
         maxHit = -1;
+        lastAttackingPlayer = null;
+    }
+
+    /**
+     * Returns the last player who attacked this NPC, independently of its current outgoing target.
+     *
+     * @return The death sound's player recipient, or {@code null} if no player has attacked this life.
+     */
+    public Player getLastAttackingPlayer() {
+        return lastAttackingPlayer;
+    }
+
+    /**
+     * Records the player associated with the latest committed incoming player attack.
+     *
+     * @param player The attacking player, or {@code null} to clear the recipient.
+     */
+    public void setLastAttackingPlayer(Player player) {
+        lastAttackingPlayer = player;
     }
 
     /**
