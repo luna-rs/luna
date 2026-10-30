@@ -7,6 +7,7 @@ import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.combat.AmmoType
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.CombatStyle
+import io.luna.game.model.mob.combat.CombatFormula
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.attack.MeleeCombatAttack
@@ -45,12 +46,15 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
      * Creates a melee combat attack with optional overrides for the attack animation, maximum hit, attack range,
      * and attack speed.
      *
-     * Damage is rolled using melee accuracy against the current victim and is capped by the supplied maximum hit.
+     * Damage is rolled using melee offence against the current victim and is capped by the supplied maximum hit.
+     * An optional magic-defence roll supports melee creatures such as bloodvelds without changing their damage
+     * family, protection prayer, contact reach, or hit timing.
      *
      * @param animationId The attack animation to play.
      * @param maxHit The maximum damage this attack can deal.
      * @param range The maximum melee distance allowed for the attack.
      * @param speed The attack delay in ticks.
+     * @param magicDefence Whether the melee offensive roll is checked against magic defence.
      * @param launch The listener applied when the melee attack is actually launched.
      * @return The configured melee combat attack.
      */
@@ -59,12 +63,17 @@ class NpcAttackCombatHookReceiver(npc: Npc, other: Mob) : NpcCombatHookReceiver(
         maxHit: Int = npc.combatDef().maximumHit,
         range: Int = 1,
         speed: Int = npc.combatDef().attackSpeed,
+        magicDefence: Boolean = false,
         launch: MeleeCombatAttack<Npc>.(CombatDamage?) -> CombatDamage? = { it },
     ) = object : MeleeCombatAttack<Npc>(npc, other, animationId, range, speed) {
 
         override fun calculateDamage(other: Mob): CombatDamage {
-            return CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)
-                .setBaseMaxHit(maxHit).build().resolve()
+            val request = CombatDamageRequest.Builder(attacker, other, CombatDamageType.MELEE)
+                .setBaseMaxHit(maxHit)
+            if (magicDefence) {
+                request.setBaseAccuracy(CombatFormula.calculateMagicDefendedMeleeHitChance(attacker, other))
+            }
+            return request.build().resolve()
         }
 
         override fun onAttack(damage: CombatDamage?): CombatDamage? {
