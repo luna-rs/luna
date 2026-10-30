@@ -158,10 +158,10 @@ class CastleWarsTest {
         assertEquals(2, sara.castleWarsTickets)
         assertFalse(sara.equipment.contains(4041))
         sara.inventory.remove(1275)
-        // Fixture items are all non-stackable; exercise partial delivery as well.
+        // Both stackable tickets fit in the one freed slot.
         game.claimTickets(sara)
-        assertEquals(1, sara.castleWarsTickets)
-        sara.inventory.remove(1275)
+        assertEquals(0, sara.castleWarsTickets)
+        assertEquals(2, sara.inventory.computeAmountForId(4067))
         game.claimTickets(sara)
         game.claimTickets(sara)
         assertEquals(0, sara.castleWarsTickets)
