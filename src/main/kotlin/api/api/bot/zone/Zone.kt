@@ -46,6 +46,15 @@ enum class Zone(val price: Int,
                 val travel: List<TravelStrategy> = emptyList(),
                 val safe: Boolean = true) {
     /**
+     * Port Phasmatys travel hub and bank destinations for the town and its nearby farming plots.
+     */
+    PORT_PHASMATYS(price = 3500,
+                   anchor = Position(3690, 3473),
+                   regions = setOf(14646, 14647),
+                   bankAnchors = listOf(Position(3687, 3465), Position(3688, 3465),
+                                        Position(3690, 3465), Position(3691, 3465))),
+
+    /**
      * Canifis footprint derived from the supplied main-town rectangle. The anchor is user supplied;
      * bank anchors are intentionally empty. Travel costs the supplied 5,000 GP fee.
      */

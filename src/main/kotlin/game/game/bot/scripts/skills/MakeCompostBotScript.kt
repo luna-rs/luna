@@ -50,12 +50,13 @@ class MakeCompostBotScript(
 
     companion object {
         /**
-         * Native cache bins within existing mapped farming zones. Port Phasmatys retains the Farming parent-zone TODO.
+         * Native compost-bin identities mapped to the same activity areas as their surrounding farming plots.
          */
         val SITES = linkedMapOf(
             CompostBinLocation.FALADOR to SubZone.FALADOR_FARM,
             CompostBinLocation.CATHERBY to SubZone.CATHERBY_FARM,
-            CompostBinLocation.ARDOUGNE to SubZone.ARDOUGNE_FARM
+            CompostBinLocation.ARDOUGNE to SubZone.ARDOUGNE_FARM,
+            CompostBinLocation.PORT_PHASMATYS to SubZone.PORT_PHASMATYS_FARM
         )
 
         /**

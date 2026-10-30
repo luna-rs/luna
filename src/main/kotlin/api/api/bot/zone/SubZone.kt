@@ -110,6 +110,12 @@ enum class SubZone(
     ARDOUGNE_FARM(
         inside = Position(2668, 3376), area = SimpleBoxArea.of(2659, 3367, 2675, 3382),
         parent = { ARDOUGNE }),
+    /**
+     * Port Phasmatys allotments, flower and herb plots and compost bin share this farm footprint.
+     */
+    PORT_PHASMATYS_FARM(
+        inside = Position(3636, 3527), area = SimpleBoxArea.ofRadius(3584, 3516, 53, 21),
+        parent = { PORT_PHASMATYS }),
 
     /**
      * Hops fields use the same native patch flow, with seed counts supplied by the chosen crop.

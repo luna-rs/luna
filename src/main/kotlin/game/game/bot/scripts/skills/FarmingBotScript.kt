@@ -79,8 +79,7 @@ class FarmingBotScript(
 
     companion object {
         /**
-         * Map-backed farming sites with existing parent travel zones. Port Phasmatys needs its parent zone data
-         * before its four plots can be enabled; it must not inherit Canifis town's unrelated footprint.
+         * Native farming plots and their shared activity areas, using each area's parent travel and banking hub.
          */
         val SITES: Map<PatchLocation, SubZone> = linkedMapOf(
             AllotmentPatchLocation.FALADOR_NW to SubZone.FALADOR_FARM,
@@ -95,6 +94,10 @@ class FarmingBotScript(
             AllotmentPatchLocation.ARDOUGNE_SOUTH to SubZone.ARDOUGNE_FARM,
             HerbPatchLocation.ARDOUGNE to SubZone.ARDOUGNE_FARM,
             FlowerPatchLocation.ARDOUGNE to SubZone.ARDOUGNE_FARM,
+            AllotmentPatchLocation.PORT_PHASMATYS_NORTH to SubZone.PORT_PHASMATYS_FARM,
+            AllotmentPatchLocation.PORT_PHASMATYS_SOUTH to SubZone.PORT_PHASMATYS_FARM,
+            HerbPatchLocation.PORT_PHATASMYS to SubZone.PORT_PHASMATYS_FARM,
+            FlowerPatchLocation.PORT_PHASMATYS to SubZone.PORT_PHASMATYS_FARM,
             HopsPatchLocation.YANILLE to SubZone.YANILLE_HOPS,
             HopsPatchLocation.ENTRANA to SubZone.ENTRANA_HOPS,
             HopsPatchLocation.LUMBRIDGE to SubZone.LUMBRIDGE_HOPS,
