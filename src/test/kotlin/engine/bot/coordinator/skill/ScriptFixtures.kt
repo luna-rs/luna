@@ -29,7 +29,7 @@ object ScriptFixtures {
                 if (item.getAsJsonObject("unnoted_id").get("is_present").asBoolean) continue
                 ItemDefinition.ALL.storeDefinition(ItemDefinition(
                     item.get("id").asInt, item.get("name").asString, "", 0, 0, 0, 0, 0, 0, 0,
-                    false, 0, false, emptyArray(), emptyArray(), OptionalInt.empty(),
+                    item.get("stackable").asBoolean, 0, false, emptyArray(), emptyArray(), OptionalInt.empty(),
                     0, 0, 0, OptionalInt.empty(), 0.0, item.get("tradeable").asBoolean
                 ))
             }

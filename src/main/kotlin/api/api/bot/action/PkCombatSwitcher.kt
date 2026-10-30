@@ -33,6 +33,7 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
      */
     private val combat = BotCombatActionHandler(bot, handler)
     private val clan = PkClanPolicy(bot)
+    private val selection = PkLoadoutSelection(bot)
     private val failed = mutableSetOf<BotGearPurpose>()
     private var active: Pair<BotGearPurpose, CombatLoadout>? = null
     private var nextDecision: Long? = null
@@ -66,14 +67,17 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
 
         val choices = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
             .filter { it !in failed }.mapNotNull { purpose ->
-                CombatLoadout.find(bot, purpose, carriedOnly = true)?.also { outfit ->
+                selection.select(purpose, carriedOnly = true)?.also { outfit ->
                     clan.cape?.let { outfit.gear[Equipment.CAPE] = it }
                 }?.takeIf { it.gear[Equipment.WEAPON] != null }
                     ?.let { purpose to it }
             }.toMap()
         val purpose = combat.selectPkStyle(target, choices.keys) ?: return Result.UNAVAILABLE
         val selected = choices.getValue(purpose)
-        if (current?.first == purpose && ready(purpose, current.second)) return Result.READY
+        if (current?.first == purpose && current.second.spell == selected.spell &&
+            current.second.gear[Equipment.WEAPON] == selected.gear[Equipment.WEAPON] &&
+            current.second.gear[Equipment.AMMUNITION] == selected.gear[Equipment.AMMUNITION] &&
+            ready(purpose, current.second)) return Result.READY
         bot.combat.target = null
         clearMagic()
         if (!apply(target, purpose, selected)) {

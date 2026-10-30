@@ -530,7 +530,7 @@ public final class Shop {
      * @return The total sell value in units of {@link #currency}.
      * @throws IllegalArgumentException If {@code amountSold} is negative.
      */
-    private int computeSellValue(int id, int amountSold) {
+    public int computeSellValue(int id, int amountSold) {
         Preconditions.checkArgument(amountSold >= 0);
 
         int totalMoney = 0;

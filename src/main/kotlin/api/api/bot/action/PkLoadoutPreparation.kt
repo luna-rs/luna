@@ -28,6 +28,7 @@ import io.luna.game.model.mob.bot.Bot
  */
 internal class PkLoadoutPreparation(private val bot: Bot, private val handler: BotActionHandler) {
     private val clan = PkClanPolicy(bot)
+    private val selection = PkLoadoutSelection(bot)
     /**
      * A concrete departure outfit and inventory, checked against physical ownership and prospective death loss.
      *
@@ -43,17 +44,38 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
         val purposes = purposes()
         return clan.wearingCape() && purposes.isNotEmpty() && bot.inventory.any {
             it != null && Food.ID_TO_FOOD[it.id]?.heal?.let { heal -> heal > 0 } == true
-        } && purposes.all { CombatLoadout.find(bot, it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
+        } && purposes.all { selection.select(it, carriedOnly = true)?.gear?.get(Equipment.WEAPON) != null }
     }
 
     /**
      * Resolves saved disciplines without treating a build's incidental training skills as additional PK styles.
      */
     private fun purposes(): List<BotGearPurpose> {
-        if (bot.preferences.isSkiller) return emptyList()
-        val styles = bot.preferences.pk?.styles() ?: return emptyList()
-        return listOf(BotGearPurpose.MELEE to Skill.ATTACK, BotGearPurpose.RANGED to Skill.RANGED,
-            BotGearPurpose.MAGIC to Skill.MAGIC).filter { styles.uses(it.second) }.map { it.first }
+        return selection.purposes()
+    }
+
+    /**
+     * Selects a strong weapon for each assigned discipline and enough top-spell runes/arrows for a real outing.
+     * Supplies covered by the selected staff are omitted. Food quality respects the available risk allowance.
+     */
+    internal fun supplyRequirements(): Map<Int, Int>? {
+        val purposes = purposes().takeIf { it.isNotEmpty() } ?: return null
+        val required = linkedMapOf<Int, Int>()
+        for (purpose in purposes) {
+            val outfit = selection.select(purpose, desired = true) ?: return null
+            required[outfit.gear[Equipment.WEAPON] ?: return null] = 1
+            outfit.gear[Equipment.AMMUNITION]?.let { required[it] = PkLoadoutSelection.MIN_AMMUNITION }
+            for ((id, amount) in outfit.runes) {
+                required[id] = maxOf(required[id] ?: 0, amount * PkLoadoutSelection.MIN_CASTS)
+            }
+        }
+        val risk = handler.combat.pkRiskBudget()
+        val foodAllowance = risk.maximumLoss.divide(java.math.BigInteger.valueOf(64))
+        val food = Food.ID_TO_FOOD.entries.filter { it.value.heal > 0 && selection.available(it.key) &&
+            java.math.BigInteger.valueOf(bot.world.economy.getPrice(it.key).coerceAtLeast(0)) <= foodAllowance }
+            .maxByOrNull { it.value.heal }?.key ?: return null
+        required[food] = 16
+        return required
     }
 
     /**
@@ -64,14 +86,14 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     fun missingSupplies(): Boolean = purposes().let { purposes ->
         purposes.isNotEmpty() && ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
             bot.bank.filterNotNull()).none { Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true } ||
-            purposes.any { CombatLoadout.find(bot, it)?.gear?.get(Equipment.WEAPON) == null })
+            purposes.any { selection.select(it)?.gear?.get(Equipment.WEAPON) == null })
     }
 
     /**
      * Plans synchronously from owned stock. A coordinator may project the one authorized missing clan cape;
      * the actual cape is only replenished when the script runs. Other supplies always require physical stock.
-     * Each unsuccessful minimum kit lowers the damage spell or excludes
-     * one preferred weapon, so cheap owned alternatives are considered without buying or creating supplies.
+     * Strong spells and weapons remain fixed; an unaffordable minimum kit must restock instead of quietly
+     * downgrading to Wind Strike or an ineffective melee weapon. Initiating PKers budget for losing every carried item.
      * Extra food/armour/supplies are admitted only when every modeled switch fits both space and the risk cap.
      */
     fun plan(allowMissingClanCape: Boolean = false): Plan? {
@@ -84,21 +106,20 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             .sortedByDescending { Food.ID_TO_FOOD.getValue(it).heal }
         if (foods.isEmpty()) return null
         val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
-        val assess = PkRiskBudget.assessor(bot, losesItems)
-        val excluded = mutableSetOf<Int>()
-        var maximumSpellHit = Int.MAX_VALUE
-        while (true) {
-            val selected = purposes.associateWith { CombatLoadout.find(bot, it, excludingWeapons = excluded,
-                maximumSpellHit = maximumSpellHit) ?: return null }
+        val assess = PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)
+        run {
+            val selected = purposes.associateWith { selection.select(it) ?: return null }
             val quantities = linkedMapOf<Int, Int>()
             clan.cape?.let { quantities[it] = 1 }
             selected.values.forEach { quantities[it.gear[Equipment.WEAPON] ?: return null] = 1 }
             val ranged = selected[BotGearPurpose.RANGED]
             val ammunition = ranged?.gear?.get(Equipment.AMMUNITION) ?: ranged?.gear?.get(Equipment.WEAPON)
                 ?.takeIf { WeaponDefinition.ALL.retrieve(it).type in CombatLoadout.thrown }
-            ammunition?.let { quantities[it] = 1 }
+            ammunition?.let { quantities[it] = PkLoadoutSelection.MIN_AMMUNITION }
             val magic = selected[BotGearPurpose.MAGIC]
-            magic?.runes?.forEach { (id, amount) -> quantities[id] = maxOf(quantities[id] ?: 0, amount) }
+            magic?.runes?.forEach { (id, amount) ->
+                quantities[id] = maxOf(quantities[id] ?: 0, amount * PkLoadoutSelection.MIN_CASTS)
+            }
             if (quantities.any { (id, amount) -> (stock[id] ?: 0) < amount }) return null
             val starting = arrayOfNulls<Int>(14)
             starting[Equipment.CAPE] = clan.cape
@@ -147,20 +168,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             }
 
             val firstFood = foods.firstOrNull { add(it) }
-            if (firstFood == null) {
-                // Spell tiers are bounded by native max-hit definitions; weapon exclusions grow monotonically.
-                val nextHit = magic?.spell?.maxHit?.minus(1)
-                if (nextHit != null && nextHit >= 2 && CombatLoadout.find(bot, BotGearPurpose.MAGIC,
-                        excludingWeapons = excluded, maximumSpellHit = nextHit) != null) {
-                    maximumSpellHit = nextHit
-                } else {
-                    val weapon = selected.values.mapNotNull { it.gear[Equipment.WEAPON] }
-                        .maxBy { bot.world.economy.getPrice(it) }
-                    excluded += weapon
-                    maximumSpellHit = Int.MAX_VALUE
-                }
-                continue
-            }
+            if (firstFood == null) return null
             var foodCount = 1
             for (id in foods) while (foodCount < 16 && (quantities[id] ?: 0) < stock.getValue(id) && add(id)) foodCount++
 
@@ -180,7 +188,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             }
             fun extend(costs: Map<Int, Int>, limit: Int) {
                 if (costs.isEmpty()) return
-                var low = 1
+                var low = costs.maxOf { (id, cost) -> (quantities[id] ?: cost) / cost }
                 var high = minOf(limit, costs.minOf { (id, cost) -> stock.getValue(id) / cost })
                 while (low < high) {
                     val middle = low + (high - low + 1) / 2
@@ -212,6 +220,14 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
             if (!handler.banking.depositInventory() || !safe() || !handler.equipment.unequipAll() || !safe() ||
                 !handler.banking.depositInventory() || !safe()) return false
             if (!clan.ensureCape()) return false
+            val required = supplyRequirements() ?: return false
+            if (required.any { (id, amount) -> selection.owned(id) < amount }) {
+                val minimum = required.map { (id, amount) -> Item(id, if (id in Food.ID_TO_FOOD) 1 else amount) }
+                val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
+                if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget ||
+                    !PkSupplyAcquisition(bot, handler).obtain(required) || !safe() ||
+                    !handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
+            }
             val plan = plan() ?: run {
                 if (bot.bank.none { it != null && Food.ID_TO_FOOD.containsKey(it.id) }) {
                     bot.preferences.allSuitableFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }

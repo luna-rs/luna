@@ -72,7 +72,7 @@ class PkLoadoutPreparationTest {
             }
             val inventory = spy(bot.inventory)
             `when`(bot.inventory).thenReturn(inventory)
-            for (id in listOf(882, 556, 558)) doReturn(true).`when`(inventory).stackable(id)
+            for (id in listOf(882, 556, 558, 554, 565)) doReturn(true).`when`(inventory).stackable(id)
             val bank = spy(bot.bank)
             `when`(bot.bank).thenReturn(bank)
             doAnswer { bankOpen }.`when`(bank).isOpen
@@ -81,7 +81,7 @@ class PkLoadoutPreparationTest {
             val overlays = bot.overlays
             doAnswer { bankOpen = false; null }.`when`(overlays).closeWindows()
             InventoryProductionFixtures.bank(bot, Item(4315), Item(1333), Item(841), Item(1381),
-                Item(882, 20), Item(556, 20), Item(558, 20), Item(333, 20))
+                Item(882, 100), Item(556, 250), Item(554, 350), Item(565, 50), Item(333, 20))
             `when`(handler.combat.pkRiskBudget()).thenReturn(PkRiskBudget(1500, BigInteger.ZERO, BigInteger.ZERO))
             runBlocking {
                 `when`(handler.banking.travelToBankOpen()).thenAnswer {
@@ -133,7 +133,7 @@ class PkLoadoutPreparationTest {
         }
         assertTrue(fixture.bot.inventory.contains(333))
         assertTrue((fixture.bot.inventory.filterNotNull() + fixture.bot.equipment.filterNotNull())
-            .map { it.id }.containsAll(listOf(4315, 1333, 841, 1381, 882, 558)))
+            .map { it.id }.containsAll(listOf(4315, 1333, 841, 1381, 882, 565)))
     }
 
     @Test fun reopeningFailureLeavesOwnedItemsIntactAndRejectsDeparture() = runBlocking {

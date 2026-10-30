@@ -1,7 +1,6 @@
 package engine.bot.coordinator
 
 import api.bot.action.PkClanPolicy
-import api.bot.action.PkLoadoutPreparation
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.BotScript
 import game.bot.scripts.combat.PkBotScript
@@ -14,7 +13,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Dispatches saved PK identities only when an affordable compact kit can be prepared from owned supplies.
+ * Dispatches saved PK identities to prepare or procure an affordable, effective PK kit before departure.
  * Clan cape replenishment is projected without creating an item here. An ordinary clan outing needs another
  * assigned clanmate online; a confidence-selected solo outing may depart alone. Banking and live checks belong
  * to the script, so coordinator eligibility never authorizes an attack by itself.
@@ -55,7 +54,8 @@ object PkingCoordinator : BotCoordinator {
     }
 
     /**
-     * Preserves permanent purpose/styles/build and declines duplicate, unsafe, unstocked or unaffordable sessions.
+     * Preserves permanent purpose/styles/build and declines duplicate or unsafe sessions.
+     * Missing supplies enter the preparation stage, where ordinary acquisition and funding can address them.
      */
     internal fun getScript(bot: Bot): BotScript? {
         if (bot.state != EntityState.ACTIVE || bot.preferences.isSkiller || bot.preferences.pk == null ||
@@ -64,8 +64,6 @@ object PkingCoordinator : BotCoordinator {
         val solo = PkClanPolicy.chooseSolo(bot)
         val clan = PkClanPolicy(bot)
         if (clan.clanOuting && !solo && clan.onlineMembers(activePkOnly = false).isEmpty()) return null
-        val preparation = PkLoadoutPreparation(bot, bot.actionHandler)
-        if (preparation.plan(allowMissingClanCape = true) == null) return ScavengingCoordinator.detour(bot, preparation)
         return PkBotScript(bot, sessionDuration(bot), solo)
     }
 }
