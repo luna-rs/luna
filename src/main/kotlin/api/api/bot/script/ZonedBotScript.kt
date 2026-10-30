@@ -15,7 +15,9 @@ import game.player.item.consume.food.Food
 import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
 import io.luna.game.model.LocatableDistanceComparator
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.`object`.GameObject
 import io.luna.util.GsonUtils
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -398,7 +400,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     /**
      * Selects the banking parent when an activity uses an alternative entrance whose bank differs from its work zone.
      */
-    protected open fun bankParent(zone: SubZone) = zone.parent(bot)
+    protected open fun bankParent(zone: SubZone) = zone.bankZone(bot)
 
     /**
      * Rejoins a precise marketplace work tile after initial travel, banking or displacement.
@@ -667,7 +669,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (bank != null && !bot.bank.isOpen) {
             val targetPosition = bank.position
             // The cached bank can be a long walk from the far end of a dungeon or the Wilderness.
-            val reachable = handler.interactions.approach(bank, timeout = 3.minutes) {
+            val reachable = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
                 ActionSafety.NON_COMBAT.allows(bot)
             }
             if (!awaitActionSafety()) return
@@ -685,9 +687,11 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
-            // A parent with no bank of its own lists the nearest one in another zone. Its anchor would be a detour,
-            // so the bot walks straight to the booth, which can take minutes.
-            val banksElsewhere = parent.banks.none { it in parent }
+            // The anchor is a detour unless the banks are by it, as in most towns. A parent with no bank of its own
+            // lists the nearest one in another zone, and Karamja's bankers are across the island from its anchor. There
+            // the bot walks straight to the bank, which can take minutes.
+            val banksElsewhere =
+                parent.banks.none { it in parent && it.position.computeLongestDistance(parent.anchor) < 64 }
             if (parent.banks.isNotEmpty() &&
                 (banksElsewhere || handler.webWalkTo(zone = parent, bank = BankAccess.COINS))) {
                 val sortedBanks =
@@ -700,7 +704,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 for (bank in sortedBanks) {
                     if (!bankActionReady()) return
                     if (banksElsewhere) {
-                        val reached = handler.interactions.approach(bank, timeout = 3.minutes) {
+                        val reached = handler.interactions.approach(bank, timeout = 3.minutes, allowOutOfView = true) {
                             ActionSafety.NON_COMBAT.allows(bot)
                         }
                         if (!reached) {
@@ -709,7 +713,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                         }
                         if (!bankActionReady()) return
                     }
-                    val option: Int = bank.def().actions.filter { it != "null" }.size
+                    val option = bankOption(bank)
                     if (handler.interactions.interact(option, bank) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = bank
                         bot.log("Cached bank selected. parent=$parent, bank=$bank, option=$option")
@@ -726,8 +730,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
                 if (npc != null) {
                     if (!bankActionReady()) return
                     bot.log("Banking NPC ${npc.id} found!")
-                    val option: Int = npc.def().actions.filter { it != "null" }.size
-                    if (handler.interactions.interact(option, npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
+                    if (handler.interactions.interact(bankOption(npc), npc) && waitFor(5.seconds) { bot.bank.isOpen }) {
                         cachedBank = npc
                     }
                 }
@@ -753,7 +756,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (!bankActionReady()) return
         bot.log("Preparing to interact with bank. cachedBank=$cachedBank, bankOpen=${bot.bank.isOpen}")
         if (!bot.bank.isOpen) {
-            if (!handler.interactions.interact(2, cachedBank)) {
+            if (!handler.interactions.interact(bankOption(cachedBank!!), cachedBank)) {
                 bot.log("Banking aborted because cached bank interaction failed. Clearing cached bank. cachedBank=$cachedBank")
                 cachedBank = null
                 forceBanking = true
@@ -789,6 +792,21 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
 
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
         if (BotMarketplace.forZone(activeZone) == null) travelToZone(activeZone, BankAccess.COINS)
+    }
+
+    /**
+     * The option that opens [bank]: a booth's last one, or a banker's "Bank". A bot's NPC options aren't the cache's
+     * action slots, since option 3 always attacks.
+     */
+    private fun bankOption(bank: Entity): Int = when (bank) {
+        is Npc -> when (bank.def().actions.indexOf("Bank")) {
+            0 -> 1
+            1 -> 3
+            2 -> 2
+            3 -> 4
+            else -> 5
+        }
+        else -> (bank as GameObject).def().actions.filter { it != "null" }.size
     }
 
     /**
