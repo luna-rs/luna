@@ -132,6 +132,10 @@ class SmeltOreBotScript(
         return emptyList()
     }
 
+    override suspend fun onNewActiveZone(lastZone: SubZone?) {
+        furnaceObject = null
+    }
+
     override suspend fun onExecuteInZone(): Boolean {
         val zone = activeZone!!
         val bar = smelting
