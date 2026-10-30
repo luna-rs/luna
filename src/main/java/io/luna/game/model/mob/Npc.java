@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import api.combat.npc.NpcCombatHandler;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import engine.combat.status.StatusEffectType;
@@ -203,7 +204,7 @@ public class Npc extends Mob {
      * @param damage The applied hit, including splashes and non-damaging spell effects.
      */
     public void onDamageApplied(CombatDamage damage) {
-
+        NpcCombatHandler.INSTANCE.consumeAppliedDamage(this, damage);
     }
 
     @Override

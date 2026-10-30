@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import kotlin.reflect.KClass
 
@@ -89,12 +90,20 @@ object NpcCombatHandler {
     }
 
     /**
-     * Determines if an NPC only ever uses its standard melee attack, because no hook replaces it.
+     * Determines if an NPC uses standard melee without a reaction that disrupts ordinary pursuit.
      *
      * @param npc The NPC.
-     * @return `true` if [supplyAttack] always returns the NPC's default attack.
+     * @return `true` for ordinary melee without a hook that repositions combatants.
      */
-    fun usesStandardAttack(npc: Npc): Boolean = resolve(npc) { it.replacesAttack } != true
+    fun usesStandardAttack(npc: Npc): Boolean = resolve(npc) { it.replacesAttack || it.disruptsPursuit } != true
+
+    /**
+     * Dispatches the final applied hit through the same type-before-id lookup as other NPC combat hooks.
+     * Native NPC delivery calls this after updating health and history, before notifying the source attack.
+     */
+    fun consumeAppliedDamage(npc: Npc, damage: CombatDamage) {
+        resolve(npc) { it.afterDamage(npc, damage) }
+    }
 
     /**
      * Consumes an incoming hit against an NPC and applies any registered defence hook.

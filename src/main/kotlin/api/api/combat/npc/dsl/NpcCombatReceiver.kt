@@ -2,6 +2,7 @@ package api.combat.npc.dsl
 
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.damage.CombatDamage
 
 /**
  * DSL receiver used to register attack and defence hooks for an NPC combat script.
@@ -41,6 +42,27 @@ class NpcCombatReceiver {
      */
     var replacesAttack = false
         private set
+
+    /**
+     * Whether native reactions can reposition either combatant outside ordinary melee pursuit. Terrain safespots
+     * cannot prove safety against these creatures even when their outgoing attack is ordinary melee.
+     */
+    var disruptsPursuit: Boolean = false
+
+    /**
+     * Receives the health-capped hit after delivery and combat history, including zero hits, splashes and effects.
+     * Reactions inspect the applied payload and current health before changing NPC behaviour.
+     */
+    var afterDamage: Npc.(CombatDamage) -> Unit = { }
+        private set
+
+    /**
+     * Registers a native reaction after damage delivery. Defence hooks remain responsible for changing or cancelling
+     * an incoming hit; this callback observes its final result and cannot replace the already delivered damage.
+     */
+    fun afterDamage(listener: Npc.(CombatDamage) -> Unit) {
+        afterDamage = listener
+    }
 
     /**
      * Defence hook callback.

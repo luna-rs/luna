@@ -63,6 +63,8 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * remains responsible for the kill and its task credit.
      * Bloodvelds share the first upper floor and require no specialist item; their native attack checks magic
      * defence while the bot retains its selected owned combat discipline.
+     * Abyssal demons share the second upper floor and use native teleport reactions; sessions retain ordinary
+     * target recovery rather than assuming a verified terrain safespot can hold them away.
      */
     private val assignmentCamps = listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
@@ -71,6 +73,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 80, setOf("Bloodveld")),
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 90, setOf("Aberrant specter")),
         Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 100, setOf("Gargoyle")),
+        Camp(SubZone.SLAYER_TOWER_SECOND_FLOOR, 110, setOf("Abyssal demon")),
         Camp(SubZone.EAST_EDGEVILLE_TREES, 25, setOf("Bear")),
         Camp(SubZone.LEGENDS_GUILD_MINE, 25, setOf("Bear")),
         Camp(SubZone.YANILLE_DUNGEON_CHAOS_DRUIDS, 30, setOf("Giant bat")),
