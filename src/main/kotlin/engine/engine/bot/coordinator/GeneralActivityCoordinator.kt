@@ -12,6 +12,7 @@ import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.SearchNestBotScript
+import game.bot.scripts.TradeMolePartsBotScript
 import game.skill.woodcutting.searchNest.Nest
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
@@ -26,6 +27,7 @@ import kotlin.time.Duration.Companion.minutes
  * are filled toward their wanted-stock target. Wanted buckets of milk and sand use the same native filling task.
  * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
  * in a preferred supported skill. Depleted glories can be recharged at the native Fountain of Heroes.
+ * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
  * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
@@ -79,6 +81,7 @@ object GeneralActivityCoordinator : BotCoordinator {
             }
         }
         MakeCrystalKeyBotScript(bot, duration).let { if (it.isEligible()) return it }
+        TradeMolePartsBotScript(bot, duration).let { if (it.isEligible()) return it }
         Nest.VALUES.filter { owned(bot, it.id) > 0 }.randomOrNull()?.let {
             return SearchNestBotScript(bot, it, duration)
         }

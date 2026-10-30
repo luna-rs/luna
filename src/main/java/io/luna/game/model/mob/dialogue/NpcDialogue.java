@@ -71,6 +71,15 @@ public final class NpcDialogue extends DialogueInterface {
         this.text = text;
     }
 
+    /**
+     * Identifies the NPC whose head is displayed, allowing dialogue consumers to verify the speaker.
+     *
+     * @return The speaking NPC's definition ID.
+     */
+    public int getNpcId() {
+        return npcId;
+    }
+
     @Override
     public boolean init(Player player) {
         String npcName = NpcDefinition.ALL.retrieve(npcId).getName();

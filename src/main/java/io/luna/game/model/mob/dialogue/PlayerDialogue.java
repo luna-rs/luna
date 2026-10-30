@@ -4,6 +4,8 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetMobModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
+import java.util.List;
+
 /**
  * A {@link DialogueInterface} that opens a dialogue with text and a Player head model.
  *
@@ -31,6 +33,16 @@ public final class PlayerDialogue extends DialogueInterface {
         super(DialogueUtils.playerDialogue(text.length));
         this.expression = expression;
         this.text = text;
+    }
+
+    /**
+     * Returns an immutable snapshot of the displayed lines so dialogue consumers can identify a confirmation
+     * without changing its text or invoking its continuation callback.
+     *
+     * @return The displayed dialogue lines.
+     */
+    public List<String> getLines() {
+        return List.of(text);
     }
 
     @Override

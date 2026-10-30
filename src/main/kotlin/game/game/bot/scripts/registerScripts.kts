@@ -11,6 +11,7 @@ import game.bot.scripts.skills.MakeCompostBotScript.Companion.CompostData
 
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
+import game.bot.scripts.TradeMolePartsBotScript.Companion.MolePartsData
 import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
 import game.bot.scripts.RangingGuildBotScript.ArcheryData
 
@@ -203,6 +204,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<SoftClayData>(MakeSoftClayBotScript::class) { bot, data -> MakeSoftClayBotScript(bot, data) }
     scriptManager.addScript<FillWaterData>(FillWaterBotScript::class) { bot, data -> FillWaterBotScript(bot, data) }
     scriptManager.addScript<NestData>(SearchNestBotScript::class) { bot, data -> SearchNestBotScript(bot, data) }
+    scriptManager.addScript<MolePartsData>(TradeMolePartsBotScript::class) { bot, data -> TradeMolePartsBotScript(bot, data) }
     scriptManager.addScript<ChestData>(OpenCrystalChestBotScript::class) { bot, data -> OpenCrystalChestBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(TanHideBotScript::class) { bot, data -> TanHideBotScript(bot, data) }
     scriptManager.addScript<CollectHidesData>(CollectHidesBotScript::class) { bot, data -> CollectHidesBotScript(bot, data) }
