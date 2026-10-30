@@ -1,6 +1,7 @@
 package api.bot.action
 
 import game.bot.scripts.combat.PkBotScript
+import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
@@ -71,19 +72,52 @@ internal class PkClanPolicy(private val bot: Bot) {
     }
 
     /**
+     * Formation members must actually be on a surface clan patrol, wearing their assigned cape.
+     * Solo, expired and resupplying sessions cannot lead a group away from its hunting area.
+     */
+    fun patrolMembers(): List<Bot> = onlineMembers().filter {
+        apparentAlly(it) && it.position.z == 0 && levelAt(it.position) > 0 &&
+            it.scriptStack.findActive(PkBotScript::class.java).orElse(null)?.isGroupOuting() == true
+    }
+
+    /**
+     * Uses the same stable leader for every member, including while that leader has a combat child.
+     */
+    fun patrolLeader(members: List<Bot> = patrolMembers()): Bot = (members + bot).minBy { it.usernameHash }
+
+    /**
+     * Online company alone is insufficient to initiate a fight: a group outing needs its leader nearby.
+     * The leader needs at least one nearby patrol member of its own clan.
+     */
+    fun inFormation(): Boolean {
+        val members = patrolMembers()
+        val leader = patrolLeader(members)
+        return if (leader === bot) members.any { near(it, GROUP_RADIUS) } else near(leader, GROUP_RADIUS)
+    }
+
+    /**
+     * Checks proximity on the same plane rather than treating a distant online assignment as support.
+     */
+    fun near(member: Bot, radius: Int): Boolean = bot.position.z == member.position.z &&
+        bot.position.computeLongestDistance(member.position) <= radius
+
+    /**
      * Per-outing decisions keep transient confidence choices separate from permanent preference identity.
      *
      * @author lare96
      */
     companion object {
+        const val FOLLOW_RADIUS = 4
+        const val GROUP_RADIUS = 10
+
         /**
-         * Gives confident personalities a 17.5–25 percent solo chance per outing, rather than retrying every tick.
+         * Gives confident personalities a 7–10 percent solo chance per outing, rather than retrying every tick.
          * The selected mode is retained by the session snapshot; permanent clan and PK identity do not change.
          */
         fun chooseSolo(bot: Bot, roll: Double = ThreadLocalRandom.current().nextDouble()): Boolean {
             val confidence = bot.personality.confidence
             return !bot.preferences.isSkiller && bot.preferences.pk?.purpose() == Purpose.CLAN &&
-                confidence.isFinite() && confidence >= 0.7 && roll >= 0 && roll < confidence.coerceAtMost(1.0) * 0.25
+                confidence.isFinite() && confidence >= 0.7 && roll >= 0 && roll < confidence.coerceAtMost(1.0) * 0.10
         }
     }
 }

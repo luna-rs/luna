@@ -1,6 +1,7 @@
 package engine.bot.coordinator
 
 import com.google.gson.JsonObject
+import engine.bot.coordinator.skill.ScriptFixtures
 import game.bot.scripts.combat.PkBotScript
 import game.bot.scripts.combat.PkBotScript.Companion.PkData
 import io.luna.game.model.mob.attr.AttributeMap
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.bot.brain.BotBrain
 import io.luna.game.model.mob.bot.brain.BotPkPreference
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.BeforeAll
 import org.mockito.Mockito.*
 import java.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -21,6 +23,10 @@ import kotlin.time.Duration.Companion.minutes
  * @author lare96
  */
 class PkingCoordinatorTest {
+    companion object {
+        @JvmStatic @BeforeAll fun definitions() = ScriptFixtures.initialize()
+    }
+
     private fun bot(affinity: Double = 0.5, confidence: Double = 0.5, dedicated: Boolean = false): Bot {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
         `when`(bot.attributes()).thenReturn(AttributeMap())

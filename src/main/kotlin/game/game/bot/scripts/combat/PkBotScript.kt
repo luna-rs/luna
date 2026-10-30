@@ -456,6 +456,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
     private var nextPatrolCycle = 0L
 
     /**
+     * Only this parent's clan travel may be interrupted by formation checks during a suspended web walk.
+     */
+    private var clanTravelDestination: Position? = null
+    private var clanTravelLeader: Bot? = null
+    private var clanTravelInterrupted = false
+
+    /**
      * Restricts recreational PK trips, without changing this account's NPC training or other coordinators.
      */
     private val isSkillSession: Boolean get() = bot.preferences.pk?.purpose() == Purpose.SKILL
@@ -482,7 +489,8 @@ class PkBotScript(bot: Bot, val duration: Duration,
             if (!clan.wearingCape()) return false
             if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target) &&
                 !combatPolicy.canRetaliateAgainst(target)) return false
-            if (clan.clanOuting) return clanCanHunt() || combatPolicy.canRetaliateAgainst(target)
+            if (clan.clanOuting) return (clanCanHunt() && (soloClanOuting || clan.inFormation())) ||
+                combatPolicy.canRetaliateAgainst(target)
         }
         if (!isGenericSession()) return true
         if (isKindGenericSession()) return target.skullIcon != SkullIcon.NONE ||
@@ -505,6 +513,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Clanmates may be anywhere online. A solo decision belongs to this outing and never changes saved allegiance.
      */
     internal fun clanCanHunt(): Boolean = !clan.clanOuting || soloClanOuting || clan.onlineMembers(activePkOnly = false).isNotEmpty()
+
+    /**
+     * Excludes independent, departing and resupplying trips from group leadership and following.
+     */
+    internal fun isGroupOuting(): Boolean = clan.clanOuting && !soloClanOuting && !isRestocking() &&
+        System.currentTimeMillis() < expireAt
 
     /**
      * Enables fresh attack evidence for kind protection and cape-based clan infighting.
@@ -534,6 +548,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
             Purpose.SKILL -> BotCombatActionHandler.isPker(target)
             Purpose.VALUE -> true
             Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
+                (soloClanOuting || clan.inFormation()) &&
                 levelAt(bot.position) >= 30 && levelAt(target.position) >= 30 &&
                 (!clan.apparentAlly(target) || observations.canDefendClanAgainst(target))
             Purpose.GENERIC -> if (isKindGenericSession()) observations.canProtectAgainst(target) ||
@@ -555,6 +570,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
      */
     internal fun observeMovement(players: Collection<Player>) {
         if (observesEncounters()) observations.observe(players)
+        maintainClanFormation()
     }
 
     /**
@@ -565,8 +581,9 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal fun orderTargets(targets: List<Player>): List<Player> = when {
         clan.clanOuting -> {
             val assisting = clan.onlineMembers().filter { clan.apparentAlly(it) }
-                .mapNotNull { it.combat.target as? Player }.toSet()
-            targets.sortedByDescending { if (observations.canDefendClanAgainst(it)) 2 else if (it in assisting) 1 else 0 }
+                .mapNotNull { it.combat.target as? Player }.groupingBy { it }.eachCount()
+            targets.sortedWith(compareByDescending<Player> { observations.canDefendClanAgainst(it) }
+                .thenByDescending { assisting[it] ?: 0 })
         }
         isKindGenericSession() -> targets.sortedByDescending { observations.canProtectAgainst(it) }
         bot.preferences.pk?.purpose() == Purpose.VALUE -> targets.sortedBy { BotCombatActionHandler.isPker(it) }
@@ -600,16 +617,56 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * Ordinary clan outings share the lowest-username-hash active member's current deep patrol goal.
-     * Solo outings choose independently, retaining clan allegiance and local assistance rules.
+     * Ordinary clan outings rally on their leader's actual position instead of chasing a distant shared goal.
+     * Without an available patrol member, they wait at a stable clan rally point rather than roaming alone.
      */
     internal fun selectPatrolDestination(): Position {
-        if (clan.clanOuting && !soloClanOuting) {
-            val leader = (clan.onlineMembers().filter { clan.apparentAlly(it) } + bot).minBy { it.usernameHash }
-            if (leader !== bot) leader.scriptStack.findActive(PkBotScript::class.java).orElse(null)
-                ?.patrolDestination?.takeIf { it.z == 0 && levelAt(it) >= 30 }?.let { return it }
+        if (isGroupOuting()) {
+            val members = clan.patrolMembers()
+            val leader = clan.patrolLeader(members)
+            if (leader !== bot) return leader.position
+            if (members.isEmpty()) {
+                val anchors = patrolGroups(bot).flatten()
+                return anchors[((clan.cape ?: 4315) - 4315) / 2 % anchors.size]
+            }
         }
         return patrolAnchors().random()
+    }
+
+    /**
+     * Rechecks suspended clan travel each game cycle. Leaders wait for stragglers; followers stop close by or
+     * replan when their leader moves. Banking, escape and combat children retain their own movement.
+     */
+    internal fun maintainClanFormation() {
+        val destination = clanTravelDestination ?: return
+        if (!isGroupOuting() || bot.scriptStack.current() !== this || bot.combat.inCombat() ||
+            bot.position.z != 0 || levelAt(bot.position) == 0) return
+        val members = clan.patrolMembers()
+        val leader = clan.patrolLeader(members)
+        val stop = leader !== clanTravelLeader ||
+            if (leader === bot) members.any { !clan.near(it, PkClanPolicy.GROUP_RADIUS) } else
+                clan.near(leader, PkClanPolicy.FOLLOW_RADIUS) || destination.z != leader.position.z ||
+                    destination.computeLongestDistance(leader.position) > PkClanPolicy.FOLLOW_RADIUS
+        if (stop) {
+            clanTravelInterrupted = true
+            bot.navigator.cancel()
+            bot.walking.clear()
+        }
+    }
+
+    /**
+     * A cancelled formation walk must return to the patrol loop without a recovery teleport or bank detour.
+     */
+    private suspend fun walkWithClan(destination: Position, radius: Int): Boolean {
+        clanTravelDestination = destination
+        clanTravelLeader = clan.patrolLeader()
+        clanTravelInterrupted = false
+        return try {
+            handler.webWalkTo(destination, radius = radius, bank = BankAccess.NONE, fallback = false)
+        } finally {
+            clanTravelDestination = null
+            clanTravelLeader = null
+        }
     }
 
     override suspend fun init(resumed: Boolean): Boolean {
@@ -802,6 +859,27 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * Active walking/navigation is never replaced. Nearby opponents are searched before this travel begins.
      */
     internal suspend fun travelToNewArea() {
+        if (isGroupOuting() && !bot.combat.inCombat() && bot.inWilderness() &&
+            !bot.navigator.isActive && bot.walking.isEmpty) {
+            val members = clan.patrolMembers()
+            val leader = clan.patrolLeader(members)
+            if (leader !== bot) {
+                patrolDestination = null
+                if (!clan.near(leader, PkClanPolicy.FOLLOW_RADIUS)) {
+                    walkWithClan(leader.position, PkClanPolicy.FOLLOW_RADIUS)
+                }
+                return
+            }
+            if (members.any { !clan.near(it, PkClanPolicy.GROUP_RADIUS) }) return
+            if (members.isEmpty()) {
+                val rally = selectPatrolDestination()
+                patrolDestination = rally
+                if (bot.position.computeLongestDistance(rally) > PkClanPolicy.FOLLOW_RADIUS) {
+                    walkWithClan(rally, PkClanPolicy.FOLLOW_RADIUS)
+                }
+                return
+            }
+        }
         if (!bot.combat.inCombat() &&
             bot.inWilderness() &&
             !bot.navigator.isActive &&
@@ -809,12 +887,13 @@ class PkBotScript(bot: Bot, val duration: Duration,
         ) {
             val anchor = patrolDestination ?: selectPatrolDestination().also { patrolDestination = it }
             bot.log("Travelling to PK patrol anchor=$anchor")
-            val reached = handler.webWalkTo(anchor, bank = BankAccess.NONE)
+            val reached = if (isGroupOuting()) walkWithClan(anchor, 2) else
+                handler.webWalkTo(anchor, bank = BankAccess.NONE)
             if (reached && bot.position.z == anchor.z && bot.position.computeLongestDistance(anchor) <= 2) {
                 patrolDestination = null
                 nextPatrolCycle = bot.cycles + rand(8, 20)
             } else {
-                patrolDestination = null
+                if (!isGroupOuting() || !clanTravelInterrupted) patrolDestination = null
                 nextPatrolCycle = bot.cycles + 8
             }
         }
@@ -833,13 +912,15 @@ class PkBotScript(bot: Bot, val duration: Duration,
         if (!combatPolicy.pkRiskBudget().withinBudget || !clan.wearingCape() || !clanCanHunt()) return false
         if (!bot.inWilderness() || !allowsHuntingAt(bot.position)) {
             val anchor = when {
+                isGroupOuting() -> selectPatrolDestination()
                 isSkillSession -> patrolAnchors().random()
                 prefersDungeonPatrol(bot) && rand(2 of 3) -> PkArea.EDGEVILLE_DUNGEON.anchors.random()
                 else -> LOW_LEVEL_ANCHOR_POINTS.random()
             }
 
             bot.log("Bot is outside hunting area. Walking to entry anchor $anchor")
-            handler.webWalkTo(anchor, bank = BankAccess.NONE)
+            if (isGroupOuting()) walkWithClan(anchor, PkClanPolicy.FOLLOW_RADIUS) else
+                handler.webWalkTo(anchor, bank = BankAccess.NONE)
 
             if (!bot.inWilderness() || !allowsHuntingAt(bot.position) || !clan.wearingCape() || !clanCanHunt() ||
                 !combatPolicy.pkRiskBudget().withinBudget) {
