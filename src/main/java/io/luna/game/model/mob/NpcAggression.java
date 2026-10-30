@@ -110,6 +110,7 @@ public class NpcAggression {
      *     <li>Is not locked</li>
      *     <li>Can currently attack</li>
      *     <li>Does not already have a combat target</li>
+     *     <li>Has an occupied player chunk within search range</li>
      * </ul>
      * If all conditions pass, nearby viewable players are scanned and the first valid candidate encountered by the
      * scan may be attacked.
@@ -119,7 +120,8 @@ public class NpcAggression {
                 !attacker.isLocked() &&
                 !attacker.getCombat().isRetreating() &&
                 attacker.getCombat().isAttackable() &&
-                attacker.getCombat().getTarget() == null) {
+                attacker.getCombat().getTarget() == null &&
+                attacker.getWorld().getChunks().hasPlayersNearby(attacker.getChunk())) {
             scanPlayers(attacker.getWorld(), attacker.getAggressionProfile().getPolicy());
         }
     }

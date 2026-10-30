@@ -9,6 +9,7 @@ import io.luna.net.msg.out.GroupedEntityMessageWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -58,9 +59,21 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     public static final int CLIENT_REGION_RADIUS = 6;
 
     /**
+     * The chunk radius searched by the locator for players within normal viewing distance. This is independent of
+     * {@link #VIEWABLE_RADIUS}, which controls chunk update dispatch.
+     */
+    private static final int PLAYER_SEARCH_RADIUS = Math.floorDiv(Position.VIEWING_DISTANCE, Chunk.SIZE) + 1;
+
+    /**
      * Loaded chunk repositories keyed by {@link Chunk}.
      */
     private final Map<Chunk, ChunkRepository> repositories = new ConcurrentHashMap<>(29_278);
+
+    /**
+     * Number of occupied player chunks within search range of each chunk. Maintained on the game thread as player
+     * chunks become occupied or empty, so aggression checks need no allocations or empty repository searches.
+     */
+    private final Map<Chunk, Integer> playerCoverage = new HashMap<>();
 
     /**
      * Chunks that have had updates queued this tick and therefore must be reset in {@link #resetUpdatedChunks()}.
@@ -113,6 +126,39 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      */
     public ChunkRepository load(Position position) {
         return load(position.getChunk());
+    }
+
+    /**
+     * Checks whether a viewable-player search from {@code base} could find any players.
+     * <p>
+     * This game-thread check is conservative: exact tile distance, height, and eligibility are still checked by the
+     * caller's normal search. It neither loads repositories nor allocates a search collection.
+     *
+     * @param base The chunk to search from.
+     * @return {@code true} if at least one occupied player chunk is in search range.
+     */
+    public boolean hasPlayersNearby(Chunk base) {
+        return playerCoverage.containsKey(base);
+    }
+
+    /**
+     * Updates search coverage when a chunk gains its first player or loses its last player.
+     *
+     * @param source The chunk whose player occupancy changed.
+     * @param delta {@code 1} when becoming occupied, or {@code -1} when becoming empty.
+     */
+    void updatePlayerCoverage(Chunk source, int delta) {
+        for (int x = -PLAYER_SEARCH_RADIUS; x <= PLAYER_SEARCH_RADIUS; x++) {
+            for (int y = -PLAYER_SEARCH_RADIUS; y <= PLAYER_SEARCH_RADIUS; y++) {
+                Chunk nearby = source.translate(x, y);
+                int count = playerCoverage.getOrDefault(nearby, 0) + delta;
+                if (count == 0) {
+                    playerCoverage.remove(nearby);
+                } else {
+                    playerCoverage.put(nearby, count);
+                }
+            }
+        }
     }
 
     /**

@@ -207,7 +207,9 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void add(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        entitySet.add(entity);
+        if (entitySet.add(entity) && entity.getType() == EntityType.PLAYER && entitySet.size() == 1) {
+            world.getChunks().updatePlayerCoverage(chunk, 1);
+        }
     }
 
     /**
@@ -220,7 +222,9 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void remove(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        entitySet.remove(entity);
+        if (entitySet.remove(entity) && entity.getType() == EntityType.PLAYER && entitySet.isEmpty()) {
+            world.getChunks().updatePlayerCoverage(chunk, -1);
+        }
     }
 
     /**
@@ -333,7 +337,8 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * Returns the set of entities of a given {@link EntityType} in this chunk.
      * <p>
-     * The returned set is the live backing set. Mutating it will mutate the repository.
+     * The returned set is the live backing set. Use {@link #add(Entity)} and {@link #remove(Entity)} for membership
+     * changes so player search coverage stays synchronized.
      * <p>
      * This method performs an unchecked cast. The caller must ensure {@code E} matches the expected runtime
      * type for the provided {@code type}, otherwise a {@link ClassCastException} may occur later.
@@ -375,6 +380,8 @@ public final class ChunkRepository implements Iterable<Entity> {
 
     /**
      * @return The backing entity map by type.
+     * @see #add(Entity)
+     * @see #remove(Entity)
      */
     public Map<EntityType, Set<Entity>> getAll() {
         return entities;
