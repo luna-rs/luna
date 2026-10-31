@@ -8,7 +8,7 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogue
  * Opens a [MakeItemDialogueInterface] for cutting logs.
  */
 fun openInterface(plr: Player, log: Log) {
-    plr.overlays.open(object : MakeItemDialogue(*log.unstrungIds) {
+    plr.overlays.open(object : MakeItemDialogue(log.unstrungIds, log.labels) {
         override fun make(plr: Player, id: Int, index: Int, forAmount: Int) {
             val bow = log.bows[index]
             if (plr.fletching.level < bow.level) {

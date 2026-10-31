@@ -18,13 +18,29 @@ public class MakeItemDialogue extends DialogueInterface {
     private final int[] items;
 
     /**
-     * Creates a new {@link MakeItemDialogue}.
+     * The text shown under each item, or {@code null} to show the item names.
+     */
+    private final String[] labels;
+
+    /**
+     * Creates a new {@link MakeItemDialogue} that shows the item names.
      *
      * @param items The items.
      */
     public MakeItemDialogue(int... items) {
+        this(items, null);
+    }
+
+    /**
+     * Creates a new {@link MakeItemDialogue} that shows {@code labels} under the items instead of their names.
+     *
+     * @param items The items.
+     * @param labels The text under each item, in the same order, or {@code null} for the item names.
+     */
+    public MakeItemDialogue(int[] items, String[] labels) {
         super(DialogueUtils.makeItemDialogue(items.length));
         this.items = items;
+        this.labels = labels;
     }
 
     /**
@@ -65,7 +81,7 @@ public class MakeItemDialogue extends DialogueInterface {
 
         int index = 0;
         for (int id : items) {
-            String itemName = ItemDefinition.ALL.retrieve(id).getName();
+            String itemName = labels != null ? labels[index] : ItemDefinition.ALL.retrieve(id).getName();
             if (items.length == 5) {
                 itemName = DialogueUtils.makeItem5OptionsNameFix(itemName);
             }
