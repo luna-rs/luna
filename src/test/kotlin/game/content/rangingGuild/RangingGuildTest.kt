@@ -165,7 +165,7 @@ class RangingGuildTest {
     @AfterEach fun resetLocator() { reset(world.locator) }
 
     @Test fun containerHelperBuysViaNativeWidgetPacketAndRejectsWrongMenuOrClosedWindow() {
-        val p = visitor(); p.inventory.add(Item(1464, 100)); ArcheryRewards.open(p, npc(694))
+        val p = visitor(); p.inventory.add(Item(1464, ArcheryRewards.Reward.COIF.cost)); ArcheryRewards.open(p, npc(694))
         val client = mock(BotClient::class.java); `when`(client.bot).thenReturn(p)
         val output = BotOutputMessageHandler(client); `when`(p.output).thenReturn(output)
         val widgets = BotWidgetActionHandler(p, mock(BotActionHandler::class.java))
@@ -387,7 +387,7 @@ class RangingGuildTest {
     }
 
     @Test fun rewardCapacityChecksAllowExactPaymentAndExistingStacksButRejectOverflow() {
-        val p = player(); p.inventory.add(Item(1464, 101)); fill(p); ArcheryRewards.open(p, npc(694))
+        val p = player(); p.inventory.add(Item(1464, ArcheryRewards.Reward.COIF.cost + 1)); fill(p); ArcheryRewards.open(p, npc(694))
         assertFalse(ArcheryRewards.select(p, 3, 1169, true)); p.inventory.remove(Item(1464))
         assertTrue(ArcheryRewards.select(p, 3, 1169, true)); assertTrue(p.inventory.contains(1169))
         val other = player(); other.inventory.add(Item(1464, 4000)); other.inventory.add(Item(892, 1)); fill(other)

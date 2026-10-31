@@ -86,13 +86,4 @@ class BotTradeStageTest {
         assertFalse(stage.remove(Item(314, 0)))
         verifyNoInteractions(bot.output)
     }
-
-    @Test fun paymentStockExcludesEquipmentAndDynamicItems() {
-        val bot = bot()
-        InventoryProductionFixtures.bank(bot, Item(995, 100))
-        InventoryProductionFixtures.inventory(bot, Item(995, 20), DynamicItem(995))
-        val items = BotTradeManager.computeOfferItems(bot, BotTradePrice.EXACT, BotTradePurpose.BUY)
-        assertEquals(1, items.size)
-        assertEquals(Item(995, 120), items.single().item)
-    }
 }

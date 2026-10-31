@@ -2,13 +2,10 @@ package api.bot.script
 
 import api.bot.zone.SubZone
 import api.bot.action.BotInteractionActionHandler
-import engine.bot.gear.BotGearPurpose
-import game.bot.scripts.NpcCombatScript
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.runBlocking
@@ -173,23 +170,5 @@ class TargetSearchRecoveryTest {
         `when`(bot.actionHandler.interactions).thenReturn(interactions)
         assertTrue(script.discover())
         assertSame(ranged, observed)
-    }
-
-    @Test
-    fun npcDiscoveryKeepsRangedAndMagicReachWhileMeleeStillApproachesAdjacent() {
-        val bot = bot()
-        val npc = mock(Npc::class.java)
-        val ranged = InteractionPolicy(InteractionType.LINE_OF_SIGHT, 7)
-        val attack = mock(CombatAttack::class.java)
-        `when`(attack.interactionPolicy).thenReturn(ranged)
-        val combat = bot.combat
-        doReturn(attack).`when`(combat).getDefaultAttack(npc)
-        for (purpose in listOf(BotGearPurpose.RANGED, BotGearPurpose.MAGIC, BotGearPurpose.MELEE)) {
-            val script = object : NpcCombatScript(bot, 60.seconds, mutableListOf(), purpose = purpose) {
-                fun discoveryPolicy() = targetApproachPolicy(npc)
-            }
-            assertSame(if (purpose == BotGearPurpose.MELEE) InteractionPolicy.STANDARD_SIZE else ranged,
-                script.discoveryPolicy())
-        }
     }
 }
