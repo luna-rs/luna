@@ -35,11 +35,6 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     /**
-     * Sound delay for woodcutting.
-     */
-    private var soundDelay = -1
-
-    /**
      * If the last free inventory slot was just filled, so that chopping stops on the next tick.
      */
     private var stopFull = false
@@ -80,7 +75,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         else -> {
             if (!start) {
                 delay = Luna.settings().skills().woodcuttingSpeed()
-                swing(true)
+                swing()
             }
             true
         }
@@ -132,25 +127,18 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         }
         if (!swung) {
             swung = true
-            mob.playSound(Sound.CUT_TREE_1)
             mob.sendMessage("You swing your axe at the tree.")
-            swing(false)
-        }
-        if (soundDelay-- == 0) {
-            mob.playSound(Sound.CUT_TREE_2)
+            swing()
         }
     }
 
     /**
-     * Faces the tree and starts the chopping animation, with the chopping sound if [sound] is true.
+     * Faces the tree and starts the chopping animation and sound.
      */
-    private fun swing(sound: Boolean) {
+    private fun swing() {
         mob.interactingWith?.let { mob.interact(it) }
         mob.animation(axe.animation)
-        if (sound) {
-            mob.playSound(Sound.CUT_TREE_2)
-            soundDelay = 2
-        }
+        mob.playSound(Sound.CUT_TREE_2)
     }
 
     /**
@@ -167,7 +155,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
      */
     private fun deleteAndRespawnTree() {
         if (world.removeObject(treeObj)) {
-            mob.playSound(Sound.TREE_FALLEN)
+            mob.playSound(Sound.TREE_FALL)
             val stumpId = TreeStump.TREE_ID_MAP[treeObj.id]?.stumpId
             if (stumpId != null) {
                 world.addObject(

@@ -2,6 +2,7 @@ package game.obj.resource.harvestable
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
@@ -23,6 +24,7 @@ class HarvestActionItem(plr: Player, val gameObject: GameObject, val resource: H
         }
 
         mob.animation(Animation(827))
+        mob.playSound(Sound.PICK)
         val chance = resource.computeExhaustionChance()
         if (rand(chance)) {
             complete()

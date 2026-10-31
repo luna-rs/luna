@@ -2,10 +2,12 @@ package game.obj.resource.fillable
 
 import api.predef.*
 import game.skill.farming.Farming
+import game.player.Sound
 import com.google.common.collect.HashBiMap
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.`object`.GameObject
 
 /**
  * A [FillableResource] implementation for water.
@@ -58,5 +60,8 @@ object WaterResource : FillableResource() {
         empty == Farming.EMPTY_WATERING_CAN || empty in Farming.WATERING_CANS.dropLast(1)
     }
 
-    override fun onFill(plr: Player) = plr.animation(Animation(832))
+    override fun onFill(plr: Player, resourceObject: GameObject) {
+        plr.animation(Animation(832))
+        plr.playSound(if (resourceObject.def().name == "Well") Sound.WELL_FILL else Sound.TAP_FILL)
+    }
 }

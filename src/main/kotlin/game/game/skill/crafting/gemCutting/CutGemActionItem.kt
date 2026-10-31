@@ -1,6 +1,7 @@
 package game.skill.crafting.gemCutting
 
 import api.predef.*
+import game.player.Sound
 import game.skill.Skills
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
@@ -34,6 +35,7 @@ class CutGemActionItem(val plr: Player, val gem: Gem, amount: Int) : InventoryAc
 
     override fun execute() {
         plr.animation(gem.animation)
+        plr.playSound(Sound.CHISEL)
         val crushed = currentAdd.single().id != gem.cut
         if (crushed) {
             plr.sendMessage("You mis-hit the chisel and smash the ${itemName(gem.cut)} to pieces!")

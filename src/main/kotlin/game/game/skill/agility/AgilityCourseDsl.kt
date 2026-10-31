@@ -44,9 +44,11 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
     /**
      * Creates a single continuous walking traversal.
      */
-    fun movementAction(plr: Player, destination: Position, walkingAnimationId: Int, message: String) =
+    fun movementAction(plr: Player, destination: Position, walkingAnimationId: Int, message: String,
+                       sounds: List<AgilitySound> = emptyList()) =
         AgilityAction(plr, listOf(AgilityStep(destination,
-            maxOf(1, plr.position.computeLongestDistance(destination)), walkingAnimation = walkingAnimationId)),
+            maxOf(1, plr.position.computeLongestDistance(destination)), walkingAnimation = walkingAnimationId,
+            sounds = sounds)),
             message)
 
     /**

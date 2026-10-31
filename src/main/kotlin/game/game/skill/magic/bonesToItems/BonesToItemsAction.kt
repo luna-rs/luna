@@ -44,7 +44,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
         if (Magic.checkRequirements(mob, type.level, type.requirements) == null || !mob.inventory.contains(BONES)) return
         if (type == BonesToItemsType.BANANAS && RandomEvents.offerGeneral(mob)) return
         mob.lock()
-        mob.playSound(Sound.BONES_TO_BANANAS_ALL)
         world.scheduleOnce(1) {
             try {
                 if (mob.state == EntityState.ACTIVE && mob.health > 0) completeCast()
@@ -64,6 +63,7 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
         mob.inventory.removeAll(removeItems.filterNot { it.id == BONES })
         mob.animation(Animations.BONES_TO_ITEMS)
         mob.graphic(Graphic(141, 100))
+        mob.playSound(Sound.BONES_TO_BANANAS_ALL)
         mob.magic.addExperience(type.xp)
     }
 }

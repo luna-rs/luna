@@ -1,12 +1,12 @@
 [
-  { "closed": 1551, "open": 1552, "side": "LEFT" },
-  { "closed": 1553, "open": 1556, "side": "RIGHT" },
-  { "closed": 1598, "open": 1552, "side": "LEFT" },
-  { "closed": 1599, "open": 1556, "side": "RIGHT" },
-  { "closed": 12986, "open": 12988, "side": "LEFT" },
-  { "closed": 12987, "open": 12989, "side": "RIGHT" },
-  { "closed": 7049, "open": 7051, "side": "LEFT" },
-  { "closed": 7050, "open": 7052, "side": "RIGHT" },
-  { "closed": 4311, "open": 4313, "side": "LEFT" },
-  { "closed": 4312, "open": 4314, "side": "RIGHT" }
+  { "closed": 1551, "open": 1552, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 1553, "open": 1556, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 1598, "open": 1552, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 1599, "open": 1556, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 12986, "open": 12988, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "DOOR_CLOSE" },
+  { "closed": 12987, "open": 12989, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "DOOR_CLOSE" },
+  { "closed": 7049, "open": 7051, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 7050, "open": 7052, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 4311, "open": 4313, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 4312, "open": 4314, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" }
 ]

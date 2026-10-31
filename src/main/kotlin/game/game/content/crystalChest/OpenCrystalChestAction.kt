@@ -51,11 +51,12 @@ class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private va
             mob.lock()
             mob.sendMessage("You unlock the chest with your key.")
             mob.animation(Animations.PICKPOCKET)
-            mob.playSound(Sound.PICK_LOCK)
+            mob.playSound(Sound.CHEST_OPEN)
             world.addObject(173, gameObject.position, gameObject.objectType, gameObject.direction, mob)
             state = State.SEARCHING
             return false
         } else {
+            mob.playSound(Sound.LOCKED)
             mob.sendMessage("You do not have any keys to open this chest with.")
             return true
         }

@@ -105,6 +105,7 @@ combat(*SkillGuardianRandomEvent.NPC_IDS.toList().toIntArray()) {
     }
     defend {
         val encounter = randomEvents.ownerOf(npc) as? SkillGuardianRandomEvent
+        soundId = null
         if (encounter?.canFight(other) != true) {
             damage = null
             animationId = null

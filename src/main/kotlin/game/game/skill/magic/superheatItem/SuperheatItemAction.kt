@@ -5,6 +5,7 @@ import api.predef.*
 import api.predef.ext.*
 import game.content.randomEvents.RandomEvents
 import game.player.Animations
+import game.player.Sound
 import game.skill.magic.Magic
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
@@ -35,7 +36,6 @@ import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
  * @author lare96
  */
 class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.superheatDelay, 5) {
-    // TODO@0.5.0 Implement correct sounds: SUPERHEAT_ALL, SUPERHEAT_FAIL, add failing support.
     companion object {
 
         /**
@@ -96,6 +96,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         mob.magic.addExperience(XP)
         mob.animation(Animations.SUPERHEAT)
         mob.graphic(Graphic(148, 100))
+        mob.playSound(Sound.SUPERHEAT_ALL)
         mob.smithing.addExperience(barType.xp)
         mob.tabs.show(TabIndex.MAGIC)
         world.scheduleOnce(1) { RandomEvents.offerGeneral(mob) }
@@ -110,6 +111,8 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         val itemId = mob.inventory.computeIdForIndex(index)
         val possibleBars = BarType.ORE_TO_BAR[itemId]
         if (possibleBars.isEmpty()) {
+            mob.playSound(Sound.SUPERHEAT_FAIL)
+            mob.graphic(Graphic(85, 100))
             mob.sendMessage("You cannot use this spell on this item.")
             return null
         }

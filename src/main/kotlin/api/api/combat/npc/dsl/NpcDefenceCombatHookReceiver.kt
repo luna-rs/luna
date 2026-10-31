@@ -27,6 +27,12 @@ class NpcDefenceCombatHookReceiver(npc: Npc, other: Mob, action: CombatDamageAct
      */
     var animationId: Int? = npc.combatDef().defenceAnimation
 
+    /**
+     * The sound sent privately to a player when a physical hit or accurate damaging spell is accepted.
+     * Set to `null` when a custom hook owns its pain audio or the NPC cannot react to this hit.
+     */
+    var soundId: Int? = npc.combatDef().defendSound.takeIf { it >= 0 }
+
 
     /**
      * Optional damage override for this hook execution.

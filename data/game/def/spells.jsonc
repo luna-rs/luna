@@ -234,7 +234,7 @@
         "amount": 1
       }
     ],
-    "start_sound": "WEAKEN_ALL",
+    "start_sound": "NO_SOUND",
     "end_sound": "WEAKEN_ALL"
   },
   {
@@ -738,8 +738,8 @@
         "amount": 5
       }
     ],
-    "start_sound": "IBAN_LIGHTNING",
-    "end_sound": "IBAN_LIGHTNING"
+    "start_sound": "NO_SOUND",
+    "end_sound": "FIRE_WAVE_ALL"
   },
   {
     "id": 1582,
@@ -784,7 +784,7 @@
         "amount": 3
       }
     ],
-    "start_sound": "SNARE_ALL",
+    "start_sound": "NO_SOUND",
     "end_sound": "SNARE_ALL"
   },
   {
@@ -832,7 +832,7 @@
       }
     ],
     "start_sound": "MAGIC_DART_FIRE",
-    "end_sound": "MAGIC_DART_FIRE"
+    "end_sound": "NO_SOUND"
   },
   {
     "id": 1177,
@@ -961,7 +961,7 @@
         "amount": 2
       }
     ],
-    "start_sound": "SARADOMIN_STRIKE",
+    "start_sound": "NO_SOUND",
     "end_sound": "SARADOMIN_STRIKE"
   },
   {
@@ -997,7 +997,7 @@
         "amount": 1
       }
     ],
-    "start_sound": "CLAWS_OF_GUTHIX",
+    "start_sound": "NO_SOUND",
     "end_sound": "CLAWS_OF_GUTHIX"
   },
   {
@@ -1033,7 +1033,7 @@
         "amount": 4
       }
     ],
-    "start_sound": "FLAMES_OF_ZAMORAK",
+    "start_sound": "NO_SOUND",
     "end_sound": "FLAMES_OF_ZAMORAK"
   },
   {
@@ -1168,7 +1168,7 @@
         "amount": 1
       }
     ],
-    "start_sound": "VULNERABILITY_ALL",
+    "start_sound": "NO_SOUND",
     "end_sound": "VULNERABILITY_ALL"
   },
   {
@@ -1398,7 +1398,7 @@
         "amount": 1
       }
     ],
-    "start_sound": "STUN_ALL",
+    "start_sound": "NO_SOUND",
     "end_sound": "STUN_ALL"
   },
   {

@@ -15,6 +15,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * An [Action] implementation that will catch fish.
@@ -52,8 +53,6 @@ class CatchFishAction(plr: Player,
          */
         private const val FRODI = 1397
     }
-
-    // TODO@0.5.0 Implement correct sounds: FISHING_CAST(377), FISH_SWIM(378), NET(379), CATCH(238), ?
 
     /**
      * Where the fishing spot was when fishing started. Fishing stops if the spot moves.
@@ -101,10 +100,21 @@ class CatchFishAction(plr: Player,
             1 -> {
                 mob.animation(Animation(tool.castAnimation))
                 mob.sendMessage(tool.castMessages[0])
-               // playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
+                when (tool) {
+                    Tool.SMALL_NET, Tool.BIG_NET, Tool.KARAMBWANJI_NET, Tool.MONKFISH_NET ->
+                        mob.playSound(Sound.NET)
+                    Tool.HARPOON, Tool.SHARK_HARPOON -> mob.playSound(Sound.FISHING_CAST)
+                    Tool.LOBSTER_POT -> mob.queue(SoundMessageWriter(Sound.FISHING_CAST.id, 1, 20))
+                    else -> Unit
+                }
             }
 
-            2 -> tool.castMessages.getOrNull(1)?.let { mob.sendMessage(it) }
+            2 -> {
+                tool.castMessages.getOrNull(1)?.let { mob.sendMessage(it) }
+                if (tool.castAnimation == 622 && tool != Tool.LAVA_EEL_FISHING_ROD) {
+                    mob.playSound(Sound.FISHING_CAST)
+                }
+            }
         }
         if (ticks == nextRoll) {
             if (ticks != tool.firstRoll || tool.animateFirstRoll) {
@@ -223,17 +233,5 @@ class CatchFishAction(plr: Player,
         }
         mob.fishing.addExperience(fish.exp)
         mob.sendMessage(tool.catchMessages[fish] ?: fish.message)
-       // playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
-    }
-
-    /**
-     * Plays one of the argued sounds based on the tool the player is fishing with.
-     */
-    private fun playSound(rodSound: Sound, otherSound: Sound) {
-        if (tool.castAnimation == 622) {
-            mob.playSound(rodSound)
-        } else {
-            mob.playSound(otherSound)
-        }
     }
 }

@@ -1,6 +1,7 @@
 package game.skill.herblore.makeUnfPotion
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -35,6 +36,7 @@ class MakeUnfActionItem(plr: Player,
     override fun execute() {
         mob.sendMessage("You put the ${unfPotion.herbName} into the vial of water.")
         mob.animation(ANIMATION)
+        mob.playSound(Sound.GRIND)
     }
 
     override fun add() = listOf(unfPotion.idItem)

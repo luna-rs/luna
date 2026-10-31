@@ -30,6 +30,7 @@ import api.predef.ext.*
 import game.content.brimhavenArena.BrimhavenArena.tile
 import game.player.Sound
 import game.skill.Skills
+import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityStep
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
@@ -39,6 +40,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Step-on hazards, timed blades and the two independently changing plank bridges.
@@ -95,12 +97,7 @@ object ArenaTraps {
         val animation = if (failed) if (trap.objectId == 3585) 1125 else 1114
             else if (trap.objectId == 3581) 1110 else 1115
         val destination = if (failed) trap.failure else trap.destination
-        val sound = when (trap.objectId) {
-            3582 -> if (failed) Sound.FLOOR_SPIKES else Sound.FLOOR_SPIKES_AVOID
-            3585 -> if (failed) Sound.ROOF_COLLAPSE else Sound.COLLAPSE_AVOID
-            3581 -> if (failed) Sound.DART_FIRE_HIT else Sound.DART_FIRE_AVOID
-            else -> Sound.BLADE_HIT
-        }
+        val sounds = trapSounds(trap.objectId, failed)
         val session = BrimhavenArena.session(player)
         val steps = mutableListOf(AgilityStep(player.position, 1, jump = true))
         if (!failed && trap.objectId == 3581) steps += AgilityStep(player.position, 7, animation = 1110, jump = true)
@@ -115,7 +112,7 @@ object ArenaTraps {
             }
         }
         if (started) {
-            player.playSound(sound)
+            sounds.forEach { player.queue(SoundMessageWriter(it.sound.id, it.loops, it.delayCycles)) }
             when (trap.objectId) {
                 3582 -> obj.animate(1111)
                 3580 -> obj.animate(1107)
@@ -126,6 +123,18 @@ object ArenaTraps {
             }
         }
         return started
+    }
+
+    /**
+     * Source trap effects, including the delayed safe landing and both falling-rock impacts.
+     */
+    internal fun trapSounds(objectId: Int, failed: Boolean): List<AgilitySound> = when (objectId) {
+        3582 -> listOf(AgilitySound(if (failed) Sound.FLOOR_SPIKES else Sound.FLOOR_SPIKES_AVOID))
+        3585 -> if (failed) listOf(AgilitySound(Sound.ROOF_COLLAPSE), AgilitySound(Sound.ROOF_COLLAPSE2, delayCycles = 30))
+            else listOf(AgilitySound(Sound.COLLAPSE_AVOID))
+        3581 -> listOf(AgilitySound(if (failed) Sound.DART_FIRE_HIT else Sound.DART_FIRE_AVOID))
+        else -> listOf(AgilitySound(if (failed) Sound.BLADE_HIT else Sound.LAND_FLAT,
+            delayCycles = if (failed) 0 else 30))
     }
 
     internal fun broken(position: Position): Boolean =

@@ -815,6 +815,9 @@ public class Player extends Mob {
      * @param delayTicks The delay in game ticks before the sound is played.
      */
     public void playSound(Sound sound, int delayTicks) {
+        if (sound == Sound.NO_SOUND) {
+            return;
+        }
         int delay = delayTicks * 30;
         queue(new SoundMessageWriter(sound.getId(), 1, delay));
     }

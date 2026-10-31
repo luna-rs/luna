@@ -1,6 +1,7 @@
 package game.skill.herblore.makePotion
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -35,6 +36,7 @@ class MakePotionActionItem(plr: Player,
     override fun execute() {
         mob.sendMessage("You mix the ${itemName(potion.secondary)} into your potion.")
         mob.animation(ANIMATION)
+        mob.playSound(Sound.GRIND)
         mob.herblore.addExperience(potion.exp)
     }
 

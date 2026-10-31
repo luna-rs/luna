@@ -12,6 +12,7 @@ combat(GiantMole.ID) {
         melee()
     }
     defend {
+        soundId = null
         val hit = damage ?: return@defend
         if (npc.burrowing) {
             // It's underground, out of reach.

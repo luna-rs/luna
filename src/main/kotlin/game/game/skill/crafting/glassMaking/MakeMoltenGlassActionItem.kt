@@ -1,6 +1,7 @@
 package game.skill.crafting.glassMaking
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -20,6 +21,7 @@ class MakeMoltenGlassActionItem(plr: Player, amount: Int) : InventoryAction(plr,
     override fun executeIf(start: Boolean): Boolean = true
     override fun execute() {
         mob.animation(Animation(899))
+        mob.playSound(Sound.FURNACE)
         mob.crafting.addExperience(20.0)
         mob.sendMessage("You smelt the materials together and get molten glass.")
     }

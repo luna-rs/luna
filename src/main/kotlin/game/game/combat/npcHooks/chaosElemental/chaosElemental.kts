@@ -11,6 +11,7 @@ combat(CHAOS_ELEMENTAL) {
         ChaosElementalAttack(npc, other, ChaosElementalAttack.choose(other, rand()))
     }
     defend {
+        soundId = null
         // It has no block animation. Sending its -1 would cut short the attack animation it's playing.
         animationId = null
         // The death cry belongs to the shared death sequence after the hit has committed.

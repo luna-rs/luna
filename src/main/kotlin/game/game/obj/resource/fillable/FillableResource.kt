@@ -21,7 +21,7 @@ abstract class FillableResource : GameResource() {
     /**
      * Invoked when the item is filled with the resource.
      */
-    open fun onFill(plr: Player) {
+    open fun onFill(plr: Player, resourceObject: GameObject) {
 
     }
 
@@ -35,7 +35,8 @@ abstract class FillableResource : GameResource() {
                 override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
                     val emptyItem = Item(emptyId)
                     val filledItem = Item(filled)
-                    plr.submitAction(FillActionItem(plr, emptyItem, filledItem, this@FillableResource, forAmount))
+                    plr.submitAction(FillActionItem(plr, emptyItem, filledItem, this@FillableResource,
+                        resourceObject, forAmount))
                 }
             })
         }

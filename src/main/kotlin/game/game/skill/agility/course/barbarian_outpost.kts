@@ -1,6 +1,7 @@
 package game.skill.agility.course
 
 import api.predef.*
+import game.player.Sound
 import game.skill.agility.*
 import game.skill.agility.Agility.course
 import game.skill.agility.AgilityCourse.BARBARIAN_OUTPOST
@@ -9,19 +10,25 @@ import io.luna.game.model.Position
 
 course(BARBARIAN_OUTPOST) {
     obstacle(2282, BARBARIAN_ROPESWING) { rope ->
-        AgilityAction(this, listOf(AgilityStep(Position(2551, 3549), 3, animation = 751)),
+        AgilityAction(this, listOf(AgilityStep(Position(2551, 3549), 3, animation = 751,
+            sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
             "You swing across the pit.", { rope.animate() })
     }
     obstacle(2294, BARBARIAN_LOG_BALANCE) {
-        movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.")
+        movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.",
+            listOf(AgilitySound(Sound.LOG_BALANCE, tick = 2, loops = 4),
+                AgilitySound(Sound.LOG_BALANCE, tick = 6, loops = 2)))
     }
     obstacle(2284, BARBARIAN_OBSTACLE_NET) {
         climbAction(this, Position(2537, 3546, 1), "You climb the obstacle net.")
     }
     obstacle(2302, BARBARIAN_BALANCING_LEDGE) {
         AgilityAction(this, listOf(
-            AgilityStep(Position(2532, 3547, 1), 4, walkingAnimation = 756),
-            AgilityStep(Position(2532, 3546, 1), 1, jump = true)
+            AgilityStep(Position(2532, 3547, 1), 4, walkingAnimation = 756,
+                sounds = listOf(AgilitySound(Sound.BALANCING_LEDGE, tick = 1, loops = 2, delayCycles = 10),
+                    AgilitySound(Sound.BALANCING_LEDGE, tick = 2))),
+            AgilityStep(Position(2532, 3546, 1), 1, jump = true,
+                sounds = listOf(AgilitySound(Sound.BALANCING_LEDGE, tick = 1)))
         ), "You walk across the balancing ledge.")
     }
     obstacle(3205, BARBARIAN_LADDER) {
@@ -31,7 +38,8 @@ course(BARBARIAN_OUTPOST) {
         climbAction(this, Position(2532, 3546, 1), "You climb up the ladder.")
     }
     obstacle(1948, BARBARIAN_CRUMBLING_WALL, checkpoint = { it.position == Position(2542, 3553) }) { wall ->
-        AgilityAction(this, listOf(AgilityStep(wall.position.translate(1, 0), 3, animation = 840)),
+        AgilityAction(this, listOf(AgilityStep(wall.position.translate(1, 0), 3, animation = 840,
+            sounds = listOf(AgilitySound(Sound.CLIMB_WALL, delayCycles = 40)))),
             "You climb over the wall.")
     }
 }

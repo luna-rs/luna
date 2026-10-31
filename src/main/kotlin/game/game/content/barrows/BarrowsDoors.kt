@@ -2,18 +2,17 @@ package game.content.barrows
 
 import api.attr.Attr
 import api.predef.ext.schedule
+import game.player.Sound
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableMessage
 import io.luna.game.model.chunk.ChunkUpdatableRequest
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.net.msg.out.AddObjectMessageWriter
 import io.luna.net.msg.out.RemoveObjectMessageWriter
-import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Crosses paired tunnel doors using each player's packed lock state.
@@ -72,7 +71,7 @@ object BarrowsDoors {
         player.crossingDoor = true
         closed.forEach { display(player, it, false) }
         opened.forEach { display(player, it, true) }
-        player.queue(SoundMessageWriter(1277, player.varpManager.getValue(PersistentVarp.EFFECTS_VOLUME), 0))
+        player.playSound(Sound.BARROWS_DOOR_OPEN)
         player.move(destination)
         player.world.schedule(3) { task ->
             opened.forEach { display(player, it, false) }

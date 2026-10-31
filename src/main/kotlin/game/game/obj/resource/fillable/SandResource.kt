@@ -4,6 +4,7 @@ import api.predef.*
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.`object`.GameObject
 
 /**
  * A [FillableResource] implementation for sand.
@@ -29,6 +30,6 @@ object SandResource : FillableResource() {
             else -> null
         }
 
-    override fun onFill(plr: Player) = plr.animation(Animation(832))
+    override fun onFill(plr: Player, resourceObject: GameObject) = plr.animation(Animation(832))
 
 }

@@ -10,6 +10,7 @@ import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
@@ -150,7 +151,13 @@ public class PlayerMagicCombatAttack extends MagicCombatAttack<Player> {
             magic.setSelectedSpell(CombatSpellDefinition.NONE);
             attacker.getCombat().setTarget(null);
         }
-        attacker.playSound(spellEffect.getStartSound());
+        Sound castSound = spellEffect.getStartSound();
+        if (castSound != null && castSound != Sound.NO_SOUND) {
+            attacker.playSound(castSound);
+            if (spellEffect.getSpellbook() == Spellbook.REGULAR && victim instanceof Player player && player != attacker) {
+                player.playSound(castSound);
+            }
+        }
 
         attacker.skill(Skill.MAGIC).addExperience(spellEffect.getExp());
         return damage;

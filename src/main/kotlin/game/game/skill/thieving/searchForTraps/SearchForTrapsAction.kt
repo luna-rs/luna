@@ -12,6 +12,7 @@ import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * A [LockedAction] that handles searching chests for traps.
@@ -88,12 +89,13 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
             replaceChest()
             mob.sendMessage("You find a trap on the chest,")
             mob.sendMessage("You disable the trap.")
+            mob.playSound(Sound.LOCKED)
             mob.sendMessage("You open the chest.")
+            mob.queue(SoundMessageWriter(Sound.CHEST_OPEN.id, 1, 60))
             mob.sendMessage("You find treasure inside!")
             mob.thieving.addExperience(thievable.xp)
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
-                mob.playSound(Sound.PICK_LOCK)
             }
             Thieving.rollRogueEquipment(mob, obj, UNCOMMON)
         } else {

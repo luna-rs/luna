@@ -44,6 +44,7 @@ import io.luna.game.model.mob.controller.PlayerController
 import io.luna.game.model.mob.overlay.WalkableInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.game.model.`object`.GameObject
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Owns pitch sessions and shared NPC possession on the game thread. Personal balls are held separately
@@ -170,7 +171,7 @@ object GnomeBall {
         takeBall(player)
         session.flight = true
         player.animation(Animation(783))
-        player.playSound(Sound.THROW)
+        player.queue(SoundMessageWriter(Sound.THROW.id, 1, 10))
         val scored = roll < Skills.successRate(25, 300 - distance * 5, player.ranged.level.coerceIn(1, 99))
         projectile(player.position, if (scored) GOAL else GOAL.translate(1, 1))
         session.later(3) {
@@ -219,8 +220,12 @@ object GnomeBall {
         target.flight = true
         player.animation(Animation(783))
         player.playSound(Sound.THROW)
+        recipient.playSound(Sound.THROW)
         projectile(player.position, recipient.position)
-        target.later(2) { target.giveBall() }
+        target.later(2) {
+            target.giveBall()
+            if (session(player) === source && live(player)) player.playSound(Sound.CATCH)
+        }
         return true
     }
 
@@ -239,6 +244,8 @@ object GnomeBall {
             !world.collisionManager.raycast(player.position, recipient.position) || !player.inventory.remove(BALL)) return false
         recipient.equipment.set(Equipment.WEAPON, Item(BALL))
         player.animation(Animation(783)); recipient.animation(Animation(782))
+        player.playSound(Sound.THROW); recipient.playSound(Sound.THROW)
+        player.playSound(Sound.CATCH); recipient.playSound(Sound.CATCH)
         projectile(player.position, recipient.position)
         return true
     }
@@ -308,7 +315,10 @@ object GnomeBall {
                 owner.flight = true
                 projectile(npc.position, owner.player.position)
                 npc.animation(Animation(201))
-                owner.later(2) { owner.giveBall() }
+                owner.later(2) {
+                    owner.player.playSound(Sound.THROW)
+                    owner.giveBall()
+                }
             }
         }
         cooldowns.entries.removeIf { it.value <= clock || it.key.state != EntityState.ACTIVE }

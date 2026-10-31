@@ -1,6 +1,7 @@
 package game.skill.crafting.potteryCrafting
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -25,6 +26,7 @@ class PotteryWheelActionItem(val plr: Player, val unfired: Unfired, amount: Int)
 
     override fun execute() {
         mob.animation(Animation(894))
+        mob.playSound(Sound.POTTERY)
         mob.crafting.addExperience(unfired.shapingExp)
         plr.sendMessage("You mold the clay into ${articleItemName(unfired.firedId)}.")
     }

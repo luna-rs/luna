@@ -26,7 +26,9 @@
 package game.content.brimhavenArena
 
 import api.predef.*
+import game.player.Sound
 import game.skill.Skills
+import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityStep
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
@@ -148,9 +150,9 @@ object ArenaObstacles {
                 3570, 3571, 3572 -> 768
                 else -> 764
             }
-            return Route(start, listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2,
+            return Route(start, soundSteps(obj.id, true, listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2,
                 walkingAnimation = walking, animation = animation),
-                AgilityStep(landing, 2, animation = failAnimation, jump = true)), 0.0, true)
+                AgilityStep(landing, 2, animation = failAnimation, jump = true))), 0.0, true)
         }
         val steps = when (obj.id) {
             3578 -> (1..7).map { AgilityStep(at(it), 2, animation = 741, jump = true) }
@@ -163,8 +165,55 @@ object ArenaObstacles {
             else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation),
                 AgilityStep(at(length), length - 2, walkingAnimation = walking, jump = jump))
         }
-        return Route(start, steps, xp, false)
+        return Route(start, soundSteps(obj.id, false, steps), xp, false)
     }
+
+    /**
+     * Attaches the source effects to the existing movement legs without changing their destinations or durations.
+     */
+    private fun soundSteps(id: Int, failed: Boolean, steps: List<AgilityStep>): List<AgilityStep> =
+        steps.mapIndexed { index, step ->
+            val sounds = when (id) {
+                3551 -> if (index == 0) listOf(AgilitySound(Sound.TIGHTROPE, loops = 2))
+                    else if (failed) emptyList() else listOf(AgilitySound(Sound.TIGHTROPE, tick = 1, loops = 2),
+                        AgilitySound(Sound.TIGHTROPE, tick = 4))
+                3553, 3555, 3557 -> if (index == 0) listOf(AgilitySound(Sound.LOG_BALANCE, loops = 2))
+                    else if (failed) emptyList() else listOf(AgilitySound(Sound.LOG_BALANCE, tick = 1, loops = 2),
+                        AgilitySound(Sound.LOG_BALANCE, tick = 4))
+                3559, 3561 -> if (index == 0) listOf(AgilitySound(Sound.BALANCING_LEDGE, loops = 3, delayCycles = 10))
+                    else if (failed) emptyList() else listOf(AgilitySound(Sound.BALANCING_LEDGE, tick = 1, loops = 2),
+                        AgilitySound(Sound.BALANCING_LEDGE, tick = 3, loops = 2))
+                3564 -> if (index == 0) listOf(AgilitySound(Sound.MONKEYBARS_ON),
+                    AgilitySound(Sound.MONKEYBARS_LOOP, tick = 1, loops = 6))
+                    else if (failed) listOf(AgilitySound(Sound.MONKEYBARS_OFF),
+                        AgilitySound(Sound.STUMBLE_LOOP, tick = 1, loops = 10))
+                    else listOf(AgilitySound(Sound.MONKEYBARS_LOOP, tick = 1, loops = 4, delayCycles = 10),
+                        AgilitySound(Sound.MONKEYBARS_LOOP, tick = 4, loops = 3, delayCycles = 5),
+                        AgilitySound(Sound.MONKEYBARS_OFF, tick = 6))
+                3565 -> if (failed) emptyList() else listOf(AgilitySound(Sound.CLIMB_WALL, delayCycles = 40))
+                3566 -> if (!failed) listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1))
+                    else if (index == 0) listOf(AgilitySound(Sound.STUMBLE_LOOP, loops = 6, delayCycles = 10))
+                    else listOf(AgilitySound(Sound.FALL_LAND))
+                3570, 3571, 3572 -> if (index == 0) listOf(AgilitySound(Sound.PLANKWALK, loops = 2, delayCycles = 10))
+                    else if (failed) listOf(AgilitySound(Sound.PLANK_BREAK), AgilitySound(Sound.STUMBLE_LOOP, loops = 10),
+                        AgilitySound(Sound.FALL_LAND, tick = 1))
+                    else listOf(AgilitySound(Sound.PLANKWALK, loops = 4, delayCycles = 10))
+                3578 -> if (!failed) listOf(AgilitySound(Sound.JUMP_NO_LAND))
+                    else if (index == 0) listOf(AgilitySound(Sound.JUMP_NO_LAND),
+                        AgilitySound(Sound.JUMP_NO_LAND, tick = 1)) else emptyList()
+                3583 -> if (failed) {
+                    if (index == 0) listOf(AgilitySound(Sound.HANDHOLDS_GRAB_TO_SECOND))
+                    else listOf(AgilitySound(Sound.FALL_LAND, tick = 2),
+                        AgilitySound(Sound.STUMBLE_LOOP, tick = 2, loops = 5, delayCycles = 30))
+                } else when (index) {
+                    0 -> listOf(AgilitySound(Sound.HANDHOLDS_GRAB_TO_SECOND))
+                    6 -> listOf(AgilitySound(Sound.HANDHOLDS_OFF))
+                    else -> listOf(AgilitySound(Sound.HANDHOLDS_LOOP, delayCycles = 5))
+                }
+                else -> emptyList()
+            }
+            step.copy(sounds = sounds)
+        }
 
     fun cross(player: Player, obj: GameObject, roll: Double = rand().nextDouble()): Boolean {
         if (!BrimhavenArena.ready(player) || BrimhavenArena.session(player) == null || player.z != 3 ||

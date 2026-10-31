@@ -103,6 +103,11 @@ public final class NpcCombatDefinition implements Definition {
     private final int deathSound;
 
     /**
+     * The ordinary defence sound, or {@code -1} when silent.
+     */
+    private final int defendSound;
+
+    /**
      * The NPC's generic attack bonus value.
      */
     private final int attackBonus;
@@ -274,11 +279,28 @@ public final class NpcCombatDefinition implements Definition {
                                int magicBonus, int rangedBonus, int[] skills, int[] bonuses,
                                NpcCombatMovement movement, int poisonSeverity, String attackOption,
                                int attackSound, int rangedAttackSound, int deathSound) {
+        this(id, respawnTime, aggression, poisonous, immunePoison, hitpoints, maximumHit, attackSpeed,
+                attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus, rangedBonus,
+                skills, bonuses, movement, poisonSeverity, attackOption, attackSound, rangedAttackSound,
+                deathSound, -1);
+    }
+
+    /**
+     * Creates a combat definition with explicit launch, death and defence sounds.
+     *
+     * @param defendSound The defence sound id, or {@code -1} to disable ordinary defence playback.
+     */
+    public NpcCombatDefinition(int id, int respawnTime, NpcAggressionProfile aggression, boolean poisonous,
+                               boolean immunePoison, int hitpoints, int maximumHit, int attackSpeed,
+                               int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus,
+                               int magicBonus, int rangedBonus, int[] skills, int[] bonuses,
+                               NpcCombatMovement movement, int poisonSeverity, String attackOption,
+                               int attackSound, int rangedAttackSound, int deathSound, int defendSound) {
         if (poisonSeverity < 0 || (poisonSeverity > 0 && !poisonous)) {
             throw new IllegalArgumentException("Invalid poison severity for NPC " + id + ": " + poisonSeverity);
         }
         if (attackSound < -1 || attackSound > 65535 || rangedAttackSound < -1 || rangedAttackSound > 65535 ||
-                deathSound < -1 || deathSound > 65535) {
+                deathSound < -1 || deathSound > 65535 || defendSound < -1 || defendSound > 65535) {
             throw new IllegalArgumentException("Invalid combat sound for NPC " + id);
         }
         this.movement = Objects.requireNonNull(movement);
@@ -301,6 +323,7 @@ public final class NpcCombatDefinition implements Definition {
         this.attackSound = attackSound;
         this.rangedAttackSound = rangedAttackSound;
         this.deathSound = deathSound;
+        this.defendSound = defendSound;
         this.attackBonus = attackBonus;
         this.magicBonus = magicBonus;
         this.rangedBonus = rangedBonus;
@@ -416,6 +439,13 @@ public final class NpcCombatDefinition implements Definition {
      */
     public int getDeathSound() {
         return deathSound;
+    }
+
+    /**
+     * @return The defence sound id, or {@code -1} when silent.
+     */
+    public int getDefendSound() {
+        return defendSound;
     }
 
     /**

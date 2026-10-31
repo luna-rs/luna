@@ -1,6 +1,7 @@
 package game.skill.herblore.grindIngredient
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -36,6 +37,7 @@ class GrindActionItem(plr: Player,
         mob.sendMessage("You grind the $oldName into $nextWord $newName.")
 
         mob.animation(ANIMATION)
+        mob.playSound(Sound.GRIND)
     }
 
     override fun remove() = listOf(ingredient.oldItem)

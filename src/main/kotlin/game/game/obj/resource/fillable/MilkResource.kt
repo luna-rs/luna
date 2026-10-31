@@ -1,9 +1,11 @@
 package game.obj.resource.fillable
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.`object`.GameObject
 
 /**
  * A [FillableResource] implementation for cow's milk.
@@ -33,5 +35,8 @@ object MilkResource : FillableResource() {
             else -> null
         }
 
-    override fun onFill(plr: Player) = plr.animation(Animation(2292))
+    override fun onFill(plr: Player, resourceObject: GameObject) {
+        plr.animation(Animation(2292))
+        plr.playSound(Sound.MILK_COW)
+    }
 }

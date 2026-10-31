@@ -5,13 +5,14 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Hit
 import io.luna.game.model.mob.block.Hit.HitType
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Plays player pain and armour-block sounds when a hit is applied.
  *
  * Positive damage, including poison, uses the appearance gender's pain sounds. A blocked hit uses the shield's
  * configured sound, then the chest item's sound, then the unarmed fallback. Sounds are sent only to the victim
- * with a one-game-tick delay, matching Lost City's damage_self and human_hit_sound procedures.
+ * with a twenty-client-cycle delay, matching Lost City's damage_self and human_hit_sound procedures.
  *
  * Equipment mappings come from LostCityRS/Content revision 289, commit
  * 8efdb336fac31d0d0ad1e1c2912544e972ef6b98. Items without an explicit mapping use the fallback policy;
@@ -107,6 +108,6 @@ object PlayerHitSounds {
                 ?: Sound.HUMAN_BLOCK_1
             else -> return
         }
-        player.playSound(sound, 1)
+        player.queue(SoundMessageWriter(sound.id, 1, 20))
     }
 }

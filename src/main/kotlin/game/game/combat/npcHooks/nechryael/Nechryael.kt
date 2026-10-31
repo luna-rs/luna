@@ -5,7 +5,6 @@ import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
 import io.luna.game.model.EntityType
 import io.luna.game.model.LocalGraphic
-import io.luna.game.model.LocalSound
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.collision.CollisionFlag
@@ -21,6 +20,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageRequest
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.path.route.LineOfSight
+import io.luna.net.msg.out.SoundMessageWriter
 import java.util.Random
 import java.util.concurrent.ThreadLocalRandom
 
@@ -156,8 +156,7 @@ object Nechryael {
             animation(Animation(combatDef().attackAnimation))
             val sound = combatDef().attackSound
             if (sound >= 0) {
-                LocalSound.ofId(context, sound, position, ChunkUpdatableView.globalView(),
-                    Position.VIEWING_DISTANCE, 1).display()
+                victim.queue(SoundMessageWriter(sound, 1, 0))
             }
             val damage = CombatDamageRequest.Builder(this, victim, CombatDamageType.MELEE)
                 .ignoreProtectionPrayers().build().resolve().rawAmount

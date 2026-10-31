@@ -1,12 +1,14 @@
 package game.skill.agility
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.ExactMovement
 import io.luna.game.model.mob.block.PlayerModelAnimation
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Moves to an obstacle's failure point, stumbles, and lands without awarding course progress.
@@ -40,8 +42,22 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : L
             land()
             return true
         }
+        when (failure) {
+            AgilityFailure.BARBARIAN_LOG -> if (ticks == 2) {
+                mob.queue(SoundMessageWriter(Sound.LOG_BALANCE.id, 4, 0))
+            }
+            AgilityFailure.BARBARIAN_LEDGE -> if (ticks == 1) {
+                mob.queue(SoundMessageWriter(Sound.BALANCING_LEDGE.id, 2, 10))
+            }
+            AgilityFailure.WILDERNESS_LOG -> if (ticks == 0) {
+                mob.queue(SoundMessageWriter(Sound.LOG_BALANCE.id, 3, 0))
+            }
+            AgilityFailure.WILDERNESS_STONES -> if (ticks < fallTick) mob.playSound(Sound.JUMP_NO_LAND)
+            else -> Unit
+        }
         if (ticks == fallTick) {
             mob.animation(Animation(764))
+            mob.queue(SoundMessageWriter(Sound.STUMBLE_LOOP.id, 10, 0))
         } else if (ticks == fallTick + 2) {
             land()
             return true
@@ -63,5 +79,10 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : L
         mob.move(failure.landing)
         mob.sendMessage(failure.message)
         mob.damage(failure.damage(mob.hitpoints.level))
+        when (failure) {
+            AgilityFailure.BARBARIAN_LOG -> mob.playSound(Sound.WATERSPLASH)
+            AgilityFailure.WILDERNESS_STONES -> mob.playSound(Sound.SIZZLE)
+            else -> Unit
+        }
     }
 }

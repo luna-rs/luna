@@ -1,11 +1,11 @@
 package game.content.barrows
 
+import game.player.Sound
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.net.msg.out.WidgetModelMessageWriter
-import io.luna.net.msg.out.SoundMessageWriter
 import kotlin.random.Random
 
 /**
@@ -44,7 +44,7 @@ class BarrowsPuzzleInterface(
             BarrowsAreaListener.inside(origin) && BarrowsRun.state(player) == expectedState) {
             val nextState = if (permutation[index] == 0) {
                 player.sendMessage("You hear the doors' locking mechanism grind open.")
-                player.queue(SoundMessageWriter(1278, player.varpManager.getValue(PersistentVarp.EFFECTS_VOLUME), 0))
+                player.playSound(Sound.BARROWS_DOOR_UNLOCK)
                 BarrowsVarbit.PUZZLE.write(expectedState, 3)
             } else {
                 player.sendMessage("You got the puzzle wrong! You can hear the catacombs moving around you.")

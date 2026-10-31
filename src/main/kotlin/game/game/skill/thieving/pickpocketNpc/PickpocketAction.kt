@@ -106,7 +106,7 @@ class PickpocketAction(val mob: Player, val target: Npc, val thievable: Thieving
                     mob.inventory.addAll(loot)
 
                     if (loot.isNotEmpty()) {
-                        mob.playSound(Sound.PICKUP_ITEM)
+                        mob.playSound(Sound.PICK)
                     }
 
                     Thieving.rollRogueEquipment(mob, target)

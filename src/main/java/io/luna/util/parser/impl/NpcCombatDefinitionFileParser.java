@@ -62,7 +62,8 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
         return new NpcCombatDefinition(id, respawnTicks, aggression, poisonous, immunePoison, hitpoints, maximumHit,
                 attackSpeed, attackAnimation, defenceAnimation, deathAnimation, attackBonus, magicBonus,
                 rangedBonus, skills, bonuses, rules, poisonSeverity, attackOption,
-                readSound(token, "attack_sound"), readSound(token, "ranged_attack_sound"), readSound(token, "death_sound"));
+                readSound(token, "attack_sound"), readSound(token, "ranged_attack_sound"), readSound(token, "death_sound"),
+                readSound(token, "defend_sound"));
     }
 
     /**

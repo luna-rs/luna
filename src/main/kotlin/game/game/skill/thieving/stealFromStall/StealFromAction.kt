@@ -150,7 +150,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievingS
             mob.stallThefts[obj.id] = System.currentTimeMillis()
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
-                mob.playSound(Sound.PICKUP_ITEM)
+                mob.playSound(Sound.PICK)
             }
             Thieving.rollRogueEquipment(mob, obj, UNCOMMON)
         } else {

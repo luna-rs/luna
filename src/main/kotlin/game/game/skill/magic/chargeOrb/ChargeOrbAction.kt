@@ -44,7 +44,6 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
         if (Magic.checkRequirements(mob, type.level, type.requirements) != null) {
             if (RandomEvents.offerGeneral(mob)) return
             mob.lock()
-            mob.playSound(type.sound)
             world.scheduleOnce(1) {
                 try {
                     if (mob.state == EntityState.ACTIVE && mob.health > 0) completeCast()
@@ -70,6 +69,7 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
         mob.magic.addExperience(type.xp)
         mob.animation(Animations.CHARGE_ORB)
         mob.graphic(Graphic(type.graphic, 100))
+        mob.playSound(type.sound)
         mob.sendMessage("You charge the orb and place it in your inventory.")
         mob.tabs.show(TabIndex.MAGIC)
     }

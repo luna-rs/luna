@@ -3,6 +3,7 @@ package io.luna.game.model.item;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import engine.bot.gear.BotItemTracker;
+import game.player.Sound;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
@@ -647,6 +648,9 @@ public final class Equipment extends ItemContainer {
             inventory.add(currentlyEquipped);
         }
         set(equipIndex, inventoryItem);
+        if (inventoryItem.getId() == 2890) {
+            player.playSound(Sound.SHIELD_APPEAR);
+        }
         return true;
     }
 
@@ -664,6 +668,9 @@ public final class Equipment extends ItemContainer {
 
         if (player.getInventory().add(equipmentItem)) {
             set(equipmentIndex, null);
+            if (equipmentItem.getId() == 2890) {
+                player.playSound(Sound.SHIELD_APPEAR);
+            }
             return true;
         }
         return false;

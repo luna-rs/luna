@@ -71,12 +71,12 @@ class CombatPrayerSet(private val player: Player) {
         }
         // Send varbits, head icons, sounds, relevant messages.
         if (player.prayer.staticLevel < prayer.level) {
-            player.playSound(Sound.PRAYER_OFF) // todo@0.5.0 confirm if correct sound
+            player.playSound(Sound.PRAYER_OFF)
             player.sendMessage("Your Prayer level is not high enough to use this.")
             return
         } else if (player.prayer.level == 0) {
             player.sendVarp(Varp(prayer.varp, 0))
-            player.playSound(Sound.PRAYER_OFF) // todo@0.5.0 confirm if correct sound
+            player.playSound(Sound.PRAYER_OFF)
             player.sendMessage("Use an altar to recharge your Prayer points.")
             return
         }

@@ -46,7 +46,7 @@ fun treeOption(plr: Player, objectId: Int) {
  */
 fun chopFruitTree(plr: Player, axe: Axe, patch: FruitTreePatch) {
     plr.animation(axe.animation)
-    plr.playSound(Sound.TREE_FALLEN)
+    plr.playSound(Sound.TREE_FALL)
     patch.fell()
     Farming.commit(plr)
 }

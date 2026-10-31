@@ -67,7 +67,7 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
                 // Invoke effects.
                 plr.animation(drinkAnimation)
                 potion.effect(plr)
-                plr.playSound(Sound.DRINK)
+                plr.playSound(Sound.LIQUID)
             }
         }
     })

@@ -1,6 +1,7 @@
 package game.skill.fishing.catchFish
 
 import api.predef.*
+import game.player.Sound
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -105,6 +106,7 @@ fun useTool(plr: Player, target: Entity, spot: FishingSpot, item: Int) {
     when {
         spot == FishingSpot.LAVA_EEL && item in BURNABLE_TOOLS -> {
             plr.inventory.remove(Item(item))
+            plr.playSound(Sound.FIRE_LIT)
             plr.overlays.open(BurntToolDialogue(item, "The ${BURNABLE_TOOLS[item]} burns up in the lava!"))
         }
 

@@ -36,11 +36,6 @@ class ChopPatchTreeAction(plr: Player, val axe: Axe, val patch: TreePatch, sapli
     private val tree = sapling.tree
 
     /**
-     * Sound delay for woodcutting.
-     */
-    private var soundDelay = -1
-
-    /**
      * If the last free inventory slot was just filled, so that chopping stops on the next tick.
      */
     private var stopFull = false
@@ -79,7 +74,7 @@ class ChopPatchTreeAction(plr: Player, val axe: Axe, val patch: TreePatch, sapli
         else -> {
             if (!start) {
                 delay = Luna.settings().skills().woodcuttingSpeed()
-                swing(true)
+                swing()
             }
             true
         }
@@ -131,25 +126,18 @@ class ChopPatchTreeAction(plr: Player, val axe: Axe, val patch: TreePatch, sapli
         }
         if (!swung) {
             swung = true
-            mob.playSound(Sound.CUT_TREE_1)
             mob.sendMessage("You swing your axe at the tree.")
-            swing(false)
-        }
-        if (soundDelay-- == 0) {
-            mob.playSound(Sound.CUT_TREE_2)
+            swing()
         }
     }
 
     /**
-     * Faces the tree and starts the chopping animation, with the chopping sound if [sound] is true.
+     * Faces the tree and starts the chopping animation and sound.
      */
-    private fun swing(sound: Boolean) {
+    private fun swing() {
         mob.interactingWith?.let { mob.interact(it) }
         mob.animation(axe.animation)
-        if (sound) {
-            mob.playSound(Sound.CUT_TREE_2)
-            soundDelay = 2
-        }
+        mob.playSound(Sound.CUT_TREE_2)
     }
 
     /**
@@ -167,7 +155,7 @@ class ChopPatchTreeAction(plr: Player, val axe: Axe, val patch: TreePatch, sapli
     private fun fellTree() {
         val plr = mob
         val regrowTicks = tree.respawnTicks.random()
-        plr.playSound(Sound.TREE_FALLEN)
+        plr.playSound(Sound.TREE_FALL)
         patch.fell(System.currentTimeMillis(), regrowTicks)
         Farming.commit(plr)
         world.scheduleOnce(regrowTicks + 1) {

@@ -14,6 +14,7 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
+import io.luna.net.msg.out.SoundMessageWriter
 
 /**
  * Tries to slash [web] with [itemId], which is either the weapon [plr] is wielding or the item they used on it. Half
@@ -26,7 +27,7 @@ fun slash(plr: Player, web: GameObject, itemId: Int?) {
         return
     }
     plr.animation(animation)
-    plr.playSound(Sound.HACKSWORD_SLASH)
+    plr.queue(SoundMessageWriter(Sound.HACKSWORD_SLASH.id, 1, 15))
     if (!randBoolean()) {
         plr.sendMessage("You fail to cut through it.")
         return

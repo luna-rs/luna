@@ -2,6 +2,7 @@ package game.skill.crafting.textileCrafting
 
 import api.predef.*
 import game.content.randomEvents.RandomEvents
+import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -29,6 +30,7 @@ class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) 
 
     override fun execute() {
         mob.animation(Animation(894))
+        if (textile.type == TextileType.SPINNING_WHEEL) mob.playSound(Sound.SPINNING)
         mob.crafting.addExperience(textile.exp)
         plr.sendMessage("You make ${articleItemName(textile.processedItem.id)}.")
     }

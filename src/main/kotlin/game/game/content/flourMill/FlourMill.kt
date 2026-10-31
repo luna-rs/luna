@@ -79,6 +79,7 @@ object FlourMill {
      * Grinds the grain in [plr]'s hopper into the flour bin.
      */
     fun operateControls(plr: Player) {
+        plr.playSound(Sound.HOPPERLEVER)
         if (!plr.hopperFull) {
             plr.sendMessage("You operate the empty hopper. Nothing interesting happens.")
             return
@@ -92,7 +93,6 @@ object FlourMill {
         plr.hopperFull = false
         plr.varpManager.setAndSendValue(PersistentVarp.FLOUR_BIN, flour)
         plr.animation(OPERATE)
-        plr.playSound(Sound.HOPPERLEVER)
         plr.playSound(Sound.MILLSTONES)
         plr.sendMessage("You operate the hopper. The grain slides down the chute.")
         if (flour == BIN_CAPACITY) {

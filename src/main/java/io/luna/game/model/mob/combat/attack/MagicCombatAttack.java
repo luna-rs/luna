@@ -8,6 +8,7 @@ import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
@@ -259,7 +260,7 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             if (end != null) {
                 recipient.graphic(end);
             }
-            if (impactSound != null) {
+            if (impactSound != null && impactSound != Sound.NO_SOUND) {
                 playImpactSound(recipient, impactSound);
             }
             if (spellEffect != null && damage.isAccurate()) {
@@ -272,7 +273,8 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
     }
 
     /**
-     * Sends NPC spell audio to the affected player while preserving positional playback for other casters.
+     * Sends standard spell audio privately to its participants and retains positional impacts for Ancient Magicks
+     * and custom player attacks. NPC spell audio belongs to the affected player.
      *
      * @param recipient The mob receiving this spell impact.
      * @param sound The impact or splash sound.
@@ -282,8 +284,17 @@ public class MagicCombatAttack<T extends Mob> extends CombatAttack<T> {
             if (recipient instanceof Player player) {
                 player.playSound(sound);
             }
-        } else {
+            return;
+        }
+        if (spellEffect == null || spellEffect.getSpellbook() == Spellbook.ANCIENT) {
             LocalSound.of(recipient, sound).display();
+            return;
+        }
+        if (attacker instanceof Player player && recipient == victim) {
+            player.playSound(sound);
+        }
+        if (recipient instanceof Player player && recipient != attacker) {
+            player.playSound(sound);
         }
     }
 

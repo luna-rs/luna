@@ -5,11 +5,14 @@ import api.combat.npc.dsl.NpcCombatReceiver
 import api.combat.npc.dsl.NpcDefenceCombatHookReceiver
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.combat.CombatAction
 import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
+import io.luna.game.model.mob.combat.damage.CombatDamageType
+import io.luna.net.msg.out.SoundMessageWriter
 import kotlin.reflect.KClass
 
 /**
@@ -125,14 +128,22 @@ object NpcCombatHandler {
      * @param action The action that launched the damage.
      */
     fun consumeDefence(npc: Npc, other: Mob, action: CombatDamageAction) {
+        var soundId: Int? = npc.combatDef().defendSound.takeIf { it >= 0 }
         resolve(npc) {
             val receiver = NpcDefenceCombatHookReceiver(npc, other, action)
             it.defend(receiver) // Invoke defence receiver, handle defence animation if necessary.
             action.damage = receiver.damage
+            soundId = receiver.soundId
             if (receiver.animationId != null) {
                 npc.animation(Animation(receiver.animationId!!))
             }
         } ?: npc.combat.handleDefaultDefence(action.damage?.type, action.damage?.rawAmount ?: 0) // Otherwise do default defence.
+        val damage = action.damage
+        if (other is Player && damage != null && soundId != null &&
+            (damage.type == CombatDamageType.MELEE || damage.type == CombatDamageType.RANGED ||
+                (damage.type == CombatDamageType.MAGIC && damage.isAccurate && damage.amount.isPresent))) {
+            other.queue(SoundMessageWriter(soundId!!, 1, 0))
+        }
     }
 
     /**

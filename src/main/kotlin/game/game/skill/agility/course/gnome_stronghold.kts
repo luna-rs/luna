@@ -1,5 +1,6 @@
 package game.skill.agility.course
 
+import game.player.Sound
 import game.skill.agility.*
 import game.skill.agility.Agility.course
 import game.skill.agility.AgilityCourse.GNOME_STRONGHOLD
@@ -8,7 +9,8 @@ import io.luna.game.model.Position
 
 course(GNOME_STRONGHOLD) {
     obstacle(2295, GNOME_LOG_BALANCE) {
-        movementAction(this, Position(2474, 3429), 762, "You walk across the log balance.")
+        movementAction(this, Position(2474, 3429), 762, "You walk across the log balance.",
+            listOf(AgilitySound(Sound.LOG_BALANCE, loops = 4)))
     }
     obstacle(2285, GNOME_OBSTACLE_NET) {
         climbAction(this, position.translate(0, -2, 1), "You climb the obstacle net.")
@@ -17,7 +19,8 @@ course(GNOME_STRONGHOLD) {
         climbAction(this, Position(2473, 3420, 2), "You climb the tree branch.")
     }
     obstacle(2312, GNOME_BALANCING_ROPE) {
-        movementAction(this, Position(2483, 3420, 2), 762, "You carefully cross the tightrope.")
+        movementAction(this, Position(2483, 3420, 2), 762, "You carefully cross the tightrope.",
+            listOf(AgilitySound(Sound.TIGHTROPE, loops = 5)))
     }
     for (id in listOf(2314, 2315)) {
         obstacle(id, GNOME_TREE_BRANCH_2) {
@@ -33,9 +36,11 @@ course(GNOME_STRONGHOLD) {
             val exitX = if (x == 2484) 2487 else 2484
             AgilityAction(this, listOf(
                 AgilityStep(Position(x, 3433), 5, animation = 749),
-                AgilityStep(Position(exitX, 3433), 5, animation = 749),
+                AgilityStep(Position(exitX, 3433), 5, animation = 749,
+                    sounds = listOf(AgilitySound(Sound.SQUEEZE_IN))),
                 AgilityStep(Position(exitX, 3434), 1, jump = true),
-                AgilityStep(Position(exitX, 3437), 5, animation = 749)
+                AgilityStep(Position(exitX, 3437), 5, animation = 749,
+                    sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 5)))
             ), "You climb through the obstacle pipe.")
         }
     }
