@@ -6,6 +6,7 @@ import api.predef.*
 import game.bot.scripts.skills.CutLogBotScript
 import game.bot.scripts.skills.FletchAmmunitionBotScript
 import game.bot.scripts.skills.MakeArrowBotScript
+import game.bot.scripts.skills.OgreFletchingBotScript
 import game.bot.scripts.skills.StringBowBotScript
 import game.skill.fletching.attachArrow.Arrow
 import game.skill.fletching.cutLog.Log
@@ -23,6 +24,7 @@ import kotlin.time.Duration
  * share the inherited level/personality selector, with an initial ammunition opportunity and an owned-supply
  * fallback when no owned bow recipe is available.
  * Owned logs and a knife also enable every unlocked cutting recipe, including partial log batches.
+ * Ogre shafts, tips, arrows, brutal arrows and composite bows join the owned-supply production choices.
  * Profit mode does not guarantee a market margin; log-cutting fallback retains its existing acquisition behavior.
  *
  * @author lare96
@@ -77,7 +79,9 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         val arrows = ownedArrowScripts(bot, duration).map { it.requiredLevel to it }
         val ammunition = FletchAmmunitionBotScript.RECIPES.values.map { FletchAmmunitionBotScript(bot, it, duration) }
             .filter { it.isEligible() }.map { it.requiredLevel to it }
-        return getBestActivity(bot, level, { it.first }, arrows + ammunition)?.second
+        val ogre = OgreFletchingBotScript.RECIPES.values.map { OgreFletchingBotScript(bot, it, duration) }
+            .filter { it.isEligible() }.map { it.requiredLevel to it }
+        return getBestActivity(bot, level, { it.first }, arrows + ammunition + ogre)?.second
     }
 
     /** Selects a valid cutting recipe from an owned log tier and knife before using acquisition fallback. */

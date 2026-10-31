@@ -92,6 +92,8 @@ import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.MakeArrowBotScript.Companion.MakeArrowData
 import game.bot.scripts.skills.FletchAmmunitionBotScript
 import game.bot.scripts.skills.FletchAmmunitionBotScript.Companion.AmmunitionData
+import game.bot.scripts.skills.OgreFletchingBotScript
+import game.bot.scripts.skills.OgreFletchingBotScript.Companion.OgreFletchingData
 import game.bot.scripts.skills.MakeBattlestaffBotScript
 import game.bot.scripts.skills.MakeSoftClayBotScript
 import game.bot.scripts.skills.MakeDoughBotScript
@@ -222,6 +224,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<FiremakingData>(FiremakingBotScript::class) { bot, data -> FiremakingBotScript(bot, data) }
     scriptManager.addScript<MakeArrowData>(MakeArrowBotScript::class) { bot, data -> MakeArrowBotScript(bot, data) }
     scriptManager.addScript<AmmunitionData>(FletchAmmunitionBotScript::class) { bot, data -> FletchAmmunitionBotScript(bot, data) }
+    scriptManager.addScript<OgreFletchingData>(OgreFletchingBotScript::class) { bot, data -> OgreFletchingBotScript(bot, data) }
     scriptManager.addScript<BoneData>(BuryBoneBotScript::class) { bot, data -> BuryBoneBotScript(bot, data) }
     scriptManager.addScript<FarmingData>(FarmingBotScript::class) { bot, data -> FarmingBotScript(bot, data) }
     scriptManager.addScript<SuperheatItemData>(SuperheatItemBotScript::class) { bot, data -> SuperheatItemBotScript(bot, data) }
