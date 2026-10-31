@@ -16,12 +16,16 @@ course(WILDERNESS) {
             AgilityStep(Position(3004, 3947), 1, jump = true),
             AgilityStep(Position(3004, 3950), 4, animation = 749,
                 sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))
-        ), "You climb through the obstacle pipe.")
+        ), null)
     }
     obstacle(2283, WILDERNESS_ROPESWING) { rope ->
-        AgilityAction(this, listOf(AgilityStep(Position(3005, 3958), 3, animation = 751,
-            sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
-            "You swing across the pit.", { rope.animate() })
+        // The player stands on the start tile for two ticks before taking the rope.
+        AgilityAction(this, listOf(
+            AgilityStep(position, 2, jump = true),
+            AgilityStep(Position(3005, 3958), 2, animation = 751, message = "You skillfully swing across.",
+                moveStart = 20, moveEnd = 50, sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)),
+                begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })
+        ), null)
     }
     obstacle(2311, WILDERNESS_STEPPING_STONE) {
         AgilityAction(this, (3001 downTo 2996).map {
@@ -30,10 +34,11 @@ course(WILDERNESS) {
         }, "You carefully start crossing the stepping stones.")
     }
     obstacle(2297, WILDERNESS_LOG_BALANCE) {
-        movementAction(this, Position(2994, 3945), 762, "You walk across the log balance.",
+        movementAction(this, Position(2994, 3945), 762, "You walk carefully across the slippery log...",
             listOf(AgilitySound(Sound.LOG_BALANCE, loops = 3),
                 AgilitySound(Sound.LOG_BALANCE, tick = 4, loops = 2),
-                AgilitySound(Sound.LOG_BALANCE, tick = 7, loops = 2)))
+                AgilitySound(Sound.LOG_BALANCE, tick = 7, loops = 2)),
+            endMessage = "...You make it safely to the other side.")
     }
     obstacle(2328, WILDERNESS_ROCKS) { rocks ->
         AgilityAction(this, listOf(
