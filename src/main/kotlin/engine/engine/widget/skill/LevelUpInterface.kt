@@ -17,8 +17,8 @@ class LevelUpInterface(val skill: Int,
                        val data: LevelUpData) : DialogueInterface(data.inter) {
 
     override fun onOpen(player: Player) {
-        val skillName = Skill.getName(skill)
-        val lvlUpMessage = "Congratulations, you just advanced ${addArticle(skillName)} level!"
+        val skillName = Skill.getName(skill).lowercase()
+        val lvlUpMessage = "Congratulations, you just advanced ${addArticle(skillName)} level."
 
         player.sendMessage(lvlUpMessage)
         player.queue(WidgetTextMessageWriter(lvlUpMessage, data.firstLine))
