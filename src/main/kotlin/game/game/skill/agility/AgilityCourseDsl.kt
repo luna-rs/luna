@@ -52,8 +52,8 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
             message)
 
     /**
-     * Creates a climb that changes floors after the climbing animation.
+     * Creates a climb that changes floors [ticks] after the climbing animation starts.
      */
-    fun climbAction(plr: Player, destination: Position, message: String) =
-        AgilityAction(plr, listOf(AgilityStep(destination, 2, animation = 828, jump = true)), message)
+    fun climbAction(plr: Player, destination: Position, message: String, ticks: Int = 2) =
+        AgilityAction(plr, listOf(AgilityStep(destination, ticks, animation = 828, jump = true)), message)
 }

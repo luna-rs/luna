@@ -19,9 +19,13 @@ course(WILDERNESS) {
         ), "You climb through the obstacle pipe.")
     }
     obstacle(2283, WILDERNESS_ROPESWING) { rope ->
-        AgilityAction(this, listOf(AgilityStep(Position(3005, 3958), 3, animation = 751,
-            sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
-            "You swing across the pit.", { rope.animate() })
+        // The player stands on the start tile for two ticks before taking the rope.
+        AgilityAction(this, listOf(
+            AgilityStep(position, 2, jump = true),
+            AgilityStep(Position(3005, 3958), 2, animation = 751, message = "You swing across the pit.",
+                moveStart = 20, moveEnd = 50, sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)),
+                begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })
+        ), null)
     }
     obstacle(2311, WILDERNESS_STEPPING_STONE) {
         AgilityAction(this, (3001 downTo 2996).map {
