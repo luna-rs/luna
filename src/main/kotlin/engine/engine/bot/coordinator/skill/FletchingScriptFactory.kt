@@ -4,6 +4,7 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutLogBotScript
+import game.bot.scripts.skills.FletchAmmunitionBotScript
 import game.bot.scripts.skills.MakeArrowBotScript
 import game.bot.scripts.skills.StringBowBotScript
 import game.skill.fletching.attachArrow.Arrow
@@ -11,14 +12,16 @@ import game.skill.fletching.cutLog.Log
 import game.skill.fletching.stringBow.Bow
 import game.skill.fletching.stringBow.Bow.*
 import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration
 
 /**
- * Creates Fletching activities from owned arrow supplies or matching unstrung bows and strings, then
+ * Creates Fletching activities from owned ammunition supplies or matching unstrung bows and strings, then
  * falls back to log cutting. Bow selection considers every unlocked owned recipe rather than assuming
  * that the bot owns the highest unlocked log tier or randomly choosing a different short/longbow variant.
- * Arrow production includes shaft-and-feather preparation and all six finished tiers. Partial owned stacks
- * qualify in both modes. Arrow and bow production share the inherited level/personality selector, with an
- * initial arrow opportunity and an owned-arrow fallback when no owned bow recipe is available.
+ * Ammunition production includes headless and finished arrows, all dart tiers, tipped bolts and shaping bolt
+ * tips from cut opals or pearls. Partial owned stacks qualify in both modes. Ammunition and bow production
+ * share the inherited level/personality selector, with an initial ammunition opportunity and an owned-supply
+ * fallback when no owned bow recipe is available.
  * Owned logs and a knife also enable every unlocked cutting recipe, including partial log batches.
  * Profit mode does not guarantee a market margin; log-cutting fallback retains its existing acquisition behavior.
  *
@@ -54,13 +57,27 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
     }
 
     /**
-     * Selects either shaft-and-feather preparation or a finished-arrow recipe from minimum owned supplies.
-     * Both factory modes share the inherited level/personality selector and the script's preflight checks.
+     * Retains arrow-only selection for callers that specifically need shaft preparation or finished arrows.
      */
-    internal fun getOwnedArrowScript(bot: Bot, level: Int): MakeArrowBotScript? {
+    internal fun getOwnedArrowScript(bot: Bot, level: Int): MakeArrowBotScript? =
+        getBestActivity(bot, level, { it.requiredLevel }, ownedArrowScripts(bot, getDuration(bot)))
+
+    /**
+     * Builds owned arrow candidates for both arrow-only and combined ammunition selection.
+     */
+    private fun ownedArrowScripts(bot: Bot, duration: Duration): List<MakeArrowBotScript> =
+        Arrow.entries.map { MakeArrowBotScript(bot, it, duration) }.filter { it.isEligible() }
+
+    /**
+     * Shares level and personality selection across arrow dialogue recipes and direct-use dart/bolt recipes.
+     * Their scripts retain their native interaction flow while reusing the same inventory production lifecycle.
+     */
+    internal fun getOwnedAmmunitionScript(bot: Bot, level: Int): BotScript? {
         val duration = getDuration(bot)
-        val candidates = Arrow.entries.map { MakeArrowBotScript(bot, it, duration) }.filter { it.isEligible() }
-        return getBestActivity(bot, level, { it.requiredLevel }, candidates)
+        val arrows = ownedArrowScripts(bot, duration).map { it.requiredLevel to it }
+        val ammunition = FletchAmmunitionBotScript.RECIPES.values.map { FletchAmmunitionBotScript(bot, it, duration) }
+            .filter { it.isEligible() }.map { it.requiredLevel to it }
+        return getBestActivity(bot, level, { it.first }, arrows + ammunition)?.second
     }
 
     /** Selects a valid cutting recipe from an owned log tier and knife before using acquisition fallback. */
@@ -91,14 +108,14 @@ object FletchingScriptFactory : SkillingScriptFactory(SKILL_FLETCHING) {
         }
 
         /*
-         * Give arrow-making a chance before falling back to the normal bow/log selection.
+         * Give ammunition production a chance before falling back to the normal bow/log selection.
          */
         if (randBoolean()) {
-            getOwnedArrowScript(bot, level)?.let { return it }
+            getOwnedAmmunitionScript(bot, level)?.let { return it }
         }
 
         getOwnedBowScript(bot, level)?.let { return it }
-        getOwnedArrowScript(bot, level)?.let { return it }
+        getOwnedAmmunitionScript(bot, level)?.let { return it }
         getOwnedLogScript(bot, level)?.let { return it }
 
         if (level >= MAGIC_SHORTBOW.level && (!randomized || rand(2) == 0)) {
