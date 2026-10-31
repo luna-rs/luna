@@ -41,6 +41,6 @@ class StringBowAction(plr: Player,
         mob.playSound(Sound.STRING_BOW)
         mob.sendMessage("You add a string to the bow.")
         mob.animation(ANIMATION)
-        mob.fletching.addExperience(bow.exp)
+        mob.fletching.addExperience(bow.stringExp)
     }
 }
