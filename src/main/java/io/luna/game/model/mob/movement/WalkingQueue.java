@@ -338,8 +338,8 @@ public final class WalkingQueue {
     /**
      * Restores run energy for a player while they are not running.
      * <p>
-     * The restoration rate is based on the player's current Agility level. Run energy is clamped to a maximum of
-     * {@code 100.0}.
+     * The restoration rate is based on the player's current Agility level (see {@link #restoreRate(int)}). Run energy
+     * is clamped to a maximum of {@code 100.0}.
      */
     private void incrementRunEnergy() {
         if (mob.getType() != EntityType.PLAYER)
@@ -351,13 +351,21 @@ public final class WalkingQueue {
             return;
         }
 
-        double agilityLevel = player.skill(Skill.AGILITY).getLevel();
-        double energyRestoration = 0.096 * Math
-                .pow(Math.E, 0.0162569486104454583293005993255170468638949631744294 * agilityLevel);
-        double newValue = runEnergy + energyRestoration;
+        double newValue = runEnergy + restoreRate(player.skill(Skill.AGILITY).getLevel());
         newValue = Math.min(newValue, 100.0);
 
         player.setRunEnergy(newValue, true);
+    }
+
+    /**
+     * The run energy restored in one tick, in percent: {@code agilityLevel / 6 + 8} hundredths of a percent, with the
+     * division rounded down. Boosted and drained levels count. A full bar takes 1,250 ticks at level 1 and 417 at 99.
+     *
+     * @param agilityLevel The player's current Agility level.
+     * @return The percentage restored.
+     */
+    static double restoreRate(int agilityLevel) {
+        return (agilityLevel / 6 + 8) / 100.0;
     }
 
     /**
