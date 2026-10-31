@@ -22,7 +22,7 @@ object AgilityEntrances {
         if (entering && !Agility.checkLevel(plr, 35)) return null
         return AgilityAction(plr,
             listOf(AgilityStep(Position(2552, if (entering) 3558 else 3561), 4, animation = 749,
-                sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))),
+                animationTick = 1, moveStart = 30, sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))),
             "You squeeze through the pipe.").also {
             it.onSuccess = { plr.agility.addExperience(10.0) }
         }
@@ -40,17 +40,19 @@ object AgilityEntrances {
         val middle = Position(2998, if (entering) 3925 else 3924)
         val failed = roll() >= Skills.successRate(200, 250, minOf(plr.agility.level, 99))
         val steps = mutableListOf(
-            AgilityStep(Position(2998, if (entering) 3918 else 3930), 1, jump = true,
-                sounds = listOf(AgilitySound(Sound.DOOR_OPEN))),
+            AgilityStep(Position(2998, if (entering) 3918 else 3930), 2,
+                walkingAnimation = AgilityWalk.NORMAL, sounds = listOf(AgilitySound(Sound.DOOR_OPEN))),
             AgilityStep(middle, if (entering) 7 else 6, walkingAnimation = 762)
         )
         if (failed) {
-            steps += AgilityStep(middle, 1, animation = 764, jump = true,
+            // The falling pose is set a tick before the fall's exact movement, which keeps the pose it starts with.
+            steps += AgilityStep(middle, 1, walkingAnimation = 768, animation = 764, jump = true,
                 sounds = listOf(AgilitySound(Sound.STUMBLE_LOOP, loops = 10)))
-            steps += AgilityStep(middle.translate(3, -1), 2, walkingAnimation = 768)
+            steps += AgilityStep(middle.translate(3, -1), 2)
         } else {
             steps += AgilityStep(Position(2998, if (entering) 3931 else 3918), 6, walkingAnimation = 762)
-            steps += AgilityStep(Position(2998, if (entering) 3933 else 3916), 1, jump = true,
+            steps += AgilityStep(Position(2998, if (entering) 3933 else 3916), 2,
+                walkingAnimation = AgilityWalk.NORMAL,
                 sounds = listOf(AgilitySound(Sound.DOOR_OPEN)))
         }
         return AgilityAction(plr, steps, "You try to edge over the ridge...").also {
@@ -92,8 +94,8 @@ object AgilityEntrances {
         val end = if (start == TAVERLEY_PIPE_WEST) TAVERLEY_PIPE_EAST else TAVERLEY_PIPE_WEST
         plr.move(start)
         val middle = Position((start.x + end.x) / 2, start.y)
-        return AgilityAction(plr, listOf(AgilityStep(middle, 4, animation = 749), AgilityStep(end, 4, animation = 749)),
-            "You squeeze through the pipe.")
+        return AgilityAction(plr, listOf(AgilityStep(middle, 4, animation = 749),
+            AgilityStep(end, 4, animation = 749, animationTick = 1)), "You squeeze through the pipe.")
     }
 
     /**
