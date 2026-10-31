@@ -43,7 +43,8 @@ course(BARBARIAN_OUTPOST) {
         climbAction(this, Position(2532, 3546, 1), "You climb up the ladder.")
     }
     obstacle(1948, BARBARIAN_CRUMBLING_WALL, checkpoint = { it.position == Position(2542, 3553) }) { wall ->
-        AgilityAction(this, listOf(AgilityStep(wall.position.translate(1, 0), 3, animation = 840,
+        // The move spans the climb (68 client cycles), so the player is over the wall as the animation ends.
+        AgilityAction(this, listOf(AgilityStep(wall.position.translate(1, 0), 3, animation = 840, moveEnd = 68,
             sounds = listOf(AgilitySound(Sound.CLIMB_WALL, delayCycles = 40)))),
             "You climb the low wall...")
     }

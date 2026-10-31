@@ -57,7 +57,8 @@ course(GNOME_STRONGHOLD) {
                 AgilityStep(Position(x, 3433), 4, animation = 749),
                 AgilityStep(Position(exitX, 3434), 1, jump = true,
                     sounds = listOf(AgilitySound(Sound.SQUEEZE_IN))),
-                AgilityStep(Position(exitX, 3437), 4, animation = 749,
+                // The crawl covers the end of the leg, where the player comes out of the pipe.
+                AgilityStep(Position(exitX, 3437), 4, animation = 749, animationTick = 1,
                     sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))
             ), null)
         }
