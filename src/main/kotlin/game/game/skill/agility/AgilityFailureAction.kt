@@ -12,12 +12,14 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.net.msg.out.SoundMessageWriter
 
 /**
- * Moves to an obstacle's failure point, stumbles with the failure message, and lands two ticks later without
- * awarding course progress. Keeps the player locked and restores their movement animations even when interrupted.
+ * Shows the obstacle's [startMessage], moves to its failure point, stumbles with the failure message, and lands two
+ * ticks later without awarding course progress. Keeps the player locked and restores their movement animations even
+ * when interrupted.
  *
  * @author lare96
  */
-class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : LockedAction(plr) {
+class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
+                           private val startMessage: String? = null) : LockedAction(plr) {
 
     private var previousAnimation: PlayerModelAnimation? = null
     private var ticks = 0
@@ -26,6 +28,7 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : L
     override fun onLock() {
         previousAnimation = mob.model
         mob.walking.clear()
+        startMessage?.let { mob.sendMessage(it) }
         val approach = failure.approach
         if (approach != null) {
             fallTick = maxOf(1, mob.position.computeLongestDistance(approach))

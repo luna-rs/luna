@@ -49,13 +49,15 @@ data class AgilitySound(val sound: Sound, val tick: Int = 0, val loops: Int = 1,
 /**
  * Runs all legs under one lock and reports success only after the last leg finishes.
  * The first leg starts on the tick the lock is taken, and each later leg on the tick the one before it ends.
+ * [message] is sent on the first tick and [endMessage] when the last leg finishes.
  * Interrupted traversals restore animations and never award XP or course credit.
  *
  * @author lare96
  */
 class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
-                    private val message: String?,
-                    private val start: () -> Unit = {}) : LockedAction(plr) {
+                    internal val message: String?,
+                    private val start: () -> Unit = {},
+                    private val endMessage: String? = null) : LockedAction(plr) {
 
     companion object {
 
@@ -91,6 +93,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
         if (step.destination != mob.position) mob.move(step.destination)
         leg++
         if (leg == steps.size) {
+            endMessage?.let { mob.sendMessage(it) }
             onSuccess()
             return true
         }
