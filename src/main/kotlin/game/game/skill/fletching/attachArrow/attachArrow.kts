@@ -16,6 +16,9 @@ fun openInterface(plr: Player, arrow: Arrow) {
 
 // Intercept item on item event to open interface.
 for (arrow in Arrow.VALUES) {
+    if (arrow == Arrow.HEADLESS_ARROW) {
+        continue
+    }
     useItem(Arrow.HEADLESS).onItem(arrow.tip) { openInterface(plr, arrow) }
 }
 

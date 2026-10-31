@@ -48,9 +48,13 @@ class MakeArrowActionItem(plr: Player,
     }
 
     override fun execute() {
-        val withName = itemName(arrow.with)
-        val tipName = itemName(arrow.tip)
-        mob.sendMessage("You attach the $tipName to the $withName.")
+        if (arrow != Arrow.HEADLESS_ARROW) {
+            val metal = itemName(arrow.tip).substringBefore(' ').lowercase()
+            mob.sendMessage("You attach $metal heads to some of your arrows.")
+            mob.sendMessage("You attach arrow heads to $setAmount arrow shafts.")
+        } else {
+            mob.sendMessage("You attach feathers to $setAmount arrow shafts.")
+        }
 
         mob.fletching.addExperience(arrow.exp * setAmount)
     }
