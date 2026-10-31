@@ -9,6 +9,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
@@ -64,7 +65,7 @@ class ZonedActionSafetyTest {
         }
     }
 
-    @Test fun resumedInitializationWaitsBeforeCallingSetup() = runBlocking<Unit> {
+    @Test fun resumedInitializationWaitsBeforeCallingSetup() = runTest {
         val script = Activity(bot)
         `when`(bot.isLocked).thenReturn(true)
         val pending = async(start = CoroutineStart.UNDISPATCHED) { script.init(true) }
@@ -74,7 +75,7 @@ class ZonedActionSafetyTest {
         assertEquals(1, script.setups)
     }
 
-    @Test fun initialBankHookWaitsForInterruptionAfterTravelToSettle() = runBlocking<Unit> {
+    @Test fun initialBankHookWaitsForInterruptionAfterTravelToSettle() = runTest {
         val script = Activity(bot).also { it.initialBank = true }
         val banking = bot.actionHandler.banking
         `when`(banking.travelToBankDepositAll()).thenAnswer {
@@ -90,7 +91,7 @@ class ZonedActionSafetyTest {
     }
 
     @ParameterizedTest @ValueSource(booleans = [true, false])
-    fun marketplaceTravelRechecksSafetyBeforeExecutingProduction(travelSucceeded: Boolean) = runBlocking<Unit> {
+    fun marketplaceTravelRechecksSafetyBeforeExecutingProduction(travelSucceeded: Boolean) = runTest {
         val script = Activity(bot)
         assertFalse(script.init(true))
         setZone(script)

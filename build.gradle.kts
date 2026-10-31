@@ -34,6 +34,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.apache.commons:commons-compress:1.27.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")

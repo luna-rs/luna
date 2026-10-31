@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -77,7 +78,7 @@ class NpcBankOpeningTest {
         }
     }
 
-    @Test fun registeredBankerUsesSecondClickAndRequiresTheNativeWindow() = runBlocking<Unit> {
+    @Test fun registeredBankerUsesSecondClickAndRequiresTheNativeWindow() = runTest {
         fixture()
         val handler = bot.actionHandler
         `when`(handler.interactions.interact(2, banker)).thenAnswer {
@@ -111,7 +112,7 @@ class NpcBankOpeningTest {
         assertSame(InteractionPolicy.STANDARD_SIZE, interactions.interactionPolicy(2, other))
     }
 
-    @Test fun aNativeInterfaceTimeoutCannotForceOpenAnNpcBank() = runBlocking<Unit> {
+    @Test fun aNativeInterfaceTimeoutCannotForceOpenAnNpcBank() = runTest {
         fixture()
         val handler = bot.actionHandler
         `when`(handler.interactions.interact(2, banker)).thenReturn(true)
@@ -121,7 +122,7 @@ class NpcBankOpeningTest {
         verify(bank, never()).open()
     }
 
-    @Test fun failedNavigationCannotOpenTheNpcBank() = runBlocking<Unit> {
+    @Test fun failedNavigationCannotOpenTheNpcBank() = runTest {
         fixture()
         val handler = bot.actionHandler
         `when`(handler.interactions.interact(2, banker)).thenReturn(false)
@@ -131,7 +132,7 @@ class NpcBankOpeningTest {
         verify(bank, never()).open()
     }
 
-    @Test fun aBankerMovingOutOfReachDuringInteractionFailsCleanly() = runBlocking<Unit> {
+    @Test fun aBankerMovingOutOfReachDuringInteractionFailsCleanly() = runTest {
         fixture()
         val handler = bot.actionHandler
         `when`(handler.interactions.interact(2, banker)).thenAnswer {
@@ -144,7 +145,7 @@ class NpcBankOpeningTest {
         verify(bank, never()).open()
     }
 
-    @Test fun aReusedNpcIndexCannotAuthorizeTheOldBanker() = runBlocking<Unit> {
+    @Test fun aReusedNpcIndexCannotAuthorizeTheOldBanker() = runTest {
         fixture()
         val handler = bot.actionHandler
         val registry = bot.world.npcs
@@ -158,7 +159,7 @@ class NpcBankOpeningTest {
         verify(bank, never()).open()
     }
 
-    @Test fun aBankerDisappearingDuringTheWindowWaitFailsCleanly() = runBlocking<Unit> {
+    @Test fun aBankerDisappearingDuringTheWindowWaitFailsCleanly() = runTest {
         fixture()
         val handler = bot.actionHandler
         val world = bot.world
@@ -175,7 +176,7 @@ class NpcBankOpeningTest {
         verify(bank, never()).open()
     }
 
-    @Test fun aBankerRemovedDuringReactionDelayIsNeverClicked() = runBlocking<Unit> {
+    @Test fun aBankerRemovedDuringReactionDelayIsNeverClicked() = runTest {
         fixture()
         val handler = bot.actionHandler
         val pending = async(start = CoroutineStart.UNDISPATCHED) {

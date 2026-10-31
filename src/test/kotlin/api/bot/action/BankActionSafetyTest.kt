@@ -9,6 +9,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.withTimeout
@@ -78,7 +79,7 @@ class BankActionSafetyTest {
         verifyNoInteractions(interactions)
     }
 
-    @Test fun logoutDuringReactionDelayPreventsTheBankClick() = runBlocking<Unit> {
+    @Test fun logoutDuringReactionDelayPreventsTheBankClick() = runTest {
         val bot = InventoryProductionFixtures.bot()
         val handler = bot.actionHandler
         val pending = async(start = CoroutineStart.UNDISPATCHED) {
@@ -89,7 +90,7 @@ class BankActionSafetyTest {
         verifyNoInteractions(handler.interactions)
     }
 
-    @Test fun interruptionDuringInteractionPreventsWaitingAndFallback() = runBlocking<Unit> {
+    @Test fun interruptionDuringInteractionPreventsWaitingAndFallback() = runTest {
         val bot = InventoryProductionFixtures.bot()
         val bank = mock(GameObject::class.java)
         val handler = bot.actionHandler
@@ -102,7 +103,7 @@ class BankActionSafetyTest {
         assertFalse(bot.bank.isOpen)
     }
 
-    @Test fun logoutDuringInterfaceWaitPreventsDirectOpenFallback() = runBlocking<Unit> {
+    @Test fun logoutDuringInterfaceWaitPreventsDirectOpenFallback() = runTest {
         val bot = InventoryProductionFixtures.bot()
         val bank = mock(GameObject::class.java)
         val handler = bot.actionHandler
@@ -122,7 +123,7 @@ class BankActionSafetyTest {
         }
     }
 
-    @Test fun safeInterfaceTimeoutRetainsTheExistingOpenFallback() = runBlocking<Unit> {
+    @Test fun safeInterfaceTimeoutRetainsTheExistingOpenFallback() = runTest {
         val bot = InventoryProductionFixtures.bot()
         val bank = spy(bot.bank)
         `when`(bot.bank).thenReturn(bank)

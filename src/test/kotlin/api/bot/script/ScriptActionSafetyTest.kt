@@ -7,6 +7,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.*
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
@@ -172,7 +173,7 @@ class ScriptActionSafetyTest {
         assertEquals(1, script.completions)
     }
 
-    @Test fun deferredActionContinuesAfterNativeStateSettles() = runBlocking<Unit> {
+    @Test fun deferredActionContinuesAfterNativeStateSettles() = runTest {
         `when`(bot.isLocked).thenReturn(true)
         val pending = async(start = CoroutineStart.UNDISPATCHED) { ActionSafety.NON_COMBAT.await(bot) }
         assertFalse(pending.isCompleted)

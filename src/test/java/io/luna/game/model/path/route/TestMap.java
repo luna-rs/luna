@@ -30,6 +30,11 @@ final class TestMap {
     private final Map<Chunk, CollisionMatrix[]> matrices = new HashMap<>();
 
     /**
+     * The repositories reused for each chunk, as in the world's chunk manager.
+     */
+    private final Map<Chunk, ChunkRepository> repositories = new HashMap<>();
+
+    /**
      * The collision manager over the map.
      */
     private final CollisionManager manager;
@@ -50,6 +55,10 @@ final class TestMap {
     }
 
     private ChunkRepository repository(Chunk chunk) {
+        return repositories.computeIfAbsent(chunk, this::createRepository);
+    }
+
+    private ChunkRepository createRepository(Chunk chunk) {
         CollisionMatrix[] chunkMatrices = matrices.computeIfAbsent(chunk,
                 key -> CollisionMatrix.createMatrices(4, 8, 8));
         ChunkRepository repository = Mockito.mock(ChunkRepository.class);

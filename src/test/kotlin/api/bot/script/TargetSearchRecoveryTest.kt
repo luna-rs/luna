@@ -12,6 +12,7 @@ import io.luna.game.model.mob.combat.attack.CombatAttack
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
@@ -79,7 +80,7 @@ class TargetSearchRecoveryTest {
     }
 
     @Test
-    fun emptySearchesShareOneBudget() = runBlocking {
+    fun emptySearchesShareOneBudget() = runTest {
         val script = SearchScript(bot())
         script.candidateCount = 0
         script.scanSeconds = 90
@@ -89,7 +90,7 @@ class TargetSearchRecoveryTest {
     }
 
     @Test
-    fun pauseAndBankingResetSearchBudget() = runBlocking {
+    fun pauseAndBankingResetSearchBudget() = runTest {
         for (banking in listOf(false, true)) {
             val script = SearchScript(bot())
             script.candidateCount = 0

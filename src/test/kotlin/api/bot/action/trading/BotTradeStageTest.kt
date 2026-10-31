@@ -8,6 +8,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -44,7 +45,7 @@ class BotTradeStageTest {
         verify(bot.overlays).closeWindows()
     }
 
-    @Test fun aChangedOfferIsRejectedAfterTheAcceptanceDelay(): Unit = runBlocking {
+    @Test fun aChangedOfferIsRejectedAfterTheAcceptanceDelay(): Unit = runTest {
         val bot = bot()
         val other = mock(Player::class.java)
         screen(bot, other)
