@@ -15,7 +15,23 @@ ShopHandler.create("Funch's Fine Groceries") {
     merchantsAccessOnly()
 
     sell {
-        "Knife" x 10
+        "Brandy" x 10
+        "Gin" x 10
+        "Vodka" x 10
+        "Whisky" x 10
+        "Pineapple" x 10
+        "Equa leaves" x 20
+        "Orange" x 20
+        "Lemon" x 20
+        "Lime" x 20
+        "Dwellberries" x 5
+        "Cocktail shaker" x 10
+        "Chocolate bar" x 20
+        "Chocolate dust" x 10
+        "Pot of cream" x 5
+        "Bucket of milk" x 5
+        "Knife" x 5
+        "Cocktail glass" x 20
     }
 
     open {
