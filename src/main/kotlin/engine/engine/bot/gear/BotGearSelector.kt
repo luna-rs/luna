@@ -149,13 +149,12 @@ object BotGearSelector {
                 val indexGear = ALL_GEAR.value[index]
 
                 for (item in indexGear) {
-                    if (valid(bot, index, item.id) && item.purposes.containsAll(purposes) && !excluding(item)) {
+                    if (valid(bot, index, item.id) && BotEquipmentPreferences.supports(item, purposes) && !excluding(item)) {
                         selected += item
                     }
                 }
 
-                selected.sortByDescending { it.calculateScore() }
-                equipment[index] = selected.firstOrNull()?.id
+                equipment[index] = BotEquipmentPreferences.select(bot, selected, purposes)?.id
             }
             return this
         }
@@ -259,10 +258,9 @@ object BotGearSelector {
      * usable set is selected by priority, with a bonus when the full set is available, and every valid piece from that set
      * is placed into the equipment layout.
      *
-     * If a complete set is selected, the layout is returned immediately. Otherwise, any missing slots are filled by the
-     * generic purpose-based selector. The fallback selector scans every known gear candidate, keeps only valid items that
-     * satisfy all requested purposes, groups them by equipment slot, and selects the highest-scoring item for each empty
-     * slot.
+     * The purpose-based selector then checks every slot against valid owned gear. Personal family tastes can influence
+     * the result within a performance gap determined by sociability and intelligence, so a coordinated set cannot bypass
+     * progression or real equipment requirements.
      *
      * Show-off layouts then give the head slot to the bot's first owned [HeadBotGear] rare, unless it holds a piece of
      * a complete set that is still worn in full.
@@ -315,6 +313,7 @@ object BotGearSelector {
                         // We have the entire set, give a bonus to the score.
                         score += it.value * 2
                     }
+                    if (it.key.equipment.any { id -> BotEquipmentPreferences.prefers(bot, id) }) score += 4
                     score
                 }
 
@@ -330,10 +329,6 @@ object BotGearSelector {
                     completeSet = selected.key.equipment
                 }
 
-                // Dumb social bots prefer full sets, even when inefficient.
-                if (selected.key.equipment.size == selected.value && bot.personality.isDumb && bot.personality.isSocial) {
-                    return BotGearSelectorFill(bot, equipment)
-                }
             }
         }
 
@@ -341,7 +336,7 @@ object BotGearSelector {
         val selection = ArrayListMultimap.create<Int, BotGearItem>()
         for (entry in ALL_GEAR.value.entries()) {
             val item = entry.value
-            if (!valid(bot, entry.key, item.id) || !item.purposes.containsAll(purposes) || excluding(item)) {
+            if (!valid(bot, entry.key, item.id) || !BotEquipmentPreferences.supports(item, purposes) || excluding(item)) {
                 continue
             }
             selection.put(entry.key, item)
@@ -350,24 +345,18 @@ object BotGearSelector {
         // Set the best item for each missing slot.
         for (index in equipment.indices) {
             val items = selection[index]
-            val equipmentId = equipment[index]
-            items.sortByDescending { it.calculateScore() }
-            val selectionItem = items.firstOrNull()
-            if (equipmentId == null) {
-                equipment[index] = selectionItem?.id
-            } else if(!bot.personality.isDumb) {
-                // Bots that aren't stupid will use the most efficient equipment possible.
-                val equipmentItem = ALL_GEAR_IDS.value[equipmentId]
-                val selectionScore = selectionItem?.calculateScore() ?: 0
-                if(equipmentItem != null && selectionScore > equipmentItem.calculateScore()) {
-                    equipment[index] = selectionItem?.id
-                }
-            }
+            // A coordinated outfit cannot bypass the same progression checks used for individual favourites.
+            equipment[index] = BotEquipmentPreferences.select(bot, items, purposes, equipment[index])?.id
         }
         val keepSetHead = equipment[HEAD] in completeSet && completeSet.all { it in equipment }
         if (BotGearPurpose.SHOW_OFF in purposes && !keepSetHead) {
             val owned = selection[HEAD].map { it.id }
-            HeadBotGear.entries.flatMap { it.ids }.firstOrNull { it in owned }?.let { equipment[HEAD] = it }
+            val hats = HeadBotGear.entries.flatMap { it.ids }.filter { it in owned }
+            val favourite = hats.firstOrNull { BotEquipmentPreferences.prefers(bot, it) }
+            if (favourite != null) equipment[HEAD] = favourite
+            else if (equipment[HEAD]?.let { BotEquipmentPreferences.prefers(bot, it) } != true) {
+                hats.firstOrNull()?.let { equipment[HEAD] = it }
+            }
         }
         return BotGearSelectorFill(bot, equipment)
     }
@@ -419,15 +408,10 @@ object BotGearSelector {
         return BotGearSelectorFill(bot, equipment)
     }
 
-    fun computeWantedEquipment(bot: Bot): Set<Int> {
-        val wanted = HashSet<Int>()
-        /* for() {
-          // todo adds wanted equipment for level if bot has none
-         }*
-
-         */
-        return emptySet()
-    }
+    /**
+     * Returns usable outfit upgrades and missing pieces of the bot's favourite cosmetic families.
+     */
+    fun computeWantedEquipment(bot: Bot): Set<Int> = BotEquipmentPreferences.purchaseCandidates(bot).toSet()
 
     /**
      * Returns whether the bot can select an item for the requested equipment slot.

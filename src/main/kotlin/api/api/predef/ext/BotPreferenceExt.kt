@@ -1,5 +1,6 @@
 package api.predef.ext
 
+import api.bot.action.trading.BotTradeIntentions
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.player.item.consume.food.Food
@@ -11,6 +12,7 @@ import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotPreference
+import io.luna.game.model.item.Item
 
 /**
  * Returns the bot's total ownership of an item across all tracked containers.
@@ -28,15 +30,15 @@ fun Bot.totalItemAmount(id: Int): Int {
     val unnotedId = definition.unnotedId.orElse(id)
     val unnotedDefinition = itemDef(unnotedId)
 
-    var amount = itemTracker.count(unnotedId)
+    var amount = itemTracker.count(unnotedId).toLong()
 
     // Add the noted stack, if one exists, so 100 banked logs and 50 noted logs count as 150 owned logs.
     val notedId = unnotedDefinition.notedId
     if (notedId.isPresent && notedId.asInt != unnotedId) {
-        amount += itemTracker.count(notedId.asInt)
+        amount += itemTracker.count(notedId.asInt).toLong()
     }
 
-    return amount
+    return amount.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 }
 
 /**
@@ -207,6 +209,7 @@ fun BotPreference.wantedItemsToTrim(): List<Pair<WantedItemDefinition, Int>> {
  * @return `true` if the bot already owns the required amount, otherwise `false`.
  */
 fun BotPreference.requireItem(id: Int, amount: Int): Boolean {
+    BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
     if (bot.totalItemAmount(id) >= amount) {
         return true
     }

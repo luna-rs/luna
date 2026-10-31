@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.action.trading.BotMarketplace
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
 import api.predef.*
 import io.luna.game.action.ActionType
@@ -77,6 +78,7 @@ abstract class StationaryInventoryBotScript(
         if (isTerminated()) {
             return false
         }
+        BotTradeIntentions.recordSupplies(bot, withdraw, tools, stockTarget = 1_000)
         if (!bot.bank.containsAll(withdraw)) {
             bot.log("Bot does not have required withdraw items. Adding to wanted list.")
             withdraw.forEach { bot.preferences.addWantedItem(it.id, 2000) }

@@ -1,5 +1,6 @@
 package game.bot.scripts
 
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
 import api.bot.action.PvmTactics
@@ -527,6 +528,8 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        BotTradeIntentions.recordSupplies(bot,
+            selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
         if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
             stop()
             return
@@ -569,6 +572,8 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val ammo = if (purpose == BotGearPurpose.RANGED) selected.gear[Equipment.AMMUNITION] ?: weapon else null
+        if (ammo != null) BotTradeIntentions.recordSupplies(bot,
+            listOf(Item(ammo, 100)), stockTarget = 1_000)
         if (purpose == BotGearPurpose.RANGED) {
             if (ammo == null || (bot.equipment.computeAmountForId(ammo) == 0 && ammo !in bot.inventory &&
                     !handler.banking.withdraw(Item(ammo, 500)))) {

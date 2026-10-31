@@ -2,6 +2,10 @@
 package game.bot.scripts.trading
 
 import api.bot.script.DynamicBotScript
+import api.bot.action.trading.BotTradeIntentions
+import api.bot.action.trading.BotTradeManager
+import api.bot.action.trading.BotTradePrice
+import api.bot.action.trading.BotTradePurpose
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -13,11 +17,14 @@ import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 
 /**
- * Sells surplus wanted items to registered GP shops while the bot is at home.
+ * Sells an ordinary bot's actual surplus to registered GP shops while the bot is at home.
  *
- * Surplus quantities are determined from the bot's wanted-item preferences and retained ownership.
- * Items are withdrawn from the bank in batches, then sold through accessible shops using normal
- * shop interactions. Equipped items are never withdrawn for selling.
+ * Active supplies, personal cosmetic copies and useful equipment share marketplace retention rules. Broad default
+ * wanted targets do not prevent gathered loot from being sold. Merchants never use this script. A trip starts only
+ * when actual transferable surplus has an accepting GP shop, and its original quantities cap the entire visit.
+ *
+ * Items are banked and withdrawn in batches, leaving room for proceeds. Each batch refreshes equipment retention;
+ * each sale checks current ownership and newly recorded supply requirements. Equipped and dynamic items are protected.
  *
  * Shop currency, bot-access restrictions, and selling policies remain authoritative. Shops that
  * cannot be opened or stop accepting an item are skipped for the remainder of that item's sale.
@@ -29,33 +36,23 @@ import io.luna.game.model.mob.bot.Bot
  */
 class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
 
-    /**
-     * Attempts to sell surplus wanted items through registered shops.
-     *
-     * Travels home before selecting a snapshot of surplus items in descending total surplus economy value order.
-     * Each item is processed independently, with failed shops excluded from subsequent attempts.
-     *
-     * Before each withdrawal, the bot deposits its inventory, switches to unnoted withdrawal mode,
-     * and reserves an inventory slot for sale proceeds when withdrawing non-stackable items.
-     * The bot then returns home and attempts to sell through eligible shops.
-     *
-     * Sale quantities are limited by the original surplus, current retention requirements, bank
-     * stock, and inventory capacity. Items that cannot be withdrawn or sold are skipped, while
-     * failures to travel or prepare the inventory end the trip.
-     *
-     * @return `true` when the trip finishes or terminates early, regardless of how much was sold.
-     */
+    private var retainedStock = emptyMap<Int, Int>()
+    private var startedTrip = false
+
     override suspend fun run(): Boolean {
+        if (bot.preferences.isMerchant) return true
+        val surplus = saleCandidates()
+        if (surplus.isEmpty()) return true
+        startedTrip = true
         if (!travelHome()) {
             bot.log("Could not travel home to sell items.")
             return true
         }
 
-        // Snapshot the trip's quantities so changing ownership cannot expand an ongoing sale.
-        val surplus = bot.preferences.wantedItemsToTrim()
-        for ((wanted, quantity) in surplus) {
-            val id = wanted.id
-            var remaining = quantity
+        retainedStock = BotTradeIntentions.retainedStock(bot)
+        for (item in surplus) {
+            val id = item.id
+            var remaining = item.amount
             val failedShops = HashSet<Shop>()
 
             while (remaining > 0) {
@@ -72,7 +69,10 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                     bot.log("Could not prepare inventory for selling.")
                     return true
                 }
+                retainedStock = BotTradeIntentions.retainedStock(bot)
                 handler.banking.clickBankingMode(false)
+                // Withdrawal selects by id and cannot safely choose a normal item from mixed dynamic stock.
+                if (bot.bank.any { it != null && it.id == id && it.isDynamic }) break
                 val capacity = if (itemDef(id).isStackable) Int.MAX_VALUE else
                     (bot.inventory.computeRemainingSize() - 1).coerceAtLeast(0)
                 val amount = minOf(available, sellableAmount(id), bot.bank.computeAmountForId(id), capacity)
@@ -105,22 +105,32 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     }
 
     /**
+     * Shares actual marketplace surplus and prices while excluding stock without an accessible shop buyer.
+     */
+    internal fun saleCandidates(): List<Item> {
+        if (bot.preferences.isMerchant) return emptyList()
+        return BotTradeManager.computeOfferItems(bot, BotTradePrice.EXACT, BotTradePurpose.SELL)
+            .filter { shopsFor(it.item.id).isNotEmpty() }
+            .sortedByDescending { it.totalPrice() }.map { it.item }
+    }
+
+    /**
      * Computes the quantity of an item that can be sold without violating its retention target.
      *
-     * Uses the greater of zero, the wanted target, and the wanted minimum as the retained quantity.
-     * Total ownership includes items tracked across the bot's containers, including equipped items,
-     * but does not require those equipped items to be withdrawn.
-     *
-     * The result is recalculated during selling because ownership and wanted-item requirements may
-     * change while the script is suspended.
+     * Uses this banking batch's equipment retention and any newly recorded supply target. Ownership and
+     * non-dynamic transferable quantities are checked again after every suspension without rescanning all gear.
      *
      * @param id The item id to check.
      * @return The surplus quantity available for sale, clamped between zero and [Int.MAX_VALUE].
      */
-    private fun sellableAmount(id: Int): Int {
-        val wanted = bot.preferences.getWantedItem(id) ?: return 0
-        val retained = maxOf(0, wanted.target, wanted.min)
-        return (bot.totalItemAmount(id).toLong() - retained).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+    internal fun sellableAmount(id: Int): Int {
+        if (bot.preferences.isMerchant) return 0
+        val retained = maxOf(retainedStock[id] ?: 0, BotTradeIntentions.supplyTarget(bot, id))
+        val transferable = (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
+            .filter { !it.isDynamic && it.itemDef.unnotedId.orElse(it.id) == id }
+            .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        return minOf(transferable,
+            (bot.totalItemAmount(id).toLong() - retained).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
     }
 
     /**
@@ -140,8 +150,9 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      */
     private suspend fun sellItem(shop: Shop, id: Int, maxAmount: Int): Int {
         var sold = 0
-        while (bot.overlays[ShopInterface::class]?.shop === shop &&
+        while (!bot.preferences.isMerchant && bot.overlays[ShopInterface::class]?.shop === shop &&
             SubZone.HOME in bot.subZones && shop.botAccess.apply(bot) && shop.computeCanSell(id)) {
+            if (bot.inventory.any { it != null && it.id == id && it.isDynamic }) break
             val available = minOf(maxAmount - sold, sellableAmount(id), bot.inventory.computeAmountForId(id))
             if (available < 1) {
                 break
@@ -204,13 +215,7 @@ class SellToStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         return bot.overlays[ShopInterface::class]?.shop === shop
     }
 
-    /**
-     * Performs cleanup when this selling script finishes.
-     *
-     * Closes the bot's currently open interfaces, including any shop or banking interface
-     * remaining from the selling trip.
-     */
     override suspend fun finish() {
-        bot.overlays.closeWindows()
+        if (startedTrip) bot.overlays.closeWindows()
     }
 }

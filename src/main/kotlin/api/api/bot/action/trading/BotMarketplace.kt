@@ -2,7 +2,9 @@ package api.bot.action.trading
 
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
+import api.bot.script.BotScript
 import api.predef.*
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
 import io.luna.game.model.mob.bot.Bot
@@ -62,7 +64,7 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
          * An unavailable world falls back to Varrock, whose normal script startup rejects missing tiles.
          */
         fun select(bot: Bot): BotMarketplace {
-            val available = entries.filter { it.positions.isNotEmpty() }
+            val available = entries.filter { it.hasAvailableTradingSpot(bot) }
             return if (bot.personality.isDextrous) {
                 available.minByOrNull { it.arrival.computeLongestDistance(bot.position) } ?: VARROCK
             } else available.randomOrNull() ?: VARROCK
@@ -80,9 +82,90 @@ enum class BotMarketplace(val parent: Zone, val activityZone: SubZone, val skill
     private val tiles by lazy { anchors.flatMap { it.computePositions() }.distinct() }
 
     /**
+     * Maximum simultaneous trading sessions at this market. Production scripts still use the full work area.
+     */
+    val tradingCapacity: Int
+        get() = when (this) {
+            VARROCK -> 48
+            EDGEVILLE, AL_KHARID -> 32
+            SEERS_VILLAGE -> 24
+        }
+
+    /**
+     * Session-owned positions, spaced apart so neighbouring traders remain distinguishable.
+     */
+    private val tradingSpots by lazy { BotMarketplaceSpotPool<BotScript, Position>(tradingCapacity) }
+
+    /**
      * Currently unblocked work/trade tiles, with no duplicate weighting from overlapping rectangles.
      */
     val positions: List<Position> get() = tiles.filter { !world.collisionManager.isBlocked(it, false) }
+
+    /**
+     * Checks capacity without consuming a spot before a trading script starts.
+     */
+    fun hasAvailableTradingSpot(bot: Bot): Boolean {
+        val occupied = occupiedPositions(bot)
+        return tradingSpots.hasSpace(tradingCandidates(), { it !in occupied }, ::activeTrader)
+    }
+
+    /**
+     * Reserves an exclusive, currently unoccupied trading tile until banking, pause, or completion releases it.
+     */
+    fun reserveTradingSpot(owner: BotScript): Position? {
+        val occupied = occupiedPositions(owner.bot)
+        return tradingSpots.claim(owner, tradingCandidates(), { it !in occupied }, ::activeTrader)
+    }
+
+    /**
+     * Returns a session's current reservation without creating one.
+     */
+    fun tradingSpot(owner: BotScript): Position? = tradingSpots.position(owner)
+
+    /**
+     * Returns a vacated spot to the back of this market's randomized rotation.
+     */
+    fun releaseTradingSpot(owner: BotScript) = tradingSpots.release(owner)
+
+    /**
+     * Keeps portable production and social activity away from reserved trading positions.
+     */
+    fun canWorkAt(bot: Bot, position: Position): Boolean =
+        !tradingSpots.reserved(position) && unoccupied(position, bot)
+
+    /**
+     * Supplies currently free work positions for marketplace activities that do not own a trading lease.
+     */
+    fun availableWorkPositions(bot: Bot): List<Position> {
+        val occupied = occupiedPositions(bot)
+        return positions.filter { !tradingSpots.reserved(it) && it !in occupied }
+    }
+
+    /**
+     * Keeps one empty tile between the finite pool's possible trader positions.
+     */
+    private fun tradingCandidates(): List<Position> = positions.filter { it.x % 2 == 0 && it.y % 2 == 0 }
+
+    /**
+     * Revalidates real occupancy independently of collision geometry and outstanding reservations.
+     */
+    private fun unoccupied(position: Position, bot: Bot): Boolean =
+        world.players.none { it !== bot && it.state == EntityState.ACTIVE && it.position == position } &&
+                world.npcs.none { it.state == EntityState.ACTIVE && it.position == position }
+
+    /**
+     * Captures occupancy once when inspecting a whole position pool.
+     */
+    private fun occupiedPositions(bot: Bot): Set<Position> = buildSet {
+        world.players.filter { it !== bot && it.state == EntityState.ACTIVE }.forEach { add(it.position) }
+        world.npcs.filter { it.state == EntityState.ACTIVE }.forEach { add(it.position) }
+    }
+
+    /**
+     * Inactive scripts cannot keep a trading position after interruption or logout.
+     */
+    private fun activeTrader(owner: BotScript): Boolean =
+        owner.bot.state == EntityState.ACTIVE && owner.isRunning()
 
     /**
      * Checks the precise ground-floor work area, excluding gaps inside the enclosing subzone box.

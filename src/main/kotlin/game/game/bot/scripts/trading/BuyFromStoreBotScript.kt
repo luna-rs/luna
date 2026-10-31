@@ -1,5 +1,6 @@
 package game.bot.scripts.trading
 
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.DynamicBotScript
 import api.bot.zone.SubZone
 import api.predef.*
@@ -30,7 +31,7 @@ import kotlin.random.Random
  *
  * @author lare96
  */
-class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
+class BuyFromStoreBotScript(bot: Bot, private val shoppingBudget: Int? = null) : DynamicBotScript(bot) {
 
     companion object {
 
@@ -69,12 +70,6 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
     }
 
     override suspend fun run(): Boolean {
-        // Remote shop access is a home-only convenience. Never open a registered shop from somewhere else.
-        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) {
-            bot.log("Could not travel home to shop.")
-            return true
-        }
-
         // Wanted targets represent total ownership, so clear completed temporary wants before choosing purchases.
         bot.preferences.rebalanceWantedItems()
 
@@ -84,7 +79,20 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             return true
         }
 
-        val budget = computeBudget(totalCoins)
+        val budget = (shoppingBudget ?: computeBudget(totalCoins)).coerceIn(0, totalCoins)
+        if (budget == 0) return true
+        val shops = accessibleShops()
+        if (!bot.preferences.isMerchant && BotTradeIntentions.purchases(bot).none { wanted ->
+                shops.any { shop -> shop.computeBuyValue(wanted.id, 1).let {
+                    it.isPresent && it.asInt in 1..budget
+                } }
+            }) return true
+
+        // Remote shop access is a home-only convenience. Never open a registered shop from somewhere else.
+        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) {
+            bot.log("Could not travel home to shop.")
+            return true
+        }
         if (!prepareInventory(budget)) {
             bot.log("Could not prepare inventory for shopping.")
             return true
@@ -114,9 +122,6 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         // purchased because every accessible shop is empty, too expensive, or inaccessible, block it for this trip.
         val blockedWantedItems = HashSet<Int>()
 
-        // Shop access depends only on the bot, so resolve it once per trip instead of once per wanted item.
-        val shops = accessibleShops()
-
         while (remainingBudget > 0) {
             val wanted = nextWantedItem(shops, blockedWantedItems, remainingBudget) ?: break
             val spent = buyWantedItem(shops, wanted, remainingBudget)
@@ -137,7 +142,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         }
 
         // Only start random shopping once no currently-purchasable wanted item remains.
-        if (remainingBudget > 0) {
+        if (remainingBudget > 0 && bot.preferences.isMerchant) {
             spendSpeculatively(shops, remainingBudget)
         }
 
@@ -202,7 +207,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
      * Returns the next wanted item that still needs ownership and is stocked by an accessible shop.
      */
     private fun nextWantedItem(shops: List<Shop>, blocked: Set<Int>, budget: Int): WantedItemDefinition? {
-        val candidates = bot.preferences.wantedItemsToAcquire()
+        val candidates = BotTradeIntentions.purchases(bot)
             .filterNot { it.id in blocked || it.id == COINS_ID }
             .filter { wanted -> shopsFor(shops, wanted.id).any { canBuyOne(it, wanted.id, budget) } }
         return ShopPurchaseSelection.order(candidates) { shoppingWeight(it.id) }

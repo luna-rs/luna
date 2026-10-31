@@ -1,5 +1,6 @@
 package api.bot.action
 
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
@@ -398,6 +399,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (!success) {
             // We have no food. Ensure the bot starts looking for some.
             bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
+            BotTradeIntentions.requestFood(bot, amount)
         }
         return success
     }

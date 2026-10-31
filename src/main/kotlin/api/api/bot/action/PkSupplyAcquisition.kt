@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.script.BotScript.ActionSafety
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
 import api.predef.ext.get
 import engine.controllers.Controllers.inWilderness
@@ -54,6 +55,7 @@ internal class PkSupplyAcquisition(private val bot: Bot, private val handler: Bo
      */
     suspend fun obtain(required: Map<Int, Int>): Boolean = withTimeoutOrNull(5.minutes) {
         if (!safe()) return@withTimeoutOrNull false
+        BotTradeIntentions.recordSupplies(bot, required.map { (id, amount) -> Item(id, amount) })
         for ((id, amount) in required) bot.preferences.raiseWantedItemTarget(id, amount)
         try {
             // Quote all missing items together so funding does not repeatedly sell and return to the bank.

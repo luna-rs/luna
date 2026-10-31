@@ -398,6 +398,54 @@ enum class BotGearSet(
         BotGearPurpose.MAGIC
     ),
 
+    WIZARD_GOLD(
+        1,
+        setOf(
+            7394, // Wizard hat (g)
+            7390 // Wizard robe (g)
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    WIZARD_TRIMMED(
+        1,
+        setOf(
+            7396, // Wizard hat (t)
+            7392 // Wizard robe (t)
+        ),
+        BotGearPurpose.MAGIC,
+        BotGearPurpose.SHOW_OFF,
+        BotGearPurpose.SKILLING
+    ),
+
+    WHITE_FULL_LEGS(
+        10,
+        setOf(
+            6623, // White full helm
+            6617, // White platebody
+            6625, // White platelegs
+            6633, // White kiteshield
+            6611 // White scimitar
+        ),
+        BotGearPurpose.MELEE,
+        BotGearPurpose.SHOW_OFF
+    ),
+
+    WHITE_FULL_SKIRT(
+        10,
+        setOf(
+            6623, // White full helm
+            6617, // White platebody
+            6627, // White plateskirt
+            6633, // White kiteshield
+            6611 // White scimitar
+        ),
+        BotGearPurpose.MELEE,
+        BotGearPurpose.SHOW_OFF
+    ),
+
     WIZARD_DARK(
         10,
         setOf(

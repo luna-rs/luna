@@ -407,9 +407,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
      * A failed or unavailable work area is rejected through the normal zoned retry lifecycle.
      * Ordinary resource/facility destinations bypass this check. Existing webwalking owns navigation.
      */
-    private suspend fun prepareMarketplace(marketplace: BotMarketplace?): Boolean {
-        if (marketplace == null || marketplace.contains(bot.position)) return true
-        val tile = marketplace.positions.randomOrNull() ?: return false
+    protected open suspend fun prepareMarketplace(marketplace: BotMarketplace?): Boolean {
+        if (marketplace == null || marketplace.contains(bot.position) && marketplace.canWorkAt(bot, bot.position)) return true
+        val tile = marketplace.availableWorkPositions(bot).randomOrNull() ?: return false
         return handler.webWalkTo(tile) && bot.position == tile && marketplace.contains(bot.position)
     }
 

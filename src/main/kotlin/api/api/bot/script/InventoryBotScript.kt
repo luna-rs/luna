@@ -1,6 +1,7 @@
 package api.bot.script
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -137,6 +138,7 @@ abstract class InventoryBotScript(
             return emptyList()
         }
         val items = tools.map { Item(it) } + materials
+        BotTradeIntentions.recordSupplies(bot, materials, tools, stockTarget = 1_000)
         if (!bot.ownsProductionSupplies(materials, tools)) {
             if (!requestMissing) { stop(); return emptyList() }
             items.filter { bot.bank.computeAmountForId(it.id).toLong() +

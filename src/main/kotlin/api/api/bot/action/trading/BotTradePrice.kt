@@ -111,7 +111,9 @@ enum class BotTradePrice(
      * @return The adjusted selling price, in coins.
      */
     fun applySell(value: Long): Long {
-        return value - floor(value * rand(sell)).toLong()
+        if (value <= 0) return 0
+        val discount = if (sell.start == sell.endInclusive) sell.start else rand(sell)
+        return (value - floor(value * discount).toLong()).coerceAtLeast(1)
     }
 
     /**
@@ -123,7 +125,10 @@ enum class BotTradePrice(
      * @return The adjusted buying price, in coins.
      */
     fun applyBuy(value: Long): Long {
-        return value + floor(value * rand(buy)).toLong()
+        if (value <= 0) return 0
+        val premium = if (buy.start == buy.endInclusive) buy.start else rand(buy)
+        val increase = floor(value * premium).toLong()
+        return if (increase > Long.MAX_VALUE - value) Long.MAX_VALUE else value + increase
     }
 
 }

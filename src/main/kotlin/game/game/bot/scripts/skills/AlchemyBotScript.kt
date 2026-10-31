@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.Suspendable.naturalDexterityDelay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScriptData
@@ -592,6 +593,8 @@ class AlchemyBotScript(
 
         bot.log("Not enough nature runes. Adding $amount to wanted items.")
         bot.preferences.raiseWantedItemTarget(Rune.NATURE.id, amount)
+        BotTradeIntentions.recordSupplies(bot,
+            listOf(Item(Rune.NATURE.id, natureRunesPerCast())), stockTarget = minOf(amount, 1_000))
     }
 
     /**
@@ -604,6 +607,8 @@ class AlchemyBotScript(
 
         bot.log("Not enough fire runes. Adding $amount to wanted items.")
         bot.preferences.raiseWantedItemTarget(Rune.FIRE.id, amount)
+        BotTradeIntentions.recordSupplies(bot,
+            listOf(Item(Rune.FIRE.id, fireRunesPerCast())), stockTarget = minOf(amount, 1_000))
     }
 
     /**

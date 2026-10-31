@@ -1,5 +1,6 @@
 package api.bot.action
 
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
 import api.predef.ext.allSuitableFood
@@ -251,6 +252,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 continue
             }
             val minimum = required.map { (id, amount) -> Item(id, if (id in Food.ID_TO_FOOD) 1 else amount) }
+            BotTradeIntentions.recordSupplies(bot, minimum)
             val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
             if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget) continue
             if (PkSupplyAcquisition(bot, handler).quoteMissing(required) == null) {

@@ -1,6 +1,7 @@
 package game.bot.scripts.skills
 
 import api.bot.Suspendable.waitFor
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
@@ -20,6 +21,7 @@ import game.bot.scripts.RandomEventReflexScript
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import java.util.*
@@ -201,6 +203,8 @@ class FishBotScript(
             bot.log("We do not have the required bait to use this tool.")
             stop()
             bot.preferences.addWantedItem(baitId, 100_000)
+            BotTradeIntentions.recordSupplies(bot,
+                listOf(Item(baitId, 28)), stockTarget = 1_000)
             return
         }
 

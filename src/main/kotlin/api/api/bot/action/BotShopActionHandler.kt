@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
 import api.bot.script.BotScript.ActionSafety
 import io.luna.game.model.mob.bot.Bot
@@ -98,6 +99,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Attempts to sell either 1, 5, or 10 of an item.
      */
     private fun sell(id: Int, amount: Int): SuspendableFuture {
+        if (bot.preferences.isMerchant) return SuspendableFutureFailed
         // Check if a shop is open.
         val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
 
@@ -135,6 +137,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     suspend fun obtainWantedItem(id: Int, amount: Int): Boolean {
         require(amount > 0)
+        BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
         fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
         if (carried() >= amount) return true
         return withTimeoutOrNull(120.seconds) {

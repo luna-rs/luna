@@ -1,19 +1,16 @@
 package api.bot.action.trading
 
 import api.attr.Attr
-import api.bot.action.trading.BotTradeManager.SURPLUS_SELL_RATIO
 import api.bot.action.trading.BotTradeSpeechPool.BotTradeSpeech
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.math.IntMath
+import engine.bot.gear.BotEquipmentPreferences
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.model.def.ItemDefinition
-import io.luna.game.model.def.WantedItemDefinition
-import io.luna.game.model.def.WantedItemDefinition.WantedItemTag
 import io.luna.game.model.item.Item
+import io.luna.game.model.item.economy.WorldEconomy
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType.PKER
-import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType.SKILLER
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect
 import io.luna.util.NumberUtils
@@ -32,8 +29,12 @@ import io.luna.util.StringUtils
  */
 object BotTradeManager {
 
+    private var catalogueEconomy: WorldEconomy? = null
+    private var catalogueUpdatedAt = 0L
+    private var popularCatalogue = emptyList<Int>()
+
     /** The configured minimum trade-offer value, in coins. */
-    internal const val MINIMUM_OFFER_VALUE = 100L
+    internal const val MINIMUM_OFFER_VALUE = 10L
 
     /** The configured wait duration for trade requests, in seconds. */
     internal const val REQUEST_WAIT_SECONDS = 30
@@ -49,9 +50,6 @@ object BotTradeManager {
 
     /** The expected-value multiplier used by trustworthy scrutiny when validating sale returns. */
     internal const val TRUSTWORTHY_SELLING_ATTENTION = 0.55
-
-    /** The owned-to-target ratio required before normal selling considers an item eligible. */
-    private const val SURPLUS_SELL_RATIO = 2.50
 
     /** The chat colors available for generated trade advertisements. */
     private val VALID_CHAT_COLORS = ChatColor.entries.toList()
@@ -91,10 +89,7 @@ object BotTradeManager {
     fun advertiseTrade(bot: Bot, tradeItem: BotTradeItem?, purpose: BotTradePurpose): BotTradeMessage {
         val message =
             if (purpose == BotTradePurpose.MERCHANT_BUY) {
-                // Buy headers + merchant buy suffix.
-                val header = BotTradeSpeechPool.take(bot, BotTradeSpeech.BUYING)
-                val suffix = BotTradeSpeechPool.take(bot, BotTradeSpeech.MERCHANT_BUYING)
-                "$header $suffix"
+                "Buying anything"
             } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
                 // Sell headers + merchant sell suffix.
                 val header = BotTradeSpeechPool.take(bot, BotTradeSpeech.SELLING)
@@ -146,11 +141,43 @@ object BotTradeManager {
                 } else {
                     listOf(BotTradeItem(Item(995, totalGold), 1, purpose, bot))
                 }
-                goldItem + computeSellItems(bot, priceStrategy, BotTradePurpose.SELL)
+                val stockPurpose = if (purpose == BotTradePurpose.MERCHANT_BUY) BotTradePurpose.MERCHANT_SELL
+                    else BotTradePurpose.SELL
+                goldItem + computeSellItems(bot, priceStrategy, stockPurpose)
             }
 
             // Sellers offer whatever they're selling.
             BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> computeSellItems(bot, priceStrategy, purpose)
+        }
+    }
+
+    /**
+     * Applies the bot's spending reserve to transferable payment stock when preparing an actual buying session.
+     * Accounting callers can still inspect all available stock through [computeOfferItems]. Sale quantities and
+     * already sampled unit prices are unchanged; barter payment retains whole-item budget limits.
+     */
+    fun computeBudgetedOfferItems(bot: Bot, priceStrategy: BotTradePrice,
+                                  purpose: BotTradePurpose): List<BotTradeItem> {
+        val available = computeOfferItems(bot, priceStrategy, purpose)
+        if (purpose != BotTradePurpose.BUY && purpose != BotTradePurpose.MERCHANT_BUY) return available
+        val fraction = BotTradeIntentions.budgetFraction(bot, purpose).coerceIn(0.0, 1.0)
+        val coins = available.filter { it.item.id == 995 }.mapNotNull { quote ->
+            val amount = (quote.item.amount.toDouble() * fraction).toInt()
+            if (amount > 0) BotTradeItem(Item(995, amount), quote.price, quote.purpose, quote.bot) else null
+        }
+        return coins + spendingStock(available.filter { it.item.id != 995 }, fraction)
+    }
+
+    /**
+     * Limits barter payment by value while retaining whole items and the already sampled unit quotes.
+     */
+    internal fun spendingStock(stock: List<BotTradeItem>, fraction: Double): List<BotTradeItem> {
+        val quantities = stock.associate { it.item.id to it.item.amount }
+        val prices = stock.associate { it.item.id to it.price }
+        val budget = (TradeBasket.value(quantities, prices).toDouble() * fraction.coerceIn(0.0, 1.0)).toLong()
+        val selected = TradeBasket.select(quantities, prices, budget)
+        return stock.mapNotNull { quote ->
+            selected[quote.item.id]?.let { BotTradeItem(Item(quote.item.id, it), quote.price, quote.purpose, quote.bot) }
         }
     }
 
@@ -220,12 +247,9 @@ object BotTradeManager {
     /**
      * Builds candidate sale items for normal or merchant selling.
      *
-     * Normal selling collects every priced, unrestricted surplus item when its unnoted stock
-     * reaches [SURPLUS_SELL_RATIO] times the wanted target. The proposed amount comes from the
-     * wanted-item surplus calculation, which can include ownership beyond the unnoted stock.
-     *
-     * Merchant selling selects eligible wanted items whose economy prices have increased, capped to transferable
-     * ownership above the retained target and minimum. Actual tradeable amounts are not reserved here.
+     * Sale candidates include acquired tradeable stock even without a wanted definition or recent price rise,
+     * retaining concrete personal supplies and preferred equipment. Merchants require a resale margin while
+     * ordinary sellers use their normal price strategy. Actual amounts are not reserved here.
      *
      * @param bot The bot selecting items to sell.
      * @param priceStrategy The strategy used to calculate sale prices.
@@ -236,71 +260,52 @@ object BotTradeManager {
     private fun computeSellItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
         if (purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.MERCHANT_BUY) {
             throw IllegalStateException("Must be a valid SELL based purpose.")
-        } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
-            // Merchant sellers sell as much as possible of wanted items that have recently increased in value.
-            val candidates = ArrayList<BotTradeItem>()
-            for (item in bot.preferences.wantedItems) {
-                if (item.id == 995) {
-                    continue
-                }
-                val price = world.economy.prices[item.id]
-                if (price != null) {
-                    val retained = maxOf(0, item.target, item.min)
-                    val count = minOf(transferableAmount(bot, item.id),
-                        (bot.totalItemAmount(item.id).toLong() - retained).coerceIn(0, Int.MAX_VALUE.toLong()).toInt())
-                    if (price.price > price.lastPrice && !isSellRestricted(bot, item) && count > 0) {
-                        candidates += BotTradeItem(Item(item.id, count),
-                                                   priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
-                                                   purpose,
-                                                   bot)
-                    }
-                }
-            }
-            return BotTradeSelection.order(candidates)
         }
-
-        // Otherwise, sell any surplus of wanted items we can.
         val candidates = ArrayList<BotTradeItem>()
-        for ((item, surplus) in bot.preferences.wantedItemsToTrim()) {
-            if (!isSellRestricted(bot, item)) {
-                val amount = bot.itemTracker.count(item.id)
-                if (amount >= item.target * SURPLUS_SELL_RATIO) {
-                    val price = world.economy.prices[item.id]
-                    if (price != null) {
-                        val available = minOf(surplus, transferableAmount(bot, item.id))
-                        if (available < 1) continue
-                        candidates += BotTradeItem(Item(item.id, available),
-                                                   priceStrategy.applySell(price.price.toLong()).coerceAtLeast(1),
-                                                   purpose,
-                                                   bot)
-                    }
-                }
-            }
+        val merchantPrices = if (purpose == BotTradePurpose.MERCHANT_SELL) BotMerchantValuation.snapshot(bot) else null
+        val retainedStock = BotTradeIntentions.retainedStock(bot)
+        val ids = (bot.inventory.filterNotNull() + bot.bank.filterNotNull()).asSequence()
+            .filter { !it.isDynamic && it.itemDef.isTradeable }
+            .map { it.itemDef.unnotedId.orElse(it.id) }.filter { it != 995 && it != 0 }.distinct()
+        for (id in ids) {
+            val retained = (retainedStock[id] ?: 0).coerceAtLeast(0)
+            val note = itemDef(id).notedId.orElse(-1)
+            val owned = bot.itemTracker.count(id).toLong() + if (note == -1) 0L else bot.itemTracker.count(note).toLong()
+            val count = minOf(transferableAmount(bot, id),
+                (owned - retained).coerceIn(0, Int.MAX_VALUE.toLong()).toInt())
+            if (count < 1) continue
+            val guide = world.economy.getPrice(id)
+            if (purpose == BotTradePurpose.SELL && guide <= 0) continue
+            val quote = if (purpose == BotTradePurpose.MERCHANT_SELL)
+                merchantPrices!!.sell(id, guide, priceStrategy)
+            else priceStrategy.applySell(guide).coerceAtLeast(1)
+            candidates += BotTradeItem(Item(id, count), quote, purpose, bot)
         }
         return BotTradeSelection.order(candidates)
     }
 
 
     /**
-     * Uses market history within usability, wanted-priority, and minimum-stock urgency tiers before
-     * allocating the purchase budget. Merchant quotes retain their existing usability and priority tiers.
+     * Protects concrete urgent supplies before fashion purchases, then uses personal taste and market history.
+     * Merchant opportunities favour cosmetics independently of historical wanted-item ownership targets.
      */
-    internal fun prioritizePurchases(bot: Bot, candidates: List<BotTradeItem>): List<BotTradeItem> =
-        BotTradeSelection.order(candidates)
-            .sortedWith(compareByDescending<BotTradeItem> { bot.canUseWantedItem(it.item.id) }
-                .thenByDescending { bot.preferences.getWantedItem(it.item.id)?.priority?.level ?: 0 }
-                .thenByDescending {
-                    val wanted = bot.preferences.getWantedItem(it.item.id)
-                    it.purpose == BotTradePurpose.BUY && wanted != null && wanted.min != -1 &&
-                        bot.totalItemAmount(it.item.id) < wanted.min
-                })
+    internal fun prioritizePurchases(bot: Bot, candidates: List<BotTradeItem>): List<BotTradeItem> {
+        val intentions = BotTradeIntentions.purchases(bot).associateBy { it.id }
+        return BotTradeSelection.order(candidates)
+            .sortedWith(compareByDescending<BotTradeItem> {
+                if (it.purpose == BotTradePurpose.BUY) intentions[it.item.id]?.priority?.level ?: 0 else 0
+            }.thenByDescending { BotEquipmentPreferences.prefers(bot, it.item.id) }
+                .thenByDescending { BotEquipmentPreferences.isCosmetic(it.item.id) }
+                .thenByDescending { bot.canUseWantedItem(it.item.id) })
+    }
 
     /**
      * Builds candidate wanted items for normal or merchant buying.
      *
-     * Normal buying rebalances wanted items and collects every priced item, using the remaining amount
-     * needed to reach its target. Merchant buying accepts priced, tradeable items regardless of price trends,
-     * paying normal buying quotes for wanted items and half guide price for other stock (at least one coin).
+     * Normal buying uses deliberate activity, progression, and cosmetic intentions. Merchant buying quotes
+     * a bounded catalogue of common and preferred stock against guide and net alchemy values. Actual offered
+     * items receive a complete resale quote lazily, with strong discounts for unwanted stock and personal
+     * temptation for cosmetics, even when absent from this catalogue.
      * Merchant demand uses [Int.MAX_VALUE] to mark unrestricted quantities.
      *
      * [computeExpected] caps these candidates to available payment. Partner stock is checked during negotiation.
@@ -315,23 +320,25 @@ object BotTradeManager {
         if (purpose == BotTradePurpose.SELL || purpose == BotTradePurpose.MERCHANT_SELL) {
             throw IllegalStateException("Must be a valid BUY based purpose.")
         } else if (purpose == BotTradePurpose.MERCHANT_BUY) {
-            // Quote base items once; the trading script normalizes bank notes to these same quotes.
             val candidates = ArrayList<BotTradeItem>()
-            for (definition in ItemDefinition.ALL.filterNotNull()) {
-                val id = definition.id()
+            val useful = BotTradeIntentions.purchases(bot).mapTo(HashSet()) { it.id }
+            val cosmetics = BotEquipmentPreferences.cosmeticIds().asSequence()
+                .filter { ItemDefinition.ALL.get(it).map { definition -> definition.isTradeable && !definition.isNoted }.orElse(false) }
+                .sortedWith(compareByDescending<Int> { BotEquipmentPreferences.prefers(bot, it) }
+                    .thenByDescending { BotTradeSelection.popularity(it) }).take(32).toList()
+            val catalogue = (marketCatalogue() + useful.take(64) + cosmetics + listOf(314, 1511, 436, 526)).distinct()
+            val pricing = BotMerchantValuation.snapshot(bot, includeShops = false)
+            for (id in catalogue) {
+                val definition = ItemDefinition.ALL.get(id).orElse(null) ?: continue
                 if (id == 995 || id == 0 || definition.isNoted || !definition.isTradeable) continue
-                val guide = world.economy.getPrice(id)
-                if (guide <= 0) continue
-                val quote = if (bot.preferences.hasWantedItem(id)) priceStrategy.applyBuy(guide)
-                else guide / 2
+                val quote = pricing.buy(id, BotMerchantValuation.peekGuide(id), id in useful)
                 candidates += BotTradeItem(Item(id, Int.MAX_VALUE), quote.coerceAtLeast(1), purpose, bot)
             }
             return prioritizePurchases(bot, candidates)
         }
 
         // Otherwise, buy any wanted items we need to acquire.
-        bot.preferences.rebalanceWantedItems()
-        val wantedItems = bot.preferences.wantedItemsToAcquire()
+        val wantedItems = BotTradeIntentions.purchases(bot)
         if (wantedItems.isEmpty()) {
             // Bot has nothing they want to buy.
             return listOf()
@@ -342,19 +349,37 @@ object BotTradeManager {
                 if (item.id == 995) {
                     continue
                 }
-                val price = world.economy.prices[item.id]
-                if (price != null) {
+                val price = world.economy.getPrice(item.id)
+                if (price > 0) {
                     val deficit = (item.target.toLong() - bot.totalItemAmount(item.id))
                         .coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
                     if (deficit < 1 || !itemDef(item.id).isTradeable) continue
                     candidates += BotTradeItem(Item(item.id, deficit),
-                                               priceStrategy.applyBuy(price.price.toLong()).coerceAtLeast(1),
+                                               if (BotEquipmentPreferences.isCosmetic(item.id))
+                                                   BotMerchantValuation.cosmeticBuy(bot, item.id, price)
+                                               else priceStrategy.applyBuy(price).coerceAtLeast(1),
                                                purpose,
                                                bot)
                 }
             }
             return prioritizePurchases(bot, candidates)
         }
+    }
+
+    /**
+     * Shares a bounded popular shortlist across bots without creating price records for the item catalogue.
+     * Arbitrary offered items receive lazy quotes in the trading script, independently of this shortlist.
+     */
+    private fun marketCatalogue(): List<Int> {
+        val economy = world.economy
+        val now = System.nanoTime()
+        if (catalogueEconomy !== economy || now - catalogueUpdatedAt >= 30_000_000_000L) {
+            popularCatalogue = economy.prices.values.asSequence().filter { it.price > 0 }
+                .sortedByDescending { it.samples }.take(64).map { it.id }.toList()
+            catalogueEconomy = economy
+            catalogueUpdatedAt = now
+        }
+        return popularCatalogue
     }
 
     /**
@@ -370,24 +395,4 @@ object BotTradeManager {
             .sumOf { it.amount.toLong() }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
     }
 
-    /**
-     * Checks whether a wanted item is excluded from selling for the specified bot.
-     *
-     * Coins and untradeable items are always restricted. Additional checks protect low-stock items,
-     * training consumables for skiller-template bots, and combat consumables for PKer-template bots.
-     * When no skill is associated with the item, it is also restricted while the bot's combat level
-     * is below the specified maximum level.
-     *
-     * @param bot The bot whose stock and personality determine the restriction.
-     * @param item The wanted-item definition to check.
-     * @return `true` if the item must not be included in a sale candidate.
-     */
-    private fun isSellRestricted(bot: Bot, item: WantedItemDefinition): Boolean {
-        return item.id == 995 || !itemDef(item.id).isTradeable ||
-                (item.target == 1 && bot.itemTracker.count(item.id) < 3) ||
-                (item.target > 1 && bot.itemTracker.count(item.id) < item.target * SURPLUS_SELL_RATIO) ||
-                (bot.preferences.isSkiller && item.tags.contains(WantedItemTag.SKILLING_CONSUMABLE)) ||
-                (item.skill == -1 && bot.combatLevel < item.maxLevel) ||
-                (bot.preferences.isPker && item.tags.contains(WantedItemTag.COMBAT_CONSUMABLE))
-    }
 }
