@@ -126,7 +126,7 @@ public final class CombatAction extends Action<Mob> {
                 (mob instanceof Npc npc && !npc.getCombat().isWithinLeash(target))) {
             return clearTarget();
         }
-        if (!mob.getWorld().getCollisionManager().reached(mob.getPosition(), target,
+        if (!mob.getWorld().getCollisionManager().reached(mob, target,
                 attack.getInteractionPolicy())) {
             return false;
         }
@@ -180,7 +180,7 @@ public final class CombatAction extends Action<Mob> {
 
         // Run ongoing combat processing using the current interaction reach result.
         InteractionPolicy policy = attack.getInteractionPolicy();
-        boolean reached = mob.getWorld().getCollisionManager().reached(mob.getPosition(), target, policy);
+        boolean reached = mob.getWorld().getCollisionManager().reached(mob, target, policy);
         if (!combat.onCombatProcess(reached)) {
             return clearTarget();
         }

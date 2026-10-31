@@ -12,6 +12,7 @@ import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.combat.PursuitAction;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for {@link CollisionManager}, run against in-memory matrices instead of a running world.
  *
  * @author hydrozoa
+ * @author lare96
  */
 final class CollisionManagerTest {
 
@@ -144,6 +146,138 @@ final class CollisionManagerTest {
         Npc target = (Npc) mob(EntityType.NPC, 2, new Position[]{new Position(111, 111, 0)});
         assertTrue(manager.reached(botAt(new Position(113, 112, 0)), target, InteractionPolicy.STANDARD_SIZE));
         assertFalse(manager.reached(botAt(new Position(113, 113, 0)), target, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    private static Npc cacheFootprintNpc(int size, Position position) {
+        Npc npc = (Npc) mob(EntityType.NPC, size, new Position[]{position});
+        // Real NPCs expose their cache footprint through size(), while the older dimension accessors return one.
+        Mockito.when(npc.sizeX()).thenReturn(1);
+        Mockito.when(npc.sizeY()).thenReturn(1);
+        return npc;
+    }
+
+    private static Player playerAt(Position position) {
+        return (Player) mob(EntityType.PLAYER, 1, new Position[]{position});
+    }
+
+    @Test
+    void largeMobContactUsesTheWholeCacheFootprintInBothDirections() {
+        Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Position[] perimeter = {
+                new Position(99, 100, 0), new Position(99, 101, 0), new Position(99, 102, 0),
+                new Position(103, 100, 0), new Position(103, 101, 0), new Position(103, 102, 0),
+                new Position(100, 99, 0), new Position(101, 99, 0), new Position(102, 99, 0),
+                new Position(100, 103, 0), new Position(101, 103, 0), new Position(102, 103, 0)
+        };
+        for (Position position : perimeter) {
+            Player player = playerAt(position);
+            assertTrue(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE), position.toString());
+            assertTrue(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE), position.toString());
+            assertTrue(manager.reached(position, npc, InteractionPolicy.STANDARD_SIZE), position.toString());
+        }
+    }
+
+    @Test
+    void largeMobContactRejectsOuterCornersAndOverlappingBodies() {
+        Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Position[] corners = {
+                new Position(99, 99, 0), new Position(99, 103, 0),
+                new Position(103, 99, 0), new Position(103, 103, 0)
+        };
+        for (Position position : corners) {
+            Player player = playerAt(position);
+            assertFalse(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE), position.toString());
+            assertFalse(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE), position.toString());
+        }
+        for (Position position : new Position[]{new Position(100, 100, 0), new Position(101, 101, 0)}) {
+            Player overlapping = playerAt(position);
+            assertFalse(manager.reached(npc, overlapping, InteractionPolicy.STANDARD_SIZE));
+            assertFalse(manager.reached(overlapping, npc, InteractionPolicy.STANDARD_SIZE));
+        }
+        Npc overlapping = cacheFootprintNpc(2, new Position(102, 102, 0));
+        assertFalse(manager.reached(npc, overlapping, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(overlapping, npc, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void largeMobContactReadsTheActualSharedEdgeInsteadOfItsSouthWestAnchor() {
+        Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Player player = playerAt(new Position(103, 101, 0));
+        CollisionUpdate.Builder unrelated = new CollisionUpdate.Builder();
+        unrelated.type(CollisionUpdateType.ADDING);
+        unrelated.wall(new Position(102, 100, 0), false, Direction.EAST);
+        manager.apply(unrelated.build(), false);
+        assertTrue(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE));
+        assertTrue(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE));
+
+        CollisionUpdate.Builder shared = new CollisionUpdate.Builder();
+        shared.type(CollisionUpdateType.ADDING);
+        shared.wall(new Position(102, 101, 0), false, Direction.EAST);
+        manager.apply(shared.build(), false);
+        assertFalse(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void differentlySizedMobsCanUseAnyUnblockedSegmentOfTheirSharedEdge() {
+        Npc first = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Npc second = cacheFootprintNpc(2, new Position(103, 101, 0));
+        CollisionUpdate.Builder firstSegment = new CollisionUpdate.Builder();
+        firstSegment.type(CollisionUpdateType.ADDING);
+        firstSegment.wall(new Position(102, 101, 0), false, Direction.EAST);
+        manager.apply(firstSegment.build(), false);
+        assertTrue(manager.reached(first, second, InteractionPolicy.STANDARD_SIZE));
+        assertTrue(manager.reached(second, first, InteractionPolicy.STANDARD_SIZE));
+
+        CollisionUpdate.Builder finalSegment = new CollisionUpdate.Builder();
+        finalSegment.type(CollisionUpdateType.ADDING);
+        finalSegment.wall(new Position(102, 102, 0), false, Direction.EAST);
+        manager.apply(finalSegment.build(), false);
+        assertFalse(manager.reached(first, second, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(second, first, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void largeMobContactLoadsTheSharedEdgeChunkAcrossBothChunkBoundaries() {
+        Npc npc = cacheFootprintNpc(3, new Position(111, 111, 0));
+        Player player = playerAt(new Position(114, 113, 0));
+        assertTrue(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE));
+        assertTrue(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE));
+        CollisionUpdate.Builder wall = new CollisionUpdate.Builder();
+        wall.type(CollisionUpdateType.ADDING);
+        wall.wall(new Position(113, 113, 0), false, Direction.EAST);
+        manager.apply(wall.build(), false);
+        assertFalse(manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(player, npc, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void aLargeFootprintDoesNotReachAcrossAPlaneOrAnEmptyTileGap() {
+        Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Player upstairs = playerAt(new Position(103, 101, 1));
+        Player distant = playerAt(new Position(104, 101, 0));
+        assertFalse(manager.reached(npc, upstairs, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(upstairs, npc, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(npc, distant, InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(distant, npc, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void oneTileMobsRetainTheirExistingOverlapAndDiagonalReachRules() {
+        Npc npc = cacheFootprintNpc(1, new Position(100, 100, 0));
+        assertTrue(manager.reached(npc, playerAt(new Position(100, 100, 0)), InteractionPolicy.STANDARD_SIZE));
+        assertTrue(manager.reached(npc, playerAt(new Position(101, 100, 0)), InteractionPolicy.STANDARD_SIZE));
+        assertFalse(manager.reached(npc, playerAt(new Position(101, 101, 0)), InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void footprintContactStopsPursuitBeforeSouthWestAnchorDiagonalCorrection() {
+        Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
+        Player player = playerAt(new Position(99, 101, 0));
+        boolean reached = manager.reached(npc, player, InteractionPolicy.STANDARD_SIZE);
+        assertTrue(reached);
+        assertEquals(Direction.NONE, PursuitAction.nextStep(npc.getPosition(), player.getPosition(), 1, reached,
+                direction -> true));
     }
 
     private static void move(CollisionManager manager, Entity entity, Position[] position, Position to) {

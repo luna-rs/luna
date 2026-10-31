@@ -285,10 +285,13 @@ class NpcSafespotMapTest {
     }
 
     @Test
-    fun `shared pursuit preserves close diagonal separation before reached check`() {
+    fun `shared pursuit separates unreachable diagonals and preserves valid footprint contact`() {
         val from = Position(3230, 3290)
         val target = Position(3231, 3291)
-        assertEquals(Direction.NORTH, PursuitAction.nextStep(from, target, 1, true) { true })
+        assertEquals(Direction.NORTH, PursuitAction.nextStep(from, target, 1, false) { true })
+        assertEquals(Direction.NONE, PursuitAction.nextStep(from, target, 1, true) {
+            fail("Valid footprint contact must not queue another pursuit step.")
+        })
         assertEquals(Direction.NONE, PursuitAction.nextStep(from, from, 1, false) {
             fail("Overlapping pursuit belongs to the live random-separation handler.")
         })

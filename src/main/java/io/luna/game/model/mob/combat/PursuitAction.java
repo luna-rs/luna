@@ -119,8 +119,8 @@ public final class PursuitAction extends Action<Npc> {
      * <ul>
      *     <li>Rejects missing or off-plane targets</li>
      *     <li>Tries to separate overlapping entities</li>
-     *     <li>Handles close diagonal adjacency by attempting a component step</li>
      *     <li>Stops if the target is already reachable under the current interaction policy</li>
+     *     <li>Handles unreachable close diagonal adjacency by attempting a component step</li>
      *     <li>Tries diagonal movement first, then x-axis, then y-axis</li>
      * </ul>
      * A return value of {@link Direction#NONE} means that no further step should be taken.
@@ -145,7 +145,7 @@ public final class PursuitAction extends Action<Npc> {
             return Direction.NONE;
         }
 
-        return nextStep(position, targetPosition, policy.getDistance(), collision.reached(position, target, policy),
+        return nextStep(position, targetPosition, policy.getDistance(), collision.reached(mob, target, policy),
                 direction -> collision.traversable(position, EntityType.NPC, direction, mob.size(),
                         mob.getRouteStrategy()));
     }
@@ -166,6 +166,10 @@ public final class PursuitAction extends Action<Npc> {
         if (position.getZ() != targetPosition.getZ() || position.equals(targetPosition)) {
             return Direction.NONE;
         }
+        // Footprint contact may already be valid even when the southwest anchors are diagonally adjacent.
+        if (reached) {
+            return Direction.NONE;
+        }
         Direction nextDirection = Direction.between(position, targetPosition);
 
         // When diagonally adjacent, attempt to step into one of the cardinal components.
@@ -175,11 +179,6 @@ public final class PursuitAction extends Action<Npc> {
                     return dir;
                 }
             }
-            return Direction.NONE;
-        }
-
-        // No movement is needed if the target is already reachable.
-        if (reached) {
             return Direction.NONE;
         }
 

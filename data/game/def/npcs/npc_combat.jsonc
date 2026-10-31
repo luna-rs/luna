@@ -33488,14 +33488,14 @@
     "id": 2783, // Dark Beast
     "respawn_ticks": 9,
     "aggression": {
-      "policy": "COMBAT_LEVEL",
-      "tolerance_minutes": 10
+      "policy": "ALWAYS",
+      "tolerance_minutes": -1
     },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 220,
-    "maximum_hit": 1,
-    "attack_speed": 7,
+    "maximum_hit": 16,
+    "attack_speed": 4,
     "attack_animation": 2731,
     "defence_animation": 2732,
     "death_animation": 2733,

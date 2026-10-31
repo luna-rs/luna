@@ -619,9 +619,7 @@ public final class CollisionManager {
                         // The 377 client retries ground-item routes with a 1-by-1 rectangle, without an object lookup.
                         return matrices.reachedFacingEntity(start, (GroundItem) target, 1, 1, OptionalInt.empty());
                     } else if (target instanceof Mob) {
-                        // Check if we're right beside a mob.
-                        return matrices.reachedFacingEntity(start, (Mob) target,
-                                ((Mob) target).sizeX(), ((Mob) target).sizeY(), OptionalInt.empty());
+                        return reachedMob(source, (Mob) target, matrices);
                     } else if (target instanceof GameObject) {
                         // Check if we're right beside an object.
                         return matrices.reachedObject(start, (GameObject) target);
@@ -637,6 +635,40 @@ public final class CollisionManager {
         logger.warn("This section should not be reached! Invalid config [{}, {}, {}].", policy.getType(),
                 box(policy.getDistance()), target);
         return start.isWithinDistance(target, distance);
+    }
+
+    /**
+     * Tests adjacent mob footprints using their actual square sizes. NPC width/length accessors describe a
+     * point, while {@link Mob#size()} supplies the cache footprint used by movement. Each possible contact reads
+     * its own chunk's collision flags, so a large attacker can reach from any exposed edge without reaching
+     * diagonally or through a wall. Overlapping large bodies must separate before a melee attack can reach.
+     */
+    private boolean reachedMob(Locatable source, Mob target, CollisionMatrix sourceMatrix) {
+        Position start = source.abs();
+        Position end = target.getPosition();
+        int sourceSize = source instanceof Mob ? Math.max(1, ((Mob) source).size()) : 1;
+        int targetSize = Math.max(1, target.size());
+        boolean overlaps = start.getX() < end.getX() + targetSize && start.getX() + sourceSize > end.getX() &&
+                start.getY() < end.getY() + targetSize && start.getY() + sourceSize > end.getY();
+        if (overlaps && (sourceSize > 1 || targetSize > 1)) {
+            return false;
+        }
+        if (sourceSize == 1) {
+            return sourceMatrix.reachedFacingEntity(start, target, targetSize, targetSize, OptionalInt.empty());
+        }
+        for (int x = 0; x < sourceSize; x++) {
+            for (int y = 0; y < sourceSize; y++) {
+                if (x != 0 && y != 0 && x != sourceSize - 1 && y != sourceSize - 1) {
+                    continue;
+                }
+                Position edge = start.translate(x, y);
+                CollisionMatrix matrix = world.getChunks().load(edge.getChunk()).getMatrices()[edge.getZ()];
+                if (matrix.reachedFacingEntity(edge, target, targetSize, targetSize, OptionalInt.empty())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
