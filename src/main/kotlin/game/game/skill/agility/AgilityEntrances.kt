@@ -14,6 +14,11 @@ import io.luna.game.model.mob.Player
 object AgilityEntrances {
 
     /**
+     * The ordinary walk, used through the ridge's door and gate.
+     */
+    private const val WALK_ANIMATION = 819
+
+    /**
      * Only entering the Barbarian course requires level 35; a drained player can still leave.
      */
     fun barbarianPipe(plr: Player): AgilityAction? {
@@ -40,7 +45,7 @@ object AgilityEntrances {
         val middle = Position(2998, if (entering) 3925 else 3924)
         val failed = roll() >= Skills.successRate(200, 250, minOf(plr.agility.level, 99))
         val steps = mutableListOf(
-            AgilityStep(Position(2998, if (entering) 3918 else 3930), 1, jump = true,
+            AgilityStep(Position(2998, if (entering) 3918 else 3930), 2, walkingAnimation = WALK_ANIMATION,
                 sounds = listOf(AgilitySound(Sound.DOOR_OPEN))),
             AgilityStep(middle, if (entering) 7 else 6, walkingAnimation = 762)
         )
@@ -50,7 +55,7 @@ object AgilityEntrances {
             steps += AgilityStep(middle.translate(3, -1), 2, walkingAnimation = 768)
         } else {
             steps += AgilityStep(Position(2998, if (entering) 3931 else 3918), 6, walkingAnimation = 762)
-            steps += AgilityStep(Position(2998, if (entering) 3933 else 3916), 1, jump = true,
+            steps += AgilityStep(Position(2998, if (entering) 3933 else 3916), 2, walkingAnimation = WALK_ANIMATION,
                 sounds = listOf(AgilitySound(Sound.DOOR_OPEN)))
         }
         return AgilityAction(plr, steps, "You try to edge over the ridge...").also {

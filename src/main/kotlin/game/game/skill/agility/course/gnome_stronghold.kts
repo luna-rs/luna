@@ -16,7 +16,7 @@ course(GNOME_STRONGHOLD) {
         climbAction(this, position.translate(0, -2, 1), "You climb the obstacle net.")
     }
     obstacle(2313, GNOME_TREE_BRANCH) {
-        climbAction(this, Position(2473, 3420, 2), "You climb the tree branch.")
+        climbAction(this, Position(2473, 3420, 2), "You climb the tree branch.", ticks = 1)
     }
     obstacle(2312, GNOME_BALANCING_ROPE) {
         movementAction(this, Position(2483, 3420, 2), 762, "You carefully cross the tightrope.",
@@ -35,12 +35,11 @@ course(GNOME_STRONGHOLD) {
             // The pipes cross underground: the west entrance exits at the east pipe and vice versa.
             val exitX = if (x == 2484) 2487 else 2484
             AgilityAction(this, listOf(
-                AgilityStep(Position(x, 3433), 5, animation = 749),
-                AgilityStep(Position(exitX, 3433), 5, animation = 749,
+                AgilityStep(Position(x, 3433), 4, animation = 749),
+                AgilityStep(Position(exitX, 3434), 1, jump = true,
                     sounds = listOf(AgilitySound(Sound.SQUEEZE_IN))),
-                AgilityStep(Position(exitX, 3434), 1, jump = true),
-                AgilityStep(Position(exitX, 3437), 5, animation = 749,
-                    sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 5)))
+                AgilityStep(Position(exitX, 3437), 4, animation = 749,
+                    sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))
             ), "You climb through the obstacle pipe.")
         }
     }
