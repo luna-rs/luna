@@ -13,13 +13,13 @@ import io.luna.net.msg.out.WidgetItemsMessageWriter
  */
 object ArcheryRewards {
     /**
-     * Ticket prices retained from Lost City's ticket merchant script.
+     * Ticket prices from Jagex's Ranging Guild Knowledge Base page of April 2006.
      *
      * @author lare96
      */
     enum class Reward(val item: Int, val amount: Int, val cost: Int) {
         BARBED_TIPS(47, 30, 140), STUDDED_BODY(1129, 1, 150), RUNE_ARROWS(892, 50, 2000),
-        COIF(1169, 1, 100), GREEN_BODY(1135, 1, 2400), ADAMANT_JAVELINS(829, 20, 2000)
+        COIF(1169, 1, 50), GREEN_BODY(1135, 1, 2400), ADAMANT_JAVELINS(829, 20, 2000)
     }
 
     fun open(p: Player, merchant: Npc) {
