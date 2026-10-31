@@ -3,7 +3,8 @@ package game.skill.guide.data
 import game.skill.guide.skillGuide
 
 /**
- * The Fletching guide. The levels match `Bow`, `Arrow`, `Dart`, `BoltTip` and `Bolt`.
+ * The Fletching guide. The levels match `Bow`, `Arrow`, `Dart`, `BoltTip`, `Bolt`, `AcheyProduct`, `BrutalArrow` and
+ * `OgreFletching`.
  */
 val fletchingGuide = skillGuide("Fletching") {
     category("Bows") {
@@ -44,5 +45,18 @@ val fletchingGuide = skillGuide("Fletching") {
         row(34, 46, "Pearl bolttips")
         row(34, 880, "Pearl bolts")
         row(51, 881, "Barbed bolts")
+    }
+    category("Ogre") {
+        row(5, 2864, "Ogre arrow shafts")
+        row(5, 2861, "Wolfbone arrowtips")
+        row(5, 2866, "Ogre arrows")
+        row(7, 4773, "Bronze brutal arrows")
+        row(18, 4778, "Iron brutal arrows")
+        row(30, 4827, "Comp ogre bow")
+        row(33, 4783, "Steel brutal arrows")
+        row(38, 4788, "Black brutal arrows")
+        row(49, 4793, "Mithril brutal arrows")
+        row(62, 4798, "Adamant brutal arrows")
+        row(77, 4803, "Rune brutal arrows")
     }
 }
