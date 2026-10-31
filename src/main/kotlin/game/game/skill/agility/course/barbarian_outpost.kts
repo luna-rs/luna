@@ -12,7 +12,7 @@ course(BARBARIAN_OUTPOST) {
     obstacle(2282, BARBARIAN_ROPESWING) { rope ->
         AgilityAction(this, listOf(AgilityStep(Position(2551, 3549), 3, animation = 751,
             sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
-            "You swing across the pit.", { rope.animate() })
+            "You swing across the pit.", { rope.animate(Agility.ROPE_SWING_ANIMATION) })
     }
     obstacle(2294, BARBARIAN_LOG_BALANCE) {
         movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.",
