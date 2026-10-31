@@ -85,10 +85,11 @@ public class SimpleBoxArea extends Area {
         this.northEastX = northEastX;
         this.northEastY = northEastY;
 
-        northEast = new Position(northEastX, northEastY, plane);
-        northWest = new Position(southWestX, northEastY, plane);
-        southEast = new Position(northEastX, southWestY, plane);
-        southWest = new Position(southWestX, southWestY, plane);
+        int positionPlane = Math.max(0, plane);
+        northEast = new Position(northEastX, northEastY, positionPlane);
+        northWest = new Position(southWestX, northEastY, positionPlane);
+        southEast = new Position(northEastX, southWestY, positionPlane);
+        southWest = new Position(southWestX, southWestY, positionPlane);
 
         touchedRegions = ImmutableSet.of(northEast.getRegionId(), northWest.getRegionId(), southWest.getRegionId(),
                 southEast.getRegionId());
@@ -118,7 +119,7 @@ public class SimpleBoxArea extends Area {
                 position.getX() <= northEastX &&
                 position.getY() >= southWestY &&
                 position.getY() <= northEastY &&
-                position.getZ() == getPlane();
+                (getPlane() == -1 || position.getZ() == getPlane());
     }
 
     @Override
@@ -130,7 +131,7 @@ public class SimpleBoxArea extends Area {
     public Position randomPosition() {
         int randomX = RandomUtils.exclusive(width()) + southWestX;
         int randomY = RandomUtils.exclusive(length()) + southWestY;
-        return new Position(randomX, randomY, getPlane());
+        return new Position(randomX, randomY, Math.max(0, getPlane()));
     }
 
     @Override
@@ -139,7 +140,7 @@ public class SimpleBoxArea extends Area {
 
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
-                list.add(new Position(x, y, getPlane()));
+                list.add(new Position(x, y, Math.max(0, getPlane())));
             }
         }
 
@@ -171,7 +172,7 @@ public class SimpleBoxArea extends Area {
     public Position getCenterPosition() {
         int centerX = southWestX + ((northEastX - southWestX) / 2);
         int centerY = southWestY + ((northEastY - southWestY) / 2);
-        return new Position(centerX, centerY, getPlane());
+        return new Position(centerX, centerY, Math.max(0, getPlane()));
     }
 
     /**

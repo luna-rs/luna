@@ -115,7 +115,7 @@ public class PolygonArea extends Area {
      */
     @Override
     public boolean contains(Position position) {
-        if(position.getZ() != getPlane()) {
+        if (getPlane() != -1 && position.getZ() != getPlane()) {
             return false;
         }
         int x = position.getX();

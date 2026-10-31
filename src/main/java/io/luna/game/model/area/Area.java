@@ -54,7 +54,7 @@ public abstract class Area implements Locatable {
         int normalizedNeY = Math.max(southWestY, northEastY);
 
         SimpleBoxArea box = new SimpleBoxArea(normalizedSwX, normalizedSwY, normalizedNeX, normalizedNeY, plane);
-        box.setAnchorPosition(new Position(normalizedSwX, normalizedSwY, plane));
+        box.setAnchorPosition(new Position(normalizedSwX, normalizedSwY, Math.max(0, plane)));
         return box;
     }
 
@@ -116,7 +116,7 @@ public abstract class Area implements Locatable {
                 center.getX() - radius, center.getY() - radius,
                 center.getX() + radius, center.getY() + radius, plane
         );
-        box.setAnchorPosition(center.setZ(plane));
+        box.setAnchorPosition(center.setZ(Math.max(0, plane)));
         return box;
     }
 
@@ -162,7 +162,7 @@ public abstract class Area implements Locatable {
      */
     public static CircularArea of(Point center, int radius, int plane) {
         CircularArea area = new CircularArea(center.x, center.y, radius, plane);
-        area.setAnchorPosition(new Position(center.x, center.y, plane));
+        area.setAnchorPosition(new Position(center.x, center.y, Math.max(0, plane)));
         return area;
     }
 
@@ -191,17 +191,19 @@ public abstract class Area implements Locatable {
     private Position anchorPosition;
 
     /**
-     * The plane this area is on.
+     * The plane this area is on, or {@code -1} to ignore the plane during containment checks.
      */
     private final int plane;
 
     /**
      * Creates a new {@link Area}.
      *
-     * @param plane The plane this area is on.
+     * Wildcard areas use plane 0 for generated positions and anchors, while containment accepts every plane.
+     *
+     * @param plane The plane this area is on, or {@code -1} for all planes.
      */
     public Area(int plane) {
-        checkArgument(plane >= 0 && plane < 4, "Plane must be between 0-3.");
+        checkArgument(plane >= -1 && plane < 4, "Plane must be -1 or between 0-3.");
         this.plane = plane;
     }
 
@@ -256,6 +258,7 @@ public abstract class Area implements Locatable {
      * Computes every {@link Position} contained within this area.
      * <p>
      * This method does not cache; use {@link #getPositions()} for cached access.
+     * Areas with plane {@code -1} enumerate their X/Y footprint on plane 0.
      *
      * @return An immutable list of positions in this area.
      */
@@ -263,6 +266,7 @@ public abstract class Area implements Locatable {
 
     /**
      * Returns every {@link Position} contained within this area, building and caching the list if needed.
+     * Areas with plane {@code -1} represent their X/Y footprint on plane 0.
      *
      * @return The cached immutable list of positions.
      */
@@ -282,7 +286,7 @@ public abstract class Area implements Locatable {
      */
     public Position getAnchorPosition() {
         if (anchorPosition == null) {
-            anchorPosition = randomPosition().setZ(plane);
+            anchorPosition = randomPosition().setZ(Math.max(0, plane));
         }
         return anchorPosition;
     }
@@ -296,12 +300,12 @@ public abstract class Area implements Locatable {
      */
     public void setAnchorPosition(Position position) {
         if (contains(position)) {
-            anchorPosition = position.setZ(plane);
+            anchorPosition = position.setZ(Math.max(0, plane));
         }
     }
 
     /**
-     * @return The plane this area is on.
+     * @return The plane this area is on, or {@code -1} when containment ignores the plane.
      */
     public int getPlane() {
         return plane;

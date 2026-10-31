@@ -271,7 +271,7 @@ object MultiCombatAreaListener : PlayerAreaListener() {
 private class PlaneArea(private val area: Area, private val planes: Set<Int>) : Locatable {
 
     override fun contains(position: Position) = position.z in planes &&
-        area.contains(Position(position.x, position.y, area.plane))
+        area.contains(Position(position.x, position.y, maxOf(0, area.plane)))
 
     override fun abs(): Position = area.abs()
 

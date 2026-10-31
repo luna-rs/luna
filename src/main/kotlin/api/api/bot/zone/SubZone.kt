@@ -29,7 +29,6 @@ import io.luna.game.model.mob.bot.Bot
  * - [inside], the preferred local anchor used after the bot is inside or near the subzone.
  * - [entrance], an optional dynamic external anchor for entrances, ladders, gates, portals, levers, or boats.
  * - [area], the rectangular tile bounds used for containment checks and region indexing.
- * - [additionalAreas], extra floors or recovery areas that belong to the same activity.
  * - [parent], the dynamic broader travel zone used for routing and fallback behavior.
  * - [bankZone], the zone whose banks bots use, which is [parent] unless a nearer bank lies in another zone.
  *
@@ -40,8 +39,7 @@ enum class SubZone(
     val entrance: Bot.() -> Position? = { null },
     val area: SimpleBoxArea,
     val parent: Bot.() -> Zone,
-    val bankZone: Bot.() -> Zone = parent,
-    private val additionalAreas: List<SimpleBoxArea> = emptyList()) {
+    val bankZone: Bot.() -> Zone = parent) {
     /**
      * Mainland bush patches from the revision 377 maps. Rimmington uses Falador's existing travel and bank parent.
      */
@@ -313,8 +311,7 @@ enum class SubZone(
      */
     GNOME_STRONGHOLD_AGILITY(
         inside = Position(2474, 3437),
-        area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29),
-        additionalAreas = (1..2).map { SimpleBoxArea.ofRadius(2467, 3413, 25, 29, it) },
+        area = SimpleBoxArea.ofRadius(2467, 3413, 25, 29, -1),
         parent = { GNOME_STRONGHOLD }),
 
     /**
@@ -332,9 +329,7 @@ enum class SubZone(
     BARBARIAN_OUTPOST_AGILITY(
         inside = Position(2551, 3554),
         entrance = { Position(2552, 3561) },
-        area = SimpleBoxArea.of(2530, 3540, 2555, 3558),
-        additionalAreas = listOf(SimpleBoxArea.of(2530, 3540, 2555, 3558, 1),
-            SimpleBoxArea.of(2535, 9940, 2555, 9955)),
+        area = SimpleBoxArea.of(2530, 3540, 2555, 3558, -1),
         parent = { SEERS_VILLAGE }),
 
     /**
@@ -344,7 +339,6 @@ enum class SubZone(
         inside = Position(2998, 3933),
         entrance = { Position(2998, 3916) },
         area = SimpleBoxArea.of(2990, 3933, 3008, 3968),
-        additionalAreas = listOf(SimpleBoxArea.of(2990, 10340, 3010, 10368)),
         parent = { WILDERNESS }),
 
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
@@ -1543,10 +1537,8 @@ enum class SubZone(
             val map = HashMultimap.create<Int, SubZone>()
 
             for (zone in entries) {
-                for (area in listOf(zone.area) + zone.additionalAreas) {
-                    for (region in area.touchedRegions) {
-                        map.put(region, zone)
-                    }
+                for (region in zone.area.touchedRegions) {
+                    map.put(region, zone)
                 }
             }
 
@@ -1569,7 +1561,7 @@ enum class SubZone(
         /**
          * Updates the bot's current subzones from its cached local subzones.
          *
-         * [Bot.subZones] contains every cached local subzone whose activity areas contain the bot.
+         * [Bot.subZones] contains every cached local subzone whose [SubZone.area] contains the bot.
          * The set is empty when no local subzone contains the bot.
          *
          * @param bot The bot whose current subzone is being updated.
@@ -1579,20 +1571,13 @@ enum class SubZone(
             bot.subZones.clear()
             if (bot.localSubZones.isNotEmpty()) {
                 for (zone in bot.localSubZones) {
-                    if (zone.contains(bot.position)) {
+                    if (zone.area.contains(bot.position)) {
                         bot.subZones.add(zone)
                     }
                 }
             }
         }
     }
-
-    /**
-     * Checks the main activity footprint and its supported extra floors or recovery areas.
-     * Each area retains its own bounds and plane.
-     */
-    fun contains(position: Position): Boolean =
-        area.contains(position) || additionalAreas.any { it.contains(position) }
 
     /**
      * Checks whether a [Bot] is inside this activity or close to its local or external anchor.
@@ -1602,7 +1587,7 @@ enum class SubZone(
      * @return `true` if [bot] is inside this activity or within [distance] of [inside] or [entrance].
      */
     fun isWithinDistance(bot: Bot, distance: Int): Boolean {
-        if (contains(bot.position) || this in bot.subZones || inside.isWithinDistance(bot, distance)) {
+        if (area.contains(bot.position) || this in bot.subZones || inside.isWithinDistance(bot, distance)) {
             return true
         }
         val outsidePosition = entrance(bot)

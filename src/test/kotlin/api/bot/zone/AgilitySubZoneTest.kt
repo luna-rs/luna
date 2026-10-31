@@ -10,7 +10,7 @@ import org.mockito.Mockito.*
 import java.util.EnumSet
 
 /**
- * Keeps native Agility floors and failure pits inside their course without widening ordinary subzones.
+ * Keeps Agility bots on their multi-plane courses without widening floor-specific subzones.
  *
  * @author lare96
  */
@@ -39,100 +39,83 @@ class AgilitySubZoneTest {
         SubZone.updateSubZone(it)
     }
 
-    @Test fun nativeCourseFloorsRetainTheirMembership() {
-        val positions = listOf(
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2474, 3437),
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2473, 3423, 1),
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2477, 3420, 2),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2551, 3549),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2537, 3546, 1),
-            SubZone.WILDERNESS_AGILITY to Position(3004, 3950)
-        )
-        for ((zone, position) in positions) {
-            val bot = locate(position)
-            assertTrue(zone in bot.localSubZones, "$zone must be indexed at $position")
-            assertTrue(zone in bot.subZones, "$zone must contain $position")
+    @Test fun multiPlaneCoursesRetainMembershipOnEveryPlane() {
+        for (zone in listOf(SubZone.GNOME_STRONGHOLD_AGILITY, SubZone.BARBARIAN_OUTPOST_AGILITY)) {
+            for (plane in 0..3) {
+                val position = zone.inside.setZ(plane)
+                val bot = locate(position)
+                assertTrue(zone.area.contains(position), "$zone must contain $position")
+                assertTrue(zone in bot.localSubZones, "$zone must be indexed at $position")
+                assertTrue(zone in bot.subZones, "$zone must retain membership at $position")
+            }
         }
     }
 
-    @Test fun courseMembershipRejectsUnsupportedFloorsAndDistantTiles() {
+    @Test fun courseMembershipRejectsDistantTilesOnEveryPlane() {
         val positions = listOf(
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2477, 3420, 3),
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2556, 3420, 2),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2537, 3546, 2),
-            SubZone.WILDERNESS_AGILITY to Position(3004, 3950, 1)
+            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2556, 3420),
+            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2630, 3546)
         )
         for ((zone, position) in positions) {
-            val bot = locate(position)
-            assertFalse(zone in bot.subZones, "$zone must exclude $position")
-            assertFalse(zone.isWithinDistance(bot, 64), "$position must require course travel")
+            for (plane in 0..3) {
+                val outside = position.setZ(plane)
+                val bot = locate(outside)
+                assertFalse(zone.area.contains(outside), "$zone must exclude $outside")
+                assertFalse(zone in bot.subZones, "$zone must exclude $outside")
+                assertFalse(zone.isWithinDistance(bot, 64), "$outside must require course travel")
+            }
         }
     }
 
-    @Test fun upperCourseFloorsAreNearbyBeforeTheMembershipCacheRefreshes() {
+    @Test fun courseFloorsAreNearbyBeforeTheMembershipCacheRefreshes() {
         val positions = listOf(
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2473, 3423, 1),
-            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2477, 3420, 2),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2537, 3546, 1)
+            SubZone.GNOME_STRONGHOLD_AGILITY to Position(2477, 3420),
+            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2537, 3546)
         )
         for ((zone, position) in positions) {
-            val bot = bot(position)
-            assertTrue(bot.subZones.isEmpty())
-            assertTrue(zone.isWithinDistance(bot, 64), "$position is already on $zone")
+            for (plane in 0..3) {
+                val onCourse = position.setZ(plane)
+                val bot = bot(onCourse)
+                assertTrue(bot.subZones.isEmpty())
+                assertTrue(zone.isWithinDistance(bot, 64), "$onCourse is already on $zone")
+            }
         }
     }
 
-    @Test fun courseSearchAreasAndTravelAnchorsStayOnTheSurface() {
-        for (zone in listOf(SubZone.GNOME_STRONGHOLD_AGILITY,
-                            SubZone.BARBARIAN_OUTPOST_AGILITY, SubZone.WILDERNESS_AGILITY)) {
+    @Test fun multiPlaneCourseGeometryKeepsConcreteTravelCoordinates() {
+        for (zone in listOf(SubZone.GNOME_STRONGHOLD_AGILITY, SubZone.BARBARIAN_OUTPOST_AGILITY)) {
             assertEquals(0, zone.inside.z)
-            assertEquals(0, zone.area.plane)
+            assertEquals(-1, zone.area.plane)
+            assertEquals(0, zone.area.anchorPosition.z)
+            assertEquals(0, zone.area.centerPosition.z)
+            for (corner in listOf(zone.area.southWest, zone.area.southEast,
+                                  zone.area.northWest, zone.area.northEast)) {
+                assertEquals(0, corner.z)
+            }
             assertTrue(zone.area.contains(zone.inside))
-            assertFalse(zone.area.contains(zone.inside.setZ(1)))
             assertTrue(zone.area.tileRadius < 64)
         }
     }
 
-    @Test fun nativeFailureLandingsAndPitLaddersRemainIndexedInTheirCourses() {
-        val positions = listOf(
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2551, 9948),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2547, 9951),
-            SubZone.WILDERNESS_AGILITY to Position(3004, 10357),
-            SubZone.WILDERNESS_AGILITY to Position(2998, 10345),
-            SubZone.WILDERNESS_AGILITY to Position(3005, 10363)
-        )
-        for ((zone, position) in positions) {
+    @Test fun theSurfaceOnlyWildernessCourseKeepsItsFloorRestriction() {
+        val zone = SubZone.WILDERNESS_AGILITY
+        assertEquals(0, zone.area.plane)
+        for (plane in 0..3) {
+            val position = Position(3004, 3950, plane)
             val bot = locate(position)
-            assertTrue(zone in bot.localSubZones, "$zone must be indexed in its pit region")
-            assertTrue(zone in bot.subZones, "$zone must contain its native pit tile $position")
-            assertTrue(zone.isWithinDistance(bot, 64), "Pit recovery must precede course travel")
-        }
-    }
-
-    @Test fun pitsExcludeOtherFloorsAndTilesBeyondTheirBounds() {
-        val positions = listOf(
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2547, 9951, 1),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2556, 9951),
-            SubZone.BARBARIAN_OUTPOST_AGILITY to Position(2547, 9956),
-            SubZone.WILDERNESS_AGILITY to Position(3005, 10363, 1),
-            SubZone.WILDERNESS_AGILITY to Position(3011, 10363),
-            SubZone.WILDERNESS_AGILITY to Position(3005, 10369)
-        )
-        for ((zone, position) in positions) {
-            val bot = locate(position)
-            assertFalse(zone in bot.subZones, "$zone must exclude $position")
-            assertFalse(zone.isWithinDistance(bot, 64))
+            assertEquals(plane == 0, zone.area.contains(position))
+            assertEquals(plane == 0, zone in bot.subZones)
+            assertEquals(plane == 0, zone.isWithinDistance(bot, 64))
         }
     }
 
     @Test fun unrelatedSubzonesStillRequireTheirOwnFloor() {
         val zone = SubZone.SLAYER_TOWER_FIRST_FLOOR
-        val firstFloor = locate(Position(3434, 3563, 1))
-        assertTrue(zone in firstFloor.subZones)
-        assertTrue(zone.isWithinDistance(firstFloor, 64))
-        val secondFloor = locate(Position(3434, 3563, 2))
-        assertFalse(zone in secondFloor.subZones)
-        assertFalse(zone.isWithinDistance(secondFloor, 64))
-        assertTrue(SubZone.SLAYER_TOWER_SECOND_FLOOR in secondFloor.subZones)
+        for (plane in 0..3) {
+            val bot = locate(Position(3434, 3563, plane))
+            assertEquals(plane == 1, zone in bot.subZones)
+            assertEquals(plane == 1, zone.isWithinDistance(bot, 64))
+            assertEquals(plane == 2, SubZone.SLAYER_TOWER_SECOND_FLOOR in bot.subZones)
+        }
     }
 }

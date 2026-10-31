@@ -133,7 +133,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             step = recoveredStep
             recovering = true
             landing = null
-        } else if (!recovering && landing == null && !course.zone.contains(bot.position) && bot.position.z == 0) {
+        } else if (!recovering && landing == null && bot.position !in course.zone.area && bot.position.z == 0) {
             step = 0
         }
         // A saved movement index is not proof of successful native obstacles, especially after a fall.
@@ -145,7 +145,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     override suspend fun onBankRequested(initial: Boolean) =
         initial && course != AgilityBotCourse.GNOME_STRONGHOLD && !recovering &&
-            bot.position.z == 0 && !course.zone.contains(bot.position) && !handler.inventory.hasAnyFood()
+            bot.position.z == 0 && bot.position !in course.zone.area && !handler.inventory.hasAnyFood()
 
     override suspend fun onBankOpen(initial: Boolean) {
         if (!handler.banking.withdrawAnyFood(8)) {
@@ -187,7 +187,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         if (bot.position.z != next.plane) return failedAttempt()
         val obj = world.locator.findObjects(course.zone.area.centerPosition.setZ(next.plane), course.zone.area.tileRadius) {
             it.state == EntityState.ACTIVE && it.id in next.objectIds &&
-                it.position.z == next.plane && course.zone.contains(it.position) && next.matches(it)
+                it.position.z == next.plane && it.position in course.zone.area && next.matches(it)
         }.minByOrNull { it.position.computeLongestDistance(bot.position) } ?: return failedAttempt()
         val entry = next.approach(obj)
         if (entry != null && !walkTo(entry)) return failedAttempt()

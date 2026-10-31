@@ -40,7 +40,7 @@ public final class CircularArea extends Area {
             throw new IllegalArgumentException("Circular radius cannot be less than 1");
         }
         this.radius = radius;
-        this.center = new Position(centerX, centerY, plane);
+        this.center = new Position(centerX, centerY, Math.max(0, plane));
 
         // Anchor defaults to the center for circles.
         setAnchorPosition(center);
@@ -55,7 +55,7 @@ public final class CircularArea extends Area {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(center, radius);
+        return Objects.hashCode(center, radius, getPlane());
     }
 
     /**
@@ -66,6 +66,9 @@ public final class CircularArea extends Area {
      */
     @Override
     public boolean contains(Position position) {
+        if (getPlane() == -1) {
+            position = position.setZ(0);
+        }
         if(!center.isWithinDistance(position, radius)) {
             return false;
         }
@@ -103,7 +106,7 @@ public final class CircularArea extends Area {
                 int dx = x - cx;
                 int dy = y - cy;
                 if (dx * dx + dy * dy <= radiusSquared) {
-                    set.add(new Position(x, y, getPlane()));
+                    set.add(new Position(x, y, Math.max(0, getPlane())));
                 }
             }
         }

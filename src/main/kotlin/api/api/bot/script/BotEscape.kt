@@ -43,7 +43,7 @@ class BotEscape(val position: Position, val attacker: String, val time: Long, va
     fun avoids(zone: SubZone, now: Long = System.currentTimeMillis()): Boolean {
         if (!isRecent(now)) return false
         if (zone == this.zone) return true
-        if (zone.area.plane != position.z) return false
+        if (zone.area.plane != -1 && zone.area.plane != position.z) return false
         val southWest = zone.area.southWest
         val northEast = zone.area.northEast
         val dx = maxOf(southWest.x - position.x, 0, position.x - northEast.x)
