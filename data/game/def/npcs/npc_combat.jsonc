@@ -24227,12 +24227,29 @@
     ]
   },
   {
+    "id": 1826, // Hole in the wall: same hidden health resource as its active form.
+    "respawn_ticks": 9,
+    "aggression": null,
+    "movement": { "max_range": 0, "attack_range": 0, "retreat_hitpoints": -1 },
+    "poisonous": false,
+    "immune_poison": true,
+    "hitpoints": 105,
+    "maximum_hit": 0,
+    "attack_speed": 4,
+    "attack_animation": -1,
+    "defence_animation": -1,
+    "death_animation": -1,
+    "attack_bonus": 0,
+    "magic_bonus": 0,
+    "ranged_bonus": 0,
+    "skills": [30, 30, 16, 1, 1],
+    "bonuses": [0, 0, 0, 0, 0, 0]
+  },
+  {
     "id": 1827, // Wall Beast
     "respawn_ticks": 9,
-    "aggression": {
-      "policy": "ALWAYS",
-      "tolerance_minutes": -1
-    },
+    "aggression": null,
+    "movement": { "max_range": 0, "attack_range": 0, "retreat_hitpoints": -1 },
     "poisonous": false,
     "immune_poison": true,
     "hitpoints": 105,

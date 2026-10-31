@@ -106313,14 +106313,12 @@
   // Hole in the wall (id 1826)
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3161,
       "y": 9547,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Cave Slime (id 1831)
@@ -106339,14 +106337,12 @@
   // Hole in the wall (id 1826)
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3162,
       "y": 9574,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Cave bug larva (id 1833)
@@ -106378,14 +106374,12 @@
   // Hole in the wall (id 1826)
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3164,
       "y": 9556,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Cave Slime (id 1831)
@@ -106821,26 +106815,22 @@
   // Hole in the wall (id 1826) x2
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3198,
       "y": 9554,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3198,
       "y": 9572,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // H.A.M. Member (id 1714)
@@ -114164,26 +114154,22 @@
   // Hole in the wall (id 1826) x2
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3215,
       "y": 9560,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   {
     "id": 1826,
+    "respawn_ticks": 9,
+    "default_direction": "SOUTH",
     "position": {
       "x": 3216,
       "y": 9588,
       "z": 0
-    },
-    "wander": {
-      "radius": 5,
-      "frequency": "NORMAL"
     }
   },
   // Cave Bug (id 1832)
