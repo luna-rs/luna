@@ -12,6 +12,11 @@ import io.luna.game.model.mob.Player
 object Agility {
 
     /**
+     * The rope's swing animation. The 377 ropeswing objects have no animation of their own.
+     */
+    const val ROPE_SWING_ANIMATION = 497
+
+    /**
      * Each course keeps its own last completed checkpoint.
      */
     val Player.courseProgress by Attr.obj { mutableMapOf<AgilityCourse, Int>() }

@@ -10,17 +10,22 @@ import io.luna.game.model.Position
 
 course(BARBARIAN_OUTPOST) {
     obstacle(2282, BARBARIAN_ROPESWING) { rope ->
-        AgilityAction(this, listOf(AgilityStep(Position(2551, 3549), 3, animation = 751,
-            sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
-            "You swing across the pit.", { rope.animate() })
+        // The player stands on the start tile for two ticks before taking the rope.
+        AgilityAction(this, listOf(
+            AgilityStep(position, 2, jump = true),
+            AgilityStep(Position(2551, 3549), 2, animation = 751, message = "You skillfully swing across.",
+                moveStart = 20, moveEnd = 50, sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)),
+                begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })
+        ), null)
     }
     obstacle(2294, BARBARIAN_LOG_BALANCE) {
-        movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.",
+        movementAction(this, Position(2541, 3546), 762, "You walk carefully across the slippery log...",
             listOf(AgilitySound(Sound.LOG_BALANCE, tick = 2, loops = 4),
-                AgilitySound(Sound.LOG_BALANCE, tick = 6, loops = 2)))
+                AgilitySound(Sound.LOG_BALANCE, tick = 6, loops = 2)),
+            endMessage = "...You make it safely to the other side.")
     }
     obstacle(2284, BARBARIAN_OBSTACLE_NET) {
-        climbAction(this, Position(2537, 3546, 1), "You climb the obstacle net.")
+        climbAction(this, Position(2537, 3546, 1), "You climb the netting...")
     }
     obstacle(2302, BARBARIAN_BALANCING_LEDGE) {
         AgilityAction(this, listOf(
@@ -29,10 +34,10 @@ course(BARBARIAN_OUTPOST) {
                     AgilitySound(Sound.BALANCING_LEDGE, tick = 2))),
             AgilityStep(Position(2532, 3546, 1), 1, jump = true,
                 sounds = listOf(AgilitySound(Sound.BALANCING_LEDGE, tick = 1)))
-        ), "You walk across the balancing ledge.")
+        ), "You put your foot on the ledge and try to edge across.", endMessage = "You skillfully edge across the gap.")
     }
     obstacle(3205, BARBARIAN_LADDER) {
-        climbAction(this, Position(2532, 3546), "You climb down the ladder.")
+        climbAction(this, Position(2532, 3546), null)
     }
     obstacle(1747, BARBARIAN_LADDER) {
         climbAction(this, Position(2532, 3546, 1), "You climb up the ladder.")
@@ -40,7 +45,7 @@ course(BARBARIAN_OUTPOST) {
     obstacle(1948, BARBARIAN_CRUMBLING_WALL, checkpoint = { it.position == Position(2542, 3553) }) { wall ->
         AgilityAction(this, listOf(AgilityStep(wall.position.translate(1, 0), 3, animation = 840,
             sounds = listOf(AgilitySound(Sound.CLIMB_WALL, delayCycles = 40)))),
-            "You climb over the wall.")
+            "You climb the low wall...")
     }
 }
 
