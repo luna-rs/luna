@@ -107,7 +107,7 @@ object BotMerchantValuation {
     }
 
     /**
-     * Quotes every tradeable item, applying severe discounts to unwanted stock and extra temptation to cosmetics.
+     * Quotes every tradeable item, protecting useful stock and cosmetics from resale discounts.
      */
     fun buy(bot: Bot, id: Int, guide: Long, useful: Boolean = false): Long = snapshot(bot).buy(id, guide, useful)
 
@@ -125,7 +125,8 @@ object BotMerchantValuation {
     fun sell(bot: Bot, id: Int, guide: Long, strategy: BotTradePrice): Long = snapshot(bot).sell(id, guide, strategy)
 
     /**
-     * Computes an explicit quote from a captured emotional state and random sample.
+     * Computes an explicit quote from a captured emotional state and random sample. Useful items and cosmetics
+     * retain at least their reference value, while personal temptation can still raise the bid above it.
      */
     internal fun bid(reference: Long, intelligence: Double, greedy: Boolean, cosmetic: Boolean,
                      liked: Boolean, preferred: Boolean, useful: Boolean, sample: Double): Long {
@@ -141,7 +142,7 @@ object BotMerchantValuation {
             else -> (0.20 + roll * 0.30 - judgment * 0.10 - if (greedy) 0.05 else 0.0)
                 .coerceIn(0.10, 0.50)
         }
-        return scaled(reference, fraction)
+        return scaled(reference, if (cosmetic || useful) fraction.coerceAtLeast(1.0) else fraction)
     }
 
     /**

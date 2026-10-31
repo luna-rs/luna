@@ -6,9 +6,7 @@ import api.bot.action.trading.BotTradeManager.tradeRequests
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript
 import api.bot.social.BotConversations
-import api.bot.social.BotTradeScams
 import api.bot.social.BotSocialInteractions
-import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import api.predef.ext.*
@@ -65,7 +63,7 @@ class TradeBotScript(bot: Bot,
                      zone: MutableList<SubZone> = mutableListOf(marketplace.activityZone),
                      private val purchaseTarget: Item? = null,
                      private val purchasePrice: Long = 0) :
-    ZonedBotScript(bot, duration, zone), SocialBotScript {
+    ZonedBotScript(bot, duration, zone) {
 
     companion object {
 
@@ -152,11 +150,6 @@ class TradeBotScript(bot: Bot,
     private var negotiating = false
 
     /**
-     * A completed trust trade invalidates carried quantities once its optional aftermath dialogue has finished.
-     */
-    private var socialStockChanged = false
-
-    /**
      * Advertisements keep their wording and formatting until the advertised item or its price changes.
      */
     private val autotyper = BotTradeAutotyper()
@@ -202,6 +195,8 @@ class TradeBotScript(bot: Bot,
         get() = purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.MERCHANT_BUY
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        BotSocialInteractions.cancel(bot)
+        BotConversations.cancel(bot)
         prepared = false
         if (marketplace.reserveTradingSpot(this) == null) {
             capacityBlocked = true
@@ -293,19 +288,11 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun executeInZone(): Boolean {
-        BotConversations.tick(bot)
-        if (BotConversations.engaged(bot)) return true
-        if (socialStockChanged) {
-            socialStockChanged = false
-            prepared = false
-            forceBanking = true
-            return true
-        }
         if (!prepared) {
             forceBanking = true
             return true
         }
-        val incoming = bot.tradeRequests.pollRequests { canTradeWith(it) }
+        val incoming = bot.tradeRequests.pollRequests { canAcceptRequest(it) }
         if (incoming != null) {
             attemptTrade(incoming)
         } else if (!searchTimer.isRunning || searchTimer.elapsed().seconds >= 8) {
@@ -314,7 +301,12 @@ class TradeBotScript(bot: Bot,
             val other = world.locator.findPlayers(bot, Position.VIEWING_DISTANCE * 2) {
                 it is Bot && bot.isViewableFrom(it) && canTradeWith(it)
             }.shuffled().firstOrNull()
-            if (other != null) attemptTrade(other)
+            if (other != null) {
+                attemptTrade(other)
+                if (prepared && !forceBanking && hasHumanRequest()) {
+                    bot.tradeRequests.pollRequests { canAcceptRequest(it) }?.let { attemptTrade(it) }
+                }
+            }
         }
         if (prepared && !forceBanking) sendMessage()
         return true
@@ -330,8 +322,6 @@ class TradeBotScript(bot: Bot,
         }
         return bot.position == tile || handler.webWalkTo(tile) && bot.position == tile
     }
-
-    override suspend fun beforeZoneWork(): Boolean = purchaseTarget == null && BotSocialInteractions.participate(bot)
 
     override fun snapshot(): BotScriptData? = null
 
@@ -389,7 +379,6 @@ class TradeBotScript(bot: Bot,
      */
     private fun availableAtMarket(other: TradeBotScript): Boolean =
         other.bot !== bot && other.bot.state == EntityState.ACTIVE && other.prepared &&
-            !BotSocialInteractions.engaged(other.bot) && !BotConversations.engaged(other.bot) &&
             buying != other.buying && marketplace.contains(other.bot.position) &&
             !checkBlacklisted(other.bot.username) && !other.checkBlacklisted(bot.username) &&
             other.bot.tradingWith == -1 && !other.bot.overlays.hasWindow()
@@ -495,11 +484,16 @@ class TradeBotScript(bot: Bot,
     private suspend fun attemptTrade(other: Player) {
         negotiating = true
         var success = false
+        var yieldedToPlayer = false
         try {
             val existing = bot.overlays[OfferTradeInterface::class]
             val offer = if (existing?.other === other) {
                 BotTradeOfferStage(bot, other, BotTradeRequestStage(bot, other))
-            } else BotTradeRequestStage(bot, other).sendAndAwait() ?: return
+            } else BotTradeRequestStage(bot, other).sendAndAwait {
+                val proceed = other !is Bot || !hasHumanRequest()
+                if (!proceed) yieldedToPlayer = true
+                proceed
+            } ?: return
             activeTrade = offer
             success = negotiate(offer, other)
             if (success) {
@@ -512,7 +506,9 @@ class TradeBotScript(bot: Bot,
             if (!success) {
                 // Requests can open a screen just before cancellation resumes the coroutine.
                 BotTradeStage(bot, other).decline()
-                addBlacklisted(other.username, 5.minutes)
+                if (!yieldedToPlayer) {
+                    addBlacklisted(other.username, if (other is Bot) 5.minutes else 5.seconds)
+                }
             }
             activeTrade = null
             if (bot.tradingWith == other.index) bot.tradingWith = -1
@@ -764,25 +760,28 @@ class TradeBotScript(bot: Bot,
 
     /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
     private fun canTradeWith(other: Player): Boolean {
-        if (BotSocialInteractions.engaged(bot) || other is Bot && BotSocialInteractions.engaged(other)) return false
-        if (BotConversations.engaged(bot) || other is Bot && BotConversations.engaged(other)) return false
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
         if (other !is Bot) return true
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
+        if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
         return prepared && script.prepared && botExchange(script) != null
     }
 
+    /**
+     * Accepts only requests still addressed to this bot, including a reciprocal request that just opened a trade.
+     */
+    private fun canAcceptRequest(other: Player): Boolean = canTradeWith(other) &&
+        (other.tradingWith == bot.index || other.overlays[OfferTradeInterface::class]?.other === bot)
+
+    /**
+     * Lets a waiting bot request yield to a live player request without consuming that player's place in the queue.
+     */
+    private fun hasHumanRequest(): Boolean = bot.tradeRequests.hasRequest { it !is Bot && canAcceptRequest(it) }
+
     /** Exposes the selected scrutiny policy for future personality-specific negotiation behavior. */
     fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
-
-    override fun canSocialize(): Boolean = purchaseTarget == null && prepared && !forceBanking && !negotiating && activeTrade == null &&
-        duration > Duration.ZERO && marketplace.contains(bot.position)
-
-    override fun socialTradeCompleted() {
-        socialStockChanged = true
-    }
 
     override fun onPaused() {
         prepared = false

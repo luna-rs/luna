@@ -28,12 +28,13 @@ class BotTradingActionHandler(private val bot: Bot, private val handler: BotActi
      * Native controller and trade-request validation still decide whether the request opens a trade screen.
      *
      * @param plr The player to trade with.
+     * @param canContinue Whether this unanswered approach should continue before the trade screen opens.
      * @return `true` if the interaction handler confirms reach after submitting the click; `false` if permission is
      * absent or lost, or interaction fails. A successful result does not confirm that a trade interface opened.
      */
-    suspend fun sendTradeRequest(plr: Player): Boolean {
+    suspend fun sendTradeRequest(plr: Player, canContinue: () -> Boolean = { true }): Boolean {
         return handler.interactions.interact(TRADE.index, plr) {
-            TRADE in bot.contextMenu
+            TRADE in bot.contextMenu && canContinue()
         }
     }
 

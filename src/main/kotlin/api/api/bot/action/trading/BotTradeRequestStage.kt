@@ -31,20 +31,20 @@ class BotTradeRequestStage(
      * trading helper checks this bot's Trade option during approach and before the click. Reach or click submission
      * alone does not advance the stage; the matching offer interface must appear within the request timeout.
      *
+     * @param canContinue Whether to continue this unanswered request. An existing matching trade takes precedence.
      * @return The next [BotTradeOfferStage] if the request was sent and the trade interface opened within the
      * timeout, otherwise `null`.
      */
-    suspend fun sendAndAwait(): BotTradeOfferStage? {
-        val existing = bot.overlays[OfferTradeInterface::class]
-        if (existing?.other === other) return BotTradeOfferStage(bot, other, this)
-        return if (bot.actionHandler.trading.sendTradeRequest(other)) {
-            if (waitFor(REQUEST_WAIT_SECONDS.seconds) {
-                    bot.overlays[OfferTradeInterface::class]?.other === other
-                })
-                BotTradeOfferStage(bot, other, this)
-            else null
-        } else {
-            null
+    suspend fun sendAndAwait(canContinue: () -> Boolean = { true }): BotTradeOfferStage? {
+        fun opened() = bot.overlays[OfferTradeInterface::class]?.other === other
+        if (opened()) return BotTradeOfferStage(bot, other, this)
+        if (!canContinue()) return null
+        val sent = bot.actionHandler.trading.sendTradeRequest(other) { opened() || canContinue() }
+        if (opened()) return BotTradeOfferStage(bot, other, this)
+        if (!sent || !canContinue()) return null
+        waitFor(REQUEST_WAIT_SECONDS.seconds) {
+            opened() || !canContinue()
         }
+        return if (opened()) BotTradeOfferStage(bot, other, this) else null
     }
 }
