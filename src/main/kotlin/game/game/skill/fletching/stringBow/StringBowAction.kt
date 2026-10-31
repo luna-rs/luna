@@ -5,24 +5,15 @@ import game.player.Sound
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 
 /**
- * An [InventoryAction] implementation that strings bows.
+ * An [InventoryAction] implementation that strings bows. Stringing has no animation.
  *
  * @author lare96
  */
 class StringBowAction(plr: Player,
                       val bow: Bow,
                       count: Int) : InventoryAction(plr, true, 2, count) {
-
-    companion object {
-
-        /**
-         * The stringing animation.
-         */
-        val ANIMATION = Animation(713)
-    }
 
     override fun add() = listOf(bow.strungItem)
     override fun remove() = listOf(bow.unstrungItem, Item(Bow.BOW_STRING))
@@ -40,7 +31,6 @@ class StringBowAction(plr: Player,
     override fun execute() {
         mob.playSound(Sound.STRING_BOW)
         mob.sendMessage("You add a string to the bow.")
-        mob.animation(ANIMATION)
         mob.fletching.addExperience(bow.stringExp)
     }
 }
