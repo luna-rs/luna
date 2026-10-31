@@ -403,8 +403,8 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
                 break
             }
 
-            // The 317/377 shop interface gives us Buy 1, Buy 5, and Buy 10. Use the largest supported click whose
-            // current dynamic price stays inside the remaining budget.
+            // Use the largest supported click that fits the remaining target and stock and whose current dynamic
+            // price stays inside the remaining budget.
             val amount = purchaseAmount(
                 shop = shop,
                 id = id,
@@ -416,6 +416,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
             val itemsBefore = bot.inventory.computeAmountForId(id)
 
             val bought = when (amount) {
+                100 -> handler.shop.buy100(id).await()
                 10 -> handler.shop.buy10(id).await()
                 5 -> handler.shop.buy5(id).await()
                 1 -> handler.shop.buy1(id).await()
@@ -451,7 +452,7 @@ class BuyFromStoreBotScript(bot: Bot) : DynamicBotScript(bot) {
         maxAmount: Int,
         budget: Int
     ): Int? {
-        for (amount in intArrayOf(10, 5, 1)) {
+        for (amount in intArrayOf(100, 10, 5, 1)) {
             if (amount > maxAmount) {
                 continue
             }

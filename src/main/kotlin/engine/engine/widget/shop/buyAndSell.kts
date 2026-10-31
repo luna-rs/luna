@@ -68,4 +68,10 @@ on(WidgetItemFourthClickEvent::class)
     .filter { widgetId == 3823 }
     .then { modify(this, 10, Sell) }
 
+/**
+ * Buy 100.
+ */
+on(WidgetItemFifthClickEvent::class)
+    .filter { widgetId == 3900 }
+    .then { modify(this, 100, Buy) }
 

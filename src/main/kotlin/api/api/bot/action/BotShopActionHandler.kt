@@ -34,6 +34,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     fun buy10(id: Int) = buy(id, 10)
 
     /**
+     * Attempts to purchase 100 of [id] from the currently open shop.
+     */
+    fun buy100(id: Int) = buy(id, 100)
+
+    /**
      * Attempts to sell 1 of [id] to the currently open shop.
      */
     fun sell1(id: Int) = sell(id, 1)
@@ -49,7 +54,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     fun sell10(id: Int) = sell(id, 10)
 
     /**
-     * Attempts to purchase either 1, 5, or 10 of an item.
+     * Attempts to purchase either 1, 5, 10, or 100 of an item.
      */
     private fun buy(id: Int, amount: Int): SuspendableFuture {
         // Check if a shop is open.
@@ -70,7 +75,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
 
         // Only require enough room for one item here.
         //
-        // Shop.buy already clamps Buy 5/Buy 10 to the amount that actually fits in the inventory. Checking against the entire
+        // Shop.buy already clamps bulk purchases to the amount that actually fits in the inventory. Checking against the entire
         // shop stack would incorrectly reject something like Buy 1 on a non-stackable item when the shop currently stocks 50.
         if (!bot.inventory.hasSpaceFor(shopItem.withAmount(1))) {
             bot.log("Not enough inventory space to buy this item.")
@@ -83,6 +88,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             1 -> bot.output.sendItemWidgetClick(2, shopIndex, 3900, id)
             5 -> bot.output.sendItemWidgetClick(3, shopIndex, 3900, id)
             10 -> bot.output.sendItemWidgetClick(4, shopIndex, 3900, id)
+            100 -> bot.output.sendItemWidgetClick(5, shopIndex, 3900, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
         return boughtItemCond.submit(5) // Unsuspend when the inventory amount increases.
@@ -185,6 +191,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
                         val remaining = amount - before
                         if (remaining <= 0) return@withTimeoutOrNull true
                         val buy = when {
+                            remaining >= 100 && shop.items.computeAmountForId(id) >= 100 &&
+                                shop.computeBuyValue(id, 100).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy100(id)
                             remaining >= 10 && shop.items.computeAmountForId(id) >= 10 &&
                                 shop.computeBuyValue(id, 10).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy10(id)
                             remaining >= 5 && shop.items.computeAmountForId(id) >= 5 &&
