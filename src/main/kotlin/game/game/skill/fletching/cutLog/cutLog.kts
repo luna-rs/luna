@@ -9,8 +9,14 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogue
  */
 fun openInterface(plr: Player, log: Log) {
     plr.overlays.open(object : MakeItemDialogue(*log.unstrungIds) {
-        override fun make(plr: Player, id: Int, index: Int, forAmount: Int) =
-            plr.submitAction(CutLogActionItem(plr, log.id, log.bows[index], forAmount))
+        override fun make(plr: Player, id: Int, index: Int, forAmount: Int) {
+            val bow = log.bows[index]
+            if (plr.fletching.level < bow.level) {
+                plr.newDialogue().text(CutLogActionItem.levelMessage(bow)).open()
+            } else {
+                plr.submitAction(CutLogActionItem(plr, log.id, bow, forAmount))
+            }
+        }
     })
 }
 
