@@ -36443,6 +36443,7 @@
     "id": 3201, // Killerwatt
     "respawn_ticks": 9,
     "aggression": null,
+    "movement": { "max_range": 64, "attack_range": 0, "retreat_hitpoints": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 51,
@@ -36468,7 +36469,7 @@
       10,
       10,
       20,
-      -10,
+      20,
       0
     ]
   },
@@ -36476,6 +36477,7 @@
     "id": 3202, // Killerwatt
     "respawn_ticks": 9,
     "aggression": null,
+    "movement": { "max_range": 64, "attack_range": 0, "retreat_hitpoints": -1 },
     "poisonous": false,
     "immune_poison": false,
     "hitpoints": 51,
@@ -36501,7 +36503,7 @@
       10,
       10,
       20,
-      -10,
+      20,
       0
     ]
   },
