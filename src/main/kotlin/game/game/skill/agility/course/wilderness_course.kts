@@ -14,7 +14,8 @@ course(WILDERNESS) {
             AgilityStep(Position(3004, 3940), 4, animation = 749,
                 sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4))),
             AgilityStep(Position(3004, 3947), 1, jump = true),
-            AgilityStep(Position(3004, 3950), 4, animation = 749,
+            // The crawl covers the end of the leg, where the player comes out of the pipe.
+            AgilityStep(Position(3004, 3950), 4, animation = 749, animationTick = 1,
                 sounds = listOf(AgilitySound(Sound.SQUEEZE_IN, tick = 4)))
         ), null)
     }
@@ -29,7 +30,8 @@ course(WILDERNESS) {
     }
     obstacle(2311, WILDERNESS_STEPPING_STONE) {
         AgilityAction(this, (3001 downTo 2996).map {
-            AgilityStep(Position(it, 3960), 2, animation = 741,
+            AgilityStep(Position(it, 3960), Agility.STONE_TICKS, animation = Agility.STONE_JUMP_ANIMATION,
+                moveStart = Agility.STONE_JUMP_START, moveEnd = Agility.STONE_JUMP_END,
                 sounds = listOf(AgilitySound(Sound.JUMP_NO_LAND)))
         }, "You carefully start crossing the stepping stones.")
     }

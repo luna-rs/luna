@@ -17,6 +17,22 @@ object Agility {
     const val ROPE_SWING_ANIMATION = 497
 
     /**
+     * HUMAN_SPOT_JUMP, the jump onto each stepping stone.
+     */
+    const val STONE_JUMP_ANIMATION = 741
+
+    /**
+     * Ticks spent on each stepping stone.
+     */
+    const val STONE_TICKS = 2
+
+    /**
+     * Client cycles into a stone's ticks when the jump leaves and lands, after the crouch.
+     */
+    const val STONE_JUMP_START = 15
+    const val STONE_JUMP_END = 30
+
+    /**
      * Each course keeps its own last completed checkpoint.
      */
     val Player.courseProgress by Attr.obj { mutableMapOf<AgilityCourse, Int>() }
