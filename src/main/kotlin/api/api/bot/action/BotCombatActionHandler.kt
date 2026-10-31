@@ -8,6 +8,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.roundToInt
 import api.bot.Suspendable.waitFor
+import api.combat.magic.CombatSpellHandler.resetAutocast
+import api.bot.script.BotScript.ActionSafety
+import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.bot.webwalk.plan.BankAccess
 import api.combat.death.PlayerDeathItems
@@ -53,6 +56,25 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * @author lare96
      */
     companion object {
+        /**
+         * The minimum combat level for bots to select or cast Ancient Magicks.
+         */
+        const val MIN_ANCIENT_COMBAT_LEVEL = 60
+
+        /**
+         * Keeps Ancient Magicks unavailable to bots below the combat-level cutoff.
+         * Native spell levels, equipment, runes and account-build rules remain separate requirements.
+         */
+        @JvmStatic
+        fun canUseAncients(bot: Bot): Boolean = bot.combatLevel >= MIN_ANCIENT_COMBAT_LEVEL
+
+        /**
+         * Checks the bot-specific spellbook restriction without changing live spell or equipment state.
+         */
+        @JvmStatic
+        fun canUseSpellbook(bot: Bot, spellbook: Spellbook): Boolean =
+            spellbook != Spellbook.ANCIENT || canUseAncients(bot)
+
         /**
          * Determines whether training [skill] still advances this bot's permanent account build.
          * Non-combat skills are unrestricted; skiller templates reject every combat skill.
@@ -245,6 +267,16 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * Returns false when no style can respect the build; callers must stop attacking in that case.
      */
     fun prepareTrainingStyle(): Boolean {
+        val magic = bot.combat.magic
+        if ((magic.isAutocasting && magic.autocastSpell != CombatSpellDefinition.NONE &&
+                !canUseSpellbook(bot, magic.autocastSpell.spellbook)) ||
+            (magic.selectedSpell != CombatSpellDefinition.NONE && !canUseSpellbook(bot, magic.selectedSpell.spellbook))) {
+            magic.isAutocasting = false
+            magic.autocastSpell = CombatSpellDefinition.NONE
+            magic.selectedSpell = CombatSpellDefinition.NONE
+            magic.refreshAutocast()
+            return false
+        }
         if (bot.preferences.pk == null && !bot.preferences.isSkiller) return true
         if (bot.combat.magic.isAutocasting || bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE) {
             return mayGainExperience(bot, Skill.MAGIC)
@@ -260,7 +292,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * Chooses an armour counter from supply-ready disciplines allowed by the saved PK identity.
      * Callers supply only disciplines whose owned equipment, ammunition and damage spells are usable.
      * This policy does not equip items, initiate fights, select targets, or authorize risk from bank stock.
-     * Lowest armour defence wins; ties retain the current discipline to avoid pointless switching.
+     * Eligible, supplied Ancient Magicks receives a 95% preference before normal counter selection.
+     * Otherwise lowest armour defence wins; ties retain the current discipline to avoid pointless switching.
      * Intelligence and dexterity reduce the chance of choosing a weaker available counter.
      * Reaction timing is supplied separately by [pkSwitchDelay] for the future PK session controller.
      */
@@ -277,6 +310,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             }
         }
         if (options.isEmpty()) return null
+        if (BotGearPurpose.MAGIC in options && bot.spellbook == Spellbook.ANCIENT && canUseAncients(bot) &&
+            mistakeRoll >= 0.05) return BotGearPurpose.MAGIC
         val current = when {
             bot.combat.magic.isAutocasting -> BotGearPurpose.MAGIC
             bot.combat.weapon.isRanged -> BotGearPurpose.RANGED
@@ -337,7 +372,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * @return `true` if autocasting was configured successfully.
      */
     fun setAutocastSpell(spell: CombatSpellDefinition): Boolean {
-        if (spell == CombatSpellDefinition.NONE || spell.spellbook != bot.spellbook) {
+        if (spell == CombatSpellDefinition.NONE || spell.spellbook != bot.spellbook ||
+            !canUseSpellbook(bot, spell.spellbook) || !mayGainExperience(bot, SKILL_MAGIC)) {
             return false
         }
 
@@ -359,6 +395,26 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
         magic.autocastSpell = spell
         magic.isAutocasting = true
         magic.refreshAutocast()
+        return true
+    }
+
+    /**
+     * Switches the bot's spellbook programmatically at home before combat supplies are prepared.
+     * Rechecks safety, location and eligibility after travel, and clears the previous combat spell state.
+     */
+    suspend fun switchSpellbook(spellbook: Spellbook): Boolean {
+        fun safe(): Boolean = bot.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) &&
+            !bot.inWilderness() && canUseSpellbook(bot, spellbook)
+        if (bot.state != EntityState.ACTIVE || !bot.isAlive || !canUseSpellbook(bot, spellbook)) return false
+        if (bot.spellbook == spellbook) return true
+        if (!safe()) return false
+        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) return false
+        if (!safe() || SubZone.HOME !in bot.subZones) return false
+        if (bot.spellbook == spellbook) return true
+        bot.combat.target = null
+        bot.combat.magic.selectedSpell = CombatSpellDefinition.NONE
+        bot.spellbook = spellbook
+        bot.combat.magic.resetAutocast()
         return true
     }
 
@@ -507,7 +563,8 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
      * @return `true` if the spell was selected, otherwise `false`.
      */
     fun selectAndUseSpell(spell: CombatSpell): Boolean {
-        if (Magic.checkRequirements(bot, spell.def, false) != null) {
+        if (spell.def.spellbook == bot.spellbook && canUseSpellbook(bot, spell.def.spellbook) &&
+            mayGainExperience(bot, SKILL_MAGIC) && Magic.checkRequirements(bot, spell.def, false) != null) {
             bot.combat.magic.selectedSpell = spell.def
             return true
         }

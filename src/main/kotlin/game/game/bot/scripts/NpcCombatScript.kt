@@ -68,7 +68,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Fights configured NPCs using owned melee, ranged or elemental autocast supplies.
+ * Fights configured NPCs using owned melee, ranged or combat-magic supplies.
  * The existing targeting and banking lifecycle handles travel, replenishment and bounded target searches.
  *
  * Dragon sessions require a one-handed melee loadout and an owned anti-dragon shield, equipped before travel.
@@ -87,8 +87,11 @@ import kotlin.time.Duration.Companion.seconds
  * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
  * position across the full lair. Their banking uses the stronger food policy shared with other boss trips.
  *
+ * Magic sessions switch to their saved spell's book at home before preparing equipment. Ancient Magicks requires
+ * combat level 60, a compatible staff and owned rune supplies.
+ *
  * @property purpose The combat discipline retained throughout this session.
- * @property spell The elemental spell selected for a Magic session, preserved when saving.
+ * @property spell The combat spell selected for a Magic session, preserved when saving.
  * @property slayerTask Optional native assignment restricting this session to exact task NPC IDs.
  * @property slayerMaster The original assignee; an assignment change ends this combat session.
  * @author lare96
@@ -432,6 +435,10 @@ open class NpcCombatScript(bot: Bot,
 
         bot.sendVarp(PersistentVarp.AUTO_RETALIATE, 1)
 
+        if (purpose == BotGearPurpose.MAGIC) {
+            val spellbook = spell?.def?.spellbook ?: bot.spellbook
+            if (!handler.combat.switchSpellbook(spellbook)) return false
+        }
         loadout = slayerLoadout(bot, purpose, slayerTask, spell) ?: return false
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
@@ -1088,7 +1095,8 @@ open class NpcCombatScript(bot: Bot,
                 return false
             }
             val definition = selected.spell ?: return false
-            if (bot.spellbook != definition.spellbook || bot.magic.level < definition.level) {
+            if (bot.spellbook != definition.spellbook || bot.magic.level < definition.level ||
+                !BotCombatActionHandler.canUseSpellbook(bot, definition.spellbook)) {
                 clearMagic()
                 stop()
                 return false

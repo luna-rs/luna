@@ -21,6 +21,7 @@ import io.luna.game.model.item.Equipment.SHIELD
 import io.luna.game.model.item.Equipment.WEAPON
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.Weapon
@@ -93,6 +94,7 @@ class SplashBotScript(
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
+        if (!handler.combat.switchSpellbook(Spellbook.REGULAR)) return false
         if (resumed && spell != null && usingStaff != null && splashEquipment != null) {
             return true
         }

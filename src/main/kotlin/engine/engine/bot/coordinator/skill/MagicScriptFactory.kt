@@ -3,6 +3,7 @@ package engine.bot.coordinator.skill
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import engine.bot.coordinator.CombatCoordinator
 import game.bot.scripts.skills.AlchemyBotScript
 import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript
@@ -32,12 +33,15 @@ import io.luna.game.model.mob.bot.Bot
  *
  * Training also has a 25% chance to consider owned city-teleport supplies before production. Supported safe
  * teleports use the normal level/personality selector; profit selection never spends runes on teleport training.
+ * Eligible combat-level-60 bots with an owned Ancient staff and fifty casts strongly prefer combat Magic (95%).
+ * Training and profit combat share the normal camp selection and combat preparation lifecycle.
  *
  * @author lare96
  */
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, true, getDuration(bot))?.let { return it }
         if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
         return getProductionScript(bot, level)
     }
@@ -54,6 +58,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, false, getDuration(bot))?.let { return it }
         val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
         if (telegrab.isEligible()) return telegrab
         return getProductionScript(bot, level)

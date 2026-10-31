@@ -54,10 +54,11 @@ internal class PkLoadoutSelection(private val bot: Bot) {
     /**
      * Supports native elemental and ancient damage spells, excluding target-specific spells and unlock items.
      */
-    fun strongestSpell(): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values.filter {
+    fun strongestSpell(spellbook: Spellbook = bot.spellbook): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values.filter {
         val name = it.spell.name
         val supported = name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE", "SMOKE", "SHADOW", "BLOOD", "ICE")
-        it.spellbook == bot.spellbook && it.level <= bot.skill(Skill.MAGIC).level && it.maxHit > 0 && supported &&
+        BotCombatActionHandler.canUseSpellbook(bot, spellbook) && it.spellbook == spellbook &&
+            it.level <= bot.skill(Skill.MAGIC).level && it.maxHit > 0 && supported &&
             it.required.all { requirement -> requirement is RuneRequirement } &&
             BotCombatActionHandler.mayGainExperience(bot, Skill.MAGIC)
     }.maxWithOrNull(compareBy<CombatSpellDefinition> { it.maxHit }.thenBy { it.level })
@@ -66,9 +67,10 @@ internal class PkLoadoutSelection(private val bot: Bot) {
      * Resolves compatible, equippable weapons and ammunition. Desired selection may buy missing items;
      * owned and carried selection never invent stock or downgrade the strongest spell to fit leftover runes.
      */
-    fun select(purpose: BotGearPurpose, desired: Boolean = false, carriedOnly: Boolean = false): CombatLoadout? {
+    fun select(purpose: BotGearPurpose, desired: Boolean = false, carriedOnly: Boolean = false,
+               spellbook: Spellbook = bot.spellbook): CombatLoadout? {
         if (purpose !in purposes()) return null
-        val spell = if (purpose == BotGearPurpose.MAGIC) strongestSpell() ?: return null else null
+        val spell = if (purpose == BotGearPurpose.MAGIC) strongestSpell(spellbook) ?: return null else null
         // One synchronous stock snapshot avoids rescanning every bank slot for every weapon candidate.
         val carried = bot.inventory.filterNotNull() + bot.equipment.filterNotNull()
         val stock = (carried + if (carriedOnly) emptyList() else bot.bank.filterNotNull())
@@ -100,7 +102,7 @@ internal class PkLoadoutSelection(private val bot: Bot) {
             if (!accessible(id) || !affordable(id) || !equipment.meetsAllRequirements(bot)) return@filter false
             when (purpose) {
                 BotGearPurpose.MAGIC -> definition.type == Weapon.STAFF &&
-                    (bot.spellbook != Spellbook.ANCIENT || id in Staff.AUTOCAST_ANCIENTS)
+                    (spellbook != Spellbook.ANCIENT || id in Staff.AUTOCAST_ANCIENTS)
                 BotGearPurpose.RANGED -> definition.type in BOWS &&
                     (id in AmmoDefinition.NO_AMMO_WEAPONS || ammunition(id) != null) &&
                     BotCombatActionHandler.allowedStyles(bot, definition.typeDef.styles).isNotEmpty()

@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.script.BotScript.ActionSafety
 import api.combat.death.PlayerDeathItems
 import api.predef.ext.allSuitableFood
+import api.predef.rand
 import engine.bot.gear.BotGearPurpose
 import engine.controllers.Controllers.inWilderness
 import game.player.item.consume.food.Food
@@ -16,6 +17,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.ItemContainer.StackPolicy
 import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -58,11 +60,11 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Selects a strong weapon for each assigned discipline and enough top-spell runes/arrows for a real outing.
      * Supplies covered by the selected staff are omitted. Food quality respects the available risk allowance.
      */
-    internal fun supplyRequirements(): Map<Int, Int>? {
+    internal fun supplyRequirements(spellbook: Spellbook = bot.spellbook): Map<Int, Int>? {
         val purposes = purposes().takeIf { it.isNotEmpty() } ?: return null
         val required = linkedMapOf<Int, Int>()
         for (purpose in purposes) {
-            val outfit = selection.select(purpose, desired = true) ?: return null
+            val outfit = selection.select(purpose, desired = true, spellbook = spellbook) ?: return null
             required[outfit.gear[Equipment.WEAPON] ?: return null] = 1
             outfit.gear[Equipment.AMMUNITION]?.let { required[it] = PkLoadoutSelection.MIN_AMMUNITION }
             for ((id, amount) in outfit.runes) {
@@ -83,10 +85,16 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
      * Legal unarmed training does not satisfy the PK session's owned-weapon requirement.
      * Scavenging detours may address stock shortages, but must not bypass unrelated PK policies.
      */
-    fun missingSupplies(): Boolean = purposes().let { purposes ->
-        purposes.isNotEmpty() && ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
-            bot.bank.filterNotNull()).none { Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true } ||
-            purposes.any { selection.select(it)?.gear?.get(Equipment.WEAPON) == null })
+    fun missingSupplies(): Boolean {
+        val purposes = purposes().takeIf { it.isNotEmpty() } ?: return false
+        val noFood = (bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull())
+            .none { Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true }
+        val suppliedBook = listOf(Spellbook.REGULAR, Spellbook.ANCIENT).any { spellbook ->
+            BotCombatActionHandler.canUseSpellbook(bot, spellbook) && purposes.all {
+                selection.select(it, spellbook = spellbook)?.gear?.get(Equipment.WEAPON) != null
+            }
+        }
+        return noFood || !suppliedBook
     }
 
     /**
@@ -208,11 +216,57 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
     }
 
     /**
+     * Strongly prefers Ancient Magicks for eligible Magic PKers while retaining regular magic as a supplied fallback.
+     * Both choices are projected without changing live spell state; switching at home happens before banking.
+     */
+    private fun preparationSpellbooks(): List<Spellbook> {
+        if (BotGearPurpose.MAGIC !in purposes()) return listOf(
+            bot.spellbook.takeIf { BotCombatActionHandler.canUseSpellbook(bot, it) } ?: Spellbook.REGULAR)
+        val books = listOf(Spellbook.ANCIENT, Spellbook.REGULAR).filter {
+            selection.select(BotGearPurpose.MAGIC, desired = true, spellbook = it) != null
+        }
+        return if (books.size == 2 && !rand(0.95)) books.reversed() else books
+    }
+
+    /**
+     * Keeps future food gathering enabled when preparation cannot reach the later owned-kit planning step.
+     */
+    private fun requestMissingFood() {
+        if ((bot.inventory.filterNotNull() + bot.equipment.filterNotNull() + bot.bank.filterNotNull()).none {
+                Food.ID_TO_FOOD[it.id]?.heal?.let { it > 0 } == true
+            }) bot.preferences.allSuitableFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }
+    }
+
+    /**
      * Deposits unrelated belongings, builds a fresh plan and applies it with native banking/equipment helpers.
      * Every suspension is followed by safety checks. Partial withdrawals and changed prices cannot authorize
      * Wilderness entry; a failed preparation finishes at the bank rather than retrying an impossible kit forever.
      */
     suspend fun prepare(): Boolean {
+        for (spellbook in preparationSpellbooks()) {
+            if (bot.state != EntityState.ACTIVE || !ActionSafety.NON_COMBAT.allows(bot) || bot.inWilderness()) return false
+            val required = supplyRequirements(spellbook)
+            if (required == null) {
+                requestMissingFood()
+                continue
+            }
+            val minimum = required.map { (id, amount) -> Item(id, if (id in Food.ID_TO_FOOD) 1 else amount) }
+            val losesItems = PlayerDeathItems.losesItems(bot, Luna.settings().game().betaMode())
+            if (!PkRiskBudget.assessor(bot, losesItems, keepCountOverride = 0)(minimum, emptyList(), true).withinBudget) continue
+            if (PkSupplyAcquisition(bot, handler).quoteMissing(required) == null) {
+                required.forEach { (id, amount) -> bot.preferences.raiseWantedItemTarget(id, amount) }
+                continue
+            }
+            if (!handler.combat.switchSpellbook(spellbook)) continue
+            if (prepareCurrentSpellbook()) return true
+        }
+        return false
+    }
+
+    /**
+     * Rechecks stock and risk after selecting the spellbook, including after an unsuccessful preferred-book attempt.
+     */
+    private suspend fun prepareCurrentSpellbook(): Boolean {
         fun safe(): Boolean = bot.state == EntityState.ACTIVE && ActionSafety.NON_COMBAT.allows(bot) && !bot.inWilderness()
         if (!safe()) return false
         try {
@@ -229,9 +283,7 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                     !handler.banking.travelToBankOpen() || !safe() || !handler.banking.depositInventory() || !safe()) return false
             }
             val plan = plan() ?: run {
-                if (bot.bank.none { it != null && Food.ID_TO_FOOD.containsKey(it.id) }) {
-                    bot.preferences.allSuitableFood().forEach { bot.preferences.raiseWantedItemTarget(it.id, 750) }
-                }
+                requestMissingFood()
                 return false
             }
             for ((id, items) in (plan.inventory + plan.equipment).groupBy { it.id }) {

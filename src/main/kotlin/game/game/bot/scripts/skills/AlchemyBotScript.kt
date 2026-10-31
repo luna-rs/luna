@@ -238,10 +238,7 @@ class AlchemyBotScript(
 
     override suspend fun onInit(resumed: Boolean): Boolean {
         if (!BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
-        if (bot.spellbook != Spellbook.REGULAR) {
-            bot.log("Alchemy requires the regular spellbook.")
-            return false
-        }
+        if (!handler.combat.switchSpellbook(Spellbook.REGULAR)) return false
 
         if (bot.magic.level < type.level) {
             bot.log("Magic level ${bot.magic.level} is too low for ${type.name.lowercase()} alchemy.")

@@ -6,6 +6,8 @@ import com.google.common.collect.HashMultimap
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.bot.action.CombatLoadout
+import api.bot.action.BotCombatActionHandler
+import api.bot.script.BotScript
 import game.bot.scripts.NpcCombatScript
 import game.bot.scripts.KalphiteQueenTrip
 import game.bot.scripts.GiantMoleTrip
@@ -14,10 +16,12 @@ import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.combat.RockCrabBotScript
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.brain.BotActivity
 import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator
 import io.luna.game.model.mob.bot.brain.BotPersonalityManager.PersonalityTemplateType
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration
 
 /**
  * Selects supply-ready combat disciplines and level-appropriate, explicitly named NPC camps.
@@ -128,12 +132,60 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return preferred.filter { it.zone == SubZone.GIANT_MOLE_LAIR || it.minimum >= threshold ||
                 (training && it.zone == SubZone.ROCK_CRABS) }
         }
+
+        /**
+         * Selects owned Ancient supplies for an expensive Magic session, with at least fifty casts available.
+         * Planning projects the spellbook without changing game state; the combat script switches at home.
+         */
+        internal fun ancientMagicLoadout(bot: Bot): CombatLoadout? {
+            if (!BotCombatActionHandler.canUseAncients(bot) ||
+                !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return null
+            return CombatLoadout.find(bot, BotGearPurpose.MAGIC, spellbook = Spellbook.ANCIENT, minimumCasts = 50)
+        }
+
+        /**
+         * Shares camp admission, protection requirements and session construction with Magic skill selection.
+         */
+        internal fun ancientMagicScript(bot: Bot, training: Boolean, duration: Duration): BotScript? =
+            ancientMagicLoadout(bot)?.let { createScript(bot, training, BotGearPurpose.MAGIC, it, duration) }
+
+        /**
+         * Builds the appropriate combat session from an already supplied discipline and its eligible camps.
+         */
+        private fun createScript(bot: Bot, training: Boolean, purpose: BotGearPurpose,
+                                 loadout: CombatLoadout, duration: Duration): BotScript? {
+            val candidates = eligibleCamps(combatReadiness(bot, purpose), training, purpose,
+                bot.itemTracker.contains(1540) &&
+                    loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
+                queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout),
+                moleReady = GiantMoleTrip.ready(bot))
+                .filter { it.zone.entryBlocker(bot) == null }.shuffled()
+            if (candidates.firstOrNull()?.zone == SubZone.ROCK_CRABS) {
+                return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell)
+            }
+            val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
+            val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
+                else candidates.filter { it.zone !in dedicated && it.zone != SubZone.ROCK_CRABS }.take(4)
+            if (selected.isEmpty()) return null
+            val names = HashMultimap.create<SubZone, String>()
+            selected.forEach { names.putAll(it.zone, it.names) }
+            return NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
+                names, purpose, loadout.spell?.spell)
+        }
     }
 
     override fun accept(bot: Bot) {
         if (bot.personality.type == PersonalityTemplateType.SKILLER) {
             (if (training) BotActivity.TRAINING_SKILLS else BotActivity.PROFIT_SKILLS).coordinator.accept(bot)
             return
+        }
+        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
+            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
+        if (!training && rand(0.95)) {
+            ancientMagicScript(bot, false, duration)?.let {
+                bot.scriptStack.push(it)
+                return
+            }
         }
         if (!training && BarrowsBotScript.eligible(bot) && rand(0.20)) {
             bot.scriptStack.push(BarrowsBotScript(bot))
@@ -144,29 +196,11 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             return
         }
         val ready = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
-            .mapNotNull { purpose -> CombatLoadout.find(bot, purpose)?.let { purpose to it } }
+            .mapNotNull { purpose ->
+                val ancient = if (purpose == BotGearPurpose.MAGIC && rand(0.95)) ancientMagicLoadout(bot) else null
+                (ancient ?: CombatLoadout.find(bot, purpose))?.let { purpose to it }
+            }
         val (purpose, loadout) = ready.randomOrNull() ?: return
-        val level = combatReadiness(bot, purpose)
-        val candidates = eligibleCamps(level, training, purpose, bot.itemTracker.contains(1540) &&
-            loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
-            queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout),
-            moleReady = GiantMoleTrip.ready(bot))
-            .filter { it.zone.entryBlocker(bot) == null }.shuffled()
-        val duration = if (bot.preferences.likesActivity(BotActivity.TRAINING_COMBAT) ||
-            bot.preferences.likesActivity(BotActivity.PROFIT_COMBAT)) rand(100, 350).minutes else rand(45, 120).minutes
-        // Rock crabs sit disguised as rocks, so they need a script that waits for them to wake.
-        if (candidates.firstOrNull()?.zone == SubZone.ROCK_CRABS) {
-            bot.scriptStack.push(RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell))
-            return
-        }
-        // Dedicated boss outings keep their supplies and recovery separate from ordinary multi-camp sessions.
-        val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
-        val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
-            else candidates.filter { it.zone !in dedicated && it.zone != SubZone.ROCK_CRABS }.take(4)
-        if (selected.isEmpty()) return
-        val names = HashMultimap.create<SubZone, String>()
-        selected.forEach { names.putAll(it.zone, it.names) }
-        bot.scriptStack.push(NpcCombatScript(bot, duration, selected.map { it.zone }.toMutableList(),
-            names, purpose, loadout.spell?.spell))
+        createScript(bot, training, purpose, loadout, duration)?.let { bot.scriptStack.push(it) }
     }
 }

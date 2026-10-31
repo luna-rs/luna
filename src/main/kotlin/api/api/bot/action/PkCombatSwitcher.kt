@@ -103,7 +103,8 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
         if (bot.equipment.weapon?.id != weapon || !equipDef(weapon).meetsAllRequirements(bot)) return false
         if (purpose == BotGearPurpose.MAGIC) {
             val spell = selected.spell ?: return false
-            return bot.spellbook == spell.spellbook && bot.magic.level >= spell.level &&
+            return BotCombatActionHandler.canUseSpellbook(bot, spell.spellbook) &&
+                bot.spellbook == spell.spellbook && bot.magic.level >= spell.level &&
                 bot.combat.magic.selectedSpell == CombatSpellDefinition.NONE &&
                 selected.runes.all { (id, amount) -> bot.inventory.computeAmountForId(id) >= amount } &&
                 bot.combat.magic.isAutocasting && bot.combat.magic.autocastSpell == spell
