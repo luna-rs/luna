@@ -2245,6 +2245,11 @@
     "initial_popularity": 40
   },
   {
+    "id": 962, // Christmas cracker
+    "initial_price": 1000000000,
+    "initial_popularity": 1
+  },
+  {
     "id": 970, // Papyrus
     "initial_price": 25,
     "initial_popularity": 20
@@ -2271,7 +2276,7 @@
   },
   {
     "id": 981, // Disk of returning
-    "initial_price": 25,
+    "initial_price": 100000000,
     "initial_popularity": 1
   },
   {
@@ -2366,42 +2371,42 @@
   },
   {
     "id": 1037, // Bunny ears
-    "initial_price": 25,
+    "initial_price": 25000000,
     "initial_popularity": 10
   },
   {
     "id": 1038, // Red partyhat
-    "initial_price": 25,
+    "initial_price": 300000000,
     "initial_popularity": 1
   },
   {
     "id": 1040, // Yellow partyhat
-    "initial_price": 25,
+    "initial_price": 150000000,
     "initial_popularity": 1
   },
   {
     "id": 1042, // Blue partyhat
-    "initial_price": 25,
+    "initial_price": 500000000,
     "initial_popularity": 1
   },
   {
     "id": 1044, // Green partyhat
-    "initial_price": 25,
+    "initial_price": 200000000,
     "initial_popularity": 1
   },
   {
     "id": 1046, // Purple partyhat
-    "initial_price": 25,
+    "initial_price": 175000000,
     "initial_popularity": 1
   },
   {
     "id": 1048, // White partyhat
-    "initial_price": 25,
+    "initial_price": 400000000,
     "initial_popularity": 1
   },
   {
     "id": 1050, // Santa hat
-    "initial_price": 160,
+    "initial_price": 100000000,
     "initial_popularity": 1
   },
   {
@@ -2411,17 +2416,17 @@
   },
   {
     "id": 1053, // Green h'ween mask
-    "initial_price": 25,
+    "initial_price": 50000000,
     "initial_popularity": 1
   },
   {
     "id": 1055, // Blue h'ween mask
-    "initial_price": 25,
+    "initial_price": 75000000,
     "initial_popularity": 1
   },
   {
     "id": 1057, // Red h'ween mask
-    "initial_price": 25,
+    "initial_price": 100000000,
     "initial_popularity": 1
   },
   {
@@ -3306,7 +3311,7 @@
   },
   {
     "id": 1419, // Scythe
-    "initial_price": 25,
+    "initial_price": 25000000,
     "initial_popularity": 10
   },
   {
@@ -4561,12 +4566,12 @@
   },
   {
     "id": 1959, // Pumpkin
-    "initial_price": 30,
+    "initial_price": 25000000,
     "initial_popularity": 5
   },
   {
     "id": 1961, // Easter egg
-    "initial_price": 25,
+    "initial_price": 25000000,
     "initial_popularity": 80
   },
   {
@@ -4641,7 +4646,7 @@
   },
   {
     "id": 1989, // Half full wine jug
-    "initial_price": 25,
+    "initial_price": 150000000,
     "initial_popularity": 80
   },
   {
@@ -5450,6 +5455,11 @@
     "initial_popularity": 5
   },
   {
+    "id": 2422, // Blue partyhat
+    "initial_price": 500000000,
+    "initial_popularity": 1
+  },
+  {
     "id": 2425, // Orbital knife
     "initial_price": 25,
     "initial_popularity": 10
@@ -5571,12 +5581,12 @@
   },
   {
     "id": 2474, // Flowers
-    "initial_price": 100,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
     "id": 2476, // Flowers
-    "initial_price": 100,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
@@ -5816,252 +5826,252 @@
   },
   {
     "id": 2577, // Ranger boots
-    "initial_price": 200,
+    "initial_price": 35000000,
     "initial_popularity": 20
   },
   {
     "id": 2579, // Wizard boots
-    "initial_price": 200,
+    "initial_price": 1500000,
     "initial_popularity": 20
   },
   {
     "id": 2581, // Robin hood hat
-    "initial_price": 450,
+    "initial_price": 5000000,
     "initial_popularity": 10
   },
   {
     "id": 2583, // Black platebody (t)
-    "initial_price": 3840,
+    "initial_price": 150000,
     "initial_popularity": 20
   },
   {
     "id": 2585, // Black platelegs (t)
-    "initial_price": 1920,
+    "initial_price": 100000,
     "initial_popularity": 20
   },
   {
     "id": 2587, // Black full helm (t)
-    "initial_price": 1056,
+    "initial_price": 75000,
     "initial_popularity": 20
   },
   {
     "id": 2589, // Black kiteshield (t)
-    "initial_price": 1632,
+    "initial_price": 125000,
     "initial_popularity": 20
   },
   {
     "id": 2591, // Black platebody (g)
-    "initial_price": 3840,
+    "initial_price": 300000,
     "initial_popularity": 20
   },
   {
     "id": 2593, // Black platelegs (g)
-    "initial_price": 1920,
+    "initial_price": 200000,
     "initial_popularity": 20
   },
   {
     "id": 2595, // Black full helm (g)
-    "initial_price": 1056,
+    "initial_price": 150000,
     "initial_popularity": 20
   },
   {
     "id": 2597, // Black kiteshield (g)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 2599, // Adam platebody (t)
-    "initial_price": 12800,
+    "initial_price": 300000,
     "initial_popularity": 20
   },
   {
     "id": 2601, // Adam platelegs (t)
-    "initial_price": 6400,
+    "initial_price": 200000,
     "initial_popularity": 20
   },
   {
     "id": 2603, // Adam kiteshield (t)
-    "initial_price": 5440,
+    "initial_price": 225000,
     "initial_popularity": 20
   },
   {
     "id": 2605, // Adam full helm (t)
-    "initial_price": 3520,
+    "initial_price": 150000,
     "initial_popularity": 20
   },
   {
     "id": 2607, // Adam platebody (g)
-    "initial_price": 12800,
+    "initial_price": 600000,
     "initial_popularity": 20
   },
   {
     "id": 2609, // Adam platelegs (g)
-    "initial_price": 6400,
+    "initial_price": 400000,
     "initial_popularity": 20
   },
   {
     "id": 2611, // Adam kiteshield (g)
-    "initial_price": 5440,
+    "initial_price": 450000,
     "initial_popularity": 20
   },
   {
     "id": 2613, // Adam full helm (g)
-    "initial_price": 3520,
+    "initial_price": 300000,
     "initial_popularity": 20
   },
   {
     "id": 2615, // Rune platebody (g)
-    "initial_price": 65000,
+    "initial_price": 1500000,
     "initial_popularity": 20
   },
   {
     "id": 2617, // Rune platelegs (g)
-    "initial_price": 64000,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 2619, // Rune full helm (g)
-    "initial_price": 35200,
+    "initial_price": 750000,
     "initial_popularity": 20
   },
   {
     "id": 2621, // Rune kiteshield (g)
-    "initial_price": 54400,
+    "initial_price": 1250000,
     "initial_popularity": 20
   },
   {
     "id": 2623, // Rune platebody (t)
-    "initial_price": 65000,
+    "initial_price": 750000,
     "initial_popularity": 20
   },
   {
     "id": 2625, // Rune platelegs (t)
-    "initial_price": 64000,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 2627, // Rune full helm (t)
-    "initial_price": 35200,
+    "initial_price": 350000,
     "initial_popularity": 20
   },
   {
     "id": 2629, // Rune kiteshield (t)
-    "initial_price": 54400,
+    "initial_price": 600000,
     "initial_popularity": 20
   },
   {
     "id": 2631, // Highwayman mask
-    "initial_price": 40,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 2633, // Blue beret
-    "initial_price": 80,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 2635, // Black beret
-    "initial_price": 80,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
     "id": 2637, // White beret
-    "initial_price": 80,
+    "initial_price": 600000,
     "initial_popularity": 10
   },
   {
     "id": 2639, // Tan cavalier
-    "initial_price": 200,
+    "initial_price": 1000000,
     "initial_popularity": 10
   },
   {
     "id": 2641, // Dark cavalier
-    "initial_price": 200,
+    "initial_price": 1500000,
     "initial_popularity": 10
   },
   {
     "id": 2643, // Black cavalier
-    "initial_price": 200,
+    "initial_price": 2500000,
     "initial_popularity": 10
   },
   {
     "id": 2645, // Red headband
-    "initial_price": 40,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 2647, // Black headband
-    "initial_price": 40,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 2649, // Brown headband
-    "initial_price": 40,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 2651, // Pirate's hat
-    "initial_price": 180,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
     "id": 2653, // Zamorak platebody
-    "initial_price": 65000,
+    "initial_price": 3000000,
     "initial_popularity": 20
   },
   {
     "id": 2655, // Zamorak platelegs
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 20
   },
   {
     "id": 2657, // Zamorak full helm
-    "initial_price": 35200,
+    "initial_price": 1500000,
     "initial_popularity": 10
   },
   {
     "id": 2659, // Zamorak kiteshield
-    "initial_price": 54400,
+    "initial_price": 2500000,
     "initial_popularity": 10
   },
   {
     "id": 2661, // Saradomin plate
-    "initial_price": 65000,
+    "initial_price": 3000000,
     "initial_popularity": 20
   },
   {
     "id": 2663, // Saradomin legs
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
     "id": 2665, // Saradomin full
-    "initial_price": 35200,
+    "initial_price": 1500000,
     "initial_popularity": 10
   },
   {
     "id": 2667, // Saradomin kite
-    "initial_price": 54400,
+    "initial_price": 2500000,
     "initial_popularity": 10
   },
   {
     "id": 2669, // Guthix platebody
-    "initial_price": 65000,
+    "initial_price": 3000000,
     "initial_popularity": 20
   },
   {
     "id": 2671, // Guthix platelegs
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 20
   },
   {
     "id": 2673, // Guthix full helm
-    "initial_price": 35200,
+    "initial_price": 1500000,
     "initial_popularity": 10
   },
   {
     "id": 2675, // Guthix kiteshield
-    "initial_price": 54400,
+    "initial_price": 2500000,
     "initial_popularity": 10
   },
   {
@@ -6636,7 +6646,7 @@
   },
   {
     "id": 2997, // Pirate's hook
-    "initial_price": 89,
+    "initial_price": 5000000,
     "initial_popularity": 10
   },
   {
@@ -7426,72 +7436,72 @@
   },
   {
     "id": 3472, // Black plateskirt (t)
-    "initial_price": 1920,
+    "initial_price": 100000,
     "initial_popularity": 20
   },
   {
     "id": 3473, // Black plateskirt (g)
-    "initial_price": 1920,
+    "initial_price": 200000,
     "initial_popularity": 20
   },
   {
     "id": 3474, // Adam plateskirt (t)
-    "initial_price": 6400,
+    "initial_price": 200000,
     "initial_popularity": 20
   },
   {
     "id": 3475, // Adam plateskirt (g)
-    "initial_price": 6400,
+    "initial_price": 400000,
     "initial_popularity": 20
   },
   {
     "id": 3476, // Rune plateskirt (g)
-    "initial_price": 64000,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 3477, // Rune plateskirt (t)
-    "initial_price": 64000,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 3478, // Zamorak plateskirt
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 20
   },
   {
     "id": 3479, // Saradomin skirt
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
     "id": 3480, // Guthix plateskirt
-    "initial_price": 64000,
+    "initial_price": 2000000,
     "initial_popularity": 20
   },
   {
     "id": 3481, // Gilded platebody
-    "initial_price": 65000,
+    "initial_price": 15000000,
     "initial_popularity": 20
   },
   {
     "id": 3483, // Gilded platelegs
-    "initial_price": 64000,
+    "initial_price": 10000000,
     "initial_popularity": 20
   },
   {
     "id": 3485, // Gilded plateskirt
-    "initial_price": 64000,
+    "initial_price": 10000000,
     "initial_popularity": 20
   },
   {
     "id": 3486, // Gilded full helm
-    "initial_price": 35200,
+    "initial_price": 7500000,
     "initial_popularity": 20
   },
   {
     "id": 3488, // Gilded kiteshield
-    "initial_price": 54400,
+    "initial_price": 12500000,
     "initial_popularity": 20
   },
   {
@@ -7910,6 +7920,66 @@
     "initial_popularity": 5
   },
   {
+    "id": 3827, // Torn page 1(s)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3828, // Torn page 2(s)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3829, // Torn page 3(s)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3830, // Torn page 4(s)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3831, // Torn page 1(z)
+    "initial_price": 1000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3832, // Torn page 2(z)
+    "initial_price": 1000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3833, // Torn page 3(z)
+    "initial_price": 1000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3834, // Torn page 4(z)
+    "initial_price": 1000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3835, // Torn page 1(g)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3836, // Torn page 2(g)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3837, // Torn page 3(g)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 3838, // Torn page 4(g)
+    "initial_price": 500000,
+    "initial_popularity": 1
+  },
+  {
     "id": 3839, // Damaged book
     "initial_price": 200,
     "initial_popularity": 10
@@ -8083,6 +8153,11 @@
     "id": 4076, // Nezikchened's mum
     "initial_price": 25,
     "initial_popularity": 5
+  },
+  {
+    "id": 4079, // Yo-yo
+    "initial_price": 10000000,
+    "initial_popularity": 1
   },
   {
     "id": 4087, // Dragon platelegs
@@ -8941,12 +9016,12 @@
   },
   {
     "id": 4565, // Basket of eggs
-    "initial_price": 25,
+    "initial_price": 10000000,
     "initial_popularity": 30
   },
   {
     "id": 4566, // Rubber chicken
-    "initial_price": 25,
+    "initial_price": 15000000,
     "initial_popularity": 10
   },
   {
@@ -11421,17 +11496,17 @@
   },
   {
     "id": 6180, // Lederhosen top
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 6181, // Lederhosen shorts
-    "initial_price": 25,
+    "initial_price": 350000,
     "initial_popularity": 10
   },
   {
     "id": 6182, // Lederhosen hat
-    "initial_price": 25,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
@@ -12291,17 +12366,17 @@
   },
   {
     "id": 6654, // Camo top
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 6655, // Camo bottoms
-    "initial_price": 25,
+    "initial_price": 350000,
     "initial_popularity": 10
   },
   {
     "id": 6656, // Camo helmet
-    "initial_price": 25,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
@@ -12311,12 +12386,12 @@
   },
   {
     "id": 6665, // Mudskipper hat
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 6666, // Flippers
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 5
   },
   {
@@ -12453,6 +12528,11 @@
     "id": 6721, // Rusty scimitar
     "initial_price": 25,
     "initial_popularity": 5
+  },
+  {
+    "id": 6722, // Zombie head
+    "initial_price": 5000000,
+    "initial_popularity": 1
   },
   {
     "id": 6724, // Seercull
@@ -12621,23 +12701,58 @@
   },
   {
     "id": 6856, // Bobble hat
-    "initial_price": 25,
+    "initial_price": 3000000,
     "initial_popularity": 10
+  },
+  {
+    "id": 6857, // Bobble scarf
+    "initial_price": 2000000,
+    "initial_popularity": 1
   },
   {
     "id": 6858, // Jester hat
-    "initial_price": 25,
+    "initial_price": 3000000,
     "initial_popularity": 10
+  },
+  {
+    "id": 6859, // Jester scarf
+    "initial_price": 2000000,
+    "initial_popularity": 1
   },
   {
     "id": 6860, // Tri-jester hat
-    "initial_price": 25,
+    "initial_price": 3000000,
     "initial_popularity": 10
   },
   {
+    "id": 6861, // Tri-jester scarf
+    "initial_price": 2000000,
+    "initial_popularity": 1
+  },
+  {
     "id": 6862, // Woolly hat
-    "initial_price": 25,
+    "initial_price": 3000000,
     "initial_popularity": 10
+  },
+  {
+    "id": 6863, // Woolly scarf
+    "initial_price": 2000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 6865, // Blue marionette
+    "initial_price": 5000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 6866, // Green marionette
+    "initial_price": 5000000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 6867, // Red marionette
+    "initial_price": 5000000,
+    "initial_popularity": 1
   },
   {
     "id": 6883, // Peach
@@ -13386,207 +13501,222 @@
   },
   {
     "id": 7319, // Red boater
-    "initial_price": 225,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7321, // Orange boater
-    "initial_price": 225,
+    "initial_price": 500000,
     "initial_popularity": 80
   },
   {
     "id": 7323, // Green boater
-    "initial_price": 225,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7325, // Blue boater
-    "initial_price": 225,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7327, // Black boater
-    "initial_price": 225,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
+    "id": 7329, // Red firelighter
+    "initial_price": 5000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 7330, // Green firelighter
+    "initial_price": 5000,
+    "initial_popularity": 1
+  },
+  {
+    "id": 7331, // Blue firelighter
+    "initial_price": 5000,
+    "initial_popularity": 1
+  },
+  {
     "id": 7332, // Black kiteshield(h)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 7334, // Adam kiteshield(h)
-    "initial_price": 5440,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 7336, // Rune kiteshield(h)
-    "initial_price": 54400,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 7338, // Black kiteshield(h)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 7340, // Adam kiteshield(h)
-    "initial_price": 5440,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 7342, // Rune kiteshield(h)
-    "initial_price": 54400,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 7344, // Black kiteshield(h)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 7346, // Adam kiteshield(h)
-    "initial_price": 5440,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 7348, // Rune kiteshield(h)
-    "initial_price": 54400,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 7350, // Black kiteshield(h)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 7352, // Adam kiteshield(h)
-    "initial_price": 5440,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 7354, // Rune kiteshield(h)
-    "initial_price": 54400,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 7356, // Black kiteshield(h)
-    "initial_price": 1632,
+    "initial_price": 250000,
     "initial_popularity": 20
   },
   {
     "id": 7358, // Adam kiteshield(h)
-    "initial_price": 5440,
+    "initial_price": 500000,
     "initial_popularity": 20
   },
   {
     "id": 7360, // Rune kiteshield(h)
-    "initial_price": 54400,
+    "initial_price": 1000000,
     "initial_popularity": 20
   },
   {
     "id": 7362, // Studded body (g)
-    "initial_price": 850,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 7364, // Studded body (t)
-    "initial_price": 850,
+    "initial_price": 150000,
     "initial_popularity": 10
   },
   {
     "id": 7366, // Studded chaps (g)
-    "initial_price": 750,
+    "initial_price": 150000,
     "initial_popularity": 10
   },
   {
     "id": 7368, // Studded chaps (t)
-    "initial_price": 750,
+    "initial_price": 100000,
     "initial_popularity": 10
   },
   {
     "id": 7370, // D-hide body(g)
-    "initial_price": 7800,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
     "id": 7372, // D-hide body (t)
-    "initial_price": 7800,
+    "initial_price": 400000,
     "initial_popularity": 10
   },
   {
     "id": 7374, // D-hide body (g)
-    "initial_price": 9360,
+    "initial_price": 1250000,
     "initial_popularity": 10
   },
   {
     "id": 7376, // D-hide body (t)
-    "initial_price": 9360,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
     "id": 7378, // D-hide chaps (g)
-    "initial_price": 3900,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7380, // D-hide chaps (t)
-    "initial_price": 3900,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 7382, // D-hide chaps (g)
-    "initial_price": 4320,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
     "id": 7384, // D-hide chaps (t)
-    "initial_price": 4320,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7386, // Blue skirt (g)
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7388, // Blue skirt (t)
-    "initial_price": 25,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 7390, // Wizard robe (g)
-    "initial_price": 25,
+    "initial_price": 750000,
     "initial_popularity": 10
   },
   {
     "id": 7392, // Wizard robe (t)
-    "initial_price": 25,
+    "initial_price": 400000,
     "initial_popularity": 10
   },
   {
     "id": 7394, // Wizard hat (g)
-    "initial_price": 25,
+    "initial_price": 500000,
     "initial_popularity": 10
   },
   {
     "id": 7396, // Wizard hat (t)
-    "initial_price": 25,
+    "initial_price": 250000,
     "initial_popularity": 10
   },
   {
     "id": 7398, // Enchanted robe
-    "initial_price": 80000,
+    "initial_price": 1500000,
     "initial_popularity": 10
   },
   {
     "id": 7399, // Enchanted top
-    "initial_price": 120000,
+    "initial_price": 2000000,
     "initial_popularity": 10
   },
   {
     "id": 7400, // Enchanted hat
-    "initial_price": 15000,
+    "initial_price": 1000000,
     "initial_popularity": 10
   },
   {
@@ -14541,7 +14671,7 @@
   },
   {
     "id": 7927, // Easter ring
-    "initial_price": 25,
+    "initial_price": 10000000,
     "initial_popularity": 10
   },
   {
