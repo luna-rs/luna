@@ -14,13 +14,19 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
 
     /**
      * Registers an obstacle. Only the last Barbarian wall contributes a course checkpoint. [action] only builds the
-     * traversal: it is also built for a failed attempt, for its start message.
+     * traversal: it is also built for a failed attempt, for its start message. A click that leaves the player beside
+     * the obstacle's start tile, within [AgilityApproach.RADIUS] tiles, walks them onto it first.
      */
     fun obstacle(id: Int, type: AgilityObstacle,
                  checkpoint: (GameObject) -> Boolean = { true },
                  action: Player.(GameObject) -> AgilityAction) {
         object1(id) {
-            attempt(plr, type, checkpoint = checkpoint(gameObject)) { action(plr, gameObject) }
+            val start = { attempt(plr, type, checkpoint = checkpoint(gameObject)) { action(plr, gameObject) } }
+            if (type.startIf(plr.position)) {
+                start()
+            } else if (!plr.isLocked) {
+                AgilityApproach.findStart(plr, type)?.let { plr.submitAction(AgilityApproach(plr, it, start)) }
+            }
         }
     }
 
@@ -31,7 +37,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                          roll: () -> Double = { rand().nextDouble() },
                          checkpoint: Boolean = true,
                          action: () -> AgilityAction) {
-        if (plr.isLocked || !type.startIf(plr) || !Agility.checkLevel(plr, type.level)) return
+        if (plr.isLocked || !type.startIf(plr.position) || !Agility.checkLevel(plr, type.level)) return
         val traversal = action()
         val failure = type.failure
         if (failure != null && failure.fails(plr.agility.level, roll())) {
