@@ -54,6 +54,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
     private var previousAnimation: PlayerModelAnimation? = null
     private var leg = 0
     private var elapsed = 0
+    private var legPrepared = false
 
     init {
         require(steps.isNotEmpty())
@@ -68,14 +69,25 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
 
     override fun run(): Boolean {
         val step = steps[leg]
+        if (!legPrepared) {
+            val model = if (step.walkingAnimation == -1) previousAnimation else
+                PlayerModelAnimation.Builder().setStandingId(step.walkingAnimation)
+                    .setStandingTurnId(step.walkingAnimation).setWalkingId(step.walkingAnimation).build()
+            val changed = mob.model != model
+            mob.model = model
+            mob.flags.flag(UpdateFlag.APPEARANCE)
+            legPrepared = true
+            if (step.walkingAnimation != -1 && !step.jump && changed) {
+                // The client keeps its selected movement sequence during exact movement. Give its normal
+                // movement loop one update to select the new idle/turn sequence before the route starts.
+                mob.animation(Animation(-1))
+                return false
+            }
+        }
         step.sounds.filter { it.tick == elapsed }.forEach {
             mob.queue(SoundMessageWriter(it.sound.id, it.loops, it.delayCycles))
         }
         if (elapsed == 0) {
-            mob.model = if (step.walkingAnimation == -1) previousAnimation else
-                PlayerModelAnimation.Builder().setStandingId(step.walkingAnimation)
-                    .setWalkingId(step.walkingAnimation).build()
-            mob.flags.flag(UpdateFlag.APPEARANCE)
             mob.animation(Animation(step.animation))
             if (!step.jump) {
                 val from = mob.position
@@ -88,6 +100,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
         if (step.jump) mob.move(step.destination)
         leg++
         elapsed = 0
+        legPrepared = false
         if (leg < steps.size) return false
         onSuccess()
         return true

@@ -21,6 +21,7 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : L
     private var previousAnimation: PlayerModelAnimation? = null
     private var ticks = 0
     private var fallTick = 0
+    private var prepared = false
 
     override fun onLock() {
         previousAnimation = mob.model
@@ -28,19 +29,28 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure) : L
         val approach = failure.approach
         if (approach != null) {
             fallTick = maxOf(1, mob.position.computeLongestDistance(approach))
-            mob.model = PlayerModelAnimation.Builder()
-                .setStandingId(failure.walkingAnimation)
-                .setWalkingId(failure.walkingAnimation).build()
-            mob.flags.flag(UpdateFlag.APPEARANCE)
-            mob.exactMove(ExactMovement.to(mob, approach))
-            mob.move(approach)
         }
     }
 
     override fun run(): Boolean {
-        if (failure.approach == null) {
+        val approach = failure.approach
+        if (approach == null) {
             land()
             return true
+        }
+        if (!prepared) {
+            mob.model = PlayerModelAnimation.Builder()
+                .setStandingId(failure.walkingAnimation)
+                .setStandingTurnId(failure.walkingAnimation)
+                .setWalkingId(failure.walkingAnimation).build()
+            mob.flags.flag(UpdateFlag.APPEARANCE)
+            mob.animation(Animation(-1))
+            prepared = true
+            return false
+        }
+        if (ticks == 0) {
+            mob.exactMove(ExactMovement.to(mob, approach))
+            mob.move(approach)
         }
         when (failure) {
             AgilityFailure.BARBARIAN_LOG -> if (ticks == 2) {
