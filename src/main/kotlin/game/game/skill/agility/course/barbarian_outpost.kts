@@ -10,9 +10,13 @@ import io.luna.game.model.Position
 
 course(BARBARIAN_OUTPOST) {
     obstacle(2282, BARBARIAN_ROPESWING) { rope ->
-        AgilityAction(this, listOf(AgilityStep(Position(2551, 3549), 3, animation = 751,
-            sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)))),
-            "You swing across the pit.", { rope.animate(Agility.ROPE_SWING_ANIMATION) })
+        // The player stands on the start tile for two ticks before taking the rope.
+        AgilityAction(this, listOf(
+            AgilityStep(position, 2, jump = true),
+            AgilityStep(Position(2551, 3549), 2, animation = 751, message = "You swing across the pit.",
+                moveStart = 20, moveEnd = 50, sounds = listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1)),
+                begin = { rope.animate(Agility.ROPE_SWING_ANIMATION) })
+        ), null)
     }
     obstacle(2294, BARBARIAN_LOG_BALANCE) {
         movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.",
