@@ -3,11 +3,15 @@ package api.bot.action.trading
 import api.bot.script.InventoryProductionFixtures
 import api.predef.world
 import com.google.common.collect.Iterators
+import io.luna.Luna
+import io.luna.LunaSettings
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.economy.ItemPriceData
 import io.luna.game.model.item.economy.WorldEconomy
+import io.luna.game.model.mob.bot.BotSettings
+import io.luna.util.GsonUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -87,6 +91,34 @@ class BotMerchantSaleTest {
 
         assertEquals((555..561).toList(), offers.map { it.item.id })
         assertTrue(offers.all { it.item.amount == 100 && it.totalPrice() > 1_000 })
+    }
+
+    @Test
+    fun configuredBatchSizeAndMinimumValueAffectActualMerchantOffers() {
+        `when`(bot.preferences.isMerchant).thenReturn(true)
+        val configuredBots = GsonUtils.GSON.fromJson(
+            """{"merchant_sale_stack_limit": 2, "merchant_sale_minimum_stack_value": 2500}""",
+            BotSettings::class.java)
+        val thresholdBots = GsonUtils.GSON.fromJson(
+            """{"merchant_sale_stack_limit": 7, "merchant_sale_minimum_stack_value": 2500}""",
+            BotSettings::class.java)
+        val settings = spy(Luna.settings())
+        doReturn(configuredBots).`when`(settings).bots()
+
+        mockStatic(Luna::class.java, CALLS_REAL_METHODS).use { luna ->
+            luna.`when`<LunaSettings> { Luna.settings() }.thenReturn(settings)
+
+            for ((bots, selectedIds) in listOf(configuredBots to listOf(560, 561),
+                thresholdBots to listOf(559, 560, 561))) {
+                doReturn(bots).`when`(settings).bots()
+                for (purpose in listOf(BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL)) {
+                    val offers = BotTradeManager.computeOfferItems(bot, priceStrategy, purpose)
+
+                    assertEquals(selectedIds, offers.map { it.item.id })
+                    assertTrue(offers.all { it.totalPrice() > 2_500 })
+                }
+            }
+        }
     }
 
     @Test

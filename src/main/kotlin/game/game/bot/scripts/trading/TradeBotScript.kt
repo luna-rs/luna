@@ -17,6 +17,7 @@ import engine.bot.gear.BotEquipmentPreferences
 import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
 import engine.trade.tradingWith
+import io.luna.Luna
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -227,7 +228,7 @@ class TradeBotScript(bot: Bot,
         prepared = false
         if (!computeOfferAndExpected()) return
         handler.banking.clickBankingMode(true)
-        val stackLimit = if (merchantSelling) BotTradeSelection.MERCHANT_STACK_LIMIT else Int.MAX_VALUE
+        val stackLimit = if (merchantSelling) Luna.settings().bots().merchantSaleStackLimit() else Int.MAX_VALUE
         for (entry in offering) {
             if (bot.inventory.computeRemainingSize() <= 1 || bot.inventory.size() >= stackLimit) break
             val id = entry.item.id

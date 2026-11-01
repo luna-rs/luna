@@ -124,8 +124,8 @@ object BotTradeManager {
      *
      * For buying purposes, the result contains transferable coins and eligible surplus items used as payment.
      * For selling purposes, candidates are selected using the normal or merchant selling rules.
-     * Merchant selling, including ordinary surplus sales by merchant accounts, carries at most seven
-     * stacks worth more than 1,000 coins each, ordered by recorded samples after selecting by stack value.
+     * Merchant selling, including ordinary surplus sales by merchant accounts, uses the configured sale stack
+     * limit and minimum stack value, ordered by recorded samples after selecting by stack value.
      * Nonstackable stock without a noted form contributes one item per batch.
      * The returned items are not reserved, and their actual transferable amounts must be checked later.
      *
