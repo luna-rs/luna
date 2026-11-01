@@ -4,7 +4,9 @@ import api.predef.*
 import game.content.brimhavenArena.ArenaObstacles
 import game.content.brimhavenArena.ArenaTraps
 import game.content.brimhavenArena.BrimhavenArena
+import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
@@ -36,6 +38,7 @@ internal object BrimhavenArenaRoute {
         fun add(start: Position, end: Position, trigger: Position, obj: GameObject?, cost: Int) {
             val from = platform(start) ?: return
             val to = platform(end) ?: return
+            if (obj == null && !walkable(start, trigger)) return
             if (abs(from % 5 - to % 5) + abs(from / 5 - to / 5) == 1)
                 add(Crossing(from, to, start, end, trigger, obj, cost))
         }
@@ -57,6 +60,20 @@ internal object BrimhavenArenaRoute {
             add(start, end, end, null, 14); add(end, start, start, null, 14)
         }
     }.distinctBy { listOf(it.from, it.to, it.start, it.end, it.obj?.id) }
+
+    /**
+     * Whether a bot can walk straight from [start] onto [trigger]. Bots walk with the server's collision, which blocks
+     * the pressure pads and blade floors that players walk over, so those crossings are left out.
+     */
+    private fun walkable(start: Position, trigger: Position): Boolean {
+        var position = start
+        while (position != trigger) {
+            val direction = Direction.between(position, trigger)
+            if (!world.collisionManager.traversable(position, EntityType.PLAYER, direction)) return false
+            position = position.translate(1, direction)
+        }
+        return true
+    }
 
     /**
      * Returns the cheapest remaining path, or null when no currently usable route reaches the goal.
