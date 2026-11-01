@@ -201,7 +201,8 @@ object BrimhavenArena {
     internal fun tick() {
         ticks++
         if (ticks % 100 == 0L) {
-            rotate(rand().nextInt(pillars.size))
+            // The arrow always moves to a new pillar.
+            rotate((targetIndex + 1 + rand().nextInt(pillars.size - 1)) % pillars.size)
             ArenaTraps.rebuildPlanks()
         }
         if (ticks % 10 == 0L) ArenaTraps.blades()
