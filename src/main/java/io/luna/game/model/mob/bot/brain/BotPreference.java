@@ -650,6 +650,16 @@ public final class BotPreference {
     }
 
     /**
+     * Adds or replaces a complete wanted-item definition, including its acquisition priority and tags.
+     *
+     * @param item The definition to store, normalized to its unnoted item ID.
+     */
+    public void addWantedItem(WantedItemDefinition item) {
+        int unnotedId = toUnnotedId(item.id());
+        wantedItems.put(unnotedId, item.id() == unnotedId ? item : item.copy(unnotedId));
+    }
+
+    /**
      * Gets a wanted-item definition after normalizing the item id.
      *
      * @param id The item id to look up.
