@@ -32,6 +32,11 @@ val STICK_TRAINER = 1664
 val TRAPDOOR_GUARD = 1665
 
 /**
+ * The trapdoor above the course, which trapdoors.kts opens and climbs down.
+ */
+val TRAPDOOR = 5131
+
+/**
  * The stick the Agility Boss throws.
  */
 val STICK = 4179
@@ -377,6 +382,26 @@ npc1(TRAPDOOR_GUARD) {
             .npc(TRAPDOOR_GUARD, "No ... yes ... oh blast - you didn't hear me say", "anything, right?")
             .player("No problem. Can I come in?")
             .npc(TRAPDOOR_GUARD, "No, human - it's werewolves only.")
+            .open()
+    }
+}
+
+// The guard speaks as the trapdoor opens.
+object1(TRAPDOOR) {
+    // TODO Once Creature of Fenkenstrain is added, the trapdoor stays shut for players without a Ring of Charos.
+    if (plr.passesAsWerewolf()) {
+        plr.newDialogue()
+            .npc(TRAPDOOR_GUARD,
+                "Good luck down there, my friend. Remember, to the",
+                "west is the main agility course, while to the east is",
+                "a skullball course.")
+            .open()
+    } else {
+        plr.newDialogue()
+            .npc(TRAPDOOR_GUARD,
+                "You can't go down there, human. If it wasn't my duty",
+                "to guard this trapdoor, I would be relieving you of",
+                "the burden of your life right now.")
             .open()
     }
 }
