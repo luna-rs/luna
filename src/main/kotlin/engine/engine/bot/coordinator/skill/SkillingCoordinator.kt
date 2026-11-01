@@ -77,29 +77,29 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
          * Attribute representing if this coordinator was last in profit or training mode.
          */
         var Bot.profitMode by Attr.boolean { false }
-    }
 
-    /**
-     * Supported skilling script factories, keyed by skill id.
-     */
-    private val factories: Map<Int, SkillingScriptFactory> = listOf(
-        MiningScriptFactory,
-        ThievingScriptFactory,
-        WoodcuttingScriptFactory,
-        FiremakingScriptFactory,
-        FletchingScriptFactory,
-        CraftingScriptFactory,
-        HerbloreScriptFactory,
-        SmithingScriptFactory,
-        CookingScriptFactory,
-        FishingScriptFactory,
-        MagicScriptFactory,
-        RunecraftingScriptFactory,
-        PrayerScriptFactory,
-        AgilityScriptFactory,
-        SlayerScriptFactory,
-        FarmingScriptFactory
-    ).associateBy { it.skillId }
+        /**
+         * Supported skilling script factories, shared with explicit developer skill selection.
+         */
+        val factories: Map<Int, SkillingScriptFactory> = listOf(
+            MiningScriptFactory,
+            ThievingScriptFactory,
+            WoodcuttingScriptFactory,
+            FiremakingScriptFactory,
+            FletchingScriptFactory,
+            CraftingScriptFactory,
+            HerbloreScriptFactory,
+            SmithingScriptFactory,
+            CookingScriptFactory,
+            FishingScriptFactory,
+            MagicScriptFactory,
+            RunecraftingScriptFactory,
+            PrayerScriptFactory,
+            AgilityScriptFactory,
+            SlayerScriptFactory,
+            FarmingScriptFactory
+        ).associateBy { it.skillId }
+    }
 
     override fun accept(bot: Bot) {
         val weights = HashMap<Int, Double>()

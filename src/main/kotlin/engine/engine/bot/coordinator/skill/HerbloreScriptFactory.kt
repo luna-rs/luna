@@ -32,8 +32,8 @@ import io.luna.game.model.mob.SkillSet
  * needed to reach that level. This supplies the initial Herblore unlock while bot questing is unavailable.
  * Normal experience-change listeners handle the level-up; bots already at or above level three receive no XP.
  *
- * When no recipe is available, identification queues herb gathering until the stable 100-200-guam
- * batch is available. A failed gathering attempt ends its continuation without recursively gathering.
+ * When no recipe is available, identification queues one herb-gathering trip toward a stable 100-200-guam
+ * restocking goal. Its continuation processes smaller hauls too; an empty return ends without recursively gathering.
  *
  * @author lare96
  */
