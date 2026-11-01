@@ -1,6 +1,7 @@
 package engine.obj
 
 import api.predef.*
+import game.content.brimhavenArena.BrimhavenArena
 import game.content.miningGuild.MiningGuild
 import io.luna.game.action.impl.ClimbAction
 import io.luna.game.event.impl.ObjectClickEvent
@@ -48,6 +49,9 @@ fun climb(plr: Player, ladder: GameObject, up: Boolean) {
         return
     }
     if (ladder.id == MINING_GUILD_LADDER && !MiningGuild.checkAccess(plr)) {
+        return
+    }
+    if (ladder.position == SpecialLadder.AGILITY_ARENA_DOWN.ladder && !BrimhavenArena.checkAccess(plr)) {
         return
     }
     val destination = LadderDestination.destination(ladder, plr.position, up)

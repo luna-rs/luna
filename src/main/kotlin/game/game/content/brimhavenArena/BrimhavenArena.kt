@@ -153,19 +153,19 @@ object BrimhavenArena {
         }, "Never mind.", { it.newDialogue().player("Never mind.").open() }).open()
     }
 
+    /**
+     * The arena ladders are climbed by the shared ladder plugin; the way down only takes players who have paid.
+     */
+    fun checkAccess(player: Player): Boolean {
+        if (player.paid) return true
+        player.sendMessage("Pay Cap'n Izzy before entering the arena.")
+        return false
+    }
+
     fun ladder(player: Player, ladder: GameObject): Boolean {
         if (!ready(player) || ladder.state != EntityState.ACTIVE ||
             !player.position.isWithinDistance(ladder.position, 2)) return false
         return when (ladder.id) {
-            3617 -> {
-                if (!ladder.position.isWithinDistance(ENTRANCE, 3) || !player.paid) {
-                    player.sendMessage("Pay Cap'n Izzy before entering the arena."); false
-                } else traverse(player, listOf(AgilityStep(LANDING, 2, animation = 828, jump = true)),
-                    "You climb down into the arena.") { enter(player) }
-            }
-            3618 -> if (inside(player.position) && ladder.position.isWithinDistance(LANDING, 3))
-                traverse(player, listOf(AgilityStep(ENTRANCE, 2, animation = 828, jump = true)),
-                    "You climb back to Brimhaven.") { leave(player) } else false
             3610 -> if (inside(player.position) && player.z == 0 && ladder.position.z == 0) {
                 val landing = ladder.position.translate(0, 0, 3)
                 traverse(player, listOf(AgilityStep(landing, 2, animation = 828, jump = true)),

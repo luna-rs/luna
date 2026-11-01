@@ -6,9 +6,9 @@ import io.luna.game.model.Position
  * Ladders that lead somewhere other than straight up or down, keyed by the ladder's position. A destination holding a
  * ladder or trapdoor means landing beside it.
  *
- * Quest and minigame requirements aren't checked because Luna doesn't have that content yet. Ladders added after 2004
- * are paired with the ladder or trapdoor that leads back to them. The Entrana house ladder is here because the tile
- * above one of its sides is walled off from the rest of the floor.
+ * Quest requirements aren't checked because Luna doesn't have that content yet; `ladders.kts` checks the Agility
+ * Arena's fee. Ladders added after 2004 are paired with the ladder or trapdoor that leads back to them. The Entrana
+ * house ladder is here because the tile above one of its sides is walled off from the rest of the floor.
  *
  * @author TheLining
  */
