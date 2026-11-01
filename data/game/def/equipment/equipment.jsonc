@@ -285,7 +285,7 @@
   },
   {
     "id": 538, // Druid's robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -329,7 +329,7 @@
   },
   {
     "id": 542, // Monk's robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -373,9 +373,9 @@
   },
   {
     "id": 546, // Shade robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -32596,7 +32596,7 @@
     "id": 7392, // Wizard robe (t)
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [

@@ -378,6 +378,17 @@ public final class CollisionManager {
     }
 
     /**
+     * Removes terrain metadata from a released instance chunk. Live collision is reset by its repository.
+     *
+     * @param chunk The released destination chunk.
+     */
+    public void clearInstanceChunk(Chunk chunk) {
+        blocked.removeAll(chunk);
+        roofed.removeAll(chunk);
+        bridges.removeIf(position -> position.getChunk().equals(chunk));
+    }
+
+    /**
      * Returns whether the column of tiles at {@code position} is bridged, in map coordinates.
      *
      * @param position The tile to test. Its height is ignored.

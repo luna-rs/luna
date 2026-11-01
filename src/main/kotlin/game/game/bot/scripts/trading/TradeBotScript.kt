@@ -1,5 +1,7 @@
 package game.bot.scripts.trading
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.waitFor
 import api.bot.action.trading.*
 import api.bot.action.trading.BotTradeManager.tradeRequests
@@ -307,7 +309,7 @@ class TradeBotScript(bot: Bot,
             searchTimer.reset().start()
             blacklist.entries.removeIf { !it.value.isAfter(Instant.now()) }
             val other = world.locator.findPlayers(bot, Position.VIEWING_DISTANCE * 2) {
-                it is Bot && bot.isViewableFrom(it) && canTradeWith(it)
+                it.isRealBot() && bot.isViewableFrom(it) && canTradeWith(it)
             }.shuffled().firstOrNull()
             if (other != null) {
                 attemptTrade(other)
@@ -530,7 +532,7 @@ class TradeBotScript(bot: Bot,
      */
     private suspend fun negotiate(offer: BotTradeOfferStage, other: Player): Boolean {
         val partner = (other as? Bot)?.scriptStack?.current() as? TradeBotScript
-        val exchange = if (other is Bot) partner?.let { botExchange(it) } ?: return false else null
+        val exchange = if (other.isRealBot()) partner?.let { botExchange(it) } ?: return false else null
         val guidePrices = HashMap<Int, Long>()
         val timer = Stopwatch.createStarted()
         val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
@@ -777,7 +779,7 @@ class TradeBotScript(bot: Bot,
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
-        if (other !is Bot) return true
+        if (!other.isRealBot()) return true
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
         return prepared && script.prepared && botExchange(script) != null
