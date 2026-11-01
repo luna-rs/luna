@@ -2,11 +2,9 @@ package api.bot.action.trading
 
 import api.bot.script.InventoryProductionFixtures
 import api.predef.world
-import com.google.common.collect.Iterators
 import io.luna.Luna
 import io.luna.LunaSettings
 import io.luna.game.model.def.ItemDefinition
-import io.luna.game.model.def.WantedItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.economy.ItemPriceData
 import io.luna.game.model.item.economy.WorldEconomy
@@ -17,6 +15,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.MockedConstruction
 import org.mockito.Mockito.*
 import java.util.OptionalInt
 
@@ -30,7 +29,7 @@ class BotMerchantSaleTest {
     companion object {
         @JvmStatic
         @BeforeAll
-        fun fixtures() = InventoryProductionFixtures.initialize()
+        fun fixtures() = InventoryProductionFixtures.initializeCombat()
     }
 
     private val bot = InventoryProductionFixtures.bot()
@@ -39,13 +38,10 @@ class BotMerchantSaleTest {
     private val economy = mock(WorldEconomy::class.java)
     private val priceStrategy = mock(BotTradePrice::class.java)
     private val ids = (554..563).toList()
+    private lateinit var merchantQuotes: MockedConstruction<BotMerchantValuation.Quotes>
 
     @BeforeEach
     fun prepareStock() {
-        val wanted = ids.map {
-            WantedItemDefinition(it, 0, 1, -1, -1,
-                WantedItemDefinition.DEFAULT_PRIORITY, WantedItemDefinition.DEFAULT_TAGS)
-        }
         val prices = ids.mapIndexed { index, id ->
             val price = when (index) {
                 8 -> 10.0
@@ -56,18 +52,28 @@ class BotMerchantSaleTest {
         }.toMap()
         `when`(fixtureWorld.economy).thenReturn(economy)
         `when`(economy.prices).thenReturn(prices)
-        `when`(economy.getRealPrice(anyInt())).thenAnswer { prices[it.getArgument<Int>(0)]?.price ?: 0.0 }
-        `when`(priceStrategy.applySell(anyLong())).thenAnswer { it.getArgument<Long>(0) }
-        `when`(bot.preferences.bot).thenReturn(bot)
-        `when`(bot.preferences.wantedItems).thenAnswer {
-            Iterators.unmodifiableIterator(wanted.iterator())
+        `when`(economy.getRealPrice(anyInt())).thenAnswer {
+            economy.prices[it.getArgument<Int>(0)]?.price ?: 0.0
         }
+        `when`(economy.getPrice(anyInt())).thenAnswer {
+            economy.prices[it.getArgument<Int>(0)]?.price?.toLong() ?: 0L
+        }
+        `when`(priceStrategy.applySell(anyLong())).thenAnswer { it.getArgument<Long>(0) }
+        `when`(bot.preferences.isSkiller).thenReturn(true)
         InventoryProductionFixtures.bank(bot, *ids.map { Item(it, 101) }.toTypedArray())
         InventoryProductionFixtures.bank(bot, Item(995, 50))
+        BotTradeIntentions.recordSupplies(bot, ids.map { Item(it, 1) }, stockTarget = 1)
+        // Isolate batch selection from resale margins while retaining the actual stock and guide-price paths.
+        merchantQuotes = mockConstruction(BotMerchantValuation.Quotes::class.java,
+            withSettings().defaultAnswer { invocation ->
+                if (invocation.method.name == "sell") invocation.getArgument<Long>(1)
+                else RETURNS_DEFAULTS.answer(invocation)
+            })
     }
 
     @AfterEach
     fun restoreEconomy() {
+        if (::merchantQuotes.isInitialized) merchantQuotes.close()
         `when`(fixtureWorld.economy).thenReturn(originalEconomy)
     }
 
@@ -134,12 +140,8 @@ class BotMerchantSaleTest {
         `when`(definition.isStackable).thenReturn(false)
         `when`(definition.notedId).thenReturn(OptionalInt.empty())
         `when`(definition.unnotedId).thenReturn(OptionalInt.empty())
-        val wanted = WantedItemDefinition(id, 0, 1, -1, -1,
-            WantedItemDefinition.DEFAULT_PRIORITY, WantedItemDefinition.DEFAULT_TAGS)
-        `when`(bot.preferences.wantedItems).thenAnswer {
-            Iterators.unmodifiableIterator(listOf(wanted).iterator())
-        }
         `when`(bot.preferences.isMerchant).thenReturn(true)
+        ids.filter { it != id }.forEach { assertTrue(bot.bank.remove(Item(it, 101))) }
         java.lang.reflect.Array.set(definitionEntries, id, definition)
         try {
             for (purpose in listOf(BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL)) {
