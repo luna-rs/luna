@@ -53,6 +53,7 @@ import java.util.concurrent.CompletableFuture
 object ArenaObstacles {
     val ids = setOf(3551, 3553, 3555, 3557, 3559, 3561, 3564, 3565, 3566, 3570, 3571, 3572, 3578, 3583)
     private const val FALL = "You lose your footing!"
+    private const val HAND_HOLDS_LEVEL = 20
     private val ropeReach = InteractionPolicy(InteractionType.SIZE, 2)
 
     fun policy(target: Entity): InteractionPolicy =
@@ -67,7 +68,8 @@ object ArenaObstacles {
                      val hurts: Boolean = failed)
 
     internal fun route(player: Player, obj: GameObject, roll: Double, from: Position = player.position): Route? {
-        if (obj.id !in ids || obj.position.z != 3 || !BrimhavenArena.inside(obj.position)) return null
+        if (obj.id !in ids || obj.position.z != 3 || !BrimhavenArena.inside(obj.position) ||
+            obj.id == 3583 && player.agility.level < HAND_HOLDS_LEVEL) return null
         val p = obj.position
         var dx = 0
         var dy = 0
@@ -246,6 +248,8 @@ object ArenaObstacles {
     fun cross(player: Player, obj: GameObject, roll: Double = rand().nextDouble()): Boolean {
         if (!BrimhavenArena.ready(player) || BrimhavenArena.session(player) == null || player.z != 3 ||
             obj.state != EntityState.ACTIVE || !player.position.isWithinDistance(obj.position, 3)) return false
+        // Below the hand holds' level they can't be taken at all.
+        if (obj.id == 3583 && !Agility.checkLevel(player, HAND_HOLDS_LEVEL)) return false
         val route = route(player, obj, roll) ?: return false
         if (player.position != route.start) {
             if (!player.position.isWithinDistance(route.start, 3)) return false
