@@ -152,9 +152,17 @@ object BrimhavenArena {
     fun tag(player: Player, pillar: GameObject): Boolean {
         val session = session(player) ?: return false
         if (!ready(player) || player.z != 3 || pillar.state != EntityState.ACTIVE ||
-            pillar.id !in setOf(3608, 3581) || pillar.position != target ||
-            !player.position.isWithinDistance(target, 1) || !world.collisionManager.raycast(player.position, target)) return false
-        if (session.tagged) { player.sendMessage("Wait until the arrow moves to the next pillar."); return false }
+            pillar.id !in setOf(3608, 3581) || !player.position.isWithinDistance(pillar.position, 1) ||
+            !world.collisionManager.raycast(player.position, pillar.position)) return false
+        if (pillar.position != target) {
+            player.sendMessage("You can only get a ticket when the flashing arrow is above the pillar.")
+            return false
+        }
+        if (session.tagged) {
+            if (session.first) firstTagLines(player)
+            else player.sendMessage("You can only get one ticket at a time, wait till the arrow moves again.")
+            return false
+        }
         if (session.eligible && !player.inventory.add(Item(TICKET))) {
             player.sendMessage("Make room for your Agility Arena Ticket and tag the pillar again."); return false
         }
@@ -162,8 +170,20 @@ object BrimhavenArena {
         session.first = !session.eligible
         session.eligible = true
         refresh(player)
-        player.sendMessage(if (session.first) "Tag the next pillar for a ticket!" else "You receive an Agility Arena Ticket!")
+        if (session.first) {
+            firstTagLines(player)
+            player.newDialogue().text("You get tickets by tagging more than one pillar in a row. @red@Tag the",
+                "@red@next pillar for a ticket!").open()
+        } else {
+            player.sendMessage("You have received an Agility Arena Ticket!")
+            player.newDialogue().give(Item(TICKET), "You have received an Agility Arena Ticket!", false).open()
+        }
         return true
+    }
+
+    private fun firstTagLines(player: Player) {
+        player.sendMessage("You get tickets by tagging more than one pillar in a row, tag the next")
+        player.sendMessage("pillar!")
     }
 
     internal fun rotate(index: Int) {
@@ -198,7 +218,7 @@ object BrimhavenArena {
      * Runs native locked agility movement. Only the same live action may grant its completion effects.
      * Area departure or logout cancels it without granting experience or later moving the player back.
      */
-    internal fun traverse(player: Player, steps: List<AgilityStep>, message: String,
+    internal fun traverse(player: Player, steps: List<AgilityStep>, message: String?,
                           complete: () -> Unit = {}): Boolean {
         if (!ready(player)) return false
         val action = AgilityAction(player, steps, message)

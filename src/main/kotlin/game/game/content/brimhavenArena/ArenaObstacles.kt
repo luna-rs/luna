@@ -51,6 +51,7 @@ import java.util.concurrent.CompletableFuture
  */
 object ArenaObstacles {
     val ids = setOf(3551, 3553, 3555, 3557, 3559, 3561, 3564, 3565, 3566, 3570, 3571, 3572, 3578, 3583)
+    private const val FALL = "You lose your footing!"
     private val ropeReach = InteractionPolicy(InteractionType.SIZE, 2)
 
     fun policy(target: Entity): InteractionPolicy =
@@ -142,7 +143,7 @@ object ArenaObstacles {
         val ontoRope = AgilityStep(at(1), 1, walkingAnimation = AgilityWalk.NORMAL)
         if (failed) {
             if (obj.id == 3565) return Route(start,
-                listOf(AgilityStep(at(1), 1), AgilityStep(start, 3, animation = 1106, jump = true)), 0.0, true, false)
+                listOf(AgilityStep(at(1), 1), AgilityStep(start, 3, animation = 1106, jump = true, message = FALL)), 0.0, true, false)
             val landing = when (obj.id) {
                 3566 -> at(0, 0)
                 3551 -> at(2, 0).translate(-dy, 0)
@@ -166,7 +167,7 @@ object ArenaObstacles {
                     animation = animation))
             }
             return Route(start, soundSteps(obj.id, true, approach +
-                AgilityStep(landing, 2, animation = failAnimation, jump = true)), 0.0, true)
+                AgilityStep(landing, 2, animation = failAnimation, jump = true, message = FALL)), 0.0, true)
         }
         val steps = when (obj.id) {
             3578 -> (1..7).map { AgilityStep(at(it), 2, animation = 741, jump = true) }
@@ -241,8 +242,7 @@ object ArenaObstacles {
             return true
         }
         val session = BrimhavenArena.session(player)
-        return BrimhavenArena.traverse(player, route.steps,
-            if (route.failed) "You lose your footing!" else "You cross the obstacle.") {
+        return BrimhavenArena.traverse(player, route.steps, null) {
             if (BrimhavenArena.session(player) === session && BrimhavenArena.inside(player.position)) {
                 if (route.hurts) player.damage(player.hitpoints.level * 5 / 100 + 2)
                 if (route.xp > 0) player.agility.addExperience(route.xp)

@@ -103,7 +103,7 @@ object ArenaTraps {
         if (!failed && trap.objectId == 3581) steps += AgilityStep(player.position, 7, animation = 1110, jump = true)
         steps += AgilityStep(destination, 2, animation = animation)
         val started = BrimhavenArena.traverse(player, steps,
-            if (failed) "The trap hits you!" else "You avoid the trap.") {
+            if (failed) hitLine(trap.objectId) else null) {
             if (BrimhavenArena.session(player) === session) {
                 if (failed) {
                     if (trap.objectId == 3581) player.agility.adjustLevel(-2)
@@ -123,6 +123,13 @@ object ArenaTraps {
             }
         }
         return started
+    }
+
+    private fun hitLine(objectId: Int) = when (objectId) {
+        3582 -> "You were hit by some floor spikes!"
+        3585 -> "You were hit by some falling rocks!"
+        3580 -> "You were hit by the spinning blades!"
+        else -> "You were hit by some darts, something on them makes you feel dizzy!"
     }
 
     /**
