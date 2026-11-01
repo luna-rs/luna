@@ -4,8 +4,9 @@ package api.bot.action.trading
  * Calculates fixed trade quantities without changing inventories or trade interfaces.
  *
  * Callers supply normalized item ids and a stable set of unit prices. Selection always starts from the original
- * available stock, rather than scaling an already reduced offer. Whole items are selected in id order and values
- * saturate at [Long.MAX_VALUE]. Unknown or non-positive prices never contribute trade value.
+ * available stock, rather than scaling an already reduced offer. Whole items follow an explicit priority when supplied,
+ * with remaining items in id order. Values saturate at [Long.MAX_VALUE]. Unknown or non-positive prices never
+ * contribute trade value.
  *
  * @author lare96
  */
@@ -17,12 +18,15 @@ internal object TradeBasket {
      * @param stock The maximum available quantity of each item.
      * @param prices The agreed price per unit of each item.
      * @param budget The maximum total value to select, in coins.
+     * @param priority Item ids to select first, in order; other stock follows in ascending id order.
      * @return Positive quantities whose combined value does not exceed the budget.
      */
-    fun select(stock: Map<Int, Int>, prices: Map<Int, Long>, budget: Long): Map<Int, Int> {
+    fun select(stock: Map<Int, Int>, prices: Map<Int, Long>, budget: Long,
+               priority: List<Int> = emptyList()): Map<Int, Int> {
         var remaining = budget.coerceAtLeast(0)
         val selected = linkedMapOf<Int, Int>()
-        for ((id, available) in stock.toSortedMap()) {
+        for (id in (priority + stock.keys.sorted()).distinct()) {
+            val available = stock[id] ?: continue
             val price = prices[id] ?: continue
             if (price <= 0 || available <= 0) continue
             val amount = minOf(available.toLong(), remaining / price).toInt()
@@ -63,15 +67,16 @@ internal object TradeBasket {
      * @param asks The seller's unit prices.
      * @param bids The buyer's maximum unit prices.
      * @param coins The buyer's available coin payment.
+     * @param priority The seller's item priority, shared by both traders.
      * @return The quantities the seller should offer; payment is their value at [asks].
      */
     fun match(stock: Map<Int, Int>, demand: Map<Int, Int>, asks: Map<Int, Long>,
-              bids: Map<Int, Long>, coins: Long): Map<Int, Int> {
+              bids: Map<Int, Long>, coins: Long, priority: List<Int> = emptyList()): Map<Int, Int> {
         val eligible = stock.mapValues { (id, amount) ->
             val ask = asks[id] ?: 0
             if (ask > 0 && ask <= (bids[id] ?: 0)) minOf(amount, demand[id] ?: 0) else 0
         }
-        return select(eligible, asks, coins)
+        return select(eligible, asks, coins, priority)
     }
 
     /**
@@ -87,13 +92,15 @@ internal object TradeBasket {
      * @param bids The buyer's maximum unit prices.
      * @param payment The buyer's available payment stock.
      * @param paymentPrices The agreed unit values of the payment items.
+     * @param priority The seller's item priority, shared by both traders.
      * @return Seller and buyer quantities respectively, or `null` when no whole-item exchange is possible.
      */
     fun exchange(stock: Map<Int, Int>, demand: Map<Int, Int>, asks: Map<Int, Long>, bids: Map<Int, Long>,
-                 payment: Map<Int, Int>, paymentPrices: Map<Int, Long>): Pair<Map<Int, Int>, Map<Int, Int>>? {
+                 payment: Map<Int, Int>, paymentPrices: Map<Int, Long>,
+                 priority: List<Int> = emptyList()): Pair<Map<Int, Int>, Map<Int, Int>>? {
         var budget = value(payment, paymentPrices)
         repeat(12) {
-            val goods = match(stock, demand, asks, bids, budget)
+            val goods = match(stock, demand, asks, bids, budget, priority)
             if (goods.isEmpty()) return null
             // Avoid exchanging the same commodity in both directions.
             val usablePayment = payment.filterKeys { it !in goods }

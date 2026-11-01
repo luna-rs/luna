@@ -124,6 +124,9 @@ object BotTradeManager {
      *
      * For buying purposes, the result contains transferable coins and eligible surplus items used as payment.
      * For selling purposes, candidates are selected using the normal or merchant selling rules.
+     * Merchant selling, including ordinary surplus sales by merchant accounts, carries at most seven
+     * stacks worth more than 1,000 coins each, ordered by recorded samples after selecting by stack value.
+     * Nonstackable stock without a noted form contributes one item per batch.
      * The returned items are not reserved, and their actual transferable amounts must be checked later.
      *
      * @param bot The bot preparing the offer.
@@ -147,7 +150,16 @@ object BotTradeManager {
             }
 
             // Sellers offer whatever they're selling.
-            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> computeSellItems(bot, priceStrategy, purpose)
+            BotTradePurpose.SELL, BotTradePurpose.MERCHANT_SELL -> {
+                val candidates = computeSellItems(bot, priceStrategy, purpose)
+                if (purpose == BotTradePurpose.MERCHANT_SELL || bot.preferences.isMerchant) {
+                    BotTradeSelection.merchantSales(candidates.map { quote ->
+                        val definition = itemDef(quote.item.id)
+                        if (definition.isStackable || definition.notedId.isPresent) quote
+                        else BotTradeItem(Item(quote.item.id, 1), quote.price, quote.purpose, bot)
+                    })
+                } else candidates
+            }
         }
     }
 
@@ -254,7 +266,7 @@ object BotTradeManager {
      * @param bot The bot selecting items to sell.
      * @param priceStrategy The strategy used to calculate sale prices.
      * @param purpose The selling purpose, either [BotTradePurpose.SELL] or [BotTradePurpose.MERCHANT_SELL].
-     * @return All eligible items to sell; the trading script selects the session stock.
+     * @return All eligible sale stock, before the merchant batch is selected by [computeOfferItems].
      * @throws IllegalStateException If a buying purpose is supplied.
      */
     private fun computeSellItems(bot: Bot, priceStrategy: BotTradePrice, purpose: BotTradePurpose): List<BotTradeItem> {
