@@ -1,5 +1,7 @@
 package game.obj.switchSpellbook
 
+import api.bot.isRealBot
+
 import api.combat.magic.CombatSpellHandler.resetAutocast
 import api.bot.action.BotCombatActionHandler
 import api.predef.*
@@ -11,7 +13,7 @@ import io.luna.game.model.mob.bot.Bot
 // Switch spell books when the altar is clicked, reset auto-cast state.
 object1(6552) {
     val bot = plr as? Bot
-    if (bot != null && bot.spellbook == Spellbook.REGULAR && !BotCombatActionHandler.canUseAncients(bot)) {
+    if (bot.isRealBot() && bot.spellbook == Spellbook.REGULAR && !BotCombatActionHandler.canUseAncients(bot)) {
         return@object1
     }
     plr.animation(Animations.PRAY)

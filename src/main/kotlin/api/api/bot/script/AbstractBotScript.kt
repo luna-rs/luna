@@ -73,4 +73,9 @@ abstract class AbstractBotScript(val bot: Bot) {
     fun isRunning(): Boolean {
         return progress?.isActive == true
     }
+
+    /**
+     * Whether this script has no coroutine or its coroutine, including cancellation cleanup, has completed.
+     */
+    fun isPassive(): Boolean = progress?.isCompleted != false
 }

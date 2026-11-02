@@ -51,7 +51,9 @@ public final class ItemPriceData {
         ItemDefinition def = ItemDefinition.ALL.retrieve(id);
         def = ItemDefinition.ALL.retrieve(def.getUnnotedId().orElse(id));
         var economy = ItemEconomyDefinition.ALL.get(def.id()).orElse(null);
-        int initialPrice = economy != null && economy.getInitialPrice() != null ? economy.getInitialPrice() : def.getValue();
+        Integer override = EconomySeedOverrides.get(def.id());
+        int initialPrice = override != null ? override :
+                economy != null && economy.getInitialPrice() != null ? economy.getInitialPrice() : def.getValue();
         return Math.max(initialPrice, def.isStackable() ? Luna.settings().economy().minimumStackablePrice() :
                 Luna.settings().economy().minimumPrice());
     }

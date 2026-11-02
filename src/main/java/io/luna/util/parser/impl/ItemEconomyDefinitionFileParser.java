@@ -30,7 +30,7 @@ public final class ItemEconomyDefinitionFileParser extends JsonFileParser<ItemEc
      * Creates the parser for economy item definitions.
      */
     public ItemEconomyDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "items", "economy_seed.json"));
+        super(Paths.get("data", "game", "def", "items", "economy_seed.jsonc"));
     }
 
     @Override
@@ -54,6 +54,11 @@ public final class ItemEconomyDefinitionFileParser extends JsonFileParser<ItemEc
             checkArgument(ids.add(definition.id()), "Duplicate economy item ID: %s", definition.id());
         }
         ItemEconomyDefinition.ALL.storeAndLock(tokenObjects);
+        try {
+            io.luna.game.model.item.economy.EconomySeedOverrides.load();
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
         logger.debug("Loaded {} item economy definitions!", box(tokenObjects.size()));
     }
 }
