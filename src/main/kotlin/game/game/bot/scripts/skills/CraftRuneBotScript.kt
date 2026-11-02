@@ -371,7 +371,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
 
     /**
      * Budgets the entire carried loss before entry, since the mage applies a skull and drains protection prayer.
-     * Skillers can Runecraft without acquiring a PK identity; their personality still bounds the same 5–25% risk.
+     * Skillers can Runecraft without acquiring a PK profile; their personality still bounds the same 5–25% risk.
      */
     private fun withinAbyssBudget(): Boolean {
         val share = PkRiskBudget.basisPoints(bot.personality.confidence, bot.personality.intelligence,

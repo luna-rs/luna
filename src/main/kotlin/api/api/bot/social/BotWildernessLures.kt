@@ -27,7 +27,7 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * Bot-only Wilderness invitations with web-walker following and delivered travel conversations. The lurer may fight
  * personally or recruit a prepared, idle PK patrol. Victims retain their carried kit and all native combat reflexes.
- * No travel step withdraws valuables, suppresses escape, changes a saved PK identity or transfers death items.
+ * No travel step withdraws valuables, suppresses escape, changes a saved PK profile or transfers death items.
  *
  * @author lare96
  */

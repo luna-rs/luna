@@ -76,7 +76,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
     private val combatPolicy = BotCombatActionHandler(bot, handler)
 
     /**
-     * Only player fights with a saved PK identity use carried mixed-style switching.
+     * Only player fights with a saved PK profile use carried mixed-style switching.
      */
     private val usesPkSwitching: Boolean get() = focus is Player && bot.preferences.pk != null
 

@@ -13,7 +13,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Dispatches saved PK identities to prepare or procure an affordable, effective PK kit before departure.
+ * Dispatches saved PK profiles to prepare or procure an affordable, effective PK kit before departure.
+ * Both dedicated PKing accounts and accounts with a secondary PK interest can participate.
  * Clan cape replenishment is projected without creating an item here. An ordinary clan outing needs another
  * assigned clanmate online; a confidence-selected solo outing may depart alone. Banking and live checks belong
  * to the script, so coordinator eligibility never authorizes an attack by itself.
@@ -28,7 +29,7 @@ object PkingCoordinator : BotCoordinator {
     /**
      * Makes positive PK interests three times as competitive with long skilling and NPC sessions.
      * Dedicated PKers receive at least weight three despite legacy randomized preferences. Explicit zero,
-     * invalid weights, skillers, introductory scavengers and accounts without a PK identity remain excluded.
+     * invalid weights, skillers, introductory scavengers and accounts without a PK profile remain excluded.
      * This is a decision weight only; clan, supplies, safety and risk still gate departure.
      */
     fun activityWeight(bot: Bot): Double {

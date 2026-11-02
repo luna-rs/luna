@@ -50,7 +50,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private val deadline = data.deadline
 
     /**
-     * Starts a bounded visit without replacing the bot's permanent preferences or PK identity.
+     * Starts a bounded visit without replacing the bot's permanent preferences or PK profile.
      */
     constructor(bot: Bot, introductory: Boolean, duration: Duration) :
         this(bot, ScavengeData().also {
@@ -128,7 +128,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
 
     /**
      * Applies the existing native death-loss assessment with a scavenger's personality allowance.
-     * A level-three account need not be assigned a PK identity to bank accumulated risk.
+     * A level-three account need not be assigned a PK profile to bank accumulated risk.
      */
     private fun withinRiskBudget(): Boolean {
         val share = PkRiskBudget.basisPoints(bot.personality.confidence, bot.personality.intelligence,

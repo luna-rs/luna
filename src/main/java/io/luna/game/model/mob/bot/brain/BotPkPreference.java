@@ -10,7 +10,9 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Permanent PK identity, separate from personality and the equipment available for a session.
+ * Permanent PK profile describing purpose, styles, and build, separate from the account's template identity
+ * and the equipment available for a session. Both dedicated PKers and accounts with a secondary PK interest
+ * may have a profile; possessing one does not make the account a PKER.
  * Targets guide training and cap native XP awards without granting levels or removing existing XP.
  * Existing accounts are assigned only builds compatible with their actual levels.
  *

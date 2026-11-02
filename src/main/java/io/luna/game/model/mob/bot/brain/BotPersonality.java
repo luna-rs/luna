@@ -13,6 +13,8 @@ import java.util.function.Supplier;
  * <p>
  * A personality consists of intelligence, kindness, confidence, sociability, and dexterity values. These traits can
  * be used by bot systems to influence decision-making and behavior.
+ * The template type defines the account's identity, such as skiller, dedicated PKer, or merchant.
+ * Activity preferences are separate interests and may vary without changing that identity.
  * <p>
  * Personalities may be created from a predefined {@link PersonalityTemplate}, randomized from a template with
  * variance, or generated using completely random trait values.
@@ -381,10 +383,11 @@ public final class BotPersonality {
     }
 
     /**
-     * Returns the template type this personality was generated from.
+     * Returns the template type defining this account's identity.
      * <p>
      * {@link PersonalityTemplateType#NONE} indicates that the personality was not generated from a predefined
-     * template. This method never returns {@code null}.
+     * template. Activity preferences and the current script do not change this identity.
+     * This method never returns {@code null}.
      *
      * @return The personality template type.
      */

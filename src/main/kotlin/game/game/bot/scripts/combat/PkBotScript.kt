@@ -589,7 +589,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
     internal fun wantsToAttack(target: Player): Boolean {
         if (clan.apparentAlly(target) && !observations.canDefendClanAgainst(target)) return false
         return when (bot.preferences.pk?.purpose()) {
-            Purpose.SKILL -> BotCombatActionHandler.isPker(target)
+            Purpose.SKILL -> BotCombatActionHandler.isPkParticipant(target)
             Purpose.VALUE -> true
             Purpose.CLAN -> clan.enabled && clan.wearingCape() && clanCanHunt() &&
                 (soloClanOuting || clan.inFormation()) &&
@@ -630,7 +630,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
                 .thenByDescending { assisting[it] ?: 0 })
         }
         isKindGenericSession() -> targets.sortedByDescending { observations.canProtectAgainst(it) }
-        bot.preferences.pk?.purpose() == Purpose.VALUE -> targets.sortedBy { BotCombatActionHandler.isPker(it) }
+        bot.preferences.pk?.purpose() == Purpose.VALUE -> targets.sortedBy { BotCombatActionHandler.isPkParticipant(it) }
         isGenericSession() && !bot.personality.isStupidlyConfident && !bot.personality.isUncertain ->
             targets.sortedByDescending { combatPolicy.pkTargetVulnerability(it, observations.isFleeing(it)) }
         else -> targets

@@ -40,6 +40,10 @@ import static io.luna.util.RandomUtils.roll;
  * <p>
  * Activities, skills, and gear may be generated from personality traits. Wanted items and
  * player feelings can change at runtime and are included in the saved preference profile.
+ * <p>
+ * The personality template defines the account's identity. Template queries such as {@link #isSkiller()},
+ * {@link #isPker()}, and {@link #isMerchant()} use that identity exclusively. Activity weights describe interests:
+ * liking PKing or merchanting does not turn an account into a dedicated PKer or merchant.
  *
  * @author lare96
  */
@@ -63,7 +67,8 @@ public final class BotPreference {
         private BotPkPreference pk;
 
         /**
-         * Supplies a permanent PK identity for explicitly configured bot builds.
+         * Supplies a permanent PK profile for explicitly configured bot builds.
+         * The profile defines how an account PKs without changing its personality template or account identity.
          */
         public Builder setPk(BotPkPreference pk) {
             this.pk = java.util.Objects.requireNonNull(pk);
@@ -156,6 +161,7 @@ public final class BotPreference {
          * Copies activity weights from a predefined personality template.
          * <p>
          * Existing weights for matching activities are overwritten without random variance.
+         * This sets interests only; the supplied personality's template remains the account identity.
          *
          * @param from The template to load.
          * @return This builder for chaining.
@@ -172,6 +178,7 @@ public final class BotPreference {
          * <p>
          * Chooses a variance magnitude from {@code 0.05..0.25}, applies an independent adjustment
          * to each template weight, and clamps the result to {@code 0.0..1.0}.
+         * The selected activity template does not change the supplied personality or account identity.
          *
          * @return This builder for chaining.
          */
@@ -382,7 +389,8 @@ public final class BotPreference {
 
     /**
      * Permanent PK purpose, style combination and build; absent for bots without a PK preference.
-     * Saved identities replace the builder's provisional identity when an account is restored.
+     * Both dedicated PKers and accounts with a secondary PK interest may have this profile.
+     * Saved profiles replace the builder's provisional profile when an account is restored.
      */
     private BotPkPreference pk;
 
@@ -416,7 +424,8 @@ public final class BotPreference {
     }
 
     /**
-     * Returns the permanent PK identity, or {@code null} when PKing is not desired.
+     * Returns the permanent PK profile, or {@code null} when PKing is not desired.
+     * A profile describes PK purpose, styles, and build; {@link #isPker()} determines the account's identity.
      */
     public BotPkPreference getPk() {
         return pk;
@@ -874,9 +883,10 @@ public final class BotPreference {
     }
 
     /**
-     * Determines whether the bot qualifies as a skiller.
+     * Determines whether the account has the skiller identity.
      * <p>
      * The skiller personality always takes precedence over randomized or saved combat weights.
+     * Other accounts may enjoy skilling without having this identity.
      *
      * @return {@code true} if the bot has the skiller template.
      */
@@ -885,9 +895,10 @@ public final class BotPreference {
     }
 
     /**
-     * Determines whether the bot uses the PKer personality template.
+     * Determines whether the account has the dedicated PKer identity.
      * <p>
-     * PKing activity preferences alone do not qualify a bot as a PKer.
+     * The PKER personality template identifies an account primarily for PKing. Other accounts may like PKing,
+     * have a PK profile, or join a PK session while retaining their own identity.
      *
      * @return {@code true} if the bot uses the {@link PersonalityTemplateType#PKER} template.
      */
@@ -896,15 +907,15 @@ public final class BotPreference {
     }
 
     /**
-     * Determines whether the bot qualifies as a merchant.
+     * Determines whether the account has the merchant identity.
      * <p>
-     * Matches the {@link PersonalityTemplateType#MERCHANT} template or a merchanting activity
-     * weight above {@code 0.60}. Bots with other templates may also qualify.
+     * The MERCHANT personality template identifies an account primarily for trading and resale.
+     * Other accounts may enjoy trading or sell their surplus without having this identity.
      *
-     * @return {@code true} if the bot has the merchant template or likes merchanting.
+     * @return {@code true} if the bot has the merchant template.
      */
     public boolean isMerchant() {
-        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT) || lovesActivity(BotActivity.MERCHANTING);
+        return hasPersonalityTemplate(PersonalityTemplateType.MERCHANT);
     }
 
     /**
@@ -912,6 +923,7 @@ public final class BotPreference {
      * <p>
      * Requires combat-training weight above {@code 0.75}, or both combat-training and profitable
      * combat weights above {@code 0.60}. PKing is classified separately by {@link #isPker()}.
+     * This derived interest does not assign an account identity.
      *
      * @return {@code true} if the bot meets either combat preference condition.
      */
@@ -925,6 +937,7 @@ public final class BotPreference {
      * <p>
      * Matches the {@link PersonalityTemplateType#HERO} template or a socializing activity
      * weight above {@code 0.60}.
+     * This behavioral tendency does not assign an account identity.
      *
      * @return {@code true} if the bot has the hero template or likes socializing.
      */
@@ -934,6 +947,7 @@ public final class BotPreference {
 
     /**
      * Determines whether the bot likes participating in minigames.
+     * This derived interest does not assign an account identity.
      *
      * @return {@code true} if the minigames activity weight exceeds {@code 0.60}.
      */

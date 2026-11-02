@@ -32,8 +32,10 @@ public class BotPersonalityManager {
     /**
      * The available predefined personality template types.
      * <p>
-     * Each type represents a high-level behavioral archetype. The actual trait values and activity preferences for
-     * each type are loaded from the personality template JSON file.
+     * The type stored in a bot's personality defines its account identity. A skiller is a skilling account,
+     * a PKer is primarily a PKing account, and a merchant is primarily a trading account.
+     * Activity preferences describe what an account likes doing and do not change its type.
+     * The actual trait values and activity preferences for each template are loaded from the personality JSON file.
      */
     public enum PersonalityTemplateType {
 
@@ -45,23 +47,23 @@ public class BotPersonalityManager {
         NONE,
 
         /**
-         * A bot focused on skilling activities.
+         * A skilling account with enforced non-combat progression.
          *
-         * <p>Skillers usually prefer gathering, production, and other non-combat progression.
+         * <p>Other account types may like skilling without acquiring this identity.
          */
         SKILLER,
 
         /**
-         * A bot focused on player-killing and combat.
+         * An account primarily for player-killing and related combat progression.
          *
-         * <p>PKers usually prefer combat, Wilderness activity, and aggressive player interaction.
+         * <p>Other account types may like PKing and join PK sessions without acquiring this identity.
          */
         PKER,
 
         /**
-         * A bot focused on trading and economy activity.
+         * An account primarily for buying, selling, and trading resale stock.
          *
-         * <p>Merchants usually prefer buying, selling, flipping, and other market-driven behavior.
+         * <p>Other account types may like trading without acquiring this identity.
          */
         MERCHANT,
 

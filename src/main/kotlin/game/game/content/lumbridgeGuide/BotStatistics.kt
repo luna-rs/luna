@@ -194,7 +194,8 @@ class BotStatistics private constructor(
         add("Coins in inventories and banks: ${number(records.sumOf { it.coins })}")
         add("Coins only; equipment and other items are not valued.")
         add("")
-        add("@dbl@Personality backgrounds")
+        add("@dbl@Account identities")
+        add("Each account has one identity from its personality.")
         val names = mapOf(
             PersonalityTemplateType.NONE to "Individual",
             PersonalityTemplateType.SKILLER to "Skiller",
@@ -211,6 +212,7 @@ class BotStatistics private constructor(
         }
         add("")
         add("@dbl@Favourite pursuits")
+        add("Accounts can enjoy pursuits beyond their main identity.")
         add("Strong interests, not current jobs; these may overlap.")
         val pursuits = mapOf(
             BotActivity.TRAINING_SKILLS to "Training skills",
