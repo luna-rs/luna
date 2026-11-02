@@ -40,7 +40,7 @@ object MerchantingCoordinator : BotCoordinator {
      */
     internal fun getSellingScript(bot: Bot): TradeBotScript? {
         if (bot.state != EntityState.ACTIVE || bot.inWilderness() || !ActionSafety.NON_COMBAT.allows(bot)) return null
-        val market = availableMarket(bot) ?: return null
+        val market = BotMarketplace.select(bot)
         val purpose = sellingPurpose(bot) ?: return null
         return TradeBotScript(bot, purpose, market)
     }
@@ -61,7 +61,7 @@ object MerchantingCoordinator : BotCoordinator {
 
     override fun accept(bot: Bot) {
         if (bot.preferences.isMerchant) {
-            val market = availableMarket(bot) ?: return
+            val market = BotMarketplace.select(bot)
             val selling = sellingPurpose(bot)
             val canBuy = bot.totalItemAmount(995).toDouble() *
                 BotTradeIntentions.budgetFraction(bot, BotTradePurpose.MERCHANT_BUY) >= BotTradeManager.MINIMUM_OFFER_VALUE
@@ -100,7 +100,7 @@ object MerchantingCoordinator : BotCoordinator {
             if (store != null && randBoolean() && store.saleCandidates().isNotEmpty()) {
                 bot.scriptStack.push(store)
             } else {
-                val market = availableMarket(bot) ?: return
+                val market = BotMarketplace.select(bot)
                 bot.scriptStack.push(TradeBotScript(bot, purpose, market))
             }
         } else if (needsItems) {
@@ -111,19 +111,10 @@ object MerchantingCoordinator : BotCoordinator {
             if (canShopBuy && (!canMarketBuy || rand(3) == 0 || isShopper && randBoolean())) {
                 bot.scriptStack.push(BuyFromStoreBotScript(bot, shopBudget))
             } else {
-                val market = availableMarket(bot) ?: return
+                val market = BotMarketplace.select(bot)
                 bot.scriptStack.push(TradeBotScript(bot, purpose, market))
             }
         }
-    }
-
-    /**
-     * Avoids constructing a doomed market visit when every trading pool is full.
-     */
-    private fun availableMarket(bot: Bot): BotMarketplace? {
-        val markets = BotMarketplace.entries.filter { it.hasAvailableTradingSpot(bot) }
-        return if (bot.personality.isDextrous) markets.minByOrNull { it.arrival.computeLongestDistance(bot.position) }
-            else markets.randomOrNull()
     }
 
     /**

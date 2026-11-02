@@ -183,9 +183,14 @@ class TradeBotScript(bot: Bot,
     private var merchantValuation: BotMerchantValuation.Quotes? = null
 
     /**
-     * A full market ends this visit without sending an otherwise prepared trader to a shop.
+     * A full market retries elsewhere instead of sending an otherwise prepared trader to a shop.
      */
     private var capacityBlocked = false
+
+    /**
+     * Shared home tile used only when every marketplace's trading slots are full.
+     */
+    private var homeOverflow: Position? = null
 
     /** The advertisement interval selected for the current intentions, in seconds. */
     private var messageCooldown = 0
@@ -207,12 +212,10 @@ class TradeBotScript(bot: Bot,
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
-        if (marketplace.reserveTradingSpot(this) == null) {
-            capacityBlocked = true
+        if (reserveTradingSpot() == null) {
             bot.log("Marketplace has no free trading spots.")
             return false
         }
-        capacityBlocked = false
         for ((name, feeling) in bot.preferences.playerFeelings) {
             if (feeling < 0.25) addBlacklisted(name, 365.days)
         }
@@ -270,9 +273,8 @@ class TradeBotScript(bot: Bot,
             return
         }
         bot.overlays.closeWindows()
-        val tile = marketplace.reserveTradingSpot(this)
-        if (tile == null) capacityBlocked = true
-        prepared = tile != null && handler.webWalkTo(marketplace.parent) &&
+        val tile = reserveTradingSpot() ?: return
+        prepared = handler.webWalkTo(marketplace.parent) &&
                 handler.webWalkTo(tile) && bot.position == tile
         if (!prepared) endSession("Could not return to an available marketplace tile.")
     }
@@ -282,6 +284,7 @@ class TradeBotScript(bot: Bot,
         BotConversations.cancel(bot)
         prepared = false
         marketplace.releaseTradingSpot(this)
+        homeOverflow = null
         activeTrade?.decline()
         activeTrade = null
         bot.tradingWith = -1
@@ -291,7 +294,16 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun completed() {
-        if (purchaseTarget == null && !traded && !capacityBlocked && !bot.preferences.isMerchant) {
+        if (capacityBlocked) {
+            val next = BotMarketplace.select(bot)
+            val remaining = remainingDuration()
+            if (next != marketplace && remaining > Duration.ZERO) {
+                bot.scriptStack.push(TradeBotScript(bot, purpose, next, remaining,
+                    purchaseTarget = purchaseTarget, purchasePrice = purchasePrice))
+            }
+            return
+        }
+        if (purchaseTarget == null && !traded && !bot.preferences.isMerchant) {
             if (buying) bot.scriptStack.push(BuyFromStoreBotScript(bot))
             else bot.scriptStack.push(SellToStoreBotScript(bot))
         }
@@ -324,16 +336,28 @@ class TradeBotScript(bot: Bot,
 
     override suspend fun prepareMarketplace(marketplace: BotMarketplace?): Boolean {
         if (marketplace == null) return true
-        val tile = marketplace.reserveTradingSpot(this)
+        val tile = reserveTradingSpot()
         if (tile == null) {
-            capacityBlocked = true
-            endSession("Marketplace trading spots are full.")
+            bot.log("Marketplace trading spots are full.")
             return false
         }
         return bot.position == tile || handler.webWalkTo(tile) && bot.position == tile
     }
 
     override fun snapshot(): BotScriptData? = null
+
+    /**
+     * Keeps exclusive trading slots everywhere except home when all markets are full.
+     */
+    private fun reserveTradingSpot(): Position? {
+        val tile = homeOverflow ?: marketplace.reserveTradingSpot(this) ?: run {
+            if (marketplace != BotMarketplace.VARROCK ||
+                BotMarketplace.entries.any { it.hasAvailableTradingSpot(bot) }) return@run null
+            marketplace.positions.filter { it in SubZone.HOME.area }.randomOrNull()?.also { homeOverflow = it }
+        }
+        capacityBlocked = tile == null
+        return tile
+    }
 
     /**
      * Counts both noted and unnoted purchases so a banked or carried delivery cannot be bought twice.
@@ -802,12 +826,16 @@ class TradeBotScript(bot: Bot,
     override fun onPaused() {
         prepared = false
         marketplace.releaseTradingSpot(this)
+        homeOverflow = null
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
-        if (!initial) marketplace.releaseTradingSpot(this)
+        if (!initial) {
+            marketplace.releaseTradingSpot(this)
+            homeOverflow = null
+        }
         BotSocialInteractions.cancel(bot)
         prepared = false
         BotConversations.cancel(bot)
@@ -829,6 +857,7 @@ class TradeBotScript(bot: Bot,
     private fun endSession(reason: String) {
         prepared = false
         marketplace.releaseTradingSpot(this)
+        homeOverflow = null
         duration = Duration.ZERO
         bot.log(reason)
     }
