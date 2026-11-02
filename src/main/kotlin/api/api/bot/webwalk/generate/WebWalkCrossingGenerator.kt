@@ -180,6 +180,16 @@ object SpecialCrossings {
     }
 
     /**
+     * The Barbarian course pipe needs level 35 Agility only when entering from the Outpost.
+     */
+    val BARBARIAN_PIPE = CrossingSpec(AgilityShortcutCrossing.ID, setOf(2287),
+                                      Requirements(flags = setOf(BotConditions.BARBARIAN_PIPE_ENTRY)),
+                                      reverseRequirements = Requirements.NONE, cost = 6,
+                                      placements = listOf(CrossingPlacement(2287, Position(2552, 3559),
+                                                                            Position(2552, 3561),
+                                                                            Position(2552, 3558))))
+
+    /**
      * The ridge into the Wilderness Agility Course, entered through door 2309 at its south end with level 52 Agility.
      * It is left through gate 2307 at its north end with no level, so each way is its own crossing. A fall drops the
      * bot in the wolf pit beside the ridge, outside the course.
@@ -235,7 +245,7 @@ object SpecialCrossings {
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].

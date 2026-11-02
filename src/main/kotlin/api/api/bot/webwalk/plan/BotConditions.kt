@@ -13,6 +13,7 @@ import game.content.sailing.ShipSearch
 import game.content.craftingGuild.CraftingGuild
 import game.content.fishingGuild.FishingGuild
 import game.obj.webs.Web
+import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -45,6 +46,11 @@ object BotConditions {
     const val FISHING_GUILD_ENTRY = "fishing_guild_entry"
 
     /**
+     * The Barbarian course pipe checks the current Agility level on entry, including boosts and drains.
+     */
+    const val BARBARIAN_PIPE_ENTRY = "barbarian_pipe_entry"
+
+    /**
      * The bot carries something that cuts a web: a weapon with a slash attack, wielded or not, or a knife.
      */
     const val SLASH_WEB = "slash_web"
@@ -60,6 +66,7 @@ object BotConditions {
             Jarvald.fare(bot) == 0 || bot.inventory.computeAmountForId(995) >= Jarvald.FARE
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
                       FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
+                      BARBARIAN_PIPE_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 35 },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->
