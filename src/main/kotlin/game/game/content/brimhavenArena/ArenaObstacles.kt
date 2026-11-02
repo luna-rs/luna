@@ -175,7 +175,7 @@ object ArenaObstacles {
                 3578 -> (1..2).map { hop(it) }
                 3566 -> listOf(swing(1, 2))
                 3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking))
-                3564 -> listOf(AgilityStep(at(3), 3, walkingAnimation = walking, animation = animation))
+                3564 -> listOf(grab, AgilityStep(at(3), 3, walkingAnimation = walking, animation = animation))
                 else -> listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2, walkingAnimation = walking,
                     animation = animation))
             }
