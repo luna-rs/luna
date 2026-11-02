@@ -146,18 +146,15 @@ public final class MapTile {
     }
 
     /**
-     * Returns whether this tile is treated as fully blocked terrain.
+     * Returns whether the native cache flags block movement on this tile.
      * <p>
-     * A tile is considered blocked if:
-     * <ul>
-     *     <li>The {@link #BLOCKED} bit is set in {@link #attributes}</li>
-     *     <li>It has a known water overlay ({@link #isWater()})</li>
-     * </ul>
+     * Overlays describe appearance and can cover only part of a tile. Water overlays therefore do not imply
+     * that the entire tile is blocked; the {@link #BLOCKED} attribute supplies its collision rule.
      *
      * @return {@code true} if the tile should block movement, otherwise {@code false}.
      */
     public boolean isBlocked() {
-        return (attributes & BLOCKED) != 0 || isWater();
+        return (attributes & BLOCKED) != 0;
     }
 
     /**
