@@ -1,15 +1,16 @@
 package game.skill.agility
 
-import io.luna.game.model.mob.Player
+import io.luna.game.model.Position
 
 /**
  * Entry positions, XP, and failure rules for the three existing agility courses.
  * Level requirements belong to entrances, not every obstacle inside a course.
+ * [startIf] tells whether a tile is one the obstacle starts from.
  *
  * @author lare96
  */
 enum class AgilityObstacle(val xp: Double,
-                           val startIf: Player.() -> Boolean,
+                           val startIf: Position.() -> Boolean,
                            val level: Int = 0,
                            val failure: AgilityFailure? = null) {
     GNOME_LOG_BALANCE(7.5, { x == 2474 && y == 3436 && z == 0 }),
