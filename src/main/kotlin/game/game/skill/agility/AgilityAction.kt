@@ -17,7 +17,7 @@ import java.util.ArrayDeque
  * are walked a tile a tick with it ([AgilityWalk]); other legs use exact movement with tick durations converted to
  * client cycles. [moveStart] and [moveEnd] place that movement inside the leg in client cycles; by default it fills
  * the leg. [animation] starts [animationTick] ticks into the leg. [message] is sent and [begin] runs when the leg
- * starts.
+ * starts. [exactStart] supplies the geometric origin of exact movement when a player enters from an adjacent tile.
  *
  * @author lare96
  */
@@ -28,12 +28,14 @@ data class AgilityStep(val destination: Position, val ticks: Int,
                        val message: String? = null,
                        val begin: () -> Unit = {},
                        val moveStart: Int = 0, val moveEnd: Int = -1,
-                       val animationTick: Int = 0) {
+                       val animationTick: Int = 0,
+                       val exactStart: Position? = null) {
     init {
         require(ticks > 0)
         require(moveEnd == -1 || moveEnd > moveStart)
         require(sounds.all { it.tick in 0..ticks })
         require(animationTick in 0 until ticks)
+        require(exactStart == null || (!jump && walkingAnimation == -1 && exactStart.z == destination.z))
     }
 }
 
@@ -70,6 +72,7 @@ data class AgilitySound(val sound: Sound, val tick: Int = 0, val loops: Int = 1,
  * and a traversal that ends with a walk keeps them until the client should have finished it before it unlocks.
  * Interrupted traversals restore animations and never award XP or course credit.
  * An optional [valid] check can stop content-specific traversals before locking, moving or awarding success.
+ * [onCancel] restores any content-specific client effects when an unfinished traversal is interrupted.
  *
  * @author lare96
  */
@@ -88,6 +91,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
     }
 
     internal var onSuccess: () -> Unit = {}
+    internal var onCancel: () -> Unit = {}
     private var previousAnimation: PlayerModelAnimation? = null
     private var leg = 0
     private var elapsed = 0
@@ -165,6 +169,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
         if (!finished) {
             mob.walking.clear()
             mob.animation(Animation(-1))
+            onCancel()
         }
     }
 
@@ -193,7 +198,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
             step.jump -> Unit
             step.walkingAnimation != -1 -> mob.walkStraight(step.destination)
             else -> {
-                val from = mob.position
+                val from = step.exactStart ?: mob.position
                 val end = if (step.moveEnd == -1) step.ticks * CYCLES_PER_TICK else step.moveEnd
                 mob.exactMove(ExactMovement(mob.lastRegion, from, step.destination, step.moveStart, end,
                     Direction.between(from, step.destination)))

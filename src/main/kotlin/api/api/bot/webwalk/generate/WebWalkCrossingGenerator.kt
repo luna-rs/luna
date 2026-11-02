@@ -15,6 +15,8 @@ import game.obj.doors.TaverleyJailDoor
 import game.skill.agility.AgilityEntrances
 import game.skill.agility.Stile
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
+import api.bot.webwalk.walk.crossing.IsafdarForestCrossing
+import api.predef.ctx
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
@@ -275,9 +277,9 @@ object SpecialCrossings {
 
 /**
  * Makes `crossings.jsonc`, which holds the crossings that have a handler, from the [CrossingSpec]s and the map data of the
- * cache. This needs no running world, like [WebWalkDoorGenerator] which it uses to place the crossings that are walls, so a
- * test can run it to make sure that the committed file is still up to date. A crossing with [CrossingSpec.placements] is put
- * at the tiles they give, as long as the map has its object there.
+ * cache. Like [WebWalkDoorGenerator], ordinary crossings only need decoded map data. Forest passages also use the loaded
+ * native collision to resolve safe approach and departure anchors. A crossing with [CrossingSpec.placements] is put
+ * at the tiles they give, as long as the map has its object there, with those forest anchors resolved separately.
  *
  * @author Hydrozoa
  */
@@ -338,15 +340,24 @@ object WebWalkCrossingGenerator {
         val report = GenerationReport()
         val placed = ArrayList<GeneratedObstacle>()
         for (placement in spec.placements) {
-            if (table.objectSet.none { it.objectId == placement.objectId && it.position == placement.pos }) {
+            val mapObject = table.objectSet.firstOrNull { it.objectId == placement.objectId && it.position == placement.pos }
+            if (mapObject == null) {
                 report.skipped += "CROSSING ${placement.objectId} at ${DoorObstacles.describe(placement.pos)}: not in the map"
+                continue
+            }
+            val anchors = if (spec.handler == IsafdarForestCrossing.ID) {
+                ArandarCrossingSpec.forestApproaches(mapObject.toGameObject(ctx))
+            } else placement.from to placement.to
+            if (anchors == null) {
+                report.skipped += "CROSSING ${placement.objectId} at ${DoorObstacles.describe(placement.pos)}: " +
+                    "no safe forest approach and departure on both sides"
                 continue
             }
             placed += GeneratedObstacle(EdgeType.CROSSING,
                                         placement.objectId,
                                         placement.pos,
-                                        placement.from,
-                                        placement.to,
+                                        anchors.first,
+                                        anchors.second,
                                         requirements = placement.requirements ?: spec.requirements,
                                         reverseRequirements = placement.reverseRequirements ?: spec.reverseRequirements)
         }

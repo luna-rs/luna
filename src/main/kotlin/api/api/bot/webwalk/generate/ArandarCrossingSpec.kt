@@ -5,12 +5,18 @@ import api.bot.webwalk.plan.BotConditions
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.walk.crossing.ArandarCrossing
 import api.bot.webwalk.walk.crossing.IsafdarLogCrossing
+import api.bot.webwalk.walk.crossing.IsafdarForestCrossing
+import api.predef.world
 import game.obj.doors.ArandarGate
 import game.skill.agility.IsafdarForest
 import game.skill.agility.IsafdarLogs
 import game.skill.agility.IsafdarTripwire
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.ObjectDirection
+import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.path.PathResultType
+import io.luna.game.model.path.route.RoutePathfinder
+import io.luna.game.model.path.route.RouteStrategy
 
 /**
  * The Arandar palisade and native woodland passages through Isafdar to Iorwerth's camp.
@@ -39,7 +45,7 @@ object ArandarCrossingSpec {
         placements = listOf(CrossingPlacement(ArandarGate.LEFT, ArandarGate.LEFT_POSITION,
             ArandarGate.NORTH, ArandarGate.SOUTH)))
 
-    val FOREST = CrossingSpec(AgilityShortcutCrossing.ID, IsafdarForest.IDS,
+    val FOREST = CrossingSpec(IsafdarForestCrossing.ID, IsafdarForest.IDS,
         Requirements(flags = setOf(BotConditions.ISAFDAR_FOREST_ENTRY)), cost = 4,
         placements = listOf(
             forest(3939, 2165, 3189, ObjectDirection.SOUTH),
@@ -68,6 +74,25 @@ object ArandarCrossingSpec {
             forest(3938, 2302, 3217, ObjectDirection.EAST),
             forest(3939, 2302, 3220, ObjectDirection.WEST),
             forest(3938, 2302, 3223, ObjectDirection.EAST)))
+
+    /**
+     * Resolves walkable graph anchors without changing the native exact-movement endpoints.
+     * Both anchors must also be reachable by walking out of their native endpoint after a crossing.
+     */
+    fun forestApproaches(forest: GameObject): Pair<Position, Position>? {
+        if (forest.id !in IsafdarForest.IDS) return null
+        val (first, second) = IsafdarForest.sides(forest.position, forest.direction)
+        val from = IsafdarForest.approach(forest, first) ?: return null
+        val to = IsafdarForest.approach(forest, second) ?: return null
+        if (from == to || IsafdarForest.route(forest, from).first != first ||
+            IsafdarForest.route(forest, to).first != second) return null
+        val pathfinder = RoutePathfinder(world.collisionManager, 1, 0, RouteStrategy.NORMAL)
+        for ((landing, anchor) in listOf(first to from, second to to)) {
+            val result = pathfinder.find(landing, anchor)
+            if (result.type != PathResultType.COMPLETE && result.type != PathResultType.EMPTY) return null
+        }
+        return from to to
+    }
 
     /**
      * Uses the native rotated geometry for a cache placement.

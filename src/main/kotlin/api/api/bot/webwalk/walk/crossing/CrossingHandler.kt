@@ -51,6 +51,7 @@ object CrossingHandlers {
                                                                ShantayPassCrossing.ID to ShantayPassCrossing,
                                                                ArandarCrossing.ID to ArandarCrossing,
                                                                IsafdarLogCrossing.ID to IsafdarLogCrossing,
+                                                               IsafdarForestCrossing.ID to IsafdarForestCrossing,
                                                                BrimhavenCrossing.ID to BrimhavenCrossing,
                                                                KillerwattCrossing.ID to KillerwattCrossing,
                                                                ProductionAccessCrossing.ID to ProductionAccessCrossing,
