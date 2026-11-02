@@ -331,7 +331,8 @@ public final class InteractionAction extends Action<Player> {
      * <p>
      * This only applies to close {@link InteractionType#SIZE} interactions with distance {@code 1} against mobs or
      * size-{@code 1} entities. In that case, diagonal adjacency may be corrected by stepping to a cardinal tile, and
-     * standing on the same tile may be corrected by stepping away.
+     * standing on the same tile may be corrected by stepping away. A reached multi-tile mob already has valid
+     * footprint contact, so diagonal southwest anchors do not require correction.
      * Ordinary immobilization prevents only a required corrective step; it does not reject an already-reached
      * cardinal interaction that needs no movement.
      *
@@ -348,7 +349,7 @@ public final class InteractionAction extends Action<Player> {
         if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             Position current = mob.getPosition();
-            Set<Direction> directions = getClosestNESW();
+            Set<Direction> directions = isMob && target.size() > 1 ? Set.of() : getClosestNESW();
             boolean needsMovement = (!directions.isEmpty() && target.isWithinDistance(mob, 1)) ||
                     target.getPosition().equals(current);
             if (needsMovement && mob.getStatus().isImmobilized()) {
