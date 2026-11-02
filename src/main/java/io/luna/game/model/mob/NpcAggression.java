@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 import game.content.mageArena.MageArenaCombat;
+import game.item.greegree.Greegree;
 
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.World;
@@ -158,6 +159,7 @@ public class NpcAggression {
             if (attacker.getCombat().isWithinLeash(victim) && attacker.getCombat().checkMultiCombat(victim) &&
                     !isTolerantOf(victim) &&
                     checkPolicy(victim, policy) &&
+                    !Greegree.disguises(victim) &&
                     victim.isAlive() &&
                     !victim.isLocked()) {
                 attacker.getCombat().attack(victim);
