@@ -69,13 +69,15 @@ data class AgilitySound(val sound: Sound, val tick: Int = 0, val loops: Int = 1,
  * The client walks a little behind the server, so a walk's animations last a tick into a following leg that has none,
  * and a traversal that ends with a walk keeps them until the client should have finished it before it unlocks.
  * Interrupted traversals restore animations and never award XP or course credit.
+ * An optional [valid] check can stop content-specific traversals before locking, moving or awarding success.
  *
  * @author lare96
  */
 class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
                     internal val message: String?,
                     private val start: () -> Unit = {},
-                    private val endMessage: String? = null) : LockedAction(plr) {
+                    private val endMessage: String? = null,
+                    private val valid: () -> Boolean = { true }) : LockedAction(plr) {
 
     companion object {
 
@@ -111,16 +113,19 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
         require(steps.isNotEmpty())
     }
 
+    override fun beforeLock(): Boolean = valid()
+
     override fun onLock() {
         previousAnimation = mob.model
         mob.walking.clear()
         if (steps.first().animation == -1) mob.animation(Animation(-1))
         message?.let { mob.sendMessage(it) }
         start()
-        beginLeg()
+        if (!valid() || !beginLeg()) complete()
     }
 
     override fun run(): Boolean {
+        if (!valid()) return true
         if (settling > 0) return --settling == 0
         val step = steps[leg]
         elapsed++
@@ -149,8 +154,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
             }
             return settling == 0
         }
-        beginLeg()
-        return false
+        return !beginLeg()
     }
 
     override fun onUnlock() {
@@ -167,11 +171,12 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
     /**
      * Starts the current leg: its message, opening sounds, animations and movement.
      */
-    private fun beginLeg() {
+    private fun beginLeg(): Boolean {
         val step = steps[leg]
         elapsed = 0
         step.message?.let { mob.sendMessage(it) }
         step.begin()
+        if (!valid()) return false
         step.sounds.filter { it.tick == 0 }.forEach { play(it) }
         val model = AgilityWalk.modelFor(step.walkingAnimation, previousAnimation)
         val walked = leg > 0 && steps[leg - 1].walkingAnimation != -1 && !steps[leg - 1].jump
@@ -194,6 +199,7 @@ class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
                     Direction.between(from, step.destination)))
             }
         }
+        return true
     }
 
     private fun showModel(model: PlayerModelAnimation) {
