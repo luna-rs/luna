@@ -221,9 +221,14 @@ public class Player extends Mob {
     private final PlayerContextMenu contextMenu = new PlayerContextMenu(this);
 
     /**
-     * The hashed password. May be {@code null} for legacy/plaintext accounts until conversion.
+     * The stored password hash, prepared before a human account enters the world.
      */
     private String hashedPassword;
+
+    /**
+     * Invalidates password changes prepared for an older credential state. Game-thread only.
+     */
+    private long passwordRevision;
 
     /**
      * The last known IP address this player logged in with.
@@ -364,6 +369,7 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        passwordRevision++;
         if (dynamicMap != null) dynamicMap.remove(this);
         pendingPlacement = true;
         localMobs.clearForLogout();
@@ -1006,16 +1012,55 @@ public class Player extends Mob {
      */
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+        passwordRevision++;
     }
 
     /**
      * Sets the plaintext password and clears any previously stored hash.
+     * Active accounts should use {@link io.luna.game.LoginService#changePassword(Player, String)} so hashing stays
+     * off the game thread.
      *
      * @param password The plaintext password.
      */
     public void setPassword(String password) {
         credentials.setPassword(password);
         hashedPassword = null;
+        passwordRevision++;
+    }
+
+    /**
+     * Reserves the next asynchronous password change. Must be called on the game thread.
+     *
+     * @return The revision that may install the prepared password.
+     */
+    public long beginPasswordChange() {
+        return ++passwordRevision;
+    }
+
+    /**
+     * Checks whether a prepared change still belongs to the current credential state.
+     *
+     * @param revision The reserved revision.
+     * @return Whether no later change or credential replacement has superseded it.
+     */
+    public boolean isPasswordChangeCurrent(long revision) {
+        return revision == passwordRevision;
+    }
+
+    /**
+     * Installs matching plaintext and prepared hash together on the game thread.
+     *
+     * @param revision The reserved revision.
+     * @param password The new plaintext password.
+     * @param hash Its already prepared hash.
+     */
+    public void applyPasswordChange(long revision, String password, String hash) {
+        if (!isPasswordChangeCurrent(revision)) {
+            throw new IllegalStateException("This password change has been superseded.");
+        }
+        Objects.requireNonNull(hash);
+        credentials.setPassword(password);
+        hashedPassword = hash;
     }
 
     /**

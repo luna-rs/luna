@@ -3,9 +3,11 @@ package io.luna.game;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Supplier;
 import io.luna.game.LoginService.LoginRequest;
+import io.luna.game.GameSettings.PasswordStrength;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.bot.PlayerAutomation;
 import io.luna.Luna;
@@ -16,10 +18,14 @@ import io.luna.net.msg.login.LoginRequestMessage;
 import io.luna.net.msg.login.LoginResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -72,6 +78,11 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         private volatile PlayerData loadedData;
 
         /**
+         * Prepared password hash handed from the worker to the final player before world registration.
+         */
+        private volatile String passwordHash;
+
+        /**
          * Creates a new {@link LoginRequest}.
          *
          * @param player The player.
@@ -94,12 +105,30 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
     private final Map<String, CompletableFuture<Boolean>> loadMap = new ConcurrentHashMap<>();
 
     /**
+     * Password preparation performed only by authentication workers.
+     */
+    private final Function<String, String> passwordHasher;
+
+    /**
      * Creates a new {@link LoginService}.
      *
      * @param world The world.
      */
     public LoginService(World world) {
         super(world);
+        passwordHasher = LoginService::hashPassword;
+    }
+
+    /**
+     * Creates a login service with explicit worker and password preparation dependencies.
+     *
+     * @param world The world.
+     * @param workers The workers owned by this service.
+     * @param passwordHasher The function used to prepare new passwords.
+     */
+    LoginService(World world, ExecutorService workers, Function<String, String> passwordHasher) {
+        super(world, workers);
+        this.passwordHasher = passwordHasher;
     }
 
     @Override
@@ -148,6 +177,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
         // If final response succeeds, register player and set ACTIVE.
         if (client.sendFinalLoginResponse(player, request.loadedData, request.message)) {
+            player.setHashedPassword(request.passwordHash);
             world.getPlayers().add(player);
             player.setState(EntityState.ACTIVE);
             logger.info("{} has logged in.", username);
@@ -159,6 +189,96 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         workers.shutdownNow();
         awaitTerminationUninterruptibly(workers);
         logger.fatal("The login service has been shutdown.");
+    }
+
+    /**
+     * Prepares a password on an authentication worker and installs it on the same active session before saving.
+     * Call on the game thread. Superseded requests and sessions that leave the world complete with {@code false}.
+     *
+     * @param player The active player requesting the change.
+     * @param password The new plaintext password, between one and twenty characters.
+     * @return Whether this request was saved while it still belonged to the same active session.
+     */
+    public CompletableFuture<Boolean> changePassword(Player player, String password) {
+        String normalizedPassword = password == null ? null : PlayerCredentials.normalizePassword(password);
+        if (normalizedPassword == null || normalizedPassword.isEmpty() || normalizedPassword.length() > 20) {
+            return CompletableFuture.failedFuture(new IllegalArgumentException("Password length must be 1-20 characters."));
+        }
+        String username = player.getUsername();
+        var target = new WeakReference<>(player);
+        if (!isCurrentSession(player, username)) {
+            return CompletableFuture.completedFuture(false);
+        }
+        long revision = player.beginPasswordChange();
+        var result = new CompletableFuture<Boolean>();
+        try {
+            CompletableFuture.supplyAsync(() -> passwordHasher.apply(normalizedPassword), workers).
+                    whenComplete((hash, error) -> onGameThread(() ->
+                            finishPasswordChange(target, username, revision, normalizedPassword, hash, error, result), result));
+        } catch (RuntimeException error) {
+            result.completeExceptionally(error);
+        }
+        return result;
+    }
+
+    /**
+     * Installs a prepared password before a game-thread save snapshot, without exposing the password to logs.
+     */
+    private void finishPasswordChange(WeakReference<Player> target, String username, long revision, String password,
+                                      String hash, Throwable error, CompletableFuture<Boolean> result) {
+        Player player = target.get();
+        if (!isCurrentSession(player, username) || !player.isPasswordChangeCurrent(revision)) {
+            result.complete(false);
+        } else if (error != null) {
+            logger.error("Issue preparing {}'s password change.", username, error);
+            result.completeExceptionally(error);
+        } else {
+            player.applyPasswordChange(revision, password, hash);
+            player.save().whenComplete((ignored, saveError) -> onGameThread(() -> {
+                Player current = target.get();
+                if (!isCurrentSession(current, username) || !current.isPasswordChangeCurrent(revision)) {
+                    result.complete(false);
+                } else if (saveError != null) {
+                    logger.error("Issue saving {}'s password change.", username, saveError);
+                    result.completeExceptionally(saveError);
+                } else {
+                    result.complete(true);
+                }
+            }, result));
+        }
+    }
+
+    /**
+     * Checks identity as well as username so completion cannot change a replacement login.
+     */
+    private boolean isCurrentSession(Player player, String username) {
+        return player != null && player.getState() == EntityState.ACTIVE &&
+                world.getPlayerMap().get(username) == player && !player.getClient().isPendingLogout() &&
+                !world.getLogoutService().isSavePending(username);
+    }
+
+    /**
+     * Completes failed scheduling or game-thread continuations instead of abandoning the requesting future.
+     */
+    private void onGameThread(Runnable action, CompletableFuture<?> result) {
+        try {
+            world.getContext().getGame().sync(action).whenComplete((ignored, error) -> {
+                if (error != null) {
+                    result.completeExceptionally(error);
+                }
+            });
+        } catch (RuntimeException error) {
+            result.completeExceptionally(error);
+        }
+    }
+
+    /**
+     * Prepares the configured stored credential for a new account or changed password.
+     */
+    private static String hashPassword(String password) {
+        PasswordStrength strength = Luna.settings().game().passwordStrength();
+        return strength == PasswordStrength.NONE ? "password" :
+                BCrypt.hashpw(password, BCrypt.gensalt(strength.getRounds()));
     }
 
     /**
@@ -188,6 +308,8 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
                 if (response == LoginResponse.NORMAL) {
                     request.loadedData = loadedData;
+                    request.passwordHash = loadedData == null ? passwordHasher.apply(request.message.getPassword()) :
+                            loadedData.password;
                     logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
                     return true;
                 } else {

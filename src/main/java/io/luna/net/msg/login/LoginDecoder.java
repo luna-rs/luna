@@ -2,6 +2,7 @@ package io.luna.net.msg.login;
 
 import com.google.common.base.Strings;
 import io.luna.LunaContext;
+import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.net.client.Client;
 import io.luna.net.client.LoginClient;
 import io.luna.net.codec.ByteMessage;
@@ -272,7 +273,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
                 ByteMessage msg = ByteMessage.wrap(rsaBuffer);
                 String username = msg.getString().toLowerCase().trim();
-                String password = msg.getString().toLowerCase().trim();
+                String password = PlayerCredentials.normalizePassword(msg.getString());
 
                 return new LoginRequestMessage(username,
                         password, encryptor, decryptor, ctx.channel().pipeline(), memoryVersion == 1);

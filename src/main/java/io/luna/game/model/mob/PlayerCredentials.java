@@ -2,6 +2,7 @@ package io.luna.game.model.mob;
 
 import io.luna.util.StringUtils;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -28,6 +29,16 @@ public final class PlayerCredentials {
      */
     public static boolean isValidUsername(String username) {
         return USERNAME_PATTERN.matcher(username).matches();
+    }
+
+    /**
+     * Applies the login protocol's case-insensitive, trimmed password policy.
+     *
+     * @param password The submitted password.
+     * @return Its locale-independent login representation.
+     */
+    public static String normalizePassword(String password) {
+        return password.toLowerCase(Locale.ROOT).trim();
     }
 
     /**
