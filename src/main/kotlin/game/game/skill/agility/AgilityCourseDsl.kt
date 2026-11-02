@@ -49,7 +49,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
     }
 
     /**
-     * Creates a single continuous walking traversal.
+     * Creates a single continuous walk across an obstacle, a tile a tick.
      */
     fun movementAction(plr: Player, destination: Position, walkingAnimationId: Int, message: String,
                        sounds: List<AgilitySound> = emptyList(), endMessage: String? = null,
