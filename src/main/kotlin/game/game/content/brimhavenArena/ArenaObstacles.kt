@@ -30,6 +30,7 @@ import game.player.Sound
 import game.skill.Skills
 import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityStep
+import game.skill.agility.AgilityWalk
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.Entity
@@ -78,7 +79,11 @@ object ArenaObstacles {
         var jump = false
         var reverse = false
         when (obj.id) {
-            3551 -> { dy = if (obj.direction == ObjectDirection.EAST) -1 else 1; start = p; xp = 10.0 }
+            3551 -> {
+                // From the platform tile before the rope, where a click on it stops.
+                dy = if (obj.direction == ObjectDirection.EAST) -1 else 1
+                start = p.translate(0, -dy); length = 8; xp = 10.0
+            }
             3566 -> {
                 when (obj.direction) {
                     ObjectDirection.WEST -> dy = -1
@@ -96,8 +101,9 @@ object ArenaObstacles {
                     ObjectDirection.NORTH -> dx = -1
                     ObjectDirection.SOUTH -> dx = 1
                 }
-                start = p.translate(if (dy != 0) 1 else 0, if (dx != 0) 1 else 0)
-                length = 8; xp = 14.0; low = 235; high = 275; walking = 744; animation = 742
+                // From the platform tile before the bars' solid end, where a click on them stops.
+                start = p.translate((if (dy != 0) 1 else 0) - dx, (if (dx != 0) 1 else 0) - dy)
+                length = 9; xp = 14.0; low = 235; high = 275; walking = 744; animation = 742
             }
             3583 -> {
                 if (obj.direction == ObjectDirection.WEST) dy = if (p.y == 9559) 1 else -1
@@ -132,15 +138,17 @@ object ArenaObstacles {
         val failed = if (obj.id in 3570..3572) ArenaTraps.broken(start.translate(dx * 2, dy * 2))
             else roll >= Skills.successRate(low, high, player.agility.level.coerceIn(1, 99))
         fun at(distance: Int, z: Int = 3) = Position(start.x + dx * distance, start.y + dy * distance, z)
+        // A plain step onto the rope's end; the balance covers only the rope.
+        val ontoRope = AgilityStep(at(1), 1, walkingAnimation = AgilityWalk.NORMAL)
         if (failed) {
             if (obj.id == 3565) return Route(start,
                 listOf(AgilityStep(at(1), 1), AgilityStep(start, 3, animation = 1106, jump = true)), 0.0, true, false)
             val landing = when (obj.id) {
                 3566 -> at(0, 0)
-                3551 -> at(1, 0).translate(-dy, 0)
+                3551 -> at(2, 0).translate(-dy, 0)
                 3578 -> at(2, 0).translate(-dy * 2, dx * 2)
                 3583, 3570, 3571, 3572 -> at(1, 0)
-                3564 -> at(2, 0).translate(0, -dy)
+                3564 -> at(3, 0).translate(0, -dy)
                 else -> at(1, 0).translate(-dy, dx)
             }
             val failAnimation = when (obj.id) {
@@ -150,9 +158,15 @@ object ArenaObstacles {
                 3570, 3571, 3572 -> 768
                 else -> 764
             }
-            return Route(start, soundSteps(obj.id, true, listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2,
-                walkingAnimation = walking, animation = animation),
-                AgilityStep(landing, 2, animation = failAnimation, jump = true))), 0.0, true)
+            // Ropes and monkey bars start a tile back, on the platform, and still fall two tiles past their end.
+            val approach = when (obj.id) {
+                3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking))
+                3564 -> listOf(AgilityStep(at(3), 3, walkingAnimation = walking, animation = animation))
+                else -> listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2, walkingAnimation = walking,
+                    animation = animation))
+            }
+            return Route(start, soundSteps(obj.id, true, approach +
+                AgilityStep(landing, 2, animation = failAnimation, jump = true)), 0.0, true)
         }
         val steps = when (obj.id) {
             3578 -> (1..7).map { AgilityStep(at(it), 2, animation = 741, jump = true) }
@@ -161,6 +175,8 @@ object ArenaObstacles {
                 7 -> if (reverse) 1124 else 1120
                 else -> animation
             }) }
+            3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking),
+                AgilityStep(at(length), length - 3, walkingAnimation = walking))
             3566, 3565 -> listOf(AgilityStep(at(length), if (obj.id == 3565) 5 else 4, animation = animation))
             else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation),
                 AgilityStep(at(length), length - 2, walkingAnimation = walking, jump = jump))
@@ -174,9 +190,9 @@ object ArenaObstacles {
     private fun soundSteps(id: Int, failed: Boolean, steps: List<AgilityStep>): List<AgilityStep> =
         steps.mapIndexed { index, step ->
             val sounds = when (id) {
-                3551 -> if (index == 0) listOf(AgilitySound(Sound.TIGHTROPE, loops = 2))
-                    else if (failed) emptyList() else listOf(AgilitySound(Sound.TIGHTROPE, tick = 1, loops = 2),
-                        AgilitySound(Sound.TIGHTROPE, tick = 4))
+                3551 -> if (index == 1) listOf(AgilitySound(Sound.TIGHTROPE, loops = 2))
+                    else if (failed || index == 0) emptyList() else listOf(AgilitySound(Sound.TIGHTROPE, tick = 1,
+                        loops = 2), AgilitySound(Sound.TIGHTROPE, tick = 4))
                 3553, 3555, 3557 -> if (index == 0) listOf(AgilitySound(Sound.LOG_BALANCE, loops = 2))
                     else if (failed) emptyList() else listOf(AgilitySound(Sound.LOG_BALANCE, tick = 1, loops = 2),
                         AgilitySound(Sound.LOG_BALANCE, tick = 4))
