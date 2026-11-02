@@ -1,5 +1,7 @@
 package engine.bot.speech
 
+import api.bot.isRealBot
+
 import api.attr.Attr
 import api.bot.action.BotCombatThreat
 import io.luna.game.model.mob.bot.Bot
@@ -84,7 +86,7 @@ object BotReactions {
      * @param died The player who died.
      */
     fun reactToOtherDied(source: Mob?, died: Player) {
-        if (source is Bot && died is Bot && died.inWilderness()) {
+        if (source.isRealBot() && died.isRealBot() && died.inWilderness()) {
             val delay = 1..3
             if(rand(source.personality.social)) {
                 val sourceText =
@@ -100,7 +102,7 @@ object BotReactions {
 
         // Ignore if the source or victim, if currently in combat with a player, or if the social check fails.
         world.locator.findViewablePlayers(died) { it != died && it.combat.target !is Player && it != source &&
-                it is Bot && rand(it.personality.social) }
+                it.isRealBot() && rand(it.personality.social) }
             .forEach {
                 val bot = it as Bot
                 val text = BotReactionSpeechPool.take(bot, ReactionSpeech.OTHER_DIED)
@@ -308,7 +310,7 @@ object BotReactions {
         }
 
         world.locator.findViewablePlayers(bot) {
-            it != bot && it is Bot && it.emotions.isFeeling(EmotionType.HAPPY, true)
+            it != bot && it.isRealBot() && it.emotions.isFeeling(EmotionType.HAPPY, true)
         }.forEach { it.asBot().emotions.add(EmotionalTrigger(EmotionType.GREEDY, 0.10)) }
     }
 

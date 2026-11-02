@@ -6,6 +6,10 @@ import io.luna.game.LoginService.LoginRequest;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerRights;
+import io.luna.game.model.mob.bot.PlayerAutomation;
+import io.luna.Luna;
+import io.luna.net.LunaChannelFilter;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.client.LoginClient;
 import io.luna.net.msg.login.LoginRequestMessage;
@@ -136,8 +140,11 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             return;
         }
 
-        var player = request.player;
         var client = request.client;
+        PlayerRights rights = PlayerRights.forLogin(request.player.getUsername(),
+                request.loadedData == null ? null : request.loadedData.rights,
+                Luna.settings().game().betaMode(), LunaChannelFilter.WHITELIST.contains(client.getIpAddress()));
+        var player = PlayerAutomation.prepareLoginPlayer(request.player, rights);
 
         // If final response succeeds, register player and set ACTIVE.
         if (client.sendFinalLoginResponse(player, request.loadedData, request.message)) {

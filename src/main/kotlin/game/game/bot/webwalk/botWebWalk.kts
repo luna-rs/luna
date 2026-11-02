@@ -1,5 +1,7 @@
 package game.bot.webwalk
 
+import api.bot.isRealBot
+
 import api.bot.script.DynamicBotScript
 import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.plan.WebWalkPlan
@@ -58,7 +60,7 @@ cmd("botwebwalk", RIGHTS_DEV) {
     val name = words[0]
     val bank = access ?: BankAccess.ALL
 
-    val online = world.players.firstOrNull { it is Bot && it.username.equals(name, true) } as Bot?
+    val online = world.players.firstOrNull { it.isRealBot() && it.username.equals(name, true) } as Bot?
     if (online != null) {
         startWebWalk(plr, online, destination, bank)
         return@cmd

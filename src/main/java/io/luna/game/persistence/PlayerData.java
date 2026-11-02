@@ -153,7 +153,9 @@ public class PlayerData {
         }
 
         databaseId = player.getDatabaseId();
-        position = player.getPosition();
+        // Private space is recycled and is not restored with this save. Recovery must not run activity cleanup.
+        position = player.getDynamicMap() == null ? player.getPosition() :
+                player.getDynamicMap().getRecoveryPosition(player);
         rights = player.getRights();
         lastIp = player.getClient().getIpAddress();
         logoutTime = Instant.now();

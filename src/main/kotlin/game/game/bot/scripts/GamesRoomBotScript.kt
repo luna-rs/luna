@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.script.BotScript
@@ -47,7 +49,7 @@ class GamesRoomBotScript(bot: Bot, private var attempted: Boolean = false,
             it !== bot && it.state == EntityState.ACTIVE && it.isAlive && !it.isLocked &&
                 GamesRoom.inRoom(it.position) && bot.position.isWithinDistance(it.position, 16) &&
                 !it.overlays.hasWindow() && !it.combat.inCombat() && !GamesRoom.playing(it) &&
-                (it !is Bot || it.index > bot.index &&
+                (!it.isRealBot() || it.index > bot.index &&
                     (it.scriptStack.current() as? GamesRoomBotScript)?.attempted == false)
         }
 
