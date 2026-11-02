@@ -514,7 +514,11 @@ object WebWalkLiveGenerator {
         val entry = Altar.OBJECT_TO_ALTAR[obj.id]
         val altar = entry ?: Altar.PORTAL_TO_ALTAR.getValue(obj.id)
         val to = if (entry != null) altar.enter else altar.exit
-        val from = climbingTiles(obj).firstOrNull()
+        val from = if (entry == null && altar == Altar.WATER) {
+            altar.enter.takeIf {
+                LadderDestination.canLand(it) && world.collisionManager.reached(it, obj, altar.portalPolicy)
+            }
+        } else climbingTiles(obj).firstOrNull()
         if (from == null || !LadderDestination.canLand(to)) {
             report.skipped += "altar ${obj.id} at ${obj.position}: no interaction tile or landing"
             return

@@ -67,7 +67,7 @@ Altar.ALL.forEach {
  * Intercept event for exiting through altar portals.
  */
 Altar.ALL.forEach {
-    object1(it.portal) {
+    object1(it.portal, InteractionPolicySupplier { _, _ -> it.portalPolicy }) {
         portalExit(plr, it)
     }
 }
