@@ -14,7 +14,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.timeout.ReadTimeoutException;
-import io.netty.util.Attribute;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,6 +21,7 @@ import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.Locale;
 import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -121,6 +121,16 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
     private int rsaBlockSize;
 
     /**
+     * If a complete request is waiting for authentication and protocol installation.
+     */
+    private boolean authenticating;
+
+    /**
+     * If this decoder paused automatic reads while authentication is pending.
+     */
+    private boolean resumeAutoRead;
+
+    /**
      * The context instance.
      */
     private final LunaContext context;
@@ -144,11 +154,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
     @Override
     protected Object decodeMsg(ChannelHandlerContext ctx, ByteBuf in, DecodeState state) {
+        if (authenticating) {
+            return null;
+        }
         switch (state) {
             case HANDSHAKE:
-                Attribute<Client<?>> attribute = ctx.channel().attr(Client.KEY);
-                attribute.set(new LoginClient(ctx.channel(), context, repository));
-
                 decodeHandshake(ctx, in);
                 break;
             case LOGIN_TYPE:
@@ -166,6 +176,13 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
         rsaBlockSize = 0;
     }
 
+    @Override
+    protected void handlerRemoved0(ChannelHandlerContext ctx) throws Exception {
+        super.handlerRemoved0(ctx);
+        if (resumeAutoRead) {
+            ctx.channel().config().setAutoRead(true);
+        }
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -189,6 +206,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
             checkState(opcode == 14, "opcode != 14");
+            ctx.channel().attr(Client.KEY).set(new LoginClient(ctx.channel(), context, repository));
 
             ByteBuf msg = ByteMessage.pooledBuffer(17);
             try {
@@ -272,8 +290,14 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
 
                 ByteMessage msg = ByteMessage.wrap(rsaBuffer);
-                String username = msg.getString().toLowerCase().trim();
+                String username = msg.getString().toLowerCase(Locale.ROOT).trim();
                 String password = PlayerCredentials.normalizePassword(msg.getString());
+
+                authenticating = true;
+                resumeAutoRead = ctx.channel().config().isAutoRead();
+                if (resumeAutoRead) {
+                    ctx.channel().config().setAutoRead(false);
+                }
 
                 return new LoginRequestMessage(username,
                         password, encryptor, decryptor, ctx.channel().pipeline(), memoryVersion == 1);

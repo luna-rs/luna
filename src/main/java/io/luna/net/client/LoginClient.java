@@ -19,6 +19,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.util.concurrent.RejectedExecutionException;
+
 /**
  * A {@link Client} implementation model representing login protocol I/O communications.
  *
@@ -108,15 +110,17 @@ public class LoginClient extends Client<LoginRequestMessage> {
     }
 
     /**
-     * Sends the final login response before the player is added to the world.
+     * Loads player data and queues the final login response and game protocol transition.
      *
      * @param player The player.
      * @param data The data to sync with the player.
      * @param message The login request message.
-     * @return {@code true} if the final login response {@link LoginResponse#NORMAL}.
+     * @return {@code true} if login was accepted and its event-loop transition was queued.
      */
     public boolean sendFinalLoginResponse(Player player, PlayerData data, LoginRequestMessage message) {
-        if (world.isFull()) {
+        if (!channel.isActive()) {
+            return false;
+        } else if (world.isFull()) {
             sendLoginResponse(player, LoginResponse.WORLD_FULL);
             return false;
         } else if (world.getLogoutService().isSavePending(player.getUsername()) || world.getPlayer(player.getUsernameHash()).isPresent()) {
@@ -124,21 +128,69 @@ public class LoginClient extends Client<LoginRequestMessage> {
             return false;
         } else {
             var gameClient = new GameClient(channel, messageRepository, player);
-            channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 
-            // Packets queued by loadData can't be encoded until the game encoder is installed below, so hold them.
+            // Loading player data and releasing its held messages remain game-thread work.
             gameClient.holdOutgoingMessages();
-            player.loadData(data);
-            sendLoginResponse(player, LoginResponse.NORMAL);
+            try {
+                player.loadData(data);
+                var response = new LoginResponseMessage(LoginResponse.NORMAL, player.getRights(), false);
+                channel.eventLoop().execute(() -> finishLoginTransition(gameClient, response, message));
+            } catch (RejectedExecutionException e) {
+                gameClient.releasePendingMessages();
+                channel.close();
+                return false;
+            } catch (RuntimeException e) {
+                gameClient.releasePendingMessages();
+                channel.close();
+                throw e;
+            }
 
-            var pipeline = channel.pipeline();
-            var messageEncoder = new GameMessageEncoder(message.getEncryptor());
-            var messageDecoder = new GameMessageDecoder(message.getDecryptor(), messageRepository);
-            pipeline.replace("login-encoder", "game-encoder", messageEncoder);
-            pipeline.replace("login-decoder", "game-decoder", messageDecoder);
+            // FIFO event-loop ordering keeps these writes behind the codec transition.
             gameClient.releaseHeldMessages();
             return true;
+        }
+    }
+
+    /**
+     * Installs the game protocol before flushing success, so immediate input uses the new decoder.
+     * Failures request logout because the game thread may already have registered the player.
+     *
+     * @param gameClient The prepared game client.
+     * @param response The successful login response.
+     * @param message The authenticated login request.
+     */
+    private void finishLoginTransition(GameClient gameClient, LoginResponseMessage response,
+                                      LoginRequestMessage message) {
+        if (!channel.isActive()) {
+            gameClient.releasePendingMessages();
+            gameClient.sendLogoutRequest();
+            return;
+        }
+        try {
+            channel.attr(KEY).set(gameClient);
+            var responseFuture = channel.write(response);
+            responseFuture.addListener(future -> {
+                if (!future.isSuccess()) {
+                    gameClient.releasePendingMessages();
+                    gameClient.sendLogoutRequest();
+                    channel.close();
+                }
+            });
+            if (!channel.isActive()) {
+                return;
+            }
+
+            var pipeline = channel.pipeline();
+            pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(message.getEncryptor()));
+            pipeline.replace("login-decoder", "game-decoder",
+                    new GameMessageDecoder(message.getDecryptor(), messageRepository));
+            channel.flush();
+        } catch (RuntimeException e) {
+            gameClient.releasePendingMessages();
+            gameClient.sendLogoutRequest();
+            channel.pipeline().fireExceptionCaught(e);
+            channel.close();
         }
     }
 }
