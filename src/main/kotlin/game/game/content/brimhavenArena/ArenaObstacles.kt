@@ -195,7 +195,7 @@ object ArenaObstacles {
             3564 -> listOf(grab, AgilityStep(at(length), length, walkingAnimation = walking))
             // The climb's move ends with its 144-cycle animation.
             3565 -> listOf(AgilityStep(at(length), 5, animation = animation, moveEnd = 144))
-            3566 -> listOf(AgilityStep(at(length), 4, animation = animation)) // TODO confirm moveEnd bread
+            3566 -> listOf(swing(length, 4))
             else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation),
                 AgilityStep(at(length), length - 2, walkingAnimation = walking))
         }
