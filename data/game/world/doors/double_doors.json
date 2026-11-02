@@ -18,5 +18,7 @@
   {"closed": 3489, "open": 3491, "side": "LEFT"},
   {"closed": 3490, "open": 3492, "side": "RIGHT"},
   {"closed": 11716, "open": 11722, "side": "LEFT"},
-  {"closed": 11721, "open": 11723, "side": "RIGHT"}
+  {"closed": 11721, "open": 11723, "side": "RIGHT"},
+  {"closed": 14929, "open": 14930, "side": "LEFT", "duration": 3},
+  {"closed": 14931, "open": 14932, "side": "RIGHT", "duration": 3}
 ]

@@ -253,6 +253,7 @@ object WebWalkLiveGenerator {
             }
         }
         essenceWizards(climbs, report)
+        climbs += PiscatorisRouteGenerator.gather(report, ::standableNear)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
