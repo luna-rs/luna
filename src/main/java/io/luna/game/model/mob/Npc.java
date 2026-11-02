@@ -224,7 +224,15 @@ public class Npc extends Mob {
      * Applies one native form update, optionally restoring the new definition's current combat levels.
      */
     private void transform(int requestedId, boolean resetCurrentLevels) {
-        definition = NpcDefinition.ALL.retrieve(requestedId);
+        NpcDefinition nextDefinition = NpcDefinition.ALL.retrieve(requestedId);
+        boolean resizeCollision = state == EntityState.ACTIVE && definition.getSize() != nextDefinition.getSize();
+        if (resizeCollision) {
+            world.getCollisionManager().updateEntity(this, true);
+        }
+        definition = nextDefinition;
+        if (resizeCollision) {
+            world.getCollisionManager().updateEntity(this, false);
+        }
         combatDefinition = NpcCombatDefinition.ALL.get(requestedId);
         transformId = requestedId;
         setSkills(resetCurrentLevels);

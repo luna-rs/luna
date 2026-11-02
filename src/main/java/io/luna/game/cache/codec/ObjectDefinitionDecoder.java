@@ -69,6 +69,11 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
         boolean solid = true;
         boolean impenetrable = true;
         boolean interactive = false;
+        int interactionOverride = -1;
+        boolean hasModels = false;
+        int firstModelType = -1;
+        boolean hasActions = false;
+        boolean hollow = false;
         String[] actions = new String[10];
         boolean obstructive = false;
         VarpChildDefinition varpDef = new VarpChildDefinition(-1, -1, ImmutableList.of());
@@ -78,6 +83,13 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             int opcode = data.readUnsignedByte();
 
             if (opcode == 0) {
+                if (interactionOverride == -1) {
+                    interactive = (hasModels && firstModelType == 10) || hasActions;
+                }
+                if (hollow) {
+                    solid = false;
+                    impenetrable = false;
+                }
                 if (animationId == OptionalInt.empty()) {
                     switch (id) { // Not in cache for some reason :/
                         case 2282:
@@ -92,17 +104,25 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
                 int amount = data.readUnsignedByte();
                 for (int i = 0; i < amount; i++) {
                     data.readShort();
-                    data.readByte();
+                    int modelType = data.readUnsignedByte();
+                    if (!hasModels && i == 0) {
+                        firstModelType = modelType;
+                    }
                 }
+                hasModels |= amount > 0;
             } else if (opcode == 2) {
                 name = CacheUtils.readString(data);
             } else if (opcode == 3) {
                 description = CacheUtils.readString(data);
             } else if (opcode == 5) {
                 int amount = data.readUnsignedByte();
+                if (!hasModels && amount > 0) {
+                    firstModelType = 10;
+                }
                 for (int i = 0; i < amount; i++) {
                     data.readShort();
                 }
+                hasModels |= amount > 0;
             } else if (opcode == 14) {
                 width = data.readUnsignedByte();
             } else if (opcode == 15) {
@@ -112,7 +132,10 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             } else if (opcode == 18) {
                 impenetrable = false;
             } else if (opcode == 19) {
-                interactive = data.readBoolean();
+                interactionOverride = data.readUnsignedByte();
+                if (interactionOverride == 1) {
+                    interactive = true;
+                }
             } else if (opcode == 24) {
                 animationId = OptionalInt.of(data.readUnsignedShort());
             } else if (opcode == 28 || opcode == 29) {
@@ -120,6 +143,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             } else if (opcode >= 30 && opcode < 39) {
                 String action = CacheUtils.readString(data);
                 actions[opcode - 30] = action;
+                hasActions = true;
             } else if (opcode == 39) {
                 data.readByte();
             } else if (opcode == 40) {
@@ -136,6 +160,8 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
                 data.readShort();
             } else if (opcode == 73) {
                 obstructive = true;
+            } else if (opcode == 74) {
+                hollow = true;
             } else if (opcode == 75) {
                 data.readByte();
             } else if (opcode == 77) {

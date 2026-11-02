@@ -151,7 +151,7 @@ public final class CollisionUpdate {
          * This follows the 377 client's rules, which are the same ones rsmod uses:
          * </p>
          * <ul>
-         *     <li>Ground decorations block their tile only when they are interactive.</li>
+         *     <li>Ground decorations block their tile only when they are solid and interactive.</li>
          *     <li>Everything else only collides when the definition is solid.</li>
          *     <li>Walls (types 0-3) block the edges or corners they cover.</li>
          *     <li>Diagonal walls, centrepieces and roofs (types 9-21) block every tile of their footprint. The
@@ -170,7 +170,7 @@ public final class CollisionUpdate {
             int orientation = object.getDirection().getId();
 
             if (type == GROUND_DECORATION.getId()) {
-                if (definition.isInteractive()) {
+                if (definition.isSolid() && definition.isInteractive()) {
                     flag(position, CollisionFlag.GROUND_DECOR);
                 }
             } else if (!definition.isSolid()) {

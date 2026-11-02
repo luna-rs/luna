@@ -14,6 +14,8 @@ import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.OptionalInt;
 
 /**
@@ -46,7 +48,7 @@ public final class CollisionMatrix {
     /**
      * The flags that stop a mob standing on a tile from stepping off it, regardless of side.
      */
-    private static final int SOLID = CollisionFlag.LOC | CollisionFlag.BLOCK_WALK;
+    private static final int SOLID = CollisionFlag.LOC | CollisionFlag.FLOOR_BLOCKED;
 
     /**
      * The flags that stop a mob from stepping off a tile to the north, used by the reach checks.
@@ -120,6 +122,12 @@ public final class CollisionMatrix {
      * The high bit of each flag's overlap counter, or {@code null} until a flag is first set twice.
      */
     private int[] overlapHigh;
+
+    /**
+     * Additional holders beyond the four represented by the packed counters, keyed by tile index and flag bit.
+     * Allocated only when a flag has more than four holders.
+     */
+    private Map<Integer, Integer> overlapOverflow;
 
     /**
      * The width (X dimension) of this matrix.
@@ -246,8 +254,8 @@ public final class CollisionMatrix {
     /**
      * Counts one more holder of each flag in {@code flags}, which are already set on the tile at {@code index}.
      * <p>
-     * Each flag has a two bit counter spread over {@link #overlapLow} and {@link #overlapHigh}, so a flag can be held
-     * by up to four callers at once. A flag held by more callers than that stays at the maximum.
+     * Each flag has a two bit counter spread over {@link #overlapLow} and {@link #overlapHigh} for up to four
+     * holders. Additional holders use {@link #overlapOverflow}, so crowded tiles do not lose collision early.
      *
      * @param index The index of the tile.
      * @param flags The flags that are already set.
@@ -260,7 +268,17 @@ public final class CollisionMatrix {
         int low = overlapLow[index];
         int high = overlapHigh[index];
 
-        int counted = flags & ~(low & high);
+        int saturated = flags & low & high;
+        if (saturated != 0) {
+            if (overlapOverflow == null) {
+                overlapOverflow = new HashMap<>();
+            }
+            for (int remaining = saturated; remaining != 0; remaining &= remaining - 1) {
+                int key = (index << 5) | Integer.numberOfTrailingZeros(remaining);
+                overlapOverflow.merge(key, 1, Integer::sum);
+            }
+        }
+        int counted = flags & ~saturated;
         int carry = low & counted;
         overlapLow[index] = low ^ counted;
         overlapHigh[index] = high ^ carry;
@@ -280,9 +298,25 @@ public final class CollisionMatrix {
         int low = overlapLow[index];
         int high = overlapHigh[index];
 
+        int overflowHeld = 0;
+        if (overlapOverflow != null) {
+            for (int remaining = flags & low & high; remaining != 0; remaining &= remaining - 1) {
+                int key = (index << 5) | Integer.numberOfTrailingZeros(remaining);
+                Integer count = overlapOverflow.get(key);
+                if (count != null) {
+                    overflowHeld |= Integer.lowestOneBit(remaining);
+                    if (count == 1) {
+                        overlapOverflow.remove(key);
+                    } else {
+                        overlapOverflow.put(key, count - 1);
+                    }
+                }
+            }
+        }
         int held = (low | high) & flags;
-        int lowOnly = low & held;
-        int highOnly = high & held & ~low;
+        int released = held & ~overflowHeld;
+        int lowOnly = low & released;
+        int highOnly = high & released & ~low;
         overlapLow[index] = (low & ~lowOnly) | highOnly;
         overlapHigh[index] = high & ~highOnly;
         return held;
@@ -341,6 +375,7 @@ public final class CollisionMatrix {
         Arrays.fill(matrix, ALL_ALLOWED);
         overlapLow = null;
         overlapHigh = null;
+        overlapOverflow = null;
     }
 
     /**
@@ -351,7 +386,15 @@ public final class CollisionMatrix {
      * @param flag The collision flag mask to set (overwriting any existing flags).
      */
     void set(int x, int y, int flag) {
-        matrix[indexOf(x, y)] = flag;
+        int index = indexOf(x, y);
+        matrix[index] = flag;
+        if (overlapLow != null) {
+            overlapLow[index] = 0;
+            overlapHigh[index] = 0;
+        }
+        if (overlapOverflow != null) {
+            overlapOverflow.keySet().removeIf(key -> (key >>> 5) == index);
+        }
     }
 
     @Override
@@ -429,6 +472,7 @@ public final class CollisionMatrix {
         System.arraycopy(newMatrix.matrix, 0, matrix, 0, newMatrix.matrix.length);
         overlapLow = newMatrix.overlapLow == null ? null : newMatrix.overlapLow.clone();
         overlapHigh = newMatrix.overlapHigh == null ? null : newMatrix.overlapHigh.clone();
+        overlapOverflow = newMatrix.overlapOverflow == null ? null : new HashMap<>(newMatrix.overlapOverflow);
     }
 
     /**
