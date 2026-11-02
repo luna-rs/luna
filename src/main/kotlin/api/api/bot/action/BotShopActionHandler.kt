@@ -126,91 +126,125 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         return soldItemCond.submit(5) // Unsuspend when the inventory amount decreases.
     }
 
-    /** Keeps the one-item acquisition API used by tool selection. */
+    /**
+     * Keeps the one-item acquisition API used by tool selection.
+     */
     suspend fun obtainWantedItem(id: Int): Boolean = obtainWantedItem(id, 1)
 
     /**
      * Obtains the minimum carried quantity through owned bank stock and normal shop purchases.
-     * Each purchase rechecks access, stock, price, funds, capacity and actual inventory progress.
-     * Partial purchases remain owned on failure; no items or currency are generated. The whole attempt
-     * has one two-minute deadline, including banking, travel and every purchase.
      */
     suspend fun obtainWantedItem(id: Int, amount: Int): Boolean {
         require(amount > 0)
         BotTradeIntentions.recordSupplies(bot, listOf(Item(id, amount)), stockTarget = amount)
-        fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
-        if (carried() >= amount) return true
-        return withTimeoutOrNull(120.seconds) {
+        return id in obtainWantedItems(mapOf(id to amount))
+    }
+
+    /**
+     * Attempts to carry or equip one of each requested item, returning the ids available when the attempt ends.
+     * Unavailable items do not prevent attempts to obtain the rest of the basket.
+     */
+    suspend fun obtainWantedItems(ids: Collection<Int>): Set<Int> = obtainWantedItems(ids.associateWith { 1 })
+
+    /**
+     * Attempts the requested minimum carried quantities through owned bank stock and normal shop purchases.
+     * Each purchase rechecks access, stock, price, funds, capacity and actual inventory progress.
+     * Basket items remain carried when depositing other inventory. Partial purchases remain owned on failure;
+     * the returned ids meet their targets when the attempt ends. The whole basket shares one two-minute
+     * deadline, including banking, travel and every purchase.
+     */
+    suspend fun obtainWantedItems(amounts: Map<Int, Int>): Set<Int> {
+        require(amounts.values.all { it > 0 })
+        val targets = amounts.toMap()
+        fun acquired() = targets.filter { (id, amount) ->
+            bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id) >= amount
+        }.keys
+        if (acquired().size == targets.size) return targets.keys
+        withTimeoutOrNull(120.seconds) {
             try {
-                if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
-                if (bot.bank.contains(id)) {
-                    if (!handler.banking.travelToBankOpen()) return@withTimeoutOrNull false
-                    handler.banking.clickBankingMode(false)
-                    val banked = minOf(bot.bank.computeAmountForId(id).toLong(), amount - carried()).toInt()
-                    if (banked > 0) {
-                        if (!bot.inventory.hasSpaceFor(Item(id, banked)) &&
-                            !handler.banking.depositInventory(setOf(id))) return@withTimeoutOrNull false
-                        if (!handler.banking.withdraw(Item(id, banked))) return@withTimeoutOrNull false
-                    }
+                for ((id, amount) in targets) {
+                    if (!ActionSafety.NON_COMBAT.await(bot)) break
+                    acquireWantedItem(id, amount, targets.keys)
                 }
-                if (carried() >= amount) return@withTimeoutOrNull true
-                val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
-                    .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
-                        .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })
-                if (shops.isEmpty()) return@withTimeoutOrNull false
-                bot.actions.interruptWeak()
-                bot.overlays.closeWindows()
-                for (shop in shops) {
-                    while (carried() < amount) {
-                        if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
-                        if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
-                        val price = shop.computeBuyValue(id, 1).orElse(-1)
-                        if (price < 0) break
-                        val currency = shop.currency.id
-                        val heldCoins = bot.inventory.computeAmountForId(currency)
-                        if (heldCoins.toLong() + bot.bank.computeAmountForId(currency) < price) break
-                        if (heldCoins < price || !bot.inventory.hasSpaceFor(Item(id))) {
-                            if (!handler.banking.travelToBankOpen()) break
-                            if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(currency, maxOf(1, price))))) {
-                                if (!handler.banking.depositInventory(setOf(currency, id))) break
-                            }
-                            // Carry enough for this purchase target instead of returning to the bank for every rune.
-                            if (carried() >= amount) return@withTimeoutOrNull true
-                            val needed = (amount - carried()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                            val stocked = shop.items.computeAmountForId(id)
-                            if (stocked < 1) break
-                            val quoted = shop.computeBuyValue(id, minOf(needed, stocked)).orElse(price)
-                            val wallet = minOf(heldCoins.toLong() + bot.bank.computeAmountForId(currency),
-                                maxOf(price.toLong(), quoted.toLong() + needed)).coerceAtMost(Int.MAX_VALUE.toLong())
-                            val missing = (wallet - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0).toInt()
-                            if (missing > 0 && !handler.banking.withdraw(Item(currency, missing))) break
-                        }
-                        if (!ActionSafety.NON_COMBAT.await(bot)) return@withTimeoutOrNull false
-                        bot.overlays.closeWindows()
-                        if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
-                        if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
-                        bot.overlays.open(ShopInterface(shop))
-                        val before = carried()
-                        val remaining = amount - before
-                        if (remaining <= 0) return@withTimeoutOrNull true
-                        val buy = when {
-                            remaining >= 100 && shop.items.computeAmountForId(id) >= 100 &&
-                                shop.computeBuyValue(id, 100).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy100(id)
-                            remaining >= 10 && shop.items.computeAmountForId(id) >= 10 &&
-                                shop.computeBuyValue(id, 10).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy10(id)
-                            remaining >= 5 && shop.items.computeAmountForId(id) >= 5 &&
-                                shop.computeBuyValue(id, 5).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy5(id)
-                            else -> buy1(id)
-                        }
-                        if (bot.overlays[ShopInterface::class]?.shop !== shop || !buy.await() ||
-                            carried() <= before) break
-                    }
-                    if (carried() >= amount) return@withTimeoutOrNull true
-                }
-                false
             } finally {
                 bot.overlays.closeWindows()
             }
-        } == true
+        }
+        return acquired()
+    }
+
+    /**
+     * Attempts one target while preserving the rest of the basket during banking.
+     */
+    private suspend fun acquireWantedItem(id: Int, amount: Int, basket: Set<Int>): Boolean {
+        fun carried() = bot.inventory.computeAmountForId(id).toLong() + bot.equipment.computeAmountForId(id)
+        if (carried() >= amount) return true
+        if (!ActionSafety.NON_COMBAT.await(bot)) return false
+        if (bot.bank.contains(id)) {
+            if (!handler.banking.travelToBankOpen()) return false
+            handler.banking.clickBankingMode(false)
+            val banked = minOf(bot.bank.computeAmountForId(id).toLong(), amount - carried()).toInt()
+            if (banked > 0) {
+                if (!bot.inventory.hasSpaceFor(Item(id, banked)) &&
+                    !handler.banking.depositInventory(basket)) return false
+                if (!handler.banking.withdraw(Item(id, banked))) return false
+            }
+        }
+        if (carried() >= amount) return true
+        val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
+            .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
+                .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })
+        if (shops.isEmpty()) return false
+        bot.actions.interruptWeak()
+        bot.overlays.closeWindows()
+        for (shop in shops) {
+            while (carried() < amount) {
+                if (!ActionSafety.NON_COMBAT.await(bot)) return false
+                if (!shop.botAccess.apply(bot) || shop.items.computeAmountForId(id) < 1) break
+                val price = shop.computeBuyValue(id, 1).orElse(-1)
+                if (price < 0) break
+                val currency = shop.currency.id
+                val heldCoins = bot.inventory.computeAmountForId(currency)
+                if (heldCoins.toLong() + bot.bank.computeAmountForId(currency) < price) break
+                if (heldCoins < price || !bot.inventory.hasSpaceFor(Item(id))) {
+                    if (!handler.banking.travelToBankOpen()) break
+                    handler.banking.clickBankingMode(false)
+                    if (!bot.inventory.hasSpaceForAll(listOf(Item(id), Item(currency, maxOf(1, price))))) {
+                        if (!handler.banking.depositInventory(basket + currency)) break
+                    }
+                    // Carry enough for this purchase target instead of returning to the bank for every rune.
+                    if (carried() >= amount) return true
+                    val needed = (amount - carried()).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                    val stocked = shop.items.computeAmountForId(id)
+                    if (stocked < 1) break
+                    val quoted = shop.computeBuyValue(id, minOf(needed, stocked)).orElse(price)
+                    val wallet = minOf(heldCoins.toLong() + bot.bank.computeAmountForId(currency),
+                        maxOf(price.toLong(), quoted.toLong() + needed)).coerceAtMost(Int.MAX_VALUE.toLong())
+                    val missing = (wallet - bot.inventory.computeAmountForId(currency)).coerceAtLeast(0).toInt()
+                    if (missing > 0 && !handler.banking.withdraw(Item(currency, missing))) break
+                }
+                if (!ActionSafety.NON_COMBAT.await(bot)) return false
+                bot.overlays.closeWindows()
+                if (SubZone.HOME !in bot.subZones && !handler.webWalkTo(SubZone.HOME)) break
+                if (!ActionSafety.NON_COMBAT.await(bot) || !shop.botAccess.apply(bot)) break
+                bot.overlays.open(ShopInterface(shop))
+                val before = carried()
+                val remaining = amount - before
+                if (remaining <= 0) return true
+                val buy = when {
+                    remaining >= 100 && shop.items.computeAmountForId(id) >= 100 &&
+                        shop.computeBuyValue(id, 100).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy100(id)
+                    remaining >= 10 && shop.items.computeAmountForId(id) >= 10 &&
+                        shop.computeBuyValue(id, 10).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy10(id)
+                    remaining >= 5 && shop.items.computeAmountForId(id) >= 5 &&
+                        shop.computeBuyValue(id, 5).orElse(-1) in 0..bot.inventory.computeAmountForId(currency) -> buy5(id)
+                    else -> buy1(id)
+                }
+                if (bot.overlays[ShopInterface::class]?.shop !== shop || !buy.await() ||
+                    carried() <= before) break
+            }
+            if (carried() >= amount) return true
+        }
+        return false
     }
 }

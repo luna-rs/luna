@@ -1,6 +1,9 @@
 package engine.widget.skill
 
+import api.bot.isRealBot
+
 import api.predef.*
+import engine.bot.gear.BotGearProgression
 import engine.bot.speech.BotReactions
 import game.player.Jingles.*
 import io.luna.game.event.EventPriority
@@ -110,8 +113,9 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
             SKILL_HITPOINTS -> skill.level + 1
             else -> newLevel
         }
-        if (plr is Bot) {
+        if (plr.isRealBot()) {
             BotReactions.reactToLevelUp(plr, skill, newLevel)
+            BotGearProgression.onLevelUp(plr, skillId, oldLevel, newLevel)
         }
 
         // Open level up widget.

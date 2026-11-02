@@ -21,11 +21,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -124,6 +126,31 @@ public final class WorldEconomy extends AbstractScheduledService {
     private int lastPricesAmount;
 
     /**
+     * Developer price edits applied and persisted by the economy service, never by the game thread.
+     */
+    private final Queue<GuidePriceEdit> guidePriceEdits = new ConcurrentLinkedQueue<>();
+
+    /**
+     * A requested price override without fabricated trade samples.
+     *
+     * @author lare96
+     */
+    private record GuidePriceEdit(int id, int price, java.util.concurrent.CompletableFuture<Double> result) {}
+
+    /**
+     * Queues an explicit price edit for the next regular economy cycle.
+     */
+    public CompletableFuture<Double> setGuidePrice(int id, int price) {
+        if (!isRunning()) throw new IllegalStateException("Economy service is not running.");
+        var def = ItemDefinition.ALL.retrieve(id);
+        int baseId = def.getUnnotedId().orElse(id);
+        EconomySeedOverrides.validate(baseId, price);
+        var result = new java.util.concurrent.CompletableFuture<Double>();
+        guidePriceEdits.add(new GuidePriceEdit(baseId, price, result));
+        return result;
+    }
+
+    /**
      * Creates a new world economy service.
      *
      * @param world The world that owns this economy service.
@@ -188,7 +215,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      */
     @Override
     protected void runOneIteration() throws Exception {
-        if (trades.isEmpty() && shopPurchases.isEmpty() && prices.size() == lastPricesAmount) {
+        if (trades.isEmpty() && shopPurchases.isEmpty() && guidePriceEdits.isEmpty() && prices.size() == lastPricesAmount) {
             return;
         }
 
@@ -240,8 +267,23 @@ public final class WorldEconomy extends AbstractScheduledService {
 
         lastPricesAmount = prices.size();
 
+        var appliedEdits = new java.util.ArrayList<GuidePriceEdit>();
+        for (GuidePriceEdit edit; (edit = guidePriceEdits.poll()) != null; ) {
+            var previous = resolvePriceData(edit.id());
+            var updated = previous.setPrice(edit.price(), 0);
+            prices.put(updated.id, updated);
+            priceUpdates.put(updated.id, updated);
+            historyUpdates.add(updated);
+            appliedEdits.add(edit);
+        }
         int updates = priceUpdates.size();
-        savePrices();
+        try {
+            savePrices();
+            appliedEdits.forEach(edit -> edit.result().complete((double) edit.price()));
+        } catch (Exception error) {
+            appliedEdits.forEach(edit -> edit.result().completeExceptionally(error));
+            throw error;
+        }
         logger.info("A total of {} economy prices have been updated.", box(updates));
     }
 
@@ -578,7 +620,7 @@ public final class WorldEconomy extends AbstractScheduledService {
      *
      * @throws IOException If JSON persistence fails.
      */
-    private void savePrices() throws IOException {
+    private void savePrices() throws Exception {
         if (world.getSerializerManager().isJson()) {
             Path tempPath = PRICE_PATH.resolveSibling(PRICE_PATH.getFileName() + ".tmp");
             GsonUtils.writeJson(new HashMap<>(prices), tempPath);
@@ -595,10 +637,26 @@ public final class WorldEconomy extends AbstractScheduledService {
             priceUpdates.clear();
             historyUpdates.clear();
         } else {
-            var priceHistoryTask = new BatchPriceHistorySqlTask(world, historyUpdates);
-            var priceUpdateTask = new BatchPriceUpdateSqlTask(world, priceUpdates.values());
-            priceHistoryTask.run();
-            priceUpdateTask.run();
+            var historySnapshot = List.copyOf(historyUpdates);
+            var priceSnapshot = new HashMap<>(priceUpdates);
+            var priceHistoryTask = new BatchPriceHistorySqlTask(world, new ConcurrentLinkedQueue<>(historySnapshot));
+            var priceUpdateTask = new BatchPriceUpdateSqlTask(world, new ArrayList<>(priceSnapshot.values()));
+            try (var connection = world.getConnectionPool().take()) {
+                boolean autoCommit = connection.getAutoCommit();
+                connection.setAutoCommit(false);
+                try {
+                    priceHistoryTask.run(connection);
+                    priceUpdateTask.run(connection);
+                    connection.commit();
+                } catch (Exception error) {
+                    connection.rollback();
+                    throw error;
+                } finally {
+                    connection.setAutoCommit(autoCommit);
+                }
+            }
+            historyUpdates.removeAll(historySnapshot);
+            priceSnapshot.forEach(priceUpdates::remove);
         }
     }
 

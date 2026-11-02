@@ -52,6 +52,14 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     private static final int MAX_ITEMS_PER_TILE = 128;
 
     /**
+     * Shares expiration policy with developer inspection without duplicating lifetime constants.
+     */
+    static int expirationTransitionTicks(GroundItem item) {
+        return item.isGlobal() ? ExpirationTask.GLOBAL_TICKS :
+                item.def().isTradeable() ? ExpirationTask.TRADEABLE_LOCAL_TICKS : ExpirationTask.UNTRADEABLE_LOCAL_TICKS;
+    }
+
+    /**
      * A {@link Task} that processes ground item expiration.
      */
     private final class ExpirationTask extends Task {
