@@ -1,5 +1,7 @@
 package game.player.command
 
+import api.bot.isRealBot
+
 import api.bot.script.DynamicBotScript
 import api.bot.script.ZonedBotScript
 import api.bot.zone.SubZone
@@ -73,7 +75,7 @@ cmd("shop") {
 cmd("botscript", RIGHTS_DEV) {
     val name = getInputFrom(0)
     for (nextPlr in world.players) {
-        if (nextPlr is Bot) {
+        if (nextPlr.isRealBot()) {
             if (nextPlr.scriptStack.current()?.javaClass?.simpleName.equals(name, true)) {
                 plr.sendMessage("Has script [$name] ${nextPlr.username}")
             }
@@ -83,7 +85,7 @@ cmd("botscript", RIGHTS_DEV) {
 
 cmd("forcescript", RIGHTS_DEV) {
     for (nextPlr in world.players) {
-        if (nextPlr is Bot) {
+        if (nextPlr.isRealBot()) {
             nextPlr.bank.add(Item(Ore.IRON.item, 250))
             nextPlr.bank.add(Item(Ore.COAL.item, 250))
             nextPlr.smithing.staticLevel = BarType.STEEL.level
@@ -116,7 +118,7 @@ cmd("rockcrabs") {
 }
 cmd("zonebots", RIGHTS_DEV) {
     for (nextPlr in world.players) {
-        if (nextPlr is Bot) {
+        if (nextPlr.isRealBot()) {
             if (nextPlr.scriptStack.current() is ZonedBotScript) {
                 plr.sendMessage("Has script [${nextPlr.scriptStack.current()?.javaClass?.simpleName}] ${nextPlr.username}")
             }
@@ -129,7 +131,7 @@ cmd("botstats", RIGHTS_DEV) {
 
     val allStats = ArrayList<BotStat>(world.bots.onlineCount)
     for (plr in world.players) {
-        if (plr is Bot) {
+        if (plr.isRealBot()) {
             allStats += BotStat(plr.skills.sumOf { it.staticLevel }, plr.combatLevel, plr.username)
         }
     }
@@ -157,7 +159,7 @@ cmd("botskill", RIGHTS_DEV) {
     val id = asInt(0)
     var (level, levelUsername) = Pair<Int, String?>(0, null)
     for (plr in world.players) {
-        if (plr is Bot) {
+        if (plr.isRealBot()) {
             val newLevel = plr.skill(id).staticLevel
             if (newLevel > level) {
                 level = newLevel
@@ -171,7 +173,7 @@ cmd("botskill", RIGHTS_DEV) {
 cmd("botrich", RIGHTS_DEV) {
     var (value, valueUsername) = Pair<Long, String?>(0, null)
     for (plr in world.players) {
-        if (plr is Bot) {
+        if (plr.isRealBot()) {
             val newBankValue = plr.itemTracker.entrySet().sumOf {
                 if (it.element == 995) {
                     it.count
@@ -196,7 +198,7 @@ cmd("botrich", RIGHTS_DEV) {
 
 cmd("hasrunes"){
     for(bot in world.players) {
-        if(bot is Bot && bot.inventory.containsAnyIds(Rune.ID_TO_RUNE.keys)) {
+        if(bot.isRealBot() && bot.inventory.containsAnyIds(Rune.ID_TO_RUNE.keys)) {
             plr.move(bot.position)
             break
         }
@@ -414,7 +416,7 @@ cmd("findfight") {
 cmd("findbot") {
     val choices = ArrayList<Bot>()
     for (next in world.players) {
-        if (next is Bot && !next.isViewableFrom(plr)) {
+        if (next.isRealBot() && !next.isViewableFrom(plr)) {
             choices += next
         }
     }

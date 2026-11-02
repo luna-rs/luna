@@ -371,7 +371,7 @@ class FarmingBotScript(
         }
         if (!productionReady(canWork(work))) return true
         val zone = SITES.getValue(location)
-        val target = world.locator.findObjects(zone.inside, zone.area.tileRadius) {
+        val target = world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {
             it.id == location.objectId && it.state == EntityState.ACTIVE && it.position.z == 0 && it in zone.area
         }.minByOrNull { bot.position.computeLongestDistance(it.position) }
         attemptProduction(work.input?.id ?: work.output?.id ?: Farming.SPADE,

@@ -1,6 +1,8 @@
 package api.bot.action.trading
 
 import api.predef.world
+import com.google.common.math.LongMath
+import io.luna.Luna
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -11,6 +13,25 @@ import kotlin.random.Random
  * @author lare96
  */
 object BotTradeSelection {
+
+    /**
+     * Selects the configured number of most valuable eligible stacks, then sells the most frequently traded ones first.
+     * Full stack values use the quoted unit prices and saturated long arithmetic. Recorded samples break
+     * value ties during selection; stack value and item id break sample ties in the resulting sale order.
+     * History is snapshotted once per quote, and input quotes are retained for the current banking trip.
+     */
+    internal fun merchantSales(items: List<BotTradeItem>,
+                               samples: (Int) -> Long = { world.economy.prices[it]?.samples ?: 0L }): List<BotTradeItem> {
+        val settings = Luna.settings().bots()
+        val eligible = items.filter { it.price > 0 && it.item.amount > 0 }.associateWith {
+            LongMath.saturatedMultiply(it.item.amount.toLong(), it.price)
+        }.filterValues { it > settings.merchantSaleMinimumStackValue() }
+        val history = eligible.keys.associateWith { samples(it.item.id).coerceAtLeast(0L) }
+        val byValue = compareByDescending<BotTradeItem> { eligible.getValue(it) }
+            .thenByDescending { history.getValue(it) }.thenBy { it.item.id }
+        val bySamples = compareByDescending<BotTradeItem> { history.getValue(it) }.then(byValue)
+        return eligible.keys.sortedWith(byValue).take(settings.merchantSaleStackLimit()).sortedWith(bySamples)
+    }
 
     /**
      * Reads observed history and the fading initial popularity seed without creating price records.

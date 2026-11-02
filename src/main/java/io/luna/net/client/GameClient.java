@@ -3,6 +3,9 @@ package io.luna.net.client;
 import io.luna.game.LogoutService;
 import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.PlayerAutomation;
+import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
@@ -134,6 +137,11 @@ public class GameClient extends Client<GameMessage> {
                 if (reader == null) {
                     logger.warn("No assigned reader for opcode {}, size {}", msg.getOpcode(), msg.getSize());
                     continue;
+                }
+                if (!(this instanceof BotClient) &&
+                        player instanceof Bot controller && controller.isAutomationActive() &&
+                        PlayerAutomation.interrupts(reader)) {
+                    controller.stopAutomation();
                 }
                 reader.submitMessage(player, msg);
             } catch (Exception e) {
