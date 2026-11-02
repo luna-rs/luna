@@ -2,6 +2,8 @@ package game.skill.agility.skullball
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Jingles
+import game.player.Sound
 import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
 import io.luna.game.model.EntityType
@@ -13,6 +15,7 @@ import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.ClearHintMessageWriter
 import io.luna.net.msg.out.MobHintMessageWriter
 import io.luna.net.msg.out.PositionHintMessageWriter
+import io.luna.net.msg.out.SoundMessageWriter
 import kotlin.math.floor
 
 /**
@@ -47,6 +50,11 @@ object Skullball {
     const val GOAL_FORWARD = 1598
     const val GOAL_BACKWARD = 1599
     const val CELEBRATE = 1605
+
+    /**
+     * Client cycles into the kick before the tap sounds, as the foot meets the ball.
+     */
+    const val TAP_DELAY = 15
 
     /**
      * The result screen and its time and score texts.
@@ -225,6 +233,7 @@ object Skullball {
         }
         plr.face(direction)
         plr.animation(Animation(KICK))
+        plr.queue(SoundMessageWriter(Sound.SKULLBALL_TAP.id, 1, TAP_DELAY))
         game.direction = direction
         game.moves = shot.squares
         game.delay = 1
@@ -292,7 +301,8 @@ object Skullball {
 
     /**
      * Rolls the ball one square on. A ball that meets a wall turns back with half its remaining squares, and stops if
-     * it can't move that way either.
+     * it can't move that way either. The player hears one sound a tick, since their client plays one at a time: a
+     * goal over the wall, and the wall over the roll.
      */
     private fun roll(game: Game) {
         val ball = game.ball
@@ -301,19 +311,26 @@ object Skullball {
             ball.walking.addStep(Direction.NORTH)
             game.moves = 0
             game.finishIn = FINISH_DELAY
+            game.player.playSound(Sound.SKULLBALL_ROLL)
             return
         }
+        var sound = Sound.SKULLBALL_ROLL
         if (!rollable(from, game.direction)) {
+            sound = Sound.SKULLBALL_COLLIDE
             game.moves /= 2
             game.direction = game.direction.opposite()
             if (game.moves == 0 || !rollable(from, game.direction)) {
                 game.moves = 0
+                game.player.playSound(sound)
                 return
             }
         }
         ball.walking.addStep(game.direction)
         game.moves--
-        pass(game, from.translate(1, game.direction))
+        if (pass(game, from.translate(1, game.direction))) {
+            sound = Sound.SKELETONGOAL
+        }
+        game.player.playSound(sound)
     }
 
     /**
@@ -327,18 +344,18 @@ object Skullball {
 
     /**
      * Swings the goal the ball rolls into at [tile], if there is one, and scores it if it's the next goal and the ball
-     * goes the course's way.
+     * goes the course's way. Returns whether it scored.
      */
-    private fun pass(game: Game, tile: Position) {
+    private fun pass(game: Game, tile: Position): Boolean {
         val index = GOALS.indexOfFirst { it.middle == tile }
         if (index == -1) {
-            return
+            return false
         }
         val forward = game.direction == GOALS[index].direction
         world.objects.findAll(tile).filter { it.id == GOAL }.findFirst()
             .ifPresent { it.animate(if (forward) GOAL_FORWARD else GOAL_BACKWARD) }
         if (!forward || index != game.goals) {
-            return
+            return false
         }
         game.goals++
         if (game.goals == 1) {
@@ -348,6 +365,8 @@ object Skullball {
         val look = if (plr.appearance.isMale) "Look at him go!" else "Look at her go!"
         shout(game, if (passesAsWerewolf(plr)) (GOAL_LINES + look).random() else
             "Humans play skullball worse than puppies!")
+        plr.playJingle(Jingles.SKULLBALL_GOAL)
+        return true
     }
 
     /**
