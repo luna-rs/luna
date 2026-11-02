@@ -349,7 +349,7 @@ object BorderGate {
                 mob.inventory.remove(Item(COINS, TOLL))
                 mob.sendMessage("You pay the guard.")
             }
-            mob.walking.addStep(if (fromLumbridge) Direction.EAST else Direction.WEST)
+            mob.walking.addForcedStep(if (fromLumbridge) Direction.EAST else Direction.WEST)
             return true
         }
 

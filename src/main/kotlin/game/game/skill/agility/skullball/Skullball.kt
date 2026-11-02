@@ -308,7 +308,7 @@ object Skullball {
         val ball = game.ball
         val from = ball.position
         if (game.goals == GOALS.size && from == FINISH_FROM && game.direction == Direction.NORTH) {
-            ball.walking.addStep(Direction.NORTH)
+            ball.walking.addForcedStep(Direction.NORTH)
             game.moves = 0
             game.finishIn = FINISH_DELAY
             game.player.playSound(Sound.SKULLBALL_ROLL)
@@ -325,7 +325,7 @@ object Skullball {
                 return
             }
         }
-        ball.walking.addStep(game.direction)
+        ball.walking.addForcedStep(game.direction)
         game.moves--
         if (pass(game, from.translate(1, game.direction))) {
             sound = Sound.SKELETONGOAL

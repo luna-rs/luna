@@ -238,10 +238,10 @@ fun slideBlock(block: SlidingBlock) {
     when (Math.floorMod(world.currentTick + block.phase, CYCLE.toLong()).toInt()) {
         0 -> {
             if (npc.position != block.home) npc.move(block.home)
-            npc.walking.addStep(block.out)
+            npc.walking.addForcedStep(block.out)
         }
-        1 -> npc.walking.addStep(block.out)
-        3, 4 -> npc.walking.addStep(block.out.opposite())
+        1 -> npc.walking.addForcedStep(block.out)
+        3, 4 -> npc.walking.addForcedStep(block.out.opposite())
     }
     if (Math.floorMod(world.currentTick + block.phase, CYCLE.toLong()) >= BLOCKING_TICKS) return
     world.locator.findPlayers(block.home, 4) { it.position in block.lane && !it.isLocked }.forEach {

@@ -228,7 +228,7 @@ object Doors {
                 passagePositions -= door.position
             }
         }
-        plr.walking.addStep(Direction.between(start, destination))
+        plr.walking.addForcedStep(Direction.between(start, destination))
         return true
     }
 

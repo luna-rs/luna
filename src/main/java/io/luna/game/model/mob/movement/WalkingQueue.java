@@ -17,11 +17,10 @@ import java.util.Queue;
 /**
  * A model representing a walking queue for a {@link Mob}.
  * <p>
- * This class does <strong>not</strong> perform any path validation or collision checks, with one exception: an NPC with
- * a {@link RouteStrategy} other than {@link RouteStrategy#NORMAL} stops, and drops its queue, when its next step is not
- * allowed by that strategy. Otherwise it will blindly follow whatever sequence of {@link Position} tiles it is given.
- * Higher-level systems (such as {@link WalkingNavigator}) are responsible for generating valid paths and avoiding
- * blocked tiles.
+ * Ordinary paths are checked against live collision before each walking and running step, using the mob's size and
+ * {@link RouteStrategy}. A blocked step drops the remaining path. Higher-level systems such as {@link WalkingNavigator}
+ * remain responsible for finding routes around obstacles. Scripted crossings that deliberately pass through collision
+ * must use {@link #replaceForcedPath(Deque)} or {@link #addForcedStep(Direction)} explicitly.
  * Immobilization is enforced here for every mob before consuming steps, including human players. This prevents
  * existing or directly queued paths from bypassing the freeze checks in player input and navigation.
  *
@@ -48,6 +47,11 @@ public final class WalkingQueue {
      * When true, up to two steps will be processed per cycle (if run energy allows it).
      */
     private boolean running;
+
+    /**
+     * Whether the current scripted path deliberately crosses collision. Movement restrictions still apply.
+     */
+    private boolean forced;
 
     /**
      * The deque of upcoming steps to process for this mob.
@@ -119,6 +123,13 @@ public final class WalkingQueue {
             return;
         }
 
+        if (!isAdjacent(currentStep, nextStep)) {
+            clear();
+            mob.setWalkingDirection(Direction.NONE);
+            mob.setRunningDirection(Direction.NONE);
+            incrementRunEnergy();
+            return;
+        }
         if (exitInstance(nextStep.setZ(plane))) return;
 
         // Process a single step.
@@ -127,6 +138,7 @@ public final class WalkingQueue {
             clear();
             mob.setWalkingDirection(Direction.NONE);
             mob.setRunningDirection(Direction.NONE);
+            incrementRunEnergy();
             return;
         }
         history.add(nextStep);
@@ -134,20 +146,43 @@ public final class WalkingQueue {
         mob.setWalkingDirection(firstStepDir);
         currentStep = nextStep;
 
-        // If we're running, process another step.
-        if (running && decrementRunEnergy() && (nextStep = current.poll()) != null) {
-            if (exitInstance(nextStep.setZ(plane))) return;
-            Direction nextStepDir = Direction.between(currentStep, nextStep);
-            if (!allowsStep(currentStep.setZ(plane), nextStepDir)) {
+        if (isNpc) {
+            // Move its collision before checking a second step that could turn back into its old footprint.
+            mob.setPosition(currentStep.setZ(plane));
+        }
+
+        // A second step is charged only after it passes validation. Keep it queued if energy runs out.
+        nextStep = running ? current.peek() : null;
+        if (nextStep != null) {
+            if (!isAdjacent(currentStep, nextStep)) {
                 clear();
                 mob.setRunningDirection(Direction.NONE);
                 mob.setPosition(currentStep.setZ(plane));
+                incrementRunEnergy();
                 return;
             }
-            history.add(nextStep);
-            mob.setLastDirection(nextStepDir);
-            mob.setRunningDirection(nextStepDir);
-            currentStep = nextStep;
+            Position destination = nextStep.setZ(plane);
+            boolean leavingInstance = mob instanceof Player player && player.getDynamicMap() != null &&
+                    !player.getDynamicMap().contains(destination);
+            Direction nextStepDir = Direction.between(currentStep, nextStep);
+            if (!leavingInstance && !allowsStep(currentStep.setZ(plane), nextStepDir)) {
+                clear();
+                mob.setRunningDirection(Direction.NONE);
+                mob.setPosition(currentStep.setZ(plane));
+                incrementRunEnergy();
+                return;
+            }
+            if (decrementRunEnergy()) {
+                if (exitInstance(destination)) return;
+                current.poll();
+                history.add(nextStep);
+                mob.setLastDirection(nextStepDir);
+                mob.setRunningDirection(nextStepDir);
+                currentStep = nextStep;
+            } else {
+                mob.setRunningDirection(Direction.NONE);
+                incrementRunEnergy();
+            }
         } else {
             mob.setRunningDirection(Direction.NONE);
             incrementRunEnergy(); // Restore run energy while not running.
@@ -178,35 +213,74 @@ public final class WalkingQueue {
     /**
      * Adds a pre-computed path to this walking queue.
      * <p>
-     * <strong>Important:</strong> This method does <em>not</em> validate the path for correctness (no collision or
-     * clipping checks). The walking queue will blindly attempt to walk every tile that is queued here. To safely queue
-     * a destination-based path generated by the pathfinder, use {@link WalkingNavigator#navigate(Position, boolean)} instead.
+     * Intermediate tiles are filled in without pathfinding. Each step is checked against live collision when consumed.
+     * Use {@link WalkingNavigator#navigate(Position, boolean)} to find a route around obstacles. A null or empty path
+     * clears the existing path, including any forced movement mode.
      *
      * @param path The path to walk as a sequence of absolute {@link Position} tiles.
      */
     public void replacePath(Deque<Position> path) {
-        if (path != null && !path.isEmpty()) {
-            addFirst(path.poll());
-            for (; ; ) {
-                Position nextPosition = path.poll();
-                if (nextPosition == null) {
-                    break;
-                }
-                add(nextPosition);
+        replacePath(path, false);
+    }
+
+    /**
+     * Queues a scripted crossing that deliberately ignores terrain, wall and mob collision. Locks, immobilization,
+     * stationary NPCs and private-map exits still apply. Previous movement history is discarded so the crossing follows
+     * only its supplied positions. Ordinary paths queued later restore collision checks.
+     * A null or empty path clears the existing path and forced movement mode.
+     *
+     * @param path The scripted crossing as absolute positions.
+     */
+    public void replaceForcedPath(Deque<Position> path) {
+        replacePath(path, true);
+    }
+
+    /**
+     * Replaces the path and the collision mode together.
+     *
+     * @param path The path to queue.
+     * @param forced Whether the scripted path deliberately crosses collision.
+     */
+    private void replacePath(Deque<Position> path, boolean forced) {
+        if (path == null || path.isEmpty()) {
+            clear();
+            return;
+        }
+        if (forced) {
+            clear();
+        }
+        this.forced = forced;
+        addFirst(path.poll());
+        for (; ; ) {
+            Position nextPosition = path.poll();
+            if (nextPosition == null) {
+                break;
             }
+            add(nextPosition);
         }
     }
 
     /**
      * Adds a single step in the specified direction to this walking queue.
      * <p>
-     * <strong>Important:</strong> This is a low-level helper that does <em>not</em> do any collision, clipping, or
-     * reachability checks. The resulting step may be invalid if the destination tile is blocked. Higher-level systems
-     * are responsible for ensuring that this call only produces valid movement.
+     * The step is checked against live collision when consumed, using the mob's size and routing strategy.
      *
      * @param direction The direction to step from the mob's current position.
      */
     public void addStep(Direction direction) {
+        forced = false;
+        addFirst(mob.getPosition().translate(1, direction));
+    }
+
+    /**
+     * Queues exactly one scripted step that deliberately crosses collision. Previous movement history is discarded;
+     * movement restrictions still apply.
+     *
+     * @param direction The direction of the scripted step.
+     */
+    public void addForcedStep(Direction direction) {
+        clear();
+        forced = true;
         addFirst(mob.getPosition().translate(1, direction));
     }
 
@@ -218,6 +292,7 @@ public final class WalkingQueue {
     public void clear() {
         current.clear();
         history.clear();
+        forced = false;
     }
 
     /**
@@ -309,20 +384,30 @@ public final class WalkingQueue {
     }
 
     /**
-     * Determines if the mob may take a step, as a last check before it moves. Only NPCs with a
-     * {@link RouteStrategy} other than {@link RouteStrategy#NORMAL} are checked, so that they cannot leave the terrain
-     * they belong to, however the step got in the queue. All other mobs may take any step.
+     * Determines if the mob may take an ordinary step against live collision, including its current size and routing
+     * strategy. An explicit scripted path bypasses only this collision check.
      *
      * @param from The tile the step is taken from.
      * @param direction The direction of the step.
      * @return {@code true} if the step is allowed.
      */
     private boolean allowsStep(Position from, Direction direction) {
-        if (!(mob instanceof Npc) || mob.getRouteStrategy() == RouteStrategy.NORMAL) {
+        if (forced) {
             return true;
         }
         return mob.getWorld().getCollisionManager()
                 .traversable(from, mob.getType(), direction, mob.size(), mob.getRouteStrategy());
+    }
+
+    /**
+     * Rejects a queued tile that became stale after the mob's position changed outside this queue.
+     *
+     * @param from The mob's current tile.
+     * @param to The queued tile.
+     * @return Whether the tiles are exactly one walking step apart.
+     */
+    private static boolean isAdjacent(Position from, Position to) {
+        return Math.max(Math.abs(from.getX() - to.getX()), Math.abs(from.getY() - to.getY())) == 1;
     }
 
     /**
@@ -342,6 +427,7 @@ public final class WalkingQueue {
         }
         Player player = (Player) mob;
         if (player.getRunEnergy() <= 0.0) {
+            player.setRunning(false);
             return false;
         }
         double totalWeight = player.getWeight();

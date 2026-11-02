@@ -96,7 +96,7 @@ fun pushMineDoors(plr: Player, leaving: Boolean) {
             plr.sendMessage("The doors open with some effort!")
             plr.playSound(Sound.DOOR_OPEN)
             plr.move(Position(3278, 9426))
-        }, { plr.walking.addStep(Direction.NORTH) })
+        }, { plr.walking.addForcedStep(Direction.NORTH) })
     }
 }
 

@@ -43,7 +43,7 @@ data class AgilityStep(val destination: Position, val ticks: Int,
 internal fun Player.walkStraight(destination: Position) {
     walking.clear()
     walking.isRunning = false
-    walking.replacePath(ArrayDeque(listOf(destination)))
+    walking.replaceForcedPath(ArrayDeque(listOf(destination)))
     // The client turns to a face target once the walk ends; point it on along the walk, or the player would turn
     // back to the object they clicked.
     face(destination.translate(1, Direction.between(position, destination)))
