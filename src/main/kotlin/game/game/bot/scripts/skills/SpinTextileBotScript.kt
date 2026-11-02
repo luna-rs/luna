@@ -9,7 +9,7 @@ import api.bot.script.productionBatch
 import api.bot.script.InventoryBotScript
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
-import api.bot.zone.Zone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.coordinator.skill.CraftingScriptFactory
@@ -43,7 +43,7 @@ import kotlin.time.Duration.Companion.seconds
  * Bowstring sessions below level ten pause for normal glove training and resume the same session.
  * Three prerequisite attempts without earned Crafting XP end the session; this budget survives saved state.
  *
- * Existing Varrock and Seers' Village wheels remain available. Seers sessions climb before interacting and
+ * Native town and Gnome Stronghold wheels share the ordinary zone lifecycle. Seers sessions climb before interacting and
  * descend before banking or finishing. Harvesting can still use [spinAtSeers] to process flax between harvests.
  * Saved sessions retain their recipe, duration, zones, and budgets; legacy flax snapshots restore as bowstrings.
  *
@@ -57,7 +57,7 @@ import kotlin.time.Duration.Companion.seconds
 class SpinTextileBotScript(
     bot: Bot,
     duration: Duration,
-    zones: MutableList<SubZone> = mutableListOf(spinningZone(bot)),
+    zones: MutableList<SubZone> = ProductionZones.SPINNING.toMutableList(),
     val textile: Textile = Textile.BOWSTRING
 ) : InventoryBotScript(bot, duration, zones) {
     init {
@@ -123,14 +123,6 @@ class SpinTextileBotScript(
          * A tile inside [SEERS_HOUSE] whose neighbours are all inside it too, since a bot's walk can stop one tile short.
          */
         private val SEERS_HOUSE_INSIDE = Position(2714, 3472)
-
-        /**
-         * Returns where [bot] spins. Clever bots in Seers' Village stay there, and every other bot goes to Thessalia's
-         * shop in Varrock.
-         */
-        private fun spinningZone(bot: Bot) =
-            if (bot in Zone.SEERS_VILLAGE && rand(bot.personality.intelligence)) SubZone.SEERS_VILLAGE_MAIN
-            else SubZone.FLAX_SPINNING_MAIN
 
         /**
          * Uses the recipe input on [wheel] and selects its single make-item option for the carried batch.
@@ -297,7 +289,7 @@ class SpinTextileBotScript(
                 if (textile != Textile.BOWSTRING) false else {
                     stop()
                     bot.scriptStack.push(HarvestBotScript(bot, Harvestable.FLAX, duration,
-                        mutableListOf(SubZone.SOUTH_SEERS_VILLAGE_FLAX)))
+                        ProductionZones.FLAX.toMutableList()))
                     true
                 }
             })

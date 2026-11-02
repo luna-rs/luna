@@ -1,11 +1,11 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
-import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.coordinator.skill.MiningScriptFactory
@@ -34,16 +34,19 @@ import kotlin.time.Duration
  * @param bot The bot running this script.
  * @param selectedItems The specific item to smith, or `null` to choose from available bars.
  * @param duration How long this script should run before completing normally.
+ * @param zones Native anvil workshops; saved sessions retain their original destinations.
  * @author lare96
  */
 class SmithBarBotScript(
     bot: Bot,
     val selectedItems: MutableList<SmithingItem> = mutableListOf(),
-    duration: Duration
-) : InventoryBotScript(bot, duration, mutableListOf(SubZone.HOME)) {
+    duration: Duration,
+    zones: MutableList<SubZone> = ProductionZones.ANVILS.toMutableList()
+) : InventoryBotScript(bot, duration, zones) {
 
     /**
-     * Recreates a smithing script from saved zone and duration data.
+     * Recreates a smithing script from saved zone and duration data. Newer snapshots also restore retry counters
+     * and retired work sites; older zone-only snapshots retain their original defaults.
      *
      * This constructor does not restore a fixed [selectedItems], so the script will choose a smithable item from the
      * bot's available bars when it initializes.
@@ -51,7 +54,9 @@ class SmithBarBotScript(
      * @param bot The bot running this script.
      * @param data The saved zone and duration data.
      */
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, mutableListOf(), data.duration)
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, mutableListOf(), data.duration, data.zones) {
+        if (data is InventoryScriptData) restoreInventoryState(data)
+    }
 
     /**
      * The cached anvil object used by this script.
@@ -134,9 +139,11 @@ class SmithBarBotScript(
             return true
         }
 
-        if (anvilObject == null) {
+        if (anvilObject?.let { it.position in zone.area } != true) {
             anvilObject = world.locator
-                .findObjects(zone.area.centerPosition, zone.area.tileRadius) { it.id in Smithing.ANVIL_OBJECTS }
+                .findObjects(zone.area.centerPosition, zone.area.tileRadius) {
+                    it.position in zone.area && it.id in Smithing.ANVIL_OBJECTS
+                }
                 .firstOrNull()
         }
 
@@ -144,24 +151,17 @@ class SmithBarBotScript(
         val anvil = anvilObject
         if (anvil == null) {
             bot.log("No anvil object found in zone area.")
-            stop()
-            return true
+            return false
         }
 
-        if (!handler.inventory.useItem(bar.id).onObject(anvil)) {
-            bot.log("Could not interact with anvil. Trying again next cycle.")
-            return true
+        attemptProduction(bar.id, outputId = id) {
+            if (!handler.inventory.useItem(bar.id).onObject(anvil)) return@attemptProduction false
+            bot.naturalDelay()
+            if (SmithingInterface::class !in bot.overlays) return@attemptProduction false
+            bot.log("Smithing item: ${itemDef(id).name}")
+            output.sendItemWidgetClick(2, table.slotId, table.widgetId, id)
+            true
         }
-
-        bot.naturalDelay()
-        if (SmithingInterface::class !in bot.overlays) {
-            bot.log("Smithing interface isn't open. Trying again next cycle.")
-            return true
-        }
-
-        bot.log("Smithing item: ${itemDef(id).name}")
-        output.sendItemWidgetClick(2, table.slotId, table.widgetId, id)
-        bot.naturalDecisionDelay()
 
         if (selectedItems.size > 1) {
             smithingItem = selectedItems.filter { it.barType == bar }.random()
@@ -175,12 +175,7 @@ class SmithBarBotScript(
             } == true)
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = ZonedBotScriptData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        return data
-    }
+    override fun snapshot(): InventoryScriptData = InventoryScriptData().also { saveInventoryState(it) }
 
     override fun onPaused() {
         anvilObject = null

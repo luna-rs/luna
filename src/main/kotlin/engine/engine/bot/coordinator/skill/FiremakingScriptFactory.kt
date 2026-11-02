@@ -14,9 +14,10 @@ import kotlin.time.Duration
 /**
  * Creates Firemaking scripts for bots.
  *
- * Bots burn logs they already own, usually ones they chopped themselves, at the nearest [FiremakingSpot]s that no other
- * bot is using. Bots without eligible logs gather a bounded stock they can burn, then resume Firemaking within the
- * same session budget. Occupied burning spots do not cause bots with usable fuel to gather more. Burning logs
+ * Bots burn logs they already own, usually ones they chopped themselves, at a [FiremakingSpot]. Normal zoned travel
+ * preferences choose the destination; occupied spots are discovered and rejected only after arrival. Bots without
+ * eligible logs gather a bounded stock they can burn, then resume Firemaking within the same session budget.
+ * Occupied burning spots do not cause bots with usable fuel to gather more. Burning logs
  * never makes money, so profit scripts always chop.
  *
  * Log selection is personality-based through [getBestActivity]: dextrous and intelligent bots burn their best logs,
@@ -28,11 +29,6 @@ import kotlin.time.Duration
  * @author TheLining
  */
 object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
-
-    /**
-     * How many of the nearest free spots a bot chooses between.
-     */
-    private const val SPOT_CHOICES = 2
 
     /**
      * Four burning inventories provide a useful batch without turning preparation into a full Woodcutting session.
@@ -58,13 +54,12 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
     }
 
     /**
-     * Creates a script that burns logs [bot] already owns at the nearest free spots.
+     * Creates a script that burns logs [bot] already owns, with alternative spots for after-arrival competition.
      *
      * @param bot The bot that will run the script.
      * @param level The bot's current Firemaking level.
      * @param zones The mutable zone list to populate with firemaking spots.
-     * @return The script, or `null` if the bot doesn't have any logs it can burn, or every spot is
-     * taken.
+     * @return The script, or `null` if the bot doesn't have any logs it can burn.
      */
     fun getBurnScript(bot: Bot,
                       level: Int = bot.firemaking.staticLevel,
@@ -73,13 +68,8 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
         if (duration <= Duration.ZERO) return null
         val owned = Log.entries.filter { bot.itemTracker.count(it.id) > 0 }
         val log = getBestActivity(bot, level, { it.level }, owned) ?: return null
-        val spots = FiremakingSpot.entries.filter { !it.isTaken() }
-            .sortedBy { bot.position.computeLongestDistance(it.zone.inside) }
-            .take(SPOT_CHOICES)
-        if (spots.isEmpty()) {
-            return null
-        }
-        spots.mapTo(zones) { it.zone }
+        zones.clear()
+        FiremakingSpot.entries.mapTo(zones) { it.zone }
         return FiremakingBotScript(bot, log, duration, zones)
     }
 }

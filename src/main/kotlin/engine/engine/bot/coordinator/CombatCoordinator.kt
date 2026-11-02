@@ -15,6 +15,7 @@ import game.bot.scripts.BarrowsBotScript
 import game.bot.scripts.DagannothKingsBotScript
 import game.bot.scripts.DagannothKingsTrip
 import game.bot.scripts.combat.RockCrabBotScript
+import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.brain.BotActivity
@@ -42,10 +43,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
     companion object {
         /**
          * A configured spawn group and the minimum combat readiness needed for deliberate attacks.
+         * Optional assignment kinds prevent a broad native category from bypassing a specialist camp's preparation.
          *
          * @author lare96
          */
-        internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>, val profit: Boolean = false)
+        internal data class Camp(val zone: SubZone, val minimum: Int, val names: Set<String>,
+                                 val profit: Boolean = false, val tasks: Set<SlayerTaskType> = emptySet())
 
         /**
          * Existing subzones and exact names verified against the configured spawn list.
@@ -54,12 +57,20 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         internal val camps = listOf(
             Camp(SubZone.LUMBRIDGE_CHICKEN_COOP, 3, setOf("Chicken")),
             Camp(SubZone.LUMBRIDGE_COW_PEN, 3, setOf("Cow", "Cow calf")),
+            Camp(SubZone.NORTH_LUMBRIDGE_COW_FIELD, 3, setOf("Cow", "Cow calf")),
+            Camp(SubZone.NORTH_ARDOUGNE_COW_FIELD, 3, setOf("Cow")),
+            Camp(SubZone.NORTH_YANILLE_COW_FIELD, 3, setOf("Cow")),
+            Camp(SubZone.SOUTH_FALADOR_FARM_WEST_CHICKENS, 3, setOf("Chicken")),
+            Camp(SubZone.SOUTH_FALADOR_FARM_EAST_CHICKENS, 3, setOf("Chicken")),
+            Camp(SubZone.SOUTH_FALADOR_FARM_CATTLE, 3, setOf("Cow", "Cow calf")),
+            Camp(SubZone.EAST_DRAYNOR_YEWS, 3, setOf("Goblin", "Giant spider", "Giant rat")),
             Camp(SubZone.GOBLIN_VILLAGE, 3, setOf("Goblin")),
             Camp(SubZone.LUMBRIDGE_SWAMP, 3, setOf("Giant rat")),
             Camp(SubZone.LUMBRIDGE_RIVER, 3, setOf("Goblin", "Giant spider")),
             Camp(SubZone.ICE_MOUNTAIN, 10, setOf("Icefiend", "Dwarf")),
             Camp(SubZone.EDGEVILLE_MONASTERY, 10, setOf("Monk")),
             Camp(SubZone.ROCK_CRABS, 10, setOf("Rock Crab")),
+            Camp(SubZone.WATERBIRTH_SURFACE_CRABS, 35, setOf("Rock Crab")),
             Camp(SubZone.HAM_CULT, 15, setOf("H.A.M. Guard")),
             Camp(SubZone.AL_KHARID_PALACE, 15, setOf("Al-Kharid warrior")),
             Camp(SubZone.BARBARIAN_VILLAGE, 20, setOf("Barbarian")),
@@ -68,7 +79,12 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.EDGEVILLE_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
             Camp(SubZone.TAVERLEY_DUNGEON_CHAOS_DRUIDS, 25, setOf("Chaos druid"), true),
             Camp(SubZone.DRAYNOR_SEWERS, 25, setOf("Zombie", "Skeleton")),
+            Camp(SubZone.VARROCK_DARK_WIZARDS, 25, setOf("Dark wizard")),
+            Camp(SubZone.AL_KHARID_MINE, 25, setOf("Scorpion")),
+            Camp(SubZone.DWARVEN_MINE, 35, setOf("Scorpion")),
+            Camp(SubZone.CRAFTING_GUILD_COW_FIELD, 35, setOf("Cow", "Cow calf", "Hobgoblin")),
             Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
+            Camp(SubZone.TAVERLY_HILL_GIANTS, 35, setOf("Hill giant"), true),
             Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.SOUTH_ARDOUGNE_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.PATERDOMUS_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
@@ -79,7 +95,18 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.TAVERLEY_DUNGEON_ZAMORAK_MONKS, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.TAVERLY_LESSER_DEMONS, 65, setOf("Lesser demon"), true),
+            Camp(SubZone.TAVERLY_GREATER, 75, setOf("Greater demon"), true),
+            Camp(SubZone.TAVERLY_HELLHOUND, 85, setOf("Hellhound"), true),
+            Camp(SubZone.TAVERLY_BLACK_DEMONS, 110, setOf("Black Demon"), true),
             Camp(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, 65, setOf("Fire giant"), true),
+            Camp(SubZone.WATERFALL_FIRE_GIANTS_WEST, 65, setOf("Fire giant"), true),
+            Camp(SubZone.WATERFALL_FIRE_GIANTS_EAST, 65, setOf("Fire giant"), true),
+            Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH, 65, setOf("Moss giant"), true),
+            Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_WEST, 65, setOf("Moss giant"), true),
+            Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL, 65, setOf("Moss giant"), true),
+            Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE, 65, setOf("Moss giant"), true),
+            Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH, 65, setOf("Moss giant"), true),
             Camp(SubZone.IORWERTH_CAMP, 75, setOf("Elf warrior"), true),
             Camp(SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS, 75, setOf("Blue dragon"), true),
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
@@ -127,11 +154,13 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 canUseCamp(it.zone, purpose, hasDragonShield, queenReady, moleReady) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
             // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
-            // Adding a supplied Mole outing must not remove the ordinary camps this discipline already used.
-            val ordinary = preferred.filter { it.zone != SubZone.GIANT_MOLE_LAIR }.ifEmpty { preferred }
-            val threshold = (ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
-            return preferred.filter { it.zone == SubZone.GIANT_MOLE_LAIR || it.minimum >= threshold ||
-                (training && it.zone == SubZone.ROCK_CRABS) }
+            // Optional boss outings and advanced camps retain the ordinary mid-game alternatives.
+            val bosses = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
+            val ordinary = preferred.filter { it.zone !in bosses }.ifEmpty { preferred }
+            // Advanced alternatives supplement the established mid-game camps rather than displacing them.
+            val threshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
+            return preferred.filter { it.zone in bosses || it.minimum >= threshold ||
+                (training && it.zone in RockCrabBotScript.CAMPS) }
         }
 
         /**
@@ -160,13 +189,14 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                     loadout.gear[io.luna.game.model.item.Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true,
                 queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout),
                 moleReady = GiantMoleTrip.ready(bot))
-                .filter { it.zone.entryBlocker(bot) == null }.shuffled()
-            if (candidates.firstOrNull()?.zone == SubZone.ROCK_CRABS) {
-                return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell)
+                .filter { it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone) }.shuffled()
+            if (candidates.firstOrNull()?.zone in RockCrabBotScript.CAMPS) {
+                return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
+                    zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList())
             }
             val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
             val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
-                else candidates.filter { it.zone !in dedicated && it.zone != SubZone.ROCK_CRABS }.take(4)
+                else candidates.filter { it.zone !in dedicated && it.zone !in RockCrabBotScript.CAMPS }.take(4)
             if (selected.isEmpty()) return null
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { names.putAll(it.zone, it.names) }

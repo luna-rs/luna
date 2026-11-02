@@ -72,6 +72,26 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
         const val PURE_ESSENCE = 7936
 
         /**
+         * Selects the essence the native trip can consume, including compatible contents in owned, level-eligible
+         * pouches. Higher runes require pure essence; lower runes retain their normal-essence-first preference.
+         * The factory uses the same selection when estimating profit, without generating or emptying supplies.
+         */
+        internal fun compatibleEssence(bot: Bot, rune: CraftableRune): Int? {
+            fun available(id: Int): Boolean {
+                val stored = EssencePouch.entries.filter {
+                    it.level <= bot.runecrafting.staticLevel && it.isOwnedBy(bot) && bot.attributes()[it.essenceId] == id
+                }.sumOf { bot.attributes()[it.essence].toLong() }
+                return bot.itemTracker.count(id).toLong() + stored > 0
+            }
+            return when {
+                rune.level > 20 -> PURE_ESSENCE.takeIf { available(it) }
+                available(RUNE_ESSENCE) -> RUNE_ESSENCE
+                available(PURE_ESSENCE) -> PURE_ESSENCE
+                else -> null
+            }
+        }
+
+        /**
          * Serializable data for restoring a [CraftRuneBotScript].
          *
          * This stores the selected [altar] and the shared production retry state. Older saves default the counters to zero.
@@ -178,13 +198,6 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     private var pouches: List<EssencePouch> = emptyList()
 
     /**
-     * Counts compatible native pouch contents, including banked pouches when planning a resumed trip.
-     */
-    private fun storedEssence(id: Int): Int = EssencePouch.entries.filter {
-        it.level <= bot.runecrafting.staticLevel && it.isOwnedBy(bot) && bot.attributes()[it.essenceId] == id
-    }.sumOf { bot.attributes()[it.essence] }
-
-    /**
      * Prevents banking between altar batches while any carried pouch still contains usable essence.
      */
     private fun hasEssence(): Boolean = essence?.let { id ->
@@ -203,14 +216,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
             return listOf()
         }
 
-        val requiresPureEssence = craftingRune.level > 20
-        essence = when {
-            requiresPureEssence && bot.itemTracker.count(PURE_ESSENCE).toLong() + storedEssence(PURE_ESSENCE) > 0 -> PURE_ESSENCE
-            requiresPureEssence -> null
-            bot.itemTracker.count(RUNE_ESSENCE).toLong() + storedEssence(RUNE_ESSENCE) > 0 -> RUNE_ESSENCE
-            bot.itemTracker.count(PURE_ESSENCE).toLong() + storedEssence(PURE_ESSENCE) > 0 -> PURE_ESSENCE
-            else -> null
-        }
+        essence = compatibleEssence(bot, craftingRune)
 
         if (essence == null) {
             bot.log("No valid essence available for $craftingRune.")

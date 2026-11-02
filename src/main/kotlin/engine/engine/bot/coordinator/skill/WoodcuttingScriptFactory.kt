@@ -18,19 +18,33 @@ import kotlin.time.Duration
  */
 object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
     /**
-     * Dedicated routes for each supported resource. Unmapped exotic trees are excluded.
+     * Dedicated native routes for each supported resource. Teak and mahogany remain excluded until the hardwood
+     * grove's admission is supported; ordinary chopping never bypasses that entry requirement.
      */
     private val routes = mapOf(
-        NORMAL to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES),
-        OAK to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES),
+        NORMAL to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,
+            SubZone.LUMBRIDGE_WOODLAND),
+        OAK to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,
+            SubZone.LUMBRIDGE_WOODLAND),
+        ACHEY to setOf(SubZone.FELDIP_ACHEY_TREES),
         WILLOW to setOf(SubZone.DRAYNOR_MAIN, SubZone.WEST_DRAYNOR_WILLOWS, SubZone.CATHERBY_BEACH_WILLOWS,
             SubZone.SOUTH_ARDOUGNE_WILLOWS, SubZone.NORTH_ARDOUGNE_WILLOWS,
-            SubZone.EAST_ARDOUGNE_WILLOWS, SubZone.SOUTH_YANILLE_WILLOWS),
+            SubZone.EAST_ARDOUGNE_WILLOWS, SubZone.SOUTH_YANILLE_WILLOWS,
+            SubZone.RIMMINGTON_COAST_WILLOWS, SubZone.PORT_SARIM_COAST_WILLOWS,
+            SubZone.GNOME_STRONGHOLD_WEST_WILLOWS, SubZone.GNOME_STRONGHOLD_NORTH_WEST_WILLOW,
+            SubZone.GNOME_STRONGHOLD_EAST_WILLOWS, SubZone.GNOME_STRONGHOLD_NORTH_EAST_WILLOW,
+            SubZone.GNOME_STRONGHOLD_NORTH_WILLOWS),
         MAPLE to setOf(SubZone.SEERS_VILLAGE_MAIN, SubZone.NORTH_WEST_SEERS_VILLAGE_MAPLES,
-            SubZone.NORTH_SEERS_VILLAGE_MAPLES, SubZone.SOUTH_SORCERERS_TOWER_MAPLES),
+            SubZone.NORTH_SEERS_VILLAGE_MAPLES, SubZone.SOUTH_SORCERERS_TOWER_MAPLES,
+            SubZone.SEERS_SOUTH_WEST_MAPLE, SubZone.SEERS_SOUTH_EAST_MAPLES, SubZone.BARBARIAN_OUTPOST_MAPLE),
+        HOLLOW to setOf(SubZone.PORT_PHASMATYS_HOLLOW_TREES),
         YEW to setOf(SubZone.LUMBER_YARD_YEWS, SubZone.EAST_DRAYNOR_YEWS, SubZone.VARROCK_PALACE_YEWS,
-            SubZone.SOUTH_FALADOR_YEWS, SubZone.SOUTH_SEERS_VILLAGE_YEWS, SubZone.WEST_CATHERBY_YEWS),
-        MAGIC to setOf(SubZone.SORCERERS_TOWER_MAGICS, SubZone.SOUTH_SEERS_VILLAGE_MAGICS)
+            SubZone.SOUTH_FALADOR_YEWS, SubZone.SOUTH_SEERS_VILLAGE_YEWS, SubZone.WEST_CATHERBY_YEWS,
+            SubZone.EDGEVILLE_YEWS, SubZone.RIMMINGTON_YEWS, SubZone.GNOME_STRONGHOLD_BANK_YEWS,
+            SubZone.GNOME_STRONGHOLD_SOUTH_YEWS, SubZone.GNOME_STRONGHOLD_EAST_YEW),
+        MAGIC to setOf(SubZone.SORCERERS_TOWER_MAGICS, SubZone.SOUTH_SEERS_VILLAGE_MAGICS,
+            SubZone.GNOME_STRONGHOLD_WEST_MAGIC, SubZone.GNOME_STRONGHOLD_BANK_MAGIC,
+            SubZone.GNOME_STRONGHOLD_EAST_MAGIC, SubZone.MTA_WEST_MAGIC_TREE, SubZone.MTA_EAST_MAGIC_TREE)
     )
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
@@ -75,7 +89,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
      */
     private fun trainingTrees(bot: Bot, level: Int): Set<Tree> {
         if (level < WILLOW.level) {
-            return setOf(NORMAL, OAK)
+            return if (bot.personality.isDumb) setOf(NORMAL, OAK, ACHEY) else setOf(NORMAL, OAK)
         }
         if (bot.personality.isDextrous) {
             return setOf(WILLOW)
@@ -91,7 +105,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
      */
     private fun profitTrees(bot: Bot, level: Int): Set<Tree> {
         if (level < WILLOW.level) {
-            return setOf(NORMAL)
+            return if (bot.personality.isDumb) setOf(NORMAL, ACHEY) else setOf(NORMAL)
         }
         val trees = linkedSetOf<Tree>()
         if (level < YEW.level) {
@@ -109,6 +123,10 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             if (bot.personality.isDumb) {
                 trees.addAll(setOf(WILLOW, MAPLE, YEW))
             }
+        }
+        if (bot.personality.isDumb) {
+            trees.add(ACHEY)
+            trees.add(HOLLOW)
         }
         return trees
     }

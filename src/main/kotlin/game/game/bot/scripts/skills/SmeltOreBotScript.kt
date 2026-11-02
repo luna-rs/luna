@@ -1,8 +1,7 @@
 package game.bot.scripts.skills
 
-import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.script.BotScriptData
 import api.bot.script.InventoryBotScript
+import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.*
@@ -58,7 +57,8 @@ class SmeltOreBotScript(
     }
 
     /**
-     * Recreates a smelting script from saved zone and duration data.
+     * Recreates a smelting script from saved zone and duration data. Newer snapshots also restore retry counters
+     * and retired work sites; older zone-only snapshots retain their original defaults.
      *
      * This constructor does not restore a fixed [selectedBar], so the script will choose a smeltable bar from the bot's
      * bank when it next withdraws supplies.
@@ -66,7 +66,9 @@ class SmeltOreBotScript(
      * @param bot The bot running this script.
      * @param data The saved zone and duration data.
      */
-    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, null, data.duration, data.zones)
+    constructor(bot: Bot, data: ZonedBotScriptData) : this(bot, null, data.duration, data.zones) {
+        if (data is InventoryScriptData) restoreInventoryState(data)
+    }
 
     /**
      * The furnace object currently used by this script.
@@ -151,10 +153,10 @@ class SmeltOreBotScript(
             return true
         }
 
-        if (furnaceObject == null) {
+        if (furnaceObject?.let { it.position in zone.area } != true) {
             furnaceObject = world.locator
                 .findObjects(zone.area.centerPosition, zone.area.tileRadius) {
-                    it.id in Smithing.FURNACE_OBJECTS
+                    it.position in zone.area && it.id in Smithing.FURNACE_OBJECTS
                 }
                 .firstOrNull()
         }
@@ -164,8 +166,7 @@ class SmeltOreBotScript(
         val furnace = furnaceObject
         if (furnace == null) {
             bot.log("No furnace object found in zone area.")
-            stop()
-            return true
+            return false
         }
 
         val useId = if (bar == BarType.STEEL) {
@@ -174,12 +175,9 @@ class SmeltOreBotScript(
             bar.oreRequired.first.id
         }
 
-        if (!handler.inventory.useItem(useId).onObject(furnace)) {
-            bot.log("Could not interact with furnace. Trying again next cycle.")
-            return true
+        attemptProduction(useId, outputId = bar.id) {
+            handler.inventory.useItem(useId).onObject(furnace)
         }
-
-        bot.naturalDecisionDelay()
         return true
     }
 
@@ -187,12 +185,7 @@ class SmeltOreBotScript(
         return forceBanking || !(smelting?.let { bot.inventory.containsAll(it.oreList) } == true)
     }
 
-    override fun snapshot(): BotScriptData {
-        val data = ZonedBotScriptData()
-        data.duration = duration
-        data.zones = originalZones.toMutableList()
-        return data
-    }
+    override fun snapshot(): InventoryScriptData = InventoryScriptData().also { saveInventoryState(it) }
 
     override suspend fun completed() {
         // Chance to queue a smithing script.

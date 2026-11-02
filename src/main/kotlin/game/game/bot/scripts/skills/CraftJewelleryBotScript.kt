@@ -6,6 +6,7 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
@@ -51,7 +52,7 @@ class CraftJewelleryBotScript(
     companion object {
 
         /** Banked furnace routes already used by the existing ore-smelting factory. */
-        val DEFAULT_ZONES = listOf(SubZone.AL_KHARID_BANK, SubZone.FALADOR_WEST_BANK)
+        val DEFAULT_ZONES = ProductionZones.FURNACES
         /**
          * Interface coordinates and supplies for one entry in the existing gold or silver table.
          * All gameplay levels, gems, outputs, and experience remain in [jewellery].

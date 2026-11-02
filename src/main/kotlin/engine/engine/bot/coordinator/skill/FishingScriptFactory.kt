@@ -59,12 +59,16 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
                         SubZone.MUSA_POINT_FISHING,
                         SubZone.AL_KHARID_BANK,
                         SubZone.DRAYNOR_MAIN,
-                        SubZone.EAST_CATHERBY_FISHING
+                        SubZone.EAST_CATHERBY_FISHING,
+                        SubZone.RIMMINGTON_COAST_FISHING,
+                        SubZone.ENTRANA_SEA_FISHING,
+                        SubZone.RELLEKKA_SOUTH_FISHING
                     )
                 } else {
                     mutableListOf(
                         SubZone.DRAYNOR_MAIN,
-                        SubZone.EAST_CATHERBY_FISHING
+                        SubZone.EAST_CATHERBY_FISHING,
+                        SubZone.RELLEKKA_SOUTH_FISHING
                     )
                 }
             }
@@ -81,11 +85,13 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             zones = {
                 if (personality.isDumb || !personality.isDextrous) {
                     mutableListOf(SubZone.LUMBRIDGE_RIVER, SubZone.SEERS_VILLAGE_FISHING,
-                                  SubZone.GNOME_STRONGHOLD_FISHING)
+                                  SubZone.GNOME_STRONGHOLD_FISHING,
+                                  SubZone.ENTRANA_RIVER_SOUTH_FISHING, SubZone.ENTRANA_RIVER_NORTH_FISHING)
                 } else {
                     mutableListOf(SubZone.BARBARIAN_VILLAGE, SubZone.SHILO_VILLAGE,
                                   SubZone.ARDOUGNE_RIVER_FISHING, SubZone.GNOME_STRONGHOLD_FISHING,
-                                  SubZone.SEERS_VILLAGE_FISHING)
+                                  SubZone.SEERS_VILLAGE_FISHING,
+                                  SubZone.ENTRANA_RIVER_SOUTH_FISHING, SubZone.ENTRANA_RIVER_NORTH_FISHING)
                 }
             }
         ),
@@ -99,9 +105,9 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             tools = setOf(LOBSTER_POT, HARPOON),
             zones = {
                 if (personality.isDumb || !personality.isDextrous || personality.isAntiSocial) {
-                    mutableListOf(SubZone.MUSA_POINT_FISHING)
+                    mutableListOf(SubZone.MUSA_POINT_FISHING, SubZone.RELLEKKA_SOUTH_FISHING)
                 } else {
-                    mutableListOf(SubZone.EAST_CATHERBY_FISHING)
+                    mutableListOf(SubZone.EAST_CATHERBY_FISHING, SubZone.RELLEKKA_SOUTH_FISHING)
                 }
             }
         ),
@@ -112,7 +118,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         BIG_NET_AND_HARPOON(
             tools = setOf(BIG_NET, SHARK_HARPOON),
             zones = {
-                mutableListOf(SubZone.EAST_CATHERBY_FISHING)
+                mutableListOf(SubZone.EAST_CATHERBY_FISHING, SubZone.RELLEKKA_NORTH_FISHING)
             }
         ),
 

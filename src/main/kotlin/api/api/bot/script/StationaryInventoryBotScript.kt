@@ -3,6 +3,7 @@ package api.bot.script
 import api.bot.action.trading.BotMarketplace
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import io.luna.game.action.ActionType
 import io.luna.game.model.def.ItemDefinition
@@ -36,15 +37,14 @@ abstract class StationaryInventoryBotScript(
          *
          * Subclasses can rely on these general-purpose banking/skilling hubs unless they need a more specific location.
          */
-        val DEFAULT_ZONES = BotMarketplace.entries.map { it.activityZone }.toSet() + SubZone.DRAYNOR_MAIN
+        val DEFAULT_ZONES = BotMarketplace.entries.map { it.activityZone }.toSet() +
+            SubZone.DRAYNOR_MAIN + ProductionZones.PORTABLE
 
         /**
          * Bank-only production destinations matching a skill's market theme, plus the existing Draynor hub.
          * Facility recipes supply their own zones and do not use this portable-production selection.
          */
-        fun zonesForSkill(skill: Int): MutableList<SubZone> =
-            (BotMarketplace.entries.filter { it.skills.isEmpty() || skill in it.skills }
-                .map { it.activityZone } + SubZone.DRAYNOR_MAIN).toMutableList()
+        fun zonesForSkill(skill: Int): MutableList<SubZone> = ProductionZones.portableForSkill(skill)
     }
 
     /**

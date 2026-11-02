@@ -6,6 +6,7 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
@@ -50,7 +51,7 @@ class MakeMoltenGlassBotScript(
         /**
          * Banked furnace routes already used by the existing ore-smelting factory.
          */
-        val DEFAULT_ZONES = listOf(SubZone.AL_KHARID_BANK, SubZone.FALADOR_WEST_BANK)
+        val DEFAULT_ZONES = ProductionZones.FURNACES
         /**
          * Soda ash consumed by the player action.
          */

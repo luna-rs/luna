@@ -2,6 +2,7 @@ package engine.bot.coordinator.skill
 
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.MakeCannonballBotScript
@@ -92,8 +93,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         })
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
-        zones += SubZone.AL_KHARID_BANK
-        zones += SubZone.FALADOR_WEST_BANK
+        zones += ProductionZones.FURNACES
         return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
     }
 
@@ -110,8 +110,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         }
 
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
-        zones += SubZone.AL_KHARID_BANK
-        zones += SubZone.FALADOR_WEST_BANK
+        zones += ProductionZones.FURNACES
         return SmeltOreBotScript(bot, null, getDuration(bot), zones)
     }
 
@@ -149,8 +148,7 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
       val zones = mutableListOf<SubZone>()
         // TODO Add more zones. Dextrous bots should prefer better smithing/smelting routes.
    // todo boilerplate
-        zones += SubZone.AL_KHARID_BANK
-        zones += SubZone.FALADOR_WEST_BANK
+        zones += ProductionZones.FURNACES
         return SmeltOreBotScript(bot, smeltBar, getDuration(bot), zones)
     }
 }

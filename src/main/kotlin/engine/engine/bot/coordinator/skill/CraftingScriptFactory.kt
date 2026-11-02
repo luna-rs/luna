@@ -4,6 +4,7 @@ import api.bot.script.BotScript
 import api.bot.script.InventoryBotScript
 import api.bot.action.BotCombatActionHandler
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
@@ -112,7 +113,7 @@ object CraftingScriptFactory : SkillingScriptFactory(SKILL_CRAFTING) {
         if (getUntannedHides(bot) > 0 || randBoolean()) {
             return TanHideBotScript(bot, getDuration(bot))
         }
-        zones += SubZone.SOUTH_SEERS_VILLAGE_FLAX
+        zones += ProductionZones.FLAX
         return HarvestBotScript(bot, Harvestable.FLAX, getDuration(bot), zones)
     }
 

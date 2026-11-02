@@ -160,7 +160,32 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
         /**
          * The roads north and south of Al-Kharid bank.
          */
-        AL_KHARID(SubZone.AL_KHARID_BANK, 3279 to 3178, 3279 to 3176, 3279 to 3159);
+        AL_KHARID(SubZone.AL_KHARID_BANK, 3279 to 3178, 3279 to 3176, 3279 to 3159),
+
+        /**
+         * Open lanes north and west of Catherby's bank and range.
+         */
+        CATHERBY(SubZone.CATHERBY_FIREMAKING, 2815 to 3447, 2808 to 3433, 2819 to 3436),
+
+        /**
+         * The roads west and south-west of Yanille bank.
+         */
+        YANILLE(SubZone.YANILLE_FIREMAKING, 2611 to 3087, 2607 to 3097, 2614 to 3083),
+
+        /**
+         * Three roads around Ardougne's northern bank building.
+         */
+        ARDOUGNE_NORTH(SubZone.ARDOUGNE_NORTH_FIREMAKING, 2616 to 3342, 2615 to 3345, 2626 to 3338),
+
+        /**
+         * Outdoor rows west, north-east and south of Ardougne's southern bank.
+         */
+        ARDOUGNE_SOUTH(SubZone.ARDOUGNE_SOUTH_FIREMAKING, 2643 to 3289, 2669 to 3299, 2657 to 3277),
+
+        /**
+         * Open rows north and south of Falador's western bank.
+         */
+        FALADOR_WEST(SubZone.FALADOR_WEST_FIREMAKING, 2951 to 3375, 2952 to 3357, 2963 to 3381);
 
         companion object {
 

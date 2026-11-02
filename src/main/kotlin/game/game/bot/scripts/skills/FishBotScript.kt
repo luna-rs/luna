@@ -17,6 +17,7 @@ import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
 import game.skill.fishing.fishingSpot.FishingSpotHandler
+import game.content.sailing.Entrana
 import game.bot.scripts.RandomEventReflexScript
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -214,6 +215,8 @@ class FishBotScript(
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
         if (zone == SubZone.FISHING_GUILD && bot.fishing.level < FISHING_GUILD_LEVEL) return false
+        if (zone in setOf(SubZone.ENTRANA_SEA_FISHING, SubZone.ENTRANA_RIVER_SOUTH_FISHING,
+                SubZone.ENTRANA_RIVER_NORTH_FISHING) && Entrana.isCarryingForbidden(bot)) return false
         return super.travelToWorkZone(zone, bank)
     }
 

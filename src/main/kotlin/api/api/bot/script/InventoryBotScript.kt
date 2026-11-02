@@ -8,6 +8,7 @@ import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.zone.SubZone
 import api.predef.ext.*
 import com.google.gson.JsonObject
+import com.google.gson.JsonArray
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import io.luna.game.action.ActionType
 import io.luna.game.model.item.Item
@@ -70,15 +71,30 @@ abstract class InventoryBotScript(
             var failures = 0
             /** Unresolved banking requests since the last verified withdrawal. */
             var bankFailures = 0
+            /**
+             * The actual tried site whose third failure has not yet completed its zone transition.
+             * Absence preserves the legacy meaning of an exhausted failure counter.
+             */
+            var failedZone: SubZone? = null
+            /**
+             * Sites already exhausted by this session, retained when its original zones are saved.
+             */
+            var failedZones: Set<SubZone> = emptySet()
             override fun load(data: JsonObject) {
                 super.load(data)
                 failures = data.get("failures")?.asInt ?: 0
                 bankFailures = data.get("bankFailures")?.asInt ?: 0
+                failedZone = data.get("failed_zone")?.takeUnless { it.isJsonNull }?.asString?.let(SubZone::valueOf)
+                failedZones = data.getAsJsonArray("failed_zones")?.map { SubZone.valueOf(it.asString) }?.toSet()
+                    ?: emptySet()
             }
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("failures", failures)
                 data.addProperty("bankFailures", bankFailures)
+                if (failedZone == null) data.remove("failed_zone") else data.addProperty("failed_zone", failedZone!!.name)
+                if (failedZones.isEmpty()) data.remove("failed_zones") else
+                    data.add("failed_zones", JsonArray().also { array -> failedZones.forEach { array.add(it.name) } })
             }
         }
     }
@@ -93,18 +109,30 @@ abstract class InventoryBotScript(
     /** Unresolved production banking requests; reset only after a successful withdrawal. */
     protected var bankFailures = 0
         private set
+    /**
+     * Exact failed-site identity survives cancellation between the final attempt and zone departure.
+     */
+    private var failedProductionZone: SubZone? = null
+    /**
+     * Prevents a later snapshot of original destinations from reintroducing previously exhausted sites.
+     */
+    private val failedProductionZones = linkedSetOf<SubZone>()
 
     /**
      * Starts a fresh interaction budget after an activity abandons a work site. Banking failures are retained.
      */
     protected fun resetProductionFailures() {
         failures = 0
+        failedProductionZone = null
     }
 
     /** Restores retry state; duration and zones are supplied to the script constructor. */
     protected fun restoreInventoryState(data: InventoryScriptData) {
         failures = data.failures
         bankFailures = data.bankFailures
+        failedProductionZone = data.failedZone
+        failedProductionZones.addAll(data.failedZones)
+        data.failedZone?.let { failedProductionZones.add(it) }
     }
 
     /** Writes common configuration and counters into a recipe snapshot using the legacy field names. */
@@ -113,10 +141,16 @@ abstract class InventoryBotScript(
         data.zones = originalZones.toMutableList()
         data.failures = failures
         data.bankFailures = bankFailures
+        data.failedZone = failedProductionZone
+        data.failedZones = failedProductionZones.toSet()
     }
 
-    /** Whether either independent production retry budget has already been exhausted. */
-    protected fun productionRetriesExhausted(): Boolean = failures >= maxFailures || bankFailures >= maxFailures
+    /**
+     * Banking and legacy interaction exhaustion always end the session. A recorded newly failed site
+     * may instead complete its exact pending zone transition without retrying an unrelated location.
+     */
+    protected fun productionRetriesExhausted(): Boolean =
+        bankFailures >= maxFailures || failures >= maxFailures && failedProductionZone == null
 
     /** The selected recipe's startup requirements; rebuilt rather than persisted on each resume. */
     private class StartupSupplies(
@@ -199,6 +233,7 @@ abstract class InventoryBotScript(
         start: suspend (amount: Int) -> Boolean
     ) {
         if (!isActionSafe()) return
+        val attemptedZone = activeZone
         val before = bot.inventory.computeAmountForId(inputId)
         val outputBefore = outputId?.let { bot.inventory.computeAmountForId(it) } ?: 0
         val started = available && withTimeoutOrNull(15_000) {
@@ -208,7 +243,13 @@ abstract class InventoryBotScript(
             bot.inventory.computeAmountForId(inputId) < before ||
                 (outputId != null && bot.inventory.computeAmountForId(outputId) > outputBefore) || progressCondition()
         }
-        if (progressed) failures = 0 else if (isActionSafe() && ++failures >= maxFailures) stop()
+        if (progressed) failures = 0 else if (isActionSafe() && ++failures >= maxFailures) {
+            val zone = attemptedZone
+            if (zones.size <= 1 || zone == null) stop() else {
+                failedProductionZone = zone
+                failedProductionZones.add(zone)
+            }
+        }
         if (dexterityDelay) bot.naturalDexterityDelay()
     }
 
@@ -227,7 +268,17 @@ abstract class InventoryBotScript(
      */
     protected open suspend fun beforeInventoryInit(): Boolean = true
 
+    override fun selectWorkZone(): SubZone? {
+        // Zoned travel recovery can rebuild original candidates; exhausted work sites stay retired.
+        zones.removeAll(failedProductionZones)
+        return super.selectWorkZone()
+    }
+
     final override suspend fun onInit(resumed: Boolean): Boolean {
+        // A paused attempt belongs to its recorded site, not whichever candidate is selected on resume.
+        zones.removeAll(failedProductionZones)
+        if (failedProductionZone != null) resetProductionFailures()
+        if (zones.isEmpty()) { stop(); return false }
         if (!trainingAllowed() || productionRetriesExhausted()) { stop(); return false }
         if (!beforeInventoryInit()) return false
         startupSupplies = null
@@ -266,12 +317,31 @@ abstract class InventoryBotScript(
     }
 
     final override suspend fun executeInZone(): Boolean {
+        if (isPaused() || isTerminated()) return true
         if (!trainingAllowed()) return false
         if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) {
             // Bot is busy, no need to re-execute.
             return true
         }
-        return onExecuteInZone()
+        if (failedProductionZone != null) {
+            if (activeZone == failedProductionZone) {
+                failures = 0
+                return false
+            }
+            resetProductionFailures()
+        }
+        if (productionRetriesExhausted()) {
+            stop()
+            return false
+        }
+        val accepted = onExecuteInZone()
+        if (isActionSafe() && !isPaused() && !isTerminated() &&
+            bot.actions.size(ActionType.WEAK) == 0 && failedProductionZone == activeZone && failedProductionZone != null) {
+            // Reject only the site that was actually tried; stock and banking budgets remain intact.
+            failures = 0
+            return false
+        }
+        return accepted
     }
 
     final override suspend fun onBankOpen(initial: Boolean) {

@@ -179,6 +179,20 @@ abstract class SkillingScriptFactory(val skillId: Int) {
         val activities = if (escape == null) available else
             available.filterNot { activity -> activity.zones.isNotEmpty() && activity.zones.all { escape.avoids(it) } }
                 .ifEmpty { available }
+        return selectRankedActivity(bot, activities)
+    }
+
+    /**
+     * Applies the ordinary personality choice to options already ranked from best to worst for the activity's goal.
+     * Level-based callers retain their existing ordering; other factories may rank actual experience or profit.
+     * Dextrous or intelligent bots take the best option, dumb bots sometimes choose the worst, and other choices
+     * retain the existing random variation. Empty lists have no available activity.
+     *
+     * @param bot The bot whose intelligence and dexterity influence the choice.
+     * @param activities Eligible options ordered from best to worst.
+     * @return The chosen option, or `null` when no eligible option exists.
+     */
+    protected fun <T> selectRankedActivity(bot: Bot, activities: List<T>): T? {
         if (bot.personality.isDextrous || bot.personality.isIntelligent) {
             return activities.firstOrNull()
         } else if (bot.personality.isDumb) {

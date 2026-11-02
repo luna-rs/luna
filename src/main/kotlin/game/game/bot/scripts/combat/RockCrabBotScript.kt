@@ -39,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param spell The elemental spell autocast in a Magic session.
  * @param slayerTask An optional rock crab Slayer task this session works on.
  * @param slayerMaster The master that assigned [slayerTask].
+ * @param zones Supply-ready native crab beaches retained through saved sessions and ordinary zone rotation.
  * @author lare96
  */
 class RockCrabBotScript(bot: Bot,
@@ -46,9 +47,12 @@ class RockCrabBotScript(bot: Bot,
                         purpose: BotGearPurpose = BotGearPurpose.MELEE,
                         spell: CombatSpell? = null,
                         slayerTask: SlayerTaskType? = null,
-                        slayerMaster: SlayerMaster? = null) :
-    NpcCombatScript(bot, duration, mutableListOf(SubZone.ROCK_CRABS),
-                    ImmutableSetMultimap.of(SubZone.ROCK_CRABS, NAME), purpose, spell, slayerTask, slayerMaster) {
+                        slayerMaster: SlayerMaster? = null,
+                        zones: MutableList<SubZone> = mutableListOf(SubZone.ROCK_CRABS)) :
+    NpcCombatScript(bot, duration, zones,
+                    ImmutableSetMultimap.Builder<SubZone, String>().apply {
+                        zones.forEach { put(it, NAME) }
+                    }.build(), purpose, spell, slayerTask, slayerMaster) {
 
     companion object {
 
@@ -56,6 +60,11 @@ class RockCrabBotScript(bot: Bot,
          * The name of an awake rock crab.
          */
         const val NAME = "Rock Crab"
+
+        /**
+         * Native disguised crabs share awakening and tolerance; Waterbirth's nearby hobgoblins need stronger bots.
+         */
+        val CAMPS = setOf(SubZone.ROCK_CRABS, SubZone.WATERBIRTH_SURFACE_CRABS)
 
         /**
          * How far around a spot, in tiles, the bot counts and wakes rocks.
@@ -81,7 +90,7 @@ class RockCrabBotScript(bot: Bot,
      * @param data The saved script data.
      */
     constructor(bot: Bot, data: NpcCombatData) : this(bot, data.duration, data.purpose, data.spell, data.slayerTask,
-                                                      data.slayerMaster)
+                                                      data.slayerMaster, data.zones.filter { it in CAMPS }.toMutableList())
 
     /**
      * The tile the bot trains from, or `null` if it hasn't picked one.

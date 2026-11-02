@@ -54,7 +54,7 @@ fun craft(plr: Player, rune: CraftableRune) {
     }
 
     // Now we can craft runes!
-    val multiplier = (plr.runecrafting.level / rune.multiplier).coerceAtLeast(1)
+    val multiplier = rune.outputMultiplier(plr.runecrafting.level)
     val removeItem = Item(essenceId, essenceAmt)
     if (inv.remove(removeItem)) {
         inv.add(Item(rune.id, essenceAmt * multiplier))

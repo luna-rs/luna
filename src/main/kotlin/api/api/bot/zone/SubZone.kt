@@ -54,10 +54,11 @@ enum class SubZone(
         parent = { ARDOUGNE }),
 
     /**
-     * Supplied Etceteria plot footprint and confirmed ground-floor arrival for native bush farming.
+     * Etceteria bush patch beside the eastern shore. The ground-floor arrival stands on the walkable approach
+     * beside its native bush plot rather than on the blocked planting tile.
      */
     ETCETERIA_BUSH_PATCH(
-        inside = Position(2586, 3861), area = SimpleBoxArea.ofRadius(2574, 3855, 20, 17),
+        inside = Position(2590, 3863), area = SimpleBoxArea.ofRadius(2574, 3855, 20, 17),
         parent = { MISCELLANIA_AND_ETCETERIA }),
 
     /**
@@ -284,7 +285,8 @@ enum class SubZone(
 
     /**
      * Marketplace session destinations. Exact work rectangles are defined in BotMarketplace; these
-     * enclosing footprints retain nearby banking/resource memberships and use parent anchors for arrival.
+     * enclosing footprints retain nearby banking/resource memberships. Al Kharid uses a local bank-market arrival
+     * because its town travel anchor is outside the marketplace.
      */
     VARROCK_MARKETPLACE(
         inside = VARROCK.anchor,
@@ -296,7 +298,8 @@ enum class SubZone(
         inside = SEERS_VILLAGE.anchor,
         area = SimpleBoxArea.of(2720, 3484, 2729, 3493), parent = { SEERS_VILLAGE }),
     AL_KHARID_MARKETPLACE(
-        inside = AL_KHARID.anchor,
+        inside = Position(3272, 3167),
+
         area = SimpleBoxArea.ofRadius(3269, 3161, 9, 13), parent = { AL_KHARID }),
 
     /**
@@ -570,7 +573,8 @@ enum class SubZone(
      * - Low level wizards
      */
     WIZARDS_TOWER(
-        inside = Position(3113, 3195),
+        inside = Position(3109, 3164),
+
         area = SimpleBoxArea.of(3090, 3143, 3127, 3177),
         parent = { DRAYNOR }),
 
@@ -814,7 +818,8 @@ enum class SubZone(
      * The farm south of Falador. Has a water source, cabbage patch, loom, cows, and chickens.
      */
     SOUTH_FALADOR_FARM(
-        inside = Position(3008, 3314), // todo add to combat and harvesting
+        inside = Position(3038, 3305),
+
         area = SimpleBoxArea.ofRadius(3012, 3279, 58, 37),
         parent =
             { FALADOR }),
@@ -960,7 +965,8 @@ enum class SubZone(
      * - Lobster pot fishing
      */
     EAST_CATHERBY_FISHING(
-        inside = Position(2838, 3435),
+        inside = Position(2839, 3434),
+
         area = SimpleBoxArea.ofRadius(2829, 3415, 35, 20),
         parent =
             { CATHERBY }),
@@ -1589,12 +1595,1156 @@ enum class SubZone(
     DEEP_WILDERNESS_RUNITE_ROCKS(
         inside = Position(3062, 3884),
         area = SimpleBoxArea.ofRadius(3052, 3878, 15, 12),
-        parent = { VARROCK });
+        parent = { VARROCK }),
+
+    /**
+     * The Coal Trucks seam west of Seers Village has eighteen native coal rocks. Ordinary miners use the
+     * existing town bank without a cart workflow.
+     */
+    COAL_TRUCKS_MINE(
+        inside = Position(2582, 3480),
+        area = SimpleBoxArea.of(2569, 3469, 2595, 3490),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * The small Karamja seam north of Shilo Village has two mithril and two adamant rocks. Ordinary mining uses
+     * the existing Draynor banking fallback.
+     */
+    KARAMJA_NORTH_SHILO_MINE(
+        inside = Position(2848, 3035),
+        area = SimpleBoxArea.of(2841, 3025, 2857, 3041),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
+
+    /**
+     * The limestone quarry east of Varrock has eight native limestone rocks. The native mining action owns its
+     * shrinking rock stages.
+     */
+    VARROCK_LIMESTONE_QUARRY(
+        inside = Position(3373, 3500),
+        area = SimpleBoxArea.of(3365, 3493, 3380, 3507),
+        parent = { VARROCK }),
+
+    /**
+     * The desert quarry has thirty-two sandstone and twenty-five exposed granite placements. An enclosed
+     * granite tile remains subject to ordinary failed-target recovery.
+     */
+    DESERT_QUARRY(
+        inside = Position(3168, 2911),
+        area = SimpleBoxArea.of(3158, 2896, 3185, 2927),
+        parent = { AL_KHARID }),
+
+    /**
+     * Woodland northwest of Lumbridge Castle contains twenty-two normal trees and three oaks. The footprint
+     * follows the open woodland below the northern fenced field.
+     */
+    LUMBRIDGE_WOODLAND(
+        inside = Position(3200, 3248),
+        area = SimpleBoxArea.of(3184, 3237, 3217, 3259),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Twelve willows follow the coast south of Rimmington. Ordinary Woodcutting reuses Falador travel and
+     * banking.
+     */
+    RIMMINGTON_COAST_WILLOWS(
+        inside = Position(2974, 3194),
+        area = SimpleBoxArea.of(2956, 3179, 2995, 3205),
+        parent = { FALADOR }),
+
+    /**
+     * Fourteen willows line the coast southwest of Port Sarim. The coastal footprint keeps their accessible
+     * shoreline stands together.
+     */
+    PORT_SARIM_COAST_WILLOWS(
+        inside = Position(3013, 3170),
+        area = SimpleBoxArea.of(2991, 3155, 3033, 3181),
+        parent = { FALADOR }),
+
+    /**
+     * Two willows stand beside the western end of the Gnome Stronghold river bridge. This bank has its own
+     * local arrival.
+     */
+    GNOME_STRONGHOLD_WEST_WILLOWS(
+        inside = Position(2384, 3431),
+        area = SimpleBoxArea.of(2379, 3424, 2389, 3439),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A single willow stands on the western river bank northwest of the Gnome Stronghold bridge.
+     */
+    GNOME_STRONGHOLD_NORTH_WEST_WILLOW(
+        inside = Position(2374, 3445),
+        area = SimpleBoxArea.of(2370, 3440, 2380, 3451),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Four willows follow the eastern bank of the Stronghold river between its southern bend and northern
+     * woodland.
+     */
+    GNOME_STRONGHOLD_EAST_WILLOWS(
+        inside = Position(2393, 3429),
+        area = SimpleBoxArea.of(2389, 3413, 2402, 3445),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A single willow stands beside the eastern shore north of the Gnome Stronghold river bridge.
+     */
+    GNOME_STRONGHOLD_NORTH_EAST_WILLOW(
+        inside = Position(2384, 3449),
+        area = SimpleBoxArea.of(2378, 3444, 2388, 3454),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Eight willows line the lake in northern Gnome Stronghold. The nearby woodland provides the normal
+     * chopping stands.
+     */
+    GNOME_STRONGHOLD_NORTH_WILLOWS(
+        inside = Position(2478, 3538),
+        area = SimpleBoxArea.of(2464, 3527, 2492, 3549),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A maple grows south of Seers Village, west of the Party Room. The stand uses ordinary Seers travel and
+     * banking.
+     */
+    SEERS_SOUTH_WEST_MAPLE(
+        inside = Position(2721, 3464),
+        area = SimpleBoxArea.of(2716, 3460, 2727, 3471),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Two maples grow southeast of Seers Village. Both use the local town banking parent.
+     */
+    SEERS_SOUTH_EAST_MAPLES(
+        inside = Position(2751, 3466),
+        area = SimpleBoxArea.of(2744, 3460, 2755, 3473),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * A solitary maple grows northeast of the Barbarian Outpost beside the water. Seers Village remains its
+     * travel and banking parent.
+     */
+    BARBARIAN_OUTPOST_MAPLE(
+        inside = Position(2592, 3595),
+        area = SimpleBoxArea.of(2587, 3588, 2598, 3599),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Two native yews grow in the ruined building south of Edgeville bank. Both have chopping stands in the
+     * same local courtyard.
+     */
+    EDGEVILLE_YEWS(
+        inside = Position(3086, 3471),
+        area = SimpleBoxArea.of(3080, 3463, 3092, 3486),
+        parent = { EDGEVILLE }),
+
+    /**
+     * Four yews grow along the wooded hillside west of Rimmington. Falador supplies the existing travel and
+     * banking parent.
+     */
+    RIMMINGTON_YEWS(
+        inside = Position(2938, 3229),
+        area = SimpleBoxArea.of(2928, 3220, 2946, 3239),
+        parent = { FALADOR }),
+
+    /**
+     * Three yews grow around the Stronghold bank woodland. Their chopping stands share the same local ground
+     * component.
+     */
+    GNOME_STRONGHOLD_BANK_YEWS(
+        inside = Position(2437, 3435),
+        area = SimpleBoxArea.of(2427, 3420, 2444, 3446),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Four yews grow in southern Gnome Stronghold, inside the southern settlement approach.
+     */
+    GNOME_STRONGHOLD_SOUTH_YEWS(
+        inside = Position(2488, 3396),
+        area = SimpleBoxArea.of(2473, 3387, 2499, 3406),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A solitary yew grows near the eastern side of Gnome Stronghold, northeast of its main woodland.
+     */
+    GNOME_STRONGHOLD_EAST_YEW(
+        inside = Position(2496, 3489),
+        area = SimpleBoxArea.of(2491, 3485, 2502, 3496),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A magic tree grows in western Gnome Stronghold. Ordinary Woodcutting uses its adjacent ground stand.
+     */
+    GNOME_STRONGHOLD_WEST_MAGIC(
+        inside = Position(2371, 3425),
+        area = SimpleBoxArea.of(2366, 3421, 2377, 3432),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A magic tree grows in the woodland south of the Stronghold bank. The same settlement supplies travel and
+     * banking.
+     */
+    GNOME_STRONGHOLD_BANK_MAGIC(
+        inside = Position(2432, 3409),
+        area = SimpleBoxArea.of(2427, 3405, 2438, 3416),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * A magic tree grows in southeastern Gnome Stronghold. It has a separate local chopping stand from the
+     * western trees.
+     */
+    GNOME_STRONGHOLD_EAST_MAGIC(
+        inside = Position(2490, 3413),
+        area = SimpleBoxArea.of(2485, 3409, 2496, 3420),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * One magic tree grows in the western courtyard outside the Mage Training Arena. The native courtyard walls
+     * remain part of ordinary approach routing.
+     */
+    MTA_WEST_MAGIC_TREE(
+        inside = Position(3355, 3311),
+        area = SimpleBoxArea.of(3351, 3306, 3360, 3316),
+        parent = { AL_KHARID }),
+
+    /**
+     * One magic tree grows in the eastern courtyard outside the Mage Training Arena. It has a separate arrival
+     * from the western courtyard.
+     */
+    MTA_EAST_MAGIC_TREE(
+        inside = Position(3367, 3311),
+        area = SimpleBoxArea.of(3363, 3306, 3373, 3316),
+        parent = { AL_KHARID }),
+
+    /**
+     * Achey woodland in the Feldip lowlands south of Yanille contains twenty-four native achey trees for ogre-
+     * log supplies.
+     */
+    FELDIP_ACHEY_TREES(
+        inside = Position(2613, 2968),
+        area = SimpleBoxArea.of(2584, 2944, 2635, 2988),
+        parent = { YANILLE }),
+
+    /**
+     * Woodland west of Port Phasmatys contains seventy-seven hollow trees. The native chopping action supplies
+     * their bark.
+     */
+    PORT_PHASMATYS_HOLLOW_TREES(
+        inside = Position(3583, 3486),
+        area = SimpleBoxArea.of(3522, 3456, 3647, 3517),
+        parent = { PORT_PHASMATYS }),
+
+    /**
+     * Rimmington's coastline has eight native net-and-bait fishing destinations. Ordinary tools use adjacent
+     * shore stands.
+     */
+    RIMMINGTON_COAST_FISHING(
+        inside = Position(2991, 3169),
+        area = SimpleBoxArea.of(2981, 3150, 3002, 3183),
+        parent = { FALADOR }),
+
+    /**
+     * Entrana's southern sea-fishing area has ten net-and-bait destinations. The monks' normal inventory and
+     * equipment restrictions apply to every trip.
+     */
+    ENTRANA_SEA_FISHING(
+        inside = Position(2878, 3335),
+        area = SimpleBoxArea.of(2870, 3326, 2884, 3347),
+        parent = { ENTRANA }, bankZone = { DRAYNOR }),
+
+    /**
+     * Two lure-and-bait fishing destinations use the southern bank of Entrana's river. This bank has its own
+     * walkable arrival.
+     */
+    ENTRANA_RIVER_SOUTH_FISHING(
+        inside = Position(2845, 3355),
+        area = SimpleBoxArea.of(2835, 3351, 2851, 3357),
+        parent = { ENTRANA }, bankZone = { DRAYNOR }),
+
+    /**
+     * Five lure-and-bait fishing destinations use the northern bank of Entrana's river. This bank has its own
+     * walkable arrival.
+     */
+    ENTRANA_RIVER_NORTH_FISHING(
+        inside = Position(2847, 3362),
+        area = SimpleBoxArea.of(2837, 3358, 2854, 3366),
+        parent = { ENTRANA }, bankZone = { DRAYNOR }),
+
+    /**
+     * Rellekka's southern piers have seven net-and-bait and ten cage-and-harpoon destinations. Both piers share
+     * an accessible shore approach.
+     */
+    RELLEKKA_SOUTH_FISHING(
+        inside = Position(2640, 3694),
+        area = SimpleBoxArea.of(2628, 3682, 2647, 3705),
+        parent = { RELLEKKA }),
+
+    /**
+     * Rellekka's northern pier has eight big-net and shark-harpoon destinations. It uses a separate local
+     * arrival from the southern piers.
+     */
+    RELLEKKA_NORTH_FISHING(
+        inside = Position(2647, 3710),
+        area = SimpleBoxArea.of(2639, 3703, 2654, 3717),
+        parent = { RELLEKKA }),
+
+    /**
+     * Seers' Village smithy, containing three anvils for smithing owned bars.
+     */
+    SEERS_VILLAGE_ANVILS(
+        inside = Position(2713, 3493),
+        area = SimpleBoxArea.of(2708, 3488, 2718, 3499),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Yanille's smithy, containing three anvils for smithing owned bars.
+     */
+    YANILLE_ANVILS(
+        inside = Position(2613, 3079),
+        area = SimpleBoxArea.of(2609, 3074, 2620, 3085),
+        parent = { YANILLE }),
+
+    /**
+     * Rellekka's western workshop: three anvils, two furnace objects, one pottery wheel, one pottery oven and
+     * one spinning wheel.
+     */
+    RELLEKKA_WORKSHOP(
+        inside = Position(2617, 3662),
+        area = SimpleBoxArea.of(2612, 3655, 2624, 3670),
+        parent = { RELLEKKA }),
+
+    /**
+     * Lumbridge's furnace north of the castle, containing one furnace for smelting and furnace crafting.
+     */
+    LUMBRIDGE_FURNACE(
+        inside = Position(3226, 3255),
+        area = SimpleBoxArea.of(3222, 3252, 3230, 3260),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Ardougne's western furnace, containing one furnace for smelting and furnace crafting.
+     */
+    ARDOUGNE_FURNACE(
+        inside = Position(2600, 3310),
+        area = SimpleBoxArea.of(2597, 3306, 2605, 3314),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Furnace north of Port Phasmatys bank, containing one furnace for smelting and furnace crafting.
+     */
+    PORT_PHASMATYS_FURNACE(
+        inside = Position(3686, 3478),
+        area = SimpleBoxArea.of(3683, 3474, 3691, 3482),
+        parent = { PORT_PHASMATYS }),
+
+    /**
+     * Shilo Village's furnace beside the local bank, containing one furnace for smelting and furnace crafting.
+     */
+    SHILO_VILLAGE_FURNACE(
+        inside = Position(2855, 2966),
+        area = SimpleBoxArea.of(2852, 2962, 2860, 2970),
+        parent = { KARAMJA }),
+
+    /**
+     * Lumbridge Castle kitchen, containing its one special cooking range.
+     */
+    LUMBRIDGE_CASTLE_RANGE(
+        inside = Position(3211, 3215),
+        area = SimpleBoxArea.of(3208, 3211, 3216, 3219),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * House southeast of Lumbridge Castle, containing one cooking range.
+     */
+    LUMBRIDGE_SOUTH_RANGE(
+        inside = Position(3230, 3195),
+        area = SimpleBoxArea.of(3226, 3192, 3234, 3200),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Catherby kitchen beside the bank, containing one cooking range.
+     */
+    CATHERBY_SOUTH_RANGE(
+        inside = Position(2817, 3443),
+        area = SimpleBoxArea.of(2813, 3440, 2821, 3448),
+        parent = { CATHERBY }),
+
+    /**
+     * Northern Catherby house, containing one cooking range.
+     */
+    CATHERBY_NORTH_RANGE(
+        inside = Position(2819, 3454),
+        area = SimpleBoxArea.of(2814, 3451, 2822, 3459),
+        parent = { CATHERBY }),
+
+    /**
+     * Southern Seers' Village house, containing one cooking range.
+     */
+    SEERS_VILLAGE_RANGE(
+        inside = Position(2715, 3477),
+        area = SimpleBoxArea.of(2711, 3472, 2719, 3480),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * House south of Ardougne's north bank, containing one cooking range.
+     */
+    ARDOUGNE_NORTH_RANGE(
+        inside = Position(2616, 3317),
+        area = SimpleBoxArea.of(2613, 3313, 2621, 3321),
+        parent = { ARDOUGNE }),
+
+    /**
+     * House north of Ardougne's south bank, containing one cooking range.
+     */
+    ARDOUGNE_SOUTH_RANGE(
+        inside = Position(2647, 3298),
+        area = SimpleBoxArea.of(2644, 3293, 2652, 3301),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Western Yanille cooking room, containing one cooking range.
+     */
+    YANILLE_WEST_RANGE(
+        inside = Position(2566, 3103),
+        area = SimpleBoxArea.of(2562, 3100, 2570, 3108),
+        parent = { YANILLE }),
+
+    /**
+     * Eastern Falador cooking room, containing one cooking range.
+     */
+    FALADOR_EAST_RANGE(
+        inside = Position(3037, 3342),
+        area = SimpleBoxArea.of(3032, 3338, 3040, 3346),
+        parent = { FALADOR }),
+
+    /**
+     * Ardougne pottery workshop, containing four shaping wheels and one firing oven.
+     */
+    ARDOUGNE_POTTERY(
+        inside = Position(2590, 3325),
+        area = SimpleBoxArea.of(2582, 3317, 2599, 3331),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Lumbridge Castle's first-floor workroom, containing one spinning wheel.
+     */
+    LUMBRIDGE_SPINNING_WHEEL(
+        inside = Position(3209, 3213, 1),
+        area = SimpleBoxArea.of(3205, 3208, 3213, 3216, 1),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * House south of Falador, containing one ground-floor spinning wheel.
+     */
+    FALADOR_SPINNING_WHEEL(
+        inside = Position(2980, 3314),
+        area = SimpleBoxArea.of(2977, 3310, 2985, 3318),
+        parent = { FALADOR }),
+
+    /**
+     * Western first-floor Gnome Stronghold workroom, containing one spinning wheel.
+     */
+    GNOME_STRONGHOLD_WEST_SPINNING(
+        inside = Position(2474, 3398, 1),
+        area = SimpleBoxArea.of(2471, 3394, 2479, 3402, 1),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Eastern first-floor Gnome Stronghold workroom, containing one spinning wheel.
+     */
+    GNOME_STRONGHOLD_EAST_SPINNING(
+        inside = Position(2486, 3401, 1),
+        area = SimpleBoxArea.of(2483, 3397, 2491, 3405, 1),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Northern first-floor Gnome Stronghold workroom, containing one spinning wheel.
+     */
+    GNOME_STRONGHOLD_NORTH_SPINNING(
+        inside = Position(2487, 3410, 1),
+        area = SimpleBoxArea.of(2484, 3406, 2492, 3414, 1),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Falador West bank work area, containing 5 usable bank booths. Portable inventory production uses free
+     * local tiles after arrival.
+     */
+    FALADOR_WEST_BANK_WORK_AREA(
+        inside = Position(2945, 3368),
+        area = SimpleBoxArea.of(2939, 3355, 2952, 3374),
+        parent = { FALADOR }),
+
+    /**
+     * Falador East bank work area, containing 6 usable bank booths. Portable inventory production uses free
+     * local tiles after arrival.
+     */
+    FALADOR_EAST_BANK_WORK_AREA(
+        inside = Position(3013, 3355),
+        area = SimpleBoxArea.of(3008, 3350, 3019, 3362),
+        parent = { FALADOR }),
+
+    /**
+     * Catherby bank work area, containing 4 usable bank booths. Portable inventory production uses free local
+     * tiles after arrival.
+     */
+    CATHERBY_BANK_WORK_AREA(
+        inside = Position(2809, 3441),
+        area = SimpleBoxArea.of(2804, 3434, 2815, 3446),
+        parent = { CATHERBY }),
+
+    /**
+     * Ardougne North bank work area, containing 3 usable bank booths. Portable inventory production uses free
+     * local tiles after arrival.
+     */
+    ARDOUGNE_NORTH_BANK_WORK_AREA(
+        inside = Position(2618, 3332),
+        area = SimpleBoxArea.of(2612, 3328, 2623, 3341),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Ardougne South bank work area, containing 2 usable bank booths. Portable inventory production uses free
+     * local tiles after arrival.
+     */
+    ARDOUGNE_SOUTH_BANK_WORK_AREA(
+        inside = Position(2655, 3283),
+        area = SimpleBoxArea.of(2651, 3279, 2661, 3289),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Yanille bank work area, containing 3 usable bank booths. Portable inventory production uses free local
+     * tiles after arrival.
+     */
+    YANILLE_BANK_WORK_AREA(
+        inside = Position(2613, 3094),
+        area = SimpleBoxArea.of(2608, 3089, 2618, 3098),
+        parent = { YANILLE }),
+
+    /**
+     * Port Phasmatys bank work area, containing 4 usable bank booths. Portable inventory production uses free
+     * local tiles after arrival.
+     */
+    PORT_PHASMATYS_BANK_WORK_AREA(
+        inside = Position(3690, 3466),
+        area = SimpleBoxArea.of(3684, 3461, 3695, 3469),
+        parent = { PORT_PHASMATYS }),
+
+    /**
+     * Southeast Varrock tea seller, containing one tea stall for level-five Thieving.
+     */
+    VARROCK_TEA_STALL(
+        inside = Position(3268, 3410),
+        area = SimpleBoxArea.of(3265, 3406, 3273, 3414),
+        parent = { VARROCK }),
+
+    /**
+     * Rellekka's market square, containing three fish stalls and two fur stalls.
+     */
+    RELLEKKA_MARKET_STALLS(
+        inside = Position(2640, 3676),
+        area = SimpleBoxArea.of(2634, 3668, 2651, 3684),
+        parent = { RELLEKKA }),
+
+    /**
+     * Miscellania's market, containing two fish stalls and one vegetable stall.
+     */
+    MISCELLANIA_MARKET_STALLS(
+        inside = Position(2516, 3863),
+        area = SimpleBoxArea.of(2509, 3858, 2523, 3870),
+        parent = { MISCELLANIA_AND_ETCETERIA }),
+
+    /**
+     * Etceteria's market, containing one fish stall and one vegetable stall.
+     */
+    ETCETERIA_MARKET_STALLS(
+        inside = Position(2602, 3876),
+        area = SimpleBoxArea.of(2596, 3872, 2610, 3880),
+        parent = { MISCELLANIA_AND_ETCETERIA }),
+
+    /**
+     * Eastern Ardougne house, containing one ground-floor ten-coin chest.
+     */
+    ARDOUGNE_EAST_CHEST(
+        inside = Position(2673, 3308),
+        area = SimpleBoxArea.of(2669, 3303, 2677, 3311),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Eastern Ardougne upstairs room, containing one nature-rune chest and one fifty-coin chest.
+     */
+    ARDOUGNE_EAST_CHEST_ROOM(
+        inside = Position(2671, 3300, 1),
+        area = SimpleBoxArea.of(2667, 3295, 2675, 3305, 1),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Ardougne Castle's southern upstairs chest room, containing one level-72 chest.
+     */
+    ARDOUGNE_CASTLE_SOUTH_CHEST(
+        inside = Position(2587, 3291, 1),
+        area = SimpleBoxArea.of(2584, 3287, 2592, 3295, 1),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Ardougne Castle's northern upstairs chest room, containing one level-72 chest.
+     */
+    ARDOUGNE_CASTLE_NORTH_CHEST(
+        inside = Position(2587, 3302, 1),
+        area = SimpleBoxArea.of(2584, 3298, 2592, 3306, 1),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Rellekka's northern sandpit, containing one sand source for owned buckets.
+     */
+    RELLEKKA_SAND_PIT(
+        inside = Position(2667, 3706),
+        area = SimpleBoxArea.of(2663, 3703, 2671, 3711),
+        parent = { RELLEKKA }),
+
+    /**
+     * Southern Zanaris sandpit, containing one sand source for owned buckets.
+     */
+    ZANARIS_SAND_PIT(
+        inside = Position(2438, 4442),
+        area = SimpleBoxArea.of(2435, 4438, 2443, 4446),
+        parent = { ZANARIS }),
+
+    /**
+     * Farm beside Lumbridge mill, containing one milkable Dairy Cow object.
+     */
+    LUMBRIDGE_DAIRY_COW(
+        inside = Position(3171, 3317),
+        area = SimpleBoxArea.of(3168, 3313, 3176, 3321),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Eastern Lumbridge cattle field, containing two milkable Dairy Cow objects.
+     */
+    EAST_LUMBRIDGE_DAIRY_COW(
+        inside = Position(3251, 3275),
+        area = SimpleBoxArea.of(3248, 3271, 3256, 3279),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Cattle field north of Ardougne, containing one milkable Dairy Cow object.
+     */
+    ARDOUGNE_DAIRY_COW(
+        inside = Position(2673, 3351),
+        area = SimpleBoxArea.of(2670, 3347, 2678, 3355),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Eastern Rellekka cattle enclosure, containing one milkable Dairy Cow object.
+     */
+    RELLEKKA_DAIRY_COW(
+        inside = Position(2677, 3670),
+        area = SimpleBoxArea.of(2674, 3666, 2682, 3674),
+        parent = { RELLEKKA }),
+
+    /**
+     * Cattle field north of Yanille, containing one milkable Dairy Cow object.
+     */
+    YANILLE_DAIRY_COW(
+        inside = Position(2584, 3122),
+        area = SimpleBoxArea.of(2581, 3118, 2589, 3126),
+        parent = { YANILLE }),
+
+    /**
+     * Cattle field north of Seers' Village, containing one milkable Dairy Cow object.
+     */
+    SEERS_VILLAGE_DAIRY_COW(
+        inside = Position(2738, 3560),
+        area = SimpleBoxArea.of(2735, 3556, 2743, 3564),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Western Yanille house, containing one sink for filling owned containers.
+     */
+    YANILLE_WATER(
+        inside = Position(2566, 3094),
+        area = SimpleBoxArea.of(2562, 3089, 2570, 3097),
+        parent = { YANILLE }),
+
+    /**
+     * House beside Ardougne's north bank, containing one sink for filling owned containers.
+     */
+    ARDOUGNE_WATER(
+        inside = Position(2616, 3325),
+        area = SimpleBoxArea.of(2613, 3321, 2621, 3329),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Western Seers' Village house, containing one sink for filling owned containers.
+     */
+    SEERS_VILLAGE_WATER(
+        inside = Position(2700, 3472),
+        area = SimpleBoxArea.of(2695, 3468, 2703, 3476),
+        parent = { SEERS_VILLAGE }),
+
+    /**
+     * Flax field southwest of Rellekka, containing twenty pickable flax plants.
+     */
+    RELLEKKA_FLAX_1(
+        inside = Position(2630, 3636),
+        area = SimpleBoxArea.of(2611, 3622, 2644, 3649),
+        parent = { RELLEKKA }),
+
+    /**
+     * Eastern Gnome Stronghold flax field by the spinning houses, containing twenty pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_1(
+        inside = Position(2481, 3399),
+        area = SimpleBoxArea.of(2463, 3389, 2498, 3415),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Southwestern Gnome Stronghold flax field, containing eleven pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_2(
+        inside = Position(2408, 3387),
+        area = SimpleBoxArea.of(2400, 3382, 2416, 3393),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Western Gnome Stronghold flax field, containing eleven pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_3(
+        inside = Position(2422, 3400),
+        area = SimpleBoxArea.of(2416, 3394, 2429, 3408),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Central Gnome Stronghold flax field, containing seven pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_4(
+        inside = Position(2446, 3403),
+        area = SimpleBoxArea.of(2439, 3393, 2455, 3411),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Western Gnome Stronghold pond-side flax field, containing five pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_5(
+        inside = Position(2400, 3419),
+        area = SimpleBoxArea.of(2392, 3415, 2408, 3427),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Northwestern Gnome Stronghold flax field, containing five pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_6(
+        inside = Position(2408, 3441),
+        area = SimpleBoxArea.of(2403, 3435, 2414, 3448),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * North-central Gnome Stronghold flax field, containing four pickable plants.
+     */
+    GNOME_STRONGHOLD_FLAX_7(
+        inside = Position(2428, 3425),
+        area = SimpleBoxArea.of(2423, 3419, 2433, 3429),
+        parent = { GNOME_STRONGHOLD }),
+
+    /**
+     * Musa Point's jungle west of the banana plantation, containing three monkeys for beginner combat and
+     * monkey assignments.
+     */
+    MUSA_POINT_MONKEYS(
+        inside = Position(2876, 3155),
+        area = SimpleBoxArea.of(2868, 3143, 2885, 3167),
+        parent = { KARAMJA }),
+
+    /**
+     * The south-western desert lizard group, containing four lizards for both native lizard assignment types.
+     * Trips require owned ice coolers.
+     */
+    DESERT_LIZARDS_SOUTHWEST(
+        inside = Position(3386, 3016),
+        area = SimpleBoxArea.of(3379, 3008, 3394, 3024),
+        parent = { AL_KHARID }),
+
+    /**
+     * The north-western desert lizard group, containing four lizards for both native lizard assignment types.
+     * Trips require owned ice coolers.
+     */
+    DESERT_LIZARDS_NORTHWEST(
+        inside = Position(3387, 3067),
+        area = SimpleBoxArea.of(3380, 3060, 3395, 3075),
+        parent = { AL_KHARID }),
+
+    /**
+     * The central desert lizard group, containing 18 lizards for both native lizard assignment types. Trips
+     * require owned ice coolers.
+     */
+    DESERT_LIZARDS_CENTRAL(
+        inside = Position(3413, 3049),
+        area = SimpleBoxArea.of(3395, 3024, 3431, 3074),
+        parent = { AL_KHARID }),
+
+    /**
+     * The eastern desert lizard group, containing 17 lizards for both native lizard assignment types. Trips
+     * require owned ice coolers.
+     */
+    DESERT_LIZARDS_EAST(
+        inside = Position(3441, 3039),
+        area = SimpleBoxArea.of(3430, 3007, 3453, 3072),
+        parent = { AL_KHARID }),
+
+    /**
+     * The western shore of the River Elid, containing three crocodiles with land approaches on this side of the
+     * river.
+     */
+    ELID_CROCODILES_WEST_BANK(
+        inside = Position(3259, 2860),
+        area = SimpleBoxArea.of(3253, 2846, 3267, 2874),
+        parent = { AL_KHARID }),
+
+    /**
+     * The eastern shore of the River Elid, containing two crocodiles with land approaches on this side of the
+     * river.
+     */
+    ELID_CROCODILES_EAST_BANK(
+        inside = Position(3269, 2860),
+        area = SimpleBoxArea.of(3263, 2849, 3275, 2872),
+        parent = { AL_KHARID }),
+
+    /**
+     * Trollheim mountain slopes containing eight mountain trolls for Troll assignments; the local footprint
+     * follows the connected combat ground.
+     */
+    TROLLHEIM_MOUNTAIN_TROLLS(
+        inside = Position(2850, 3679),
+        area = SimpleBoxArea.of(2838, 3668, 2862, 3690),
+        parent = { BURTHORPE }),
+
+    /**
+     * The Karamja harpie habitat, containing 14 harpie bug swarms. Assignment trips require a worn, lit bug
+     * lantern.
+     */
+    KARAMJA_HARPIE_SWARMS(
+        inside = Position(2872, 3114),
+        area = SimpleBoxArea.of(2849, 3100, 2895, 3129),
+        parent = { KARAMJA }),
+
+    /**
+     * The icy chamber beneath Asgarnia, containing 14 ice warriors and ice giants for their respective
+     * assignments.
+     */
+    ASGARNIAN_ICE(
+        inside = Position(3055, 9583),
+        area = SimpleBoxArea.of(3034, 9564, 3072, 9597),
+        parent = { DRAYNOR }),
+
+    /**
+     * The chamber beneath the Legends' Guild containing 19 shadow warriors for Shadow Warrior assignments.
+     */
+    LEGENDS_SHADOW(
+        inside = Position(2700, 9769),
+        area = SimpleBoxArea.of(2684, 9745, 2717, 9789),
+        parent = { ARDOUGNE }),
+
+    /**
+     * The red-dragon section of Brimhaven Dungeon, containing 14 red dragons. Combat preparation retains
+     * dragonfire protection.
+     */
+    BRIMHAVEN_RED(
+        inside = Position(2711, 9515),
+        area = SimpleBoxArea.of(2687, 9491, 2740, 9537),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The greater-demon room in Taverley Dungeon, containing two greater demons before the dusty-key gate.
+     */
+    TAVERLY_GREATER(
+        inside = Position(2863, 9750),
+        area = SimpleBoxArea.of(2852, 9739, 2874, 9763),
+        parent = { TAVERLY }),
+
+    /**
+     * The western hellhound section of Taverley Dungeon, containing 13 hellhounds beyond the dusty-key gate.
+     */
+    TAVERLY_HELLHOUND(
+        inside = Position(2862, 9836),
+        area = SimpleBoxArea.of(2844, 9811, 2881, 9862),
+        parent = { TAVERLY }),
+
+    /**
+     * The metal-dragon section of Brimhaven Dungeon, containing 17 iron and steel dragons. Trips require an
+     * anti-dragon shield, antifire and strong food.
+     */
+    BRIMHAVEN_METAL(
+        inside = Position(2724, 9439),
+        area = SimpleBoxArea.of(2693, 9412, 2750, 9472),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * Mort'ton's surface shade habitat, containing 25 dormant Loar shadows that awaken through their native
+     * encounter before Shade kills count.
+     */
+    MORTTON_SURFACE(
+        inside = Position(3495, 3294),
+        area = SimpleBoxArea.of(3469, 3262, 3521, 3326),
+        parent = { CANIFIS }),
+
+    /**
+     * The Killerwatt plane above Draynor Manor, containing 26 dormant electrical forms. Assignment trips
+     * require insulated boots.
+     */
+    KILLERWATT_REALM(
+        inside = Position(2657, 5213, 2),
+        area = SimpleBoxArea.of(2637, 5192, 2680, 5235, 2),
+        parent = { DRAYNOR }),
+
+    /**
+     * The Braindeath cellar, containing 11 fever spiders. Assignment trips require Slayer gloves.
+     */
+    BRAINDEATH_FEVER(
+        inside = Position(2150, 5099),
+        area = SimpleBoxArea.of(2135, 5088, 2166, 5110),
+        parent = { PORT_PHASMATYS }),
+
+    /**
+     * The dust-devil section of the Smoke Dungeon, containing 19 dust devils. Assignment trips require a worn
+     * facemask.
+     */
+    SMOKE_DUNGEON(
+        inside = Position(3237, 9374),
+        area = SimpleBoxArea.of(3210, 9344, 3264, 9405),
+        parent = { AL_KHARID }),
+
+    /**
+     * The skeletal-wyvern cavern beneath the Asgarnian ice dungeon, containing eight skeletal wyverns. Trips
+     * require an elemental shield and strong food.
+     */
+    ASGARNIAN_WYVERNS(
+        inside = Position(3046, 9547),
+        area = SimpleBoxArea.of(3020, 9534, 3073, 9561),
+        parent = { DRAYNOR }),
+
+    /**
+     * The dark-beast cavern, containing 11 dark beasts for high-level assignments with owned strong food.
+     */
+    DARK_BEAST_CAVE(
+        inside = Position(1993, 4649),
+        area = SimpleBoxArea.of(1983, 4627, 2007, 4671),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Mudskipper Point shoreline containing three ominous fishing spots. Owned fishing explosives lure Mogres
+     * through the native encounter; there are no permanent Mogre spawns.
+     */
+    MUDSKIPPER_MOGRES(
+        inside = Position(2996, 3111),
+        area = SimpleBoxArea.of(2980, 3104, 3007, 3124),
+        parent = { DRAYNOR }),
+
+    /**
+     * Lumbridge Swamp Caves containing 21 cave bugs, 17 cave slimes and seven dormant wall-beast holes. Trips
+     * retain an enclosed lit source and the protection or poison cure required by the assignment.
+     */
+    LUMBRIDGE_SWAMP_CAVES(
+        inside = Position(3148, 9571),
+        area = SimpleBoxArea.of(3142, 9536, 3262, 9603),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * The Lighthouse basement, containing 22 dagannoths. Arrival uses the walkable landing south of the ladder
+     * object.
+     */
+    LIGHTHOUSE_DAGANNOTHS(
+        inside = Position(2515, 10008),
+        area = SimpleBoxArea.of(2496, 10002, 2545, 10045),
+        parent = { RELLEKKA }),
+
+    /**
+     * The northern ghoul group west of Canifis, containing 11 ghouls for Ghoul assignments.
+     */
+    CANIFIS_NORTH_GHOULS(
+        inside = Position(3416, 3513),
+        area = SimpleBoxArea.of(3407, 3504, 3425, 3523),
+        parent = { CANIFIS }),
+
+    /**
+     * The southern ghoul group west of Canifis, containing ten ghouls for Ghoul assignments.
+     */
+    CANIFIS_SOUTH_GHOULS(
+        inside = Position(3429, 3463),
+        area = SimpleBoxArea.of(3418, 3453, 3439, 3473),
+        parent = { CANIFIS }),
+
+    /**
+     * The hill-giant room in Taverley Dungeon, containing five hill giants for ordinary training and
+     * assignments before the dusty-key gate.
+     */
+    TAVERLY_HILL_GIANTS(
+        inside = Position(2908, 9737),
+        area = SimpleBoxArea.of(2894, 9724, 2922, 9752),
+        parent = { TAVERLY }),
+
+    /**
+     * The lesser-demon room in Taverley Dungeon, containing five lesser demons for ordinary training and
+     * assignments before the dusty-key gate.
+     */
+    TAVERLY_LESSER_DEMONS(
+        inside = Position(2932, 9806),
+        area = SimpleBoxArea.of(2918, 9785, 2948, 9822),
+        parent = { TAVERLY }),
+
+    /**
+     * The western black-demon room in Taverley Dungeon, containing 11 black demons beyond the dusty-key gate.
+     */
+    TAVERLY_BLACK_DEMONS(
+        inside = Position(2868, 9776),
+        area = SimpleBoxArea.of(2846, 9755, 2888, 9795),
+        parent = { TAVERLY }),
+
+    /**
+     * Waterbirth Island's surface beach, containing 19 disguised rock crabs and two aggressive hobgoblins.
+     * Readiness accounts for the hobgoblins; the crab script waits for native awakening.
+     */
+    WATERBIRTH_SURFACE_CRABS(
+        inside = Position(2529, 3741),
+        area = SimpleBoxArea.of(2492, 3708, 2563, 3776),
+        parent = { RELLEKKA }),
+
+    /**
+     * The western Waterfall Dungeon chamber, containing three fire giants. Its arrival remains in this room,
+     * and trips keep Glarial's amulet equipped.
+     */
+    WATERFALL_FIRE_GIANTS_WEST(
+        inside = Position(2567, 9888),
+        area = SimpleBoxArea.of(2562, 9882, 2571, 9893),
+        parent = { ARDOUGNE }),
+
+    /**
+     * The eastern Waterfall Dungeon chamber, containing seven fire giants. Its arrival remains in this room,
+     * and trips keep Glarial's amulet equipped.
+     */
+    WATERFALL_FIRE_GIANTS_EAST(
+        inside = Position(2578, 9892),
+        area = SimpleBoxArea.of(2572, 9885, 2584, 9899),
+        parent = { ARDOUGNE }),
+
+    /**
+     * The southern moss-giant pocket in Brimhaven Dungeon, containing three moss giants with a shared approach
+     * inside this room.
+     */
+    BRIMHAVEN_MOSS_GIANTS_SOUTH(
+        inside = Position(2646, 9488),
+        area = SimpleBoxArea.of(2636, 9477, 2655, 9500),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The western moss-giant pocket in Brimhaven Dungeon, containing six moss giants on the same connected side
+     * of the cavern walls.
+     */
+    BRIMHAVEN_MOSS_GIANTS_WEST(
+        inside = Position(2644, 9533),
+        area = SimpleBoxArea.of(2630, 9510, 2658, 9557),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The central moss-giant pocket in Brimhaven Dungeon, containing four moss giants with a shared approach
+     * inside this room.
+     */
+    BRIMHAVEN_MOSS_GIANTS_CENTRAL(
+        inside = Position(2671, 9546),
+        area = SimpleBoxArea.of(2655, 9538, 2689, 9562),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The narrow moss-giant passage in Brimhaven Dungeon, containing one moss giant kept separate from the
+     * adjoining cavern rooms.
+     */
+    BRIMHAVEN_MOSS_GIANTS_PASSAGE(
+        inside = Position(2651, 9566),
+        area = SimpleBoxArea.of(2648, 9561, 2655, 9571),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The northern moss-giant pocket in Brimhaven Dungeon, containing six moss giants with a shared approach
+     * inside this room.
+     */
+    BRIMHAVEN_MOSS_GIANTS_NORTH(
+        inside = Position(2656, 9587),
+        area = SimpleBoxArea.of(2637, 9570, 2685, 9597),
+        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+
+    /**
+     * The western chicken pen at Falador's southern farm, containing six chickens. Its arrival is inside this
+     * enclosure rather than the adjacent cattle field.
+     */
+    SOUTH_FALADOR_FARM_WEST_CHICKENS(
+        inside = Position(3017, 3289),
+        area = SimpleBoxArea.of(3013, 3281, 3021, 3296),
+        parent = { FALADOR }),
+
+    /**
+     * The eastern chicken enclosure at Falador's southern farm, containing four chickens. Its own arrival
+     * avoids targeting across the farm's dividing fences.
+     */
+    SOUTH_FALADOR_FARM_EAST_CHICKENS(
+        inside = Position(3029, 3287),
+        area = SimpleBoxArea.of(3025, 3284, 3033, 3290),
+        parent = { FALADOR }),
+
+    /**
+     * The cattle field at Falador's southern farm, containing ten cows. Its arrival stays inside the cattle
+     * enclosure, separate from both chicken pens.
+     */
+    SOUTH_FALADOR_FARM_CATTLE(
+        inside = Position(3034, 3307),
+        area = SimpleBoxArea.of(3025, 3298, 3044, 3315),
+        parent = { FALADOR }),
+
+    /**
+     * Open ground around Catherby's bank and range, providing three 14-fire westward lanes with a clear final
+     * step-off tile. Spot reservations are checked only after arrival.
+     */
+    CATHERBY_FIREMAKING(
+        inside = Position(2815, 3447),
+        area = SimpleBoxArea.of(2794, 3433, 2819, 3447),
+        parent = { CATHERBY }),
+
+    /**
+     * Roads west and south-west of Yanille bank, providing three 14-fire westward lanes with a clear final
+     * step-off tile. Spot reservations are checked only after arrival.
+     */
+    YANILLE_FIREMAKING(
+        inside = Position(2611, 3087),
+        area = SimpleBoxArea.of(2593, 3083, 2614, 3097),
+        parent = { YANILLE }),
+
+    /**
+     * Roads around Ardougne's northern bank, providing three 14-fire westward lanes with a clear final step-off
+     * tile. Spot reservations are checked only after arrival.
+     */
+    ARDOUGNE_NORTH_FIREMAKING(
+        inside = Position(2616, 3342),
+        area = SimpleBoxArea.of(2601, 3338, 2626, 3345),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Open rows around Ardougne's southern bank, providing three 14-fire westward lanes with a clear final
+     * step-off tile. Spot reservations are checked only after arrival.
+     */
+    ARDOUGNE_SOUTH_FIREMAKING(
+        inside = Position(2643, 3289),
+        area = SimpleBoxArea.of(2629, 3277, 2669, 3299),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Open ground around Falador's western bank, providing three 14-fire westward lanes with a clear final
+     * step-off tile. Spot reservations are checked only after arrival.
+     */
+    FALADOR_WEST_FIREMAKING(
+        inside = Position(2951, 3375),
+        area = SimpleBoxArea.of(2937, 3357, 2963, 3381),
+        parent = { FALADOR });
 
     companion object {
 
         /**
-         * Maps each loaded map region to the subzones that touch it.
+         * Maps every intersected map region to its subzones, including interior regions of large rectangles.
          *
          * This is used as a cheap pre-filter before checking exact tile containment. A bot only scans local subzones
          * for its current region instead of checking every subzone every time it moves.
@@ -1603,8 +2753,10 @@ enum class SubZone(
             val map = HashMultimap.create<Int, SubZone>()
 
             for (zone in entries) {
-                for (region in zone.area.touchedRegions) {
-                    map.put(region, zone)
+                for (regionX in (zone.area.southWest.x shr 6)..(zone.area.northEast.x shr 6)) {
+                    for (regionY in (zone.area.southWest.y shr 6)..(zone.area.northEast.y shr 6)) {
+                        map.put((regionX shl 8) or regionY, zone)
+                    }
                 }
             }
 
@@ -1673,7 +2825,8 @@ enum class SubZone(
             )
                 "the tower door needs level ${ChaosDruidTowerDoorAction.REQUIRED_LEVEL} Thieving" else null
 
-        TAVERLEY_DUNGEON_ZAMORAK_MONKS ->
+        TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
+        TAVERLY_DUNGEON_BLUE_DRAGONS ->
             if (this !in bot.subZones && !canEnterTaverleyWest(bot))
                 "the western section of Taverley Dungeon needs a dusty key" else null
 
@@ -1684,6 +2837,9 @@ enum class SubZone(
             )
                 "the house door needs a brass key" else null
 
+        WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST ->
+            if (!bot.itemTracker.contains(295)) "the Waterfall entrance needs Glarial's amulet" else null
+
         else -> null
     }
 
@@ -1692,7 +2848,9 @@ enum class SubZone(
      */
     val entryItem: Int?
         get() = when (this) {
-            TAVERLEY_DUNGEON_ZAMORAK_MONKS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
+            TAVERLEY_DUNGEON_ZAMORAK_MONKS, TAVERLY_BLACK_DEMONS, TAVERLY_HELLHOUND,
+            TAVERLY_DUNGEON_BLUE_DRAGONS -> TaverleyJailDoor.DUSTY_KEY_GATE.key
+            WATERFALL_FIRE_GIANTS_WEST, WATERFALL_FIRE_GIANTS_EAST -> 295
             EDGEVILLE_DUNGEON_MINE, EDGEVILLE_DUNGEON_HILL_GIANTS -> BrassKeyDoor.KEY
             else -> null
         }

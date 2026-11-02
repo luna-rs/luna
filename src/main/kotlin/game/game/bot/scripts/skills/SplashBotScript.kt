@@ -26,11 +26,18 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
 import io.luna.game.model.mob.combat.Weapon
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Uses owned runes and the existing deliberately inaccurate loadout against native low-level targets.
+ * Failed searches are bounded at the arrived zone, allowing other authored rat habitats to be tried.
+ *
+ * @author lare96
+ */
 class SplashBotScript(
     bot: Bot,
     duration: Duration
-) : ZonedBotScript(bot, duration, SPLASH_ZONES) {
+) : ZonedBotScript(bot, duration, SPLASH_ZONES.toMutableList()) {
 
     override val actionSafety = ActionSafety.COMBAT
 
@@ -43,12 +50,14 @@ class SplashBotScript(
     private var usingStaff: Int? = null
     private var splashEquipment: Array<Int?>? = null
     private var runes: List<Item> = emptyList()
+    private var searchingZone: SubZone? = null
+    private var searchStartedAt: Long? = null
 
     companion object {
         const val MIN_CAST_RUNES_REQUIRED = 2_000
         const val MAX_SPLASH_MAGIC_BONUS = -64
 
-        val SPLASH_ZONES = mutableListOf(SubZone.LUMBRIDGE_COURT_YARD)
+        val SPLASH_ZONES = listOf(SubZone.LUMBRIDGE_COURT_YARD, SubZone.VARROCK_SEWERS, SubZone.DRAYNOR_SEWERS)
         val ALWAYS_ALLOWED = setOf("Rat")
 
         private val SPLASH_SPELLS = listOf(
@@ -226,18 +235,31 @@ class SplashBotScript(
         }
 
         val area = activeZone?.area ?: return false
+        if (searchingZone != activeZone) {
+            searchingZone = activeZone
+            searchStartedAt = null
+        }
 
         val target = world.locator.findNpcs(area.centerPosition, area.tileRadius) {
-            isValidTarget(it)
+            it.position in area && isValidTarget(it)
         }.asSequence()
             .filter { bot.isWithinDistance(it, 10) }
             .filter { world.collisionManager.raycast(bot.position, it.position) }
             .minByOrNull { bot.position.computeLongestDistance(it.position) }
-            ?: return true
+        if (target == null) {
+            val now = System.nanoTime()
+            val started = searchStartedAt ?: now.also { searchStartedAt = it }
+            return now - started < 180.seconds.inWholeNanoseconds
+        }
 
+        searchStartedAt = null
         bot.combat.attack(target)
         bot.naturalDelay()
         return true
+    }
+
+    override fun onPaused() {
+        searchStartedAt = null
     }
 
     override suspend fun finish() {

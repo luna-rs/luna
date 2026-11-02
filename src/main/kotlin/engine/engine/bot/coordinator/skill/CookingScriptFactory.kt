@@ -3,6 +3,7 @@ package engine.bot.coordinator.skill
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.SKILL_COOKING
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.bot.scripts.skills.CookFoodBotScript
@@ -23,12 +24,9 @@ import api.predef.rand
  * into meat, anchovy, or pineapple pizzas, which award Cooking experience. Whole cakes can also be prepared
  * with owned chocolate bars or chocolate dust at level 50 for 30 Cooking experience each.
  *
- * Zone selection is personality-based:
- *
- * - Dumb and non-dextrous bots use less optimal banking locations:
- *   - Al Kharid Bank
- *   - Varrock East Bank
- * - All other bots use Rogues' Den, which is the more efficient cooking spot.
+ * Registered ranges across ordinary towns share the same zone-selection policy. Less adept bots retain
+ * the old Al Kharid and Varrock options, while other bots can still choose Rogues' Den. The shared zoned
+ * lifecycle uses personality and distance, then tries the actual facility after arrival.
  *
  * Non-training Cooking can prepare dough from owned flour and water, including a water-filling prerequisite.
  * It can also mill flour at a windmill, picking wheat or buying pots first when none are owned.
@@ -64,6 +62,7 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
         } else {
             zones += SubZone.ROGUES_DEN
         }
+        zones += ProductionZones.RANGES
 
         return CookFoodBotScript(
             bot,

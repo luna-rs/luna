@@ -22,6 +22,8 @@ import io.luna.game.model.mob.bot.Bot
  * casual trainers and profit miners at level 40. Crafting Guild rocks also require current Crafting 40 and
  * an owned brown apron. The Mining Guild retains its existing preference once accessible.
  * Power-mining training selects iron outside the guild; collecting sessions continue to bank their ores.
+ * The selected method stays first, with other eligible mines that contain a preferred ore retained for reactive
+ * retries. A bot discovers competition after arrival; no occupancy or live-rock estimate changes its first choice.
  *
  * @author lare96
  */
@@ -40,6 +42,10 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.BARBARIAN_VILLAGE_MINE to setOf(TIN, COAL),
         SubZone.PISCATORIS_MINE to setOf(CLAY, COPPER, TIN, IRON),
         SubZone.KELDAGRIM_ENTRANCE_SOUTH_MINE to setOf(COPPER, COAL),
+        SubZone.COAL_TRUCKS_MINE to setOf(COAL),
+        SubZone.KARAMJA_NORTH_SHILO_MINE to setOf(MITHRIL, ADAMANT),
+        SubZone.VARROCK_LIMESTONE_QUARRY to setOf(LIMESTONE),
+        SubZone.DESERT_QUARRY to setOf(SANDSTONE, GRANITE),
         SubZone.DWARVEN_MINE to setOf(CLAY, COPPER, TIN, IRON, COAL, GOLD, MITHRIL, ADAMANT),
         SubZone.CRAFTING_GUILD_MINE to setOf(CLAY, SILVER, GOLD),
         SubZone.MINING_GUILD to setOf(COAL, MITHRIL),
@@ -76,15 +82,33 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             .take(3).randomOrNull() else null
         val activity = powerMethod ?: guild ?: getBestSkillingActivity(bot, level, { it.level }, options)
             ?: error("No mining activity is available at level $level.")
-        zones.clear()
-        zones.addAll(activity.zones)
         val preferred = when {
             training && (bot.personality.isDextrous || bot.personality.isIntelligent) ->
                 if (IRON in activity.tokens) setOf(IRON) else setOf(COAL).intersect(activity.tokens)
             else -> activity.tokens.filterTo(linkedSetOf()) { ore -> ore.level == activity.tokens.maxOf { it.level } }
         }.ifEmpty { activity.tokens }
+        val alternatives = compatibleZones(activity, preferred, options) - activity.zones
+        zones.clear()
+        zones.addAll(activity.zones)
+        zones.addAll(if (bot.personality.isDextrous)
+            alternatives.sortedBy { bot.position.computeLongestDistance(it.inside) }
+        else alternatives.shuffled())
         return MineBotScript(bot, activity.tokens, getDuration(bot), zones, preferred, powerMining)
     }
+
+    /**
+     * Retains eligible retry destinations without changing the selected ore set or its priority. An alternative
+     * needs at least one preferred ore; rocks of other types cannot become targets through a location change.
+     * Access, training-mode restrictions and current skill gates have already filtered [options].
+     */
+    internal fun compatibleZones(selected: BotSkillingActivity<Ore>, preferred: Set<Ore>,
+                                 options: List<BotSkillingActivity<Ore>>): Set<SubZone> =
+        linkedSetOf<SubZone>().apply {
+            addAll(selected.zones)
+            for (option in options) {
+                if (option.tokens.any { it in preferred && it in selected.tokens }) addAll(option.zones)
+            }
+        }
 
     /**
      * Keeps ore and access decisions in the mining factory rather than adding a generic policy system.

@@ -15,6 +15,7 @@ import game.bot.scripts.combat.RockCrabBotScript
 import game.bot.scripts.skills.SlayerBotScript
 import game.skill.slayer.Slayer.activeSlayerTask
 import game.skill.slayer.SlayerMaster
+import game.skill.slayer.SlayerTaskType
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
@@ -70,7 +71,7 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * Fremennik assignments share the supplied dungeon footprint and keep their individual readiness thresholds.
      * The shared combat preparation policy requires owned protection, finishing supplies and specialist weapons.
      */
-    private val assignmentCamps = listOf(
+    private val assignmentCamps: List<Camp> by lazy { listOf(
         Camp(SubZone.SLAYER_TOWER_GROUND, 15, setOf("Crawling Hand")),
         Camp(SubZone.SLAYER_TOWER_GROUND, 35, setOf("Banshee")),
         Camp(SubZone.SLAYER_TOWER_FIRST_FLOOR, 75, setOf("Infernal Mage")),
@@ -103,8 +104,45 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
         Camp(SubZone.ZANARIS_MAIN, 65, setOf("Otherworldly being")),
         Camp(SubZone.ZANARIS_MAIN, 85, setOf("Zygomite")),
         Camp(SubZone.NORTH_SEERS_VILLAGE_MAPLES, 75, setOf("Wolf")),
-        Camp(SubZone.EDGEVILLE_DUNGEON, 110, setOf("Black Demon"))
-    )
+        Camp(SubZone.EDGEVILLE_DUNGEON, 110, setOf("Black Demon")),
+        taskCamp(SubZone.MUSA_POINT_MONKEYS, 10, SlayerTaskType.MONKEY),
+        taskCamp(SubZone.DESERT_LIZARDS_SOUTHWEST, 50, SlayerTaskType.LIZARD, SlayerTaskType.DESERT_LIZARD),
+        taskCamp(SubZone.DESERT_LIZARDS_NORTHWEST, 50, SlayerTaskType.LIZARD, SlayerTaskType.DESERT_LIZARD),
+        taskCamp(SubZone.DESERT_LIZARDS_CENTRAL, 50, SlayerTaskType.LIZARD, SlayerTaskType.DESERT_LIZARD),
+        taskCamp(SubZone.DESERT_LIZARDS_EAST, 50, SlayerTaskType.LIZARD, SlayerTaskType.DESERT_LIZARD),
+        taskCamp(SubZone.ELID_CROCODILES_WEST_BANK, 65, SlayerTaskType.CROCODILE),
+        taskCamp(SubZone.ELID_CROCODILES_EAST_BANK, 65, SlayerTaskType.CROCODILE),
+        taskCamp(SubZone.TROLLHEIM_MOUNTAIN_TROLLS, 90, SlayerTaskType.TROLL),
+        taskCamp(SubZone.KARAMJA_HARPIE_SWARMS, 65, SlayerTaskType.HARPIE_BUG_SWARM),
+        taskCamp(SubZone.ASGARNIAN_ICE, 45, SlayerTaskType.ICE_WARRIOR),
+        taskCamp(SubZone.ASGARNIAN_ICE, 50, SlayerTaskType.ICE_GIANT),
+        taskCamp(SubZone.LEGENDS_SHADOW, 65, SlayerTaskType.SHADOW_WARRIOR),
+        taskCamp(SubZone.BRIMHAVEN_RED, 95, SlayerTaskType.RED_DRAGON),
+        taskCamp(SubZone.BRIMHAVEN_METAL, 110, SlayerTaskType.IRON_DRAGON),
+        taskCamp(SubZone.BRIMHAVEN_METAL, 120, SlayerTaskType.STEEL_DRAGON),
+        taskCamp(SubZone.MORTTON_SURFACE, 65, SlayerTaskType.SHADE),
+        taskCamp(SubZone.KILLERWATT_REALM, 85, SlayerTaskType.KILLERWATT),
+        taskCamp(SubZone.BRAINDEATH_FEVER, 80, SlayerTaskType.FEVER_SPIDER),
+        taskCamp(SubZone.SMOKE_DUNGEON, 100, SlayerTaskType.DUST_DEVIL),
+        taskCamp(SubZone.ASGARNIAN_WYVERNS, 115, SlayerTaskType.SKELETAL_WYVERN),
+        taskCamp(SubZone.DARK_BEAST_CAVE, 120, SlayerTaskType.DARK_BEAST),
+        taskCamp(SubZone.MUDSKIPPER_MOGRES, 65, SlayerTaskType.MOGRE),
+        taskCamp(SubZone.LUMBRIDGE_SWAMP_CAVES, 40, SlayerTaskType.CAVE_BUG),
+        taskCamp(SubZone.LUMBRIDGE_SWAMP_CAVES, 45, SlayerTaskType.CAVE_SLIME),
+        taskCamp(SubZone.LUMBRIDGE_SWAMP_CAVES, 65, SlayerTaskType.WALL_BEAST),
+        taskCamp(SubZone.LIGHTHOUSE_DAGANNOTHS, 100, SlayerTaskType.DAGANNOTH),
+        taskCamp(SubZone.CANIFIS_NORTH_GHOULS, 50, SlayerTaskType.GHOUL),
+        taskCamp(SubZone.CANIFIS_SOUTH_GHOULS, 50, SlayerTaskType.GHOUL)
+    ) }
+
+    /**
+     * Uses the native assignment's cache names for a verified footprint, including active names of dormant forms.
+     * Runtime selection still binds every deliberate attack to the assignment's exact NPC IDs.
+     */
+    private fun taskCamp(zone: SubZone, minimum: Int, vararg tasks: SlayerTaskType): Camp =
+        Camp(zone, minimum, tasks.flatMap { it.npcs }.mapNotNull {
+            NpcDefinition.ALL.get(it).orElse(null)?.name
+        }.toSet(), tasks = tasks.toSet())
 
     /**
      * Applies every native master's combat and Slayer thresholds before considering travel or dialogue.
@@ -158,8 +196,9 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
             loadout.gear[Equipment.WEAPON]?.let { !equipDef(it).isTwoHanded } == true
         val queenReady = purpose == BotGearPurpose.MELEE && KalphiteQueenTrip.ready(bot, loadout)
         return (CombatCoordinator.camps + assignmentCamps).filter {
-            it.minimum <= readiness && CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady) &&
-                it.zone.entryBlocker(bot) == null
+            (it.tasks.isEmpty() || task.task in it.tasks) && it.minimum <= readiness &&
+                CombatCoordinator.canUseCamp(it.zone, purpose, hasDragonShield, queenReady) &&
+                it.zone.entryBlocker(bot) == null && NpcCombatScript.campSuppliesOwned(bot, it.zone)
         }.mapNotNull { camp ->
             camp.names.intersect(taskNames).takeIf { it.isNotEmpty() }?.let { camp.zone to it }
         }.groupBy({ it.first }, { it.second }).mapValues { (_, names) -> names.flatten().toSet() }
@@ -169,9 +208,10 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      * Builds one assignment-bound session using the shared gear, food, ammunition and rune lifecycle.
      * No task is cancelled or rerolled when equipment, readiness or camp support is missing.
      */
-    internal fun combatScript(bot: Bot, duration: Duration): NpcCombatScript? {
+    internal suspend fun combatScript(bot: Bot, duration: Duration): NpcCombatScript? {
         if (!canTrain(bot)) return null
         val task = bot.activeSlayerTask ?: return null
+        if (!NpcCombatScript.prepareSlayerSupplies(bot, task.task)) return null
         for (purpose in disciplines.shuffled()) {
             val loadout = NpcCombatScript.slayerLoadout(bot, purpose, task.task) ?: continue
             val camps = camps(bot, purpose, loadout)
@@ -182,11 +222,15 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
             } else camps
             // Rock crabs sit disguised as rocks, so they need a script that waits for them to wake. The ordinary
             // script trains at the task's other camps, if it has any.
-            if (selected[SubZone.ROCK_CRABS]?.contains(RockCrabBotScript.NAME) == true) {
-                if (rand(selected.size - 1) == 0) {
-                    return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell, task.task, task.assignee)
+            val crabCamps = selected.filter { (zone, targets) ->
+                zone in RockCrabBotScript.CAMPS && RockCrabBotScript.NAME in targets
+            }
+            if (crabCamps.isNotEmpty()) {
+                if (rand(selected.size - 1) < crabCamps.size) {
+                    return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell, task.task, task.assignee,
+                        crabCamps.keys.toMutableList())
                 }
-                selected = selected - SubZone.ROCK_CRABS
+                selected = selected - crabCamps.keys
             }
             val names = HashMultimap.create<SubZone, String>()
             selected.forEach { (zone, targets) -> names.putAll(zone, targets) }
@@ -201,6 +245,4 @@ object SlayerScriptFactory : SkillingScriptFactory(SKILL_SLAYER) {
      */
     private val disciplines = listOf(BotGearPurpose.MELEE, BotGearPurpose.RANGED, BotGearPurpose.MAGIC)
 
-    // TODO Map additional task camps and their required protection/finishing supplies before enabling them.
-    // Keep every unmapped assignment and its streak intact; do not filter the master's native task rolls.
 }

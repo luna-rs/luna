@@ -6,6 +6,8 @@ import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.BankAccess
 import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
+import io.luna.game.model.Position
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.bot.gear.BotGearLocator
@@ -49,6 +51,11 @@ import kotlin.time.Duration.Companion.seconds
  */
 abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: MutableList<SubZone>) :
     BotScript(bot) {
+
+    /**
+     * A portable-production tile chosen after arrival and rejoined after banking or displacement.
+     */
+    private var workPosition: Pair<SubZone, Position>? = null
 
     /**
      * Creates a zoned script from persisted script data.
@@ -286,12 +293,13 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         val zone = activeZone
         if (!forceBanking && zone != null && zone.isWithinDistance(bot, 64)) {
             val marketplace = BotMarketplace.forZone(zone)
-            if (marketplace != null && !marketplace.contains(bot.position) &&
+            if ((marketplace != null && !marketplace.contains(bot.position) || zone in ProductionZones.PORTABLE) &&
                 (bot.isLocked || bot.actions.size(ActionType.STRONG) > 0 || bot.actions.size(ActionType.WEAK) > 0)) {
                 bot.naturalMicroDelay()
                 return false
             }
-            val prepared = prepareMarketplace(marketplace)
+            val prepared = if (zone in ProductionZones.PORTABLE) preparePortableWorkArea(zone)
+                else prepareMarketplace(marketplace)
             if (!isActionSafe()) return !awaitActionSafety()
             val accepted = prepared && executeInZone()
             if (!isActionSafe()) return !awaitActionSafety()
@@ -326,6 +334,7 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         cachedBank = null
         activeZone = null
         travelZone = null
+        workPosition = null
         onPaused()
     }
 
@@ -411,6 +420,22 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (marketplace == null || marketplace.contains(bot.position) && marketplace.canWorkAt(bot, bot.position)) return true
         val tile = marketplace.availableWorkPositions(bot).randomOrNull() ?: return false
         return handler.webWalkTo(tile) && bot.position == tile && marketplace.contains(bot.position)
+    }
+
+    /**
+     * Chooses visible, free bank-work tiles after arriving. Live collision and footprints are checked
+     * again after navigation; failure rejects this destination through the existing zoned lifecycle.
+     */
+    private suspend fun preparePortableWorkArea(zone: SubZone): Boolean {
+        val current = workPosition
+        if (current?.first == zone && bot.position == current.second &&
+            ProductionZones.canWorkAt(bot, zone, current.second)) return true
+        if (bot.isLocked || bot.actions.size(ActionType.STRONG) > 0 || bot.actions.size(ActionType.WEAK) > 0) return true
+        if (!bot.position.isViewable(zone.inside) && !handler.webWalkTo(zone.inside)) return false
+        if (!isActionSafe() || bot.actions.size(ActionType.WEAK) > 0) return true
+        val tile = ProductionZones.availableWorkPositions(bot, zone).randomOrNull() ?: return false
+        workPosition = zone to tile
+        return handler.webWalkTo(tile) && bot.position == tile && ProductionZones.canWorkAt(bot, zone, tile)
     }
 
     /**
@@ -524,7 +549,9 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         return true
     }
 
-    /** The default keeps the existing nearest/shuffled choice; resource scripts may retain a preferred mine. */
+    /**
+     * The default keeps the existing nearest/shuffled choice; resource scripts may retain a preferred mine.
+     */
     protected open fun selectWorkZone(): SubZone? =
         if (bot.personality.isDextrous) zones.minByOrNull { bot.position.computeLongestDistance(it.inside) }
         else zones.firstOrNull()
@@ -801,7 +828,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         leftBank = BankTripMark(bot)
 
         // Marketplace work tiles are rejoined before the next activity. Avoid a detour to the arrival anchor.
-        if (BotMarketplace.forZone(activeZone) == null) travelToZone(activeZone, BankAccess.COINS)
+        if (BotMarketplace.forZone(activeZone) == null && activeZone !in ProductionZones.PORTABLE)
+            travelToZone(activeZone, BankAccess.COINS)
     }
 
     /**

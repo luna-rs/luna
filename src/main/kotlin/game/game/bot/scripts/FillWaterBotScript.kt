@@ -5,6 +5,7 @@ import api.bot.script.InventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
@@ -29,8 +30,8 @@ import kotlin.time.Duration.Companion.seconds
  * by owned empties, inventory capacity and the remaining total filled-stock target across bank and inventory.
  * Missing empties, three failed interactions or unresolved banking requests end the task.
  *
- * Water retains its existing source zones. Sand uses Yanille's sandpit, while milk uses the dairy cow at
- * the south Falador farm. Shared travel and object interactions own navigation. Reaching the target ends
+ * Water, sand and milk use the shared public source pools, retaining the original destinations.
+ * Shared travel and object interactions own navigation. Reaching the target ends
  * this task independently of any consumer. No experience is awarded or materials purchased by this script.
  *
  * @param bot The bot preparing containers.
@@ -58,9 +59,9 @@ class FillWaterBotScript(
      */
     enum class Source(val resource: FillableResource, val emptyIds: Set<Int>, val zones: List<SubZone>) {
         WATER(WaterResource, WaterResource.REFILLABLE_IDS.toSet(),
-              listOf(SubZone.SOUTH_FALADOR_FARM, SubZone.EDGEVILLE_MAIN, SubZone.VARROCK_SQUARE)),
-        SAND(SandResource, setOf(1925), listOf(SubZone.YANILLE_SAND_PIT)),
-        MILK(MilkResource, setOf(1925), listOf(SubZone.FALADOR_DAIRY_COW))
+              ProductionZones.WATER),
+        SAND(SandResource, setOf(1925), ProductionZones.SAND),
+        MILK(MilkResource, setOf(1925), ProductionZones.MILK)
     }
 
     companion object {

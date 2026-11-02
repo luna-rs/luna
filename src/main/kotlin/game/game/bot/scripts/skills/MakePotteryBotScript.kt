@@ -6,6 +6,7 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import com.google.gson.JsonObject
@@ -48,7 +49,7 @@ class MakePotteryBotScript(
 
     companion object {
         /** Existing low-level pottery route, backed by Edgeville banking and travel. */
-        val DEFAULT_ZONES = listOf(SubZone.BARBARIAN_VILLAGE)
+        val DEFAULT_ZONES = ProductionZones.POTTERY
         /** Soft clay consumed by the player shaping action. */
         const val SOFT_CLAY = 1761
 

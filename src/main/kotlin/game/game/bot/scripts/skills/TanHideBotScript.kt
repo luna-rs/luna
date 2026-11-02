@@ -50,7 +50,7 @@ import kotlin.time.Duration.Companion.hours
 class TanHideBotScript(
     bot: Bot,
     duration: Duration,
-    zones: MutableList<SubZone> = mutableListOf(SubZone.AL_KHARID_BANK),
+    zones: MutableList<SubZone> = mutableListOf(SubZone.AL_KHARID_BANK, SubZone.CANIFIS_MAIN),
     private var allowGathering: Boolean = true
 ) : InventoryBotScript(bot, duration, zones) {
     override val verifiedProductionWithdrawals = true
@@ -100,7 +100,6 @@ class TanHideBotScript(
         }
     }
 
-    // todo canifis tannery, crafting guild
     /**
      * Recreates a hide-tanning script from saved zone and duration data.
      *
@@ -147,7 +146,6 @@ class TanHideBotScript(
         bot.log("Attempting to interact with tanner NPC.")
         if (tanner == null) {
             bot.log("No active tanner NPC found.")
-            stop()
             return false
         }
         // Travel has its own deadline; the production-start budget is only fifteen seconds.

@@ -5,6 +5,7 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
+import api.bot.zone.ProductionZones
 import api.predef.*
 import api.predef.ext.*
 import game.skill.smithing.Smithing
@@ -44,7 +45,7 @@ class MakeCannonballBotScript(
 
     companion object {
         /** Existing banked furnace routes shared with ore-smelting bots. */
-        val DEFAULT_ZONES = listOf(SubZone.AL_KHARID_BANK, SubZone.FALADOR_WEST_BANK)
+        val DEFAULT_ZONES = ProductionZones.FURNACES
 
         /**
          * Saved session configuration and persistent production and banking retry budgets.

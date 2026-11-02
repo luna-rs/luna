@@ -29,6 +29,12 @@ import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.combat.npcHooks.giantMole.GiantMole
 import game.combat.npcHooks.zygomite.Zygomites
+import game.combat.npcHooks.shades.MorttonShades
+import game.combat.npcHooks.wallBeast.WallBeasts
+import game.combat.npcHooks.mogre.Mogres
+import game.skill.firemaking.Firemaking
+import game.skill.firemaking.lightSource.LightSource
+import api.bot.webwalk.plan.BankAccess
 import game.combat.npcHooks.giantMole.GiantMole.burrowing
 import engine.combat.prayer.CombatPrayer
 import io.luna.game.model.EntityState
@@ -88,6 +94,9 @@ import kotlin.time.Duration.Companion.seconds
  * their native spear, broad-arrow or Magic Dart loadout before equipment is chosen, with no ordinary-ammo fallback.
  * Giant Mole sessions retain a spade and a sealed lit light, wait through the native burrow and reacquire its live
  * position across the full lair. Their banking uses the stronger food policy shared with other boss trips.
+ * Remaining assignments share the same lifecycle: enclosed cave lights, worn specialist protection, cooler and
+ * explosive stocks, source-native dormant-form attacks, exact wall-beast front tiles and owned Mogre throws.
+ * Waterfall trips keep Glarial's amulet equipped; metal dragons retain owned antifire and stronger food.
  *
  * Magic sessions switch to their saved spell's book at home before preparing equipment. Ancient Magicks requires
  * combat level 60, a compatible staff and owned rune supplies.
@@ -122,7 +131,13 @@ open class NpcCombatScript(bot: Bot,
             SlayerTaskType.BANSHEE to mapOf(Equipment.HEAD to 4166),
             SlayerTaskType.ABERRANT_SPECTRE to mapOf(Equipment.HEAD to 4168),
             SlayerTaskType.COCKATRICE to mapOf(Equipment.SHIELD to 4156),
-            SlayerTaskType.BASILISK to mapOf(Equipment.SHIELD to 4156)
+            SlayerTaskType.BASILISK to mapOf(Equipment.SHIELD to 4156),
+            SlayerTaskType.WALL_BEAST to mapOf(Equipment.HEAD to WallBeasts.HELMET),
+            SlayerTaskType.FEVER_SPIDER to mapOf(Equipment.HANDS to 6720),
+            SlayerTaskType.DUST_DEVIL to mapOf(Equipment.HEAD to 4164),
+            SlayerTaskType.KILLERWATT to mapOf(Equipment.BOOTS to 7159),
+            SlayerTaskType.SKELETAL_WYVERN to mapOf(Equipment.SHIELD to 2890),
+            SlayerTaskType.HARPIE_BUG_SWARM to mapOf(Equipment.SHIELD to LightSource.BUG_LANTERN.lit)
         )
 
         /**
@@ -137,7 +152,10 @@ open class NpcCombatScript(bot: Bot,
          */
         private val SLAYER_INVENTORY = mapOf(
             SlayerTaskType.GARGOYLE to mapOf(4162 to 1),
-            SlayerTaskType.ROCKSLUG to mapOf(4161 to 1)
+            SlayerTaskType.ROCKSLUG to mapOf(4161 to 1),
+            SlayerTaskType.LIZARD to mapOf(6696 to 1),
+            SlayerTaskType.DESERT_LIZARD to mapOf(6696 to 1),
+            SlayerTaskType.MOGRE to mapOf(Mogres.EXPLOSIVE to 1)
         )
 
         /**
@@ -146,6 +164,61 @@ open class NpcCombatScript(bot: Bot,
          */
         private val SLAYER_ANTIPOISONS = listOf(Potion.ANTIDOTE_PLUS_PLUS, Potion.ANTIDOTE_PLUS,
             Potion.SUPER_ANTIPOISON, Potion.ANTIPOISON_POTION).flatMap { it.doses.reversed() }
+
+        /**
+         * Native cave-slime poison and cave darkness need the same owned cure and sealed-light lifecycle.
+         */
+        private val POISONOUS_TASKS = setOf(SlayerTaskType.CAVE_CRAWLER, SlayerTaskType.CAVE_SLIME)
+
+        /**
+         * Source-native entry and high-damage supplies are checked without inspecting camp occupancy.
+         */
+        internal fun campSuppliesOwned(bot: Bot, zone: SubZone): Boolean {
+            if (zone in WATERFALL_ZONES && !bot.itemTracker.contains(295)) return false
+            if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
+                Potion.ANTI_FIRE_POTION.doses.none { bot.itemTracker.contains(it) }) return false
+            return zone !in STRONG_FOOD_ZONES || Food.ID_TO_FOOD.filterValues { it.heal >= 16 }
+                .keys.sumOf { bot.itemTracker.count(it).toLong() } >= 20
+        }
+
+        /**
+         * Waterfall chambers share the native worn Glarial amulet requirement; other equipment stays unchanged.
+         */
+        private val WATERFALL_ZONES = setOf(SubZone.WATERFALL_FIRE_GIANTS_WEST, SubZone.WATERFALL_FIRE_GIANTS_EAST)
+
+        /**
+         * These stronger ordinary assignments retain the existing boss-food withdrawal policy.
+         */
+        private val STRONG_FOOD_ZONES = setOf(SubZone.BRIMHAVEN_METAL, SubZone.ASGARNIAN_WYVERNS,
+            SubZone.DARK_BEAST_CAVE)
+
+        /**
+         * Deliberate discovery belongs to the configured spawn footprint, even after a target wanders locally.
+         * Self-defence against an existing opponent is handled before this discovery filter.
+         */
+        internal fun campSpawn(zone: SubZone, npc: Npc): Boolean = npc.basePosition in zone.area
+
+        /**
+         * Lights an owned bug lantern before the normal loadout resolver needs its wieldable lit identity.
+         * No item or experience is awarded; native tinderbox use performs the transformation.
+         */
+        internal suspend fun prepareSlayerSupplies(bot: Bot, task: SlayerTaskType): Boolean {
+            if (task != SlayerTaskType.HARPIE_BUG_SWARM ||
+                bot.itemTracker.contains(LightSource.BUG_LANTERN.lit)) return true
+            val source = LightSource.BUG_LANTERN
+            if (bot.firemaking.level < source.level || !bot.itemTracker.contains(source.unlit) ||
+                !bot.itemTracker.contains(Firemaking.TINDERBOX)) {
+                bot.preferences.addWantedItem(source.lit, 3)
+                return false
+            }
+            val handler = bot.actionHandler
+            if (!handler.banking.travelToBankDepositAll() ||
+                !handler.banking.withdraw(Item(source.unlit)) ||
+                !handler.banking.withdraw(Item(Firemaking.TINDERBOX)) ||
+                !handler.widgets.clickCloseInterface() ||
+                !handler.inventory.useItem(Firemaking.TINDERBOX).onItem(source.unlit)) return false
+            return waitFor(3.seconds) { bot.inventory.contains(source.lit) }
+        }
 
         /**
          * These dungeon assignments use the supplied Fremennik camp and require their real selected weapon to be
@@ -165,8 +238,10 @@ open class NpcCombatScript(bot: Bot,
             if (requiredSlayerEquipment(task).any { (slot, id) -> loadout.gear[slot] != id ||
                     !bot.itemTracker.contains(id) || !equipDef(id).meetsAllRequirements(bot) }) return false
             if (requiredSlayerInventory(task).any { (id, amount) -> bot.itemTracker.count(id) < amount }) return false
-            if (task == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+            if (task in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
                 SLAYER_ANTIPOISONS.none { bot.itemTracker.contains(it) }) return false
+            if (task in setOf(SlayerTaskType.CAVE_BUG, SlayerTaskType.CAVE_SLIME, SlayerTaskType.WALL_BEAST) &&
+                !GiantMoleTrip.lightOwned(bot)) return false
             val weapon = loadout.gear[Equipment.WEAPON]
             if (task in FREMENNIK_TASKS && (weapon == null || !bot.itemTracker.contains(weapon) ||
                     !equipDef(weapon).meetsAllRequirements(bot))) return false
@@ -214,13 +289,17 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun slayerLoadout(bot: Bot, purpose: BotGearPurpose, task: SlayerTaskType?,
                                    requested: CombatSpell? = null): CombatLoadout? {
+            requiredSlayerEquipment(task).values.forEach { id ->
+                if (!bot.itemTracker.contains(id)) bot.preferences.addWantedItem(id, 3)
+            }
             if (task == SlayerTaskType.ZYGOMITE) {
                 if (!ownsFungicide(bot)) bot.preferences.addWantedItem(Zygomites.FULL_SPRAY, 3)
                 if (bot.itemTracker.count(Zygomites.FUNGICIDE) < 10)
                     bot.preferences.addWantedItem(Zygomites.FUNGICIDE, 100)
             }
-            if (task == SlayerTaskType.ROCKSLUG && bot.itemTracker.count(4161) < 50) {
-                bot.preferences.addWantedItem(4161, 500)
+            requiredSlayerInventory(task).forEach { (id, _) ->
+                if (bot.itemTracker.count(id) < 50) bot.preferences.addWantedItem(id,
+                    if (id in setOf(4161, 6696, Mogres.EXPLOSIVE)) 500 else 3)
             }
             val restricted = task in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK)
             val dart = restricted && purpose == BotGearPurpose.MAGIC
@@ -255,6 +334,8 @@ open class NpcCombatScript(bot: Bot,
         val DRAGON_ZONES = setOf(
             SubZone.GREEN_DRAGONS,
             SubZone.TAVERLY_DUNGEON_BLUE_DRAGONS,
+            SubZone.BRIMHAVEN_RED,
+            SubZone.BRIMHAVEN_METAL,
             SubZone.KBD_LAIR
         )
 
@@ -351,7 +432,14 @@ open class NpcCombatScript(bot: Bot,
      * Keeps task NPC IDs authoritative even when several monsters share a camp or display name.
      */
     internal fun acceptsAssignment(npc: Npc): Boolean = assignmentActive() &&
-        (slayerTask == null || (Zygomites.FORMS[npc.id] ?: npc.id) in slayerTask.npcs)
+        (slayerTask == null || assignmentNpcId(npc) in slayerTask.npcs)
+
+    /**
+     * Maps only native dormant forms to the task's actual kill identity.
+     */
+    private fun assignmentNpcId(npc: Npc): Int = Zygomites.FORMS[npc.id]
+        ?: MorttonShades.FORMS[npc.id]
+        ?: if (npc.id == WallBeasts.DORMANT) WallBeasts.ACTIVE else npc.id
 
     /**
      * Eats and prays the way a player watching their hitpoints and prayer would; the Kalphite Queen trip keeps its own
@@ -381,6 +469,12 @@ open class NpcCombatScript(bot: Bot,
      */
     private val requiredSlayerItems = requiredSlayerInventory(slayerTask)
 
+    /**
+     * Access equipment is retained through initial gearing, bank deposits and saved-session restoration.
+     */
+    private val requiredCampGear = if (originalZones.any { it in WATERFALL_ZONES })
+        mapOf(Equipment.AMULET to 295) else emptyMap()
+
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
     /**
@@ -392,6 +486,11 @@ open class NpcCombatScript(bot: Bot,
      * Prepares dragon protection for the entire candidate set, before a work zone is selected.
      */
     private val dragonTrip: Boolean get() = originalZones.any { it in DRAGON_ZONES }
+
+    /**
+     * Every swamp-cave assignment keeps an enclosed lit source through bank deposits and restoration.
+     */
+    private val darkCaveTrip: Boolean get() = SubZone.LUMBRIDGE_SWAMP_CAVES in originalZones
 
     /**
      * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
@@ -443,11 +542,14 @@ open class NpcCombatScript(bot: Bot,
             if (!handler.combat.switchSpellbook(spellbook)) return false
         }
         loadout = slayerLoadout(bot, purpose, slayerTask, spell) ?: return false
+        if (originalZones.any { !campSuppliesOwned(bot, it) }) return false
+        requiredCampGear.forEach { (slot, id) -> loadout!!.gear[slot] = id }
         if (queenTrip && (originalZones.size != 1 || purpose != BotGearPurpose.MELEE ||
                 !KalphiteQueenTrip.levelsReady(bot) || !KalphiteQueenTrip.gearReady(loadout!!.gear) ||
                 (!resumed && !KalphiteQueenTrip.ready(bot, loadout!!)))) return false
         if (moleTrip && (originalZones.size != 1 || !GiantMoleTrip.suppliesOwned(bot) ||
                 (!resumed && !GiantMoleTrip.ready(bot)))) return false
+        if (darkCaveTrip && !GiantMoleTrip.lightOwned(bot)) return false
         if (SubZone.KBD_LAIR in originalZones && bot.combatLevel < 100) return false
         if (dragonTrip) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
@@ -493,9 +595,11 @@ open class NpcCombatScript(bot: Bot,
                 ?.let { mutableListOf(it) } ?: mutableListOf()
         }
         val options = world.locator.findNpcs(searchBase, searchRadius, true) {
-            canAttack(it) && (slayerTask == SlayerTaskType.ZYGOMITE && it.id in Zygomites.FORMS || it.combat.isAttackable)
+            (activeZone?.let { zone -> campSpawn(zone, it) } != false) && canAttack(it) &&
+                (slayerTask == SlayerTaskType.ZYGOMITE && it.id in Zygomites.FORMS ||
+                slayerTask == SlayerTaskType.WALL_BEAST && it.id == WallBeasts.DORMANT || it.combat.isAttackable)
                     && bot.combat.checkMultiCombat(it)
-                    && !ctx.cache.mapIndexTable.getTile(it.position).isBlocked
+                    && (it.id == WallBeasts.DORMANT || !ctx.cache.mapIndexTable.getTile(it.position).isBlocked)
             // todo incorporate checks for ranged/magic, this is for stuff like ducks that move on water
         }
 
@@ -540,18 +644,23 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        if (darkCaveTrip && !GiantMoleTrip.collectLight(bot)) {
+            stop()
+            return
+        }
         for ((id, amount) in requiredSlayerItems) {
-            val stock = if (slayerTask == SlayerTaskType.ROCKSLUG && id == 4161)
-                minOf(50, assignment?.remaining ?: 1, bot.itemTracker.count(id)).coerceAtLeast(amount) else amount
+            val stock = if (id in setOf(4161, 6696, Mogres.EXPLOSIVE))
+                minOf(if (itemDef(id).isStackable) 50 else 3, assignment?.remaining ?: 1,
+                    bot.itemTracker.count(id)).coerceAtLeast(amount) else amount
             val missing = stock - bot.inventory.computeAmountForId(id)
             if (missing > 0 && (!handler.banking.withdraw(Item(id, missing)) ||
                     bot.inventory.computeAmountForId(id) < amount)) {
-                if (id == 4161) bot.preferences.addWantedItem(id, 500)
+                bot.preferences.addWantedItem(id, if (id in setOf(4161, 6696, Mogres.EXPLOSIVE)) 500 else 3)
                 stop()
                 return
             }
         }
-        if (slayerTask == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+        if (slayerTask in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
             SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) }) {
             val cure = SLAYER_ANTIPOISONS.firstOrNull { bot.bank.contains(it) }
             if (cure == null || !handler.banking.withdraw(Item(cure)) || !bot.inventory.contains(cure)) {
@@ -559,7 +668,7 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        for ((slot, id) in requiredSlayerGear) {
+        for ((slot, id) in requiredSlayerGear + requiredCampGear) {
             if (bot.equipment[slot]?.id != id && id !in bot.inventory && !handler.banking.withdraw(Item(id))) {
                 stop()
                 return
@@ -591,7 +700,11 @@ open class NpcCombatScript(bot: Bot,
                 return
             }
         }
-        if (dragonTrip) handler.potions.withdrawAntifire()
+        if (dragonTrip && !handler.potions.withdrawAntifire() &&
+            SubZone.BRIMHAVEN_METAL in originalZones && !bot.status.isAntiFire()) {
+            stop()
+            return
+        }
         if (queenTrip) {
             for ((id, amount) in KalphiteQueenTrip.supplies) {
                 if (!handler.banking.withdraw(Item(id, amount)) || bot.inventory.computeAmountForId(id) < amount) {
@@ -601,7 +714,8 @@ open class NpcCombatScript(bot: Bot,
                 }
             }
         } else {
-            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip
+            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip ||
+                originalZones.any { it in STRONG_FOOD_ZONES }
             if (strongFood) {
                 val carried = strongFoodCount()
                 if (carried < 20 && (!handler.banking.withdrawAnyFood(amount = 20 - carried,
@@ -654,9 +768,10 @@ open class NpcCombatScript(bot: Bot,
         val shield = dragonTrip && bot.equipment.shield?.id != 1540
         val wield = listOfNotNull(weapon?.takeIf { bot.equipment.weapon?.id != it },
                                   ammo?.takeIf { it != weapon && bot.equipment.computeAmountForId(it) == 0 }) +
-                requiredSlayerGear.filter { (slot, id) -> bot.equipment[slot]?.id != id }.values +
+                (requiredSlayerGear + requiredCampGear).filter { (slot, id) -> bot.equipment[slot]?.id != id }.values +
                 listOfNotNull(1540.takeIf { shield })
-        val needsLight = moleTrip && !GiantMoleTrip.carried(bot)
+        val needsLight = (moleTrip && !GiantMoleTrip.carried(bot)) ||
+            (darkCaveTrip && !GiantMoleTrip.lightCarried(bot))
         if (wield.isEmpty() && !needsLight) return true
         if (!handler.widgets.clickCloseInterface()) return false
         for (id in wield) {
@@ -667,6 +782,7 @@ open class NpcCombatScript(bot: Bot,
             }
         }
         if (moleTrip && !GiantMoleTrip.ensureLit(bot)) return false
+        if (darkCaveTrip && !GiantMoleTrip.ensureLight(bot)) return false
         return !shield || bot.equipment.weapon != null
     }
 
@@ -746,7 +862,44 @@ open class NpcCombatScript(bot: Bot,
             bot.combat.target = null
             return false
         }
+        if (slayerTask == SlayerTaskType.MOGRE && activeZone == SubZone.MUDSKIPPER_MOGRES &&
+            !bot.combat.inCombat()) summonMogre()
         return true
+    }
+
+    /**
+     * Throws a real owned explosive from a source-valid shore tile. Native pending/summon ownership prevents
+     * duplicate throws; the shared target-search deadline bounds failed emergence without resetting the task.
+     */
+    private suspend fun summonMogre() {
+        if (Mogres.liveMogre(bot) != null) return
+        if (Mogres.pendingThrow(bot) != null) {
+            waitFor(10.seconds) { Mogres.pendingThrow(bot) == null }
+            return
+        }
+        if (!bot.inventory.contains(Mogres.EXPLOSIVE)) {
+            forceBanking = true
+            return
+        }
+        for ((id, position) in Mogres.SPOTS.entries.shuffled()) {
+            if (!isActionSafe() || !assignmentActive() || forceBanking) return
+            val spot = world.objects.findAll(position).filter { it.id == id }.findFirst().orElse(null) ?: continue
+            val stand = (-Mogres.MAX_THROW..Mogres.MAX_THROW).flatMap { dx ->
+                (-Mogres.MAX_THROW..Mogres.MAX_THROW).map { dy -> position.translate(dx, dy) }
+            }.filter { tile -> tile in activeZone!!.area &&
+                tile.computeLongestDistance(position) in Mogres.MIN_THROW..Mogres.MAX_THROW &&
+                !world.collisionManager.isBlocked(tile, false) && world.collisionManager.raycast(tile, position)
+            }.minByOrNull { bot.position.computeLongestDistance(it) } ?: continue
+            if (!handler.webWalkTo(stand, bank = BankAccess.NONE) || bot.position != stand ||
+                !isActionSafe() || !assignmentActive() || !Mogres.registeredSpot(bot, spot) ||
+                Mogres.shoreTile(bot, position) == null) continue
+            val index = bot.inventory.computeIndexForId(Mogres.EXPLOSIVE)
+            if (index < 0) return
+            bot.output.useItemOnObject(index, Mogres.EXPLOSIVE, spot)
+            waitFor(10.seconds) { Mogres.liveMogre(bot) != null ||
+                !assignmentActive() || !bot.inventory.contains(Mogres.EXPLOSIVE) && Mogres.pendingThrow(bot) == null }
+            return
+        }
     }
 
     override suspend fun refocus(): Boolean {
@@ -835,10 +988,25 @@ open class NpcCombatScript(bot: Bot,
      */
     private fun needsFinishingReach(target: Npc?): Boolean = target?.let {
         it.id == 1611 || it.id in Zygomites.FORMS ||
+            it.id in setOf(WallBeasts.DORMANT, WallBeasts.ACTIVE) ||
+            (it.id in 2803..2808 && it.health <= 4) ||
             it.id in Zygomites.FORMS.values && it.health <= Zygomites.FINISH_HEALTH
     } == true
 
     override suspend fun interactWithTarget(option: Int, target: Npc): Boolean {
+        if (slayerTask == SlayerTaskType.WALL_BEAST) {
+            val front = WallBeasts.FRONTS.entries.firstOrNull { it.value == target.basePosition }?.key ?: return false
+            val life = target.spawnCount
+            if (bot.position != front && !handler.webWalkTo(front, bank = BankAccess.NONE)) return false
+            if (bot.position != front || !isActionSafe() || !assignmentActive() || !prepareCombat()) return false
+            if (!waitFor(5.seconds) { target.spawnCount != life || !target.isAlive ||
+                    target.id == WallBeasts.ACTIVE && WallBeasts.permitsFight(bot, target) }) return false
+            return target.spawnCount == life && target.isAlive &&
+                handler.interactions.interact(3, target, InteractionPolicy.STANDARD_SIZE) {
+                    isActionSafe() && assignmentActive() && prepareCombat() && bot.position == front &&
+                        target.spawnCount == life && WallBeasts.permitsFight(bot, target)
+                }
+        }
         val expectedId = target.id
         val active = Zygomites.FORMS[expectedId]
         val life = target.spawnCount
@@ -901,6 +1069,7 @@ open class NpcCombatScript(bot: Bot,
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
         if (!acceptsAssignment(npc)) return false
+        if (slayerTask == SlayerTaskType.MOGRE && Mogres.liveMogre(bot) !== npc) return false
         if (npc.id in Zygomites.FORMS) return slayerTask == SlayerTaskType.ZYGOMITE
         if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
         if (moleTrip) return npc.id == GiantMole.ID && !npc.burrowing
@@ -915,7 +1084,9 @@ open class NpcCombatScript(bot: Bot,
         if (zone != null) {
             val zoneNames = names[zone]
             if (zoneNames.isNotEmpty()) {
-                return npc.def().name in zoneNames
+                val taskName = io.luna.game.model.def.NpcDefinition.ALL.get(assignmentNpcId(npc))
+                    .orElse(null)?.name ?: npc.def().name
+                return taskName in zoneNames
             }
         }
 
@@ -1070,10 +1241,14 @@ open class NpcCombatScript(bot: Bot,
 
     private fun configureCombat(): Boolean {
         if ((moleTrip && !GiantMoleTrip.carried(bot)) ||
+            (darkCaveTrip && !GiantMoleTrip.lightCarried(bot)) ||
             requiredSlayerGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
+            requiredCampGear.any { (slot, id) -> bot.equipment[slot]?.id != id } ||
+            (SubZone.BRIMHAVEN_METAL in originalZones && !bot.status.isAntiFire() &&
+                Potion.ANTI_FIRE_POTION.doses.none { bot.inventory.contains(it) }) ||
             requiredSlayerItems.any { (id, amount) -> bot.inventory.computeAmountForId(id) < amount } ||
             (slayerTask == SlayerTaskType.ZYGOMITE && Zygomites.carriedSpray(bot) == null) ||
-            (slayerTask == SlayerTaskType.CAVE_CRAWLER && !bot.status.isAntiPoison() &&
+            (slayerTask in POISONOUS_TASKS && !bot.status.isAntiPoison() &&
                 SLAYER_ANTIPOISONS.none { bot.inventory.contains(it) })) {
             combatConfigured = false
             bot.combat.target = null

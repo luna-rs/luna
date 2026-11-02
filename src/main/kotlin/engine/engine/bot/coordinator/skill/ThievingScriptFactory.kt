@@ -41,17 +41,16 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         if (shouldPickpocket) {
             return createPickpocketScript(bot, level, zones, training)
         }
-        if (!training && level >= ThievingChest.STEEL_ARROWTIPS.level && !randBoolean()) {
-            val chest: ThievingChest
-            val zone: SubZone
-            if (level >= ThievingChest.BLOOD_RUNES.level) {
-                chest = ThievingChest.BLOOD_RUNES
-                zone = SubZone.CHAOS_DRUID_TOWER_DUNGEON
-            } else {
-                chest = ThievingChest.STEEL_ARROWTIPS
-                zone = SubZone.HEMENSTER_CHEST_ROOM
-            }
-            val activity = BotSkillingActivity(tokens = setOf(chest), zones = setOf(zone))
+        if (!training && level >= ThievingChest.TEN_COIN.level && !randBoolean()) {
+            val activity = getBestSkillingActivity(bot, level, { it.level }, listOf(
+                BotSkillingActivity(setOf(ThievingChest.TEN_COIN), setOf(SubZone.ARDOUGNE_EAST_CHEST)),
+                BotSkillingActivity(setOf(ThievingChest.NATURE_RUNE, ThievingChest.FIFTY_COIN),
+                    setOf(SubZone.ARDOUGNE_EAST_CHEST_ROOM)),
+                BotSkillingActivity(setOf(ThievingChest.STEEL_ARROWTIPS), setOf(SubZone.HEMENSTER_CHEST_ROOM)),
+                BotSkillingActivity(setOf(ThievingChest.BLOOD_RUNES), setOf(SubZone.CHAOS_DRUID_TOWER_DUNGEON)),
+                BotSkillingActivity(setOf(ThievingChest.ARDOUGNE_CASTLE),
+                    setOf(SubZone.ARDOUGNE_CASTLE_SOUTH_CHEST, SubZone.ARDOUGNE_CASTLE_NORTH_CHEST))
+            ))!!
             zones.clear()
             zones.addAll(activity.zones)
             return SearchBotScript(bot, activity.tokens, getDuration(bot), zones)
@@ -69,12 +68,21 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         } else {
             stalls.add(stall(setOf(ThievingStallType.SEED), SubZone.DRAYNOR_MAIN))
         }
+        stalls.add(stall(setOf(ThievingStallType.TEA), SubZone.VARROCK_TEA_STALL))
+        stalls.add(stall(setOf(ThievingStallType.VEGETABLE),
+            SubZone.MISCELLANIA_MARKET_STALLS, SubZone.ETCETERIA_MARKET_STALLS))
+        stalls.add(stall(setOf(ThievingStallType.FISH), SubZone.RELLEKKA_MARKET_STALLS,
+            SubZone.MISCELLANIA_MARKET_STALLS, SubZone.ETCETERIA_MARKET_STALLS))
+        stalls.add(stall(setOf(ThievingStallType.FUR),
+            SubZone.ARDOUGNE_SQUARE_THIEVING, SubZone.RELLEKKA_MARKET_STALLS))
         val activity = getBestSkillingActivity(bot, level, { it.level }, stalls)
         if (activity == null) {
             return createPickpocketScript(bot, level, zones, training)
         }
         zones.clear()
-        zones.addAll(activity.zones)
+        zones.addAll((activity.zones + stalls.filter { option ->
+            option.tokens.any { it in activity.tokens }
+        }.flatMap { it.zones }).distinct())
         return StealBotScript(bot, activity.tokens, getDuration(bot), zones)
     }
 
@@ -96,6 +104,16 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
             ?: error("No pickpocket activity is available at level $level.")
         zones.clear()
         zones.addAll(activity.zones)
+        for (target in activity.tokens) zones.addAll(when (target) {
+            MAN_AND_WOMAN -> listOf(SubZone.LUMBRIDGE_COURT_YARD, SubZone.SEERS_VILLAGE_MAIN,
+                SubZone.VARROCK_EAST_BANK, SubZone.DRAYNOR_MAIN)
+            GUARD -> listOf(SubZone.FALADOR_WEST_BANK, SubZone.HOME)
+            FARMER -> listOf(SubZone.NORTH_ARDOUGNE_COW_FIELD)
+            else -> emptyList()
+        })
+        val expanded = zones.distinct()
+        zones.clear()
+        zones.addAll(expanded)
         return PickpocketBotScript(bot, activity.tokens, getDuration(bot), zones)
     }
 
@@ -154,6 +172,6 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
     /**
      * Associates a supported group of stalls with its theft route.
      */
-    private fun stall(tokens: Set<ThievingStallType>, zone: SubZone) =
-        BotSkillingActivity(tokens = tokens, zones = setOf(zone))
+    private fun stall(tokens: Set<ThievingStallType>, vararg zones: SubZone) =
+        BotSkillingActivity(tokens = tokens, zones = zones.toSet())
 }

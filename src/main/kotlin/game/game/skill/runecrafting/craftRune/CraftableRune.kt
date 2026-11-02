@@ -150,4 +150,10 @@ enum class CraftableRune(
         val INSIDE_ALTAR_TO_RUNE = entries.associateBy { it.insideAltarObject }
         val ALTAR_TO_RUNE = entries.associateBy { it.altar }
     }
+
+    /**
+     * Returns native rune output per essence at [currentLevel]. Crafting and bot margin estimates share this exact
+     * calculation, so a selection estimate cannot assume a multiplier that the actual altar does not award.
+     */
+    fun outputMultiplier(currentLevel: Int): Int = (currentLevel / multiplier).coerceAtLeast(1)
 }
