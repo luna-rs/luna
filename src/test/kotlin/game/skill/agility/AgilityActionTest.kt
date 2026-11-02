@@ -14,9 +14,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
+import java.util.Deque
 
 /**
- * Exercises animation preparation, traversal timing and interruption through the native action queue.
+ * Exercises walking requests, exact movement, traversal timing and interruption through the native action queue.
  *
  * @author lare96
  */
@@ -30,15 +31,27 @@ class AgilityActionTest {
     private lateinit var bot: Bot
     private var model = PlayerModelAnimation.DEFAULT
     private val start = Position(2474, 3436)
-    private val destination = Position(2474, 3429)
+    private val destination = start.translate(0, -3)
+    private var position = start
+    private val paths = mutableListOf<List<Position>>()
 
     @BeforeEach
     fun player() {
         bot = InventoryProductionFixtures.bot()
+        model = PlayerModelAnimation.DEFAULT
+        position = start
+        paths.clear()
         `when`(bot.model).thenAnswer { model }
         doAnswer { model = it.getArgument(0); null }.`when`(bot).setModel(any())
-        `when`(bot.position).thenReturn(start)
+        `when`(bot.position).thenAnswer { position }
+        doAnswer { position = it.getArgument(0); null }.`when`(bot).move(any())
         `when`(bot.lastRegion).thenReturn(start)
+        `when`(bot.isRunning).thenReturn(true)
+        val walking = bot.walking
+        doAnswer {
+            paths += it.getArgument<Deque<Position>>(0).toList()
+            null
+        }.`when`(walking).replacePath(any())
     }
 
     private fun tick() {
@@ -50,58 +63,73 @@ class AgilityActionTest {
         listOf(AgilityStep(destination, 3, walkingAnimation = 762, sounds = sounds)), "Crossing the log")
 
     @Test
-    fun balancingAppearanceArrivesBeforeForcedMovementAndSound() {
-        val action = balance(listOf(AgilitySound(Sound.LOG_BALANCE)))
+    fun balancingStartsWithItsReadyModelWalkingPathAndOpeningSound() {
+        val action = balance(listOf(AgilitySound(Sound.LOG_BALANCE), AgilitySound(Sound.LOG_BALANCE, tick = 2)))
         bot.actions.submit(action)
 
-        tick()
-
-        assertEquals(762, model.standingId)
+        assertEquals(763, model.standingId)
         assertEquals(762, model.standingTurnId)
         assertEquals(762, model.walkingId)
+        assertEquals(listOf(listOf(destination)), paths)
+        verify(bot.walking).setRunning(false)
         verify(bot, never()).exactMove(any())
         verify(bot, never()).move(any())
-        verify(bot, never()).queue(any(SoundMessageWriter::class.java))
+        verify(bot).queue(any(SoundMessageWriter::class.java))
 
         tick()
-
-        val route = ArgumentCaptor.forClass(ExactMovement::class.java)
-        verify(bot).exactMove(route.capture())
-        assertEquals(start, route.value.startPosition)
-        assertEquals(destination, route.value.endPosition)
-        assertEquals(60, route.value.durationEnd)
-        verify(bot).move(destination)
+        assertEquals(start, position)
+        verify(bot, never()).move(any())
         verify(bot).queue(any(SoundMessageWriter::class.java))
-        assertEquals(762, model.standingId)
+
+        tick()
+        verify(bot, times(2)).queue(any(SoundMessageWriter::class.java))
+        verify(bot, never()).move(any())
+
+        tick()
+        assertEquals(destination, position)
+        verify(bot).move(destination)
+        verify(bot, never()).exactMove(any())
+        assertEquals(763, model.standingId)
     }
 
     @Test
-    fun preparationDoesNotSpendTraversalTicksOrAwardCompletionEarly() {
+    fun traversalCompletesOnItsLastTickAndSettlesBeforeUnlocking() {
         var completed = false
         val action = balance().also { it.onSuccess = { completed = true } }
         bot.actions.submit(action)
-        tick()
-        repeat(3) { tick() }
+        repeat(2) { tick() }
         assertFalse(completed)
         assertFalse(action.isFinished)
-        assertEquals(762, model.standingId)
+        assertEquals(start, position)
+        assertEquals(763, model.standingId)
 
         tick()
 
         assertTrue(completed)
+        assertFalse(action.isFinished)
+        assertEquals(destination, position)
+        assertEquals(763, model.standingId)
+        verify(bot, never()).unlock()
+
+        tick()
+
         assertTrue(action.isFinished)
         assertSame(PlayerModelAnimation.DEFAULT, model)
+        verify(bot.walking).setRunning(true)
         verify(bot).unlock()
     }
 
     @Test
-    fun interruptedPreparationRestoresTheOriginalModelWithoutMovingOrCompleting() {
+    fun interruptingWalkingRestoresTheOriginalModelWithoutCompleting() {
         var completed = false
         val original = PlayerModelAnimation.Builder().setStandingId(809).build()
         model = original
         val action = balance().also { it.onSuccess = { completed = true } }
         bot.actions.submit(action)
         tick()
+        assertEquals(listOf(listOf(destination)), paths)
+        assertEquals(763, model.standingId)
+        clearInvocations(bot.walking)
 
         action.interrupt()
 
@@ -109,46 +137,67 @@ class AgilityActionTest {
         assertFalse(completed)
         verify(bot, never()).exactMove(any())
         verify(bot, never()).move(any())
+        verify(bot.walking).clear()
         verify(bot).unlock()
     }
 
     @Test
-    fun explicitActionAnimationsStartWithoutASeparateModelPreparationTick() {
+    fun exactMovementStartsOnSubmissionButChangesPositionOnlyWhenTheLegEnds() {
         val action = AgilityAction(bot,
             listOf(AgilityStep(destination, 2, animation = 749)), "Entering the pipe")
         bot.actions.submit(action)
 
-        tick()
-
         val animation = ArgumentCaptor.forClass(Animation::class.java)
         verify(bot).animation(animation.capture())
         assertEquals(749, animation.value.id)
-        verify(bot).exactMove(any())
-        verify(bot).move(destination)
-    }
-
-    @Test
-    fun failedLogApproachAlsoPreparesItsAnimationBeforeMoving() {
-        val failure = AgilityFailure.BARBARIAN_LOG
-        `when`(bot.position).thenReturn(failure.approach!!.translate(0, 3))
-        val action = AgilityFailureAction(bot, failure)
-        bot.actions.submit(action)
-        verify(bot, never()).exactMove(any())
-
-        tick()
-
-        assertEquals(762, model.standingId)
-        assertEquals(762, model.standingTurnId)
-        verify(bot, never()).exactMove(any())
+        val route = ArgumentCaptor.forClass(ExactMovement::class.java)
+        verify(bot).exactMove(route.capture())
+        assertEquals(start, route.value.startPosition)
+        assertEquals(destination, route.value.endPosition)
+        assertEquals(0, route.value.durationStart)
+        assertEquals(60, route.value.durationEnd)
+        assertTrue(paths.isEmpty())
         verify(bot, never()).move(any())
 
         tick()
 
-        verify(bot).exactMove(any())
-        verify(bot).move(failure.approach)
+        assertEquals(start, position)
+        assertFalse(action.isFinished)
+        verify(bot, never()).move(any())
+
+        tick()
+
+        assertEquals(destination, position)
+        verify(bot).move(destination)
+        assertTrue(action.isFinished)
+        verify(bot).unlock()
+    }
+
+    @Test
+    fun failedLogApproachWalksInItsBalanceModelAndRestoresItOnInterruption() {
+        val failure = AgilityFailure.BARBARIAN_LOG
+        position = failure.approach!!.translate(0, 3)
+        val action = AgilityFailureAction(bot, failure)
+        bot.actions.submit(action)
+        verify(bot, never()).exactMove(any())
+
+        assertEquals(763, model.standingId)
+        assertEquals(762, model.standingTurnId)
+        assertEquals(762, model.walkingId)
+        assertEquals(listOf(listOf(failure.approach)), paths)
+        verify(bot.walking).setRunning(false)
+        verify(bot, never()).exactMove(any())
+        verify(bot, never()).move(any())
+
+        repeat(2) { tick() }
+
+        verify(bot, never()).exactMove(any())
+        verify(bot, never()).move(any())
         verify(bot, never()).damage(anyInt())
+        clearInvocations(bot.walking)
         action.interrupt()
         assertSame(PlayerModelAnimation.DEFAULT, model)
+        verify(bot.walking).clear()
         verify(bot).unlock()
     }
 
@@ -168,17 +217,39 @@ class AgilityActionTest {
 
     @Test
     fun consecutiveLegsWithTheSameMovementModelDoNotAddAnotherPreparationPause() {
-        val next = destination.translate(0, -2)
+        val first = start.translate(0, -1)
+        val next = first.translate(0, -2)
+        var completed = false
         val action = AgilityAction(bot, listOf(
-            AgilityStep(destination, 1, walkingAnimation = 762),
-            AgilityStep(next, 2, walkingAnimation = 762)), "Crossing the bridge")
+            AgilityStep(first, 1, walkingAnimation = 762),
+            AgilityStep(next, 2, walkingAnimation = 762)), "Crossing the bridge").also {
+            it.onSuccess = { completed = true }
+        }
         bot.actions.submit(action)
 
-        repeat(4) { tick() }
+        assertEquals(listOf(listOf(first)), paths)
+        tick()
+        assertEquals(first, position)
+        assertEquals(listOf(listOf(first), listOf(next)), paths)
+        assertFalse(completed)
+        tick()
+        assertEquals(first, position)
+        assertFalse(completed)
+        tick()
 
-        verify(bot, times(2)).exactMove(any())
-        verify(bot).move(destination)
+        assertTrue(completed)
+        assertFalse(action.isFinished)
+        assertEquals(next, position)
+        verify(bot, never()).exactMove(any())
+        verify(bot).move(first)
         verify(bot).move(next)
-        assertEquals(762, model.standingId)
+        assertEquals(763, model.standingId)
+        verify(bot, never()).unlock()
+
+        tick()
+
+        assertTrue(action.isFinished)
+        assertSame(PlayerModelAnimation.DEFAULT, model)
+        verify(bot).unlock()
     }
 }

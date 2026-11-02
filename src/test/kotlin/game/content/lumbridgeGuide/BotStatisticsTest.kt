@@ -34,6 +34,7 @@ class BotStatisticsTest {
 
     private fun bot(vararg scripts: BotScript, coins: Int = 0, bankCoins: Int = 0): Bot {
         val bot = mock(Bot::class.java, RETURNS_DEEP_STUBS)
+        `when`(bot.isBot).thenReturn(true)
         `when`(bot.state).thenReturn(EntityState.ACTIVE)
         `when`(bot.personality.type).thenReturn(PersonalityTemplateType.SKILLER)
         `when`(bot.combatLevel).thenReturn(42)

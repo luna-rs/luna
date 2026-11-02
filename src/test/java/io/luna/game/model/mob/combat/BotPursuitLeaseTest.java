@@ -46,6 +46,7 @@ class BotPursuitLeaseTest {
         final PlayerCombatContext combat;
 
         Fixture() {
+            when(bot.isBot()).thenReturn(true);
             when(bot.getState()).thenReturn(EntityState.ACTIVE);
             when(npc.getState()).thenReturn(EntityState.ACTIVE);
             when(bot.isAlive()).thenReturn(true);

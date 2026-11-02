@@ -382,6 +382,7 @@ class BotCombatThreatTest {
     private fun player(level: Int): Bot = InventoryProductionFixtures.bot().also { player ->
         val fixtureWorld = player.world
         val combat = player.combat
+        `when`(player.isBot).thenReturn(true)
         `when`(player.asPlr()).thenReturn(player)
         `when`(player.totalHealth).thenReturn(level)
         `when`(player.combatLevel).thenReturn(100)
