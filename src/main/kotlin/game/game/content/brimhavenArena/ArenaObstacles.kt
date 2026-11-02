@@ -28,6 +28,7 @@ package game.content.brimhavenArena
 import api.predef.*
 import game.player.Sound
 import game.skill.Skills
+import game.skill.agility.Agility
 import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityStep
 import game.skill.agility.AgilityWalk
@@ -77,7 +78,6 @@ object ArenaObstacles {
         var high = 280
         var walking = 762
         var animation = -1
-        var jump = false
         var reverse = false
         when (obj.id) {
             3551 -> {
@@ -130,8 +130,8 @@ object ArenaObstacles {
                 start = p.translate(-dx, -dy)
                 when (obj.id) {
                     3559, 3561 -> { xp = 16.0; walking = if (dx == 1) 754 else 756; low = 256; high = 256 }
-                    3570, 3571, 3572 -> { xp = 6.0; walking = -1; low = 256; high = 256 }
-                    3578 -> { xp = 18.0; walking = -1; animation = 741; jump = true }
+                    3570, 3571, 3572 -> { xp = 6.0; walking = AgilityWalk.NORMAL; low = 256; high = 256 }
+                    3578 -> { xp = 18.0; walking = -1; animation = 741 }
                     else -> xp = 12.0
                 }
             }
@@ -141,9 +141,18 @@ object ArenaObstacles {
         fun at(distance: Int, z: Int = 3) = Position(start.x + dx * distance, start.y + dy * distance, z)
         // A plain step onto the rope's end; the balance covers only the rope.
         val ontoRope = AgilityStep(at(1), 1, walkingAnimation = AgilityWalk.NORMAL)
+        // Each pillar is a hop in the middle of its jump, as on stepping stones.
+        fun hop(distance: Int) = AgilityStep(at(distance), 2, animation = 741, moveStart = 15, moveEnd = 30)
+        // The player swings across inside the swing animation, as the rope swings.
+        fun swing(distance: Int, ticks: Int) = AgilityStep(at(distance), ticks, animation = 751, moveStart = 20,
+            moveEnd = 50, begin = { obj.animate(Agility.ROPE_SWING_ANIMATION) })
+        // The player grabs the bars before moving: the client holds a walk until this animation ends.
+        val grab = AgilityStep(start, 2, animation = 742, jump = true)
         if (failed) {
-            if (obj.id == 3565) return Route(start,
-                listOf(AgilityStep(at(1), 1), AgilityStep(start, 3, animation = 1106, jump = true, message = FALL)), 0.0, true, false)
+            // A walk to the wall, the failed climb there, and a walk back.
+            if (obj.id == 3565) return Route(start, listOf(AgilityStep(at(1), 1, walkingAnimation = AgilityWalk.NORMAL),
+                AgilityStep(at(1), 3, animation = 1106, jump = true, message = FALL),
+                AgilityStep(start, 1, walkingAnimation = AgilityWalk.NORMAL)), 0.0, true, false)
             val landing = when (obj.id) {
                 3566 -> at(0, 0)
                 3551 -> at(2, 0).translate(-dy, 0)
@@ -161,6 +170,8 @@ object ArenaObstacles {
             }
             // Ropes and monkey bars start a tile back, on the platform, and still fall two tiles past their end.
             val approach = when (obj.id) {
+                3578 -> (1..2).map { hop(it) }
+                3566 -> listOf(swing(1, 2))
                 3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking))
                 3564 -> listOf(AgilityStep(at(3), 3, walkingAnimation = walking, animation = animation))
                 else -> listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2, walkingAnimation = walking,
@@ -170,7 +181,7 @@ object ArenaObstacles {
                 AgilityStep(landing, 2, animation = failAnimation, jump = true, message = FALL)), 0.0, true)
         }
         val steps = when (obj.id) {
-            3578 -> (1..7).map { AgilityStep(at(it), 2, animation = 741, jump = true) }
+            3578 -> (1..7).map { hop(it) }
             3583 -> (1..7).map { AgilityStep(at(it), 2, animation = when (it) {
                 1 -> if (reverse) 1121 else 1117
                 7 -> if (reverse) 1124 else 1120
@@ -178,9 +189,13 @@ object ArenaObstacles {
             }) }
             3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking),
                 AgilityStep(at(length), length - 3, walkingAnimation = walking))
-            3566, 3565 -> listOf(AgilityStep(at(length), if (obj.id == 3565) 5 else 4, animation = animation))
+            3566 -> listOf(swing(length, 4))
+            3564 -> listOf(grab, AgilityStep(at(length), length, walkingAnimation = walking))
+            // The climb's move ends with its 144-cycle animation.
+            3565 -> listOf(AgilityStep(at(length), 5, animation = animation, moveEnd = 144))
+            3566 -> listOf(AgilityStep(at(length), 4, animation = animation)) // TODO confirm moveEnd bread
             else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation),
-                AgilityStep(at(length), length - 2, walkingAnimation = walking, jump = jump))
+                AgilityStep(at(length), length - 2, walkingAnimation = walking))
         }
         return Route(start, soundSteps(obj.id, false, steps), xp, false)
     }
@@ -202,11 +217,11 @@ object ArenaObstacles {
                         AgilitySound(Sound.BALANCING_LEDGE, tick = 3, loops = 2))
                 3564 -> if (index == 0) listOf(AgilitySound(Sound.MONKEYBARS_ON),
                     AgilitySound(Sound.MONKEYBARS_LOOP, tick = 1, loops = 6))
-                    else if (failed) listOf(AgilitySound(Sound.MONKEYBARS_OFF),
-                        AgilitySound(Sound.STUMBLE_LOOP, tick = 1, loops = 10))
+                    else if (failed) if (index == 2) listOf(AgilitySound(Sound.MONKEYBARS_OFF),
+                        AgilitySound(Sound.STUMBLE_LOOP, tick = 1, loops = 10)) else emptyList()
                     else listOf(AgilitySound(Sound.MONKEYBARS_LOOP, tick = 1, loops = 4, delayCycles = 10),
                         AgilitySound(Sound.MONKEYBARS_LOOP, tick = 4, loops = 3, delayCycles = 5),
-                        AgilitySound(Sound.MONKEYBARS_OFF, tick = 6))
+                        AgilitySound(Sound.MONKEYBARS_OFF, tick = step.ticks))
                 3565 -> if (failed) emptyList() else listOf(AgilitySound(Sound.CLIMB_WALL, delayCycles = 40))
                 3566 -> if (!failed) listOf(AgilitySound(Sound.SWING_ACROSS, tick = 1))
                     else if (index == 0) listOf(AgilitySound(Sound.STUMBLE_LOOP, loops = 6, delayCycles = 10))
@@ -215,9 +230,7 @@ object ArenaObstacles {
                     else if (failed) listOf(AgilitySound(Sound.PLANK_BREAK), AgilitySound(Sound.STUMBLE_LOOP, loops = 10),
                         AgilitySound(Sound.FALL_LAND, tick = 1))
                     else listOf(AgilitySound(Sound.PLANKWALK, loops = 4, delayCycles = 10))
-                3578 -> if (!failed) listOf(AgilitySound(Sound.JUMP_NO_LAND))
-                    else if (index == 0) listOf(AgilitySound(Sound.JUMP_NO_LAND),
-                        AgilitySound(Sound.JUMP_NO_LAND, tick = 1)) else emptyList()
+                3578 -> if (!failed || index < 2) listOf(AgilitySound(Sound.JUMP_NO_LAND)) else emptyList()
                 3583 -> if (failed) {
                     if (index == 0) listOf(AgilitySound(Sound.HANDHOLDS_GRAB_TO_SECOND))
                     else listOf(AgilitySound(Sound.FALL_LAND, tick = 2),
