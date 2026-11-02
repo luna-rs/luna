@@ -219,6 +219,17 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
         return removeFromSet(item);
     }
 
+    /**
+     * Expires this exact drop, including an overflow drop waiting to become visible.
+     * Pending drops are still {@link EntityState#NEW}, so ordinary unregistration cannot remove them.
+     *
+     * @param item The drop whose content-specific lifetime has ended.
+     * @return {@code true} if the drop was removed from this list.
+     */
+    public boolean expire(GroundItem item) {
+        return removeFromSet(item);
+    }
+
     @Override
     public int size() {
         return active.size();
@@ -334,8 +345,8 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                 pending.remove(item.getPosition(), item)) {
             if(item.getState() == EntityState.ACTIVE) {
                 item.hide();
-                item.setState(EntityState.INACTIVE);
             }
+            item.setState(EntityState.INACTIVE);
             return true;
         }
         return false;

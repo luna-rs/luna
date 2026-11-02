@@ -5,6 +5,88 @@
   incorrect bonuses/requirements.
 */
 [
+  // Source axe hazards can leave these zero-bonus tools in the weapon slot.
+  {
+    "id": 492, // Axe handle
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 494, // Broken bronze axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 496, // Broken iron axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 498, // Broken steel axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 500, // Broken black axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 502, // Broken mithril axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 504, // Broken adamant axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 506, // Broken rune axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 6741, // Broken dragon axe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
   {
     "id": 751, // Gnomeball
     "index": 3,

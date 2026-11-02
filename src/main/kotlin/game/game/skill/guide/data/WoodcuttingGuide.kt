@@ -26,6 +26,6 @@ val woodcuttingGuide = skillGuide("Woodcutting") {
         row(21, 1355, "Mithril axe")
         row(31, 1357, "Adamant axe")
         row(41, 1359, "Rune axe")
-        row(41, 6739, "Dragon axe")
+        row(61, 6739, "Dragon axe")
     }
 }

@@ -121,21 +121,20 @@ enum class Axe(val id: Int,
              YEW to (14 to 44),
              MAGIC to (7 to 21)
          )),
-    // Until 22 August 2006 the dragon axe cut exactly like a rune axe, at the same level.
     DRAGON(id = 6739,
-           level = 41,
+           level = 61,
            animation = Animation(2846),
            chances = mapOf(
-               NORMAL to (224 to 700),
-               ACHEY to (224 to 700),
-               OAK to (112 to 350),
-               WILLOW to (56 to 175),
-               TEAK to (55 to 164),
-               MAPLE to (28 to 87),
+               NORMAL to (240 to 750),
+               ACHEY to (240 to 750),
+               OAK to (120 to 375),
+               WILLOW to (60 to 187),
+               TEAK to (60 to 190),
+               MAPLE to (30 to 93),
                HOLLOW to (64 to 94),
-               MAHOGANY to (29 to 88),
-               YEW to (14 to 44),
-               MAGIC to (7 to 21)
+               MAHOGANY to (34 to 94),
+               YEW to (15 to 47),
+               MAGIC to (7 to 22)
            ));
 
     companion object {

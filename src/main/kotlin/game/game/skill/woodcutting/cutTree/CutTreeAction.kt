@@ -44,11 +44,6 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
      */
     private var swung = false
 
-    /**
-     * The bird's nest that falls instead of the log on this attempt, if any.
-     */
-    private var nest: Nest? = null
-
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
             // No inventory space.
@@ -70,7 +65,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             false
         }
 
-        start && RandomEvents.offerActivity(mob, RandomEvents.Activity.WOODCUTTING) -> false
+        start && RandomEvents.offerWoodcutting(mob, treeObj, axe) -> false
 
         else -> {
             if (!start) {
@@ -82,21 +77,21 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     override fun execute() {
-        val droppedNest = nest
-        if (droppedNest != null) {
-            nest = null
-            mob.sendMessage("A bird's nest falls out of the tree.")
-            world.addItem(droppedNest.id, 1, nestTile(), mob)
-        } else if (currentAdd.isNotEmpty()) {
-            val name = itemName(tree.logId)
-            mob.sendMessage("You get some ${name.lowercase()}.")
-            mob.woodcutting.addExperience(tree.exp)
-
-            if (mob.inventory.isFull) {
-                stopFull = true
-            }
-        } else {
+        if (currentAdd.isEmpty()) {
             return
+        }
+        val name = itemName(tree.logId)
+        mob.sendMessage("You get some ${name.lowercase()}.")
+        mob.woodcutting.addExperience(tree.exp)
+
+        if (rand().nextInt(256) == 0) {
+            mob.sendMessage("A bird's nest falls out of the tree.")
+            val droppedNest = world.addItem(Nest.roll().id, 1, nestTile(), mob)
+            droppedNest.setExpire(false)
+            world.scheduleOnce(50) { world.items.expire(droppedNest) }
+        }
+        if (mob.inventory.isFull) {
+            stopFull = true
         }
         if (Woodcutting.fallsAfterLog(tree)) {
             deleteAndRespawnTree()
@@ -108,9 +103,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         if (!Woodcutting.success(mob.woodcutting.level, tree, axe)) {
             return emptyList()
         }
-        // Normal and achey trees never give nests; on other trees a nest takes the place of the log.
-        nest = if (tree != Tree.NORMAL && tree != Tree.ACHEY && rand().nextInt(256) == 0) Nest.roll() else null
-        return if (nest == null) listOf(Item(tree.logId)) else emptyList()
+        return listOf(Item(tree.logId))
     }
 
     override fun onFinished() {
@@ -143,8 +136,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     /**
      * Picks a random tile next to the player that they could step onto, for a bird's nest to land on, or the player's
-     * own tile if there is none. Jagex describes a bias to the west but not its size, so every direction is equally
-     * likely.
+     * own tile if there is none. Lost City's radius-one map_findsquare selects uniformly among reachable tiles.
      */
     private fun nestTile(): Position =
         Direction.ALL_EXCEPT_NONE.filter { world.collisionManager.traversable(mob.position, EntityType.PLAYER, it) }
@@ -164,7 +156,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     treeObj.objectType,
                     treeObj.direction)
             }
-            world.scheduleOnce(tree.respawnTicks.random()) {
+            world.scheduleOnce(Woodcutting.scaleRespawn(tree.respawnTicks.random(), world.players.size())) {
                 world.addObject(
                     treeObj.id,
                     treeObj.position,

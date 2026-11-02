@@ -14,6 +14,14 @@ import io.luna.Luna
 object Woodcutting {
 
     /**
+     * Scales Lost City's base respawn [ticks] by the online [players], down to half the base at 2,000 players.
+     * This uses its reconstruction in `scripts/general/scripts/player_count.rs2`; the original Jagex formula is
+     * unknown. Durations are fixed when the tree falls, as in that source.
+     */
+    fun scaleRespawn(ticks: Int, players: Int): Int =
+        ticks * (4000 - players.coerceIn(0, 2000)) / 4000
+
+    /**
      * Simulate the result of woodcutting for [attempts] tries, and print the result.
      */
     fun simulate(attempts: Int = 10_000) {
