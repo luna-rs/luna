@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
  */
 public abstract class GameMessageWriter {
 
-    private final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Writes data into a buffer.

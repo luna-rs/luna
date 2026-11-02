@@ -6,6 +6,7 @@ import kotlin.coroutines.Continuation;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.def.CombatStyleDefinition;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.plugin.PluginBootstrap;
@@ -14,6 +15,10 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.in.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -61,6 +66,17 @@ final class PlayerAutomationTest {
         verify(client).queue(message);
         verify(context.getWorld().getBots(), never()).add(any());
         assertThrows(IllegalStateException.class, player::login);
+    }
+
+    @Test
+    void reconnectingHumanRetainsTheExistingCollectionHash() {
+        Bot reconnected = Bot.connectedPlayer(context, new PlayerCredentials("tester", "different"));
+        Set<Player> players = new HashSet<>();
+        players.add(player);
+
+        assertEquals(Objects.hash(player.getUsernameHash()), player.hashCode());
+        assertEquals(player.hashCode(), reconnected.hashCode());
+        assertTrue(players.contains(reconnected));
     }
 
     @Test

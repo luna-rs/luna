@@ -330,7 +330,7 @@ public class Player extends Mob {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(getUsernameHash());
+        return 31 + Long.hashCode(getUsernameHash());
     }
 
     @Override
