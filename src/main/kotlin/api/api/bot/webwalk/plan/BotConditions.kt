@@ -1,6 +1,7 @@
 package api.bot.webwalk.plan
 
 import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.AbyssCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
@@ -67,6 +68,8 @@ object BotConditions {
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
                       FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
                       BARBARIAN_PIPE_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 35 },
+                      AbyssCrossing.ENTRY_ALLOWED to { bot: Bot -> AbyssCrossing.optedIn(bot) },
+                      AbyssCrossing.LAW_ALLOWED to { bot: Bot -> AbyssCrossing.lawAllowed(bot) },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

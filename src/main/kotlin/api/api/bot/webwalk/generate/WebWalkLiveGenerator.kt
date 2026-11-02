@@ -253,6 +253,7 @@ object WebWalkLiveGenerator {
             }
         }
         essenceWizards(climbs, report)
+        climbs += AbyssRouteGenerator.gather(report, { climbingTiles(it).firstOrNull() }, ::standableNear)
         climbs += PiscatorisRouteGenerator.gather(report, ::standableNear)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
