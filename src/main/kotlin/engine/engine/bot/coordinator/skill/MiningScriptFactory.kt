@@ -43,7 +43,8 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.EDGEVILLE_DUNGEON_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, MITHRIL, ADAMANT),
         SubZone.RELLEKKA_MINE to setOf(CLAY, SILVER, COAL),
         SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE),
-        SubZone.SHILO_VILLAGE to setOf(GEM_ROCK)
+        SubZone.SHILO_VILLAGE to setOf(GEM_ROCK),
+        SubZone.DEEP_WILDERNESS_RUNITE_ROCKS to setOf(RUNE)
     )
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
@@ -105,7 +106,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             if (training && zone == SubZone.AL_KHARID_MINE && bot.combatLevel <= 30) {
                 continue
             }
-            if (training && zone == SubZone.EDGEVILLE_DUNGEON_MINE) {
+            if (training && zone in setOf(SubZone.EDGEVILLE_DUNGEON_MINE, SubZone.DEEP_WILDERNESS_RUNITE_ROCKS)) {
                 continue
             }
             val tokens = linkedSetOf<Ore>()

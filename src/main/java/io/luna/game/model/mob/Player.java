@@ -52,6 +52,8 @@ import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
+import io.luna.net.msg.out.DynamicMapMessageWriter;
+import io.luna.game.model.map.DynamicMap;
 import io.luna.net.msg.out.SoundMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
@@ -172,6 +174,11 @@ public class Player extends Mob {
      * The last region position used for region-change detection.
      */
     private Position lastRegion;
+
+    /**
+     * The active private map, or null while the player is in the normal world.
+     */
+    private DynamicMap dynamicMap;
 
     /**
      * Whether the region changed this tick.
@@ -357,6 +364,7 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        if (dynamicMap != null) dynamicMap.remove(this);
         pendingPlacement = true;
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
@@ -471,11 +479,11 @@ public class Player extends Mob {
             }
         } else {
             setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
-            rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
-                    PlayerRights.DEVELOPER : PlayerRights.PLAYER;
-            if (isBot()) {
-                rights = PlayerRights.PLAYER;
-            }
+            rights = PlayerRights.PLAYER;
+        }
+        if (!isBot()) {
+            rights = PlayerRights.forLogin(getUsername(), data == null ? null : data.rights,
+                    Luna.settings().game().betaMode(), LunaChannelFilter.WHITELIST.contains(client.getIpAddress()));
         }
     }
 
@@ -753,8 +761,9 @@ public class Player extends Mob {
         if (lastRegion == null || needsRegionUpdate()) {
             regionChanged = true;
             lastRegion = position;
-            if (!(this instanceof Bot)) {
-                queue(new RegionMessageWriter(position));
+            if (!isBot()) {
+                queue(dynamicMap == null ? new RegionMessageWriter(position) :
+                        new DynamicMapMessageWriter(dynamicMap, position));
             }
         }
     }
@@ -1506,5 +1515,21 @@ public class Player extends Mob {
         return tolerance;
     }
 
+
+    /**
+     * @return The player's current private map, or null in the real world.
+     */
+    public DynamicMap getDynamicMap() {
+        return dynamicMap;
+    }
+
+    /**
+     * Changes membership metadata. DynamicMap owns movement, controller registration and map updates.
+     *
+     * @param dynamicMap The joined map, or null after departure.
+     */
+    public void setDynamicMap(DynamicMap dynamicMap) {
+        this.dynamicMap = dynamicMap;
+    }
 
 }

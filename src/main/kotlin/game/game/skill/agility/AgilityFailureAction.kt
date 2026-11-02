@@ -31,6 +31,7 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
      * the client never sees them on it before the jump.
      */
     private var stone: Position? = null
+    private var approaching = false
 
     override fun onLock() {
         previousAnimation = mob.model
@@ -56,6 +57,13 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
         if (approach == null) {
             land()
             return true
+        }
+        if (!approaching) {
+            approaching = true
+            mob.exactMove(ExactMovement(mob.lastRegion, mob.position, approach, 0,
+                fallTick * AgilityAction.CYCLES_PER_TICK, Direction.between(mob.position, approach)))
+            mob.move(approach)
+            return false
         }
         ticks++
         when (failure) {

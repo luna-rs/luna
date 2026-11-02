@@ -1,5 +1,7 @@
 package api.bot.social
 
+import api.bot.isRealBot
+
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
@@ -169,7 +171,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
         if (!canStartAutomaticChat() || now < availableToChatAt ||
             !BotConversations.available(bot, allowWorking = true)) return
         val people = bot.world.locator.findViewablePlayers(bot) {
-            it !== bot && nearby(it) && (it !is Bot ||
+            it !== bot && nearby(it) && (!it.isRealBot() ||
                 (BotConversations.available(it, allowWorking = true) && now >= (camper(it)?.availableToChatAt ?: 0L)))
         }
         val campers = if (crowded) people.filter { camper(it) != null } else emptyList()
@@ -177,7 +179,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
         nextSpeech = now + Random.nextLong(100, 220)
         if (Random.nextDouble() > 0.25 + 0.7 * bot.personality.social) return
         val ownTone = tone
-        if (listener is Bot) {
+        if (listener.isRealBot()) {
             val other = (listener.scriptStack.current() as? NpcCombatScript)?.campBehavior
             if (other != null && now < other.availableToChatAt) return
             if (!BotConversations.available(listener, allowWorking = true)) return
@@ -221,7 +223,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
         val camp = zone ?: return false
         if (holdingConversation || now < (nextCampConversation[camp] ?: 0L)) return false
         return bot.world.locator.findViewablePlayers(bot) {
-            it is Bot && it !== bot && bot.isWithinDistance(it, 8) &&
+            it.isRealBot() && it !== bot && bot.isWithinDistance(it, 8) &&
                 (BotConversations.engaged(it) ||
                     (it.scriptStack.current() as? NpcCombatScript)?.campBehavior?.holdingConversation == true)
         }.isEmpty()
@@ -317,7 +319,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
 
         /** Human messages recruit one nearby listener; bot dialogue is already owned by the conversation runner. */
         override fun handle(message: BotChatMessage): Boolean {
-            if (message.speaker is Bot) return false
+            if (message.speaker.isRealBot()) return false
             val candidates = message.hearers.mapNotNull {
                 (it.scriptStack.current() as? NpcCombatScript)?.campBehavior
             }.filter { it.script.canSocialize() && it.nearby(message.speaker) }
@@ -344,7 +346,7 @@ class CombatCampBehavior(private val script: NpcCombatScript, private val accept
             if (damage <= 0 || player.health !in 1..threshold || player.health + damage <= threshold ||
                 now < player.tauntedUntil || !player.combat.inCombat()) return
             val observers = world.locator.findViewablePlayers(player) {
-                it is Bot && it !== player && it.isWithinDistance(player, 8)
+                it.isRealBot() && it !== player && it.isWithinDistance(player, 8)
             }.filterIsInstance<Bot>().mapNotNull {
                 (it.scriptStack.current() as? NpcCombatScript)?.campBehavior
             }.filter { it.mean && it.nearby(player) && BotConversations.available(it.bot, allowWorking = true) }

@@ -173,7 +173,7 @@ object BrimhavenArena {
             } else false
             else -> false
         }
-    }
+    }eeeeeeeeeeeeeeeee
 
     fun enter(player: Player): Boolean {
         if (!inside(player.position) || !player.isAlive || !player.paid) return false

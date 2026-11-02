@@ -1,6 +1,7 @@
 package api.combat.death.dsl
 
-import io.luna.game.model.mob.bot.Bot
+import api.bot.isRealBot
+
 import api.drops.DropTableHandler.getDropTable
 import api.drops.MergedDropTable
 import api.predef.*
@@ -106,7 +107,7 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
                     if (clueDropped) continue
                     clueDropped = true
                 }
-                if (source is Bot && item.itemDef.value > 10_000 && !reacted) { // TODO@0.5.0 Use economy value.
+                if (source.isRealBot() && item.itemDef.value > 10_000 && !reacted) { // TODO@0.5.0 Use economy value.
                     // React to receiving a rare drop.
                     BotReactions.reactToRareDrop(source, item)
                     reacted = true

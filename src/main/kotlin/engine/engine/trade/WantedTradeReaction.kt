@@ -1,5 +1,7 @@
 package engine.trade
 
+import api.bot.isRealBot
+
 import api.predef.ext.wantedItemsToAcquire
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import engine.bot.speech.BotReactions
@@ -31,7 +33,7 @@ internal class WantedTradeReaction private constructor(
          * @return A pending reaction for a bot with unmet wants, otherwise `null`.
          */
         fun capture(player: Player, offered: Iterable<Item?>): WantedTradeReaction? {
-            val bot = player as? Bot ?: return null
+            val bot = player.let { if (it.isRealBot()) it else null } ?: return null
             val escrow = offered.filterNotNull().groupBy { it.itemDef.unnotedId.orElse(it.id) }
                 .mapValues { (_, items) -> items.sumOf { it.amount.toLong() } }
             val before = bot.preferences.wantedItemsToAcquire().mapNotNull { wanted ->
