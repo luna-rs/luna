@@ -38,6 +38,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.Expression
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.WalkableInterface
 import io.luna.game.model.mob.varp.Varp
@@ -92,13 +93,64 @@ object BrimhavenArena {
 
     fun talk(player: Player, clerk: Npc) {
         if (!near(player, clerk, 437)) return
-        player.newDialogue().options("Pay 200 coins to enter", {
-            player.overlays.closeWindows(); pay(player, clerk)
-        }, "How does the arena work?", {
-            player.newDialogue().npc(437, 588, "Follow the flashing arrow and tag each pillar.",
-                "Consecutive tags earn tickets. Missing one resets your streak.",
-                "Traps are dangerous! Jackie exchanges your tickets.").open()
-        }, "Never mind", { player.overlays.closeWindows() }).open()
+        player.newDialogue()
+            .player(Expression.HAPPY, "Ahoy Cap'n!")
+            .npc(437, Expression.HAPPY, "Ahoy there!")
+            .then { ask(it, clerk) }.open()
+    }
+
+    private fun ask(player: Player, clerk: Npc) {
+        player.newDialogue().options("What is this place?", {
+            it.newDialogue()
+                .player(Expression.CONFUSED, "What is this place?")
+                .npc(437, Expression.HAPPY, "This, me hearty, is the entrance to the Brimhaven", "Agility Arena!")
+                .npc(437, Expression.HAPPY, "I were diggin for buried treasure when I found it!",
+                    "Amazed I was! It was a sight to behold!")
+                .npc(437, Expression.HAPPY, "It were the biggest thing I'd ever seen! It",
+                    "must've been at least a league from side to side!")
+                .npc(437, Expression.HAPPY, "It made me list, I were that excited!")
+                .npc(437, Expression.HAPPY, "I'd found a huge cave with all these platforms. I",
+                    "reckon it be an ancient civilisation that made",
+                    "it. I had to be mighty careful as there was these", "traps everywhere! Dangerous it was!")
+                .npc(437, Expression.HAPPY, "Entrance is only 200 coins!")
+                .then { player -> ask(player, clerk) }.open()
+        }, "What do I do in the arena?", {
+            it.newDialogue()
+                .player(Expression.CONFUSED, "What do I do in the arena?")
+                .npc(437, "Well, me hearty, it's simple. Ye can cross between",
+                    "two platforms by using the traps or obstacles", "strung across 'em. Try and make your way to the",
+                    "pillar that is indicated by the flashing arrow.")
+                .npc(437, "Ye receive tickets for tagging more than one",
+                    "pillar in a row. So ye won't get a ticket from the",
+                    "first pillar but ye will for every platform ye tag", "in a row after that.")
+                .npc(437, "If ye miss a platform ye will miss out on the next",
+                    "ticket so try and get every platform you can! When",
+                    "ye be done, take the tickets to Jackie over there", "and she'll exchange them for more stuff!")
+                .player(Expression.HAPPY, "Thanks!")
+                .then { player -> ask(player, clerk) }.open()
+        }, "I'd like to use the Agility Arena, please.", { offerEntry(it, clerk) },
+            "See you later.", { it.newDialogue().player("See you later.").open() }).open()
+    }
+
+    private fun offerEntry(player: Player, clerk: Npc) {
+        val dialogue = player.newDialogue().player("I'd like to use the Agility Arena, please.")
+        if (player.paid) {
+            dialogue.npc(437, Expression.LAUGHING, "Ye've already paid, so down ye goes...").open()
+            return
+        }
+        dialogue.npc(437, "Aye, entrance be 200 coins.")
+            .npc(437, Expression.SHOCKED, "A word of warning me hearty! There are dangerous", "traps down there!")
+        if (player.inventory.computeAmountForId(995) < 200) {
+            dialogue.player("I don't have the money on me at the moment.")
+                .npc(437, Expression.ANGRY, "No coins, no entrance!").open()
+            return
+        }
+        dialogue.options("Okay, here's 200 coins.", {
+            it.newDialogue().player("Okay, here's 200 coins.").then { player ->
+                if (pay(player, clerk))
+                    player.newDialogue().npc(437, Expression.HAPPY, "May the wind be in ye sails!").open()
+            }.open()
+        }, "Never mind.", { it.newDialogue().player("Never mind.").open() }).open()
     }
 
     fun ladder(player: Player, ladder: GameObject): Boolean {

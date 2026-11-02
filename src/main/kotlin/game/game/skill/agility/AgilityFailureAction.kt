@@ -58,7 +58,7 @@ class AgilityFailureAction(plr: Player, private val failure: AgilityFailure,
             land()
             return true
         }
-s        if (!approaching) {
+        if (!approaching) {
             approaching = true
             mob.exactMove(ExactMovement(mob.lastRegion, mob.position, approach, 0,
                 fallTick * AgilityAction.CYCLES_PER_TICK, Direction.between(mob.position, approach)))
