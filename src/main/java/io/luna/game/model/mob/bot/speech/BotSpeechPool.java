@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A helper class that loads files within {@code ./data/game/bots/speech/} into memory. These files, when loaded are
@@ -164,6 +166,32 @@ public class BotSpeechPool<T extends Enum<T>> {
      */
     public final String take(Bot bot, T context) {
         String phrase = RandomUtils.random(pool.get(context));
+        return expand(bot, context, phrase);
+    }
+
+    /**
+     * Selects an acceptable expanded phrase with a finite scan, returning null when this context is exhausted.
+     *
+     * @param bot The speaker.
+     * @param context The speech category.
+     * @param acceptable The recent-history and pending-message filter.
+     * @return An eligible phrase, or null.
+     */
+    public final String take(Bot bot, T context, Predicate<String> acceptable) {
+        var phrases = pool.get(context);
+        if (phrases.isEmpty()) return null;
+        int start = ThreadLocalRandom.current().nextInt(phrases.size());
+        for (int offset = 0; offset < phrases.size(); offset++) {
+            String phrase = expand(bot, context, phrases.get((start + offset) % phrases.size()));
+            if (phrase != null && !phrase.isBlank() && acceptable.test(phrase)) return phrase;
+        }
+        return null;
+    }
+
+    /**
+     * Substitutes the registered full tokens before applying any selection filter.
+     */
+    private String expand(Bot bot, T context, String phrase) {
         if (phrase != null) {
             for (var entry : tags.row(context).entrySet()) {
                 Object replaceWith = entry.getValue().apply(bot);
