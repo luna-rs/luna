@@ -17,5 +17,9 @@ enum class AgilityCourse(val level: Int, val bonus: Double, val obstacles: List<
 
     // The 2006 Knowledge Base lists XP for each obstacle and no lap bonus; the zip vine's 300 is its own.
     APE_ATOLL(48, 0.0, listOf(APE_STEPPING_STONE, APE_TROPICAL_TREE, APE_MONKEY_BARS, APE_SKULL_SLOPE, APE_ROPE,
-        APE_ZIP_VINE))
+        APE_ZIP_VINE)),
+
+    // The lap's 190 bonus is paid for the stick handed in at the end, not for the checkpoints.
+    WEREWOLF(60, 0.0, listOf(WEREWOLF_STEPPING_STONE, WEREWOLF_HURDLE, WEREWOLF_PIPE, WEREWOLF_SKULL_SLOPE,
+        WEREWOLF_ZIP_LINE))
 }

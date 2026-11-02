@@ -3,6 +3,7 @@ package game.skill.agility
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -21,26 +22,37 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
     /**
      * Registers an obstacle. Only the last Barbarian wall contributes a course checkpoint. [action] only builds the
      * traversal: it is also built for a failed attempt, for its start message. A failed attempt plays [fail] when
-     * given, or the obstacle's [AgilityFailure] route. A player who fails [canPass] plays [refuse] when given. A click
-     * that leaves the player beside the obstacle's start tile, within [AgilityApproach.RADIUS] tiles, walks them onto
-     * it first.
+     * given, or the obstacle's [AgilityFailure] route; [failsIf], when given, decides the failure instead of that
+     * route's roll and needs [fail]. A player who fails [canPass] plays [refuse] when given. [allow], when given,
+     * sees each click first and returns `false` when it turned the player away itself. A click that leaves the player
+     * beside the obstacle's start tile, within [AgilityApproach.RADIUS] tiles, walks them onto it first; [startTile]
+     * names that tile when it depends on the object clicked. [interaction] is how close a click must bring them.
      */
     fun obstacle(id: Int, type: AgilityObstacle,
                  checkpoint: (GameObject) -> Boolean = { true },
                  fail: (Player.(GameObject) -> AgilityAction)? = null,
                  refuse: (Player.(GameObject) -> AgilityAction?)? = null,
+                 failsIf: (Player.() -> Boolean)? = null,
+                 allow: (Player.(GameObject) -> Boolean)? = null,
+                 startTile: (Player.(GameObject) -> Position)? = null,
+                 interaction: InteractionPolicySupplier = InteractionPolicy.STANDARD_SIZE_BIF,
                  action: Player.(GameObject) -> AgilityAction) {
-        object1(id) {
+        require(failsIf == null || fail != null) { "An obstacle's own fail roll needs its own fall." }
+        object1(id, interaction) {
             val obj = gameObject
+            if (allow != null && !allow(plr, obj)) return@object1
             val start = {
                 attempt(plr, type, checkpoint = checkpoint(obj),
                     fail = fail?.let { { it(plr, obj) } },
-                    refuse = refuse?.let { { it(plr, obj) } }) { action(plr, obj) }
+                    refuse = refuse?.let { { it(plr, obj) } },
+                    failsIf = failsIf?.let { { it(plr) } }) { action(plr, obj) }
             }
-            if (type.startIf(plr.position)) {
+            val from = startTile?.invoke(plr, obj)
+            if (from?.let { plr.position == it } ?: type.startIf(plr.position)) {
                 start()
             } else if (!plr.isLocked) {
-                AgilityApproach.findStart(plr, type)?.let { plr.submitAction(AgilityApproach(plr, it, start)) }
+                val tile = from ?: AgilityApproach.findStart(plr, type)
+                tile?.let { plr.submitAction(AgilityApproach(plr, it, start)) }
             }
         }
     }
@@ -53,6 +65,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                          checkpoint: Boolean = true,
                          fail: (() -> AgilityAction)? = null,
                          refuse: (() -> AgilityAction?)? = null,
+                         failsIf: (() -> Boolean)? = null,
                          action: () -> AgilityAction) {
         if (plr.isLocked || !type.startIf(plr.position) || !Agility.checkLevel(plr, type.level)) return
         if (refuse != null && !plr.canPass()) {
@@ -61,8 +74,8 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
         }
         val traversal = action()
         val failure = type.failure
-        if (failure != null && failure.fails(plr.agility.level, roll())) {
-            plr.submitAction(fail?.invoke() ?: AgilityFailureAction(plr, failure, traversal.message))
+        if (failsIf?.invoke() ?: (failure != null && failure.fails(plr.agility.level, roll()))) {
+            plr.submitAction(fail?.invoke() ?: AgilityFailureAction(plr, failure!!, traversal.message))
             return
         }
         traversal.onSuccess = { Agility.complete(plr, courseType, type, checkpoint) }
