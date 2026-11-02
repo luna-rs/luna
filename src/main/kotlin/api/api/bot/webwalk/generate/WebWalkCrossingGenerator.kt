@@ -13,6 +13,7 @@ import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
 import game.skill.agility.AgilityEntrances
+import game.skill.agility.Stile
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -241,11 +242,22 @@ object SpecialCrossings {
                                       Requirements(items = listOf(ItemRequirement(BrassKeyDoor.KEY))), cost = 4)
 
     /**
+     * The two ordinary stiles into the Ardougne mill's fenced wheat field.
+     */
+    val ARDOUGNE_STILES = CrossingSpec(AgilityShortcutCrossing.ID, setOf(Stile.ID), cost = 6,
+                                       placements = listOf(
+                                           CrossingPlacement(Stile.ID, Position(2638, 3350), Position(2637, 3350),
+                                                             Position(2640, 3350)),
+                                           CrossingPlacement(Stile.ID, Position(2655, 3347), Position(2654, 3347),
+                                                             Position(2657, 3347))))
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
+        ARDOUGNE_STILES)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
