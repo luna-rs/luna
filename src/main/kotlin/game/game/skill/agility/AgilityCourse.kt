@@ -21,5 +21,10 @@ enum class AgilityCourse(val level: Int, val bonus: Double, val obstacles: List<
 
     // The lap's 190 bonus is paid for the stick handed in at the end, not for the checkpoints.
     WEREWOLF(60, 0.0, listOf(WEREWOLF_STEPPING_STONE, WEREWOLF_HURDLE, WEREWOLF_PIPE, WEREWOLF_SKULL_SLOPE,
-        WEREWOLF_ZIP_LINE))
+        WEREWOLF_ZIP_LINE)),
+
+    // The pyramid's 300 is paid at the doorway out of the top, not for checkpoints: falls send players back down a
+    // level, so its obstacles are taken in no fixed count.
+    AGILITY_PYRAMID(30, 0.0, listOf(PYRAMID_LOW_WALL, PYRAMID_LEDGE, PYRAMID_PLANK, PYRAMID_CROSS_GAP,
+        PYRAMID_JUMP_GAP, PYRAMID_TOP_ROCKS))
 }

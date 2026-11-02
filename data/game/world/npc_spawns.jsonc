@@ -128863,12 +128863,12 @@
   {
     "id": 3123,
     "position": {
-      "x": 3363,
-      "y": 2829,
+      "x": 3352,
+      "y": 2832,
       "z": 0
     },
     "wander": {
-      "radius": 5,
+      "radius": 3,
       "frequency": "NORMAL"
     }
   },
