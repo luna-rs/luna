@@ -175,9 +175,8 @@ object ArenaObstacles {
                 3578 -> (1..2).map { hop(it) }
                 3566 -> listOf(swing(1, 2))
                 3551 -> listOf(ontoRope, AgilityStep(at(3), 2, walkingAnimation = walking))
-                3564 -> listOf(grab, AgilityStep(at(3), 3, walkingAnimation = walking, animation = animation))
-                else -> listOf(AgilityStep(at(if (obj.id == 3566) 1 else 2), 2, walkingAnimation = walking,
-                    animation = animation))
+                3564 -> listOf(grab, AgilityStep(at(3), 3, walkingAnimation = walking))
+                else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation))
             }
             return Route(start, soundSteps(obj.id, true, approach +
                 AgilityStep(landing, 2, animation = failAnimation, jump = true, message = FALL)), 0.0, true)
@@ -195,7 +194,6 @@ object ArenaObstacles {
             3564 -> listOf(grab, AgilityStep(at(length), length, walkingAnimation = walking))
             // The climb's move ends with its 144-cycle animation.
             3565 -> listOf(AgilityStep(at(length), 5, animation = animation, moveEnd = 144))
-            3566 -> listOf(swing(length, 4))
             else -> listOf(AgilityStep(at(2), 2, walkingAnimation = walking, animation = animation),
                 AgilityStep(at(length), length - 2, walkingAnimation = walking))
         }

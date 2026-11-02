@@ -14,11 +14,6 @@ import io.luna.game.model.mob.Player
 object AgilityEntrances {
 
     /**
-     * The ordinary walk, used through the ridge's door and gate.
-     */
-    private const val WALK_ANIMATION = 819
-
-    /**
      * Only entering the Barbarian course requires level 35; a drained player can still leave.
      */
     fun barbarianPipe(plr: Player): AgilityAction? {

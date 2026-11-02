@@ -16,7 +16,7 @@ npc1(437) { BrimhavenArena.talk(plr, targetNpc) }
 npc2(437) { BrimhavenArena.pay(plr, targetNpc) }
 npc1(1055) { BrimhavenArena.openRewards(plr, targetNpc) }
 npc2(1055) { BrimhavenArena.openRewards(plr, targetNpc) }
-for (id in listOf(3617, 3618, 3610)) object1(id) { BrimhavenArena.ladder(plr, gameObject) }
+object1(3610) { BrimhavenArena.ladder(plr, gameObject) }
 for (id in listOf(3608, 3581)) object1(id) { BrimhavenArena.tag(plr, gameObject) }
 for (id in ArenaObstacles.ids) object1(id, { _, obj -> ArenaObstacles.policy(obj) }) {
     ArenaObstacles.cross(plr, gameObject)
