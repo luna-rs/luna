@@ -49,6 +49,35 @@ class TradeBasketTest {
             TradeBasket.select(linkedMapOf(1511 to 10, 314 to 10), prices, 25))
     }
 
+    @Test fun sellerPriorityDeterminesWhichStockFitsAPartialPayment() {
+        assertEquals(mapOf(1511 to 50), TradeBasket.select(mapOf(314 to 100, 1511 to 100),
+            mapOf(314 to 1L, 1511 to 1L), 50, listOf(1511, 314)))
+    }
+
+    @Test fun duplicateAndMissingPriorityIdsDoNotConsumeStockOrHideOtherItems() {
+        assertEquals(mapOf(1511 to 10, 314 to 5), TradeBasket.select(mapOf(314 to 10, 1511 to 10),
+            mapOf(314 to 1L, 1511 to 1L), 15, listOf(9999, 1511, 1511)))
+    }
+
+    @Test fun bothParticipantsResolveTheSameExchangeUsingTheSellersPriority() {
+        val stock = linkedMapOf(314 to 100, 1511 to 100)
+        val prices = mapOf(314 to 1L, 1511 to 1L)
+        val priority = listOf(1511, 314)
+        val sellerPlan = TradeBasket.exchange(stock, stock, prices, prices,
+            mapOf(995 to 50), mapOf(995 to 1L), priority)
+        val buyerPlan = TradeBasket.exchange(stock.toSortedMap(compareByDescending { it }), stock,
+            prices, prices, mapOf(995 to 50), mapOf(995 to 1L), priority)
+
+        assertEquals(mapOf(1511 to 50) to mapOf(995 to 50), sellerPlan)
+        assertEquals(sellerPlan, buyerPlan)
+    }
+
+    @Test fun aBuyerCanPurchaseOnlyTheWantedSubsetOfAPrioritizedMerchantBatch() {
+        assertEquals(mapOf(314 to 20) to mapOf(995 to 20), TradeBasket.exchange(
+            mapOf(314 to 100, 1511 to 100), mapOf(314 to 20), mapOf(314 to 1L, 1511 to 1L),
+            mapOf(314 to 1L), mapOf(995 to 50), mapOf(995 to 1L), listOf(1511, 314)))
+    }
+
     @Test fun largeQuantitiesAndPricesCannotOverflowIntoAFreeOrNegativeTrade() {
         assertEquals(Long.MAX_VALUE, TradeBasket.value(mapOf(314 to Int.MAX_VALUE), mapOf(314 to Long.MAX_VALUE)))
         assertEquals(Long.MAX_VALUE, TradeBasket.value(mapOf(314 to 1, 1511 to 1),

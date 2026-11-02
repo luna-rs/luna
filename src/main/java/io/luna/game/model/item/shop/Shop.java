@@ -345,7 +345,7 @@ public final class Shop {
             } else {
                 items.set(index, shopItem.addAmount(-buyAmount));
             }
-            if (player instanceof Bot && currency == Currency.COINS) {
+            if (api.bot.BotTypes.isRealBot(player) && currency == Currency.COINS) {
                 world.getEconomy().addShopPurchase(buyItem, currencyItem);
             }
             return true;

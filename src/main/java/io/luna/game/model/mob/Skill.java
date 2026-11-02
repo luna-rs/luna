@@ -265,8 +265,8 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         if (amount > 0) {
-            double awarded = set.getMob() instanceof Bot bot ?
-                    BotCombatActionHandler.limitExperience(bot, this, amount) :
+            double awarded = api.bot.BotTypes.isRealBot(set.getMob()) ?
+                    BotCombatActionHandler.limitExperience((Bot) set.getMob(), this, amount) :
                     amount * Luna.settings().game().experienceMultiplier();
             setExperience(experience + awarded);
         }
