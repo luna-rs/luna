@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.chunk.Chunk.SIZE;
 
 /**
@@ -89,7 +90,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     private final Set<GameObject> removedStaticObjects = new HashSet<>();
 
     /**
-     * The live collision matrices for this chunk, one per height level. Fully blocked if {@link #untraversable}.
+     * The live collision matrices, initially blocked for missing cache data until an instance plane is installed.
      */
     private final CollisionMatrix[] matrices;
 
@@ -104,6 +105,11 @@ public final class ChunkRepository implements Iterable<Entity> {
      * True if this chunk has no map data in the cache index table and should be treated as entirely untraversable.
      */
     private final boolean untraversable;
+
+    /**
+     * Destination planes installed by a private map despite this chunk having no native cache data.
+     */
+    private final boolean[] instancePlanes = new boolean[4];
 
     /**
      * Creates a new {@link ChunkRepository}.
@@ -164,7 +170,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * <p>
      * This checks the {@link CollisionMatrix} for the appropriate height level and tile within this chunk.
      * <p>
-     * If {@link #untraversable} is true, this method always returns {@code false}.
+     * Chunks without native cache data remain blocked except on planes installed by a private map.
      *
      * @param next The candidate tile position (absolute coordinates).
      * @param type The moving entity type.
@@ -173,7 +179,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @return {@code true} if the tile is traversable.
      */
     public boolean traversable(Position next, EntityType type, Direction direction, boolean safe) {
-        if (untraversable) {
+        if (untraversable && !instancePlanes[next.getZ()]) {
             return false;
         }
 
@@ -425,4 +431,34 @@ public final class ChunkRepository implements Iterable<Entity> {
     public Set<GameObject> getRemovedStaticObjects() {
         return removedStaticObjects;
     }
+    /**
+     * Opens a previously empty destination plane before native terrain and object collision are installed.
+     *
+     * @param plane The destination plane.
+     */
+    public void prepareInstancePlane(int plane) {
+        checkState(untraversable, "Instance space must have no native map.");
+        matrices[plane].replace(CollisionMatrix.createMatrices(1, SIZE, SIZE)[0]);
+        instancePlanes[plane] = true;
+    }
+
+    /**
+     * Restores a released private-map chunk to blocked empty space after all entities have been removed.
+     * Persistent object hides and queued updates must not leak into the next instance using this chunk.
+     */
+    public void clearInstance() {
+        checkState(untraversable, "Cannot clear native map chunks.");
+        checkState(entities.values().stream().allMatch(Set::isEmpty),
+                "Remove instance entities before releasing a chunk.");
+        CollisionMatrix[] blocked = CollisionMatrix.createMatrices(4, SIZE, SIZE, true);
+        for (int plane = 0; plane < 4; plane++) {
+            matrices[plane].replace(blocked[plane]);
+            instancePlanes[plane] = false;
+        }
+        persistentUpdates.clear();
+        temporaryUpdates.clear();
+        removedStaticObjects.clear();
+        snapshotCollisionMap();
+    }
+
 }
