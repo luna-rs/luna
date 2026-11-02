@@ -118934,6 +118934,7 @@
       "y": 3424,
       "z": 0
     },
+    "route_strategy": "INDOORS",
     "wander": {
       "radius": 5,
       "frequency": "NORMAL"
