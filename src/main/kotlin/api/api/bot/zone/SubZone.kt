@@ -1523,7 +1523,15 @@ enum class SubZone(
     LVL_40_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(2956, 3820),
         area = SimpleBoxArea.ofRadius(2943, 3813, 16, 14),
-        parent = { EDGEVILLE });
+        parent = { EDGEVILLE }),
+
+    /**
+     * Deep Wilderness runite rocks, used by profit miners with Varrock as their travel and banking parent.
+     */
+    DEEP_WILDERNESS_RUNITE_ROCKS(
+        inside = Position(3062, 3884),
+        area = SimpleBoxArea.ofRadius(3052, 3878, 15, 12),
+        parent = { VARROCK });
 
     companion object {
 

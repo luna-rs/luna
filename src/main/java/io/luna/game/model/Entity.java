@@ -284,7 +284,7 @@ public abstract class Entity implements Attributable, Locatable {
                     Player player = (Player) this;
                     player.getControllers().checkPosition();
                     player.getTolerance().refresh();
-                    if(player.isBot()) {
+                    if(player instanceof Bot) {
                         SubZone.Companion.updateSubZone(player.asBot());
                     }
                 }

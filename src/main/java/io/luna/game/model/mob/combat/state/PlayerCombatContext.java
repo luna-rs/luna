@@ -104,7 +104,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * The lease must be refreshed within twenty game ticks and never applies to human players or PvP.
      */
     public void holdPursuit(Object owner, Npc target, BooleanSupplier active) {
-        if (!(player instanceof Bot)) {
+        if (!(player instanceof Bot controller && (controller.isBot() || controller.isAutomationActive()))) {
             return;
         }
         pursuitOwner = java.util.Objects.requireNonNull(owner);
@@ -131,7 +131,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
         if (pursuitOwner == null) {
             return false;
         }
-        if (!(player instanceof Bot) || target != pursuitTarget || player.getState() != EntityState.ACTIVE ||
+        if (!(player instanceof Bot controller && (controller.isBot() || controller.isAutomationActive())) || target != pursuitTarget || player.getState() != EntityState.ACTIVE ||
                 target.getState() != EntityState.ACTIVE || !player.isAlive() || !target.isAlive() ||
                 player.getWorld().getCurrentTick() - pursuitLeaseTick > 20 || !pursuitActive.getAsBoolean()) {
             releasePursuit(pursuitOwner);
