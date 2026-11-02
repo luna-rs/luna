@@ -93,6 +93,10 @@ object KnownStairs {
      * The known stairs by position.
      */
     private val ALL = mapOf(
+        // Agility Pyramid: its fourth level is on a copy of the pyramid to the north.
+        up(3360, 2837, 3, offset(-320, 1859, -1)),
+        down(3040, 4693, 2, offset(320, -1859, 1)),
+
         // Al Kharid General Store.
         up(3312, 3185, 0, tile(3314, 3185, 1)),
         down(3313, 3185, 1, tile(3313, 3184, 0)),

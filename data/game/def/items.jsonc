@@ -9937,7 +9937,7 @@
   {
     "id": 6970, // Pyramid top
     "weight": 11.0,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 6971, // Sandstone (1kg)
