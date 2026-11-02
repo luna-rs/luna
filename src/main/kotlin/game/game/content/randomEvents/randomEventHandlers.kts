@@ -1,5 +1,7 @@
 package game.content.randomEvents
 
+import api.bot.isRealBot
+
 import api.predef.*
 import api.drops.DropTableHandler
 import api.combat.npc.NpcCombatHandler.combat
@@ -123,7 +125,7 @@ for (id in SkillGuardianRandomEvent.NPC_IDS) {
         death {
             val encounter = randomEvents.ownerOf(victim) as? SkillGuardianRandomEvent
             if (encounter?.claimDeath(source) == true) {
-                if (source is Bot) BotReactions.reactToKill(source, victim)
+                if (source.isRealBot()) BotReactions.reactToKill(source, victim)
                 drop()
             }
             victim.move(Position(1, 1))

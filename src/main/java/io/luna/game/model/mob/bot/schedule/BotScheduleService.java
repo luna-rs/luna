@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.schedule;
 
+import api.bot.BotTypes;
 import api.bot.script.BotScript;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
@@ -309,7 +310,7 @@ public final class BotScheduleService extends AbstractScheduledService {
             // First check any previously scheduled login requests.
             loginRequests.entrySet().removeIf(entry -> {
                 String username = entry.getKey();
-                Optional<Bot> optionalBot = world.getPlayer(username).filter(it -> it instanceof Bot).map(Player::asBot);
+                Optional<Bot> optionalBot = world.getPlayer(username).filter(BotTypes::isRealBot).map(Player::asBot);
                 if (optionalBot.isPresent()) {
                     Bot bot = optionalBot.get();
                     addLogoutRequest(bot.getUsernameHash(), bot.getPersonality());
@@ -394,7 +395,7 @@ public final class BotScheduleService extends AbstractScheduledService {
             Instant logoutAt = entry.getValue();
             if (Instant.now().isAfter(logoutAt)) {
                 world.getPlayer(entry.getKey())
-                        .filter(plr -> plr instanceof Bot)
+                        .filter(plr -> api.bot.BotTypes.isRealBot(plr))
                         .ifPresent(value -> world.getContext().getGame().sync(() -> {
                             Bot bot = value.asBot();
                             BotScript script = bot.getScriptStack().current();

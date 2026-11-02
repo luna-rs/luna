@@ -9,6 +9,7 @@ import engine.controllers.Controllers.inWilderness
 import game.content.brimhavenArena.ArenaObstacles
 import game.content.brimhavenArena.BrimhavenArena
 import game.content.brimhavenArena.BrimhavenArena.paid
+import game.content.sailing.Sailing
 import game.player.item.consume.food.Food
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -17,7 +18,7 @@ import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.controller.PlayerController
-import io.luna.game.model.mob.dialogue.OptionDialogue
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
 import kotlinx.coroutines.delay
@@ -38,10 +39,15 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
             bot.controllers.primary.javaClass == PlayerController::class.java && !bot.overlays.hasWindow() &&
             (BrimhavenArena.inside(bot.position) && BrimhavenArena.session(bot) != null ||
                 BrimhavenArena.session(bot) == null && bot.health >= 10 &&
-                (bot.paid || bot.inventory.computeAmountForId(995).toLong() + bot.bank.computeAmountForId(995) >= 200) &&
+                bot.inventory.computeAmountForId(995).toLong() + bot.bank.computeAmountForId(995) >= coins(bot) &&
                 (bot.inventory.asSequence() + bot.bank.asSequence()).filterNotNull().any {
                     (Food.ID_TO_FOOD[it.id]?.heal ?: 0) >= 6
                 })
+
+        /**
+         * Izzy's 200-coin fee unless already paid, and the fare of the ship that every way to Brimhaven takes.
+         */
+        private fun coins(bot: Bot): Int = (if (bot.paid) 0 else 200) + Sailing.FARE
 
         internal fun reward(tickets: Int): BrimhavenArena.Reward? = when {
             tickets >= 10 -> BrimhavenArena.Reward.XP_TEN
@@ -82,7 +88,6 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
 
     private var ownedSession: BrimhavenArena.Session? = null
     private var navigation: CompletableFuture<NavigationResult>? = null
-    private var ownedDialogue: OptionDialogue? = null
     private var ownedRewards: BrimhavenArena.Rewards? = null
     override val allowsCombatResponse = false
     override fun allowsLoot(item: GroundItem) = false
@@ -111,27 +116,25 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
             if (ownedSession != null && current !== ownedSession) return true
             ownedSession = current
             if (!data.entered) data.initialTickets = bot.inventory.computeAmountForId(BrimhavenArena.TICKET)
-            data.attempted = true; data.entered = true; data.leaving = true
+            data.attempted = true; data.entered = true
             return false
         }
         if (data.entered && data.leaving && bot.position.isWithinDistance(BrimhavenArena.ENTRANCE, 16)) return false
         if (data.attempted || System.currentTimeMillis() >= data.deadline || !eligible(bot)) return true
         data.attempted = true
-        return withTimeoutOrNull(minOf(180_000, data.deadline - System.currentTimeMillis())) {
+        return withTimeoutOrNull(data.deadline - System.currentTimeMillis()) {
             if (!handler.banking.travelToBankDepositAll() ||
                 !handler.banking.withdrawAnyFood(12, minimumHeal = 6, retry = false) ||
-                (!bot.paid && !handler.banking.withdraw(Item(995, 200))) ||
+                !handler.banking.withdraw(Item(995, coins(bot))) ||
                 !handler.widgets.clickCloseInterface()) return@withTimeoutOrNull true
             if (!handler.webWalkTo(BrimhavenArena.ENTRANCE, bank = BankAccess.NONE) || !live() ||
                 System.currentTimeMillis() >= data.deadline) return@withTimeoutOrNull true
             if (!bot.paid) {
                 val clerk = world.locator.findNpcs(BrimhavenArena.ENTRANCE, 16) { it.id == 437 }.firstOrNull()
                     ?: return@withTimeoutOrNull true
-                if (!handler.interactions.interact(1, clerk) { live() && !BrimhavenArena.inside(bot.position) } ||
-                    !await { bot.overlays.getOverlay(OptionDialogue::class.java) != null }) return@withTimeoutOrNull true
-                ownedDialogue = bot.overlays.getOverlay(OptionDialogue::class.java)
-                if (!handler.widgets.clickDialogueOption("Pay 200 coins to enter") || !await { bot.paid })
-                    return@withTimeoutOrNull true
+                // Option 2 is Izzy's "Pay".
+                if (!handler.interactions.interact(2, clerk) { live() && !BrimhavenArena.inside(bot.position) } ||
+                    !await { bot.paid }) return@withTimeoutOrNull true
             }
             data.initialTickets = bot.inventory.computeAmountForId(BrimhavenArena.TICKET)
             val ladder = world.locator.findObjects(Position(2809, 3194), 0) { it.id == 3617 }.firstOrNull()
@@ -151,12 +154,28 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
     private suspend fun walk(tile: Position, allowed: () -> Boolean): Boolean {
         if (!visiting() || !settled() || !allowed()) return false
         if (bot.position == tile) return true
-        val pending = bot.navigator.navigate(tile, true)
+        return follow(bot.navigator.navigate(tile, true), allowed) { bot.position == tile }
+    }
+
+    /**
+     * Walks beside a pillar, the exit ladder or a pit rope before it is clicked. A click's own approach plans with the
+     * web walker, which has no routes on the platforms or in the pit.
+     */
+    private suspend fun walk(target: GameObject, allowed: () -> Boolean = { true }): Boolean {
+        if (!visiting() || !settled() || !allowed()) return false
+        if (beside(target)) return true
+        return follow(bot.navigator.navigate(target, true), allowed) { beside(target) }
+    }
+
+    private fun beside(target: GameObject) = world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)
+
+    private suspend fun follow(pending: CompletableFuture<NavigationResult>, allowed: () -> Boolean,
+                               arrived: () -> Boolean): Boolean {
         navigation = pending
         return try {
             withTimeoutOrNull(15_000) {
                 while (!pending.isDone && visiting() && !bot.isLocked && allowed()) delay(100)
-                bot.position == tile && settled() && allowed()
+                arrived() && settled() && allowed()
             } == true
         } finally {
             if (navigation === pending) {
@@ -184,6 +203,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         val ropes = objects(0).filter { it.id == 3610 }.sortedBy { it.position.computeLongestDistance(bot.position) }
         for (rope in ropes.take(3)) {
             val landing = rope.position.translate(0, 0, 3)
+            walk(rope) { bot.z == 0 }
             handler.interactions.interact(1, rope) { visiting() && settled() && bot.z == 0 }
             if (await(10_000) { !visiting() || settled() && bot.z == 3 }) return visiting() && bot.position == landing
             if (!visiting()) return false
@@ -209,6 +229,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         if (from == goal) {
             if (data.leaving) {
                 val ladder = objects(3).firstOrNull { it.id == 3618 } ?: return record(false)
+                walk(ladder)
                 handler.interactions.interact(1, ladder) { visiting() && settled() }
                 return record(await { !BrimhavenArena.inside(bot.position) && settled() })
             }
@@ -216,6 +237,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
             if (session.tagged) { delay(600); return false }
             val pillar = objects(3).firstOrNull { it.id in setOf(3608, 3581) && it.position == BrimhavenArena.target }
                 ?: return record(false)
+            walk(pillar) { BrimhavenArena.targetIndex == goal }
             handler.interactions.interact(1, pillar) { visiting() && settled() && BrimhavenArena.targetIndex == goal }
             val tagged = await(5_000) { session.tagged || BrimhavenArena.targetIndex != goal || !visiting() }
             if (session.tagged) data.lastTag = System.currentTimeMillis()
@@ -265,8 +287,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
 
     override suspend fun finish() {
         cancelNavigation()
-        if (ownedDialogue != null && bot.overlays.getOverlay(OptionDialogue::class.java) === ownedDialogue ||
-            ownedRewards != null && bot.overlays.getOverlay(BrimhavenArena.Rewards::class.java) === ownedRewards)
+        if (ownedRewards != null && bot.overlays.getOverlay(BrimhavenArena.Rewards::class.java) === ownedRewards)
             bot.overlays.closeWindows()
     }
 

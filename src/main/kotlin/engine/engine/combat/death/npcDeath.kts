@@ -1,5 +1,7 @@
 package engine.combat.death
 
+import api.bot.isRealBot
+
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import engine.bot.speech.BotReactions
@@ -23,7 +25,7 @@ DeathHookHandler.setDefaultHook(Npc::class) {
         if (source is Player) {
             Slayer.record(source, victim.id)
         }
-        if (source is Bot) BotReactions.reactToKill(source, victim)
+        if (source.isRealBot()) BotReactions.reactToKill(source, victim)
         drop()
         victim.move(Position(1, 1))
     }

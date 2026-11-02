@@ -1,5 +1,7 @@
 package game.player.command
 
+import api.bot.isRealBot
+
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.primitives.Ints
@@ -66,7 +68,7 @@ cmd("viewbank", RIGHTS_ADMIN) {
 cmd("botitem", RIGHTS_ADMIN) {
     val item = getInputFrom(0).lowercase()
     for (bot in world.players) {
-        if (bot is Bot) {
+        if (bot.isRealBot()) {
             if (bot.bank.filterNotNull().find { it.itemDef.name.lowercase() == item } != null) {
                 val bankInterface = object : DynamicBankInterface("The bank of ${bot.username}") {
                     override fun buildDisplayItems(player: Player?): ArrayList<Item> {
