@@ -545,8 +545,8 @@ enum class SubZone(
      * The room with the steel arrowtip chest in Hemenster, south-west of seers' village.
      */
     HEMENSTER_CHEST_ROOM(
-        inside = Position(2642, 3447),
-        area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
+        inside = Position(2640, 3424),
+        area = SimpleBoxArea.of(2638, 3421, 2641, 3427),
         parent = { SEERS_VILLAGE }),
 
     /**
