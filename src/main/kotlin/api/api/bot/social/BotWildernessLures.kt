@@ -1,17 +1,13 @@
 package api.bot.social
 
 import api.attr.Attr
-import api.attr.getValue
-import api.attr.setValue
-import api.bot.action.BotCombatActionHandler
 import api.bot.action.PkLoadoutPreparation
 import api.bot.action.PkRiskBudget
+import api.bot.isRealBot
 import api.bot.script.BotScript
 import api.bot.webwalk.plan.BankAccess
 import api.combat.death.PlayerDeathItems
-import api.predef.ext.*
-import api.predef.rand
-import api.predef.world
+import api.predef.*
 import engine.bot.speech.BotReactions.lastScammedBy
 import engine.bot.speech.BotScamSpeechPool
 import engine.bot.speech.BotScamSpeechPool.ScamSpeech
@@ -70,8 +66,9 @@ object BotWildernessLures {
         fun value(stock: List<io.luna.game.model.item.Item>) = stock.fold(java.math.BigInteger.ZERO) { sum, item ->
             if (!item.itemDef.isTradeable) sum else sum + java.math.BigInteger.valueOf(
                 if (item.id == 995) 1 else world.economy.getPrice(item.unnotedItemDef.id()).coerceAtLeast(0)) *
-                java.math.BigInteger.valueOf(item.amount.toLong())
+                    java.math.BigInteger.valueOf(item.amount.toLong())
         }
+
         val loss = PkRiskBudget.assess(victim, losesItems = true).deathLoss
         return acceptsRisk(victim.personality.intelligence, value(items), loss)
     }
@@ -84,29 +81,35 @@ object BotWildernessLures {
         val now = System.currentTimeMillis()
         if (!actor.preferences.isScammer || actor === victim || now < actor.nextLure || now < victim.nextLure ||
             !BotConversations.available(actor) || !BotConversations.available(victim) ||
-            victim.preferences.getFeelingsToward(actor.username) < 0.4) return false
+            victim.preferences.getFeelingsToward(actor.username) < 0.4
+        ) return false
         val patrol = if (useAccomplice) world.players.filterIsInstance<Bot>().asSequence()
-            .filter { it !== actor && it !== victim && canAmbush(it) && it.state == EntityState.ACTIVE &&
-                !it.combat.inCombat() && it.combat.target == null && it.walking.isEmpty && !it.navigator.isActive &&
-                !BotSocialInteractions.engaged(it) && !it.overlays.hasWindow() && levelAt(it.position) > 0 }
-            .mapNotNull { bot -> (bot.scriptStack.current() as? PkBotScript)?.takeIf {
-                it.isRunning() && !it.isRestocking() && it.wantsToAttack(victim) &&
-                    PkLoadoutPreparation(bot, bot.actionHandler).ready() &&
-                    levelAt(bot.position) >= abs(bot.combatLevel - victim.combatLevel) + 1
-            }?.let { bot to it } }.firstOrNull() else null
+            .filter {
+                it !== actor && it !== victim && canAmbush(it) && it.state == EntityState.ACTIVE &&
+                        !it.combat.inCombat() && it.combat.target == null && it.walking.isEmpty && !it.navigator.isActive &&
+                        !BotSocialInteractions.engaged(it) && !it.overlays.hasWindow() && levelAt(it.position) > 0
+            }
+            .mapNotNull { bot ->
+                (bot.scriptStack.current() as? PkBotScript)?.takeIf {
+                    it.isRunning() && !it.isRestocking() && it.wantsToAttack(victim) &&
+                            PkLoadoutPreparation(bot, bot.actionHandler).ready() &&
+                            levelAt(bot.position) >= abs(bot.combatLevel - victim.combatLevel) + 1
+                }?.let { bot to it }
+            }.firstOrNull() else null
         if (useAccomplice && patrol == null) return false
         val killer = patrol?.first ?: actor
         if (!canAmbush(killer) || !PkLoadoutPreparation(killer, killer.actionHandler).ready()) return false
         val policy = patrol?.second ?: PkBotScript(killer, 10.minutes)
         val difference = abs(killer.combatLevel - victim.combatLevel) + 1
         val destination = patrol?.first?.position ?: (PkBotScript.PkArea.LOW_LEVEL.anchors +
-            PkBotScript.PkArea.CHAOS_TEMPLE_LVL_10.anchors + PkBotScript.PkArea.GREEN_DRAGONS.anchors)
+                PkBotScript.PkArea.CHAOS_TEMPLE_LVL_10.anchors + PkBotScript.PkArea.GREEN_DRAGONS.anchors)
             .filter { levelAt(it) >= difference && policy.allowsHuntingAt(it) }
             .minByOrNull { levelAt(it) * 1000 + abs(it.x - actor.position.x) + abs(it.y - actor.position.y) }
-            ?: return false
+        ?: return false
         val lines = BotScamSpeechPool.exchange(ScamSpeech.LURE_PITCH) ?: return false
         val pitch = BotConversations.start(actor, victim, lines) ?: return false
-        val session = Journey(actor, victim, killer, policy, Position(destination.x, destination.y, destination.z), pitch)
+        val session =
+            Journey(actor, victim, killer, policy, Position(destination.x, destination.y, destination.z), pitch)
         if (!BotSocialInteractions.claim(session.bots, session)) {
             pitch.close()
             return false
@@ -121,7 +124,7 @@ object BotWildernessLures {
      * and a delayed death action may finish briefly after its combat script observed zero health.
      */
     fun onDeath(victim: Player, source: Any?, lostItems: Boolean) {
-        val bot = victim as? Bot ?: return
+        val bot = victim.let { if (it.isRealBot()) it else null } ?: return
         val fight = bot.lureFight ?: return
         bot.lureFight = null
         if (source !== fight.killer || !lostItems || fight.recorded || !fight.recent() || levelAt(victim.position) <= 0) return
@@ -140,16 +143,19 @@ object BotWildernessLures {
         private val deadline = System.currentTimeMillis() + 120_000
         private var finishedAt: Long? = null
         var recorded = false
+
         /**
          * Allows native death processing to settle after the combat script observed zero health.
          */
         fun recent(): Boolean = System.currentTimeMillis() <= minOf(deadline, finishedAt?.plus(10_000) ?: deadline)
+
         /**
          * Revalidates the particular victim through the original PK purpose and the native player-combat checks.
          */
         fun allows(): Boolean = finishedAt == null && recent() && canAmbush(killer) &&
-            policy.wantsToAttack(victim) && policy.allowsPursuit(victim) &&
-            killer.actionHandler.combat.canAttackWildernessPlayer(victim)
+                policy.wantsToAttack(victim) && policy.allowsPursuit(victim) &&
+                killer.actionHandler.combat.canAttackWildernessPlayer(victim)
+
         /**
          * Clears an abandoned live target; dead victims keep the short-lived tag until their death hook settles.
          */
@@ -166,7 +172,8 @@ object BotWildernessLures {
      * @author lare96
      */
     private class Journey(val actor: Bot, val victim: Bot, val killer: Bot, val policy: PkBotScript,
-                          val destination: Position, var speech: BotConversations.Conversation) : BotSocialInteractions.Session {
+                          val destination: Position, var speech: BotConversations.Conversation) :
+        BotSocialInteractions.Session {
         val bots = listOf(actor, victim, killer).distinct()
         private val scripts = bots.map { it.scriptStack.current() }
         private val deadline = System.currentTimeMillis() + 10 * 60_000
@@ -180,20 +187,21 @@ object BotWildernessLures {
         private val originalRun = actor.walking.isRunning
 
         override fun valid(): Boolean = !ended && System.currentTimeMillis() < deadline &&
-            actor.isWithinDistance(victim, 16) && !actor.ignores.contains(victim.usernameHash) &&
-            !victim.ignores.contains(actor.usernameHash) && bots.indices.all { index ->
-                val bot = bots[index]
-                bot.state == EntityState.ACTIVE && bot.scriptStack.current() === scripts[index] &&
+                actor.isWithinDistance(victim, 16) && !actor.ignores.contains(victim.usernameHash) &&
+                !victim.ignores.contains(actor.usernameHash) && bots.indices.all { index ->
+            val bot = bots[index]
+            bot.state == EntityState.ACTIVE && bot.scriptStack.current() === scripts[index] &&
                     scripts[index]?.isRunning() == true && BotScript.ActionSafety.NON_COMBAT.allows(bot) &&
                     bot.reflex.activeReflex == null && bot.combat.target == null
-            }
+        }
 
         override suspend fun participate(bot: Bot) {
             speech.tick()
             if (!walking) {
                 if (!speech.ended) return
                 if (!speech.completed || !willingToRisk(victim) || !rand(BotTradeScams.consentChance(
-                        victim.personality.intelligence, victim.preferences.getFeelingsToward(actor.username)))) {
+                        victim.personality.intelligence, victim.preferences.getFeelingsToward(actor.username)))
+                ) {
                     close()
                     BotScamSpeechPool.exchange(ScamSpeech.REFUSAL)?.let { BotConversations.start(actor, victim, it) }
                     return
@@ -201,28 +209,42 @@ object BotWildernessLures {
                 walking = true
                 actor.walking.isRunning = false
             }
-            if (!valid()) { close(); return }
+            if (!valid()) {
+                close(); return
+            }
             if (bot === victim) {
-                if (!willingToRisk(victim)) { close(); return }
+                if (!willingToRisk(victim)) {
+                    close(); return
+                }
                 if (!following) {
                     following = followActor()
-                    if (!following || !valid()) { close(); return }
+                    if (!following || !valid()) {
+                        close(); return
+                    }
                 }
                 if (!actor.isWithinDistance(victim, 2) &&
-                    !followActor()) { close(); return }
+                    !followActor()
+                ) {
+                    close(); return
+                }
                 if (arrived && actor.isWithinDistance(victim, 2)) ambush()
             } else if (bot === actor && following && !travelling) {
                 travelling = true
                 val reached = withTimeoutOrNull(120_000) {
                     actor.actionHandler.webWalkTo(destination, bank = BankAccess.NONE)
                 } == true
-                if (!valid() || !reached || !actor.isWithinDistance(destination, 2)) { close(); return }
+                if (!valid() || !reached || !actor.isWithinDistance(destination, 2)) {
+                    close(); return
+                }
                 arrived = true
             }
-            if (walking && speech.ended && System.currentTimeMillis() >= nextSpeech && actor.isWithinDistance(victim, 8)) {
+            if (walking && speech.ended && System.currentTimeMillis() >= nextSpeech && actor.isWithinDistance(victim,
+                                                                                                              8)
+            ) {
                 nextSpeech = System.currentTimeMillis() + 20_000
                 BotScamSpeechPool.exchange(ScamSpeech.LURE_TRAVEL)?.let {
-                    BotConversations.start(actor, victim, it, allowMovement = true, interaction = this)?.let { next -> speech = next }
+                    BotConversations.start(actor, victim, it, allowMovement = true, interaction = this)
+                        ?.let { next -> speech = next }
                 }
             }
         }
@@ -231,7 +253,9 @@ object BotWildernessLures {
             victimApproaching = true
             return try {
                 victim.actionHandler.interactions.approach(actor) { valid() }
-            } finally { victimApproaching = false }
+            } finally {
+                victimApproaching = false
+            }
         }
 
         /**
@@ -241,7 +265,10 @@ object BotWildernessLures {
         private fun ambush() {
             if (!willingToRisk(victim) || !canAmbush(killer) || !policy.wantsToAttack(victim) ||
                 !policy.allowsPursuit(victim) || !PkLoadoutPreparation(killer, killer.actionHandler).ready() ||
-                !killer.actionHandler.combat.canAttackWildernessPlayer(victim)) { close(); return }
+                !killer.actionHandler.combat.canAttackWildernessPlayer(victim)
+            ) {
+                close(); return
+            }
             val fight = Fight(actor.username, victim, killer, policy)
             close()
             victim.lureFight = fight
@@ -250,11 +277,19 @@ object BotWildernessLures {
             val waiting = object : BotSocialInteractions.Session {
                 override fun valid() = fight.recent() && victim.isAlive && victim.scriptStack.current() === original
                 override suspend fun participate(bot: Bot) {}
-                override fun close() { BotSocialInteractions.release(listOf(victim), this) }
+                override fun close() {
+                    BotSocialInteractions.release(listOf(victim), this)
+                }
             }
-            if (!BotSocialInteractions.claim(listOf(victim), waiting)) { victim.lureFight = null; return }
-            killer.scriptStack.pushHead(CombatBotScript(killer, victim, pkSession = policy,
-                targetAllowed = { fight.allows() }, onCombatFinished = { fight.finished(); waiting.close() }, lootOnVictory = true))
+            if (!BotSocialInteractions.claim(listOf(victim), waiting)) {
+                victim.lureFight = null; return
+            }
+            killer.scriptStack.pushHead(CombatBotScript(killer,
+                                                        victim,
+                                                        pkSession = policy,
+                                                        targetAllowed = { fight.allows() },
+                                                        onCombatFinished = { fight.finished(); waiting.close() },
+                                                        lootOnVictory = true))
         }
 
         override fun close() {
@@ -262,7 +297,9 @@ object BotWildernessLures {
             ended = true
             speech.close()
             if (actor.scriptStack.current() === scripts[0]) {
-                if (travelling) { actor.navigator.cancel(); actor.walking.clear() }
+                if (travelling) {
+                    actor.navigator.cancel(); actor.walking.clear()
+                }
                 actor.walking.isRunning = originalRun
             }
             if (victimApproaching && victim.scriptStack.current() === scripts[1]) {

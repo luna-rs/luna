@@ -98,7 +98,7 @@ public final class WalkingQueue {
             incrementRunEnergy();
             return;
         }
-        if(mob instanceof Bot) {
+        if(mob instanceof Bot botController && (botController.isBot() || botController.isAutomationActive())) {
             // Close bot windows while moving without interrupting the weak navigation action.
             Bot bot = mob.asPlr().asBot();
             if(!current.isEmpty()) {
@@ -119,6 +119,8 @@ public final class WalkingQueue {
             return;
         }
 
+        if (exitInstance(nextStep.setZ(plane))) return;
+
         // Process a single step.
         Direction firstStepDir = Direction.between(currentStep, nextStep);
         if (!allowsStep(currentStep.setZ(plane), firstStepDir)) {
@@ -134,6 +136,7 @@ public final class WalkingQueue {
 
         // If we're running, process another step.
         if (running && decrementRunEnergy() && (nextStep = current.poll()) != null) {
+            if (exitInstance(nextStep.setZ(plane))) return;
             Direction nextStepDir = Direction.between(currentStep, nextStep);
             if (!allowsStep(currentStep.setZ(plane), nextStepDir)) {
                 clear();
@@ -151,6 +154,25 @@ public final class WalkingQueue {
         }
 
         mob.setPosition(currentStep.setZ(plane));
+    }
+
+    /**
+     * Leaves a private map through its controller before a queued step enters an unmapped tile.
+     * This runs before collision checks, since unmapped space is deliberately blocked.
+     *
+     * @param destination The next walking or running tile.
+     * @return Whether this step exited the instance and ended movement processing.
+     */
+    private boolean exitInstance(Position destination) {
+        if (mob instanceof Player player && player.getDynamicMap() != null &&
+                !player.getDynamicMap().contains(destination)) {
+            player.getDynamicMap().remove(player);
+            clear();
+            mob.setWalkingDirection(Direction.NONE);
+            mob.setRunningDirection(Direction.NONE);
+            return true;
+        }
+        return false;
     }
 
     /**
