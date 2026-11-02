@@ -148,6 +148,8 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     void finishRequest(String username, LogoutRequest request) {
         // Close windows before the save, so items held in them (trade offers) are back in the inventory.
         request.player.getOverlays().closeWindows();
+        // Never persist a coordinate in recyclable instance space, including forced logout timeouts.
+        if (request.player.getDynamicMap() != null) request.player.getDynamicMap().remove(request.player);
         PlayerData saveData = request.player.createSaveData();
 
         // Flush any buffered outbound reads and writes before disconnect/removal.

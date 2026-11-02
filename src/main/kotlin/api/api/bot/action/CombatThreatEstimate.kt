@@ -1,5 +1,7 @@
 package api.bot.action
 
+import api.bot.isRealBot
+
 import api.bot.action.eating.MonsterMemory.Companion.monsterMemory
 import api.combat.npc.NpcCombatHandler
 import engine.combat.prayer.CombatPrayer
@@ -84,7 +86,7 @@ private fun estimatePlayer(player: Player, defender: Mob, capability: Boolean,
     val spell = magic.selectedSpell?.takeIf { it != CombatSpellDefinition.NONE }
         ?: magic.autocastSpell?.takeIf { magic.isAutocasting && magic.canAutocast(it) }
     if (spell != null) {
-        if (!capability && checkSupplies && player is Bot && (player.spellbook != spell.spellbook ||
+        if (!capability && checkSupplies && player.isRealBot() && (player.spellbook != spell.spellbook ||
                 Magic.spellCost(player, spell.level, spell.required) !is SpellCost.Castable)) {
             return CombatThreatEstimate(0.0, 0)
         }
@@ -128,7 +130,7 @@ private fun estimateNpc(npc: Npc, defender: Mob, capability: Boolean): CombatThr
         val total = definition.hitpoints.coerceIn(1, 1000)
         maximum = BarrowsCombat.dharokMaximum(maximum, if (capability) 1 else npc.health, total)
     }
-    if (defender is Bot) maximum = maxOf(maximum, defender.monsterMemory.biggestHit(npc.id))
+    if (defender.isRealBot()) maximum = maxOf(maximum, defender.monsterMemory.biggestHit(npc.id))
     // A learned dominant style cannot establish that a custom attack never switches or bypasses protection.
     val styles = if (standard) listOf(CombatDamageType.MELEE) else CombatDamageType.entries
     var estimate = CombatThreatEstimate(0.0, 0, !standard)

@@ -1,5 +1,7 @@
 package game.content.lumbridgeGuide
 
+import api.bot.isRealBot
+
 import game.bot.scripts.combat.CombatBotScript
 import game.bot.scripts.combat.PkBotScript
 import game.player.QuestJournalInterface
@@ -48,7 +50,7 @@ class BotStatistics private constructor(
                 if (player.state != EntityState.ACTIVE) {
                     continue
                 }
-                if (player !is Bot) {
+                if (!player.isRealBot()) {
                     humans++
                     continue
                 }

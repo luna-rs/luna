@@ -91,8 +91,11 @@ object BotTradeIntentions {
         for (id in gear) {
             if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) continue
             val cosmetic = BotEquipmentPreferences.isCosmetic(id)
+            val urgentUpgrade = id in progression &&
+                bot.preferences.getWantedItem(id)?.priority == WantedItemPriority.URGENT
             result.putIfAbsent(id, definition(id, -1, 1,
-                if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
+                if (urgentUpgrade) WantedItemPriority.URGENT
+                else if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
         }
         addCombatSupplies(bot, progression, result)
         return result.values.sortedByDescending { it.priority().level }

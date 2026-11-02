@@ -1,5 +1,7 @@
 package api.bot.action
 
+import api.bot.isRealBot
+
 import game.bot.scripts.combat.PkBotScript
 import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.EntityState
@@ -63,7 +65,7 @@ internal class PkClanPolicy(private val bot: Bot) {
      */
     fun onlineMembers(activePkOnly: Boolean = true): List<Bot> {
         val id = cape ?: return emptyList()
-        return bot.world.players.stream().filter { it is Bot && it !== bot }.map { it as Bot }.filter {
+        return bot.world.players.stream().filter { it.isRealBot() && it !== bot }.map { it as Bot }.filter {
             it.state == EntityState.ACTIVE && it.isAlive && !it.preferences.isSkiller &&
                 it.preferences.pk != null && bot.world.botManager.clanRegistry.capeFor(it.username) == id &&
                 (!activePkOnly || (it.preferences.pk?.purpose() == Purpose.CLAN &&

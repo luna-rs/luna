@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.delay
 import api.bot.action.trading.BotMarketplace
 import api.bot.script.BotScript
@@ -127,7 +129,7 @@ open class IdleBotScript(bot: Bot, private val destination: SubZone, private val
     protected open fun considerConversation() {
         if (!rand(bot.personality.social)) return
         val partner = world.locator.findViewablePlayers(bot) {
-            it is Bot && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
+            it.isRealBot() && it !== bot && it.isWithinDistance(bot, 8) && BotConversations.available(it)
         }.filterIsInstance<Bot>().shuffled().firstOrNull() ?: return
         BotConversationPool.select(bot, partner)?.let { BotConversations.start(bot, partner, it) }
     }

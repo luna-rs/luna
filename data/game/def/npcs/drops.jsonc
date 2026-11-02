@@ -13149,7 +13149,7 @@
         "id": 7812, // Goblin skull
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       },
       {
