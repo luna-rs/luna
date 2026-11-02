@@ -82,6 +82,19 @@ public final class BotSettings {
     private Double newAccountScavengingChance;
 
     /**
+     * Optional new-account rune-runner fraction. Omitted settings use two percent.
+     */
+    private Double newAccountRuneRunningChance;
+
+    /**
+     * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
+     */
+    public double newAccountRuneRunningChance() {
+        if (newAccountRuneRunningChance == null || !Double.isFinite(newAccountRuneRunningChance)) return 0.02;
+        return newAccountRuneRunningChance == 0 ? 0 : Math.clamp(newAccountRuneRunningChance, 0.01, 0.03);
+    }
+
+    /**
      * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
      */
     public double newAccountScavengingChance() {

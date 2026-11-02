@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot.brain;
 import api.bot.script.BotScript;
 import engine.bot.coordinator.PkingCoordinator;
 import engine.bot.coordinator.ScavengingCoordinator;
+import engine.bot.coordinator.RuneRunningCoordinator;
 import game.bot.scripts.CannonBotSupport;
 import game.bot.scripts.RecoverCannonBotScript;
 import io.luna.game.model.mob.bot.Bot;
@@ -52,6 +53,9 @@ public class BotBrain {
         }
         if (bot.getPreferences().getScavenging().isIntroductory()) {
             return ScavengingCoordinator.INSTANCE;
+        }
+        if (bot.getPreferences().getRuneRunning().isIntroductory() && RuneRunningCoordinator.INSTANCE.canDispatch(bot)) {
+            return RuneRunningCoordinator.INSTANCE;
         }
         var map = new HashMap<>(bot.getPreferences().getActivities());
         map.computeIfPresent(BotActivity.PKING, (key, value) -> PkingCoordinator.INSTANCE.activityWeight(bot));

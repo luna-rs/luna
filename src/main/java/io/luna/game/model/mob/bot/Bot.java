@@ -618,7 +618,8 @@ public final class Bot extends Player {
                     loadData(data);
                     if (data == null) {
                         position = spawnPosition;
-                        preferences.initializeNewScavenger(Luna.settings().bots().newAccountScavengingChance());
+                        preferences.initializeNewActivities(Luna.settings().bots().newAccountScavengingChance(),
+                                Luna.settings().bots().newAccountRuneRunningChance());
                     }
                     PlayerData loadedData = data;
                     boolean eligible = !preferences.isSkiller() && preferences.getPk() != null;
@@ -677,6 +678,10 @@ public final class Bot extends Player {
             if (preferences.getScavenging().isIntroductory()) {
                 preferences.getScavenging().advance(getTimePlayed().toMillis());
                 if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();
+            }
+            if (preferences.getRuneRunning().isIntroductory()) {
+                preferences.getRuneRunning().advance(getTimePlayed().toMillis());
+                if (getCombatLevel() >= 50) preferences.getRuneRunning().completeIntroduction();
             }
             // Process speech before scripts so we can still talk while doing anything.
             speechStack.process();

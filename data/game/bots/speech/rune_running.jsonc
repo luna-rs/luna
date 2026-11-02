@@ -1,0 +1,98 @@
+{
+  "INTRODUCTION": [
+    ["hey, need an essence runner?", "25 essence for {runes} {rune} runes and 25 notes{fare}.", "sounds good, where do i bring it?", "right here outside the ruins, i'll do the crafting."],
+    ["you taking runners for {rune} runes?", "yep, {runes} runes and 25 notes for 25 essence{fare}.", "i can do that. unnoted essence, yeah?", "that's it. i'll wait here while you make the bank trip."],
+    ["got room for another runner?", "sure. 25 essence gets {runes} runes and 25 notes{fare}.", "nice, i could use some {rune} runes.", "i get the crafting xp, you keep the payment."],
+    ["hi, are you paying for essence runs?", "{runes} {rune} runes and 25 notes per 25 essence{fare}.", "alright, i'll bring it loose from the bank.", "good stuff. we can trade here by the ruins."],
+    ["mind if i run some essence for you?", "go ahead. {runes} runes and 25 notes per load{fare}.", "25 essence each time?", "yep, unnoted. i'll handle the altar."],
+    ["looking for a runner? i've got a bit of time.", "25 essence for {runes} {rune} runes and 25 notes{fare}.", "works for me. i'll keep coming back here.", "cheers. i'll stay near the ruins."],
+    ["what are you giving runners today?", "{runes} {rune} runes and 25 notes per load{fare}.", "i'll carry 25 essence a trip then.", "perfect. loose essence in, noted essence back."],
+    ["can i help with the running?", "sure, {runes} runes and 25 notes for each 25 essence{fare}.", "i haven't done this much before.", "just unnote at a bank and bring it back here."],
+    ["hey, still doing {rune} runs?", "yep. {runes} runes and 25 notes for 25 essence{fare}.", "good, i'll take a few trips.", "trade me outside the ruins when you're ready."],
+    ["any work here for someone who can't craft these?", "running. {runes} runes and 25 notes per 25 essence{fare}.", "that'll do nicely. i'll fetch a load.", "i'll be here. no crafting level needed for the carrying."]
+  ],
+  "STARTER": [
+    ["i'd run for you, but i don't have a first load.", "take 25 noted essence{fare}.", "what do i do with the notes?", "bank them, withdraw 25 loose essence, then bring it here."],
+    ["i'm short on essence. can i still start?", "yes, i can put up 25 notes{fare}.", "so i swap those at a bank first?", "right. bring 25 loose back and i'll pay you in {rune} runes."],
+    ["i haven't got any essence to begin with.", "i've got 25 notes to get you going{fare}.", "thanks. where does the running part come in?", "unnote them at a bank, then bring the loose essence to me."],
+    ["could you help me get the first trip going?", "i can give you 25 noted essence{fare}.", "then i bring the same amount back loose?", "exactly. after that each load gets runes and fresh notes."],
+    ["i need a little help starting. no essence yet.", "i'll cover the first 25 notes{fare}.", "alright, i'll take them to the bank.", "deposit the notes, withdraw loose essence, and come back."],
+    ["is there a way to run without buying a first load?", "i can start you with 25 noted essence{fare}.", "nice. i unnote them and return?", "yep. i'll craft them and pay for your next delivery."],
+    ["i can carry essence, just haven't got any.", "let's start with 25 of my notes{fare}.", "i'll need to visit a bank with those.", "that's the idea. bring back 25 unnoted essence."],
+    ["first time running. i've come without essence.", "no worries, i'll put up 25 notes{fare}.", "and the next trade is loose essence for payment?", "yes, plus replacement notes so you can keep running."],
+    ["any chance you can lend me the first load?", "i can give you 25 notes to start{fare}.", "cheers, i'll get them unnoted.", "bring the 25 loose essence back here for the paid runs."],
+    ["i'd like to run, but my pockets are empty.", "i've got a starter load of 25 notes{fare}.", "i'll go turn those into loose essence then.", "good. a bank will swap them; i'll wait near the ruins."]
+  ],
+  "DELIVERY": [
+    ["back with 25 essence.", "ready. {runes} {rune} runes and 25 notes{fare}."],
+    ["another load for you.", "cheers. {runes} runes and 25 notes for the essence{fare}."],
+    ["25 loose essence, as agreed.", "yep, {runes} {rune} runes and 25 notes here{fare}."],
+    ["got the next batch. trade?", "sure, {runes} runes and 25 replacement notes{fare}."],
+    ["made it back. got room for my essence?", "yes. {runes} {rune} runes and 25 notes ready{fare}."],
+    ["here comes another 25.", "nice one. {runes} runes and 25 notes coming up{fare}."],
+    ["same deal for this load?", "same deal. {runes} {rune} runes and 25 notes{fare}."],
+    ["my legs are getting a workout. 25 more here.", "mine aren't! {runes} runes and 25 notes ready{fare}."],
+    ["back from the bank with your essence.", "thanks. {runes} {rune} runes and 25 notes for it{fare}."],
+    ["ready to hand over this batch.", "trade me. {runes} runes and 25 notes for 25 essence{fare}."]
+  ],
+  "STARTER_RECEIVED": [
+    ["got the notes, thanks. off to the bank.", "see you back here with the loose essence."],
+    ["starter notes received. i'll get them unnoted.", "cheers. bring 25 loose essence when you're ready."],
+    ["thanks for getting me started.", "no problem. bank the notes and withdraw the essence."],
+    ["right, i have the first load of notes now.", "good luck with the trip. i'll be by the ruins."],
+    ["got them. bank first, then back here.", "that's it. next time it'll be a paid delivery."],
+    ["cheers, those notes will get me going.", "you're welcome. i'll wait for the loose essence."],
+    ["notes are in my pack. won't be long.", "take your time. unnote them before you bring them back."],
+    ["alright, heading to the bank with these.", "see you in a bit. same spot when you return."],
+    ["thanks, i can start running now.", "yep. swap those notes at a bank and bring back the essence."],
+    ["got the starter load. i'll do the bank trip.", "nice one. i'll handle the crafting when you get back."]
+  ],
+  "THANKS": [
+    ["got the payment, cheers.", "thanks for the run. see you with the next load."],
+    ["thanks, all there.", "and i've got the essence. good trade."],
+    ["another trip paid for. cheers!", "thanks for keeping the essence coming."],
+    ["payment received. i'll bank these.", "nice one. i'll get this load crafted."],
+    ["cheers for the {rune} runes.", "cheers for doing the walking."],
+    ["all sorted, thanks.", "good stuff. i'll put this essence to use."],
+    ["got my runes and notes. ta.", "thanks. this is a lot less walking for me."],
+    ["another good run. thanks!", "couldn't keep crafting without the deliveries."],
+    ["paid and ready for the bank. cheers.", "thanks for the load. i'll be here a while yet."],
+    ["thanks, that went smoothly.", "yep. good to have a reliable runner."]
+  ],
+  "INTERRUPTED": [
+    ["that trade didn't go through.", "let's check our packs before trying again."],
+    ["hang on, something went wrong with the trade.", "alright. best check what we're carrying."],
+    ["looks like that attempt failed.", "yes. let's sort out the next one carefully."],
+    ["looks like we need to try that again.", "okay, just checking the essence and payment first."],
+    ["something interrupted us there.", "no rush. let's check the offer before accepting."],
+    ["one moment, the trade didn't go as planned.", "fair enough. take a look at your pack."],
+    ["we couldn't finish that trade.", "let's make sure the next offer has the right items."],
+    ["hold on, i need to check that exchange.", "same here. better to be sure."],
+    ["that didn't look right. give me a second.", "take your time. we'll check the next offer."],
+    ["can we pause a moment after that trade?", "sure. let's check our supplies before the next one."]
+  ],
+  "HOST_FINISHED": [
+    ["want me to bring another load?", "not enough supplies set aside for another run. i'll stop here."],
+    ["still taking essence deliveries?", "that's it for this session. thanks for the running."],
+    ["shall i do another bank trip?", "i can't cover another load from this pack. cheers for helping."],
+    ["got enough set aside for one more run?", "not another full load. i'll bank up after this."],
+    ["same again, or are you finishing?", "finishing here. i haven't set enough aside for another run."],
+    ["ready for me to fetch the next batch?", "i'm calling it here. thanks for bringing those loads over."],
+    ["need another 25 essence?", "no more runs for now. i'll need to sort my supplies out."],
+    ["am i doing another lap to the bank?", "not this time. that's as far as this session's supplies go."],
+    ["can you pay for another run?", "not from what i've brought. cheers for the deliveries."],
+    ["let me know if you want one more load.", "i'll stop at this one. need to bank before hiring more runners."]
+  ],
+  "FAREWELL": [
+    ["that's enough running for me. thanks for the work.", "cheers for helping. take care."],
+    ["i'm heading off after these runs.", "thanks for the deliveries. see you around."],
+    ["going to call it there. good luck crafting.", "thanks, and good luck with whatever's next."],
+    ["my feet could do with a rest. i'll stop here.", "fair enough. cheers for doing the running."],
+    ["thanks for the runs. i'm off to do something else.", "no worries. you helped me get some good crafting in."],
+    ["i'll leave you to it now. cheers.", "cheers. thanks for bringing the essence over."],
+    ["think i'm done carrying essence for now.", "thanks for your help. have a good one."],
+    ["time for me to move on. thanks again.", "you're welcome. was good having a runner."],
+    ["last of my running for now. see you.", "see you around. thanks for the work."],
+    ["i'm going to bank up and head out.", "alright, cheers for the deliveries."]
+  ]
+}

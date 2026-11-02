@@ -18,6 +18,7 @@ on(ServerLaunchEvent::class) {
         BotCampSpeechPool.load()
         BotMiningSpeechPool.load()
         BotMiningArgumentPool.load()
+        BotRuneRunningSpeechPool.load()
     }
 }
 

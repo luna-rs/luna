@@ -400,6 +400,11 @@ public final class BotPreference {
     private BotScavengingPreference scavenging = new BotScavengingPreference(0);
 
     /**
+     * One-off rune-running allowance and optional low-level profit-session cooldown.
+     */
+    private BotRuneRunningPreference runeRunning = new BotRuneRunningPreference(0);
+
+    /**
      * Prevents duplicate creation callbacks from rerolling an account. Saved accounts set this during load.
      */
     private transient boolean newAccountInitialized;
@@ -412,14 +417,37 @@ public final class BotPreference {
     }
 
     /**
+     * Returns durable rune-running progress, including the disabled default for legacy accounts.
+     */
+    public BotRuneRunningPreference getRuneRunning() {
+        return runeRunning;
+    }
+
+    /**
      * Rolls only after persistence confirms a genuinely new, permanent level-three account.
      * Builder construction and ordinary saved-account login must never call this method.
      */
     public void initializeNewScavenger(double chance) {
+        initializeNewActivities(chance, 0);
+    }
+
+    /**
+     * Assigns at most one introductory job after persistence confirms a genuinely new permanent account.
+     * Rune running remains available below combat level fifty without replacing the account's normal identity.
+     */
+    public void initializeNewActivities(double scavengingChance, double runeRunningChance) {
         if (newAccountInitialized) return;
         newAccountInitialized = true;
-        if (bot.getCombatLevel() == 3 && !bot.isTemporary() && ThreadLocalRandom.current().nextDouble() < chance) {
+        if (bot.isTemporary()) return;
+        double scavengingWeight = bot.getCombatLevel() == 3 && Double.isFinite(scavengingChance) ?
+                Math.clamp(scavengingChance, 0.0, 1.0) : 0.0;
+        double runningWeight = bot.getCombatLevel() < 50 && Double.isFinite(runeRunningChance) ?
+                Math.clamp(runeRunningChance, 0.0, 1.0 - scavengingWeight) : 0.0;
+        double roll = ThreadLocalRandom.current().nextDouble();
+        if (roll < scavengingWeight) {
             scavenging = new BotScavengingPreference(ThreadLocalRandom.current().nextLong(60, 601) * 60_000);
+        } else if (roll < scavengingWeight + runningWeight) {
+            runeRunning = new BotRuneRunningPreference(ThreadLocalRandom.current().nextLong(60, 181) * 60_000);
         }
     }
 
@@ -573,6 +601,7 @@ public final class BotPreference {
         preferences.add("player_feelings", playerFeelingsJson);
         preferences.add("pk", pk == null ? com.google.gson.JsonNull.INSTANCE : pk.save());
         preferences.add("scavenging", scavenging.save());
+        preferences.add("runeRunning", runeRunning.save());
         return preferences;
     }
 
@@ -588,6 +617,8 @@ public final class BotPreference {
         newAccountInitialized = true;
         scavenging = object.has("scavenging") && object.get("scavenging").isJsonObject()
                 ? BotScavengingPreference.load(object.getAsJsonObject("scavenging")) : new BotScavengingPreference(0);
+        runeRunning = object.has("runeRunning") && object.get("runeRunning").isJsonObject()
+                ? BotRuneRunningPreference.load(object.getAsJsonObject("runeRunning")) : new BotRuneRunningPreference(0);
         // Deserialize activities and their weightings.
         JsonArray activitiesJson = object.getAsJsonArray("activities");
         for (JsonElement activityJson : activitiesJson) {
