@@ -276,12 +276,14 @@ public abstract class Entity implements Attributable, Locatable {
                             plugins.post(new RegionChangedEvent((Player) this, old, now));
                             if (this instanceof Bot) {
                                 Bot bot = (Bot) this;
-                                Zone.Companion.updateZone(bot, now.getId());
                                 SubZone.Companion.updateLocalSubZones(bot, now.getId());
                             }
                         }
                     }
                     Player player = (Player) this;
+                    if (player instanceof Bot) {
+                        Zone.Companion.updateZone(player.asBot());
+                    }
                     player.getControllers().checkPosition();
                     player.getTolerance().refresh();
                     if(player instanceof Bot) {

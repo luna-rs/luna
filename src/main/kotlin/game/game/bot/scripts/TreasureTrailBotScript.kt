@@ -216,7 +216,7 @@ class TreasureTrailBotScript(bot: Bot, private val data: TrailData = TrailData()
         if (bot.position.isWithinDistance(position, 1)) return true
         if (handler.webWalkTo(position, radius = 1) && isActionSafe(ActionSafety.NON_COMBAT)) return true
         if (!awaitActionSafety(ActionSafety.NON_COMBAT)) return false
-        val parent = Zone.REGIONS[position.regionId] ?: return false
+        val parent = Zone.of(position) ?: return false
         return handler.webWalkTo(zone = parent, bank = BankAccess.COINS) && awaitActionSafety(ActionSafety.NON_COMBAT) &&
             handler.webWalkTo(position, radius = 1) && isActionSafe(ActionSafety.NON_COMBAT)
     }

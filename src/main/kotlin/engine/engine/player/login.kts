@@ -52,7 +52,7 @@ on(LoginEvent::class, EventPriority.HIGH) {
     if(plr is Bot) {
         val bot = plr as Bot
         bot.preferences.rebalanceWantedItems()
-        Zone.updateZone(bot, bot.position.regionId)
+        Zone.updateZone(bot)
 
         // TODO Make more efficient, only update local subzones when the region changes, only update
         SubZone.updateLocalSubZones(bot, bot.position.regionId)

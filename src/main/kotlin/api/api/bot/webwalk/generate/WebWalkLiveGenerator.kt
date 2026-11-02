@@ -317,6 +317,8 @@ object WebWalkLiveGenerator {
 
     /**
      * Finds bank objects or registered bankers at the zones' bank anchors, without duplicating shared anchors.
+     * Booth candidates must pass native object interaction reach as well as floor checks before customer-side
+     * connectivity chooses a stand. Banker candidates retain their native two-tile banking policy in [bankSeed].
      * Missing destinations and destinations without a reachable stand are left out and reported.
      * Must be called on the game thread.
      */
@@ -329,7 +331,11 @@ object WebWalkLiveGenerator {
                     return@forEachIndexed
                 }
                 val id = "${zone.name.lowercase()}_$index"
-                bankSeed(id, booth, report)?.let { seeds += it }
+                val bankObject = world.locator.findObjectsOnTile(booth) { it.id in Banking.bankingObjects }.firstOrNull()
+                bankSeed(id, booth, report, canStand = { tile ->
+                    LadderDestination.canLand(tile) && (bankObject == null ||
+                        world.collisionManager.reached(tile, bankObject, InteractionPolicy.STANDARD_SIZE))
+                })?.let { seeds += it }
             }
         }
         return seeds

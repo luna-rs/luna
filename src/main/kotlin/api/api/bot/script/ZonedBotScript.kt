@@ -724,9 +724,8 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
         if (cachedBank == null) {
             bot.log("Resolving bank for parent zone. parent=$parent, bankCount=${parent.banks.size}")
 
-            // The anchor is a detour unless the banks are by it, as in most towns. A parent with no bank of its own
-            // lists the nearest one in another zone, and Karamja's bankers are across the island from its anchor. There
-            // the bot walks straight to the bank, which can take minutes.
+            // The anchor is a detour when a zone lists an off-site fallback or a bank far from its arrival.
+            // Travel straight to those banks rather than visiting the activity hub first.
             val banksElsewhere =
                 parent.banks.none { it in parent && it.position.computeLongestDistance(parent.anchor) < 64 }
             if (parent.banks.isNotEmpty() &&

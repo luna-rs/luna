@@ -41,14 +41,14 @@ enum class SubZone(
     val parent: Bot.() -> Zone,
     val bankZone: Bot.() -> Zone = parent) {
     /**
-     * Mainland bush patches from the revision 377 maps. Rimmington uses Falador's existing travel and bank parent.
+     * Mainland bush patches from the revision 377 maps. Rimmington has its own travel parent and banks in Falador.
      */
     CHAMPIONS_GUILD_BUSH_PATCH(
         inside = Position(3180, 3357), area = SimpleBoxArea.of(3178, 3354, 3185, 3361),
         parent = { VARROCK }),
     RIMMINGTON_BUSH_PATCH(
         inside = Position(2939, 3221), area = SimpleBoxArea.of(2937, 3218, 2944, 3225),
-        parent = { FALADOR }),
+        parent = { RIMMINGTON }, bankZone = { FALADOR }),
     ARDOUGNE_BUSH_PATCH(
         inside = Position(2616, 3225), area = SimpleBoxArea.of(2614, 3222, 2621, 3229),
         parent = { ARDOUGNE }),
@@ -105,7 +105,7 @@ enum class SubZone(
         parent = { TREE_GNOME_VILLAGE }),
     BRIMHAVEN_FRUIT_PATCH(
         inside = Position(2763, 3212), area = SimpleBoxArea.of(2761, 3209, 2769, 3217),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
     CATHERBY_FRUIT_PATCH(
         inside = Position(2859, 3433), area = SimpleBoxArea.of(2857, 3430, 2865, 3438),
         parent = { CATHERBY }),
@@ -233,7 +233,7 @@ enum class SubZone(
     SHILO_VILLAGE(
         inside = Position(2852, 2958),
         area = SimpleBoxArea.ofRadius(2816, 2944, 64, 64),
-        parent = { KARAMJA }),
+        parent = { Zone.SHILO_VILLAGE }),
 
     /**
      * Yanille's sandpit at (2542, 3103), used to fill owned buckets for glassmaking.
@@ -406,7 +406,7 @@ enum class SubZone(
     BRIMHAVEN_DUNGEON_FIRE_GIANTS(
         inside = Position(2651, 9502),
         area = SimpleBoxArea.ofRadius(2632, 9473, 56, 35),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     WHITE_KNIGHTS_CASTLE(
         inside = Position(2971, 3343),
@@ -514,7 +514,7 @@ enum class SubZone(
     RIMMINGTON_MINE(
         inside = Position(2977, 3244),
         area = SimpleBoxArea.of(2965, 3230, 2990, 3251),
-        parent = { FALADOR }),
+        parent = { RIMMINGTON }, bankZone = { FALADOR }),
 
     /**
      * The south-west bank of the Port Khazard mine, beside the Fight Arena: four clay, two copper,
@@ -1455,7 +1455,7 @@ enum class SubZone(
         entrance = { Position(2868, 3017) },
         area = SimpleBoxArea.of(2378, 4814, 2422, 4858),
         // Shilo Village's bank is behind its gate.
-        // TODO Once Shilo Village is added, bots that have finished it bank in the village (KARAMJA).
+        // TODO Once Shilo Village is added, bots that have finished it bank in the village (SHILO_VILLAGE).
         parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
@@ -1559,7 +1559,7 @@ enum class SubZone(
         inside = Position(3485, 9498),
         entrance = { Position(3226, 3108) },
         area = SimpleBoxArea.of(3456, 9472, 3519, 9535),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * Level 12 Wilderness chaos temple.
@@ -1631,7 +1631,7 @@ enum class SubZone(
     DESERT_QUARRY(
         inside = Position(3168, 2911),
         area = SimpleBoxArea.of(3158, 2896, 3185, 2927),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * Woodland northwest of Lumbridge Castle contains twenty-two normal trees and three oaks. The footprint
@@ -1643,13 +1643,12 @@ enum class SubZone(
         parent = { LUMBRIDGE }),
 
     /**
-     * Twelve willows follow the coast south of Rimmington. Ordinary Woodcutting reuses Falador travel and
-     * banking.
+     * Twelve willows follow the coast south of Rimmington. Woodcutting trips return to Falador for banking.
      */
     RIMMINGTON_COAST_WILLOWS(
         inside = Position(2974, 3194),
         area = SimpleBoxArea.of(2956, 3179, 2995, 3205),
-        parent = { FALADOR }),
+        parent = { RIMMINGTON }, bankZone = { FALADOR }),
 
     /**
      * Fourteen willows line the coast southwest of Port Sarim. The coastal footprint keeps their accessible
@@ -1658,7 +1657,7 @@ enum class SubZone(
     PORT_SARIM_COAST_WILLOWS(
         inside = Position(3013, 3170),
         area = SimpleBoxArea.of(2991, 3155, 3033, 3181),
-        parent = { FALADOR }),
+        parent = { PORT_SARIM }, bankZone = { FALADOR }),
 
     /**
      * Two willows stand beside the western end of the Gnome Stronghold river bridge. This bank has its own
@@ -1745,7 +1744,7 @@ enum class SubZone(
     RIMMINGTON_YEWS(
         inside = Position(2938, 3229),
         area = SimpleBoxArea.of(2928, 3220, 2946, 3239),
-        parent = { FALADOR }),
+        parent = { RIMMINGTON }, bankZone = { FALADOR }),
 
     /**
      * Three yews grow around the Stronghold bank woodland. Their chopping stands share the same local ground
@@ -1841,7 +1840,7 @@ enum class SubZone(
     RIMMINGTON_COAST_FISHING(
         inside = Position(2991, 3169),
         area = SimpleBoxArea.of(2981, 3150, 3002, 3183),
-        parent = { FALADOR }),
+        parent = { RIMMINGTON }, bankZone = { FALADOR }),
 
     /**
      * Entrana's southern sea-fishing area has ten net-and-bait destinations. The monks' normal inventory and
@@ -1943,7 +1942,7 @@ enum class SubZone(
     SHILO_VILLAGE_FURNACE(
         inside = Position(2855, 2966),
         area = SimpleBoxArea.of(2852, 2962, 2860, 2970),
-        parent = { KARAMJA }),
+        parent = { Zone.SHILO_VILLAGE }),
 
     /**
      * Lumbridge Castle kitchen, containing its one special cooking range.
@@ -2351,7 +2350,7 @@ enum class SubZone(
     MUSA_POINT_MONKEYS(
         inside = Position(2876, 3155),
         area = SimpleBoxArea.of(2868, 3143, 2885, 3167),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * The south-western desert lizard group, containing four lizards for both native lizard assignment types.
@@ -2360,7 +2359,7 @@ enum class SubZone(
     DESERT_LIZARDS_SOUTHWEST(
         inside = Position(3386, 3016),
         area = SimpleBoxArea.of(3379, 3008, 3394, 3024),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The north-western desert lizard group, containing four lizards for both native lizard assignment types.
@@ -2369,7 +2368,7 @@ enum class SubZone(
     DESERT_LIZARDS_NORTHWEST(
         inside = Position(3387, 3067),
         area = SimpleBoxArea.of(3380, 3060, 3395, 3075),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The central desert lizard group, containing 18 lizards for both native lizard assignment types. Trips
@@ -2378,7 +2377,7 @@ enum class SubZone(
     DESERT_LIZARDS_CENTRAL(
         inside = Position(3413, 3049),
         area = SimpleBoxArea.of(3395, 3024, 3431, 3074),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The eastern desert lizard group, containing 17 lizards for both native lizard assignment types. Trips
@@ -2387,7 +2386,7 @@ enum class SubZone(
     DESERT_LIZARDS_EAST(
         inside = Position(3441, 3039),
         area = SimpleBoxArea.of(3430, 3007, 3453, 3072),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The western shore of the River Elid, containing three crocodiles with land approaches on this side of the
@@ -2396,7 +2395,7 @@ enum class SubZone(
     ELID_CROCODILES_WEST_BANK(
         inside = Position(3259, 2860),
         area = SimpleBoxArea.of(3253, 2846, 3267, 2874),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The eastern shore of the River Elid, containing two crocodiles with land approaches on this side of the
@@ -2405,7 +2404,7 @@ enum class SubZone(
     ELID_CROCODILES_EAST_BANK(
         inside = Position(3269, 2860),
         area = SimpleBoxArea.of(3263, 2849, 3275, 2872),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * Trollheim mountain slopes containing eight mountain trolls for Troll assignments; the local footprint
@@ -2423,7 +2422,7 @@ enum class SubZone(
     KARAMJA_HARPIE_SWARMS(
         inside = Position(2872, 3114),
         area = SimpleBoxArea.of(2849, 3100, 2895, 3129),
-        parent = { KARAMJA }),
+        parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
      * The icy chamber beneath Asgarnia, containing 14 ice warriors and ice giants for their respective
@@ -2432,7 +2431,7 @@ enum class SubZone(
     ASGARNIAN_ICE(
         inside = Position(3055, 9583),
         area = SimpleBoxArea.of(3034, 9564, 3072, 9597),
-        parent = { DRAYNOR }),
+        parent = { PORT_SARIM }, bankZone = { DRAYNOR }),
 
     /**
      * The chamber beneath the Legends' Guild containing 19 shadow warriors for Shadow Warrior assignments.
@@ -2449,7 +2448,7 @@ enum class SubZone(
     BRIMHAVEN_RED(
         inside = Position(2711, 9515),
         area = SimpleBoxArea.of(2687, 9491, 2740, 9537),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * Entrana Dungeon's room containing two greater demons; the legacy enum name is retained for saved sessions.
@@ -2475,7 +2474,7 @@ enum class SubZone(
     BRIMHAVEN_METAL(
         inside = Position(2724, 9439),
         area = SimpleBoxArea.of(2693, 9412, 2750, 9472),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * Mort'ton's surface shade habitat, containing 25 dormant Loar shadows that awaken through their native
@@ -2510,7 +2509,7 @@ enum class SubZone(
     SMOKE_DUNGEON(
         inside = Position(3237, 9374),
         area = SimpleBoxArea.of(3210, 9344, 3264, 9405),
-        parent = { AL_KHARID }),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
 
     /**
      * The skeletal-wyvern cavern beneath the Asgarnian ice dungeon, containing eight skeletal wyverns. Trips
@@ -2519,7 +2518,7 @@ enum class SubZone(
     ASGARNIAN_WYVERNS(
         inside = Position(3046, 9547),
         area = SimpleBoxArea.of(3020, 9534, 3073, 9561),
-        parent = { DRAYNOR }),
+        parent = { PORT_SARIM }, bankZone = { DRAYNOR }),
 
     /**
      * The dark-beast cavern, containing 11 dark beasts for high-level assignments with owned strong food.
@@ -2536,7 +2535,7 @@ enum class SubZone(
     MUDSKIPPER_MOGRES(
         inside = Position(2996, 3111),
         area = SimpleBoxArea.of(2980, 3104, 3007, 3124),
-        parent = { DRAYNOR }),
+        parent = { PORT_SARIM }, bankZone = { DRAYNOR }),
 
     /**
      * Lumbridge Swamp Caves containing 21 cave bugs, 17 cave slimes and seven dormant wall-beast holes. Trips
@@ -2632,7 +2631,7 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_SOUTH(
         inside = Position(2646, 9488),
         area = SimpleBoxArea.of(2636, 9477, 2655, 9500),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * The western moss-giant pocket in Brimhaven Dungeon, containing six moss giants on the same connected side
@@ -2641,7 +2640,7 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_WEST(
         inside = Position(2644, 9533),
         area = SimpleBoxArea.of(2630, 9510, 2658, 9557),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * The central moss-giant pocket in Brimhaven Dungeon, containing four moss giants with a shared approach
@@ -2650,7 +2649,7 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_CENTRAL(
         inside = Position(2671, 9546),
         area = SimpleBoxArea.of(2655, 9538, 2689, 9562),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * The narrow moss-giant passage in Brimhaven Dungeon, containing one moss giant kept separate from the
@@ -2659,7 +2658,7 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_PASSAGE(
         inside = Position(2651, 9566),
         area = SimpleBoxArea.of(2648, 9561, 2655, 9571),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * The northern moss-giant pocket in Brimhaven Dungeon, containing six moss giants with a shared approach
@@ -2668,7 +2667,7 @@ enum class SubZone(
     BRIMHAVEN_MOSS_GIANTS_NORTH(
         inside = Position(2656, 9587),
         area = SimpleBoxArea.of(2637, 9570, 2685, 9597),
-        parent = { KARAMJA }, bankZone = { ARDOUGNE }),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
      * The western chicken pen at Falador's southern farm, containing six chickens. Its arrival is inside this
