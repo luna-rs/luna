@@ -5,6 +5,7 @@ import api.bot.webwalk.plan.PlanLeg
 import api.bot.webwalk.walk.LegContext
 import api.predef.*
 import game.content.miningGuild.MiningGuild
+import game.content.fishingGuild.FishingGuild
 import game.content.craftingGuild.CraftingGuild
 import game.content.gnomeBall.GnomeBall
 import game.obj.doors.BrassKeyDoor
@@ -32,7 +33,7 @@ object ConditionalDoorCrossing : CrossingHandler {
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
             id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
-            id != GnomeStrongholdGate.GATE) {
+            id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
@@ -59,6 +60,10 @@ object ConditionalDoorCrossing : CrossingHandler {
             val picking = yanillePick || towerPick
             if (id == MiningGuild.DOOR && bot.mining.level < MiningGuild.REQUIRED_LEVEL) {
                 return "the door requires level 60 Mining"
+            }
+            if (id == FishingGuild.DOOR && !Doors.isEntering(position, door.direction, bot.position) &&
+                !FishingGuild.canEnter(bot)) {
+                return "the door requires level 68 Fishing"
             }
             if (id == CraftingGuild.DOOR && Doors.isEntering(position, door.direction, bot.position) &&
                 !CraftingGuild.canEnter(bot)) {

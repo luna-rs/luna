@@ -11,6 +11,7 @@ import game.skill.runecrafting.essenceMine.EssenceMineWizard
 import game.skill.runecrafting.enterAltar.Altar
 import game.content.sailing.ShipSearch
 import game.content.craftingGuild.CraftingGuild
+import game.content.fishingGuild.FishingGuild
 import game.obj.webs.Web
 import io.luna.game.model.mob.bot.Bot
 
@@ -39,6 +40,11 @@ object BotConditions {
     const val CRAFTING_GUILD_ENTRY = "crafting_guild_entry"
 
     /**
+     * The Fishing Guild checks the current Fishing level, including boosts and drains.
+     */
+    const val FISHING_GUILD_ENTRY = "fishing_guild_entry"
+
+    /**
      * The bot carries something that cuts a web: a weapon with a slash attack, wielded or not, or a knife.
      */
     const val SLASH_WEB = "slash_web"
@@ -53,6 +59,7 @@ object BotConditions {
                          JarvaldCrossing.PAYMENT to { bot: Bot ->
             Jarvald.fare(bot) == 0 || bot.inventory.computeAmountForId(995) >= Jarvald.FARE
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
+                      FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

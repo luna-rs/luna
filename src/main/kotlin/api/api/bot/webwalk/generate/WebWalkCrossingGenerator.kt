@@ -8,6 +8,7 @@ import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.GnomeStrongholdGate
 import game.content.miningGuild.MiningGuild
+import game.content.fishingGuild.FishingGuild
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
@@ -91,6 +92,14 @@ object SpecialCrossings {
      */
     val MINING_GUILD = CrossingSpec(ConditionalDoorCrossing.ID, setOf(MiningGuild.DOOR),
                                     Requirements(skills = mapOf(Skill.MINING to MiningGuild.REQUIRED_LEVEL)), cost = 4)
+
+    /**
+     * The south-facing Fishing Guild door leaves freely from its own tile; the reverse direction checks admission.
+     */
+    val FISHING_GUILD = CrossingSpec(ConditionalDoorCrossing.ID, setOf(FishingGuild.DOOR),
+                                     Requirements.NONE,
+                                     reverseRequirements = Requirements(flags = setOf(BotConditions.FISHING_GUILD_ENTRY)),
+                                     cost = 4)
 
     /**
      * The Yanille door is unlocked from its own tile; the reverse direction needs a lockpick.
@@ -226,7 +235,7 @@ object SpecialCrossings {
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
