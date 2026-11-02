@@ -1,5 +1,7 @@
 package engine.bot.speech
 
+import api.bot.isRealBot
+
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
@@ -284,7 +286,7 @@ object BotPriceChecks : BotChatHandler {
         }
         val asker = message.speaker
         // A bot asking inside a conversation gets its answer from its partner.
-        if (now >= asker.nextPriceCheck && !(asker is Bot && BotConversations.engaged(asker))) {
+        if (now >= asker.nextPriceCheck && !(asker.isRealBot() && BotConversations.engaged(asker))) {
             asker.nextPriceCheck = now + ASKER_COOLDOWN
             answer(message, question, items, now)
         }
@@ -362,7 +364,7 @@ object BotPriceChecks : BotChatHandler {
     private fun ask(market: BotMarketplace, now: Long) {
         val (center, radius) = marketBounds.getValue(market)
         val askers = world.locator.findPlayers(center, radius) {
-            it is Bot && now >= it.nextPriceAsk && market.contains(it.position) && it.localHumans.isNotEmpty() &&
+            it.isRealBot() && now >= it.nextPriceAsk && market.contains(it.position) && it.localHumans.isNotEmpty() &&
                 BotConversations.available(it)
         }.filterIsInstance<Bot>().shuffled()
         for (asker in askers) {
@@ -414,7 +416,7 @@ object BotPriceChecks : BotChatHandler {
                 second.nextPriceAnswer = now + ANSWER_COOLDOWN
             }
         }
-        if (asker is Bot && rand(asker.personality.social * 0.6)) {
+        if (asker.isRealBot() && rand(asker.personality.social * 0.6)) {
             line(asker, PriceCheckSpeech.THANKS)?.let {
                 say(asker, it, ticks + 1 + replyTicks(asker, reply.text, it), asked, 1, true)
             }
@@ -558,7 +560,7 @@ object BotPriceChecks : BotChatHandler {
     private fun noteAnswer(message: BotChatMessage, now: Long) {
         open.removeIf { now > it.expires }
         val speaker = message.speaker
-        if (speaker is Bot || open.isEmpty() || !PRICE.containsMatchIn(message.text)) {
+        if (speaker.isRealBot() || open.isEmpty() || !PRICE.containsMatchIn(message.text)) {
             return
         }
         for (asked in open) {

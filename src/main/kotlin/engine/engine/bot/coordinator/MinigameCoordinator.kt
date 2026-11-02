@@ -1,5 +1,7 @@
 package engine.bot.coordinator
 
+import api.bot.isRealBot
+
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
@@ -99,7 +101,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         val id = DropPartyOption.currentPartyId
         if (!DropPartyOption.isCurrentParty(id)) return
         for (player in world.players) {
-            if (player !is Bot || player.attendedParty == id || !safeToAttend(player)) continue
+            if (!player.isRealBot() || player.attendedParty == id || !safeToAttend(player)) continue
             if (player.scriptStack.current() is DropPartyBotScript) continue
             player.attendedParty = id
             player.scriptStack.pushHead(DropPartyBotScript(player, id, DropPartyOption.currentPartyDeadline))

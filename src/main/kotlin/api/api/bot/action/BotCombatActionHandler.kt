@@ -1,5 +1,7 @@
 package api.bot.action
 
+import api.bot.isRealBot
+
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
@@ -137,7 +139,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
          * Human players are recognized by their native skull icon.
          */
         @JvmStatic
-        fun isPker(player: Player): Boolean = if (player is Bot) {
+        fun isPker(player: Player): Boolean = if (player.isRealBot()) {
             !player.preferences.isSkiller && (player.personality.type == PersonalityTemplateType.PKER ||
                 player.scriptStack.containsActive(PkBotScript::class.java))
         } else player.skullIcon != SkullIcon.NONE

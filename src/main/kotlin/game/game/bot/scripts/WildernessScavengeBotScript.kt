@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.delay
 import api.bot.action.PkRiskBudget
 import api.bot.script.BotScript
@@ -203,7 +205,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private fun chooseDestination(): Position {
         val edgevilleActive = world.players.any {
             it !== bot && it.state == EntityState.ACTIVE && it.position.regionId == EDGEVILLE_REGION &&
-                levelAt(it.position) > 0 && (it !is Bot || !it.preferences.scavenging.isIntroductory)
+                levelAt(it.position) > 0 && (!it.isRealBot() || !it.preferences.scavenging.isIntroductory)
         }
         val roaming = if (introductory) PkArea.entries.flatMap { it.anchors }
             else PkBotScript.patrolGroups(bot).flatten()

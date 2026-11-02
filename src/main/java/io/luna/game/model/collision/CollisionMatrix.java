@@ -418,6 +418,20 @@ public final class CollisionMatrix {
     }
 
     /**
+     * Replaces flags and overlap counts with an independent copy of a same-sized matrix.
+     *
+     * @param newMatrix The matrix to copy.
+     */
+    public void replace(CollisionMatrix newMatrix) {
+        if (newMatrix.matrix.length != matrix.length) {
+            throw new IllegalArgumentException("Matrix replacing must match existing length!");
+        }
+        System.arraycopy(newMatrix.matrix, 0, matrix, 0, newMatrix.matrix.length);
+        overlapLow = newMatrix.overlapLow == null ? null : newMatrix.overlapLow.clone();
+        overlapHigh = newMatrix.overlapHigh == null ? null : newMatrix.overlapHigh.clone();
+    }
+
+    /**
      * Determines if the given {@code start} position has reached a wall object. This only applies when
      * {@code wallObject} is a wall-type object; for other object types, this method always returns {@code false}.
      * <p>
@@ -428,7 +442,7 @@ public final class CollisionMatrix {
      * @param wallObject The wall object being tested.
      * @return {@code true} if {@code start} has reached {@code wallObject}; otherwise {@code false}.
      */
-    public boolean reachedWall(Position start,  GameObject wallObject) {
+    public boolean reachedWall(Position start, GameObject wallObject) {
         int startX = start.getLocalX(start);
         int startY = start.getLocalY(start);
 
@@ -597,7 +611,7 @@ public final class CollisionMatrix {
      * @param object The object being tested.
      * @return {@code true} if {@code start} has reached {@code object}; otherwise {@code false}.
      */
-    public boolean reachedObject(Position start,GameObject object) {
+    public boolean reachedObject(Position start, GameObject object) {
         ObjectType objectType = object.getObjectType();
         if (objectType == ObjectType.DEFAULT ||
                 objectType == ObjectType.DIAGONAL_DEFAULT ||
@@ -627,7 +641,7 @@ public final class CollisionMatrix {
                 return reachedWall(start, object);
             }
             if (objectTypeId < 10) {
-                return reachedDecoration(start,  object);
+                return reachedDecoration(start, object);
             }
             return false;
         }
