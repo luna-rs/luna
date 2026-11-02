@@ -2452,12 +2452,13 @@ enum class SubZone(
         parent = { KARAMJA }, bankZone = { ARDOUGNE }),
 
     /**
-     * The greater-demon room in Taverley Dungeon, containing two greater demons before the dusty-key gate.
+     * Entrana Dungeon's room containing two greater demons; the legacy enum name is retained for saved sessions.
+     * Entry is one-way from Entrana, and its magic-door exit leads into deep Wilderness.
      */
     TAVERLY_GREATER(
         inside = Position(2863, 9750),
         area = SimpleBoxArea.of(2852, 9739, 2874, 9763),
-        parent = { TAVERLY }),
+        parent = { ENTRANA }),
 
     /**
      * The western hellhound section of Taverley Dungeon, containing 13 hellhounds beyond the dusty-key gate.

@@ -6,6 +6,9 @@ import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
 import api.bot.webwalk.walk.crossing.EssenceMineCrossing
+import api.bot.webwalk.walk.crossing.BrimhavenCrossing
+import api.bot.webwalk.walk.crossing.ProductionAccessCrossing
+import api.bot.webwalk.walk.crossing.SubzoneEntranceCrossing
 import api.bot.zone.SubZone
 import game.skill.runecrafting.essenceMine.EssenceMine
 import game.skill.runecrafting.essenceMine.EssenceMineWizard
@@ -16,6 +19,10 @@ import game.content.fishingGuild.FishingGuild
 import game.obj.webs.Web
 import game.skill.agility.IsafdarForest
 import game.skill.agility.IsafdarLogs
+import game.skill.agility.TrollClimbingRocks
+import api.bot.webwalk.walk.crossing.TrollClimbingCrossing
+import game.obj.entrances.BrimhavenDungeonAccess
+import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 
@@ -80,7 +87,26 @@ object BotConditions {
                       AbyssCrossing.LAW_ALLOWED to { bot: Bot -> AbyssCrossing.lawAllowed(bot) },
                       ISAFDAR_FOREST_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= IsafdarForest.REQUIRED_LEVEL },
                       ISAFDAR_LOG_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= IsafdarLogs.REQUIRED_LEVEL },
-                      SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
+                      TrollClimbingCrossing.READY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= TrollClimbingRocks.LEVEL },
+                      TrollClimbingCrossing.BOOTS_WORN to { bot: Bot -> TrollClimbingRocks.hasBoots(bot) },
+                      SLASH_WEB to { bot: Bot -> Web.blade(bot) != null },
+                      BrimhavenCrossing.PREPAID to { bot: Bot -> BrimhavenDungeonAccess.hasPaid(bot) },
+                      SubzoneEntranceCrossing.SWAMP_READY to { bot: Bot -> SubzoneEntranceCrossing.canEnterSwamp(bot) },
+                      SubzoneEntranceCrossing.WATERFALL_AMULET to { bot: Bot -> SubzoneEntranceCrossing.canEnterWaterfall(bot) },
+                      ProductionAccessCrossing.CHEST_ADMISSION to { bot: Bot ->
+                          bot.skill(Skill.THIEVING).level >= ArdougneHouseDoorAction.Lock.CHEST_HOUSE.level },
+                      ProductionAccessCrossing.SOUTH_CHEST_ADMISSION to { bot: Bot ->
+                          bot.skill(Skill.THIEVING).level >= ArdougneHouseDoorAction.Lock.CHEST_HOUSE_SOUTH.level },
+                      ProductionAccessCrossing.RANGE_ADMISSION to { bot: Bot ->
+                          bot.skill(Skill.THIEVING).level >= ArdougneHouseDoorAction.Lock.RANGE_HOUSE.level },
+                      ProductionAccessCrossing.CASTLE_ADMISSION to { bot: Bot ->
+                          bot.skill(Skill.THIEVING).level >= ArdougneHouseDoorAction.Lock.CASTLE.level },
+                      ProductionAccessCrossing.HUT_ADMISSION to { bot: Bot ->
+                          bot.skill(Skill.THIEVING).level >= ArdougneHouseDoorAction.Lock.WILDERNESS_HUT.level &&
+                              bot.inventory.contains(1523) }) +
+                BrimhavenDungeonAccess.passages.filter { it.needsAbility }.associate { passage ->
+                    BrimhavenCrossing.flag(passage) to { bot: Bot -> BrimhavenDungeonAccess.canTraverse(bot, passage) }
+                } +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->
                     SubZone.ESSENCE_MINE.area.contains(bot) && EssenceMine.returnWizard(bot) == wizard

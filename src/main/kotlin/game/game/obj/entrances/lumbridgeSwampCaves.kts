@@ -1,8 +1,6 @@
 package game.obj.entrances
 
-import api.attr.Attr
-import api.attr.getValue
-import api.attr.setValue
+import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import api.predef.*
 import api.predef.ext.*
 import game.obj.entrances.EntranceLanding.Companion.shift
@@ -25,10 +23,8 @@ val ROPE = 954
  */
 val ROPED_VARBIT = 279
 
-/**
- * Whether the player has tied a rope to the dark hole. It only has to be done once.
- */
-var Player.swampCavesRoped by Attr.boolean().persist("swamp_caves_roped")
+// Register the canonical persisted rope attribute before profiles are loaded.
+SwampCaveEntrance.initialize()
 
 /**
  * Climbs [plr] down the dark hole, tying a rope to it first if they haven't yet.

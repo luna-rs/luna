@@ -1,8 +1,5 @@
 package game.obj.entrances
 
-import api.attr.Attr
-import api.attr.getValue
-import api.attr.setValue
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
@@ -25,35 +22,36 @@ import io.luna.game.model.`object`.GameObject
 /**
  * Saniboch, who takes the entry fee outside the Brimhaven Dungeon.
  */
-val SANIBOCH = 1595
+val SANIBOCH = BrimhavenDungeonAccess.SANIBOCH
 
 /**
  * The entry fee.
  */
-val FEE = 875
+val FEE = BrimhavenDungeonAccess.FEE
 
 /**
  * Coins, and the pile of coins shown when paying.
  */
-val COINS = 995
-val COINS_PILE = 999
+val COINS = BrimhavenDungeonAccess.COINS
+val COINS_PILE = BrimhavenDungeonAccess.COINS_PILE
 
 /**
  * The dungeon entrance, and the same entrance while it's open.
  */
-val ENTRANCE = 5083
-val OPEN_ENTRANCE = 5082
+val ENTRANCE = BrimhavenDungeonAccess.ENTRANCE
+val OPEN_ENTRANCE = BrimhavenDungeonAccess.OPEN_ENTRANCE
 
 /**
  * The exit back out of the dungeon.
  */
-val EXIT = 5084
+val EXIT = BrimhavenDungeonAccess.EXIT
 
 /**
  * Where the entrance and exit lead.
  */
-val INSIDE = Position(2713, 9564)
-val OUTSIDE = Position(2745, 3152)
+// These non-constant aliases initialize the shared persisted credit during native script bootstrap.
+val INSIDE = BrimhavenDungeonAccess.INSIDE
+val OUTSIDE = BrimhavenDungeonAccess.OUTSIDE
 
 /**
  * Reaching into the entrance, and chopping vines without an axe.
@@ -63,23 +61,9 @@ val REACH = Animation(832)
 /**
  * Whether the player has paid Saniboch and not gone in since.
  */
-var Player.paidSaniboch by Attr.boolean().persist("paid_saniboch")
-
-/**
- * A vine that blocks a passage in the dungeon.
- *
- * @param id The vine.
- * @param level The Woodcutting level needed to chop through it from [start].
- * @param start The tile on the near side, the only side an axe and the level are needed on.
- * @param end The tile on the far side.
- */
-enum class Vine(val id: Int, val level: Int, val start: Position, val end: Position) {
-    FIRST(id = 5103, level = 10, start = Position(2691, 9564), end = Position(2689, 9564)),
-    SECOND(id = 5104, level = 27, start = Position(2683, 9568), end = Position(2683, 9570)),
-    THIRD(id = 5105, level = 22, start = Position(2672, 9499), end = Position(2674, 9499)),
-    FOURTH(id = 5106, level = 34, start = Position(2674, 9479), end = Position(2676, 9479)),
-    FIFTH(id = 5107, level = 34, start = Position(2693, 9482), end = Position(2695, 9482))
-}
+var Player.paidSaniboch: Boolean
+    get() = BrimhavenDungeonAccess.hasPaid(this)
+    set(value) = BrimhavenDungeonAccess.setPaid(this, value)
 
 /**
  * Says something to [plr] as Saniboch.
@@ -217,9 +201,9 @@ object1(EXIT) { plr.move(OUTSIDE) }
 on(LoginEvent::class) { plr.paidSaniboch }
 
 /**
- * Chops through [vine] for [plr], who needs an axe and the [Vine.level] unless they're coming back the other way.
+ * Chops through [vine] for [plr], who needs an axe and the [BrimhavenDungeonAccess.Vine.level] unless coming back.
  */
-fun chop(plr: Player, obj: GameObject, vine: Vine) {
+fun chop(plr: Player, obj: GameObject, vine: BrimhavenDungeonAccess.Vine) {
     val back = plr.position.computeLongestDistance(vine.end) < plr.position.computeLongestDistance(vine.start)
     val axe = Axe.computeAxeType(plr)
     if (!back) {
@@ -254,7 +238,7 @@ fun chop(plr: Player, obj: GameObject, vine: Vine) {
     })
 }
 
-for (vine in Vine.values()) {
+for (vine in BrimhavenDungeonAccess.Vine.entries) {
     object1(vine.id) { chop(plr, gameObject, vine) }
 }
 

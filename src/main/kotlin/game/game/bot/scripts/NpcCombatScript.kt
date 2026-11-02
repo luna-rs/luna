@@ -48,6 +48,8 @@ import game.skill.prayer.Bone
 import game.skill.smithing.BarType
 import game.skill.smithing.smithBar.SmithingTable
 import game.skill.woodcutting.cutTree.Tree
+import game.skill.woodcutting.cutTree.Axe
+import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import io.luna.game.model.Position
 import io.luna.game.model.def.CombatStyleDefinition
 import io.luna.game.model.def.CombatSpellDefinition
@@ -175,6 +177,7 @@ open class NpcCombatScript(bot: Bot,
          */
         internal fun campSuppliesOwned(bot: Bot, zone: SubZone): Boolean {
             if (zone in WATERFALL_ZONES && !bot.itemTracker.contains(295)) return false
+            if (zone == SubZone.TROLLHEIM_MOUNTAIN_TROLLS && !bot.itemTracker.contains(3105)) return false
             if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
                 Potion.ANTI_FIRE_POTION.doses.none { bot.itemTracker.contains(it) }) return false
             return zone !in STRONG_FOOD_ZONES || Food.ID_TO_FOOD.filterValues { it.heal >= 16 }
@@ -185,6 +188,29 @@ open class NpcCombatScript(bot: Bot,
          * Waterfall chambers share the native worn Glarial amulet requirement; other equipment stays unchanged.
          */
         private val WATERFALL_ZONES = setOf(SubZone.WATERFALL_FIRE_GIANTS_WEST, SubZone.WATERFALL_FIRE_GIANTS_EAST)
+
+        private val BRIMHAVEN_ZONES = setOf(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, SubZone.BRIMHAVEN_RED,
+            SubZone.BRIMHAVEN_METAL, SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH, SubZone.BRIMHAVEN_MOSS_GIANTS_WEST,
+            SubZone.BRIMHAVEN_MOSS_GIANTS_CENTRAL, SubZone.BRIMHAVEN_MOSS_GIANTS_PASSAGE,
+            SubZone.BRIMHAVEN_MOSS_GIANTS_NORTH)
+
+        /**
+         * Physical tools for entering a camp, excluding return-only travel from a camp already occupied.
+         * Tied Swamp ropes are personal and permanent; Waterfall ropes are carried and reused. Brimhaven uses
+         * the native current Woodcutting-level rule and keeps a usable worn axe instead of replacing the outfit.
+         */
+        internal fun travelTools(bot: Bot, zones: Collection<SubZone>): List<Item> {
+            val entering = zones.filter { it !in bot.subZones }
+            val tools = mutableListOf<Item>()
+            if (entering.any { it in WATERFALL_ZONES } && bot.subZones.none { it in WATERFALL_ZONES } ||
+                entering.any { it == SubZone.LUMBRIDGE_SWAMP_CAVES } && !bot.swampCavesRoped) tools += Item(954)
+            if (entering.any { it in BRIMHAVEN_ZONES } && Axe.computeAxeType(bot) == null) {
+                val axe = Axe.entries.filter { bot.woodcutting.level >= it.level && bot.itemTracker.contains(it.id) }
+                    .maxByOrNull { it.level } ?: Axe.BRONZE
+                tools += Item(axe.id)
+            }
+            return tools
+        }
 
         /**
          * These stronger ordinary assignments retain the existing boss-food withdrawal policy.
@@ -472,8 +498,9 @@ open class NpcCombatScript(bot: Bot,
     /**
      * Access equipment is retained through initial gearing, bank deposits and saved-session restoration.
      */
-    private val requiredCampGear = if (originalZones.any { it in WATERFALL_ZONES })
-        mapOf(Equipment.AMULET to 295) else emptyMap()
+    private val requiredCampGear =
+        (if (originalZones.any { it in WATERFALL_ZONES }) mapOf(Equipment.AMULET to 295) else emptyMap()) +
+        (if (SubZone.TROLLHEIM_MOUNTAIN_TROLLS in originalZones) mapOf(Equipment.BOOTS to 3105) else emptyMap())
 
     private val queenTrip: Boolean get() = SubZone.KALPHITE_QUEEN in originalZones
 
@@ -648,6 +675,13 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return
         }
+        for (tool in travelTools(bot, originalZones)) {
+            if (!bot.inventory.contains(tool) && (!handler.banking.withdraw(tool) || !bot.inventory.contains(tool))) {
+                bot.preferences.addWantedItem(tool.id, 3)
+                stop()
+                return
+            }
+        }
         for ((id, amount) in requiredSlayerItems) {
             val stock = if (id in setOf(4161, 6696, Mogres.EXPLOSIVE))
                 minOf(if (itemDef(id).isStackable) 50 else 3, assignment?.remaining ?: 1,
@@ -792,6 +826,16 @@ open class NpcCombatScript(bot: Bot,
             (1540 !in bot.inventory || !handler.equipment.equip(1540) || bot.equipment.weapon == null)) {
             stop()
         }
+    }
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
+        val missing = travelTools(bot, listOf(zone)).filterNot { bot.inventory.contains(it) }
+        if (missing.any { !bot.itemTracker.contains(it.id) } || !bot.inventory.hasSpaceForAll(missing)) {
+            missing.forEach { bot.preferences.addWantedItem(it.id, 3) }
+            return false
+        }
+        if (missing.isNotEmpty() && !handler.retrieveAll(missing)) return false
+        return super.travelToWorkZone(zone, bank)
     }
     // todo auto bury bones after each kill
     // todo use potions, etc. when available and needed

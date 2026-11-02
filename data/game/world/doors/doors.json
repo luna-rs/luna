@@ -13,5 +13,9 @@
   { "closed": 11993, "open": 11994 },
   { "closed": 7259, "open": 7260 },
   { "closed": 2559, "open": 2070 },
-  { "closed": 2554, "open": 2055 }
+  { "closed": 2554, "open": 2055 },
+  { "closed": 5126, "open": 5128 },
+  { "closed": 11470, "open": 11471 },
+  { "closed": 136, "open": 1532, "duration": 3 },
+  { "closed": 5244, "open": 5245 }
 ]

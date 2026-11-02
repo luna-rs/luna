@@ -43,6 +43,8 @@ fun showShadowLadder(plr: Player) {
 // The Heroes' Guild doors (2624/2625) and Barbarian Outpost gates (2115/2116) likewise use ordinary door handling
 // until Heroes' Quest and Alfred Grimhand's Barcrawl are implemented. TODO Restore their admission checks then.
 // The Piscatoris colony gate follows the same policy until Swan Song is implemented.
+// The Legends' Guild doors likewise remain ordinary passages until Legends' Quest supplies
+// its legends_returned_to_radimus admission state. TODO Restore that source quest check then.
 on(LoginEvent::class) {
     // Enakhra's Lament: the four secret entrances into Enakhra's temple.
     for (varbit in 1598..1601) {
@@ -84,13 +86,13 @@ on(EquipmentChangeEvent::class) {
 /**
  * Professor Oddenstein, who warns players before they go through the rift to the Killerwatt plane.
  */
-val ODDENSTEIN = 286
+val ODDENSTEIN = KillerwattAccess.PROFESSOR
 
 /**
  * The rift in Draynor Manor, and the portal back from the Killerwatt plane.
  */
-val KILLERWATT_RIFT = 11355
-val KILLERWATT_PORTAL = 11356
+val KILLERWATT_RIFT = KillerwattAccess.RIFT
+val KILLERWATT_PORTAL = KillerwattAccess.PORTAL
 
 /**
  * The insulated boots, which protect from the killerwatts.
@@ -100,8 +102,8 @@ val INSULATED_BOOTS = 7159
 /**
  * Where the rift and the portal lead.
  */
-val KILLERWATT_PLANE = near(2677, 5214, 2)
-val DRAYNOR_MANOR_LAB = near(3110, 3363, 2)
+val KILLERWATT_PLANE = KillerwattAccess.REALM_LANDING
+val DRAYNOR_MANOR_LAB = KillerwattAccess.LAB_LANDING
 
 /**
  * Whether the player has asked not to be warned about the flashing lights again.

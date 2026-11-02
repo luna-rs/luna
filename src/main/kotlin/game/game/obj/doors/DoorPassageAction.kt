@@ -6,6 +6,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.`object`.ObjectDirection
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -15,7 +16,8 @@ import java.util.concurrent.CompletableFuture
  * @author lare96
  */
 abstract class DoorPassageAction(plr: Player, door: GameObject, private val type: DoorType,
-                                 private val faceDoor: Boolean = false) : Action<Player>(plr, ActionType.WEAK) {
+                                 private val faceDoor: Boolean = false,
+                                 private val openDirection: ObjectDirection? = null) : Action<Player>(plr, ActionType.WEAK) {
 
     private val position = door.position
     private val direction = door.direction
@@ -59,7 +61,7 @@ abstract class DoorPassageAction(plr: Player, door: GameObject, private val type
         if (!checkAccess(entering)) {
             return true
         }
-        if (Doors.passThrough(world, mob, closed, type, entering)) {
+        if (Doors.passThrough(world, mob, closed, type, entering, openDirection)) {
             if (faceDoor) {
                 mob.interact(closed)
             }

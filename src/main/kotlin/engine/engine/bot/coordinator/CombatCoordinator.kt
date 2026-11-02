@@ -96,7 +96,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, 55, setOf("Monk of Zamorak"), true),
             Camp(SubZone.KARAMJA_DUNGEON, 65, setOf("Lesser demon"), true),
             Camp(SubZone.TAVERLY_LESSER_DEMONS, 65, setOf("Lesser demon"), true),
-            Camp(SubZone.TAVERLY_GREATER, 75, setOf("Greater demon"), true),
+            // TAVERLY_GREATER is Entrana Dungeon: ordinary armed outfits cannot pass the island's native search.
             Camp(SubZone.TAVERLY_HELLHOUND, 85, setOf("Hellhound"), true),
             Camp(SubZone.TAVERLY_BLACK_DEMONS, 110, setOf("Black Demon"), true),
             Camp(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, 65, setOf("Fire giant"), true),

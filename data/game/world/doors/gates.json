@@ -8,5 +8,7 @@
   { "closed": 7049, "open": 7051, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
   { "closed": 7050, "open": 7052, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
   { "closed": 4311, "open": 4313, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
-  { "closed": 4312, "open": 4314, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" }
+  { "closed": 4312, "open": 4314, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 3197, "open": 4139, "side": "LEFT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" },
+  { "closed": 3198, "open": 4140, "side": "RIGHT", "open_sound": "GATE_OPEN", "close_sound": "GATE_CLOSE" }
 ]

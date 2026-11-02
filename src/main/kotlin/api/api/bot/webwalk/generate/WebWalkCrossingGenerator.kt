@@ -36,10 +36,13 @@ import io.luna.game.model.Position
  * @property pos The position of the object.
  * @property from The tile to cross it from.
  * @property to The tile that crossing it arrives at.
+ * @property requirements Forward requirements for this placement, or `null` to inherit its crossing spec.
+ * @property reverseRequirements Return requirements for this placement, or `null` to inherit its crossing spec.
  *
  * @author Hydrozoa
  */
-data class CrossingPlacement(val objectId: Int, val pos: Position, val from: Position, val to: Position)
+data class CrossingPlacement(val objectId: Int, val pos: Position, val from: Position, val to: Position,
+                             val requirements: Requirements? = null, val reverseRequirements: Requirements? = null)
 
 /**
  * A kind of crossing that a [api.bot.webwalk.walk.crossing.CrossingHandler] crosses, and the facts about it that the
@@ -259,7 +262,9 @@ object SpecialCrossings {
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
         ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
         PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
-        ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES)
+        ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES) +
+        ProductionAccessCrossingSpec.ALL + SubzoneEntranceSpec.ALL + LighthouseBridgeSpec.ALL +
+        PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
@@ -303,7 +308,7 @@ object WebWalkCrossingGenerator {
         for (spec in specs) {
             val (placed, placedReport) = if (spec.placements.isEmpty())
                 WebWalkDoorGenerator.generate(table, spec.closedObjectIds.associateWith { EdgeType.CROSSING })
-            else place(table, spec.placements)
+            else place(table, spec)
             placedReport.skipped.forEach { report.skipped += it }
             for (id in spec.closedObjectIds) {
                 if (placed.none { it.objectId == id }) {
@@ -311,8 +316,9 @@ object WebWalkCrossingGenerator {
                 }
             }
             for (obstacle in placed) {
-                crossings += obstacle.copy(handler = spec.handler, cost = spec.cost, requirements = spec.requirements,
-                                           reverseRequirements = spec.reverseRequirements,
+                crossings += obstacle.copy(handler = spec.handler, cost = spec.cost,
+                                           requirements = if (spec.placements.isEmpty()) spec.requirements else obstacle.requirements,
+                                           reverseRequirements = if (spec.placements.isEmpty()) spec.reverseRequirements else obstacle.reverseRequirements,
                                            bidirectional = spec.bidirectional.takeIf { it != EdgeType.CROSSING.bidirectionalByDefault })
                 report.count("${spec.handler} crossings")
             }
@@ -324,14 +330,14 @@ object WebWalkCrossingGenerator {
      * Places crossings at the tiles that they are given, if the map data has their objects where they say.
      *
      * @param table The map data.
-     * @param placements Where the crossings are.
+     * @param spec The placements and their inherited requirements.
      * @return The crossings whose objects the map has, and the ones that were left out.
      */
     private fun place(table: MapIndexTable,
-                      placements: List<CrossingPlacement>): Pair<List<GeneratedObstacle>, GenerationReport> {
+                      spec: CrossingSpec): Pair<List<GeneratedObstacle>, GenerationReport> {
         val report = GenerationReport()
         val placed = ArrayList<GeneratedObstacle>()
-        for (placement in placements) {
+        for (placement in spec.placements) {
             if (table.objectSet.none { it.objectId == placement.objectId && it.position == placement.pos }) {
                 report.skipped += "CROSSING ${placement.objectId} at ${DoorObstacles.describe(placement.pos)}: not in the map"
                 continue
@@ -340,7 +346,9 @@ object WebWalkCrossingGenerator {
                                         placement.objectId,
                                         placement.pos,
                                         placement.from,
-                                        placement.to)
+                                        placement.to,
+                                        requirements = placement.requirements ?: spec.requirements,
+                                        reverseRequirements = placement.reverseRequirements ?: spec.reverseRequirements)
         }
         return Pair(placed, report)
     }

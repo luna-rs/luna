@@ -38,6 +38,12 @@ object Doors {
     private val byId: HashMap<Int, DoorType> = HashMap()
 
     /**
+     * The registered family of each closed type. Double doors can reuse an open model for either leaf; the
+     * original type of a runtime-opened object is retained in [origins]. Other families keep their side checks.
+     */
+    private val kinds: IdentityHashMap<DoorType, Kind> = IdentityHashMap()
+
+    /**
      * Every loaded [DoorType].
      */
     var all: List<DoorType> = emptyList()
@@ -135,7 +141,7 @@ object Doors {
      * @param kind The kind of door being added.
      * @param types The doors to add.
      * @throws IllegalArgumentException If a door has a side when it should not (or the reverse), or if a closed id is used by
-     * more than one door, or an open id is shared with a door of the other side or a different open id.
+     * more than one door, or an open id is shared with an incompatible side outside the double-door family.
      */
     fun add(kind: Kind, types: List<DoorType>) {
         for (type in types) {
@@ -146,9 +152,11 @@ object Doors {
             // An open id may be shared by several closed doors that look the same. Each one closes back to the door
             // that it was opened from, see [origins].
             val sharing = byId.putIfAbsent(type.open, type)
-            require(sharing == null || (sharing.open == type.open && sharing.side == type.side)) {
+            val sharedDoubleLeaves = kind == Kind.DOUBLE && kinds[sharing] == Kind.DOUBLE
+            require(sharing == null || (sharing.open == type.open && (sharing.side == type.side || sharedDoubleLeaves))) {
                 "Duplicate door id ${type.open} in door files."
             }
+            kinds[type] = kind
             if (sharing != null) {
                 sharedOpenIds += type.open
             }
@@ -186,11 +194,12 @@ object Doors {
      * The caller checks access and aligns the player before calling this on the game thread.
      * An invisible wall prevents other players from following through without their own access check.
      * The type is supplied directly so registering a freely opening handler cannot bypass the condition.
+     * A source-specific [openDirection] changes only the temporary leaf's rotation; ordinary passages keep their swap.
      *
      * @return Whether the door was replaced and the player crossed it.
      */
     internal fun passThrough(world: World, plr: Player, door: GameObject, type: DoorType,
-                             entering: Boolean): Boolean {
+                             entering: Boolean, openDirection: ObjectDirection? = null): Boolean {
         if (door.id != type.closed || type.side != null || door.objectType != ObjectType.STRAIGHT_WALL ||
             isPassageBusy(door.position)) {
             return false
@@ -205,7 +214,7 @@ object Doors {
             return false
         }
         val blocker = world.addObject(83, door.position, door.objectType, door.direction)
-        val open = world.addObject(swap.id, swap.position, door.objectType, swap.direction)
+        val open = world.addObject(swap.id, swap.position, door.objectType, openDirection ?: swap.direction)
         passages += open
         passagePositions += door.position
         plr.playSound(type.openSoundOrDefault)

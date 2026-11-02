@@ -26,6 +26,7 @@ import io.luna.game.model.Position
  * @param face The direction to face after arriving, if any.
  * @param position Where the object is, for objects that lead somewhere different from each spot. `null` if it leads
  * to [landing] from everywhere.
+ * @param useFrom Canonical interaction tiles when ordinary adjacent tiles are isolated decorations or omit a valid side.
  *
  * @author TheLining
  */
@@ -37,7 +38,8 @@ enum class Entrance(val id: Int,
                     val animation: Int? = null,
                     val arriveDelay: Boolean = false,
                     val face: Direction? = null,
-                    val position: Position? = null) {
+                    val position: Position? = null,
+                    val useFrom: List<Position> = emptyList()) {
 
     // Karamja Volcano.
     KARAMJA_VOLCANO_DOWN(id = 492, landing = shift(0, 6400), message = "You climb down through the pot hole.",
@@ -94,22 +96,28 @@ enum class Entrance(val id: Int,
     WATERBIRTH_HILL_CAVE(id = 8930, landing = tile(2545, 10143)),
 
     // Burthorpe, out of the Rogues' Den to the pub.
-    ROGUES_DEN_OUT(id = 7258, landing = tile(2906, 3537), message = "You walk through the passage...", delay = 1),
+    ROGUES_DEN_OUT(id = 7258, landing = tile(2906, 3537), message = "You walk through the passage...", delay = 1,
+                   useFrom = listOf(Position(3061, 4985, 1))),
 
     // Entrana dungeon's magic door, out to the Wilderness.
     ENTRANA_DUNGEON_OUT(id = 2407, landing = tile(3250, 3772), message = "You feel the world around you dissolve...",
-                        face = Direction.NORTH),
+                        face = Direction.NORTH, useFrom = listOf(Position(2873, 9750))),
 
     // East Ardougne, the cave into the sewers (Hazeel Cult).
     ARDOUGNE_SEWERS_IN(id = 2852, landing = tile(2570, 9682), message = "You enter the cave."),
 
     // The tunnels between Rellekka, Trollweiss Mountain and the cave outside Keldagrim.
     RELLEKKA_TUNNEL_IN(id = 5008, landing = tile(2773, 10162)),
-    RELLEKKA_TUNNEL_OUT(id = 5014, landing = tile(2730, 3713)),
+    RELLEKKA_TUNNEL_OUT(id = 5014, landing = tile(2730, 3713), useFrom = listOf(Position(2773, 10162))),
     TROLLWEISS_TUNNEL_IN(id = 5012, landing = tile(2799, 10134)),
     TROLLWEISS_TUNNEL_OUT(id = 5013, landing = tile(2797, 3719)),
     KELDAGRIM_CAVE_IN(id = 5973, landing = tile(2838, 10124)),
-    KELDAGRIM_CAVE_OUT(id = 5998, landing = tile(2778, 10161)),
+    KELDAGRIM_CAVE_OUT(id = 5998, landing = tile(2778, 10161), useFrom = listOf(Position(2838, 10124))),
+
+    // Priest in Peril's Holy barrier. Its eastern trapdoor is the way back into the basement.
+    // TODO Restore Drezel's post-quest admission state once Priest in Peril is implemented.
+    PATERDOMUS_HOLY_BARRIER(id = 3443, landing = tile(3423, 3485), message = "You pass through the holy barrier.",
+                           useFrom = listOf(Position(3440, 9887))),
 
     // Trollweiss Mountain and the troll caves under it (Troll Romance).
     TROLL_ROMANCE_CAVE_IN(id = 5007, landing = tile(2803, 10187)),
@@ -142,7 +150,8 @@ enum class Entrance(val id: Int,
     TROLLHEIM_CAVE_SOUTH_IN(id = 3757, landing = tile(2907, 10019), position = Position(2903, 3644)),
     TROLLHEIM_CAVE_NORTH_IN(id = 3757, landing = tile(2907, 10035), position = Position(2907, 3652)),
     TROLLHEIM_CAVE_SOUTH_OUT(id = 3758, landing = tile(2904, 3643), position = Position(2906, 10017)),
-    TROLLHEIM_CAVE_NORTH_OUT(id = 3758, landing = tile(2908, 3654), position = Position(2906, 10036)),
+    TROLLHEIM_CAVE_NORTH_OUT(id = 3758, landing = tile(2908, 3654), position = Position(2906, 10036),
+                            useFrom = listOf(Position(2907, 10035))),
 
     // Mad Eadgar's cave on top of Trollheim.
     // TODO Once Troll Stronghold is added, players who haven't freed Eadgar go to the copy of the cave without him,
@@ -312,7 +321,8 @@ enum class Entrance(val id: Int,
     // TODO Once Horror from the Deep is added, the door needs Jossik's key the first time ("You unlock the Lighthouse
     //  front door."), players who haven't finished the quest go into its copy of the lighthouse, and the iron ladder
     //  down only works once the light is fixed.
-    LIGHTHOUSE_DOOR(id = 4577, landing = acrossNorth(3635, 3636), position = Position(2509, 3636)),
+    LIGHTHOUSE_DOOR(id = 4577, landing = acrossNorth(3635, 3636), position = Position(2509, 3636),
+                    useFrom = listOf(Position(2509, 3635), Position(2509, 3636))),
     LIGHTHOUSE_QUEST_COPY_DOOR(id = 4577, landing = tile(2509, 3635), position = Position(2445, 4596)),
     LIGHTHOUSE_BASEMENT_DOWN(id = 4383, landing = tile(2518, 9994, 1), delay = 1, animation = 827,
                              position = Position(2509, 3644)),

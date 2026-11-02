@@ -255,6 +255,8 @@ object WebWalkLiveGenerator {
         essenceWizards(climbs, report)
         climbs += AbyssRouteGenerator.gather(report, { climbingTiles(it).firstOrNull() }, ::standableNear)
         climbs += PiscatorisRouteGenerator.gather(report, ::standableNear)
+        climbs += BrimhavenRouteGenerator.gather(report)
+        climbs += KillerwattRouteGenerator.gather(report)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
@@ -473,7 +475,11 @@ object WebWalkLiveGenerator {
 
         val crossings = ArrayList<Pair<Position, Position>>()
         var unstandable: Position? = null
-        for (from in climbingTiles(obj)) {
+        val stands = if (entrance.useFrom.isEmpty()) climbingTiles(obj) else entrance.useFrom.filter { from ->
+            LadderDestination.canLand(from) &&
+                world.collisionManager.reached(from, obj, InteractionPolicy.STANDARD_SIZE)
+        }
+        for (from in stands) {
             val to = entrance.landing.from(from)
             if (to == from) {
                 continue

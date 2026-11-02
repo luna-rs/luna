@@ -50,7 +50,14 @@ object CrossingHandlers {
                                                                AbyssCrossing.ID to AbyssCrossing,
                                                                ShantayPassCrossing.ID to ShantayPassCrossing,
                                                                ArandarCrossing.ID to ArandarCrossing,
-                                                               IsafdarLogCrossing.ID to IsafdarLogCrossing)
+                                                               IsafdarLogCrossing.ID to IsafdarLogCrossing,
+                                                               BrimhavenCrossing.ID to BrimhavenCrossing,
+                                                               KillerwattCrossing.ID to KillerwattCrossing,
+                                                               ProductionAccessCrossing.ID to ProductionAccessCrossing,
+                                                               SubzoneEntranceCrossing.ID to SubzoneEntranceCrossing,
+                                                               LighthouseBridgeCrossing.ID to LighthouseBridgeCrossing,
+                                                               PaterdomusGateCrossing.ID to PaterdomusGateCrossing,
+                                                               TrollClimbingCrossing.ID to TrollClimbingCrossing)
 
     /**
      * The names of every handler.

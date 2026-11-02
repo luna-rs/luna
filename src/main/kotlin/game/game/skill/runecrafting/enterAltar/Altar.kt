@@ -109,7 +109,7 @@ enum class Altar(
         tiara = 5541,
         portal = 2473,
         enter = Position(2400, 4835),
-        exit = Position(2867, 3019),
+        exit = Position(2865, 3022),
         zone = SubZone.NATURE_ALTAR
     ),
 
