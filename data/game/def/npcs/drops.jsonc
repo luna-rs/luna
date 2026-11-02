@@ -475,7 +475,7 @@
         "id": 7863, // Zombie bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -1212,7 +1212,7 @@
         "id": 7830, // Wolf bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -1945,7 +1945,7 @@
         "id": 7842, // Ogre ribs
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -2569,7 +2569,7 @@
         "id": 7857, // Dagannoth ribs
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -2958,7 +2958,7 @@
         "id": 7839, // Baby dragon bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -4008,7 +4008,7 @@
         "id": 7881, // Ghoul bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -5979,7 +5979,7 @@
         "id": 7899, // Basilisk bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -7588,7 +7588,7 @@
         "id": 7902, // Desert lizard bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -8730,7 +8730,7 @@
         "id": 7908, // Big frog leg
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       },
       {
@@ -11916,7 +11916,7 @@
         "id": 7863, // Zombie bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -12251,7 +12251,7 @@
         "id": 7863, // Zombie bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -12838,7 +12838,7 @@
         "id": 7884, // Troll bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -13653,7 +13653,7 @@
         "id": 7848, // Zogre bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -15829,7 +15829,7 @@
         "id": 7860, // Snake spine
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -17443,7 +17443,7 @@
         "id": 7818, // Ram skull
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       }
     ]
@@ -17466,7 +17466,7 @@
         "id": 7911, // Vulture wing
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -17490,7 +17490,7 @@
         "id": 7893, // Experiment bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -17591,7 +17591,7 @@
         "id": 7887, // Seagull wing
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -18695,7 +18695,7 @@
         "id": 7836, // Rat bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -18717,7 +18717,7 @@
         "id": 7824, // Giant rat bone
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       }
     ]
@@ -19137,7 +19137,7 @@
         "id": 7896, // Rabbit bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -19809,7 +19809,7 @@
         "id": 7878, // Terrorbird wing
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -20011,7 +20011,7 @@
         "id": 7872, // Fire giant bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -20188,7 +20188,7 @@
         "id": 7875, // Ice giant ribs
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -20702,7 +20702,7 @@
         "id": 7869, // Moss giant bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -21053,7 +21053,7 @@
         "id": 7845, // Jogre bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -23995,14 +23995,14 @@
         "id": 300, // Rat's tail
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Witch's potionm",
         "table": 1
       },
       {
         "id": 7836, // Rat bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -24036,7 +24036,7 @@
         "id": 7824, // Giant rat bone
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       }
     ]
@@ -25125,7 +25125,7 @@
         "id": 7851, // Mogre bone
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       },
       {
@@ -25387,7 +25387,7 @@
         "id": 7833, // Bat wing
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
@@ -25409,7 +25409,7 @@
         "id": 7827, // Giant bat wing
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       }
     ]
@@ -25439,7 +25439,7 @@
         "id": 7821, // Unicorn bone
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       }
     ]
@@ -26444,7 +26444,7 @@
         "id": 7824, // Giant rat bone
         "quantity": "1",
         "noted": false,
-        "rarity": 1.0,
+        "rarity": 0, // Hidden until quest "Rag and bone man"
         "table": 1
       },
       {
@@ -26861,7 +26861,7 @@
         "id": 7890, // Undead cow ribs
         "quantity": "1",
         "noted": false,
-        "rarity": 0.25,
+        "rarity": 0, // Hidden until quest "Rag and bone man II"
         "table": 1
       }
     ]
