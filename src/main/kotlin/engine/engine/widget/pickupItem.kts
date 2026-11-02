@@ -25,6 +25,11 @@ val logger = FileOutputType.ITEM_PICKUP.logger
 val itemPickup = FileOutputType.ITEM_PICKUP.level
 
 /**
+ * The Werewolf Agility Course's stick, of which a player can only hold one.
+ */
+val WEREWOLF_STICK = 4179
+
+/**
  * Pickup the item.
  */
 on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PICKUP_BIF) {
@@ -35,6 +40,8 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.GROUND_ITEM_PIC
             plr.sendMessage("You may only possess one sacred cape at a time.")
             plr.sendMessage("The conflicting powers of the capes drive them apart.")
         }
+        pickupItem.id == WEREWOLF_STICK && plr.inventory.contains(WEREWOLF_STICK) ->
+            plr.sendMessage("That's somebody else's stick!")
         !TreasureTrails.canAcquire(plr, pickupItem.id) -> Unit
         ZamorakWine.onPickup(plr, groundItem) -> Unit
 
