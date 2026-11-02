@@ -1,6 +1,5 @@
 package game.bot.scripts.skills
 
-import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.bot.script.InventoryBotScript
 import api.bot.script.StationaryInventoryBotScript
 import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
@@ -23,8 +22,9 @@ import kotlin.time.Duration
  * batch when bank stock runs low. Identification is an individual click rather than a make-item dialogue or
  * repeating action; the existing gameplay handler performs conversion, level validation, and experience awards.
  *
- * Eligibility requires a stable 100-200-herb batch and the permanent Herblore level for its recipe.
- * Insufficient startup stock queues chaos-druid gathering followed by one bounded identification retry. Current level is checked again during execution,
+ * Eligibility requires one owned herb and the permanent Herblore level for its recipe. The stable 100-200-herb
+ * gathering goal does not prevent processing a smaller haul. Empty startup stock queues chaos-druid gathering
+ * followed by one bounded identification retry. Current level is checked again during execution,
  * while combat, locks, and strong actions defer processing. Three consecutive interactions without input
  * consumption end the session; unresolved banking requests are bounded separately. A failed or timed-out
  * withdrawal ends the script through the inherited banking hook.
@@ -49,7 +49,7 @@ class IdentifyHerbBotScript(
 
     companion object {
         /**
-         * A stable batch goal avoids changing the requirement on every coordinator invocation.
+         * A stable restocking goal for gathering sessions, independent of the minimum identification supplies.
          */
         fun herbTarget(bot: Bot): Int = 100 + Math.floorMod(bot.username.hashCode(), 101)
 
@@ -101,17 +101,17 @@ class IdentifyHerbBotScript(
     }
 
     /**
-     * Checks permanent level and the complete starting batch across inventory and bank.
+     * Checks permanent level and at least one unidentified herb across inventory and bank.
      */
     fun isEligible(): Boolean = bot.skill(SKILL_HERBLORE).staticLevel >= requiredLevel &&
-            bot.itemTracker.count(herb.id) >= herbTarget(bot)
+            bot.ownsProductionSupplies(materials)
 
     /** Returns up to twenty-eight banked unidentified herbs, or an empty batch when stock is exhausted. */
     fun bankBatch(): List<Item> = bot.productionBatch(materials)
 
     override fun withdraw(): List<Item> {
         if (bot.skill(SKILL_HERBLORE).staticLevel < requiredLevel) { stop(); return emptyList() }
-        if (!started && bot.itemTracker.count(herb.id) < herbTarget(bot)) {
+        if (!started && !bot.ownsProductionSupplies(materials)) {
             if (allowGathering) {
                 allowGathering = false
                 bot.scriptStack.softPushHead(IdentifyHerbBotScript(bot, herb, duration, allowGathering = false))

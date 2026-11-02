@@ -119,8 +119,18 @@ object ArenaTraps {
         }
         val started = BrimhavenArena.traverse(player, steps,
             if (failed) hitLine(trap.objectId) else null) {
-            if (!failed && BrimhavenArena.session(player) === session) player.agility.addExperience(trap.xp)
+            if (BrimhavenArena.session(player) === session) {
+                if (failed) {
+                    if (trap.objectId == 3581) player.agility.adjustLevel(-2)
+                    player.damage(player.hitpoints.level * 5 / 100 + 2)
+                } else player.agility.addExperience(trap.xp)
+            }
         }
+        val steps = mutableListOf(AgilityStep(player.position, if (failed && !darts) 2 else 1, jump = true,
+            begin = if (darts) hit else ({})))
+        if (!failed && trap.objectId == 3581) steps += AgilityStep(player.position, 7, animation = 1110, jump = true)
+        steps += AgilityStep(destination, 2, animation = animation, begin = if (failed && !darts) hit else ({}))
+        
         if (started) {
             sounds.forEach { player.queue(SoundMessageWriter(it.sound.id, it.loops, it.delayCycles)) }
             when (trap.objectId) {
