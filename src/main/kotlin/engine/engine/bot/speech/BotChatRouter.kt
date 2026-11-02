@@ -1,5 +1,7 @@
 package engine.bot.speech
 
+import api.bot.isRealBot
+
 import api.predef.*
 import io.luna.game.event.impl.ChatEvent
 import io.luna.game.model.EntityState
@@ -21,7 +23,7 @@ class BotChatMessage(val speaker: Player, val text: String) {
      */
     val hearers: List<Bot> by lazy(LazyThreadSafetyMode.NONE) {
         world.locator.findViewablePlayers(speaker) {
-            it is Bot && it !== speaker && it.state == EntityState.ACTIVE &&
+            it.isRealBot() && it !== speaker && it.state == EntityState.ACTIVE &&
                 !speaker.ignores.contains(it.usernameHash) && !it.ignores.contains(speaker.usernameHash)
         }.map { it as Bot }
     }

@@ -1,5 +1,7 @@
 package game.bot.scripts.trading
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.waitFor
 import api.bot.action.trading.*
 import api.bot.action.trading.BotTradeManager.tradeRequests
@@ -17,6 +19,7 @@ import engine.bot.gear.BotEquipmentPreferences
 import engine.trade.ConfirmTradeInterface
 import engine.trade.OfferTradeInterface
 import engine.trade.tradingWith
+import io.luna.Luna
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -94,7 +97,7 @@ class TradeBotScript(bot: Bot,
                     }, true),
                         script.quantities(script.specificDemand().map { it.item }, true),
                         seller.prices(seller.offering), script.prices(script.specificDemand()),
-                        script.quantities(payment.map { it.item }, true), script.prices(payment)) != null
+                        script.quantities(payment.map { it.item }, true), script.prices(payment), seller.salePriority()) != null
                 }) return script
             }
             return null
@@ -194,6 +197,12 @@ class TradeBotScript(bot: Bot,
     private val buying: Boolean
         get() = purpose == BotTradePurpose.BUY || purpose == BotTradePurpose.MERCHANT_BUY
 
+    /**
+     * Merchant accounts also use merchant batches when selling ordinary surplus.
+     */
+    private val merchantSelling: Boolean
+        get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
+
     override suspend fun onInit(resumed: Boolean): Boolean {
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
@@ -221,8 +230,9 @@ class TradeBotScript(bot: Bot,
         prepared = false
         if (!computeOfferAndExpected()) return
         handler.banking.clickBankingMode(true)
+        val stackLimit = if (merchantSelling) Luna.settings().bots().merchantSaleStackLimit() else Int.MAX_VALUE
         for (entry in offering) {
-            if (bot.inventory.computeRemainingSize() <= 1) break
+            if (bot.inventory.computeRemainingSize() <= 1 || bot.inventory.size() >= stackLimit) break
             val id = entry.item.id
             // Bank.withdraw selects by id. Skip mixed stacks as well to avoid withdrawing dynamic instances.
             if (bot.bank.any { it != null && it.id == id && it.isDynamic }) continue
@@ -299,7 +309,7 @@ class TradeBotScript(bot: Bot,
             searchTimer.reset().start()
             blacklist.entries.removeIf { !it.value.isAfter(Instant.now()) }
             val other = world.locator.findPlayers(bot, Position.VIEWING_DISTANCE * 2) {
-                it is Bot && bot.isViewableFrom(it) && canTradeWith(it)
+                it.isRealBot() && bot.isViewableFrom(it) && canTradeWith(it)
             }.shuffled().firstOrNull()
             if (other != null) {
                 attemptTrade(other)
@@ -352,12 +362,10 @@ class TradeBotScript(bot: Bot,
         }.filter { availableAtMarket(it) }
         val candidates = if (buying) wants else offers
         // Preserve the buyer's budget allocation order; sellers favor stock with a current market match.
-        val selected = if (purpose == BotTradePurpose.SELL) {
-            prioritizeMarketItems(candidates.sortedByDescending(::stackValue), offers, traders)
-        } else if (purpose == BotTradePurpose.MERCHANT_SELL) {
-            prioritizeMarketItems(candidates.sortedByDescending(::stackValue), offers, traders)
+        val selected = if (purpose == BotTradePurpose.SELL && !merchantSelling) {
+            prioritizeMarketItems(candidates.sortedByDescending(::stackValue), offers, traders).take(1)
         } else candidates
-        offering = if (buying) offers else if (purpose == BotTradePurpose.SELL) selected.take(1) else selected
+        offering = if (buying) offers else selected
         expected = if (purpose == BotTradePurpose.BUY) selected.take(1) else if (buying) selected
         else BotTradeManager.computeExpected(bot, strategy, purpose, offering)
         cosmeticQuotes.clear()
@@ -462,7 +470,7 @@ class TradeBotScript(bot: Bot,
     }
 
     /**
-     * Advertises the most valuable carried merchant stack instead of an unrelated generic category.
+     * Advertises the highest-priority carried sale stack instead of an unrelated generic category.
      */
     private fun saleAdvertisement(): BotTradeItem? {
         val carried = quantities(carriedOffer.toItems(), true)
@@ -470,8 +478,7 @@ class TradeBotScript(bot: Bot,
             val amount = if (carriedOffer.isEmpty()) quote.item.amount else carried[quote.item.id] ?: 0
             if (amount > 0) BotTradeItem(Item(quote.item.id, amount), quote.price, quote.purpose, bot) else null
         }
-        return if (purpose == BotTradePurpose.MERCHANT_SELL) stock.maxByOrNull(::stackValue)
-        else stock.firstOrNull()
+        return stock.firstOrNull()
     }
 
     /**
@@ -525,7 +532,7 @@ class TradeBotScript(bot: Bot,
      */
     private suspend fun negotiate(offer: BotTradeOfferStage, other: Player): Boolean {
         val partner = (other as? Bot)?.scriptStack?.current() as? TradeBotScript
-        val exchange = if (other is Bot) partner?.let { botExchange(it) } ?: return false else null
+        val exchange = if (other.isRealBot()) partner?.let { botExchange(it) } ?: return false else null
         val guidePrices = HashMap<Int, Long>()
         val timer = Stopwatch.createStarted()
         val seen = HashMap<Pair<Map<Int, Int>, Map<Int, Int>>, Int>()
@@ -586,7 +593,8 @@ class TradeBotScript(bot: Bot,
             }
         }
         fun select(demand: List<BotTradeItem>) = TradeBasket.exchange(stock,
-            buyer.quantities(demand.map { it.item }, true), asks, buyer.prices(demand), payment, paymentPrices)
+            buyer.quantities(demand.map { it.item }, true), asks, buyer.prices(demand), payment, paymentPrices,
+            seller.salePriority())
         var selected = select(buyer.expected)
         if (selected == null && buyer.purpose == BotTradePurpose.MERCHANT_BUY) {
             selected = select(buyer.effectiveExpected(stock))
@@ -625,8 +633,15 @@ class TradeBotScript(bot: Bot,
         val stock = humanSaleStock()
         if (receiving.isEmpty()) return stock
         val budget = receivedValue(receiving, guidePrices)
-        return carriedQuantities(TradeBasket.select(quantities(stock.toItems(), true), prices(offering), budget))
+        return carriedQuantities(TradeBasket.select(quantities(stock.toItems(), true), prices(offering), budget,
+            salePriority()))
     }
+
+    /**
+     * Keeps merchant sale priority consistent for both participants and for partial human purchases.
+     */
+    private fun salePriority(): List<Int> =
+        if (merchantSelling) offering.map { it.item.id } else emptyList()
 
     /** Ensures ordinary exchanges receive useful stock or payment, even when scrutiny is permissive. */
     private fun hasUsefulReturn(receiving: Map<Int, Int>, guidePrices: MutableMap<Int, Long>): Boolean {
@@ -697,7 +712,7 @@ class TradeBotScript(bot: Bot,
      * Human buyers first see the single advertised merchant stack; bot buyers can match a useful collection.
      */
     private fun humanSaleStock(): Map<Int, Int> {
-        if (purpose != BotTradePurpose.MERCHANT_SELL) return carriedOffer
+        if (!merchantSelling) return carriedOffer
         val item = saleAdvertisement()?.item ?: return emptyMap()
         return carriedOffer.filterKeys { unnotedId(it) == item.id }
     }
@@ -721,7 +736,8 @@ class TradeBotScript(bot: Bot,
     private fun carriedQuantities(selected: Map<Int, Int>): Map<Int, Int> {
         val remaining = selected.toMutableMap()
         val result = linkedMapOf<Int, Int>()
-        for ((id, amount) in carriedOffer.toSortedMap()) {
+        val carried = if (merchantSelling) carriedOffer else carriedOffer.toSortedMap()
+        for ((id, amount) in carried) {
             val base = unnotedId(id)
             val take = minOf(amount, remaining[base] ?: 0)
             if (take > 0) {
@@ -763,7 +779,7 @@ class TradeBotScript(bot: Bot,
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
-        if (other !is Bot) return true
+        if (!other.isRealBot()) return true
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
         return prepared && script.prepared && botExchange(script) != null
