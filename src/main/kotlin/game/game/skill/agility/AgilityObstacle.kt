@@ -1,5 +1,6 @@
 package game.skill.agility
 
+import game.skill.agility.pyramid.AgilityPyramid
 import io.luna.game.model.Position
 
 /**
@@ -59,5 +60,15 @@ enum class AgilityObstacle(val xp: Double,
     WEREWOLF_HURDLE(20.0, { x in 3537..3543 && y in setOf(9892, 9895, 9898) && z == 0 }, level = 60),
     WEREWOLF_PIPE(15.0, { x in setOf(3538, 3541, 3544) && y == 9904 && z == 0 }, level = 60),
     WEREWOLF_SKULL_SLOPE(25.0, { x == 3533 && y in 9909..9911 && z == 0 }, level = 60),
-    WEREWOLF_ZIP_LINE(200.0, { x == 3528 && y == 9910 && z == 0 }, level = 60)
+    WEREWOLF_ZIP_LINE(200.0, { x == 3528 && y == 9910 && z == 0 }, level = 60),
+
+    // Each kind of Agility Pyramid obstacle stands in several places, so its start tiles come from the pyramid's list.
+    // Going backwards starts from a crossing's far end. A boost that got a player down the rock slide can wear off on
+    // the way up, so every obstacle checks the level too.
+    PYRAMID_LOW_WALL(8.0, { AgilityPyramid.startsFrom(PYRAMID_LOW_WALL, this) }, level = 30),
+    PYRAMID_LEDGE(52.0, { AgilityPyramid.startsFrom(PYRAMID_LEDGE, this) }, level = 30),
+    PYRAMID_PLANK(56.4, { AgilityPyramid.startsFrom(PYRAMID_PLANK, this) }, level = 30),
+    PYRAMID_CROSS_GAP(56.4, { AgilityPyramid.startsFrom(PYRAMID_CROSS_GAP, this) }, level = 30),
+    PYRAMID_JUMP_GAP(22.0, { AgilityPyramid.startsFrom(PYRAMID_JUMP_GAP, this) }, level = 30),
+    PYRAMID_TOP_ROCKS(0.0, { x == 3043 && y in 4697..4698 && z == 3 }, level = 30)
 }
