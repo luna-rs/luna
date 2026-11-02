@@ -46,17 +46,18 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
      * Creates a single continuous walking traversal.
      */
     fun movementAction(plr: Player, destination: Position, walkingAnimationId: Int, message: String,
-                       sounds: List<AgilitySound> = emptyList(), endMessage: String? = null) =
+                       sounds: List<AgilitySound> = emptyList(), endMessage: String? = null,
+                       start: () -> Unit = {}) =
         AgilityAction(plr, listOf(AgilityStep(destination,
             maxOf(1, plr.position.computeLongestDistance(destination)), walkingAnimation = walkingAnimationId,
             sounds = sounds)),
-            message, endMessage = endMessage)
+            message, start, endMessage)
 
     /**
      * Creates a climb that changes floors [ticks] after the climbing animation starts.
      */
     fun climbAction(plr: Player, destination: Position, message: String?, ticks: Int = 2,
-                    endMessage: String? = null) =
+                    endMessage: String? = null, start: () -> Unit = {}) =
         AgilityAction(plr, listOf(AgilityStep(destination, ticks, animation = 828, jump = true)), message,
-            endMessage = endMessage)
+            start, endMessage)
 }
