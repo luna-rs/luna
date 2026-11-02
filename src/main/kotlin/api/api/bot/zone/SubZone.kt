@@ -1506,10 +1506,10 @@ enum class SubZone(
         parent = { TAVERLY }),
 
     /**
-     * Varrock's Zamorak monk and its configured five-tile wandering area.
+     * The public room beside Varrock Palace's imprisoned Zamorak monk. The cage itself has no walking entrance.
      */
     VARROCK_ZAMORAK_TEMPLE(
-        inside = Position(3213, 3476),
+        inside = Position(3215, 3476),
         area = SimpleBoxArea.of(3208, 3471, 3218, 3481),
         parent = { VARROCK }),
 

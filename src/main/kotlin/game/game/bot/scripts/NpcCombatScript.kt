@@ -71,6 +71,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Fights configured NPCs using owned melee, ranged or combat-magic supplies.
  * The existing targeting and banking lifecycle handles travel, replenishment and bounded target searches.
+ * Varrock's sealed monk cage is excluded from fresh and restored sessions because its drops cannot be reached on foot.
  *
  * Dragon sessions require a one-handed melee loadout and an owned anti-dragon shield, equipped before travel.
  * Losing that protection blocks further attack clicks and requests banking. KBD additionally requires combat
@@ -105,7 +106,8 @@ open class NpcCombatScript(bot: Bot,
                            private var spell: CombatSpell? = null,
                            private val slayerTask: SlayerTaskType? = null,
                            private val slayerMaster: SlayerMaster? = null) :
-    TargetingZonedBotScript<Npc>(bot, duration, zones), SocialBotScript {
+    TargetingZonedBotScript<Npc>(bot, duration,
+        zones.filterNot { it == SubZone.VARROCK_ZAMORAK_TEMPLE }.toMutableList()), SocialBotScript {
 
     override val actionSafety = ActionSafety.COMBAT
 
