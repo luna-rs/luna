@@ -1,6 +1,7 @@
 package engine.widget
 
 import api.predef.*
+import engine.item.developerItem.DeveloperItemHandler
 import game.content.mageArena.MageArena
 import game.item.degradable.DegradableDropWarningDialogue
 import game.item.degradable.DegradableEquipmentHandler
@@ -28,6 +29,10 @@ val itemDrop = FileOutputType.ITEM_DROP.level
 on(DropItemEvent::class, EventPriority.HIGH) {
     val item = plr.inventory[index]
     val itemDef = item.itemDef
+    if (item.id == DeveloperItemHandler.ITEM_ID) {
+        if (DeveloperItemHandler.allowed(plr)) plr.sendMessage("You cannot drop Luna's toy.")
+        return@on
+    }
     if (MageArena.dropCape(plr, index)) {
         plr.overlays.closeWindows()
     } else if(DegradableEquipmentHandler.isDropRestricted(item.id)) {

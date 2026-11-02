@@ -21,7 +21,11 @@ on(ItemOnNpcEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID }.
 on(ItemOnGroundItemEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID }.then {
     DeveloperInspection.groundInfo(plr, groundItem)
 }
-on(ItemOnItemEvent::class).filter { usedItemId == DeveloperItemHandler.ITEM_ID }.then {
-    DeveloperInspection.inventoryItem(plr, targetItemIndex, targetItemId)
+on(ItemOnItemEvent::class).filter {
+    usedItemId == DeveloperItemHandler.ITEM_ID || targetItemId == DeveloperItemHandler.ITEM_ID
+}.then {
+    if (DeveloperItemHandler.allowed(plr) && usedItemId == DeveloperItemHandler.ITEM_ID) {
+        DeveloperInspection.inventoryItem(plr, targetItemIndex, targetItemId)
+    }
 }
 on(LogoutEvent::class) { DeveloperItemHandler.forget(plr) }

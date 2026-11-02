@@ -29,7 +29,25 @@ object DeveloperItemHandler {
     const val ITEM_ID = 4177
     private val previous = WeakHashMap<Player, (Player) -> Unit>()
 
-    fun allowed(plr: Player) = plr.rights == PlayerRights.DEVELOPER && plr.state == EntityState.ACTIVE
+    fun allowed(plr: Player): Boolean {
+        if (plr.rights != PlayerRights.DEVELOPER) {
+            destroy(plr)
+            forget(plr)
+            return false
+        }
+        return plr.state == EntityState.ACTIVE
+    }
+
+    /**
+     * Removes every carried toy without creating a ground item.
+     */
+    internal fun destroy(plr: Player) {
+        for (container in listOf(plr.inventory, plr.equipment)) {
+            container.forIndexedItems { index, item ->
+                if (item?.id == ITEM_ID) container[index] = null
+            }
+        }
+    }
 
     fun available(plr: Player, target: Player): Boolean {
         if (!allowed(plr)) return false

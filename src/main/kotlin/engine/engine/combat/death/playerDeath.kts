@@ -9,6 +9,7 @@ import api.bot.social.BotWildernessLures
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
+import engine.item.developerItem.DeveloperItemHandler
 import game.bot.scripts.DeathReflexScript.Companion.lastKiller
 import game.player.Animations
 import game.player.Jingles
@@ -46,6 +47,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
             return@death
         }
 
+        DeveloperItemHandler.destroy(victim)
         EssencePouch.loseOnDeath(victim)
         val removedItems = removeAll(sort = false)
         if (removedItems.isNotEmpty()) {
