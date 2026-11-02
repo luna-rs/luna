@@ -1,5 +1,7 @@
 package game.player.command
 
+import api.bot.isRealBot
+
 import api.bot.zone.Zone
 import api.event.Matcher
 import api.predef.*
@@ -68,7 +70,7 @@ cmd("commands") {
  * A command that tells how many players are currently online.
  */
 cmd("players") {
-    plr.sendMessage("Real players online: ${world.players.count { it != null && it !is Bot }}.")
+    plr.sendMessage("Real players online: ${world.players.count { it != null && !it.isRealBot() }}.")
     plr.sendMessage("Bots online: ${world.bots.onlineCount}.")
 }
 

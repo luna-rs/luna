@@ -115,6 +115,10 @@
     "high_intelligence_chance": 0.05,
     // The chance that a newly created bot becomes a merchant.
     "high_merchanting_chance": 0.10,
+    // The maximum sale stacks a merchant carries per batch. Clamped to 1-27 to leave room for payment.
+    "merchant_sale_stack_limit": 7,
+    // Each merchant sale stack must be worth strictly more than this many GP at its asking price.
+    "merchant_sale_minimum_stack_value": 1000,
     // The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and greed.
     "base_loot_value": 15000
   },

@@ -185,7 +185,7 @@ class MakeCompostBotScript(
         val wasClosed = bin.closed
         val wasOpen = bin.open
         val zone = SITES.getValue(location)
-        val obj = world.locator.findObjects(zone.inside, zone.area.tileRadius) {
+        val obj = world.locator.findObjects(zone.area.centerPosition, zone.area.tileRadius) {
             it.id == location.objectId && it.state == EntityState.ACTIVE && it.position.z == 0 && it in zone.area
         }.firstOrNull()
         attemptProduction(input ?: Farming.BUCKET, available = obj != null,
