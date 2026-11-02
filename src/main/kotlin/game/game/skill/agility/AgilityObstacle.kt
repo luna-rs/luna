@@ -3,7 +3,7 @@ package game.skill.agility
 import io.luna.game.model.Position
 
 /**
- * Entry positions, XP, and failure rules for the three existing agility courses.
+ * Entry positions, XP, and failure rules for the agility courses.
  * Level requirements belong to entrances, not every obstacle inside a course.
  * [startIf] tells whether a tile is one the obstacle starts from.
  *
@@ -38,5 +38,17 @@ enum class AgilityObstacle(val xp: Double,
         failure = AgilityFailure.WILDERNESS_STONES),
     WILDERNESS_LOG_BALANCE(20.0, { x == 3002 && y == 3945 && z == 0 },
         failure = AgilityFailure.WILDERNESS_LOG),
-    WILDERNESS_ROCKS(0.0, { x in 2993..2995 && y == 3937 && z == 0 })
+    WILDERNESS_ROCKS(0.0, { x in 2993..2995 && y == 3937 && z == 0 }),
+
+    // Ape Atoll has no entrance, so every obstacle checks the course level.
+    APE_STEPPING_STONE(40.0, { x == 2755 && y == 2742 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_STEPPING_STONE),
+    APE_TROPICAL_TREE(40.0, { x == 2753 && y == 2742 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_TROPICAL_TREE),
+    APE_MONKEY_BARS(40.0, { x == 2752 && y == 2741 && z == 2 }, level = 48,
+        failure = AgilityFailure.APE_MONKEY_BARS),
+    APE_SKULL_SLOPE(60.0, { x == 2747 && y == 2741 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_SKULL_SLOPE),
+    APE_ROPE(100.0, { x == 2751 && y == 2731 && z == 0 }, level = 48, failure = AgilityFailure.APE_ROPE),
+    APE_ZIP_VINE(300.0, { x == 2757 && y == 2733 && z == 0 }, level = 48, failure = AgilityFailure.APE_ZIP_VINE)
 }
