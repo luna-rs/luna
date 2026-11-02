@@ -154,7 +154,8 @@ public final class CombatAction extends Action<Mob> {
         }
 
         // Apply auto-retaliate if a valid aggressor was remembered.
-        if (combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() || mob instanceof Bot)) {
+        if (combat.getAutoRetaliateTarget() != null && (combat.isAutoRetaliate() ||
+                (mob instanceof Bot controller && (controller.isBot() || controller.isAutomationActive())))) {
             if (combat.getAutoRetaliateTarget().isAlive()) {
                 combat.setTarget(combat.getAutoRetaliateTarget());
             }

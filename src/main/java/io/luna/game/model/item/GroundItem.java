@@ -187,7 +187,7 @@ public class GroundItem extends StationaryEntity {
     protected void onActive() {
         if (!getView().isGlobal()) {
             for (Player player : getView()) {
-                if (player.isBot()) {
+                if (player instanceof io.luna.game.model.mob.bot.Bot) {
                     player.asBot().getViewableItems().add(this);
                 }
             }
@@ -198,7 +198,7 @@ public class GroundItem extends StationaryEntity {
     protected void onInactive() {
         if (!originalView.isGlobal()) {
             for (Player player : originalView) {
-                if (player.isBot()) {
+                if (player instanceof io.luna.game.model.mob.bot.Bot) {
                     player.asBot().getViewableItems().remove(this);
                 }
             }
@@ -285,6 +285,15 @@ public class GroundItem extends StationaryEntity {
      */
     public final int getExpireTicks() {
         return expireTicks;
+    }
+
+    /**
+     * Returns ticks until this drop becomes public or is removed, or -1 for persistent drops.
+     */
+    public final int getRemainingLifetimeTicks() {
+        if (!isExpiring()) return -1;
+        int lifetime = GroundItemList.expirationTransitionTicks(this);
+        return Math.max(0, lifetime - expireTicks);
     }
 
     /**
