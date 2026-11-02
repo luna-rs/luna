@@ -3,6 +3,7 @@ package game.bot.scripts
 import api.bot.action.CombatLoadout
 import api.predef.*
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.npc.spawn.shantayPass.ShantayPass
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.bot.Bot
 
@@ -17,7 +18,7 @@ internal object KalphiteQueenTrip {
     const val POTION = 2434
     const val ROPE = 954
     val prayerPotions = setOf(2434, 139, 141, 143)
-    val supplies = mapOf(FOOD to 20, POTION to 4, ROPE to 2)
+    val supplies = mapOf(FOOD to 20, POTION to 4, ROPE to 2, ShantayPass.PASS to 1)
 
     /**
      * Uses unboosted levels so a temporary potion cannot qualify an underlevelled bot.

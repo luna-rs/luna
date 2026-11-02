@@ -47,7 +47,8 @@ object CrossingHandlers {
                                                                ZanarisCrossing.ID to ZanarisCrossing,
                                                                ShiloVillageTravelCrossing.ID to ShiloVillageTravelCrossing,
                                                                PiscatorisCrossing.ID to PiscatorisCrossing,
-                                                               AbyssCrossing.ID to AbyssCrossing)
+                                                               AbyssCrossing.ID to AbyssCrossing,
+                                                               ShantayPassCrossing.ID to ShantayPassCrossing)
 
     /**
      * The names of every handler.

@@ -258,7 +258,7 @@ object SpecialCrossings {
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
         ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
-        PiscatorisHoleCrossingSpec.SPEC)
+        PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
