@@ -490,25 +490,39 @@ public final class BotScheduleService extends AbstractScheduledService {
     /**
      * Calculates the next time the bot should attempt to log in.
      * <p>
-     * Social bots return sooner, while antisocial bots remain offline longer.
+     * Most breaks stay near the configured base duration, with uncommon one-to-two-day breaks and rare longer
+     * absences at the default settings. Sociability only shortens the sampled break, by at most twenty percent.
      *
      * @param personality The personality used to adjust the login time.
      * @return The next login time.
      */
     private Instant calculateNextLogin(BotPersonality personality) {
-        int baseHours = calculateBaseHours(settings.baseLogoutHours());
-        int boostHours = calculateBoostHours(baseHours, personality);
-        int totalHours = (int) clamp(
-                personality.isSocial() ? baseHours - boostHours : baseHours + boostHours,
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        double baseHours = Math.max(1, settings.baseLogoutHours());
+        double roll = random.nextDouble();
+        double hours;
+        if (roll < 0.90) {
+            hours = random.nextDouble(baseHours * 0.5, baseHours * 1.5);
+        } else if (roll < 0.98) {
+            hours = random.nextDouble(baseHours * 2.0, baseHours * 4.0);
+        } else if (roll < 0.999) {
+            hours = random.nextDouble(baseHours * 4.0, baseHours * 8.0);
+        } else {
+            hours = random.nextDouble(baseHours * 8.0, baseHours * 14.0);
+        }
+
+        double social = personality.getSocial();
+        double shortening = Double.isFinite(social) ? 0.20 * clamp(social, 0.0, 1.0) : 0.0;
+        double totalHours = clamp(
+                hours * (1.0 - shortening),
                 settings.minimumLogoutHours(),
                 settings.maximumLogoutHours()
         );
-
-        return Instant.now().plus(30, ChronoUnit.MINUTES).plus(totalHours, ChronoUnit.HOURS);
+        return Instant.now().plus(Math.round(totalHours * 60.0), ChronoUnit.MINUTES);
     }
 
     /**
-     * Calculates how many hours should be added to or removed from a base online/offline duration.
+     * Calculates how many hours should be added to or removed from a base online duration.
      * <p>
      * The boost is based on the side of the social spectrum represented by the bot's personality. Social bots use their
      * social score directly, while antisocial bots use the inverse social score.

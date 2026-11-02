@@ -99,8 +99,8 @@
     "base_online_count": 1500,
     // The baseline number of hours bots should remain logged in.
     "base_login_hours": 8,
-    // The baseline number of hours bots should remain logged out before returning.
-    "base_logout_hours": 48,
+    // The typical break length in hours; uncommon and rare breaks use longer ranges.
+    "base_logout_hours": 12,
     // The minimum number of hours a bot should remain logged in before being scheduled for logout.
     "minimum_login_hours": 1,
     // The maximum number of hours a bot should remain logged in before being scheduled for logout.
