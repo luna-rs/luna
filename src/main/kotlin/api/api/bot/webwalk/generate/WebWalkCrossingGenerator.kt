@@ -257,7 +257,7 @@ object SpecialCrossings {
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
-        ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT)
+        ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
