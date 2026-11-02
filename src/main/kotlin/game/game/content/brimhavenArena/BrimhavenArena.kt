@@ -33,7 +33,6 @@ import api.predef.ext.*
 import game.skill.agility.AgilityAction
 import game.skill.agility.AgilityStep
 import io.luna.game.action.ActionState
-import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -69,8 +68,11 @@ object BrimhavenArena {
     fun tile(x: Int, y: Int, z: Int = 3) = Position(2752 + x, 9536 + y, z)
     fun inside(p: Position): Boolean = p.x in 2752..2815 && p.y in 9536..9599 && p.z in 0..3
     fun session(player: Player): Session? = sessions[player]
+    /**
+     * Click listeners run inside the interaction's own strong action, so only a lock, death or combat means busy.
+     */
     internal fun ready(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive &&
-        !player.isLocked && !player.combat.inCombat() && player.actions.size(ActionType.STRONG) == 0
+        !player.isLocked && !player.combat.inCombat()
     private fun near(player: Player, npc: Npc, id: Int): Boolean = ready(player) && npc.id == id &&
         npc.state == EntityState.ACTIVE && npc.position.isWithinDistance(ENTRANCE, 16) &&
         player.position.isWithinDistance(npc.position, 3)
