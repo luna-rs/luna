@@ -8,7 +8,7 @@ import api.bot.script.InventoryBotScript.Companion.InventoryScriptData
 import api.bot.zone.SubZone
 import api.predef.*
 import com.google.gson.JsonObject
-import engine.bot.coordinator.skill.WoodcuttingScriptFactory
+import engine.bot.coordinator.skill.FiremakingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.firemaking.Firemaking
 import game.skill.firemaking.Firemaking.TINDERBOX
@@ -27,7 +27,8 @@ import kotlin.time.Duration.Companion.seconds
  * The script withdraws a tinderbox and up to [LOGS_PER_TRIP] logs of one [log] type, walks to the eastern end of a
  * [FiremakingLane] beside the bank, and lights one log after another. Each fire steps the bot one tile west, so the
  * fires form a straight line. When the lane runs out or a fire is in the way, the bot picks another lane, and once its
- * logs are gone it banks for more. When the bank runs low, the script queues a Woodcutting script and stops.
+ * logs are gone it banks for more. When fuel runs out, the remaining session time passes to compatible log gathering
+ * and its explicit burning continuation.
  *
  * Only one bot firemakes at each spot. A bot that finds its spot taken, or every lane there burning, rejects the zone
  * so another one can be tried.
@@ -231,6 +232,11 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
      */
     private var lane: FiremakingLane? = null
 
+    /**
+     * A depleted session hands off only once, even if another withdrawal callback arrives before cancellation settles.
+     */
+    private var gatheringQueued = false
+
     override fun withdraw(): List<Item> = withdrawBatch(bankOnly = false)
 
     override fun bankWithdraw(): List<Item> = withdrawBatch(bankOnly = true)
@@ -361,12 +367,18 @@ class FiremakingBotScript(bot: Bot, val log: Log, duration: Duration, zones: Mut
 
 
     /**
-     * Queues a Woodcutting script so the bot can chop more logs to burn, then stops this script.
+     * Hands off remaining time to compatible fuel preparation, then stops this script.
      */
     private fun chopMoreLogs() {
-        val script =
-            WoodcuttingScriptFactory.getScript(bot, bot.woodcutting.staticLevel, mutableListOf(), randBoolean())
-        bot.scriptStack.pushTail(script, 2)
+        if (gatheringQueued) return
+        gatheringQueued = true
+        releaseSpot()
+        val remaining = remainingDuration()
+        if (remaining > Duration.ZERO) {
+            val script = FiremakingScriptFactory.getTrainingScript(bot, bot.firemaking.staticLevel,
+                mutableListOf(), remaining)
+            bot.scriptStack.softPushHead(script)
+        }
         stop()
     }
 }

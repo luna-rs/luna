@@ -101,37 +101,34 @@ class SkillingCoordinator(private val training: Boolean) : BotCoordinator {
         ).associateBy { it.skillId }
     }
 
-    override fun accept(bot: Bot) {
+    /**
+     * Weights only skills with a supported factory, preserving account-build eligibility and preferences.
+     */
+    internal fun skillWeights(bot: Bot): Map<Int, Double> {
         val weights = HashMap<Int, Double>()
         fun eligible(skill: Int) = if (training) BotCombatActionHandler.wantsToTrain(bot, skill)
             else BotCombatActionHandler.mayGainExperience(bot, skill)
 
-        for (skill in bot.skills) {
-            if (!eligible(skill.id)) continue
+        for (skillId in factories.keys) {
+            if (!eligible(skillId)) continue
             // In training mode, low level skills are more likely to be selected. In profit mode, the inverse applies.
-            val levelFactor = if (training) 1.0 - (skill.staticLevel / 100.0) else skill.staticLevel / 100.0
-            weights[skill.id] = (levelFactor * LEVEL_WEIGHT) + 0.10
+            val level = bot.skill(skillId).staticLevel
+            val levelFactor = if (training) 1.0 - (level / 100.0) else level / 100.0
+            weights[skillId] = (levelFactor * LEVEL_WEIGHT) + 0.10
         }
 
         for (skill in bot.preferences.skills) {
             weights.computeIfPresent(skill) { _, old -> old + PREFERENCE_WEIGHT }
         }
 
-        val selectedSkill = RandomUtils.weightedRoll(weights)
+        return weights
+    }
+
+    override fun accept(bot: Bot) {
+        val selectedSkill = RandomUtils.weightedRoll(skillWeights(bot)) ?: return
+        val factory = factories[selectedSkill] ?: return
         val zones = ArrayList<SubZone>()
-
         bot.profitMode = !training
-
-        bot.scriptStack.push(run {
-            var script = factories[selectedSkill]?.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training)
-
-            if (script == null) {
-                val factory = factories.values.filter { eligible(it.skillId) }
-                    .randomOrNull() ?: return@run null
-                script = factory.getScript(bot, bot.skill(factory.skillId).staticLevel, zones, training)
-            }
-
-            script
-        })
+        bot.scriptStack.push(factory.getScript(bot, bot.skill(selectedSkill).staticLevel, zones, training))
     }
 }

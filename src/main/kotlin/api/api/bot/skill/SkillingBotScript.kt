@@ -1,11 +1,15 @@
 
 package api.bot.skill
 
+import api.attr.Attr
+import api.bot.action.trading.BotTradeIntentions
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
 import api.bot.script.TargetingZonedBotScript
 import api.bot.zone.SubZone
 import api.predef.*
+import game.skill.mining.Pickaxe
+import game.skill.woodcutting.cutTree.Axe
 import io.luna.game.model.Entity
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.item.Item
@@ -24,6 +28,7 @@ import kotlin.time.Duration
  * an optional emergency tool may be added to the bot's bank. Required tools must actually be owned
  * and usable at the current level; failed provisioning stops the session. Selected tools are replaced
  * after loss or a level drain, and banked replacements are collected before native interactions.
+ * Gathering-tool reviews record useful one-copy upgrades for ordinary shopping and adopt owned upgrades at banks.
  *
  * Subclasses define the required level, available tools, optional emergency tool, additional requirements, and
  * skill-specific execution and banking behaviour.
@@ -50,6 +55,16 @@ abstract class SkillingBotScript<E : Entity>(
          * This set is mutable but should be treated as read-only by callers.
          */
         val EMPTY_TOOL_SET = TreeSet<SkillingTool>()
+
+        /**
+         * Highest usable tier, best owned tool and review time, shared across sessions for each gathering skill.
+         */
+        private val toolReviews = Attr.map<Int, Triple<Int, Int, Long>>()
+
+        private val axeQuality = Axe.entries.associate { axe ->
+            axe.id to axe.chances.values.sumOf { (minimum, maximum) -> minimum + maximum }
+        }
+        private val pickaxeQuality = Pickaxe.entries.associate { it.id to -it.speed }
     }
 
     /**
@@ -73,6 +88,7 @@ abstract class SkillingBotScript<E : Entity>(
         }
 
         tool = resolveTool()
+        reviewToolUpgrade()
         if (skill.level < requiredLevel) return false
         val toolId = tool?.id
         if (toolId != null) {
@@ -120,6 +136,7 @@ abstract class SkillingBotScript<E : Entity>(
     protected open suspend fun handleFullInventory(): Boolean = false
 
     final override suspend fun onBankOpen(initial: Boolean) {
+        reviewToolUpgrade()
         if (skill.level < levelRequired() || tools().isNotEmpty() && tool == null ||
             tool?.let { skill.level < it.skillLevel } == true) {
             stop()
@@ -281,7 +298,9 @@ abstract class SkillingBotScript<E : Entity>(
             addAll(configured)
             removeIf { skill.level < it.skillLevel }
         }
-        val ordered = if (bot.personality.isDumb) candidates.shuffled() else candidates.toList()
+        val quality = toolQuality()
+        val ordered = if (bot.personality.isDumb) candidates.shuffled() else if (quality.isEmpty()) candidates.toList()
+            else candidates.sortedWith(compareByDescending<SkillingTool> { quality[it.id] ?: it.skillLevel }.thenBy { it.id })
         ordered.firstOrNull { skill.level >= it.skillLevel && ownsTool(it.id) }?.let { return it }
         for (candidate in ordered) {
             if (skill.level < candidate.skillLevel) continue
@@ -298,6 +317,55 @@ abstract class SkillingBotScript<E : Entity>(
             return null
         }
         return emergency
+    }
+
+    /**
+     * Recognizes gathering tools by their native effectiveness, independently of wielding requirements.
+     * Other tools retain their configured ordering and do not generate speculative upgrades.
+     */
+    private fun toolQuality(): Map<Int, Int> = when (skill.id) {
+        SKILL_WOODCUTTING -> axeQuality
+        SKILL_MINING -> pickaxeQuality
+        else -> emptyMap()
+    }
+
+    /**
+     * Reviews one useful axe or pickaxe upgrade during preparation, keeping ordinary work as the fallback.
+     * Owned upgrades are collected through normal banking; missing tools use the existing budgeted merchanting path.
+     */
+    private fun reviewToolUpgrade() {
+        val quality = toolQuality()
+        if (quality.isEmpty()) return
+        fun candidates() = tools().filter { it.id in quality && skill.level >= it.skillLevel }
+            .sortedWith(compareByDescending<SkillingTool> { quality.getValue(it.id) }.thenBy { it.id })
+        fun bestOwned() = candidates().firstOrNull { ownsTool(it.id) }
+        val owned = bestOwned()
+        if (owned == null) {
+            BotTradeIntentions.recordToolUpgrade(bot, quality.keys, null)
+            return
+        }
+        if (!bot.personality.isDumb) tool = owned
+        val activeFor = duration.inWholeMilliseconds.coerceIn(0L, 8 * 60 * 60_000L) + 2 * 60 * 60_000L
+        fun record(id: Int) {
+            val satisfying = candidates().filter { quality.getValue(it.id) >= quality.getValue(id) }.map { it.id }
+            BotTradeIntentions.recordToolUpgrade(bot, quality.keys, id, satisfying, retained = owned.id,
+                activeForMillis = activeFor)
+        }
+        val better = candidates().filter { quality.getValue(it.id) > quality.getValue(owned.id) }
+        if (better.isEmpty()) {
+            record(owned.id)
+            return
+        }
+        val now = System.currentTimeMillis()
+        val reviews = bot.attributes()[toolReviews.attr]
+        val last = reviews[skill.id]
+        val best = better.first().id
+        if (last?.first == best && last.second == owned.id && now - last.third < 30 * 60_000L) return
+        record(owned.id)
+        reviews[skill.id] = Triple(best, owned.id, now)
+        if (!bot.personality.isIntelligent && !rand(bot.personality.intelligence)) return
+
+        record(best)
     }
 
     /**
