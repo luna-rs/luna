@@ -1,20 +1,19 @@
 package game.item.greegree
 
+import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.PlayerModelAnimation
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
-import io.luna.game.model.mob.controller.PlayerController
 
 /**
  * The monkey greegrees and the monkeys they turn their holder into.
  *
  * @param id The greegree's item id.
  * @param npc The monkey the holder becomes.
- * @param run The monkey's running animation, or -1 if it can't run.
+ * @param run The monkey's running animation, or -1 to run with its walk.
  * @author TheLining
  */
 enum class Greegree(val id: Int, val npc: Int, private val run: Int) {
@@ -26,11 +25,6 @@ enum class Greegree(val id: Int, val npc: Int, private val run: Int) {
     SMALL_ZOMBIE_MONKEY(4029, 1485, -1),
     LARGE_ZOMBIE_MONKEY(4030, 1486, -1),
     KARAMJAN_MONKEY(4031, 1487, 1419);
-
-    /**
-     * Whether the monkey can run. The zombie monkeys only walk.
-     */
-    val canRun = run != -1
 
     /**
      * The monkey's standing and walking animations. Its turns are left unset (-1), so the client turns it with its
@@ -71,44 +65,17 @@ enum class Greegree(val id: Int, val npc: Int, private val run: Int) {
         fun worksAt(position: Position) = AREAS.any { it.contains(position) }
 
         /**
-         * The greegree [plr] holds, or `null`. It reads the slot without the plugin predefs, since the engine calls it
-         * through [disguises].
+         * The greegree [plr] holds, or `null`.
          */
-        fun held(plr: Player): Greegree? = plr.equipment[Equipment.WEAPON]?.let { ITEMS[it.id] }
-
-        /**
-         * Whether [plr] looks like the monkey of the greegree they hold.
-         */
-        @JvmStatic
-        fun disguises(plr: Player): Boolean {
-            val greegree = held(plr) ?: return false
-            return plr.transformId == greegree.npc
-        }
-
-        /**
-         * Turns [plr] back into a human.
-         */
-        fun reset(plr: Player) {
-            plr.resetTransform()
-            if (plr.controllers.primary is GreegreeController) {
-                plr.controllers.unregister()
-            }
-        }
+        fun held(plr: Player): Greegree? = plr.equipment.weapon?.let { ITEMS[it.id] }
     }
 
     /**
-     * Turns [plr] into this greegree's monkey. The [GreegreeController] takes over only from the default controller, so
-     * an activity's own controller stays in charge.
+     * Turns [plr] into this greegree's monkey.
      */
     fun transform(plr: Player) {
         plr.transform(npc)
         plr.model = model
         plr.flags.flag(UpdateFlag.APPEARANCE)
-        if (!canRun) {
-            plr.isRunning = false
-        }
-        if (plr.controllers.primary.javaClass == PlayerController::class.java) {
-            plr.controllers.register(GreegreeController(plr))
-        }
     }
 }

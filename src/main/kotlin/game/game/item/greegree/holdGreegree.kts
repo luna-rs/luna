@@ -14,7 +14,7 @@ on(EquipmentChangeEvent::class, EventPriority.NORMAL) {
     if (index != Equipment.WEAPON) return@on
     val greegree = newItem?.let { Greegree.ITEMS[it.id] }
     when {
-        greegree == null -> if (oldItem?.id in Greegree.ITEMS) Greegree.reset(plr)
+        greegree == null -> if (oldItem?.id in Greegree.ITEMS) plr.resetTransform()
         Greegree.worksAt(plr.position) -> greegree.transform(plr)
         else -> {
             // Out of Zooknock's reach it does nothing and goes back in the pack.
