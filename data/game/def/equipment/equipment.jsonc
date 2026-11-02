@@ -285,7 +285,7 @@
   },
   {
     "id": 538, // Druid's robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -329,7 +329,7 @@
   },
   {
     "id": 542, // Monk's robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -373,9 +373,9 @@
   },
   {
     "id": 546, // Shade robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -15511,6 +15511,182 @@
   {
     "id": 4021, // M'speak amulet
     "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4024, // Monkey greegree (small ninja monkey)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4025, // Monkey greegree (medium ninja monkey)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4026, // Monkey greegree (gorilla)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4027, // Monkey greegree (bearded gorilla)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4028, // Monkey greegree (ancient monkey)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4029, // Monkey greegree (small zombie monkey)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4030, // Monkey greegree (large zombie monkey)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4031, // Monkey greegree (Karamjan monkey)
+    "index": 3,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -32596,7 +32772,7 @@
     "id": 7392, // Wizard robe (t)
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [

@@ -1,5 +1,7 @@
 package game.bot.scripts.skills
 
+import api.bot.isRealBot
+
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
@@ -40,7 +42,7 @@ internal object MiningArguments {
         if (!BotConversations.available(bot, allowWorking = true)) return
         bot.nextMiningArgumentCheck = now + rand(300, 600)
         val rivals = world.locator.findPlayers(bot.position, 8) { player ->
-            player is Bot && player !== bot && player.state == EntityState.ACTIVE &&
+            player.isRealBot() && player !== bot && player.state == EntityState.ACTIVE &&
                 player.actions.first(MineOreAction::class.java)?.rockObj === rock
         }.filterIsInstance<Bot>().filter { rival ->
             val other = rival.scriptStack.current() as? MineBotScript
