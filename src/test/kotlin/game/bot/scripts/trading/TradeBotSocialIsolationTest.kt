@@ -53,7 +53,9 @@ class TradeBotSocialIsolationTest {
             return bot
         }
 
-        private fun human(): Player = mock(Player::class.java, RETURNS_DEEP_STUBS).also {
+        private fun human(connected: Boolean = false): Player =
+            (if (connected) mock(Bot::class.java, RETURNS_DEEP_STUBS)
+            else mock(Player::class.java, RETURNS_DEEP_STUBS)).also {
             `when`(it.attributes()).thenReturn(AttributeMap())
             `when`(it.state).thenReturn(EntityState.ACTIVE)
             `when`(it.username).thenReturn("Human")
@@ -128,6 +130,19 @@ class TradeBotSocialIsolationTest {
         assertTrue(hasHumanRequest(script))
         assertTrue(hasHumanRequest(script))
         assertSame(human, bot.tradeRequests.pollRequests { accepts(script, it) })
+        assertFalse(hasHumanRequest(script))
+    }
+
+    @Test
+    fun connectedPlayersWithAutomationFacilitiesRetainHumanTradePriority() {
+        val bot = trader(BotTradePurpose.MERCHANT_BUY, 1)
+        val human = human(connected = true)
+        val script = bot.scriptStack.current() as TradeBotScript
+        human.tradingWith = bot.index
+        bot.tradeRequests.addRequest(human)
+
+        assertTrue(hasHumanRequest(script))
+        assertSame(human, bot.tradeRequests.pollHumanRequests { accepts(script, it) })
         assertFalse(hasHumanRequest(script))
     }
 

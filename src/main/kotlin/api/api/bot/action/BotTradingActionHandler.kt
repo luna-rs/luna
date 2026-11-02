@@ -39,6 +39,15 @@ class BotTradingActionHandler(private val bot: Bot, private val handler: BotActi
     }
 
     /**
+     * Submits a native trade request with a one-time prerequisite, such as delivering its counteroffer message.
+     * The prerequisite runs after approach and permission checks, immediately before the trade click.
+     */
+    suspend fun sendTradeRequest(plr: Player, beforeRequest: () -> Boolean, canContinue: () -> Boolean): Boolean {
+        return handler.interactions.interactBeforeSubmit(TRADE.index, plr,
+            allowed = { TRADE in bot.contextMenu && canContinue() }, beforeSubmit = beforeRequest)
+    }
+
+    /**
      * Clicks the accept button on the final trade confirmation screen.
      *
      * @return `true` if the confirmation trade interface was open and the click was sent.

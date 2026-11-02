@@ -172,6 +172,14 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         interact(option, target, onWebWalkLeg = false, allowed = allowed)
 
     /**
+     * Runs a one-time prerequisite after reaching the target and rechecking permission, immediately before the
+     * interaction packet is submitted. Repeated approach checks never invoke [beforeSubmit].
+     */
+    suspend fun interactBeforeSubmit(option: Int, target: Entity?, allowed: () -> Boolean,
+                                    beforeSubmit: () -> Boolean): Boolean =
+        interact(option, target, onWebWalkLeg = false, allowed = allowed, beforeSubmit = beforeSubmit)
+
+    /**
      * Approaches with a content handler's native reach policy, such as a rope swing two tiles away.
      * The ordinary interaction packet still applies the server's registered policy and validation.
      */
@@ -179,7 +187,8 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         interact(option, target, onWebWalkLeg = false, allowed = allowed, reachPolicy = policy)
 
     private suspend fun interact(option: Int, target: Entity?, onWebWalkLeg: Boolean,
-                                 allowed: () -> Boolean = { true }, reachPolicy: InteractionPolicy? = null): Boolean {
+                                 allowed: () -> Boolean = { true }, reachPolicy: InteractionPolicy? = null,
+                                 beforeSubmit: (() -> Boolean)? = null): Boolean {
         if (target == null || !allowed()) {
             return false
         }
@@ -213,7 +222,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             bot.log("Interaction failed: web approach did not reach the target.")
             return false
         }
-        if (!allowed()) return false
+        if (!allowed() || beforeSubmit?.invoke() == false) return false
         val previousAttack = bot.combat.lastAttackSent
         val npcAttack = combatClick(option, target)
         var targetGone = false

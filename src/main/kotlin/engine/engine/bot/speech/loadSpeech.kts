@@ -3,6 +3,7 @@ package engine.bot.speech;
 import api.predef.*
 import api.predef.ext.*
 import api.bot.social.CombatCampBehavior
+import api.bot.action.trading.PlayerTradeAdvertisementMarket
 import io.luna.game.event.impl.ChatEvent
 import io.luna.game.event.impl.CombatDamageReceivedEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
@@ -24,6 +25,7 @@ on(ServerLaunchEvent::class) {
 BotReactions.reactToOtherLevelUp()
 
 // Bots answer price checks in public chat, and ask them at the markets.
+BotChatRouter.add(PlayerTradeAdvertisementMarket.live)
 BotChatRouter.add(BotPriceChecks)
 BotChatRouter.add(CombatCampBehavior)
 on(ChatEvent::class) { BotChatRouter.route(this) }
