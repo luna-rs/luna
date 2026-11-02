@@ -175,4 +175,13 @@ public class PlayerController {
         return true;
     }
 
+    /**
+     * Returns the player this controller was constructed for.
+     *
+     * @return The controller owner.
+     */
+    public final Player getPlayer() {
+        return player;
+    }
+
 }

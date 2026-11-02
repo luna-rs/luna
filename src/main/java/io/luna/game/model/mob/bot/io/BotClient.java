@@ -98,7 +98,21 @@ public final class BotClient extends GameClient {
      * @param msg The message to simulate.
      */
     public void queueSimulated(GameMessage msg) {
+        if (bot.isConnectedPlayer() && !bot.isAutomationActive()) {
+            msg.getPayload().releaseAll();
+            return;
+        }
         pendingReadMessages.add(msg);
+    }
+
+    /**
+     * Discards pending synthetic input and observations when human control resumes. Game-thread only.
+     */
+    public void clearAutomationMessages() {
+        GameMessage msg;
+        while ((msg = pendingReadMessages.poll()) != null) msg.getPayload().releaseAll();
+        pendingWriteMessages.clear();
+        input.clear();
     }
 
     /**

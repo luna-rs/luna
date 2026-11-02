@@ -242,6 +242,9 @@ public final class BotScriptStack {
      * @param script The high-priority script to run immediately.
      */
     public void pushHead(BotScript script) {
+        if (bot.isConnectedPlayer() && !bot.isAutomationActive()) {
+            return;
+        }
         BotScript current = buffer.peek();
         if (current != null) {
             // Pause current script, but don't remove it. The stack will start it again later.
@@ -265,6 +268,9 @@ public final class BotScriptStack {
      * @param script The script to run after the current script.
      */
     public void softPushHead(BotScript script) {
+        if (bot.isConnectedPlayer() && !bot.isAutomationActive()) {
+            return;
+        }
         String scriptName = script.getClass().getName();
         BotScript current = buffer.peek();
         if (current != null) {
@@ -291,6 +297,9 @@ public final class BotScriptStack {
      * @param script The script to enqueue at the tail.
      */
     public void pushTail(BotScript script) {
+        if (bot.isConnectedPlayer() && !bot.isAutomationActive()) {
+            return;
+        }
         String scriptName = script.getClass().getName();
         if (buffer.size() >= SCRIPT_WARNING_THRESHOLD) {
             logger.warn("Excessive amount of scripts in buffer bot={}, script={}.", bot, scriptName);
@@ -357,10 +366,29 @@ public final class BotScriptStack {
     }
 
     /**
-     * Clears all queued scripts except the currently running script.
-     * <p>
-     * If the current script is running, it is preserved at the head of the buffer. Idle, paused, finished, and pending
-     * scripts are removed.
+     * Cancels active and paused work and discards queued work without shutting the stack down.
+     * Must run on the game thread.
+     */
+    public void stopAll() {
+        List<BotScript> pending = List.copyOf(buffer);
+        buffer.clear();
+        pending.forEach(BotScript::stop);
+    }
+
+    /**
+     * Removes and cancels the current script, including work that has not started yet.
+     */
+    public boolean stopCurrent() {
+        BotScript current = buffer.pollFirst();
+        if (current == null) {
+            return false;
+        }
+        current.stop();
+        return true;
+    }
+
+    /**
+     * Clears queued scripts, preserving the currently running script.
      */
     public void clear() {
         BotScript current = buffer.peek();

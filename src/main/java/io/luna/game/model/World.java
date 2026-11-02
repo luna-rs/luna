@@ -10,9 +10,11 @@ import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.economy.WorldEconomy;
 import io.luna.game.model.item.shop.ShopManager;
+import io.luna.game.model.map.DynamicMapSpacePool;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.BotManager;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.object.GameObjectList;
@@ -261,6 +263,11 @@ public final class World {
     private final WorldEconomy economy;
 
     /**
+     * The dynamic space pool managing map instance space.
+     */
+    private final DynamicMapSpacePool dynamicMapSpacePool;
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The runtime context instance.
@@ -274,6 +281,7 @@ public final class World {
         persistenceService = new PersistenceService(this);
         botManager = new BotManager(this);
         economy = new WorldEconomy(this);
+        dynamicMapSpacePool = new DynamicMapSpacePool(context);
 
         // Initialize the connection pool.
         if (serializerManager.isSql()) {
@@ -303,6 +311,7 @@ public final class World {
         economy.startAsync();
         items.startExpirationTask();
         collisionManager.build(false);
+        dynamicMapSpacePool.buildEmptySpacePool();
         botManager.load();
     }
 
@@ -410,6 +419,9 @@ public final class World {
                 continue;
             }
             player.getClient().handleDecodedMessages();
+            if (player instanceof Bot controller && controller.isConnectedPlayer()) {
+                controller.processAutomationInput();
+            }
         }
 
         // Then, pre-process NPC walking and action queues.
@@ -443,7 +455,7 @@ public final class World {
                 player.getWalking().process();
                 player.getActions().processAfterMovement();
 
-                if (player.isBot()) {
+                if (player instanceof Bot) {
                     player.asBot().process();
                 }
                 if (player.getState() == EntityState.ACTIVE) {
@@ -746,5 +758,12 @@ public final class World {
      */
     public WorldEconomy getEconomy() {
         return economy;
+    }
+
+    /**
+     * @return The dynamic space pool managing map instance space.
+     */
+    public DynamicMapSpacePool getDynamicMapSpacePool() {
+        return dynamicMapSpacePool;
     }
 }

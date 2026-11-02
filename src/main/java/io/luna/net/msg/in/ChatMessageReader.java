@@ -1,9 +1,9 @@
 package io.luna.net.msg.in;
 
+import api.bot.BotTypes;
 import engine.player.punishment.PunishmentHandler;
 import io.luna.game.event.impl.ChatEvent;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -28,7 +28,7 @@ public final class ChatMessageReader extends GameMessageReader<ChatEvent> {
 
     @Override
     public boolean validate(Player player, ChatEvent event) {
-        if (player instanceof Bot bot && !bot.getSpeechStack().validateConversationDelivery(event.getUnpackedMessage())) {
+        if (BotTypes.isRealBot(player) && !player.asBot().getSpeechStack().validateConversationDelivery(event.getUnpackedMessage())) {
             return false;
         }
         if (PunishmentHandler.INSTANCE.notifyIfMuted(player)) {
