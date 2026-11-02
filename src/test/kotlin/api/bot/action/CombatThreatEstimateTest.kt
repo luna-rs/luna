@@ -159,15 +159,17 @@ class CombatThreatEstimateTest {
                 NpcCombatDefinition.ALL.storeDefinition(it)
             }
         }
+        val hitpoints = definition.hitpoints
+        val maxHit = definition.maximumHit
         return mock(Npc::class.java, RETURNS_DEEP_STUBS).also {
             `when`(it.id).thenReturn(id)
             `when`(it.asNpc()).thenReturn(it)
             `when`(it.combatDef()).thenReturn(definition)
-            `when`(it.totalHealth).thenReturn(definition.hitpoints)
-            `when`(it.health).thenReturn(definition.hitpoints)
+            `when`(it.totalHealth).thenReturn(hitpoints)
+            `when`(it.health).thenReturn(hitpoints)
             `when`(it.combat.attackStyleBonus).thenReturn(EquipmentBonus.SLASH_ATTACK)
             for (type in CombatDamageType.entries) {
-                `when`(it.combat.getDefaultMaxHit(type)).thenReturn(definition.maximumHit)
+                `when`(it.combat.getDefaultMaxHit(type)).thenReturn(maxHit)
             }
             skills(it, 70)
         }

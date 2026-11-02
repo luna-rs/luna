@@ -120,8 +120,8 @@ public class WalkingNavigator {
             cancel();
         }
         active = request;
-        mob.submitAction(new NavigationAction(mob, active));
-        return active.getPending();
+        mob.submitAction(new NavigationAction(mob, request));
+        return request.getPending();
     }
 
     /**
@@ -301,8 +301,22 @@ public class WalkingNavigator {
      */
     public void cancel() {
         discardPaths();
-        if (isActive()) {
-            active.getPending().cancel(true);
+        NavigationRequest cancelled = active;
+        active = null;
+        if (cancelled != null) {
+            cancelled.getPending().cancel(true);
+        }
+    }
+
+    /**
+     * Releases a finished request before its completion callbacks can submit another request.
+     * A replaced action may finish later, so only the identical active request is detached.
+     *
+     * @param request The request whose navigation action has finished on the game thread.
+     */
+    void finish(NavigationRequest request) {
+        if (active == request) {
+            active = null;
         }
     }
 

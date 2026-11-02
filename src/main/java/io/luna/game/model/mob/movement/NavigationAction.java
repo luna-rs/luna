@@ -231,6 +231,7 @@ final class NavigationAction extends Action<Mob> {
         } else if (result == null) {
             result = NavigationResult.DIDNT_REACH;
         }
+        navigator.finish(request);
         request.getPending().complete(result);
     }
 }

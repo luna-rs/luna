@@ -6,6 +6,7 @@ import engine.bank.Banking
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Bank
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.MobList
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.task.Task
@@ -49,7 +50,7 @@ class NpcBankOpeningTest {
         bot = InventoryProductionFixtures.bot()
         val world = bot.world
         val npcs = world.npcs
-        previous = npcs[NPC_INDEX]
+        previous = (npcs as MobList<*>)[NPC_INDEX] as? Npc
         banker = mock(Npc::class.java, RETURNS_DEEP_STUBS)
         `when`(banker.id).thenReturn(2271)
         `when`(banker.def().actions).thenReturn(ImmutableList.of("Talk-to", "Bank"))
@@ -57,7 +58,7 @@ class NpcBankOpeningTest {
         `when`(banker.world).thenReturn(world)
         `when`(banker.state).thenReturn(EntityState.ACTIVE)
         `when`(banker.isAlive).thenReturn(true)
-        `when`(npcs[NPC_INDEX]).thenReturn(banker)
+        doReturn(banker).`when`(npcs).get(NPC_INDEX)
         `when`(world.collisionManager.reached(bot, banker, Banking.BANKER_POLICY)).thenAnswer { reached }
         bank = mock(Bank::class.java)
         `when`(bank.isOpen).thenAnswer { nativeWindow }
@@ -73,7 +74,8 @@ class NpcBankOpeningTest {
     @AfterEach fun restoreWorld() {
         if (::bot.isInitialized) {
             val world = bot.world
-            `when`(world.npcs[NPC_INDEX]).thenReturn(previous)
+            val npcs = world.npcs
+            doReturn(previous).`when`(npcs).get(NPC_INDEX)
             doNothing().`when`(world).schedule(any(Task::class.java))
         }
     }

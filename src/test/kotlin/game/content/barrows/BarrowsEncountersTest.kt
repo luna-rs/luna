@@ -10,6 +10,7 @@ import io.luna.game.model.def.NpcCombatDefinition
 import io.luna.game.model.def.NpcCombatMovement
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.VarpDefinition
+import io.luna.game.model.mob.MobReferenceFixtures
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.attr.AttributeMap
@@ -31,6 +32,7 @@ class BarrowsEncountersTest {
     private val world = context.world
     private val tasks = mutableListOf<Task>()
     private lateinit var owner: Player
+    private var nextPlayerIndex = 1
 
     private fun player(): Player {
         val player = mock(Player::class.java, RETURNS_DEEP_STUBS)
@@ -42,6 +44,7 @@ class BarrowsEncountersTest {
         `when`(player.position).thenReturn(Position(3555, 9697, 3))
         `when`(player.state).thenReturn(EntityState.ACTIVE)
         `when`(player.isAlive).thenReturn(true)
+        MobReferenceFixtures.register(player, nextPlayerIndex++)
         return player
     }
 
@@ -73,6 +76,7 @@ class BarrowsEncountersTest {
             val npc = it.getArgument<Npc>(0)
             npc.index = index++
             npc.state = EntityState.ACTIVE
+            doReturn(npc).`when`(npcs).get(npc.index)
             true
         }.`when`(npcs).add(any(Npc::class.java))
         doAnswer {

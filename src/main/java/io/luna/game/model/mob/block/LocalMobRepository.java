@@ -42,8 +42,8 @@ import java.util.stream.Stream;
  *     local sets while the updating view is cleaned up via {@code removeIf} in the iteration methods.</li>
  * </ol>
  * <p>
- * All mutation methods enforce that they are only called from the updating thread via {@link #assertUpdatingThread()},
- * ensuring that non-thread-safe structures are not accessed concurrently.
+ * Update mutations enforce {@link #assertUpdatingThread()}. Logout cleanup runs on the game thread between
+ * synchronization phases, after the previous update workers have completed.
  * </p>
  *
  * @author lare96
@@ -157,6 +157,29 @@ public final class LocalMobRepository {
             localNpcs.remove(npc);
             npc.getLocalHumans().remove(player);
         }
+    }
+
+    /**
+     * Detaches the departing session from its observed NPCs and bots, then clears both local views.
+     * The game thread calls this between synchronization phases, while no update worker can access this repository.
+     * Session handles keep cleanup of an old login from removing a new login with the same username.
+     */
+    public void clearForLogout() {
+        if (Thread.currentThread() != player.getContext().getGame().getThread()) {
+            throw new IllegalStateException("LocalMobRepository logout cleanup from non-game thread.");
+        }
+        for (Player other : localPlayers) {
+            if (other.isBot()) {
+                other.asBot().getLocalHumans().remove(player);
+            }
+        }
+        for (Npc npc : localNpcs) {
+            npc.getLocalHumans().remove(player);
+        }
+        updatingPlayers.clear();
+        updatingNpcs.clear();
+        localPlayers.clear();
+        localNpcs.clear();
     }
 
     /**
@@ -317,8 +340,8 @@ public final class LocalMobRepository {
     /**
      * Ensures that the current thread is an updating thread.
      * <p>
-     * All mutation methods in this repository must be called only from updating threads. If this condition is
-     * violated, an {@link IllegalStateException} is thrown to highlight incorrect usage early.
+     * Update mutations must be called only from updating threads. If this condition is violated, an
+     * {@link IllegalStateException} is thrown to highlight incorrect usage early.
      * </p>
      */
     private void assertUpdatingThread() {

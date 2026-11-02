@@ -5,6 +5,7 @@ import api.combat.specialAttack.SpecialAttackHandler;
 import api.combat.specialAttack.dsl.SpecialAttackBuilderReceiver;
 import api.combat.specialAttack.dsl.SpecialAttackDataReceiver;
 import engine.combat.prayer.CombatPrayerSet;
+import io.luna.game.action.Action;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.def.CombatSpellDefinition;
 import io.luna.game.model.def.CombatStyleDefinition;
@@ -19,6 +20,7 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.combat.AmmoType;
+import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.CombatFormula;
 import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.combat.CombatStance;
@@ -90,6 +92,11 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * Selection state captured when the first attack is cached, or {@code null} when no attack is cached.
      */
     private AttackSelection firstAttackSelection;
+
+    /**
+     * The interaction action owning an unconsumed prepared attack until it hands off to combat.
+     */
+    private Action<?> firstAttackOwner;
 
     /**
      * A temporary, target-specific movement lease owned by a bot combat script.
@@ -195,6 +202,7 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * @return {@code true} if the target and active controllers permit combat, otherwise {@code false}.
      */
     public boolean canAttackCurrentTarget() {
+        Mob target = getTarget();
         return target != null && target.getCombat().isAttackable() &&
                 (!(target instanceof Player) || isAttackable()) && player.getControllers().checkCombat(target);
     }
@@ -276,13 +284,16 @@ public final class PlayerCombatContext extends CombatContext<Player> {
 
     @Override
     public void onCombatFinished() {
-        setFirstAttack(null);
+        if (firstAttackOwner == null) {
+            setFirstAttack(null);
+        }
         releasePursuit(pursuitOwner);
     }
 
     @Override
     public void reset() {
         releasePursuit(pursuitOwner);
+        setFirstAttack(null);
         super.reset();
     }
 
@@ -422,7 +433,51 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * @return The cached first attack, or {@code null} if none is set.
      */
     public CombatAttack<Player> getFirstAttack() {
+        if (involvesInactivePlayer(firstAttack)) {
+            setFirstAttack(null);
+        }
         return firstAttack;
+    }
+
+    /**
+     * Associates preparation created while resolving an interaction with that action's lifetime.
+     * A newer action's preparation is left alone when an older action finishes.
+     *
+     * @param owner The action owning the approach or deferred listener execution.
+     * @param target The interaction target.
+     */
+    public void claimFirstAttack(Action<?> owner, Mob target) {
+        if (firstAttackOwner == null && firstAttack != null && firstAttack.getVictim() == target) {
+            firstAttackOwner = owner;
+        }
+    }
+
+    /**
+     * Transfers preparation from an approach to its deferred listener action.
+     *
+     * @param previous The action completing the approach.
+     * @param next The action that will execute the listeners.
+     */
+    public void transferFirstAttack(Action<?> previous, Action<?> next) {
+        if (firstAttackOwner == previous) {
+            firstAttackOwner = next;
+        }
+    }
+
+    /**
+     * Ends an interaction's preparation, retaining it only when a live combat action accepted that exact target.
+     * Combat consumes the prepared attack normally and clears any unused preparation when its action finishes.
+     *
+     * @param owner The approach or deferred listener action that has finished.
+     */
+    public void finishFirstAttack(Action<?> owner) {
+        if (firstAttackOwner == owner) {
+            firstAttackOwner = null;
+            if (firstAttack != null && (getTarget() != firstAttack.getVictim() ||
+                    player.getActions().first(CombatAction.class) == null)) {
+                setFirstAttack(null);
+            }
+        }
     }
 
     /**
@@ -432,7 +487,9 @@ public final class PlayerCombatContext extends CombatContext<Player> {
      * @param firstAttack The first attack to cache, or {@code null} to clear it.
      */
     public void setFirstAttack(CombatAttack<Player> firstAttack) {
+        firstAttack = involvesInactivePlayer(firstAttack) ? null : firstAttack;
         this.firstAttack = firstAttack;
-        firstAttackSelection = firstAttack == null ? null : captureAttackSelection();
+        firstAttackOwner = null;
+        firstAttackSelection = this.firstAttack == null ? null : captureAttackSelection();
     }
 }

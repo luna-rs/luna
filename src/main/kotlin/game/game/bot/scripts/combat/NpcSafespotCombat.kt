@@ -5,7 +5,7 @@ import api.bot.zone.SubZone
 import engine.bot.combat.NpcSafespotMap
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.CombatAttackHistory
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.async
@@ -28,9 +28,9 @@ class NpcSafespotCombat(private val bot: Bot, private val active: () -> Boolean)
     private var target: Npc? = null
     private var zone: SubZone? = null
     private var policy: InteractionPolicy? = null
-    private var incoming: CombatAttack<*>? = null
-    private var npcOutgoing: CombatAttack<*>? = null
-    private var outgoing: CombatAttack<*>? = null
+    private var incoming: CombatAttackHistory? = null
+    private var npcOutgoing: CombatAttackHistory? = null
+    private var outgoing: CombatAttackHistory? = null
     private var startedTick = 0L
     private var stableSince = -1L
     private var observedTick = -1L

@@ -6,7 +6,6 @@ import api.bot.script.BotScript;
 import api.bot.zone.SubZone;
 import api.bot.zone.Zone;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import game.bot.scripts.DeathReflexScript;
 import game.bot.scripts.EatFoodReflexScript;
 import game.bot.scripts.LootItemReflexScript;
@@ -23,6 +22,7 @@ import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.LocalMobRepository;
+import io.luna.game.model.mob.block.LocalHumanView;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.brain.BotBrain;
@@ -264,11 +264,11 @@ public final class Bot extends Player {
     private final BotScriptStack scriptStack;
 
     /**
-     * The human players currently visible to this bot.
+     * The human sessions currently visible to this bot.
      * <p>
-     * Bots do not use the normal player local-mob update repository, so human visibility is tracked separately.
+     * Bots do not use the normal player local-mob update repository. This non-owning view stores session handles.
      */
-    private final Set<Player> localHumans = Sets.newConcurrentHashSet();
+    private final LocalHumanView localHumans = new LocalHumanView();
 
     /**
      * The simulated client connection backing this bot.
@@ -827,13 +827,13 @@ public final class Bot extends Player {
     }
 
     /**
-     * Gets the concurrent set of human players currently visible to this bot.
+     * Gets the non-owning view of human sessions observing this bot.
      * <p>
      * This replaces normal player local-mob tracking for bots.
      *
-     * @return The visible human player set.
+     * @return The concurrent observer view, resolving only the original live sessions.
      */
-    public Set<Player> getLocalHumans() {
+    public LocalHumanView getLocalHumans() {
         return localHumans;
     }
 

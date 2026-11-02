@@ -7,6 +7,7 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcCombatMovement;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.MobReferenceFixtures;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
@@ -50,6 +51,8 @@ class NpcRetreatTest {
         when(npc.getActions()).thenReturn(actions);
         combat = spy(new NpcCombatContext(npc));
         when(npc.getCombat()).thenReturn(combat);
+        MobReferenceFixtures.register(npc, 1);
+        MobReferenceFixtures.register(player, 2);
     }
 
     @Test

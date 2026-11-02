@@ -57,7 +57,7 @@ class BarrowsCombatTest {
         val hit = apply(BarrowsBrother.GUTHAN, 24)
         assertEquals(24, hit.rawAmount)
         val applied = ArgumentCaptor.forClass(CombatDamage::class.java)
-        verify(player.combat).lastDamageReceived = applied.capture()
+        verify(player.combat).setLastDamageReceived(applied.capture())
         assertEquals(3, applied.value.rawAmount)
         verify(npc).health = 53
         clearInvocations(npc)

@@ -366,6 +366,10 @@ public class Player extends Mob {
     protected void onInactive() {
         if (dynamicMap != null) dynamicMap.remove(this);
         pendingPlacement = true;
+        localMobs.clearForLogout();
+        actions.clear();
+        navigator.cancel();
+        combat.reset();
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
     }

@@ -10,7 +10,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
-import io.luna.game.model.mob.combat.damage.CombatDamage
+import io.luna.game.model.mob.combat.CombatDamageHistory
 import io.luna.game.model.mob.combat.damage.CombatDamageType
 import java.util.EnumMap
 import java.util.EnumSet
@@ -111,7 +111,7 @@ class PvmPrayer(private val bot: Bot) {
     /**
      * The hit the bot last read the fight on, or `null` if it read it before taking one.
      */
-    private var readHit: CombatDamage? = null
+    private var readHit: CombatDamageHistory? = null
 
     /**
      * Whether the bot has started spending its reserve this fight, because it was close to dying.
@@ -326,7 +326,7 @@ class PvmPrayer(private val bot: Bot) {
     /**
      * Returns the last hit the bot took from a monster in this fight, or `null` if it hasn't taken one.
      */
-    private fun lastHit(fight: PvmFight): CombatDamage? {
+    private fun lastHit(fight: PvmFight): CombatDamageHistory? {
         val hit = bot.combat.lastDamageReceived ?: return null
         val attacker = hit.attacker as? Npc ?: return null
         return if (attacker in fight.opponents) hit else null
