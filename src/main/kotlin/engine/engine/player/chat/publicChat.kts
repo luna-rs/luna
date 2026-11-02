@@ -22,6 +22,6 @@ val chat = FileOutputType.CHAT.level
  */
 on(ChatEvent::class, EventPriority.HIGH) {
     plr.chat(Chat(message, color, plr.rights.clientValue, effect))
-    (plr as? Bot)?.speechStack?.acknowledgeConversation(unpackedMessage)
+    (plr as? Bot)?.speechStack?.acknowledgeSpeech(unpackedMessage)
     logger.log(chat, "{}: {}", plr.username, unpackedMessage)
 }

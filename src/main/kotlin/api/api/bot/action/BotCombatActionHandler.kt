@@ -1,5 +1,7 @@
 package api.bot.action
 
+import api.bot.isRealBot
+
 import engine.bot.gear.BotGearPurpose
 import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Player
@@ -132,12 +134,13 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             styles.filter { style -> style.exp.isNotEmpty() && style.exp.all { mayGainExperience(bot, it) } }
 
         /**
-         * Recognizes bots by their PKER template or active PK session, including a paused parent beneath combat.
+         * Recognizes runtime PvP participants for targeting, separately from permanent PKER account identity.
+         * Bots qualify through their PKER template or an active PK session, including a paused parent beneath combat.
          * A saved build alone does not imply current PK activity, and a bot's skull is not a substitute for intent.
          * Human players are recognized by their native skull icon.
          */
         @JvmStatic
-        fun isPker(player: Player): Boolean = if (player is Bot) {
+        fun isPkParticipant(player: Player): Boolean = if (player.isRealBot()) {
             !player.preferences.isSkiller && (player.personality.type == PersonalityTemplateType.PKER ||
                 player.scriptStack.containsActive(PkBotScript::class.java))
         } else player.skullIcon != SkullIcon.NONE
@@ -289,7 +292,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
     }
 
     /**
-     * Chooses an armour counter from supply-ready disciplines allowed by the saved PK identity.
+     * Chooses an armour counter from supply-ready disciplines allowed by the saved PK profile.
      * Callers supply only disciplines whose owned equipment, ammunition and damage spells are usable.
      * This policy does not equip items, initiate fights, select targets, or authorize risk from bank stock.
      * Eligible, supplied Ancient Magicks receives a 95% preference before normal counter selection.

@@ -4,11 +4,15 @@ import engine.combat.status.StatusEffectType;
 import engine.controllers.MultiCombatAreaListener;
 import game.combat.npcHooks.skeletalWyvern.WyvernIcyBreathStatusEffect;
 import io.luna.game.TickTimer;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.MobReference;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.CombatAction;
+import io.luna.game.model.mob.combat.CombatAttackHistory;
+import io.luna.game.model.mob.combat.CombatDamageHistory;
 import io.luna.game.model.mob.combat.CombatImpactQueue;
 import io.luna.game.model.mob.combat.CombatRestriction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
@@ -72,21 +76,21 @@ public abstract class CombatContext<T extends Mob> {
     private final TickTimer combatTimer;
 
     /**
-     * The mob currently being attacked, or {@code null} if no combat target is set.
+     * The non-owning identity of the current combat target, or {@code null} if no target is set.
      */
-    protected Mob target;
+    private MobReference target;
 
     /**
      * The mob that should be attacked automatically if auto-retaliate is triggered.
      */
-    protected Mob autoRetaliateTarget;
+    private MobReference autoRetaliateTarget;
 
     /**
      * The last mob this mob exchanged combat with.
      * <p>
      * This is used for single-combat validation and combat ownership checks.
      */
-    protected Mob lastCombatWith;
+    private MobReference lastCombatWith;
 
     /**
      * The number of game ticks remaining before this mob may perform another attack.
@@ -109,24 +113,24 @@ public abstract class CombatContext<T extends Mob> {
     private boolean disabled;
 
     /**
-     * The most recent combat attack that successfully applied to this mob.
+     * A value snapshot of the most recent combat attack that successfully applied to this mob.
      * <p>
      * This can be used by combat scripts and post-hit logic to inspect the attack that produced the latest hit.
      */
-    private CombatAttack<?> lastAttackReceived;
+    private CombatAttackHistory lastAttackReceived;
 
     /**
-     * The last attack sent by this mob.
+     * A value snapshot of the last attack sent by this mob.
      */
-    private CombatAttack<?> lastAttackSent;
+    private CombatAttackHistory lastAttackSent;
 
     /**
-     * The most recent combat damage received by this mob.
+     * A value snapshot of the most recent combat damage received by this mob.
      * <p>
      * This is published after damage is applied and before its events or source callbacks run. Nested hit
      * notifications may replace it with a newer applied hit; event and callback arguments identify their own hit.
      */
-    private CombatDamage lastDamageReceived;
+    private CombatDamageHistory lastDamageReceived;
 
     /**
      * Creates a new combat context for the supplied mob.
@@ -240,7 +244,7 @@ public abstract class CombatContext<T extends Mob> {
                 return;
             }
         }
-        target = enemy;
+        setTarget(enemy);
         mob.getActions().submitIfAbsent(new CombatAction(mob));
     }
 
@@ -259,7 +263,7 @@ public abstract class CombatContext<T extends Mob> {
         }
         attack(enemy);
         CombatAction action = mob.getActions().first(CombatAction.class);
-        if (target == enemy && action != null && hasExpiredAttackDelay()) {
+        if (getTarget() == enemy && action != null && hasExpiredAttackDelay()) {
             setAttackDelay(getRetaliationDelay());
         }
     }
@@ -316,14 +320,16 @@ public abstract class CombatContext<T extends Mob> {
             return true;
         }
 
-        if (isSingleCombatLocked() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
+        Mob opponent = getLastCombatWith();
+        if (isSingleCombatLocked() && opponent != null && !Objects.equals(opponent, victim)) {
             mob.ifPlayer(player -> player.sendMessage("You are already in combat."));
             return false;
         }
 
         CombatContext<?> victimCombat = victim.getCombat();
-        if (victimCombat.isSingleCombatLocked() && victimCombat.lastCombatWith != null &&
-                !Objects.equals(victimCombat.lastCombatWith, mob)) {
+        Mob victimOpponent = victimCombat.getLastCombatWith();
+        if (victimCombat.isSingleCombatLocked() && victimOpponent != null &&
+                !Objects.equals(victimOpponent, mob)) {
             mob.ifPlayer(player -> player.sendMessage("They are already in combat."));
             return false;
         }
@@ -391,8 +397,28 @@ public abstract class CombatContext<T extends Mob> {
         if (mob instanceof Npc npc && attacker instanceof Player player) {
             npc.getCombat().setLastAttackingPlayer(player);
         }
-        lastCombatWith = attacker;
+        setLastCombatWith(attacker);
         resetCombatTimer();
+    }
+
+    /**
+     * Checks whether a participant is a player session that has left the world.
+     *
+     * @param participant The participant, or {@code null}.
+     * @return Whether the participant is an inactive player.
+     */
+    protected static boolean isInactivePlayer(Mob participant) {
+        return participant instanceof Player && participant.getState() == EntityState.INACTIVE;
+    }
+
+    /**
+     * Checks whether a prepared attack still refers to an inactive player session.
+     *
+     * @param attack The prepared attack, or {@code null}.
+     * @return Whether either participant is an inactive player.
+     */
+    protected static boolean involvesInactivePlayer(CombatAttack<?> attack) {
+        return attack != null && (isInactivePlayer(attack.getAttacker()) || isInactivePlayer(attack.getVictim()));
     }
 
     /**
@@ -478,14 +504,14 @@ public abstract class CombatContext<T extends Mob> {
      * @param target The new target, or {@code null} if no target should be tracked.
      */
     public final void setTarget(Mob target) {
-        this.target = target;
+        this.target = MobReference.capture(target);
     }
 
     /**
      * @return The current target, or {@code null} if no target is active.
      */
     public final Mob getTarget() {
-        return target;
+        return target == null ? null : target.resolve();
     }
 
     /**
@@ -499,7 +525,7 @@ public abstract class CombatContext<T extends Mob> {
      * @return The mob to retaliate against, or {@code null} if none is set.
      */
     public Mob getAutoRetaliateTarget() {
-        return autoRetaliateTarget;
+        return autoRetaliateTarget == null ? null : autoRetaliateTarget.resolve();
     }
 
     /**
@@ -508,14 +534,14 @@ public abstract class CombatContext<T extends Mob> {
      * @param autoRetaliateTarget The mob to retaliate against, or {@code null} to clear it.
      */
     public void setAutoRetaliateTarget(Mob autoRetaliateTarget) {
-        this.autoRetaliateTarget = autoRetaliateTarget;
+        this.autoRetaliateTarget = MobReference.capture(autoRetaliateTarget);
     }
 
     /**
      * @return The last tracked combat opponent, or {@code null} if none is set.
      */
     public Mob getLastCombatWith() {
-        return lastCombatWith;
+        return lastCombatWith == null ? null : lastCombatWith.resolve();
     }
 
     /**
@@ -524,7 +550,7 @@ public abstract class CombatContext<T extends Mob> {
      * @param lastAttackedBy The last tracked combat opponent.
      */
     public void setLastCombatWith(Mob lastAttackedBy) {
-        this.lastCombatWith = lastAttackedBy;
+        this.lastCombatWith = MobReference.capture(lastAttackedBy);
     }
 
     /**
@@ -610,7 +636,7 @@ public abstract class CombatContext<T extends Mob> {
      *
      * @return The last applied combat attack, or {@code null} if none has been tracked.
      */
-    public CombatAttack<?> getLastAttackReceived() {
+    public CombatAttackHistory getLastAttackReceived() {
         return lastAttackReceived;
     }
 
@@ -620,7 +646,7 @@ public abstract class CombatContext<T extends Mob> {
      * @param lastAttackReceived The last applied combat attack.
      */
     public void setLastAttackReceived(CombatAttack<?> lastAttackReceived) {
-        this.lastAttackReceived = lastAttackReceived;
+        this.lastAttackReceived = lastAttackReceived == null ? null : lastAttackReceived.getHistory();
     }
 
     /**
@@ -628,7 +654,7 @@ public abstract class CombatContext<T extends Mob> {
      *
      * @return The last attack sent by this mob, or {@code null} if none has been tracked.
      */
-    public CombatAttack<?> getLastAttackSent() {
+    public CombatAttackHistory getLastAttackSent() {
         return lastAttackSent;
     }
 
@@ -638,7 +664,7 @@ public abstract class CombatContext<T extends Mob> {
      * @param lastAttackSent The last attack.
      */
     public void setLastAttackSent(CombatAttack<?> lastAttackSent) {
-        this.lastAttackSent = lastAttackSent;
+        this.lastAttackSent = lastAttackSent == null ? null : lastAttackSent.getHistory();
     }
 
     /**
@@ -646,7 +672,7 @@ public abstract class CombatContext<T extends Mob> {
      *
      * @return The last received combat damage, or {@code null} if none has been tracked.
      */
-    public CombatDamage getLastDamageReceived() {
+    public CombatDamageHistory getLastDamageReceived() {
         return lastDamageReceived;
     }
 
@@ -656,6 +682,6 @@ public abstract class CombatContext<T extends Mob> {
      * @param lastDamageReceived The last received combat damage.
      */
     public void setLastDamageReceived(CombatDamage lastDamageReceived) {
-        this.lastDamageReceived = lastDamageReceived;
+        this.lastDamageReceived = lastDamageReceived == null ? null : new CombatDamageHistory(lastDamageReceived);
     }
 }

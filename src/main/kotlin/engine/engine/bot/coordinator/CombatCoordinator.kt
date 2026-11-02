@@ -49,6 +49,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
 
         /**
          * Existing subzones and exact names verified against the configured spawn list.
+         * Varrock's imprisoned monk is excluded because its cage has no walking access for melee or loot.
          */
         internal val camps = listOf(
             Camp(SubZone.LUMBRIDGE_CHICKEN_COOP, 3, setOf("Chicken")),
@@ -70,7 +71,6 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.EDGEVILLE_DUNGEON_HILL_GIANTS, 35, setOf("Hill giant"), true),
             Camp(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.SOUTH_ARDOUGNE_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
-            Camp(SubZone.VARROCK_ZAMORAK_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.PATERDOMUS_ZAMORAK_MONKS, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE, 35, setOf("Monk of Zamorak"), true),
             Camp(SubZone.WHITE_KNIGHTS_CASTLE, 40, setOf("White Knight")),
@@ -106,6 +106,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
         internal fun canUseCamp(zone: SubZone, purpose: BotGearPurpose,
                                 hasDragonShield: Boolean, queenReady: Boolean = false,
                                 moleReady: Boolean = false): Boolean = when {
+            zone == SubZone.VARROCK_ZAMORAK_TEMPLE -> false
             zone == SubZone.KALPHITE_QUEEN -> purpose == BotGearPurpose.MELEE && queenReady
             zone == SubZone.GIANT_MOLE_LAIR -> moleReady
             zone in NpcCombatScript.DRAGON_ZONES -> purpose == BotGearPurpose.MELEE && hasDragonShield

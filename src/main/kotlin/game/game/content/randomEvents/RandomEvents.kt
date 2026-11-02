@@ -37,6 +37,7 @@ import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.fishingSpot.FishingSpotHandler
+import game.skill.woodcutting.cutTree.Axe
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -46,6 +47,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 import kotlin.random.Random
 
 /**
@@ -196,6 +198,27 @@ object RandomEvents {
             else -> false
         }
     }
+
+    /**
+     * Offers woodcutting's three source hazard slots with the live tree and current tool. Ents
+     * and lost heads release readiness once selected, even if the tree has no mapped Ent form
+     * or no safe landing tile exists; neither outcome is rerolled into a different encounter.
+     */
+    fun offerWoodcutting(player: Player, tree: GameObject, axe: Axe): Boolean =
+        offerWoodcutting(player, tree, axe) { Random.nextInt(it) }
+
+    /**
+     * Retains Lost City's independent general roll after the nine-way woodcutting selection.
+     */
+    internal fun offerWoodcutting(player: Player, tree: GameObject, axe: Axe, random: (Int) -> Int): Boolean =
+        offerOutcome(player) {
+            when (random(9)) {
+                0 -> startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
+                1 -> WoodcuttingRandomEvents.startEnt(player, tree)
+                2 -> WoodcuttingRandomEvents.loseHead(player, axe)
+                else -> generalKind(random)?.let { startEncounter(player, it) } ?: false
+            }
+        }
 
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
@@ -387,6 +410,7 @@ object RandomEvents {
      * A blocked restoration remains queued until the player can accept a soft trigger.
      */
     fun login(player: Player) {
+        WoodcuttingRandomEvents.login(player)
         player.randomEventClock.consume()
         player.generalEventTicks = 0
         if (Kind.entries.none { it.followsLogout && it.name == player.pendingRandomEvent }) player.pendingRandomEvent = ""

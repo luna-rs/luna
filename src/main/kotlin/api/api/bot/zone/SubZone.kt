@@ -505,7 +505,65 @@ enum class SubZone(
         area = SimpleBoxArea.of(2936, 3275, 2944, 3292),
         parent = { FALADOR }),
 
-    // TODO rimmington mine
+    /**
+     * Rimmington's open mine: two clay, five copper, two tin, six iron and two gold rocks.
+     */
+    RIMMINGTON_MINE(
+        inside = Position(2977, 3244),
+        area = SimpleBoxArea.of(2965, 3230, 2990, 3251),
+        parent = { FALADOR }),
+
+    /**
+     * The south-west bank of the Port Khazard mine, beside the Fight Arena: four clay, two copper,
+     * seven tin, nine iron, one coal and two mithril rocks. The opposite riverbank is a separate mine.
+     */
+    PORT_KHAZARD_SOUTH_WEST_MINE(
+        inside = Position(2631, 3141),
+        area = SimpleBoxArea.of(2622, 3128, 2639, 3154),
+        parent = { YANILLE }),
+
+    /**
+     * The north-east bank of the Port Khazard mine: two copper, two tin and two mithril rocks.
+     */
+    PORT_KHAZARD_NORTH_EAST_MINE(
+        inside = Position(2652, 3169),
+        area = SimpleBoxArea.of(2639, 3148, 2659, 3176),
+        parent = { YANILLE }),
+
+    /**
+     * Rocks outside West Ardougne beside the Zamorak monks: three copper and one tin rock.
+     */
+    WEST_ARDOUGNE_MINE(
+        inside = Position(2470, 3254),
+        area = SimpleBoxArea.of(2465, 3230, 2483, 3259),
+        parent = { ARDOUGNE }),
+
+    /**
+     * Barbarian Village's central mining patch: five tin and four coal rocks, banking in Edgeville.
+     */
+    BARBARIAN_VILLAGE_MINE(
+        inside = Position(3081, 3421),
+        area = SimpleBoxArea.of(3076, 3415, 3086, 3425),
+        parent = { EDGEVILLE }),
+
+    /**
+     * The mine south of Piscatoris Fishing Colony: two clay, two copper, two tin and three iron rocks.
+     * Uses the colony bank through the native shore tunnel and gate crossings.
+     */
+    PISCATORIS_MINE(
+        inside = Position(2336, 3642),
+        area = SimpleBoxArea.of(2331, 3636, 2342, 3649),
+        parent = { PISCATORIS_FISHING_COLONY }),
+
+    /**
+     * The southern Keldagrim entrance cavern: two copper and five coal rocks, reached through the
+     * existing Rellekka tunnel and cave entrances without crossing the underground river.
+     */
+    KELDAGRIM_ENTRANCE_SOUTH_MINE(
+        inside = Position(2867, 10119),
+        entrance = { Position(2730, 3713) },
+        area = SimpleBoxArea.of(2859, 10112, 2876, 10127),
+        parent = { RELLEKKA }),
 
     /**
      * The wizards' tower area. Intended for low-level combat training.
@@ -545,8 +603,8 @@ enum class SubZone(
      * The room with the steel arrowtip chest in Hemenster, south-west of seers' village.
      */
     HEMENSTER_CHEST_ROOM(
-        inside = Position(2642, 3447),
-        area = SimpleBoxArea.of(2625, 3410, 2643, 3455),
+        inside = Position(2640, 3424),
+        area = SimpleBoxArea.of(2638, 3421, 2641, 3427),
         parent = { SEERS_VILLAGE }),
 
     /**
@@ -1448,10 +1506,10 @@ enum class SubZone(
         parent = { TAVERLY }),
 
     /**
-     * Varrock's Zamorak monk and its configured five-tile wandering area.
+     * The public room beside Varrock Palace's imprisoned Zamorak monk. The cage itself has no walking entrance.
      */
     VARROCK_ZAMORAK_TEMPLE(
-        inside = Position(3213, 3476),
+        inside = Position(3215, 3476),
         area = SimpleBoxArea.of(3208, 3471, 3218, 3481),
         parent = { VARROCK }),
 
@@ -1523,7 +1581,15 @@ enum class SubZone(
     LVL_40_WILDERNESS_CHAOS_TEMPLE(
         inside = Position(2956, 3820),
         area = SimpleBoxArea.ofRadius(2943, 3813, 16, 14),
-        parent = { EDGEVILLE });
+        parent = { EDGEVILLE }),
+
+    /**
+     * Deep Wilderness runite rocks, used by profit miners with Varrock as their travel and banking parent.
+     */
+    DEEP_WILDERNESS_RUNITE_ROCKS(
+        inside = Position(3062, 3884),
+        area = SimpleBoxArea.ofRadius(3052, 3878, 15, 12),
+        parent = { VARROCK });
 
     companion object {
 

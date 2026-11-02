@@ -33,6 +33,13 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.VARROCK_SW_MINE to setOf(CLAY, TIN, IRON, SILVER),
         SubZone.VARROCK_SE_MINE to setOf(COPPER, TIN, IRON),
         SubZone.FALADOR_WEST_MINE to setOf(COPPER, TIN, IRON, COAL),
+        SubZone.RIMMINGTON_MINE to setOf(CLAY, COPPER, TIN, IRON, GOLD),
+        SubZone.PORT_KHAZARD_SOUTH_WEST_MINE to setOf(CLAY, COPPER, TIN, IRON, COAL, MITHRIL),
+        SubZone.PORT_KHAZARD_NORTH_EAST_MINE to setOf(COPPER, TIN, MITHRIL),
+        SubZone.WEST_ARDOUGNE_MINE to setOf(COPPER, TIN),
+        SubZone.BARBARIAN_VILLAGE_MINE to setOf(TIN, COAL),
+        SubZone.PISCATORIS_MINE to setOf(CLAY, COPPER, TIN, IRON),
+        SubZone.KELDAGRIM_ENTRANCE_SOUTH_MINE to setOf(COPPER, COAL),
         SubZone.DWARVEN_MINE to setOf(CLAY, COPPER, TIN, IRON, COAL, GOLD, MITHRIL, ADAMANT),
         SubZone.CRAFTING_GUILD_MINE to setOf(CLAY, SILVER, GOLD),
         SubZone.MINING_GUILD to setOf(COAL, MITHRIL),
@@ -43,7 +50,8 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
         SubZone.EDGEVILLE_DUNGEON_MINE to setOf(COPPER, TIN, IRON, SILVER, COAL, MITHRIL, ADAMANT),
         SubZone.RELLEKKA_MINE to setOf(CLAY, SILVER, COAL),
         SubZone.ESSENCE_MINE to setOf(RUNE_ESSENCE),
-        SubZone.SHILO_VILLAGE to setOf(GEM_ROCK)
+        SubZone.SHILO_VILLAGE to setOf(GEM_ROCK),
+        SubZone.DEEP_WILDERNESS_RUNITE_ROCKS to setOf(RUNE)
     )
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
@@ -105,7 +113,7 @@ object MiningScriptFactory : SkillingScriptFactory(SKILL_MINING) {
             if (training && zone == SubZone.AL_KHARID_MINE && bot.combatLevel <= 30) {
                 continue
             }
-            if (training && zone == SubZone.EDGEVILLE_DUNGEON_MINE) {
+            if (training && zone in setOf(SubZone.EDGEVILLE_DUNGEON_MINE, SubZone.DEEP_WILDERNESS_RUNITE_ROCKS)) {
                 continue
             }
             val tokens = linkedSetOf<Ore>()

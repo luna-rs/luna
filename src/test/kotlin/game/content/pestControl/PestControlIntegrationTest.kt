@@ -18,6 +18,7 @@ import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.MobDeathAction.DeathStage
+import io.luna.game.model.mob.MobReferenceFixtures
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
@@ -90,6 +91,8 @@ class PestControlIntegrationTest {
     private val npcs = mutableListOf<PestControlNpc>()
     private val objects = linkedSetOf<GameObject>()
     private val volunteers = mutableListOf<Player>()
+    private var nextNpcIndex = 1
+    private var nextPlayerIndex = 1
 
     @BeforeEach fun worldFixtures() {
         val npcList = world.npcs
@@ -98,6 +101,7 @@ class PestControlIntegrationTest {
         doAnswer {
             val npc = it.getArgument<Npc>(0)
             npc.state = EntityState.ACTIVE
+            MobReferenceFixtures.register(npc, nextNpcIndex++)
             if (npc is PestControlNpc) npcs += npc
             true
         }.`when`(npcList).add(any(Npc::class.java))
@@ -128,6 +132,7 @@ class PestControlIntegrationTest {
         `when`(player.equipment).thenReturn(equipment)
         `when`(player.combatLevel).thenReturn(80)
         `when`(player.isAlive).thenReturn(true)
+        MobReferenceFixtures.register(player, nextPlayerIndex++)
         volunteers += player
     }
 

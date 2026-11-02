@@ -1,5 +1,7 @@
 package game.content.lumbridgeGuide
 
+import api.bot.isRealBot
+
 import game.bot.scripts.combat.CombatBotScript
 import game.bot.scripts.combat.PkBotScript
 import game.player.QuestJournalInterface
@@ -48,7 +50,7 @@ class BotStatistics private constructor(
                 if (player.state != EntityState.ACTIVE) {
                     continue
                 }
-                if (player !is Bot) {
+                if (!player.isRealBot()) {
                     humans++
                     continue
                 }
@@ -192,7 +194,8 @@ class BotStatistics private constructor(
         add("Coins in inventories and banks: ${number(records.sumOf { it.coins })}")
         add("Coins only; equipment and other items are not valued.")
         add("")
-        add("@dbl@Personality backgrounds")
+        add("@dbl@Account identities")
+        add("Each account has one identity from its personality.")
         val names = mapOf(
             PersonalityTemplateType.NONE to "Individual",
             PersonalityTemplateType.SKILLER to "Skiller",
@@ -209,6 +212,7 @@ class BotStatistics private constructor(
         }
         add("")
         add("@dbl@Favourite pursuits")
+        add("Accounts can enjoy pursuits beyond their main identity.")
         add("Strong interests, not current jobs; these may overlap.")
         val pursuits = mapOf(
             BotActivity.TRAINING_SKILLS to "Training skills",

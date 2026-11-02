@@ -1,15 +1,16 @@
 package game.skill.agility
 
-import io.luna.game.model.mob.Player
+import io.luna.game.model.Position
 
 /**
- * Entry positions, XP, and failure rules for the three existing agility courses.
+ * Entry positions, XP, and failure rules for the agility courses.
  * Level requirements belong to entrances, not every obstacle inside a course.
+ * [startIf] tells whether a tile is one the obstacle starts from.
  *
  * @author lare96
  */
 enum class AgilityObstacle(val xp: Double,
-                           val startIf: Player.() -> Boolean,
+                           val startIf: Position.() -> Boolean,
                            val level: Int = 0,
                            val failure: AgilityFailure? = null) {
     GNOME_LOG_BALANCE(7.5, { x == 2474 && y == 3436 && z == 0 }),
@@ -37,5 +38,26 @@ enum class AgilityObstacle(val xp: Double,
         failure = AgilityFailure.WILDERNESS_STONES),
     WILDERNESS_LOG_BALANCE(20.0, { x == 3002 && y == 3945 && z == 0 },
         failure = AgilityFailure.WILDERNESS_LOG),
-    WILDERNESS_ROCKS(0.0, { x in 2993..2995 && y == 3937 && z == 0 })
+    WILDERNESS_ROCKS(0.0, { x in 2993..2995 && y == 3937 && z == 0 }),
+
+    // Ape Atoll has no entrance, so every obstacle checks the course level.
+    APE_STEPPING_STONE(40.0, { x == 2755 && y == 2742 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_STEPPING_STONE),
+    APE_TROPICAL_TREE(40.0, { x == 2753 && y == 2742 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_TROPICAL_TREE),
+    APE_MONKEY_BARS(40.0, { x == 2752 && y == 2741 && z == 2 }, level = 48,
+        failure = AgilityFailure.APE_MONKEY_BARS),
+    APE_SKULL_SLOPE(60.0, { x == 2747 && y == 2741 && z == 0 }, level = 48,
+        failure = AgilityFailure.APE_SKULL_SLOPE),
+    APE_ROPE(100.0, { x == 2751 && y == 2731 && z == 0 }, level = 48, failure = AgilityFailure.APE_ROPE),
+    APE_ZIP_VINE(300.0, { x == 2757 && y == 2733 && z == 0 }, level = 48, failure = AgilityFailure.APE_ZIP_VINE),
+
+    // Nothing on the way down to the Werewolf course checks the level, so every obstacle does. Each of the five
+    // stones and three hurdles pays its own share of the 2006 total.
+    WEREWOLF_STEPPING_STONE(10.0, { z == 0 && (x == 3538 && y in setOf(9873, 9875, 9877) ||
+        x == 3540 && y in setOf(9877, 9879)) }, level = 60),
+    WEREWOLF_HURDLE(20.0, { x in 3537..3543 && y in setOf(9892, 9895, 9898) && z == 0 }, level = 60),
+    WEREWOLF_PIPE(15.0, { x in setOf(3538, 3541, 3544) && y == 9904 && z == 0 }, level = 60),
+    WEREWOLF_SKULL_SLOPE(25.0, { x == 3533 && y in 9909..9911 && z == 0 }, level = 60),
+    WEREWOLF_ZIP_LINE(200.0, { x == 3528 && y == 9910 && z == 0 }, level = 60)
 }

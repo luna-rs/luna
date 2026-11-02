@@ -1,5 +1,7 @@
 package engine.combat.death
 
+import api.bot.isRealBot
+
 import api.combat.death.DeathHookHandler
 import api.combat.death.DeathHookHandler.deathItems
 import api.combat.death.PlayerDeathItems
@@ -7,6 +9,7 @@ import api.bot.social.BotWildernessLures
 import api.predef.*
 import api.predef.ext.*
 import engine.bot.speech.BotReactions
+import engine.item.developerItem.DeveloperItemHandler
 import game.bot.scripts.DeathReflexScript.Companion.lastKiller
 import game.player.Animations
 import game.player.Jingles
@@ -28,13 +31,13 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
         BotReactions.reactToOtherDied(source, victim)
-        if (victim is Bot) {
+        if (victim.isRealBot()) {
             // The damage stack only counts players, so an NPC killer is the attacker of the last hit.
             val killer = source ?: victim.combat.lastDamageReceived?.attacker?.takeIf { it != victim }
             victim.lastKiller = killer
             if (killer != null) BotReactions.reactToDied(victim, killer)
         }
-        if (source is Bot) BotReactions.reactToKill(source, victim)
+        if (source.isRealBot()) BotReactions.reactToKill(source, victim)
     }
 
     death {
@@ -44,6 +47,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
             return@death
         }
 
+        DeveloperItemHandler.destroy(victim)
         EssencePouch.loseOnDeath(victim)
         val removedItems = removeAll(sort = false)
         if (removedItems.isNotEmpty()) {

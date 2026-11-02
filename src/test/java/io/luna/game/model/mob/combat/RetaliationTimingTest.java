@@ -4,6 +4,7 @@ import io.luna.game.action.ActionQueue;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.MobReferenceFixtures;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
@@ -73,6 +74,8 @@ class RetaliationTimingTest {
             combat = spy(new NpcCombatContext(npc));
             when(npc.getCombat()).thenReturn(combat);
             combat.setRetreatPolicy(RetreatPolicy.NONE);
+            MobReferenceFixtures.register(npc, 1);
+            MobReferenceFixtures.register(player, 2);
         }
 
         /**
@@ -138,6 +141,7 @@ class RetaliationTimingTest {
                 CombatStyle.CROSSBOW_RAPID, CombatStyle.KNIFE_RAPID, CombatStyle.DART_RAPID)) {
             Player player = mock(Player.class, RETURNS_DEEP_STUBS);
             Npc attacker = mock(Npc.class);
+            MobReferenceFixtures.register(attacker, 2);
             when(player.isAlive()).thenReturn(true);
             when(attacker.isAlive()).thenReturn(true);
             when(player.getWorld().getCurrentTick()).thenReturn(100L);
@@ -168,6 +172,7 @@ class RetaliationTimingTest {
     @Test void playerRetaliationDoesNotExtendAnUnexpiredOrJustReadyCooldown() {
         Player player = mock(Player.class, RETURNS_DEEP_STUBS);
         Npc attacker = mock(Npc.class);
+        MobReferenceFixtures.register(attacker, 2);
         when(player.isAlive()).thenReturn(true);
         when(attacker.isAlive()).thenReturn(true);
         when(player.getControllers().checkCombat(attacker)).thenReturn(true);

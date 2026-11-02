@@ -2,7 +2,6 @@ package io.luna.game.model.mob;
 
 import api.combat.npc.NpcCombatHandler;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Sets;
 import engine.combat.status.StatusEffectType;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
@@ -16,6 +15,7 @@ import io.luna.game.model.area.Area;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.block.LocalHumanView;
 import io.luna.game.model.mob.combat.state.NpcCombatContext;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
 import io.luna.game.model.mob.movement.wandering.DumbWanderingAction;
@@ -29,7 +29,6 @@ import io.luna.game.model.path.route.RouteStrategy;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -97,12 +96,11 @@ public class Npc extends Mob {
     private int spawnCount;
 
     /**
-     * The set of human players that currently have this NPC in their local view.
+     * The human sessions that currently have this NPC in their local view.
      * <p>
-     * This is maintained as a concurrent set and can be used for things like targeted updates, proximity-based
-     * behaviour, or analytics.
+     * The concurrent view stores session handles, so observing this NPC cannot keep a logged-out player alive.
      */
-    private final Set<Player> localHumans = Sets.newConcurrentHashSet();
+    private final LocalHumanView localHumans = new LocalHumanView();
 
     /**
      * The combat context holding important combat data.
@@ -574,11 +572,11 @@ public class Npc extends Mob {
     }
 
     /**
-     * Returns the set of human players that currently have this NPC in their local view.
+     * Returns the non-owning view of human sessions observing this NPC.
      *
-     * @return A concurrent {@link Set} of players that currently see this NPC.
+     * @return The concurrent observer view, resolving only the original live sessions.
      */
-    public Set<Player> getLocalHumans() {
+    public LocalHumanView getLocalHumans() {
         return localHumans;
     }
 

@@ -25,6 +25,8 @@ import game.bot.scripts.NpcCombatScript.Companion.NpcCombatData
 import game.bot.scripts.skills.SlayerBotScript
 import game.bot.scripts.skills.SlayerBotScript.SlayerData
 import game.bot.scripts.WildernessScavengeBotScript.ScavengeData
+import game.bot.scripts.RuneRunnerBotScript.RunnerData
+import game.bot.scripts.RuneCrafterBotScript.CrafterData
 import game.bot.scripts.CollectGroundItemBotScript.CollectionData
 import game.bot.scripts.combat.PkBotScript.Companion.PkData
 
@@ -217,6 +219,8 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<NpcCombatData>(RockCrabBotScript::class) { bot, data -> RockCrabBotScript(bot, data) }
     scriptManager.addScript<SlayerData>(SlayerBotScript::class) { bot, data -> SlayerBotScript(bot, data) }
     scriptManager.addScript<ScavengeData>(WildernessScavengeBotScript::class) { bot, data -> WildernessScavengeBotScript(bot, data) }
+    scriptManager.addScript<RunnerData>(RuneRunnerBotScript::class) { bot, data -> RuneRunnerBotScript(bot, data) }
+    scriptManager.addScript<CrafterData>(RuneCrafterBotScript::class) { bot, data -> RuneCrafterBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(CookFoodBotScript::class) { bot, data -> CookFoodBotScript(bot, data) }
     scriptManager.addScript<ZonedBotScriptData>(SmithBarBotScript::class) { bot, data -> SmithBarBotScript(bot, data) }
     scriptManager.addScript<FishData>(FishBotScript::class) { bot, data -> FishBotScript(bot, data) }

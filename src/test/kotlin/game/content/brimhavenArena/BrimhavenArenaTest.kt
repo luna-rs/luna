@@ -8,8 +8,12 @@ import io.luna.game.model.mob.controller.ControllerManager
 import kotlinx.coroutines.runBlocking
 import io.luna.game.action.Action
 import io.luna.game.action.ActionState
+import io.luna.game.action.impl.ClimbAction
+import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
 import io.luna.game.model.Position
+import io.luna.game.model.collision.CollisionManager
 import io.luna.game.model.def.*
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -64,7 +68,7 @@ class BrimhavenArenaTest {
                 val widgets = ImmutableList.builder<WidgetDefinition>()
                 WidgetDefinitionDecoder().decode(cache, widgets)
                 nativeWidgets = widgets.build().associateBy { it.id() }
-                for (id in listOf(8287, 8292, 2469)) if (WidgetDefinition.ALL[id].isEmpty)
+                for (id in listOf(8287, 8292, 2469, 359, 306)) if (WidgetDefinition.ALL[id].isEmpty)
                     WidgetDefinition.ALL.storeDefinition(nativeWidgets.getValue(id))
                 val objects = ImmutableList.builder<GameObjectDefinition>()
                 io.luna.game.cache.codec.ObjectDefinitionDecoder().decode(cache, objects)
@@ -171,20 +175,57 @@ class BrimhavenArenaTest {
         assertEquals(200, p.inventory.computeAmountForId(995))
     }
 
-    @Test fun ladderAdmissionAndExitUseLockedMovementAndConsumeVisitOnlyOnExit() {
+    @Test fun sharedLaddersUseLockedMovementAndConsumeVisitOnlyOnAreaExit() {
         val p = player(BrimhavenArena.ENTRANCE)
         val down = obj(3617, Position(2809, 3194))
-        assertFalse(BrimhavenArena.ladder(p, down))
-        p.paid = true
-        assertTrue(BrimhavenArena.ladder(p, down)); assertTrue(p.isLocked)
-        assertEquals(BrimhavenArena.ENTRANCE, p.position)
-        finish(p)
-        assertFalse(p.isLocked); assertNotNull(BrimhavenArena.session(p))
-        assertEquals(BrimhavenArena.LANDING, p.position)
-        assertTrue(BrimhavenArena.ladder(p, obj(3618, BrimhavenArena.tile(53, 54))))
-        finish(p)
-        assertEquals(BrimhavenArena.ENTRANCE, p.position)
-        assertNull(BrimhavenArena.session(p)); assertFalse(p.paid)
+        val up = obj(3618, BrimhavenArena.tile(53, 54))
+        for (ladder in listOf(down, up)) {
+            val definition = GameObjectDefinition.ALL.retrieve(ladder.id)
+            `when`(ladder.def()).thenReturn(definition)
+            `when`(ladder.sizeX()).thenReturn(definition.sizeX)
+            `when`(ladder.sizeY()).thenReturn(definition.sizeY)
+        }
+        val originalMap = ctx.cache.mapIndexTable
+        val originalCollision = world.collisionManager
+        val collision = mock(CollisionManager::class.java)
+        `when`(collision.traversable(any(Position::class.java), eq(EntityType.PLAYER), any(Direction::class.java)))
+            .thenReturn(true)
+        `when`(ctx.cache.mapIndexTable).thenReturn(map)
+        `when`(world.collisionManager).thenReturn(collision)
+        val firstListener = scriptListeners.size
+        val firstMatcher = scriptMatchers.size
+        try {
+            val ladders = Class.forName("engine.obj.Ladders").getConstructor(Array<String>::class.java)
+                .newInstance(emptyArray<String>() as Any)
+            val climb = ladders.javaClass.getMethod("climb", Player::class.java, GameObject::class.java,
+                Boolean::class.javaPrimitiveType)
+            climb.invoke(ladders, p, down, false)
+            assertFalse(p.isLocked); assertFalse(pending.containsKey(p))
+            assertEquals(BrimhavenArena.ENTRANCE, p.position)
+            verify(p).sendMessage("Pay Cap'n Izzy before entering the arena.")
+
+            p.paid = true
+            climb.invoke(ladders, p, down, false)
+            assertInstanceOf(ClimbAction::class.java, pending.getValue(p))
+            assertTrue(p.isLocked); assertEquals(BrimhavenArena.ENTRANCE, p.position)
+            repeat(3) { p.actions.process(); p.actions.normalize() }
+            assertFalse(p.isLocked); assertEquals(BrimhavenArena.LANDING, p.position)
+            ArenaAreaListener.enter(p)
+            val visit = BrimhavenArena.session(p)
+            assertNotNull(visit); assertTrue(p.paid)
+
+            climb.invoke(ladders, p, up, true)
+            assertTrue(p.isLocked); assertSame(visit, BrimhavenArena.session(p)); assertTrue(p.paid)
+            repeat(3) { p.actions.process(); p.actions.normalize() }
+            assertFalse(p.isLocked); assertEquals(BrimhavenArena.ENTRANCE, p.position)
+            ArenaAreaListener.exit(p)
+            assertNull(BrimhavenArena.session(p)); assertFalse(p.paid)
+        } finally {
+            scriptListeners.subList(firstListener, scriptListeners.size).clear()
+            scriptMatchers.subList(firstMatcher, scriptMatchers.size).clear()
+            `when`(ctx.cache.mapIndexTable).thenReturn(originalMap)
+            `when`(world.collisionManager).thenReturn(originalCollision)
+        }
     }
 
     @Test fun firstTagPrimesStreakDuplicatesFailAndMissedRoundsResetEligibility() {
@@ -339,13 +380,14 @@ class BrimhavenArenaTest {
         val placement = map.objectSet.objects.first { it.objectId == 3551 }
         val p = player(placement.position.translate(1, 0)); enter(p)
         val obstacle = obj(placement)
+        val takeoff = ArenaObstacles.route(p, obstacle, 0.0)!!.start
         val arrival = java.util.concurrent.CompletableFuture<io.luna.game.model.mob.movement.NavigationResult>()
-        `when`(p.navigator.navigate(placement.position, false)).thenReturn(arrival)
+        `when`(p.navigator.navigate(takeoff, false)).thenReturn(arrival)
         `when`(p.navigator.currentPending).thenReturn(arrival)
         assertTrue(ArenaObstacles.cross(p, obstacle, 0.0))
         val approach = pending.getValue(p)
         assertFalse(approach.run())
-        verify(p.navigator).navigate(placement.position, false)
+        verify(p.navigator).navigate(takeoff, false)
         assertEquals(placement.position.translate(1, 0), p.position)
         assertFalse(p.isLocked)
         BrimhavenArena.leave(p)

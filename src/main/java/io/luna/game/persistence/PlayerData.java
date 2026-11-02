@@ -19,7 +19,6 @@ import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot;
 import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.CombatStance;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -137,23 +136,20 @@ public class PlayerData {
      */
     public PlayerData save(Player player) {
         String hashedPw = player.getHashedPassword();
-        String plainTextPw = player.getPassword();
         if (hashedPw == null) {
-            // No hashed password, we need to generate one.
-            PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
-            if (passwordStrength != PasswordStrength.NONE && !player.isBot()) {
-                String salt = BCrypt.gensalt(passwordStrength.getRounds());
-                password = BCrypt.hashpw(plainTextPw, salt);
-            } else {
-                password = "password";
+            if (!player.isBot() && Luna.settings().game().passwordStrength() != PasswordStrength.NONE) {
+                throw new IllegalStateException("Prepare the account password hash before creating save data.");
             }
+            password = "password";
         } else {
             // We have a hashed password, use it.
             password = hashedPw;
         }
 
         databaseId = player.getDatabaseId();
-        position = player.getPosition();
+        // Private space is recycled and is not restored with this save. Recovery must not run activity cleanup.
+        position = player.getDynamicMap() == null ? player.getPosition() :
+                player.getDynamicMap().getRecoveryPosition(player);
         rights = player.getRights();
         lastIp = player.getClient().getIpAddress();
         logoutTime = Instant.now();

@@ -27,7 +27,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
     /**
      * The logger.
      */
-    private final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The update block set used to encode all pending NPC update flags.

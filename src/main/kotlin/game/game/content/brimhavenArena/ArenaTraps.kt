@@ -32,6 +32,7 @@ import game.player.Sound
 import game.skill.Skills
 import game.skill.agility.AgilitySound
 import game.skill.agility.AgilityStep
+import game.skill.agility.AgilityWalk
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.Position
@@ -94,22 +95,31 @@ object ArenaTraps {
         val failed = player.agility.level < trap.level ||
             roll >= Skills.successRate(trap.low, trap.high, player.agility.level.coerceIn(1, 99))
         if (player.agility.level < trap.level) player.sendMessage("You need an Agility level of ${trap.level} to pass this trap.")
-        val animation = if (failed) if (trap.objectId == 3585) 1125 else 1114
-            else if (trap.objectId == 3581) 1110 else 1115
+        val animation = if (!failed) 1115 else if (trap.objectId == 3585) 1125 else 1114
         val destination = if (failed) trap.failure else trap.destination
         val sounds = trapSounds(trap.objectId, failed)
         val session = BrimhavenArena.session(player)
-        val steps = mutableListOf(AgilityStep(player.position, 1, jump = true))
-        if (!failed && trap.objectId == 3581) steps += AgilityStep(player.position, 7, animation = 1110, jump = true)
-        steps += AgilityStep(destination, 2, animation = animation)
+        val hit = {
+            if (trap.objectId == 3581) player.agility.adjustLevel(-2)
+            player.damage(player.hitpoints.level * 5 / 100 + 2)
+        }
+        // Darts hit with their message; the other traps hit a tick later, as they push the player back.
+        val darts = failed && trap.objectId == 3581
+        val duck = !failed && trap.objectId == 3581
+        // Every trap waits for the step onto it to end: a move or a duck started earlier makes the client jump the
+        // player ahead or hold the rest of the step.
+        val steps = mutableListOf(AgilityStep(player.position, 2, jump = true, begin = if (darts) hit else ({})))
+        if (duck) {
+            steps += AgilityStep(player.position, 7, animation = 1110, jump = true)
+            steps += AgilityStep(destination, 2, walkingAnimation = AgilityWalk.NORMAL)
+        } else {
+            // The push ends with the 50-cycle stumble back rather than sliding on after it.
+            steps += AgilityStep(destination, 2, animation = animation, moveEnd = if (animation == 1114) 50 else -1,
+                begin = if (failed && !darts) hit else ({}))
+        }
         val started = BrimhavenArena.traverse(player, steps,
-            if (failed) "The trap hits you!" else "You avoid the trap.") {
-            if (BrimhavenArena.session(player) === session) {
-                if (failed) {
-                    if (trap.objectId == 3581) player.agility.adjustLevel(-2)
-                    player.damage(player.hitpoints.level * 5 / 100 + 2)
-                } else player.agility.addExperience(trap.xp)
-            }
+            if (failed) hitLine(trap.objectId) else null) {
+            if (!failed && BrimhavenArena.session(player) === session) player.agility.addExperience(trap.xp)
         }
         if (started) {
             sounds.forEach { player.queue(SoundMessageWriter(it.sound.id, it.loops, it.delayCycles)) }
@@ -119,10 +129,17 @@ object ArenaTraps {
                 3585 -> LocalGraphic(world.context, 271, 0, 0, trap.start, ChunkUpdatableView.globalView()).display()
                 3581 -> LocalProjectile.followPath(world.context).setSourcePosition(trap.anchor)
                     .setTargetPosition(trap.start).setId(270).setStartHeight(10).setEndHeight(10)
-                    .setTiming(0, 40).setInitialSlope(0).build().display()
+                    .setTiming(if (duck) 30 else 0, if (duck) 70 else 40).setInitialSlope(0).build().display()
             }
         }
         return started
+    }
+
+    private fun hitLine(objectId: Int) = when (objectId) {
+        3582 -> "You were hit by some floor spikes!"
+        3585 -> "You were hit by some falling rocks!"
+        3580 -> "You were hit by the spinning blades!"
+        else -> "You were hit by some darts, something on them makes you feel dizzy!"
     }
 
     /**
@@ -132,9 +149,10 @@ object ArenaTraps {
         3582 -> listOf(AgilitySound(if (failed) Sound.FLOOR_SPIKES else Sound.FLOOR_SPIKES_AVOID))
         3585 -> if (failed) listOf(AgilitySound(Sound.ROOF_COLLAPSE), AgilitySound(Sound.ROOF_COLLAPSE2, delayCycles = 30))
             else listOf(AgilitySound(Sound.COLLAPSE_AVOID))
-        3581 -> listOf(AgilitySound(if (failed) Sound.DART_FIRE_HIT else Sound.DART_FIRE_AVOID))
+        3581 -> listOf(if (failed) AgilitySound(Sound.DART_FIRE_HIT)
+            else AgilitySound(Sound.DART_FIRE_AVOID, delayCycles = 30))
         else -> listOf(AgilitySound(if (failed) Sound.BLADE_HIT else Sound.LAND_FLAT,
-            delayCycles = if (failed) 0 else 30))
+            delayCycles = if (failed) 0 else 60))
     }
 
     internal fun broken(position: Position): Boolean =
@@ -176,9 +194,11 @@ object ArenaTraps {
                 val dest = if (player.position == first) first.translate(first.x - second.x, first.y - second.y)
                     else second.translate(second.x - first.x, second.y - first.y)
                 player.playSound(Sound.SAW_RISE_AND_SPIN)
-                if (!BrimhavenArena.traverse(player, listOf(AgilityStep(dest, 2, animation = 846)),
-                        "You were hit by the saw blade!") { player.damage(player.hitpoints.level * 5 / 100 + 2) })
-                    player.damage(player.hitpoints.level * 5 / 100 + 2)
+                val hit = { player.damage(player.hitpoints.level * 5 / 100 + 2) }
+                // The push waits for the step onto the saw to end, and ends with the 26-cycle stumble.
+                if (!BrimhavenArena.traverse(player, listOf(AgilityStep(player.position, 2, jump = true),
+                        AgilityStep(dest, 1, animation = 846, moveEnd = 26, begin = hit)), "You were hit by the saw blade!"))
+                    hit()
             }
         }
     }

@@ -167,6 +167,29 @@ class ActionQueueTest {
         assertNull(queue.first(Action.class));
     }
 
+    @Test void aFailingCompletionHookDoesNotPreventOtherActionsOrQueueCleanup() {
+        Mob mob = mock(Mob.class);
+        ActionQueue queue = queue(mob);
+        List<String> finished = new ArrayList<>();
+        Action<Mob> failing = trackedAction(mob, ActionType.SOFT, () -> {
+            finished.add("failed");
+            throw new IllegalStateException("fixture completion failure");
+        });
+        Action<Mob> next = trackedAction(mob, ActionType.SOFT, () -> finished.add("next"));
+        queue.submit(failing);
+        queue.submit(next);
+
+        assertDoesNotThrow(queue::clear);
+
+        assertEquals(List.of("failed", "next"), finished);
+        assertEquals(ActionState.INTERRUPTED, failing.getState());
+        assertEquals(ActionState.INTERRUPTED, next.getState());
+        assertEquals(0, queue.size());
+        assertNull(queue.first(Action.class));
+        queue.process();
+        assertEquals(List.of("failed", "next"), finished);
+    }
+
     @Test void clearDuringExecutionDiscardsPendingActionsAndAcceptsReplacement() {
         Mob mob = mock(Mob.class);
         ActionQueue queue = queue(mob);

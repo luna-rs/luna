@@ -30,6 +30,7 @@ import kotlin.time.Duration.Companion.minutes
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
  * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
+ * Low-combat accounts can occasionally deliver essence to a funded skiller Runecrafter for rune payments.
  * Minigames retain their separate category. No work is queued when supplies or applicable content are absent.
  *
  * @author lare96
@@ -74,6 +75,7 @@ object GeneralActivityCoordinator : BotCoordinator {
             val skill = preferred.randomOrNull() ?: eligible.randomOrNull()
             if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
+        RuneRunningCoordinator.profitScript(bot)?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {

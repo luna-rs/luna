@@ -1,5 +1,7 @@
 package game.bot.scripts
 
+import api.bot.isRealBot
+
 import api.bot.Suspendable.delay
 import api.bot.action.PkRiskBudget
 import api.bot.script.BotScript
@@ -48,7 +50,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private val deadline = data.deadline
 
     /**
-     * Starts a bounded visit without replacing the bot's permanent preferences or PK identity.
+     * Starts a bounded visit without replacing the bot's permanent preferences or PK profile.
      */
     constructor(bot: Bot, introductory: Boolean, duration: Duration) :
         this(bot, ScavengeData().also {
@@ -126,7 +128,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
 
     /**
      * Applies the existing native death-loss assessment with a scavenger's personality allowance.
-     * A level-three account need not be assigned a PK identity to bank accumulated risk.
+     * A level-three account need not be assigned a PK profile to bank accumulated risk.
      */
     private fun withinRiskBudget(): Boolean {
         val share = PkRiskBudget.basisPoints(bot.personality.confidence, bot.personality.intelligence,
@@ -203,7 +205,7 @@ class WildernessScavengeBotScript(bot: Bot, data: ScavengeData) : BotScript(bot)
     private fun chooseDestination(): Position {
         val edgevilleActive = world.players.any {
             it !== bot && it.state == EntityState.ACTIVE && it.position.regionId == EDGEVILLE_REGION &&
-                levelAt(it.position) > 0 && (it !is Bot || !it.preferences.scavenging.isIntroductory)
+                levelAt(it.position) > 0 && (!it.isRealBot() || !it.preferences.scavenging.isIntroductory)
         }
         val roaming = if (introductory) PkArea.entries.flatMap { it.anchors }
             else PkBotScript.patrolGroups(bot).flatten()

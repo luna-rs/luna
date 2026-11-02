@@ -71,6 +71,17 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
         workers = ExecutorUtils.threadPool(serviceName() + "Worker");
     }
 
+    /**
+     * Creates a service using the supplied persistence workers.
+     *
+     * @param world The world instance.
+     * @param workers The workers owned and stopped by this service.
+     */
+    AuthenticationService(World world, ExecutorService workers) {
+        this.world = world;
+        this.workers = workers;
+    }
+
     @Override
     protected final void startUp() throws Exception {
         // Persistence services don't require startup operations.

@@ -1,7 +1,7 @@
 package api.bot.action.trading
 
+import api.bot.isRealBot
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
 import java.time.Instant
 
 /**
@@ -17,7 +17,7 @@ class BotTradeRequestHandler(private val clock: () -> Instant = { Instant.now() 
     /**
      * The pending trade requests and the time each request was received.
      */
-    private val requests = HashMap<Player, Instant>()
+    private val requests = LinkedHashMap<Player, Instant>()
 
     /**
      * Adds or refreshes a trade request from [plr].
@@ -27,6 +27,8 @@ class BotTradeRequestHandler(private val clock: () -> Instant = { Instant.now() 
      * @param plr The player requesting a trade.
      */
     fun addRequest(plr: Player) {
+        // Account equality can span reconnects; retain the player instance that sent this request.
+        requests.remove(plr)
         requests[plr] = clock()
     }
 
@@ -55,8 +57,27 @@ class BotTradeRequestHandler(private val clock: () -> Instant = { Instant.now() 
      * @return The first player whose request is accepted by [action], or `null` if no request is accepted.
      */
     fun pollRequests(action: (Player) -> Boolean): Player? {
+        return pollRequests({ true }, action)
+    }
+
+    /**
+     * Processes human requests without inspecting or consuming pending autonomous-bot requests.
+     * Connected players with automation facilities retain their human priority.
+     */
+    fun pollHumanRequests(action: (Player) -> Boolean): Player? = pollRequests({ !it.isRealBot() }, action)
+
+    /**
+     * Processes autonomous-bot requests while preserving human requests for the caller's higher-priority pass.
+     */
+    fun pollBotRequests(action: (Player) -> Boolean): Player? = pollRequests({ it.isRealBot() }, action)
+
+    /**
+     * Removes expired requests globally, then consumes only the selected group in priority and arrival order.
+     */
+    private fun pollRequests(include: (Player) -> Boolean, action: (Player) -> Boolean): Player? {
         discardExpired()
-        val pending = requests.entries.sortedWith(compareBy<Map.Entry<Player, Instant>> { it.key is Bot }
+        val pending = requests.entries.filter { include(it.key) }
+            .sortedWith(compareBy<Map.Entry<Player, Instant>> { it.key.isRealBot() }
             .thenBy { it.value })
         for (entry in pending) {
             requests.remove(entry.key)

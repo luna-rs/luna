@@ -33,12 +33,12 @@ import api.predef.ext.*
 import game.skill.agility.AgilityAction
 import game.skill.agility.AgilityStep
 import io.luna.game.action.ActionState
-import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.dialogue.Expression
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.WalkableInterface
 import io.luna.game.model.mob.varp.Varp
@@ -69,8 +69,11 @@ object BrimhavenArena {
     fun tile(x: Int, y: Int, z: Int = 3) = Position(2752 + x, 9536 + y, z)
     fun inside(p: Position): Boolean = p.x in 2752..2815 && p.y in 9536..9599 && p.z in 0..3
     fun session(player: Player): Session? = sessions[player]
+    /**
+     * Click listeners run inside the interaction's own strong action, so only a lock, death or combat means busy.
+     */
     internal fun ready(player: Player): Boolean = player.state == EntityState.ACTIVE && player.isAlive &&
-        !player.isLocked && !player.combat.inCombat() && player.actions.size(ActionType.STRONG) == 0
+        !player.isLocked && !player.combat.inCombat()
     private fun near(player: Player, npc: Npc, id: Int): Boolean = ready(player) && npc.id == id &&
         npc.state == EntityState.ACTIVE && npc.position.isWithinDistance(ENTRANCE, 16) &&
         player.position.isWithinDistance(npc.position, 3)
@@ -90,28 +93,79 @@ object BrimhavenArena {
 
     fun talk(player: Player, clerk: Npc) {
         if (!near(player, clerk, 437)) return
-        player.newDialogue().options("Pay 200 coins to enter", {
-            player.overlays.closeWindows(); pay(player, clerk)
-        }, "How does the arena work?", {
-            player.newDialogue().npc(437, 588, "Follow the flashing arrow and tag each pillar.",
-                "Consecutive tags earn tickets. Missing one resets your streak.",
-                "Traps are dangerous! Jackie exchanges your tickets.").open()
-        }, "Never mind", { player.overlays.closeWindows() }).open()
+        player.newDialogue()
+            .player(Expression.HAPPY, "Ahoy Cap'n!")
+            .npc(437, Expression.HAPPY, "Ahoy there!")
+            .then { ask(it, clerk) }.open()
+    }
+
+    private fun ask(player: Player, clerk: Npc) {
+        player.newDialogue().options("What is this place?", {
+            it.newDialogue()
+                .player(Expression.CONFUSED, "What is this place?")
+                .npc(437, Expression.HAPPY, "This, me hearty, is the entrance to the Brimhaven", "Agility Arena!")
+                .npc(437, Expression.HAPPY, "I were diggin for buried treasure when I found it!",
+                    "Amazed I was! It was a sight to behold!")
+                .npc(437, Expression.HAPPY, "It were the biggest thing I'd ever seen! It",
+                    "must've been at least a league from side to side!")
+                .npc(437, Expression.HAPPY, "It made me list, I were that excited!")
+                .npc(437, Expression.HAPPY, "I'd found a huge cave with all these platforms. I",
+                    "reckon it be an ancient civilisation that made",
+                    "it. I had to be mighty careful as there was these", "traps everywhere! Dangerous it was!")
+                .npc(437, Expression.HAPPY, "Entrance is only 200 coins!")
+                .then { player -> ask(player, clerk) }.open()
+        }, "What do I do in the arena?", {
+            it.newDialogue()
+                .player(Expression.CONFUSED, "What do I do in the arena?")
+                .npc(437, "Well, me hearty, it's simple. Ye can cross between",
+                    "two platforms by using the traps or obstacles", "strung across 'em. Try and make your way to the",
+                    "pillar that is indicated by the flashing arrow.")
+                .npc(437, "Ye receive tickets for tagging more than one",
+                    "pillar in a row. So ye won't get a ticket from the",
+                    "first pillar but ye will for every platform ye tag", "in a row after that.")
+                .npc(437, "If ye miss a platform ye will miss out on the next",
+                    "ticket so try and get every platform you can! When",
+                    "ye be done, take the tickets to Jackie over there", "and she'll exchange them for more stuff!")
+                .player(Expression.HAPPY, "Thanks!")
+                .then { player -> ask(player, clerk) }.open()
+        }, "I'd like to use the Agility Arena, please.", { offerEntry(it, clerk) },
+            "See you later.", { it.newDialogue().player("See you later.").open() }).open()
+    }
+
+    private fun offerEntry(player: Player, clerk: Npc) {
+        val dialogue = player.newDialogue().player("I'd like to use the Agility Arena, please.")
+        if (player.paid) {
+            dialogue.npc(437, Expression.LAUGHING, "Ye've already paid, so down ye goes...").open()
+            return
+        }
+        dialogue.npc(437, "Aye, entrance be 200 coins.")
+            .npc(437, Expression.SHOCKED, "A word of warning me hearty! There are dangerous", "traps down there!")
+        if (player.inventory.computeAmountForId(995) < 200) {
+            dialogue.player("I don't have the money on me at the moment.")
+                .npc(437, Expression.ANGRY, "No coins, no entrance!").open()
+            return
+        }
+        dialogue.options("Okay, here's 200 coins.", {
+            it.newDialogue().player("Okay, here's 200 coins.").then { player ->
+                if (pay(player, clerk))
+                    player.newDialogue().npc(437, Expression.HAPPY, "May the wind be in ye sails!").open()
+            }.open()
+        }, "Never mind.", { it.newDialogue().player("Never mind.").open() }).open()
+    }
+
+    /**
+     * The arena ladders are climbed by the shared ladder plugin; the way down only takes players who have paid.
+     */
+    fun checkAccess(player: Player): Boolean {
+        if (player.paid) return true
+        player.sendMessage("Pay Cap'n Izzy before entering the arena.")
+        return false
     }
 
     fun ladder(player: Player, ladder: GameObject): Boolean {
         if (!ready(player) || ladder.state != EntityState.ACTIVE ||
             !player.position.isWithinDistance(ladder.position, 2)) return false
         return when (ladder.id) {
-            3617 -> {
-                if (!ladder.position.isWithinDistance(ENTRANCE, 3) || !player.paid) {
-                    player.sendMessage("Pay Cap'n Izzy before entering the arena."); false
-                } else traverse(player, listOf(AgilityStep(LANDING, 2, animation = 828, jump = true)),
-                    "You climb down into the arena.") { enter(player) }
-            }
-            3618 -> if (inside(player.position) && ladder.position.isWithinDistance(LANDING, 3))
-                traverse(player, listOf(AgilityStep(ENTRANCE, 2, animation = 828, jump = true)),
-                    "You climb back to Brimhaven.") { leave(player) } else false
             3610 -> if (inside(player.position) && player.z == 0 && ladder.position.z == 0) {
                 val landing = ladder.position.translate(0, 0, 3)
                 traverse(player, listOf(AgilityStep(landing, 2, animation = 828, jump = true)),
@@ -150,9 +204,17 @@ object BrimhavenArena {
     fun tag(player: Player, pillar: GameObject): Boolean {
         val session = session(player) ?: return false
         if (!ready(player) || player.z != 3 || pillar.state != EntityState.ACTIVE ||
-            pillar.id !in setOf(3608, 3581) || pillar.position != target ||
-            !player.position.isWithinDistance(target, 1) || !world.collisionManager.raycast(player.position, target)) return false
-        if (session.tagged) { player.sendMessage("Wait until the arrow moves to the next pillar."); return false }
+            pillar.id !in setOf(3608, 3581) || !player.position.isWithinDistance(pillar.position, 1) ||
+            !world.collisionManager.raycast(player.position, pillar.position)) return false
+        if (pillar.position != target) {
+            player.sendMessage("You can only get a ticket when the flashing arrow is above the pillar.")
+            return false
+        }
+        if (session.tagged) {
+            if (session.first) firstTagLines(player)
+            else player.sendMessage("You can only get one ticket at a time, wait till the arrow moves again.")
+            return false
+        }
         if (session.eligible && !player.inventory.add(Item(TICKET))) {
             player.sendMessage("Make room for your Agility Arena Ticket and tag the pillar again."); return false
         }
@@ -160,8 +222,20 @@ object BrimhavenArena {
         session.first = !session.eligible
         session.eligible = true
         refresh(player)
-        player.sendMessage(if (session.first) "Tag the next pillar for a ticket!" else "You receive an Agility Arena Ticket!")
+        if (session.first) {
+            firstTagLines(player)
+            player.newDialogue().text("You get tickets by tagging more than one pillar in a row. @red@Tag the",
+                "@red@next pillar for a ticket!").open()
+        } else {
+            player.sendMessage("You have received an Agility Arena Ticket!")
+            player.newDialogue().give(Item(TICKET), "You have received an Agility Arena Ticket!", false).open()
+        }
         return true
+    }
+
+    private fun firstTagLines(player: Player) {
+        player.sendMessage("You get tickets by tagging more than one pillar in a row, tag the next")
+        player.sendMessage("pillar!")
     }
 
     internal fun rotate(index: Int) {
@@ -179,7 +253,8 @@ object BrimhavenArena {
     internal fun tick() {
         ticks++
         if (ticks % 100 == 0L) {
-            rotate(rand().nextInt(pillars.size))
+            // The arrow always moves to a new pillar.
+            rotate((targetIndex + 1 + rand().nextInt(pillars.size - 1)) % pillars.size)
             ArenaTraps.rebuildPlanks()
         }
         if (ticks % 10 == 0L) ArenaTraps.blades()
@@ -196,7 +271,7 @@ object BrimhavenArena {
      * Runs native locked agility movement. Only the same live action may grant its completion effects.
      * Area departure or logout cancels it without granting experience or later moving the player back.
      */
-    internal fun traverse(player: Player, steps: List<AgilityStep>, message: String,
+    internal fun traverse(player: Player, steps: List<AgilityStep>, message: String?,
                           complete: () -> Unit = {}): Boolean {
         if (!ready(player)) return false
         val action = AgilityAction(player, steps, message)

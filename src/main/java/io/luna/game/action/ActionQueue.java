@@ -4,6 +4,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -30,6 +32,11 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public final class ActionQueue {
+
+    /**
+     * Reports failed completion hooks while allowing the remaining action owners to release their resources.
+     */
+    private static final Logger logger = LogManager.getLogger(ActionQueue.class);
 
     /**
      * The mob whose actions are processed by this queue.
@@ -315,9 +322,18 @@ public final class ActionQueue {
      * and new actions may be submitted without waiting for the next {@link #process()} call.
      */
     public void clear() {
-        interruptAll();
-        processing.clear();
-        executing.clear();
+        try {
+            for (Action<?> action : new ArrayList<>(processing.values())) {
+                try {
+                    action.interrupt();
+                } catch (Exception e) {
+                    logger.error("An error occurred while clearing an action.", e);
+                }
+            }
+        } finally {
+            processing.clear();
+            executing.clear();
+        }
     }
 
     /**

@@ -65,6 +65,12 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     var completed = false
 
     /**
+     * Whether the exchange represents a market price. Rune-running wages and replacement essence pay for
+     * delivery work rather than buying the traded essence, so their agreed baskets opt out of price sampling.
+     */
+    var samplesMarketPrices = true
+
+    /**
      * Initializes the trading interface, inventory overlay, and offer panels.
      */
     override fun onOpen(plr: Player) {

@@ -5,6 +5,7 @@ import api.bot.Suspendable.waitFor
 import api.bot.Suspendable.delay
 import api.bot.action.PkRiskBudget
 import api.bot.webwalk.plan.BankAccess
+import api.bot.webwalk.walk.crossing.AbyssCrossing
 import api.bot.zone.SubZone
 import api.bot.zone.Zone
 import api.combat.death.PlayerDeathItems
@@ -370,7 +371,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
 
     /**
      * Budgets the entire carried loss before entry, since the mage applies a skull and drains protection prayer.
-     * Skillers can Runecraft without acquiring a PK identity; their personality still bounds the same 5–25% risk.
+     * Skillers can Runecraft without acquiring a PK profile; their personality still bounds the same 5–25% risk.
      */
     private fun withinAbyssBudget(): Boolean {
         val share = PkRiskBudget.basisPoints(bot.personality.confidence, bot.personality.intelligence,
@@ -392,6 +393,12 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
     private fun journeySafe(): Boolean = bot.state == EntityState.ACTIVE && bot.isAlive && bot.healthPercent >= 45 &&
         !(bot.combat.inCombat() && handler.combat.opponent() is Player)
 
+    /**
+     * Authorizes global Abyss entry only after this activity has prepared its carried pack and combat guards.
+     */
+    internal fun permitsAbyssEntry(): Boolean = viaAbyss && guardsInstalled && hasEssence() &&
+        journeySafe() && withinAbyssBudget()
+
     override suspend fun beforeZoneWork(): Boolean {
         if (!viaAbyss) return false
         if (bot.healthPercent < 70) handler.inventory.eatAnyFood(minimumHeal = 8)
@@ -412,7 +419,7 @@ class CraftRuneBotScript(bot: Bot, val altar: Altar, duration: Duration, val via
                 if (!handler.webWalkTo(zone = SubZone.ABYSS_ENTRY_MAGE, bank = BankAccess.NONE) || !journeySafe() ||
                     !hasEssence() || !withinAbyssBudget()) return@withTimeoutOrNull false
                 val mage = world.locator.findNpcs(SubZone.ABYSS_ENTRY_MAGE.inside, 12) { it.id == 2257 }.firstOrNull()
-                if (!handler.interactions.interact(3, mage) { journeySafe() } ||
+                if (!handler.interactions.interact(AbyssCrossing.MAGE_OPTION, mage) { journeySafe() } ||
                     !waitFor(10.seconds) { (inAbyss() && !bot.isLocked) || !journeySafe() } ||
                     !inAbyss() || bot.isLocked) return@withTimeoutOrNull false
             }

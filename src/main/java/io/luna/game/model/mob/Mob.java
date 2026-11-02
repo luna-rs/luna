@@ -29,6 +29,7 @@ import io.luna.net.codec.ByteMessage;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -42,6 +43,21 @@ import static io.luna.game.model.mob.Skill.HITPOINTS;
  * @author lare96
  */
 public abstract class Mob extends Entity {
+
+    /**
+     * Assigns object identities independently of reusable protocol list slots.
+     */
+    private static final AtomicLong NEXT_INCARNATION = new AtomicLong();
+
+    /**
+     * The identity of this mob instance for non-owning world references.
+     */
+    private final long incarnation = NEXT_INCARNATION.incrementAndGet();
+
+    /**
+     * The cached reference for the current list registration, or {@code null} while unregistered.
+     */
+    private MobReference reference;
 
     /**
      * The set of update flags indicating which update blocks need to be encoded for this mob.
@@ -94,9 +110,14 @@ public abstract class Mob extends Entity {
     private Direction lastDirection = Direction.SOUTH;
 
     /**
-     * The entity this mob is currently interacting with (target), if any.
+     * A non-mob interaction target, if any. Mob targets use a non-owning world reference.
      */
     private Entity interactingWith;
+
+    /**
+     * The mob being faced, without retaining its player session.
+     */
+    private MobReference interactingMob;
 
     /**
      * Cached player view of this mob when {@link #type} is {@link EntityType#PLAYER}. May be {@code null}.
@@ -287,6 +308,9 @@ public abstract class Mob extends Entity {
      * </p>
      */
     public final void buildBlockData() {
+        if (interactingMob != null && interactingMob.resolve() == null) {
+            interact(null);
+        }
         flagData = flags.snapshot();
         if (blockData == null || !flags.isEmpty()) {
             // Only build block data when actually needed.
@@ -652,6 +676,9 @@ public abstract class Mob extends Entity {
      * @param entity The new interaction target, or {@code null} to clear.
      */
     public final void interact(Entity entity) {
+        if (entity instanceof Mob && entity.getState() == EntityState.INACTIVE) {
+            entity = null;
+        }
         if (entity == null) {
             pendingBlockData.interact(65535);
             flags.flag(UpdateFlag.INTERACTION);
@@ -662,7 +689,8 @@ public abstract class Mob extends Entity {
         } else {
             face(entity.getPosition());
         }
-        interactingWith = entity;
+        interactingMob = entity instanceof Mob mob ? MobReference.capture(mob) : null;
+        interactingWith = entity instanceof Mob ? null : entity;
     }
 
     /**
@@ -672,7 +700,7 @@ public abstract class Mob extends Entity {
      * @return {@code true} if the current interaction target equals {@code entity}.
      */
     public final boolean isInteractingWith(Entity entity) {
-        return Objects.equals(interactingWith, entity);
+        return Objects.equals(getInteractingWith(), entity);
     }
 
     /**
@@ -724,6 +752,21 @@ public abstract class Mob extends Entity {
             checkArgument(index >= 1, "index < 1");
         }
         this.index = index;
+        reference = index == -1 ? null : new MobReference(world, type, index, incarnation);
+    }
+
+    /**
+     * @return The immutable identity of this mob instance.
+     */
+    public final long getIncarnation() {
+        return incarnation;
+    }
+
+    /**
+     * @return The cached identity of this registration, or {@code null} when unregistered.
+     */
+    public final MobReference getReference() {
+        return reference;
     }
 
     /**
@@ -948,7 +991,7 @@ public abstract class Mob extends Entity {
      * @return The interaction target, or {@code null} if none.
      */
     public Entity getInteractingWith() {
-        return interactingWith;
+        return interactingMob == null ? interactingWith : interactingMob.resolve();
     }
 
     /**

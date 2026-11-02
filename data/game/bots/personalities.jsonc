@@ -5,6 +5,10 @@
  * gatherer, or scammer-style personality. These templates give the bot system a starting shape for behavior instead of
  * making every generated bot feel statistically identical.
  *
+ * The type stored in a bot's personality defines the account's identity: SKILLER is a skilling account,
+ * PKER is primarily a PKing account, and MERCHANT is primarily a trading account. Activity preferences are
+ * separate interests. An account can enjoy PKing or trading without taking on the corresponding identity.
+ *
  * The top-level personality values are normalized from 0.0 to 1.0:
  *
  * - intelligence: How smart, efficient, and strategic the bot tends to be.
@@ -16,8 +20,9 @@
  * The preferences object gives weighted interest in major activity categories. Higher values make the bot more likely to
  * choose that type of content when the scheduler, brain, or script-selection system needs an activity bias.
  *
- * These templates should be treated as behavior biases, not strict rules. Runtime systems may still adjust behavior based
- * on wealth, skills, combat level, available equipment, current goals, world state, danger, and nearby opportunities.
+ * Trait values and activity weights are behavior biases. Runtime systems may adjust behavior based on wealth, skills,
+ * combat level, equipment, goals, world state, danger, and nearby opportunities. Account restrictions still apply:
+ * SKILLER accounts retain their non-combat identity even when a generated or saved weight suggests combat.
  */
 [
   {

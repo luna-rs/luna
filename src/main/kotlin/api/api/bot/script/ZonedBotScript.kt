@@ -496,18 +496,28 @@ abstract class ZonedBotScript(bot: Bot, var duration: Duration, val zones: Mutab
     }
 
     /**
+     * Charges elapsed work before handing the remaining budget to a continuation. Uninitialized scripts have not
+     * started their clock yet; their configured budget is retained until normal initialization.
+     */
+    protected fun remainingDuration(): Duration {
+        if (timestamp == 0L) return duration
+        val now = System.currentTimeMillis()
+        duration -= (now - timestamp).milliseconds
+        timestamp = now
+        return duration
+    }
+
+    /**
      * Updates [duration] using the elapsed time since the previous duration check.
      *
      * @return `true` if this script still has time remaining, otherwise `false`.
      */
     private fun checkDuration(): Boolean {
-        val now = System.currentTimeMillis()
-        val elapsed = (now - timestamp).milliseconds
-        duration = duration.minus(elapsed)
-        timestamp = now
+        val previous = duration
+        remainingDuration()
 
         if (duration <= Duration.ZERO) {
-            bot.log("Duration expired. Completing script normally. elapsed=$elapsed")
+            bot.log("Duration expired. Completing script normally. elapsed=${previous - duration}")
             return false
         }
 

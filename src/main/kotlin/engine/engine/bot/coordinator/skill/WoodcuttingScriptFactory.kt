@@ -4,9 +4,11 @@ import api.bot.script.BotScript
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.CutTreeBotScript
+import game.skill.firemaking.Log
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.Tree.*
 import io.luna.game.model.mob.bot.Bot
+import kotlin.time.Duration
 
 /**
  * Selects tree-specific methods, preserving willow training and level-based profit progression.
@@ -36,6 +38,21 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript =
         createScript(bot, level, zones, false)
+
+    /**
+     * Gathers mapped logs usable by both skills and retains Firemaking as the continuation's purpose.
+     */
+    fun getFiremakingScript(bot: Bot, firemakingLevel: Int, duration: Duration,
+                            zones: MutableList<SubZone>): CutTreeBotScript {
+        val options = routes.filterKeys { tree ->
+            Log.ID_TO_LOG[tree.logId]?.let { it.level <= firemakingLevel } == true
+        }.map { (tree, locations) -> BotSkillingActivity(setOf(tree), locations) }
+        val activity = getBestSkillingActivity(bot, bot.woodcutting.staticLevel, { it.level }, options)
+            ?: error("No Firemaking log gathering activity is available.")
+        zones.clear()
+        zones.addAll(activity.zones)
+        return CutTreeBotScript(bot, activity.tokens, duration, zones, FiremakingScriptFactory.GATHER_TARGET)
+    }
 
     /**
      * Keeps the existing training/profit tree choices attached to their supported routes.

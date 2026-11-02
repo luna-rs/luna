@@ -35,11 +35,27 @@ class BotTradeRequestStage(
      * @return The next [BotTradeOfferStage] if the request was sent and the trade interface opened within the
      * timeout, otherwise `null`.
      */
-    suspend fun sendAndAwait(canContinue: () -> Boolean = { true }): BotTradeOfferStage? {
+    suspend fun sendAndAwait(canContinue: () -> Boolean = { true }): BotTradeOfferStage? =
+        awaitRequest(canContinue, null)
+
+    /**
+     * Runs [beforeRequest] once immediately before submitting an unanswered native request. An already-open matching
+     * trade skips that prerequisite and continues normally; its owner can deliver any still-needed message afterward.
+     */
+    suspend fun sendAndAwait(beforeRequest: () -> Boolean, canContinue: () -> Boolean): BotTradeOfferStage? =
+        awaitRequest(canContinue, beforeRequest)
+
+    /**
+     * Keeps legacy requests on their existing action path while supporting a one-time submission prerequisite.
+     */
+    private suspend fun awaitRequest(canContinue: () -> Boolean, beforeRequest: (() -> Boolean)?): BotTradeOfferStage? {
         fun opened() = bot.overlays[OfferTradeInterface::class]?.other === other
         if (opened()) return BotTradeOfferStage(bot, other, this)
         if (!canContinue()) return null
-        val sent = bot.actionHandler.trading.sendTradeRequest(other) { opened() || canContinue() }
+        val sent = if (beforeRequest == null) {
+            bot.actionHandler.trading.sendTradeRequest(other) { opened() || canContinue() }
+        } else bot.actionHandler.trading.sendTradeRequest(other,
+            beforeRequest = { opened() || beforeRequest() }, canContinue = { opened() || canContinue() })
         if (opened()) return BotTradeOfferStage(bot, other, this)
         if (!sent || !canContinue()) return null
         waitFor(REQUEST_WAIT_SECONDS.seconds) {

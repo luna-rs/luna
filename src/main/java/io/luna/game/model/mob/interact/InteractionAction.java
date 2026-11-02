@@ -86,8 +86,13 @@ public final class InteractionAction extends Action<Player> {
                 mob.getWalking().clear();
             }
             mob.interact(target);
-            pending.forEach(listener -> listener.getAction().run());
+            pending.forEach(listener -> executeListener(listener, this));
             return true;
+        }
+
+        @Override
+        public void onFinished() {
+            mob.getCombat().finishFirstAttack(this);
         }
     }
 
@@ -150,25 +155,38 @@ public final class InteractionAction extends Action<Player> {
         this.listeners = listeners;
         this.target = target;
         this.event = event;
+        claimFirstAttack(this);
     } // todo navigation action can handle most of this?
 
     @Override
     public void onSubmit() {
-        // Interrupt any other weak actions so this interaction takes precedence.
-        mob.getActions().getAll(ActionType.WEAK).forEach(action -> {
-            if (!(action instanceof InteractionAction)) {
-                action.interrupt();
+        try {
+            // Interrupt any other weak actions so this interaction takes precedence.
+            mob.getActions().getAll(ActionType.WEAK).forEach(action -> {
+                if (!(action instanceof InteractionAction)) {
+                    action.interrupt();
+                }
+            });
+
+            // For mobs, set the interaction focus immediately on them.
+            if (target instanceof Mob) {
+                mob.interact(target);
             }
-        });
 
-        // For mobs, set the interaction focus immediately on them.
-        if (target instanceof Mob) {
-            mob.interact(target);
-        }
-
-        // Run the action once instantly.
-        if (run()) {
-            interrupt();
+            // Run the action once instantly.
+            if (run()) {
+                interrupt();
+            }
+        } catch (RuntimeException | Error failure) {
+            // Submission runs before queue insertion, so a failed listener has no later queue cleanup pass.
+            try {
+                interrupt();
+            } catch (RuntimeException | Error cleanupFailure) {
+                if (cleanupFailure != failure) {
+                    failure.addSuppressed(cleanupFailure);
+                }
+            }
+            throw failure;
         }
     }
 
@@ -201,7 +219,7 @@ public final class InteractionAction extends Action<Player> {
             mob.getWalking().clear();
             List<InteractionActionListener> pending = new ArrayList<>(listeners);
             listeners.clear();
-            pending.forEach(listener -> listener.getAction().run());
+            pending.forEach(listener -> executeListener(listener, this));
             return true;
         }
 
@@ -215,7 +233,7 @@ public final class InteractionAction extends Action<Player> {
             InteractionPolicy policy = listener.getPolicy();
             if (policy.getType() == InteractionType.UNSPECIFIED) {
                 // Listener has no policy, run irrespective of interaction code.
-                listener.getAction().run();
+                executeListener(listener, this);
                 it.remove();
                 continue;
             }
@@ -268,9 +286,43 @@ public final class InteractionAction extends Action<Player> {
             if (!moved) {
                 mob.getWalking().clear();
             }
-            pending.forEach(listener -> listener.getAction().run());
+            pending.forEach(listener -> executeListener(listener, this));
         } else {
-            mob.getActions().submitIfAbsent(new DelayedInteractionAction(pending, moved));
+            DelayedInteractionAction deferred = new DelayedInteractionAction(pending, moved);
+            mob.getCombat().transferFirstAttack(this, deferred);
+            if (!mob.getActions().submitIfAbsent(deferred)) {
+                mob.getCombat().finishFirstAttack(deferred);
+            }
+        }
+    }
+
+    @Override
+    public void onFinished() {
+        mob.getCombat().finishFirstAttack(this);
+    }
+
+    /**
+     * Claims any attack prepared while resolving this interaction's listener policy.
+     *
+     * @param owner The action whose lifetime bounds the prepared attack.
+     */
+    private void claimFirstAttack(Action<?> owner) {
+        if (target instanceof Mob targetMob) {
+            mob.getCombat().claimFirstAttack(owner, targetMob);
+        }
+    }
+
+    /**
+     * Executes a listener and associates any manual-spell preparation it creates with its owning action.
+     *
+     * @param listener The reached listener.
+     * @param owner The action executing the listener.
+     */
+    private void executeListener(InteractionActionListener listener, Action<?> owner) {
+        try {
+            listener.getAction().run();
+        } finally {
+            claimFirstAttack(owner);
         }
     }
 
@@ -279,7 +331,8 @@ public final class InteractionAction extends Action<Player> {
      * <p>
      * This only applies to close {@link InteractionType#SIZE} interactions with distance {@code 1} against mobs or
      * size-{@code 1} entities. In that case, diagonal adjacency may be corrected by stepping to a cardinal tile, and
-     * standing on the same tile may be corrected by stepping away.
+     * standing on the same tile may be corrected by stepping away. A reached multi-tile mob already has valid
+     * footprint contact, so diagonal southwest anchors do not require correction.
      * Ordinary immobilization prevents only a required corrective step; it does not reject an already-reached
      * cardinal interaction that needs no movement.
      *
@@ -296,7 +349,7 @@ public final class InteractionAction extends Action<Player> {
         if ((isMob || mob.isBot() || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
             Position current = mob.getPosition();
-            Set<Direction> directions = getClosestNESW();
+            Set<Direction> directions = isMob && target.size() > 1 ? Set.of() : getClosestNESW();
             boolean needsMovement = (!directions.isEmpty() && target.isWithinDistance(mob, 1)) ||
                     target.getPosition().equals(current);
             if (needsMovement && mob.getStatus().isImmobilized()) {
@@ -389,7 +442,9 @@ public final class InteractionAction extends Action<Player> {
      * @param target The new interaction target.
      */
     public void setTarget(Entity target) {
+        mob.getCombat().finishFirstAttack(this);
         this.target = target;
+        claimFirstAttack(this);
         retry = false;
     }
 

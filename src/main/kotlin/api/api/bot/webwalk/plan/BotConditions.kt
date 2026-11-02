@@ -1,6 +1,7 @@
 package api.bot.webwalk.plan
 
 import api.bot.webwalk.walk.crossing.AltarCrossing
+import api.bot.webwalk.walk.crossing.AbyssCrossing
 import api.bot.webwalk.walk.crossing.JarvaldCrossing
 import api.bot.webwalk.walk.crossing.WaterbirthPartyCrossing
 import game.content.waterbirth.Jarvald
@@ -11,7 +12,11 @@ import game.skill.runecrafting.essenceMine.EssenceMineWizard
 import game.skill.runecrafting.enterAltar.Altar
 import game.content.sailing.ShipSearch
 import game.content.craftingGuild.CraftingGuild
+import game.content.fishingGuild.FishingGuild
 import game.obj.webs.Web
+import game.skill.agility.IsafdarForest
+import game.skill.agility.IsafdarLogs
+import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -39,6 +44,22 @@ object BotConditions {
     const val CRAFTING_GUILD_ENTRY = "crafting_guild_entry"
 
     /**
+     * The Fishing Guild checks the current Fishing level, including boosts and drains.
+     */
+    const val FISHING_GUILD_ENTRY = "fishing_guild_entry"
+
+    /**
+     * The Barbarian course pipe checks the current Agility level on entry, including boosts and drains.
+     */
+    const val BARBARIAN_PIPE_ENTRY = "barbarian_pipe_entry"
+
+    /**
+     * The woodland passages and log bridges check current Agility, including boosts and drains.
+     */
+    const val ISAFDAR_FOREST_ENTRY = "isafdar_forest_entry"
+    const val ISAFDAR_LOG_ENTRY = "isafdar_log_entry"
+
+    /**
      * The bot carries something that cuts a web: a weapon with a slash attack, wielded or not, or a knife.
      */
     const val SLASH_WEB = "slash_web"
@@ -53,6 +74,12 @@ object BotConditions {
                          JarvaldCrossing.PAYMENT to { bot: Bot ->
             Jarvald.fare(bot) == 0 || bot.inventory.computeAmountForId(995) >= Jarvald.FARE
         }, CRAFTING_GUILD_ENTRY to { bot: Bot -> CraftingGuild.canEnter(bot) },
+                      FISHING_GUILD_ENTRY to { bot: Bot -> FishingGuild.canEnter(bot) },
+                      BARBARIAN_PIPE_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 35 },
+                      AbyssCrossing.ENTRY_ALLOWED to { bot: Bot -> AbyssCrossing.optedIn(bot) },
+                      AbyssCrossing.LAW_ALLOWED to { bot: Bot -> AbyssCrossing.lawAllowed(bot) },
+                      ISAFDAR_FOREST_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= IsafdarForest.REQUIRED_LEVEL },
+                      ISAFDAR_LOG_ENTRY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= IsafdarLogs.REQUIRED_LEVEL },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null }) +
                 Altar.entries.associate { altar -> AltarCrossing.flag(altar) to { bot: Bot -> AltarCrossing.canEnter(bot, altar) } } +
                 EssenceMineWizard.entries.associate { wizard -> EssenceMineCrossing.exitFlag(wizard) to { bot: Bot ->

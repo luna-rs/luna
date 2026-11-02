@@ -4,6 +4,7 @@ import api.bot.script.InventoryProductionFixtures;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.MobReferenceFixtures;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
@@ -46,6 +47,7 @@ class BotPursuitLeaseTest {
         final PlayerCombatContext combat;
 
         Fixture() {
+            when(bot.isBot()).thenReturn(true);
             when(bot.getState()).thenReturn(EntityState.ACTIVE);
             when(npc.getState()).thenReturn(EntityState.ACTIVE);
             when(bot.isAlive()).thenReturn(true);
@@ -53,6 +55,8 @@ class BotPursuitLeaseTest {
             when(bot.getWorld().getCurrentTick()).thenAnswer(call -> tick.get());
             combat = spy(new PlayerCombatContext(bot));
             when(bot.getCombat()).thenReturn(combat);
+            MobReferenceFixtures.register(bot, 1);
+            MobReferenceFixtures.register(npc, 2);
         }
 
         void hold() {

@@ -52,6 +52,8 @@ import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
+import io.luna.net.msg.out.DynamicMapMessageWriter;
+import io.luna.game.model.map.DynamicMap;
 import io.luna.net.msg.out.SoundMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
@@ -174,6 +176,11 @@ public class Player extends Mob {
     private Position lastRegion;
 
     /**
+     * The active private map, or null while the player is in the normal world.
+     */
+    private DynamicMap dynamicMap;
+
+    /**
      * Whether the region changed this tick.
      */
     private boolean regionChanged;
@@ -214,9 +221,14 @@ public class Player extends Mob {
     private final PlayerContextMenu contextMenu = new PlayerContextMenu(this);
 
     /**
-     * The hashed password. May be {@code null} for legacy/plaintext accounts until conversion.
+     * The stored password hash, prepared before a human account enters the world.
      */
     private String hashedPassword;
+
+    /**
+     * Invalidates password changes prepared for an older credential state. Game-thread only.
+     */
+    private long passwordRevision;
 
     /**
      * The last known IP address this player logged in with.
@@ -318,7 +330,7 @@ public class Player extends Mob {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(getUsernameHash());
+        return 31 + Long.hashCode(getUsernameHash());
     }
 
     @Override
@@ -357,7 +369,13 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        passwordRevision++;
+        if (dynamicMap != null) dynamicMap.remove(this);
         pendingPlacement = true;
+        localMobs.clearForLogout();
+        actions.clear();
+        navigator.cancel();
+        combat.reset();
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
     }
@@ -471,11 +489,11 @@ public class Player extends Mob {
             }
         } else {
             setPosition(Luna.settings().game().startingPosition().translate(RandomUtils.inclusive(1), RandomUtils.inclusive(1)));
-            rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
-                    PlayerRights.DEVELOPER : PlayerRights.PLAYER;
-            if (isBot()) {
-                rights = PlayerRights.PLAYER;
-            }
+            rights = PlayerRights.PLAYER;
+        }
+        if (!isBot()) {
+            rights = PlayerRights.forLogin(getUsername(), data == null ? null : data.rights,
+                    Luna.settings().game().betaMode(), LunaChannelFilter.WHITELIST.contains(client.getIpAddress()));
         }
     }
 
@@ -753,8 +771,9 @@ public class Player extends Mob {
         if (lastRegion == null || needsRegionUpdate()) {
             regionChanged = true;
             lastRegion = position;
-            if (!(this instanceof Bot)) {
-                queue(new RegionMessageWriter(position));
+            if (!isBot()) {
+                queue(dynamicMap == null ? new RegionMessageWriter(position) :
+                        new DynamicMapMessageWriter(dynamicMap, position));
             }
         }
     }
@@ -993,16 +1012,55 @@ public class Player extends Mob {
      */
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+        passwordRevision++;
     }
 
     /**
      * Sets the plaintext password and clears any previously stored hash.
+     * Active accounts should use {@link io.luna.game.LoginService#changePassword(Player, String)} so hashing stays
+     * off the game thread.
      *
      * @param password The plaintext password.
      */
     public void setPassword(String password) {
         credentials.setPassword(password);
         hashedPassword = null;
+        passwordRevision++;
+    }
+
+    /**
+     * Reserves the next asynchronous password change. Must be called on the game thread.
+     *
+     * @return The revision that may install the prepared password.
+     */
+    public long beginPasswordChange() {
+        return ++passwordRevision;
+    }
+
+    /**
+     * Checks whether a prepared change still belongs to the current credential state.
+     *
+     * @param revision The reserved revision.
+     * @return Whether no later change or credential replacement has superseded it.
+     */
+    public boolean isPasswordChangeCurrent(long revision) {
+        return revision == passwordRevision;
+    }
+
+    /**
+     * Installs matching plaintext and prepared hash together on the game thread.
+     *
+     * @param revision The reserved revision.
+     * @param password The new plaintext password.
+     * @param hash Its already prepared hash.
+     */
+    public void applyPasswordChange(long revision, String password, String hash) {
+        if (!isPasswordChangeCurrent(revision)) {
+            throw new IllegalStateException("This password change has been superseded.");
+        }
+        Objects.requireNonNull(hash);
+        credentials.setPassword(password);
+        hashedPassword = hash;
     }
 
     /**
@@ -1506,5 +1564,21 @@ public class Player extends Mob {
         return tolerance;
     }
 
+
+    /**
+     * @return The player's current private map, or null in the real world.
+     */
+    public DynamicMap getDynamicMap() {
+        return dynamicMap;
+    }
+
+    /**
+     * Changes membership metadata. DynamicMap owns movement, controller registration and map updates.
+     *
+     * @param dynamicMap The joined map, or null after departure.
+     */
+    public void setDynamicMap(DynamicMap dynamicMap) {
+        this.dynamicMap = dynamicMap;
+    }
 
 }

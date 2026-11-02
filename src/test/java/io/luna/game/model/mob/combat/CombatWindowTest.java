@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.state.CombatContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -76,7 +77,8 @@ class CombatWindowTest {
 
     @Test void singleCombatChecksUseOwnershipRatherThanTheLogoutWindow() {
         Fixture f = new Fixture();
-        Mob oldOpponent = mock(Mob.class);
+        Player oldOpponent = mock(Player.class);
+        io.luna.game.model.mob.MobReferenceFixtures.register(oldOpponent, 1);
         Mob newOpponent = mock(Mob.class, RETURNS_DEEP_STUBS);
         when(newOpponent.getPosition()).thenReturn(new Position(101, 100));
         f.combat.setLastCombatWith(oldOpponent);

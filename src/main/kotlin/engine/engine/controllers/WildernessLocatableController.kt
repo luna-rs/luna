@@ -1,7 +1,8 @@
 package engine.controllers
 
+import api.bot.isRealBot
+
 import api.attr.Attr
-import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import com.google.common.collect.ImmutableSet
 import engine.combat.status.StatusEffectType
@@ -47,7 +48,7 @@ object WildernessLocatableController : PlayerAreaListener() {
         plr.overlays.open(WalkableInterface(197))
         plr.contextMenu.show(OPTION_ATTACK)
         plr.controllers.register(WildernessController(plr))
-        if(plr is Bot) {
+        if(plr.isRealBot()) {
             // Less confident = more scared when in the wilderness.
             plr.emotions.add(EmotionalTrigger(EmotionType.SCARED, 0.25 * (1.0 - plr.personality.confidence)))
         }

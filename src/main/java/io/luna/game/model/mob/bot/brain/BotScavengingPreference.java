@@ -55,7 +55,7 @@ public final class BotScavengingPreference {
 
     /**
      * Ends an introductory phase if the account no longer has level-three combat stats.
-     * Levels and the permanent PK identity are never reset or replaced.
+     * Levels and the permanent PK profile are never reset or replaced.
      */
     public void completeIntroduction() {
         remainingMillis = 0;

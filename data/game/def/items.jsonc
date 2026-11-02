@@ -5677,7 +5677,7 @@
   {
     "id": 4177, // Wolfbane lever
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4178, // Olive stuffer

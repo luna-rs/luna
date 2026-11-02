@@ -1,5 +1,7 @@
 package api.bot.action
 
+import api.bot.isRealBot
+
 import game.bot.scripts.combat.PkBotScript
 import engine.controllers.WildernessLocatableController.levelAt
 import io.luna.game.model.EntityState
@@ -20,7 +22,7 @@ import java.util.concurrent.ThreadLocalRandom
  */
 internal class PkClanPolicy(private val bot: Bot) {
     /**
-     * Every permanent PK identity participates; an outing purpose does not determine membership.
+     * Every permanent PK profile participates; an outing purpose does not determine membership.
      */
     val enabled: Boolean get() = !bot.preferences.isSkiller && bot.preferences.pk != null
 
@@ -63,7 +65,7 @@ internal class PkClanPolicy(private val bot: Bot) {
      */
     fun onlineMembers(activePkOnly: Boolean = true): List<Bot> {
         val id = cape ?: return emptyList()
-        return bot.world.players.stream().filter { it is Bot && it !== bot }.map { it as Bot }.filter {
+        return bot.world.players.stream().filter { it.isRealBot() && it !== bot }.map { it as Bot }.filter {
             it.state == EntityState.ACTIVE && it.isAlive && !it.preferences.isSkiller &&
                 it.preferences.pk != null && bot.world.botManager.clanRegistry.capeFor(it.username) == id &&
                 (!activePkOnly || (it.preferences.pk?.purpose() == Purpose.CLAN &&
@@ -112,7 +114,7 @@ internal class PkClanPolicy(private val bot: Bot) {
 
         /**
          * Gives confident personalities a 7–10 percent solo chance per outing, rather than retrying every tick.
-         * The selected mode is retained by the session snapshot; permanent clan and PK identity do not change.
+         * The selected mode is retained by the session snapshot; permanent clan and PK profile do not change.
          */
         fun chooseSolo(bot: Bot, roll: Double = ThreadLocalRandom.current().nextDouble()): Boolean {
             val confidence = bot.personality.confidence

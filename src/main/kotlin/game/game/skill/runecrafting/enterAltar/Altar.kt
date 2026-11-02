@@ -2,6 +2,8 @@ package game.skill.runecrafting.enterAltar
 
 import api.bot.zone.SubZone
 import io.luna.game.model.Position
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 
 /**
  * Represents a Runecrafting altar and its related world data.
@@ -46,8 +48,8 @@ enum class Altar(
         talisman = 1444,
         tiara = 5531,
         portal = 2467,
-        enter = Position(2726, 4832),
-        exit = Position(3187, 3166),
+        enter = Position(2725, 4832),
+        exit = Position(3182, 3162),
         zone = SubZone.WATER_ALTAR
     ),
 
@@ -131,7 +133,18 @@ enum class Altar(
         zone = SubZone.DEATH_ALTAR
     );
 
+    /**
+     * Water's portal is reached from the dry edge of its pond; other portals use ordinary adjacent reach.
+     */
+    val portalPolicy: InteractionPolicy
+        get() = if (this == WATER) WATER_PORTAL_POLICY else InteractionPolicy.STANDARD_SIZE
+
     companion object {
+
+        /**
+         * Keeps the Water portal usable while its surrounding water tiles remain blocked for walking.
+         */
+        private val WATER_PORTAL_POLICY = InteractionPolicy(InteractionType.SIZE, 2)
 
         /**
          * All defined Runecrafting altars.

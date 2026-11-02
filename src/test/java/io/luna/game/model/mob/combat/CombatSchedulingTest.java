@@ -5,6 +5,8 @@ import io.luna.game.action.impl.ConsumeAction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.MobReferenceFixtures;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
 import io.luna.game.model.mob.combat.damage.CombatDamage;
@@ -49,7 +51,7 @@ class CombatSchedulingTest {
         /**
          * The living target used for reach and attack checks.
          */
-        final Mob victim = mock(Mob.class, RETURNS_DEEP_STUBS);
+        final Mob victim = mock(Npc.class, RETURNS_DEEP_STUBS);
         /**
          * The combat context retaining real countdown and target state.
          */
@@ -104,6 +106,7 @@ class CombatSchedulingTest {
                 combat.setAttackDelay(4);
                 return null;
             }).when(attack).apply();
+            MobReferenceFixtures.register(victim, 2);
             combat.setTarget(victim);
         }
 

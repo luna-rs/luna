@@ -8,6 +8,7 @@ import io.luna.game.action.impl.NpcRetreatAction;
 import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.MobReference;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
@@ -18,6 +19,7 @@ import io.luna.game.model.mob.combat.damage.CombatDamageAction;
 import io.luna.game.model.mob.combat.damage.CombatDamageRequest;
 import io.luna.game.model.mob.combat.damage.CombatDamageType;
 
+import java.lang.ref.WeakReference;
 import java.util.Set;
 import java.util.Objects;
 
@@ -74,7 +76,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * The last player to commit an incoming attack during this NPC's current life.
      * Outgoing attacks do not change the player selected to hear its death sound.
      */
-    private Player lastAttackingPlayer;
+    private MobReference lastAttackingPlayer;
 
     /**
      * Whether this NPC has entered the state requiring a finishing item. Cleared when this context is reset.
@@ -92,9 +94,10 @@ public final class NpcCombatContext extends CombatContext<Npc> {
     }
 
     /**
-     * The player-owned finishing action currently reserved for this NPC, if any.
+     * A non-owning link to the finishing action owned by the player's action queue.
+     * Retaining an NPC must not extend that player's session lifetime.
      */
-    private Action<?> executionAction;
+    private WeakReference<Action<?>> executionAction;
 
     /**
      * Checks whether a finishing sequence is already pending before another consumable is removed.
@@ -103,10 +106,12 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @return Whether an unfinished execution action is already reserved.
      */
     public boolean isExecutionPending() {
-        if (executionAction != null && executionAction.isFinished()) {
+        Action<?> action = executionAction == null ? null : executionAction.get();
+        if (action == null || action.isFinished() || isInactivePlayer(action.getMob())) {
             executionAction = null;
+            return false;
         }
-        return executionAction != null;
+        return true;
     }
 
     /**
@@ -116,7 +121,10 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @param action The action that owns this NPC's pending finish.
      */
     public void trackExecution(Action<?> action) {
-        executionAction = action;
+        if (action != null && isInactivePlayer(action.getMob())) {
+            return;
+        }
+        executionAction = action == null ? null : new WeakReference<>(action);
     }
 
     /**
@@ -125,7 +133,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @param action The finishing action releasing its reservation.
      */
     public void clearExecution(Action<?> action) {
-        if (executionAction == action) {
+        if (executionAction != null && executionAction.get() == action) {
             executionAction = null;
         }
     }
@@ -146,7 +154,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         retreatPolicy = RetreatPolicy.CONFIGURED;
         attackBonusType = null;
         maxHit = -1;
-        lastAttackingPlayer = null;
+        setLastAttackingPlayer(null);
     }
 
     /**
@@ -155,7 +163,8 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @return The death sound's player recipient, or {@code null} if no player has attacked this life.
      */
     public Player getLastAttackingPlayer() {
-        return lastAttackingPlayer;
+        Mob attacker = lastAttackingPlayer == null ? null : lastAttackingPlayer.resolve();
+        return attacker instanceof Player player ? player : null;
     }
 
     /**
@@ -164,7 +173,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      * @param player The attacking player, or {@code null} to clear the recipient.
      */
     public void setLastAttackingPlayer(Player player) {
-        lastAttackingPlayer = player;
+        lastAttackingPlayer = MobReference.capture(player);
     }
 
     /**
@@ -175,7 +184,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
      */
     private void resetExecution() {
         awaitingExecution = false;
-        Action<?> previous = executionAction;
+        Action<?> previous = executionAction == null ? null : executionAction.get();
         executionAction = null;
         if (previous != null) {
             previous.interrupt();
@@ -212,6 +221,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
 
     @Override
     public boolean onCombatProcess(boolean reached) {
+        Mob target = getTarget();
         return !isRetreating() && (target == null || isWithinLeash(target));
     }
 
@@ -232,12 +242,13 @@ public final class NpcCombatContext extends CombatContext<Npc> {
         boolean lowHealth = (retreatPolicy == RetreatPolicy.CONFIGURED || retreatPolicy == RetreatPolicy.LOW_HEALTH) &&
                 mob.getHealth() <= mob.combatDef().getMovement().retreatHitpoints();
         CombatAction combatAction = mob.getActions().first(CombatAction.class);
+        Mob target = getTarget();
         boolean engaged = target != null && target.isAlive() && combatAction != null && !combatAction.isFinished();
         if (enemy instanceof Player && (lowHealth || (!engaged && !isWithinLeash(enemy)))) {
             mob.getActions().submitIfAbsent(new NpcRetreatAction(mob, enemy));
         } else if (!engaged || hasLongExpiredAttackDelay()) {
             attack(enemy);
-            if (target == enemy) {
+            if (getTarget() == enemy) {
                 setAttackDelay(Math.max(0, mob.combatDef().getAttackSpeed() / 2));
                 CombatAction acceptedAction = mob.getActions().first(CombatAction.class);
                 if (!engaged && acceptedAction != null) {
@@ -306,7 +317,7 @@ public final class NpcCombatContext extends CombatContext<Npc> {
             mob.getStatus().remove(StatusEffectType.POISONED);
             setDisabled(true);
             mob.getWalking().setLocked(true);
-            target = null;
+            setTarget(null);
         }
     }
 

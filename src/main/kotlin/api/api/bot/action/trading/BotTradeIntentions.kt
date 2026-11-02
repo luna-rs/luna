@@ -40,6 +40,31 @@ object BotTradeIntentions {
     private val plans = Attr.map<Int, SupplyPlan>()
 
     /**
+     * A one-copy upgrade and the already validated tools that make its purchase unnecessary.
+     *
+     * @author lare96
+     */
+    private data class ToolUpgradePlan(val expires: Long, val satisfying: List<Int>, val fallback: Int?)
+
+    private val toolUpgrades = Attr.map<Int, ToolUpgradePlan>()
+
+    /**
+     * Replaces this tool family's upgrade request without removing independent activity supplies.
+     * Useful owned tools retain one working copy instead of creating another purchase.
+     */
+    internal fun recordToolUpgrade(bot: Bot, family: Set<Int>, id: Int?,
+                                   satisfying: List<Int> = emptyList(), retained: Int? = null,
+                                   activeForMillis: Long = 2 * 60 * 60_000L,
+                                   now: Long = System.currentTimeMillis()) {
+        val current = bot.attributes()[toolUpgrades.attr]
+        current.keys.removeAll(family)
+        if (id != null && id in family && ItemDefinition.ALL.get(id).map { it.isTradeable }.orElse(false)) {
+            current[id] = ToolUpgradePlan(now + activeForMillis.coerceIn(1L, 10 * 60 * 60_000L),
+                (satisfying.filter { it in family } + id).distinct(), retained?.takeIf { it in family })
+        }
+    }
+
+    /**
      * Records already validated activity inputs. Tools retain one usable copy; consumable reserves grow
      * for patient stockpilers without inheriting unrelated targets from the global wanted-item catalogue.
      */
@@ -79,7 +104,7 @@ object BotTradeIntentions {
      */
     fun purchases(bot: Bot, now: Long = System.currentTimeMillis()): List<WantedItemDefinition> {
         val result = LinkedHashMap<Int, WantedItemDefinition>()
-        for ((id, plan) in livePlans(bot, now)) {
+        for ((id, plan) in supplyPlans(bot, now)) {
             val owned = bot.totalItemAmount(id)
             if (owned >= plan.target || !bot.canUseWantedItem(id)) continue
             val priority = if (owned < plan.minimum) WantedItemPriority.URGENT else WantedItemPriority.STANDARD
@@ -91,8 +116,11 @@ object BotTradeIntentions {
         for (id in gear) {
             if (bot.totalItemAmount(id) > 0 || !bot.canUseWantedItem(id)) continue
             val cosmetic = BotEquipmentPreferences.isCosmetic(id)
+            val urgentUpgrade = id in progression &&
+                bot.preferences.getWantedItem(id)?.priority == WantedItemPriority.URGENT
             result.putIfAbsent(id, definition(id, -1, 1,
-                if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
+                if (urgentUpgrade) WantedItemPriority.URGENT
+                else if (id !in progression && cosmetic) WantedItemPriority.LOW else WantedItemPriority.HIGH))
         }
         addCombatSupplies(bot, progression, result)
         return result.values.sortedByDescending { it.priority().level }
@@ -162,7 +190,7 @@ object BotTradeIntentions {
      * Merchant resale can sell other acquired stock even when a broad default wanted entry exists.
      */
     fun retainedStock(bot: Bot): Map<Int, Int> {
-        val retained = livePlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
+        val retained = supplyPlans(bot, System.currentTimeMillis()).mapValuesTo(HashMap()) { it.value.target }
         val combatSupplies = HashMap<Int, WantedItemDefinition>()
         addCombatSupplies(bot, BotEquipmentPreferences.progressionCandidates(bot), combatSupplies, includeSatisfied = true)
         for ((id, supply) in combatSupplies) retained[id] = maxOf(retained[id] ?: 0, supply.target())
@@ -186,7 +214,33 @@ object BotTradeIntentions {
     /**
      * Rechecks newly requested supplies during a suspended sale without rebuilding every equipment layout.
      */
-    fun supplyTarget(bot: Bot, id: Int): Int = livePlans(bot, System.currentTimeMillis())[id]?.target ?: 0
+    fun supplyTarget(bot: Bot, id: Int): Int = supplyPlans(bot, System.currentTimeMillis())[id]?.target ?: 0
+
+    /**
+     * Combines independent supply sources without reducing either source's minimum or stock target.
+     */
+    private fun supplyPlans(bot: Bot, now: Long): Map<Int, SupplyPlan> {
+        val result = HashMap(livePlans(bot, now))
+        val upgrades = bot.attributes()[toolUpgrades.attr]
+        upgrades.entries.removeIf { it.value.expires <= now }
+        fun add(id: Int, upgrade: ToolUpgradePlan) {
+            val existing = result[id]
+            result[id] = if (existing == null) SupplyPlan(1, 1, upgrade.expires) else SupplyPlan(
+                maxOf(existing.minimum, 1), maxOf(existing.target, 1),
+                maxOf(existing.expires, upgrade.expires))
+        }
+        for ((id, upgrade) in upgrades.toMap()) {
+            val owned = upgrade.satisfying.firstOrNull { bot.totalItemAmount(it) > 0 }
+            val desired = owned ?: id
+            if (desired != id) {
+                upgrades.remove(id)
+                upgrades[desired] = upgrade
+            }
+            add(desired, upgrade)
+            if (owned == null) upgrade.fallback?.takeIf { bot.totalItemAmount(it) > 0 }?.let { add(it, upgrade) }
+        }
+        return result
+    }
 
     private fun livePlans(bot: Bot, now: Long): HashMap<Int, SupplyPlan> {
         val current = bot.attributes()[plans.attr]

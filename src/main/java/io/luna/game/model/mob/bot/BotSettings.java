@@ -61,6 +61,16 @@ public final class BotSettings {
     private final double merchantingChance;
 
     /**
+     * Optional maximum merchant sale stacks per batch. Omitted settings use seven stacks.
+     */
+    private Integer merchantSaleStackLimit;
+
+    /**
+     * Optional minimum total asking value for each merchant sale stack. Omitted settings use 1,000 GP.
+     */
+    private Long merchantSaleMinimumStackValue;
+
+    /**
      * The base value an item stack must have for a bot to loot it. Affected by combat level, intelligence, and
      * greed.
      */
@@ -70,6 +80,19 @@ public final class BotSettings {
      * Optional new-account scavenger fraction. Omitted settings use two percent.
      */
     private Double newAccountScavengingChance;
+
+    /**
+     * Optional new-account rune-runner fraction. Omitted settings use two percent.
+     */
+    private Double newAccountRuneRunningChance;
+
+    /**
+     * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
+     */
+    public double newAccountRuneRunningChance() {
+        if (newAccountRuneRunningChance == null || !Double.isFinite(newAccountRuneRunningChance)) return 0.02;
+        return newAccountRuneRunningChance == 0 ? 0 : Math.clamp(newAccountRuneRunningChance, 0.01, 0.03);
+    }
 
     /**
      * Returns the configured one-to-three percent fraction; zero explicitly disables assignment.
@@ -147,6 +170,20 @@ public final class BotSettings {
      */
     public double merchantingChance() {
         return merchantingChance;
+    }
+
+    /**
+     * Returns the merchant sale stack limit, bounded to 1-27 to reserve an inventory slot for payment.
+     */
+    public int merchantSaleStackLimit() {
+        return merchantSaleStackLimit == null ? 7 : Math.clamp(merchantSaleStackLimit, 1, 27);
+    }
+
+    /**
+     * Returns the non-negative asking value that each merchant sale stack must strictly exceed.
+     */
+    public long merchantSaleMinimumStackValue() {
+        return merchantSaleMinimumStackValue == null ? 1_000L : Math.max(0L, merchantSaleMinimumStackValue);
     }
 
     /**

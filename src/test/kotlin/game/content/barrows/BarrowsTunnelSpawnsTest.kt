@@ -10,6 +10,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.def.NpcCombatDefinition
 import io.luna.game.model.def.NpcCombatMovement
 import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.mob.MobReferenceFixtures
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.attr.AttributeMap
@@ -43,6 +44,7 @@ class BarrowsTunnelSpawnsTest {
         `when`(player.position).thenReturn(Position(3550, 9690))
         `when`(player.state).thenReturn(EntityState.ACTIVE)
         `when`(player.isAlive).thenReturn(true)
+        MobReferenceFixtures.register(player, 1)
         `when`(player.attributes()).thenReturn(AttributeMap())
         `when`(player.varpManager).thenReturn(manager)
         manager.setValue(PersistentVarp.BARROWS, 64)
@@ -70,6 +72,7 @@ class BarrowsTunnelSpawnsTest {
             val npc = it.getArgument<Npc>(0)
             npc.index = index++
             npc.state = EntityState.ACTIVE
+            doReturn(npc).`when`(npcs).get(npc.index)
             true
         }.`when`(npcs).add(any(Npc::class.java))
         doAnswer { it.getArgument<Npc>(0).state = EntityState.INACTIVE; true }

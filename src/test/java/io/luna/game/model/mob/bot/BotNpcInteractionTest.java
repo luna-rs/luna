@@ -7,6 +7,7 @@ import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.combat.CombatAttackHistory;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.mob.movement.NavigationResult;
@@ -93,7 +94,7 @@ class BotNpcInteractionTest {
     }
 
     @Test void attackAgainstRequestedNpcConfirmsSuccess() {
-        var attack = mock(CombatAttack.class);
+        var attack = mock(CombatAttackHistory.class);
         when(attack.getVictim()).thenReturn(target);
         when(bot.getOutput().sendNpcInteraction(3, target)).thenAnswer(invocation -> {
             when(bot.getCombat().getLastAttackSent()).thenReturn(attack);
@@ -104,11 +105,11 @@ class BotNpcInteractionTest {
     }
 
     @Test void oldAttackOrAttackAgainstAnotherNpcDoesNotConfirmSuccess() {
-        var oldAttack = mock(CombatAttack.class);
+        var oldAttack = mock(CombatAttackHistory.class);
         when(oldAttack.getVictim()).thenReturn(target);
         when(bot.getCombat().getLastAttackSent()).thenReturn(oldAttack);
         assertEquals(false, handler.interact(3, target, continuation));
-        var otherAttack = mock(CombatAttack.class);
+        var otherAttack = mock(CombatAttackHistory.class);
         when(otherAttack.getVictim()).thenReturn(mock(Npc.class));
         when(bot.getOutput().sendNpcInteraction(3, target)).thenAnswer(invocation -> {
             when(bot.getCombat().getLastAttackSent()).thenReturn(otherAttack);
@@ -130,9 +131,11 @@ class BotNpcInteractionTest {
         when(attack.getVictim()).thenReturn(target);
         when(attack.getInteractionPolicy()).thenReturn(policy);
         when(bot.getCombat().getDefaultAttack(target)).thenReturn(attack);
+        CombatAttackHistory history = mock(CombatAttackHistory.class);
+        when(history.getVictim()).thenReturn(target);
         when(world.getCollisionManager().reached(bot, target, policy)).thenReturn(true);
         when(bot.getOutput().sendNpcInteraction(3, target)).thenAnswer(invocation -> {
-            when(bot.getCombat().getLastAttackSent()).thenReturn(attack);
+            when(bot.getCombat().getLastAttackSent()).thenReturn(history);
             return true;
         });
 

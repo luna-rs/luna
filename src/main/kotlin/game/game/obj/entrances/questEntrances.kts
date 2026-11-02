@@ -40,6 +40,9 @@ fun showShadowLadder(plr: Player) {
 // Some entrances only show their option once a quest has got far enough. Luna doesn't have these quests yet, so they
 // are shown to everyone.
 // TODO Once these quests are added, show each entrance only once the player has got that far.
+// The Heroes' Guild doors (2624/2625) and Barbarian Outpost gates (2115/2116) likewise use ordinary door handling
+// until Heroes' Quest and Alfred Grimhand's Barcrawl are implemented. TODO Restore their admission checks then.
+// The Piscatoris colony gate follows the same policy until Swan Song is implemented.
 on(LoginEvent::class) {
     // Enakhra's Lament: the four secret entrances into Enakhra's temple.
     for (varbit in 1598..1601) {

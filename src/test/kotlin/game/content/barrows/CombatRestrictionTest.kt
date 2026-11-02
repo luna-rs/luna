@@ -8,6 +8,7 @@ import io.luna.game.model.EntityType
 import io.luna.game.model.Position
 import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.MobReferenceFixtures
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatAction
@@ -32,6 +33,8 @@ class CombatRestrictionTest {
     fun unrestrictedMobsAreUnchangedAndOwnershipAppliesInBothDirections() {
         val owner = mock(Player::class.java)
         val stranger = mock(Player::class.java)
+        MobReferenceFixtures.register(owner, 1)
+        MobReferenceFixtures.register(stranger, 2)
         val npc = mock(Npc::class.java, withSettings().extraInterfaces(CombatRestriction::class.java)
             .defaultAnswer(RETURNS_DEEP_STUBS))
         val restriction = npc as CombatRestriction

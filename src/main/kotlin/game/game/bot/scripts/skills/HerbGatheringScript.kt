@@ -32,6 +32,7 @@ class HerbGatheringScript(
         /**
          * Existing herb-dropping camps, shared by default zone selection and exact NPC-name restrictions.
          * All configured Zamorak monk areas now use the Chaos druid drop table, including Wilderness temples.
+         * The imprisoned Varrock monk is excluded because its drops cannot be reached on foot.
          */
         private val herbTargets = ImmutableSetMultimap.builder<SubZone, String>()
             .put(SubZone.CHAOS_DRUID_TOWER, "Chaos druid")
@@ -41,7 +42,6 @@ class HerbGatheringScript(
             .put(SubZone.SOUTH_ARDOUGNE_ZAMORAK_MONKS, "Monk of Zamorak")
             .put(SubZone.TAVERLEY_DUNGEON_ZAMORAK_MONKS, "Monk of Zamorak")
             .put(SubZone.NORTH_FALADOR_CHAOS_TEMPLE, "Monk of Zamorak")
-            .put(SubZone.VARROCK_ZAMORAK_TEMPLE, "Monk of Zamorak")
             .put(SubZone.PATERDOMUS_ZAMORAK_MONKS, "Monk of Zamorak")
             .put(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE, "Monk of Zamorak")
             .put(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE, "Monk of Zamorak")

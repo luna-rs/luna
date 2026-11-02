@@ -8360,11 +8360,6 @@
     "initial_popularity": 100
   },
   {
-    "id": 4177, // Wolfbane lever
-    "initial_price": 25,
-    "initial_popularity": 5
-  },
-  {
     "id": 4178, // Olive stuffer
     "initial_price": 25,
     "initial_popularity": 10

@@ -18,7 +18,7 @@ val logger: Logger = FileOutputType.PRIVATE_MESSAGE.logger
  */
 on(PrivateChatEvent::class, EventPriority.HIGH) {
     world.getPlayer(name).ifPresent {
-        it.queue(PrivateChatMessageWriter(plr.usernameHash, message))
+        it.queue(PrivateChatMessageWriter(plr.usernameHash, message, plr.rights))
         logger.log(FileOutputType.PRIVATE_MESSAGE.level, "{} --> {}: {}", plr.username,
                    StringUtils.decodeFromBase37(name), unpackedMessage)
     }

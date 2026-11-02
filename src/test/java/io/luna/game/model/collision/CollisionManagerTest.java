@@ -1,5 +1,6 @@
 package io.luna.game.model.collision;
 
+import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -12,7 +13,11 @@ import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.PursuitAction;
+import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.interact.InteractionAction;
+import io.luna.game.model.mob.interact.InteractionActionListener;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
@@ -25,7 +30,9 @@ import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 
@@ -178,7 +185,7 @@ final class CollisionManagerTest {
     }
 
     @Test
-    void largeMobContactRejectsOuterCornersAndOverlappingBodies() {
+    void largeMobContactRejectsOuterCornersAndOverlappingLargeAttackers() {
         Npc npc = cacheFootprintNpc(3, new Position(100, 100, 0));
         Position[] corners = {
                 new Position(99, 99, 0), new Position(99, 103, 0),
@@ -192,11 +199,62 @@ final class CollisionManagerTest {
         for (Position position : new Position[]{new Position(100, 100, 0), new Position(101, 101, 0)}) {
             Player overlapping = playerAt(position);
             assertFalse(manager.reached(npc, overlapping, InteractionPolicy.STANDARD_SIZE));
-            assertFalse(manager.reached(overlapping, npc, InteractionPolicy.STANDARD_SIZE));
+            assertTrue(manager.reached(overlapping, npc, InteractionPolicy.STANDARD_SIZE));
         }
         Npc overlapping = cacheFootprintNpc(2, new Position(102, 102, 0));
         assertFalse(manager.reached(npc, overlapping, InteractionPolicy.STANDARD_SIZE));
         assertFalse(manager.reached(overlapping, npc, InteractionPolicy.STANDARD_SIZE));
+    }
+
+    @Test
+    void singleTileActorsCanReachFromEveryTileInsideLargeNpcFootprints() {
+        for (int size : new int[]{2, 3, 5}) {
+            Npc npc = cacheFootprintNpc(size, new Position(111, 111, 0));
+            for (int x = 0; x < size; x++) {
+                for (int y = 0; y < size; y++) {
+                    Position position = npc.getPosition().translate(x, y);
+                    assertTrue(manager.reached(playerAt(position), npc, InteractionPolicy.STANDARD_SIZE),
+                            position.toString());
+                    assertTrue(manager.reached(botAt(position), npc, InteractionPolicy.STANDARD_SIZE),
+                            position.toString());
+                    assertTrue(manager.reached(position, npc, InteractionPolicy.STANDARD_SIZE),
+                            position.toString());
+                }
+            }
+        }
+    }
+
+    @Test
+    void clientApproachInsideTwoTileNpcCanDispatchAndApplyMeleeAttack() {
+        Position position = new Position(100, 101, 0);
+        Npc target = cacheFootprintNpc(2, new Position(100, 100, 0));
+        Player player = Mockito.mock(Player.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(player.getPosition()).thenReturn(position);
+        Mockito.when(player.abs()).thenReturn(position);
+        Mockito.when(player.size()).thenReturn(1);
+        Mockito.when(player.isAlive()).thenReturn(true);
+        Mockito.when(target.isAlive()).thenReturn(true);
+        Mockito.when(player.isWithinDistance(target, Position.VIEWING_DISTANCE + 5)).thenReturn(true);
+        Mockito.when(player.getWorld().getCollisionManager()).thenReturn(manager);
+        var combat = player.getCombat();
+        Mockito.when(combat.getTarget()).thenReturn(target);
+        Mockito.when(combat.getLastCombatWith()).thenReturn(null);
+        Mockito.when(combat.getAutoRetaliateTarget()).thenReturn(null);
+        Mockito.when(combat.onCombatProcess(Mockito.anyBoolean())).thenReturn(true);
+        Mockito.when(combat.checkMultiCombat(target)).thenReturn(true);
+        Mockito.when(combat.isAttackReady()).thenReturn(true);
+        CombatAttack<?> attack = Mockito.mock(CombatAttack.class);
+        Mockito.doReturn(attack).when(combat).getNextAttack(target);
+        Mockito.when(attack.getInteractionPolicy()).thenReturn(InteractionPolicy.STANDARD_SIZE);
+        var listener = new InteractionActionListener(InteractionPolicy.STANDARD_SIZE,
+                () -> assertFalse(new CombatAction(player).run()));
+        var interaction = new InteractionAction(player, new ArrayList<>(List.of(listener)), target,
+                new AttackNpcEvent(player, target));
+
+        assertTrue(interaction.run());
+        Mockito.verify(attack).apply();
+        Mockito.verify(player.getNavigator(), Mockito.never()).submit(Mockito.any());
+        Mockito.verify(player, Mockito.never()).sendMessage(Mockito.anyString());
     }
 
     @Test

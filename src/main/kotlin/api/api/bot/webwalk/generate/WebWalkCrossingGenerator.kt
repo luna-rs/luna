@@ -8,10 +8,12 @@ import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
 import game.content.craftingGuild.CraftingGuild
 import game.obj.doors.GnomeStrongholdGate
 import game.content.miningGuild.MiningGuild
+import game.content.fishingGuild.FishingGuild
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
 import game.skill.agility.AgilityEntrances
+import game.skill.agility.Stile
 import api.bot.webwalk.walk.crossing.AgilityShortcutCrossing
 import api.bot.webwalk.plan.BotConditions
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
@@ -93,6 +95,14 @@ object SpecialCrossings {
                                     Requirements(skills = mapOf(Skill.MINING to MiningGuild.REQUIRED_LEVEL)), cost = 4)
 
     /**
+     * The south-facing Fishing Guild door leaves freely from its own tile; the reverse direction checks admission.
+     */
+    val FISHING_GUILD = CrossingSpec(ConditionalDoorCrossing.ID, setOf(FishingGuild.DOOR),
+                                     Requirements.NONE,
+                                     reverseRequirements = Requirements(flags = setOf(BotConditions.FISHING_GUILD_ENTRY)),
+                                     cost = 4)
+
+    /**
      * The Yanille door is unlocked from its own tile; the reverse direction needs a lockpick.
      * The cost includes time for failed attempts before a successful pick.
      */
@@ -171,6 +181,16 @@ object SpecialCrossings {
     }
 
     /**
+     * The Barbarian course pipe needs level 35 Agility only when entering from the Outpost.
+     */
+    val BARBARIAN_PIPE = CrossingSpec(AgilityShortcutCrossing.ID, setOf(2287),
+                                      Requirements(flags = setOf(BotConditions.BARBARIAN_PIPE_ENTRY)),
+                                      reverseRequirements = Requirements.NONE, cost = 6,
+                                      placements = listOf(CrossingPlacement(2287, Position(2552, 3559),
+                                                                            Position(2552, 3561),
+                                                                            Position(2552, 3558))))
+
+    /**
      * The ridge into the Wilderness Agility Course, entered through door 2309 at its south end with level 52 Agility.
      * It is left through gate 2307 at its north end with no level, so each way is its own crossing. A fall drops the
      * bot in the wolf pit beside the ridge, outside the course.
@@ -222,11 +242,24 @@ object SpecialCrossings {
                                       Requirements(items = listOf(ItemRequirement(BrassKeyDoor.KEY))), cost = 4)
 
     /**
+     * The two ordinary stiles into the Ardougne mill's fenced wheat field.
+     */
+    val ARDOUGNE_STILES = CrossingSpec(AgilityShortcutCrossing.ID, setOf(Stile.ID), cost = 6,
+                                       placements = listOf(
+                                           CrossingPlacement(Stile.ID, Position(2638, 3350), Position(2637, 3350),
+                                                             Position(2640, 3350)),
+                                           CrossingPlacement(Stile.ID, Position(2655, 3347), Position(2654, 3347),
+                                                             Position(2657, 3347))))
+
+    /**
      * Every spec.
      */
     val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
-        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT)
+        GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
+        ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,
+        PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
+        ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES)
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].

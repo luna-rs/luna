@@ -4,6 +4,7 @@ import io.luna.Luna;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.persistence.PlayerData;
+import io.luna.net.client.GameClient;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -53,6 +54,13 @@ final class PlayerDeathRecoveryTest {
 
     private Player player(boolean bot) throws Exception {
         Player player = bot ? mock(Bot.class, RETURNS_DEEP_STUBS) : mock(Player.class, RETURNS_DEEP_STUBS);
+        when(player.isBot()).thenReturn(bot);
+        if (!bot) {
+            GameClient client = mock(GameClient.class);
+            when(client.getIpAddress()).thenReturn("127.0.0.1");
+            doCallRealMethod().when(player).setClient(client);
+            player.setClient(client);
+        }
         SkillSet skills = new SkillSet(player);
         var field = Mob.class.getDeclaredField("skills");
         field.setAccessible(true);

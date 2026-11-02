@@ -6,6 +6,7 @@ import game.player.Sound;
 import engine.combat.prayer.CombatPrayer;
 import engine.combat.status.hooks.PoisonStatusEffect;
 import io.luna.game.model.mob.combat.CombatRestriction;
+import io.luna.game.model.mob.combat.CombatAttackHistory;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -79,6 +80,11 @@ public abstract class CombatAttack<T extends Mob> {
      * Gameplay recency checks use this value independently of the wall-clock timestamp.
      */
     private long launchTick = -1;
+
+    /**
+     * The shared value snapshot of this launch, created only when a delivered hit records combat history.
+     */
+    private CombatAttackHistory history;
 
     /**
      * Smite state captured at launch, shared by every delivered hit from this attack.
@@ -172,6 +178,7 @@ public abstract class CombatAttack<T extends Mob> {
         }
         timestamp = Instant.now();
         launchTick = attacker.getWorld().getCurrentTick();
+        history = null;
         npcPoisonSeverity = attacker instanceof Npc npc ? npc.combatDef().getPoisonSeverity() : 0;
         smiteActive = attacker instanceof Player player && player.skill(Skill.PRAYER).getLevel() > 0 &&
                 player.getCombat().getPrayers().isActive(CombatPrayer.SMITE);
@@ -385,6 +392,18 @@ public abstract class CombatAttack<T extends Mob> {
      */
     public Mob getVictim() {
         return victim;
+    }
+
+    /**
+     * Returns a stable history value for this launch without exposing the source's executable object graph.
+     *
+     * @return The immutable launch snapshot shared by sent and received history entries.
+     */
+    public final CombatAttackHistory getHistory() {
+        if (history == null) {
+            history = new CombatAttackHistory(this);
+        }
+        return history;
     }
 
     /**

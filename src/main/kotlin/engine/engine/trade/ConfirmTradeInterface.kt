@@ -113,10 +113,12 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
 
             // TODO@1.0 Prevent manipulation by making player trades not count if they're trading with someone they've
             //  traded with in the last <x> trades. The system should support a modifiable number of trades.
-            world.economy.addTrade(CompletedTradeData(plr.username,
-                                                      other.username,
-                                                      otherItems,
-                                                      plrItems))
+            if (offer.samplesMarketPrices && confirm.offer.samplesMarketPrices) {
+                world.economy.addTrade(CompletedTradeData(plr.username,
+                                                          other.username,
+                                                          otherItems,
+                                                          plrItems))
+            }
         } else {
             accepted = true
             plr.sendText("Waiting for other player...", 3535)

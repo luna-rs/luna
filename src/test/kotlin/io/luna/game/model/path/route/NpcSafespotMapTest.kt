@@ -17,7 +17,7 @@ import io.luna.game.model.def.NpcCombatMovement
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.PursuitAction
-import io.luna.game.model.mob.combat.attack.CombatAttack
+import io.luna.game.model.mob.combat.CombatAttackHistory
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import org.junit.jupiter.api.Assertions.*
@@ -86,7 +86,7 @@ class NpcSafespotMapTest {
     }
 
     private fun playerShot(tick: Long) {
-        val attack = mock(CombatAttack::class.java)
+        val attack = mock(CombatAttackHistory::class.java)
         `when`(attack.attacker).thenReturn(bot)
         `when`(attack.victim).thenReturn(npc)
         `when`(attack.launchTick).thenReturn(tick)
@@ -127,7 +127,7 @@ class NpcSafespotMapTest {
     fun `a launched npc attack rejects the stand without requiring damage`() {
         val controller = observingController()
         assertTrue(controller.maintain(npc, zone) { true })
-        val miss = mock(CombatAttack::class.java)
+        val miss = mock(CombatAttackHistory::class.java)
         `when`(miss.victim).thenReturn(bot)
         `when`(miss.attacker).thenReturn(npc)
         val combat = npc.combat

@@ -1,10 +1,11 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.action.BotActionHandler;
+import api.bot.script.AbstractBotScript;
+import api.bot.script.BotScript;
 import api.bot.zone.SubZone;
 import api.bot.zone.Zone;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import game.bot.scripts.DeathReflexScript;
 import game.bot.scripts.EatFoodReflexScript;
 import game.bot.scripts.LootItemReflexScript;
@@ -18,8 +19,10 @@ import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
+import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.LocalMobRepository;
+import io.luna.game.model.mob.block.LocalHumanView;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.brain.BotBrain;
@@ -87,6 +90,7 @@ public final class Bot extends Player {
         private final LunaContext context;
         private final BotManager manager;
         private boolean temporary;
+        private boolean connectedPlayer;
         private String username;
         private Position spawnPosition = Zone.LUMBRIDGE.getAnchor();
         private BotReflex reflex;
@@ -240,7 +244,7 @@ public final class Bot extends Player {
                         .build();
             }
             return new Bot(context, username, RandomUtils.nextBoolean() ? "lunaisthebest1997" : "chubbychaser123",
-                    reflex, brain, personality, preferences, spawnPosition, temporary);
+                    reflex, brain, personality, preferences, spawnPosition, temporary, connectedPlayer);
         }
     }
 
@@ -260,11 +264,11 @@ public final class Bot extends Player {
     private final BotScriptStack scriptStack;
 
     /**
-     * The human players currently visible to this bot.
+     * The human sessions currently visible to this bot.
      * <p>
-     * Bots do not use the normal player local-mob update repository, so human visibility is tracked separately.
+     * Bots do not use the normal player local-mob update repository. This non-owning view stores session handles.
      */
-    private final Set<Player> localHumans = Sets.newConcurrentHashSet();
+    private final LocalHumanView localHumans = new LocalHumanView();
 
     /**
      * The simulated client connection backing this bot.
@@ -285,6 +289,124 @@ public final class Bot extends Player {
      * Whether this bot skips normal persistence loading and saving.
      */
     private final boolean temporary;
+
+    /**
+     * A real client owns this account; bot behavior is explicit and session-only.
+     */
+    private final boolean connectedPlayer;
+
+    /**
+     * Whether explicitly injected scripts may currently run.
+     */
+    private boolean automationActive;
+
+    /**
+     * Cancelled scripts whose coroutine cleanup must finish before another session starts.
+     */
+    private List<AbstractBotScript> retiringScripts = List.of();
+
+    /**
+     * Creates a script-capable human account before the normal login handshake.
+     * No second world entity or copied inventory is involved. Callers must use normal
+     * credential validation and install the real GameClient before loading player data.
+     *
+     * @param context The game context.
+     * @param credentials The original human login credentials.
+     * @return A human player with dormant bot facilities.
+     */
+    public static Bot connectedPlayer(LunaContext context, PlayerCredentials credentials) {
+        Builder builder = new Builder(context);
+        builder.connectedPlayer = true;
+        builder.username = credentials.getUsername();
+        builder.personality = BotPersonality.DEFAULT;
+        builder.preferences = new BotPreference.Builder(builder.manager.getPersonalityManager(),
+                BotPersonality.DEFAULT).build();
+        Bot bot = builder.build();
+        // Keep the supplied password on the normal human authentication path.
+        bot.setPassword(credentials.getPassword());
+        bot.speechStack.setDisableAll(true);
+        return bot;
+    }
+
+    @Override
+    public boolean isBot() {
+        return !connectedPlayer;
+    }
+
+    /**
+     * @return Whether this is a real client account with optional script control.
+     */
+    public boolean isConnectedPlayer() {
+        return connectedPlayer;
+    }
+
+    /**
+     * @return Whether this human account is running explicitly injected work.
+     */
+    public boolean isAutomationActive() {
+        return connectedPlayer && automationActive;
+    }
+
+    /**
+     * Replaces human automation with a script bound to this exact player. Game-thread only.
+     * The account must be active and have developer rights; autonomous bots use their normal stack.
+     *
+     * @param script An existing bot script constructed with this instance.
+     */
+    public void startAutomation(BotScript script) {
+        if (!connectedPlayer || getState() != EntityState.ACTIVE || getClient().isPendingLogout() ||
+                getRights() != PlayerRights.DEVELOPER) {
+            throw new IllegalStateException("Automation requires an active, connected developer account.");
+        }
+        if (script.getBot() != this || !script.isIdle() || script.isTerminated()) {
+            throw new IllegalArgumentException("Supply a fresh script bound to this player.");
+        }
+        stopAutomation();
+        if (retiringScripts.stream().anyMatch(previous -> !previous.isPassive())) {
+            throw new IllegalStateException("Previous automation is still stopping; try again next tick.");
+        }
+        retiringScripts = List.of();
+        botClient.clearAutomationMessages();
+        automationActive = true;
+        scriptStack.pushTail(script);
+    }
+
+    /**
+     * Cancels injected work and pending synthetic input without logging out. Game-thread only.
+     */
+    public void stopAutomation() {
+        if (!connectedPlayer) return;
+        boolean wasActive = automationActive;
+        automationActive = false;
+        if (wasActive) {
+            retiringScripts = new ArrayList<>(scriptStack.getScripts());
+            if (reflex.getActiveReflex() != null) retiringScripts.add(reflex.getActiveReflex());
+        }
+        reflex.stop();
+        scriptStack.stopAll();
+        botClient.clearAutomationMessages();
+        if (wasActive) {
+            getNavigator().cancel();
+            getWalking().clear();
+            getActions().interruptWeak();
+            getCombat().setTarget(null);
+            getOverlays().closeWindows();
+        }
+    }
+
+    /**
+     * Delivers synthetic client input during the world's input phase. Game-thread only.
+     */
+    public void processAutomationInput() {
+        if (!connectedPlayer) return;
+        if (getState() != EntityState.ACTIVE || getClient().isPendingLogout() ||
+                getRights() != PlayerRights.DEVELOPER || !isAlive()) {
+            stopAutomation();
+        } else if (automationActive) {
+            botClient.handleDecodedMessages();
+        }
+    }
+
 
     /**
      * The number of bot processing cycles completed since construction.
@@ -364,20 +486,22 @@ public final class Bot extends Player {
      * @param temporary Whether this bot should skip normal persistence.
      */
     private Bot(LunaContext context, String username, String password, BotReflex reflex, BotBrain brain,
-                BotPersonality personality, BotPreference preferences, Position position, boolean temporary) {
+                BotPersonality personality, BotPreference preferences, Position position, boolean temporary,
+                boolean connectedPlayer) {
         super(context, new PlayerCredentials(username, password));
         this.reflex = reflex;
         this.brain = brain;
         this.personality = personality;
         this.preferences = preferences;
         this.temporary = temporary;
+        this.connectedPlayer = connectedPlayer;
 
         spawnPosition = position;
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
         speechStack = new BotSpeechStack(this);
-        setClient(botClient);
+        if (!connectedPlayer) setClient(botClient);
         preferences.setBot(this);
     }
 
@@ -389,12 +513,23 @@ public final class Bot extends Player {
      */
     @Override
     public void queue(GameMessageWriter msg) {
-        botClient.queue(msg);
+        if (connectedPlayer) {
+            super.queue(msg);
+            if (automationActive) botClient.queue(msg);
+        } else {
+            botClient.queue(msg);
+        }
     }
 
     @Override
     protected void onActive() {
         super.onActive();
+        if (connectedPlayer) {
+            reflex.add(new EatFoodReflexScript(this));
+            reflex.add(new LootItemReflexScript(this));
+            reflex.add(new RandomEventReflexScript(this));
+            return;
+        }
         game.bot.scripts.CannonBotSupport.restoreState(this);
         reflex.add(new LootItemReflexScript(this));
         reflex.add(new DeathReflexScript(this));
@@ -407,6 +542,7 @@ public final class Bot extends Player {
 
     @Override
     protected void onInactive() {
+        if (connectedPlayer) stopAutomation();
         super.onInactive();
         scriptStack.shutdown();
         reflex.stop();
@@ -414,6 +550,11 @@ public final class Bot extends Player {
 
     @Override
     public void forceLogout() {
+        if (connectedPlayer) {
+            stopAutomation();
+            super.forceLogout();
+            return;
+        }
         scriptStack.shutdown();
         reflex.stop();
         botClient.onInactive();
@@ -436,6 +577,7 @@ public final class Bot extends Player {
      */
     @Override
     public LocalMobRepository getLocalMobs() {
+        if (connectedPlayer) return super.getLocalMobs();
         throw new IllegalStateException("Bots are not updated like regular players. Use getLocalHumans() instead.");
     }
 
@@ -450,6 +592,9 @@ public final class Bot extends Player {
      * if login validation fails.
      */
     public CompletableFuture<PlayerData> login() {
+        if (connectedPlayer) {
+            throw new IllegalStateException("Use normal human login.");
+        }
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
         String username = getUsername();
         if (world.isFull()) {
@@ -473,7 +618,8 @@ public final class Bot extends Player {
                     loadData(data);
                     if (data == null) {
                         position = spawnPosition;
-                        preferences.initializeNewScavenger(Luna.settings().bots().newAccountScavengingChance());
+                        preferences.initializeNewActivities(Luna.settings().bots().newAccountScavengingChance(),
+                                Luna.settings().bots().newAccountRuneRunningChance());
                     }
                     PlayerData loadedData = data;
                     boolean eligible = !preferences.isSkiller() && preferences.getPk() != null;
@@ -509,10 +655,33 @@ public final class Bot extends Player {
      * reflected in diagnostics.
      */
     public void process() {
+        if (connectedPlayer) {
+            try {
+                if (getClient().isPendingLogout() || getRights() != PlayerRights.DEVELOPER || !isAlive()) {
+                    stopAutomation();
+                }
+                if (automationActive) {
+                    botClient.flush();
+                    if (reflex.process(this) && scriptStack.process()) {
+                        stopAutomation();
+                    }
+                }
+            } catch (RuntimeException error) {
+                stopAutomation();
+                throw error;
+            } finally {
+                cycles++;
+            }
+            return;
+        }
         try {
             if (preferences.getScavenging().isIntroductory()) {
                 preferences.getScavenging().advance(getTimePlayed().toMillis());
                 if (getCombatLevel() != 3) preferences.getScavenging().completeIntroduction();
+            }
+            if (preferences.getRuneRunning().isIntroductory()) {
+                preferences.getRuneRunning().advance(getTimePlayed().toMillis());
+                if (getCombatLevel() >= 50) preferences.getRuneRunning().completeIntroduction();
             }
             // Process speech before scripts so we can still talk while doing anything.
             speechStack.process();
@@ -663,13 +832,13 @@ public final class Bot extends Player {
     }
 
     /**
-     * Gets the concurrent set of human players currently visible to this bot.
+     * Gets the non-owning view of human sessions observing this bot.
      * <p>
      * This replaces normal player local-mob tracking for bots.
      *
-     * @return The visible human player set.
+     * @return The concurrent observer view, resolving only the original live sessions.
      */
-    public Set<Player> getLocalHumans() {
+    public LocalHumanView getLocalHumans() {
         return localHumans;
     }
 
