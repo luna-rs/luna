@@ -226,6 +226,21 @@ class CastleWarsSiege(private val game: CastleWarsGame) {
 
     fun isBarricade(npc: Npc): Boolean = npc in barricades
 
+    /**
+     * Exposes current match ownership without guessing from an NPC's unchanged base ID after a fire transformation.
+     */
+    fun barricadeOwner(npc: Npc): Team? = barricades[npc]
+
+    /**
+     * True only while this exact live barricade still has the native burning timer.
+     */
+    fun isBurningBarricade(npc: Npc): Boolean = npc in burning
+
+    /**
+     * Current live team count used by the native ten-barricade limit.
+     */
+    fun barricadeCount(team: Team): Int = barricades.values.count { it == team }
+
     fun barricade(player: Player, npc: Npc, item: Int) {
         if (!allowed(player, npc.position) || npc !in barricades || !player.inventory.contains(item)) return
         when (item) {

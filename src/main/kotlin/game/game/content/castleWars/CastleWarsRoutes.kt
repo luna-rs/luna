@@ -50,6 +50,9 @@ object CastleWarsRoutes {
                 Position(playerPosition.x, playerPosition.y, playerPosition.z - 1) else null
             4912 -> if (playerPosition.z == 0 && playerPosition.y < 6400)
                 Position(playerPosition.x, playerPosition.y + 6400) else null
+            // Source loc_1757 uses the corresponding cellar coordinate without changing the plane.
+            1757 -> if (playerPosition.z == 0 && objectPosition.x in 2368..2431 && objectPosition.y in 9472..9535)
+                Position(playerPosition.x, playerPosition.y - 6400) else null
             else -> null
         }
     }

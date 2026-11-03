@@ -34,7 +34,7 @@ for (id in listOf(4389, 4390)) object1(id) { CastleWars.game.exit(plr) }
 object1(4406) { CastleWars.game.quit(plr, Team.SARADOMIN) }
 object1(4407) { CastleWars.game.quit(plr, Team.ZAMORAK) }
 for (id in listOf(4377, 4378, 4900, 4901, 4902, 4903)) object1(id) { CastleWars.flag(plr, gameObject) }
-for (id in listOf(4415, 4417, 4418, 4419, 4420, 4471, 4472, 4911, 4912, 6280, 6281)) {
+for (id in listOf(4415, 4417, 4418, 4419, 4420, 4471, 4472, 4911, 4912, 1757, 6280, 6281)) {
     object1(id) { CastleWars.route(plr, gameObject) }
 }
 for (id in CastleWarsGame.TABLES.keys) object1(id) { CastleWars.game.supply(plr, id, gameObject.position) }

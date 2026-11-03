@@ -64,7 +64,8 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * @param action The packet-sending action that accepts the resolved inventory index.
          * @return `true` if the use action appeared to start successfully; otherwise `false`.
          */
-        private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): Boolean {
+        private suspend fun useOnEntity(target: Entity, allowed: () -> Boolean = { true }, action: (Int) -> Unit): Boolean {
+            if (!allowed()) return false
             val index = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else usedIndex
             if (index == -1) {
                 bot.log("I don't have ${itemName(usedId)}.")
@@ -77,10 +78,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
 
-            if (handler.interactions.approach(target) &&
+            if (handler.interactions.approach(target, canContinue = allowed) && allowed() &&
                 world.collisionManager.reached(bot, target, InteractionPolicy.STANDARD_SIZE)) {
                 val currentIndex = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else usedIndex
-                if (currentIndex == -1 || bot.inventory[currentIndex]?.id != usedId) return false
+                if (currentIndex == -1 || bot.inventory[currentIndex]?.id != usedId || !allowed()) return false
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(currentIndex)
                 return true
@@ -123,6 +124,12 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             useOnEntity(target) { bot.output.useItemOnNpc(it, usedId, target) }
 
         /**
+         * Rechecks activity permission during an NPC approach and before native item use.
+         */
+        suspend fun onNpc(target: Npc, allowed: () -> Boolean) =
+            useOnEntity(target, allowed) { bot.output.useItemOnNpc(it, usedId, target) }
+
+        /**
          * Uses the selected inventory item on a player.
          *
          * The bot will first navigate into interaction range, then send the item-on-player packet.
@@ -134,6 +141,12 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             useOnEntity(target) { bot.output.useItemOnPlayer(it, usedId, target) }
 
         /**
+         * Rechecks team, encounter or other caller permission while approaching another player.
+         */
+        suspend fun onPlayer(target: Player, allowed: () -> Boolean) =
+            useOnEntity(target, allowed) { bot.output.useItemOnPlayer(it, usedId, target) }
+
+        /**
          * Uses the selected inventory item on a game object.
          *
          * The bot will first navigate into interaction range, then send the item-on-object packet.
@@ -143,6 +156,12 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          */
         suspend fun onObject(target: GameObject) =
             useOnEntity(target) { bot.output.useItemOnObject(it, usedId, target) }
+
+        /**
+         * Rechecks activity permission throughout an object approach and immediately before native item use.
+         */
+        suspend fun onObject(target: GameObject, allowed: () -> Boolean) =
+            useOnEntity(target, allowed) { bot.output.useItemOnObject(it, usedId, target) }
     }
 
     /**
