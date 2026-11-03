@@ -188,6 +188,12 @@ object Skullball {
     fun playing(plr: Player) = games[plr]?.let { it.finishIn == 0 && it.resultIn == 0 } ?: false
 
     /**
+     * The actual owner-bound lap for game-thread consumers. Bot input reads this state without reconstructing
+     * goals, a start clock or reward entitlement from its own movement.
+     */
+    fun game(plr: Player): Game? = games[plr]
+
+    /**
      * Whether [position] is in the werewolf agility area.
      */
     fun inside(position: Position) = position.x in 3520..3583 && position.y in 9856..9925 && position.z == 0
@@ -337,7 +343,7 @@ object Skullball {
      * Whether the ball can roll from [from] towards [direction]. Goals' middles are solid, but the ball rolls through
      * them between the posts. The static map is used, so the ball rolls through people.
      */
-    private fun rollable(from: Position, direction: Direction): Boolean {
+    fun rollable(from: Position, direction: Direction): Boolean {
         val to = from.translate(1, direction)
         return GOALS.any { it.middle == to } || world.collisionManager.traversable(from, EntityType.PLAYER, direction)
     }

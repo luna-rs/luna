@@ -365,6 +365,16 @@ enum class SubZone(
         parent = { CANIFIS }),
 
     /**
+     * Eastern Werewolf cave loop: ten ordered skeleton goals, the final wall hole, four ball spawnholes,
+     * the Skullball Boss and six trainers. Its ground-floor streets share the existing trapdoor approach.
+     */
+    WEREWOLF_SKULLBALL(
+        inside = Position(3550, 9867),
+        entrance = { Position(3543, 3462) },
+        area = SimpleBoxArea.of(3547, 9858, 3582, 9918),
+        parent = { CANIFIS }),
+
+    /**
      * The Agility Pyramid yard, Simon Templeton and the first three raised obstacle levels. The western rock
      * slide supplies native access from the desert; ordinary food resupply retains Al Kharid banking.
      */

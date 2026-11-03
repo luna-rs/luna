@@ -32,6 +32,7 @@ import game.content.duelArena.DuelArena
 import game.content.gamesRoom.GamesRoom
 import game.bot.scripts.PartyRoomDonations
 import game.bot.scripts.PartyRoomEntertainment
+import game.bot.scripts.skills.SkullballBotScript
 import game.bot.scripts.LogoutBotScript
 import game.bot.scripts.trading.TradeBotScript
 import game.content.partyRoom.dropParty.DropPartyOption
@@ -70,6 +71,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
         if (RangingGuildBotScript.eligible(bot) && (bot.count > 0 || rand(0.25))) return RangingGuildBotScript(bot)
         if (BrimhavenArenaBotScript.eligible(bot) && (BrimhavenArena.inside(bot.position) || rand(0.25)))
             return BrimhavenArenaBotScript(bot)
+        if (SkullballBotScript.eligible(bot) && rand(0.25)) return SkullballBotScript(bot, 900.seconds)
         if (GnomeBallBotScript.eligible(bot) && rand(0.25)) return GnomeBallBotScript(bot)
         if (DuelArenaBotScript.eligible(bot) && (DuelArena.inside(bot.position) || rand().nextBoolean()))
             return DuelArenaBotScript(bot)

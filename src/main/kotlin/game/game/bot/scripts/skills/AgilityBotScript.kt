@@ -15,17 +15,26 @@ import com.google.gson.JsonObject
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.agility.Agility.courseProgress
 import game.skill.agility.pyramid.AgilityPyramid
+import game.skill.agility.skullball.Skullball
 import game.skill.agility.pyramid.AgilityPyramid.pyramidTopTaken
 import game.item.greegree.Greegree
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
+import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.dialogue.OptionDialogue
+import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.mob.movement.NavigationResult
 import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.future.await
+import java.util.concurrent.CompletableFuture
+import java.util.ArrayDeque
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -773,3 +782,236 @@ data class AgilityStep(val obstacle: AgilityObstacle?, val plane: Int, val objec
                        val destination: (GameObject, Position) -> Position?,
                        val waypoints: List<Position> = emptyList(),
                        val policy: InteractionPolicy? = null)
+
+/**
+ * Plays the native timed Skullball game through the Boss dialogue and actual Tap/Kick/Shoot interactions.
+ * The native game alone tracks goals, elapsed ticks, the finish hole and XP. Saved scripts retain only their
+ * activity budget and failures; login never recreates a lap or grants progress lost through native logout.
+ *
+ * @param bot The player of its own native ball.
+ * @param duration Shared travel and play budget.
+ * @author lare96
+ */
+class SkullballBotScript(bot: Bot, duration: Duration) :
+    ZonedBotScript(bot, duration, mutableListOf(SubZone.WEREWOLF_SKULLBALL)) {
+    companion object {
+        /**
+         * Native admission only; the existing game owns its Ring of Charos rule and current quest placeholder.
+         */
+        fun eligible(bot: Bot): Boolean = bot.agility.level >= Skullball.LEVEL && Skullball.passesAsWerewolf(bot)
+
+        /**
+         * No native lap, ball reference, timer or reward is serialized by the bot.
+         *
+         * @author lare96
+         */
+        class SkullballData : ZonedBotScriptData() {
+            var failures = 0
+            override fun load(data: JsonObject) {
+                super.load(data)
+                failures = data.get("failures")?.asInt ?: 0
+            }
+            override fun save(data: JsonObject) {
+                super.save(data)
+                data.addProperty("failures", failures)
+            }
+        }
+    }
+
+    private var failures = 0
+    private var observedGame: Skullball.Game? = null
+    private var navigation: CompletableFuture<NavigationResult>? = null
+    private var ownedOptions: OptionDialogue? = null
+    private var stanceTiles: Set<Position> = emptySet()
+
+    constructor(bot: Bot, data: SkullballData) : this(bot, data.duration) { failures = data.failures }
+
+    override suspend fun equipment() = null
+    override suspend fun onInit(resumed: Boolean): Boolean = eligible(bot) && failures < 3
+    override suspend fun onBankRequested(initial: Boolean): Boolean = false
+
+    override suspend fun executeInZone(): Boolean {
+        if (!eligible(bot)) return false
+        val game = Skullball.game(bot)
+        if (game == null) {
+            if (observedGame != null && bot.overlays.getOverlay(StandardInterface::class.java)?.id == Skullball.RESULT) {
+                handler.widgets.clickCloseInterface()
+                observedGame = null
+                failures = 0
+                return true
+            }
+            if (bot.overlays.hasWindow()) return record(false)
+            return record(startGame())
+        }
+        observedGame = game
+        if (game.finishIn > 0 || game.resultIn > 0 || game.moves > 0 || game.delay > 0) return true
+        if (bot.position !in stanceTiles) stanceTiles = reachableStances()
+        val shot = SkullballBotPlanner.plan(game.ball.position, game.goals,
+            { from, direction -> Skullball.rollable(from, direction) },
+            { stand -> stand in stanceTiles && !world.collisionManager.isBlocked(stand, false) })
+            ?: return record(false)
+        val ball = game.ball
+        val before = ball.position
+        if (!walk(shot.stand) || Skullball.game(bot) !== game || ball.position != before ||
+            game.moves != 0 || !isActionSafe()) return record(false)
+        val goals = game.goals
+        if (!handler.interactions.interact(when (shot.shot) {
+                Skullball.Shot.TAP -> 1
+                Skullball.Shot.KICK -> 2
+                Skullball.Shot.SHOOT -> 3
+            }, ball) { isActionSafe() && Skullball.game(bot) === game && bot.position == shot.stand }) return record(false)
+        return record(waitFor(12.seconds) {
+            Skullball.game(bot) !== game || game.finishIn > 0 || game.resultIn > 0 ||
+                game.moves == 0 && game.delay == 0 && (game.goals != goals || ball.position != before)
+        })
+    }
+
+    /**
+     * Selects only the Boss's actual start option; the ordinary dialogue reflex confirms his native player page.
+     */
+    private suspend fun startGame(): Boolean {
+        val boss = world.locator.findNpcs(SubZone.WEREWOLF_SKULLBALL.inside, 20) {
+            it.id == Skullball.BOSS && it.state == EntityState.ACTIVE
+        }.firstOrNull() ?: return false
+        val response = "I would like to do the skullball course."
+        if (!handler.interactions.interact(1, boss) { isActionSafe() && Skullball.game(bot) == null } ||
+            !waitFor(6.seconds) { bot.overlays.getOverlay(OptionDialogue::class.java)?.options?.contains(response) == true })
+            return false
+        val page = bot.overlays.getOverlay(OptionDialogue::class.java) ?: return false
+        ownedOptions = page
+        if (!isActionSafe() || !handler.widgets.clickDialogueOption(response)) return false
+        return waitFor(8.seconds) { Skullball.game(bot) != null }.also {
+            if (it) observedGame = Skullball.game(bot)
+        }
+    }
+
+    /**
+     * Local native navigation reaches the exact side of the ball without a travel fallback or teleport.
+     * Only this script's own pending navigator request may be cancelled on timeout or pause.
+     */
+    private suspend fun walk(tile: Position): Boolean {
+        if (bot.position == tile) return true
+        val pending = bot.navigator.navigate(tile, true)
+        navigation = pending
+        return try {
+            withTimeoutOrNull(15.seconds) { pending.await() == NavigationResult.REACHED && bot.position == tile } == true
+        } finally {
+            if (navigation === pending) {
+                if (bot.navigator.currentPending === pending) { bot.navigator.cancel(); bot.walking.clear() }
+                navigation = null
+            }
+        }
+    }
+
+    /**
+     * Static course walls can leave walkable pockets that the ball can reach but a player cannot. Compute the
+     * bot's local cardinal walking component once, so planning never requires a stance inside such a pocket.
+     */
+    private fun reachableStances(): Set<Position> {
+        val reached = hashSetOf(bot.position)
+        val queue = ArrayDeque<Position>()
+        queue.add(bot.position)
+        val directions = listOf(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)
+        while (queue.isNotEmpty()) {
+            val from = queue.removeFirst()
+            for (direction in directions) {
+                val next = from.translate(1, direction)
+                if (Skullball.inside(next) && next !in reached &&
+                    world.collisionManager.traversable(from, EntityType.PLAYER, direction)) {
+                    reached.add(next)
+                    queue.add(next)
+                }
+            }
+        }
+        return reached
+    }
+
+    private fun record(success: Boolean): Boolean {
+        failures = if (success) 0 else failures + 1
+        return failures < 3
+    }
+
+    override suspend fun beforeLeavingZone(): Boolean {
+        val game = Skullball.game(bot)
+        if (game == null) {
+            if (observedGame != null && bot.overlays.getOverlay(StandardInterface::class.java)?.id == Skullball.RESULT)
+                handler.widgets.clickCloseInterface()
+            return true
+        }
+        if (game !== observedGame || failures >= 3 || game.started < 0) return true
+        val lastUsefulTick = Skullball.FULL_XP_TICKS +
+            kotlin.math.ceil(Skullball.FULL_XP / Skullball.XP_PER_TICK).toInt() + Skullball.FINISH_DELAY + Skullball.RESULT_DELAY
+        if (world.currentTick - game.started > lastUsefulTick) return true
+        return !executeInZone()
+    }
+
+    override suspend fun finish() {
+        navigation?.let { if (bot.navigator.currentPending === it) { bot.navigator.cancel(); bot.walking.clear() } }
+        navigation = null
+        if (ownedOptions != null && bot.overlays.getOverlay(OptionDialogue::class.java) === ownedOptions)
+            bot.overlays.closeWindows()
+        val game = Skullball.game(bot)
+        if (game != null && game === observedGame && game.finishIn == 0 && game.resultIn == 0 && !isPaused())
+            Skullball.giveUp(bot)
+    }
+
+    override fun snapshot() = SkullballData().also {
+        it.duration = duration
+        it.zones = zones.toMutableList()
+        it.failures = failures
+    }
+}
+
+/**
+ * Bounded shot search over the native ball's live position and next goal. It considers only unobstructed straight
+ * native shot lengths and walkable kicking stances; source wall bounces remain native recovery rather than invented
+ * movement. Every planned action is recalculated after the real ball settles.
+ *
+ * @author lare96
+ */
+internal object SkullballBotPlanner {
+    /**
+     * One ordinary interaction from an exact cardinal stance behind the ball.
+     *
+     * @author lare96
+     */
+    data class Kick(val stand: Position, val shot: Skullball.Shot)
+
+    /**
+     * Finds the first shot on a short route through the next source goal, or north into the final hole.
+     * The caller supplies native collision checks so no remote occupancy knowledge or fabricated route is used.
+     */
+    fun plan(ball: Position, goal: Int, canRoll: (Position, Direction) -> Boolean,
+             canStand: (Position) -> Boolean): Kick? {
+        if (goal !in 0..Skullball.GOALS.size) return null
+        val queue = ArrayDeque<Pair<Position, Kick?>>()
+        val visited = hashSetOf(ball)
+        queue.add(ball to null)
+        val directions = listOf(Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)
+        while (queue.isNotEmpty() && visited.size <= 5000) {
+            val (from, initial) = queue.removeFirst()
+            for (direction in directions) {
+                val stand = from.translate(1, direction.opposite())
+                if (!canStand(stand)) continue
+                for (shot in Skullball.Shot.entries.reversed()) {
+                    val kick = initial ?: Kick(stand, shot)
+                    var position = from
+                    var scores = false
+                    var clear = true
+                    repeat(shot.squares) {
+                        if (goal == Skullball.GOALS.size && position == Skullball.FINISH_FROM && direction == Direction.NORTH)
+                            return kick
+                        if (!clear || !canRoll(position, direction)) { clear = false; return@repeat }
+                        position = position.translate(1, direction)
+                        if (!Skullball.inside(position)) { clear = false; return@repeat }
+                        if (goal < Skullball.GOALS.size && position == Skullball.GOALS[goal].middle &&
+                            direction == Skullball.GOALS[goal].direction) scores = true
+                    }
+                    if (clear && scores) return kick
+                    if (clear && visited.add(position)) queue.add(position to kick)
+                }
+            }
+        }
+        return null
+    }
+}

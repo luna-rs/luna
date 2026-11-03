@@ -49,6 +49,8 @@ import game.bot.scripts.DropPartyBotScript.PartyData
 import game.bot.scripts.IdleBotScript.IdleData
 import game.bot.scripts.skills.AgilityBotScript
 import game.bot.scripts.skills.AgilityBotScript.Companion.AgilityData
+import game.bot.scripts.skills.SkullballBotScript
+import game.bot.scripts.skills.SkullballBotScript.Companion.SkullballData
 import game.bot.scripts.skills.WeaveTextileBotScript
 import game.bot.scripts.skills.WeaveTextileBotScript.Companion.TextileData
 import game.bot.scripts.UseLampBotScript.Companion.LampData
@@ -184,6 +186,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<PestControlData>(PestControlBotScript::class) { bot, data -> PestControlBotScript(bot, data) }
     scriptManager.addScript<BoardGameData>(GamesRoomBotScript::class) { bot, data -> GamesRoomBotScript(bot, data) }
     scriptManager.addScript<AgilityData>(AgilityBotScript::class) { bot, data -> AgilityBotScript(bot, data) }
+    scriptManager.addScript<SkullballData>(SkullballBotScript::class) { bot, data -> SkullballBotScript(bot, data) }
     scriptManager.addScript<TextileData>(WeaveTextileBotScript::class) { bot, data -> WeaveTextileBotScript(bot, data) }
     scriptManager.addScript<LampData>(UseLampBotScript::class) { bot, data -> UseLampBotScript(bot, data) }
     scriptManager.addScript<CutTreeData>(CutTreeBotScript::class) { bot, data -> CutTreeBotScript(bot, data) }
