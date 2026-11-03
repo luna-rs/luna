@@ -2,6 +2,7 @@ package api.combat.death.dsl
 
 import api.bot.isRealBot
 
+import api.combat.death.PlayerDeathItems
 import api.drops.DropTableHandler.getDropTable
 import api.drops.MergedDropTable
 import api.predef.*
@@ -50,7 +51,8 @@ class DeathReceiver<T : Mob>(val receiver: DeathHookReceiver<T>) {
          */
         fun removeItems(container: ItemContainer, items: ArrayList<Item>) {
             container.forIndexedItems { index, item ->
-                if (item != null && item.itemDef.isTradeable) {
+                if (item != null && item.itemDef.isTradeable &&
+                    !PlayerDeathItems.isProtectedBotTeamCape(receiver.victim, item)) {
                     items.add(item)
                     container.set(index, null)
                 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ItemEconomyDefinition;
+import io.luna.game.model.mob.bot.brain.BotPkPreference;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,19 +47,26 @@ public final class ItemEconomyDefinitionFileParser extends JsonFileParser<ItemEc
     @Override
     public void onCompleted(ImmutableList<ItemEconomyDefinition> tokenObjects) {
         var ids = new HashSet<Integer>();
+        var eligible = ImmutableList.<ItemEconomyDefinition>builder();
         for (ItemEconomyDefinition definition : tokenObjects) {
             var item = ItemDefinition.ALL.get(definition.id()).orElseThrow(() ->
                     new IllegalArgumentException("Unknown economy item ID: " + definition.id()));
+            // Older local seed files still include team capes, which now serve only as clan markers.
+            if (BotPkPreference.isTeamCape(item.getUnnotedId().orElse(item.id()))) {
+                continue;
+            }
             checkArgument(item.isTradeable() && !item.isNoted(),
                     "Economy definitions require tradeable, unnoted items: %s", definition.id());
             checkArgument(ids.add(definition.id()), "Duplicate economy item ID: %s", definition.id());
+            eligible.add(definition);
         }
-        ItemEconomyDefinition.ALL.storeAndLock(tokenObjects);
+        var definitions = eligible.build();
+        ItemEconomyDefinition.ALL.storeAndLock(definitions);
         try {
             io.luna.game.model.item.economy.EconomySeedOverrides.load();
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
-        logger.debug("Loaded {} item economy definitions!", box(tokenObjects.size()));
+        logger.debug("Loaded {} item economy definitions!", box(definitions.size()));
     }
 }

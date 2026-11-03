@@ -3,6 +3,7 @@ package io.luna.game.model.def;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.luna.game.model.mob.bot.brain.BotPkPreference;
 import io.luna.util.StringUtils;
 
 import java.util.Objects;
@@ -542,11 +543,12 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
-     * Returns whether this item is tradeable.
+     * Returns whether this item is tradeable. Team capes and their notes identify clans and cannot be traded,
+     * including when older item data still marks them as tradeable.
      *
      * @return {@code true} if tradeable.
      */
     public boolean isTradeable() {
-        return tradeable;
+        return tradeable && !BotPkPreference.isTeamCape(unnotedId.orElse(id));
     }
 }

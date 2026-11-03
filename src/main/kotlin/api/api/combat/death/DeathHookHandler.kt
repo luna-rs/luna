@@ -133,6 +133,9 @@ object DeathHookHandler {
                 defaultNpcHook?.invoke(receiver)
             }
         } else if (victim is Player) {
+            if (stage == DeathStage.DEATH) {
+                PlayerDeathItems.bankBotTeamCapes(victim)
+            }
             val receiver = DeathHookReceiver(victim, source, stage)
             val type = victim.controllers.primary.javaClass
             val hook = playerHooks[type]

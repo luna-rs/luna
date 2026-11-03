@@ -6062,252 +6062,252 @@
   {
     "id": 4315, // Team-1 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4317, // Team-2 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4319, // Team-3 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4321, // Team-4 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4323, // Team-5 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4325, // Team-6 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4327, // Team-7 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4329, // Team-8 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4331, // Team-9 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4333, // Team-10 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4335, // Team-11 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4337, // Team-12 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4339, // Team-13 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4341, // Team-14 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4343, // Team-15 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4345, // Team-16 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4347, // Team-17 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4349, // Team-18 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4351, // Team-19 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4353, // Team-20 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4355, // Team-21 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4357, // Team-22 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4359, // Team-23 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4361, // Team-24 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4363, // Team-25 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4365, // Team-26 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4367, // Team-27 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4369, // Team-28 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4371, // Team-29 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4373, // Team-30 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4375, // Team-31 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4377, // Team-32 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4379, // Team-33 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4381, // Team-34 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4383, // Team-35 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4385, // Team-36 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4387, // Team-37 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4389, // Team-38 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4391, // Team-39 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4393, // Team-40 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4395, // Team-41 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4397, // Team-42 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4399, // Team-43 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4401, // Team-44 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4403, // Team-45 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4405, // Team-46 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4407, // Team-47 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4409, // Team-48 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4411, // Team-49 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4413, // Team-50 cape
     "weight": 0.4,
-    "tradeable": true
+    "tradeable": false
   },
   {
     "id": 4415, // Blunt axe
