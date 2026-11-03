@@ -2,6 +2,7 @@ package api.bot.action
 
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
+import api.bot.action.prayer.BotPrayerRestoration
 import io.luna.game.model.mob.bot.Bot
 import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.walk.BankWithdrawal
@@ -76,6 +77,11 @@ class BotActionHandler(val bot: Bot) {
      * Handles when the bot drinks the potions it carries.
      */
     val potions = BotPotionActionHandler(bot, this)
+
+    /**
+     * Offers nearby native altar visits between ordinary activities when prayer points are depleted.
+     */
+    val prayerRestoration = BotPrayerRestoration(bot, this)
 
     /**
      * Handles trade requests, final confirmation clicks, and closing trade windows through normal client output.

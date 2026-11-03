@@ -81,6 +81,7 @@ object GeneralActivityCoordinator : BotCoordinator {
             if (skill != null) return UseLampBotScript(bot, skill, duration)
         }
         RuneRunningCoordinator.profitScript(bot)?.let { return it }
+        bot.actionHandler.prayerRestoration.preparation()?.let { return it }
         if (TreasureTrailBotScript.eligible(bot)) return TreasureTrailBotScript(bot)
         if (owned(bot, OpenCrystalChestBotScript.KEY) > 0) {
             chestPositions.minByOrNull { it.computeLongestDistance(bot.position) }?.let {
