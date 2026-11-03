@@ -6,9 +6,12 @@ import io.luna.net.LunaChannelFilter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
+import io.netty.util.NetUtil;
 import io.netty.util.internal.TypeParameterMatcher;
 
 import java.net.InetSocketAddress;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
@@ -26,6 +29,30 @@ public abstract class Client<I> {
      */
     public static final AttributeKey<Client<?>> KEY = AttributeKey.valueOf("Client.key");
 
+    private static final AttributeKey<String> VERIFIED_IP = AttributeKey.valueOf("Client.verifiedIp");
+
+    /**
+     * Records an immutable numeric peer address after transport-level proxy verification.
+     *
+     * @param channel The connection.
+     * @param address The verified IPv4 or IPv6 address, without a port.
+     */
+    public static void setIpAddress(Channel channel, String address) {
+        byte[] bytes = address == null ? null : NetUtil.createByteArrayFromIpAddressString(address);
+        if (bytes == null) {
+            throw new IllegalArgumentException("A verified client address must be an IP literal.");
+        }
+        try {
+            String canonical = InetAddress.getByAddress(bytes).getHostAddress();
+            String existing = channel.attr(VERIFIED_IP).setIfAbsent(canonical);
+            if (existing != null && !existing.equals(canonical)) {
+                throw new IllegalStateException("A connection's verified client address cannot change.");
+            }
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid client IP address.", e);
+        }
+    }
+
     /**
      * Retrieves the IP address for {@code channel}.
      *
@@ -35,6 +62,10 @@ public abstract class Client<I> {
     public static String getIpAddress(Channel channel) {
         if(channel == BotChannel.CHANNEL) {
             return "bot-client";
+        }
+        String verified = channel.hasAttr(VERIFIED_IP) ? channel.attr(VERIFIED_IP).get() : null;
+        if (verified != null) {
+            return verified;
         }
         try {
             InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();

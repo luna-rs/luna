@@ -7,6 +7,7 @@ import io.luna.net.msg.login.LoginDecoder;
 import io.luna.net.msg.login.LoginEncoder;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -62,11 +63,20 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
+        addGameHandlers(ch);
+        ch.pipeline().addBefore("login-decoder", "channel-filter", channelFilter);
+    }
+
+    /**
+     * Installs the shared RuneScape protocol after a transport has admitted its connection.
+     *
+     * @param ch The admitted channel.
+     */
+    public void addGameHandlers(Channel ch) {
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
         ch.attr(LunaChannelFilter.KEY).setIfAbsent(channelFilter);
 
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
-        ch.pipeline().addLast("channel-filter", channelFilter);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository));
         ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("upstream-handler", upstreamHandler);

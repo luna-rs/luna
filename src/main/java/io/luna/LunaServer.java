@@ -18,6 +18,8 @@ import io.luna.game.model.World;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
+import io.luna.net.websocket.WebSocketChannelInitializer;
+import io.luna.net.websocket.WebSocketSettings;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.AmmoDefinitionFileParser;
 import io.luna.util.parser.impl.BossFileParser;
@@ -35,6 +37,7 @@ import io.luna.util.parser.impl.WeaponSoundDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -166,14 +169,32 @@ public final class LunaServer {
      */
     private void initNetwork() {
         ResourceLeakDetector.setLevel(Luna.settings().game().resourceLeakDetection());
+        WebSocketSettings webSocket = Luna.settings().game().webSocket();
+        webSocket.validate();
+        if (webSocket.enabled() && webSocket.port() == Luna.settings().game().port()) {
+            throw new IllegalArgumentException("Desktop TCP and WebSocket listeners require different ports.");
+        }
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
-
-        bootstrap.group(loopGroup);
-        bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-        bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
+        List<Channel> listeners = new ArrayList<>();
+        try {
+            bootstrap.group(loopGroup);
+            bootstrap.channel(NioServerSocketChannel.class);
+            bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
+            listeners.add(bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly().channel());
+            if (webSocket.enabled()) {
+                ServerBootstrap browser = bootstrap.clone().childHandler(
+                        new WebSocketChannelInitializer(context, channelFilter, messageRepository, webSocket));
+                listeners.add(browser.bind(webSocket.bindAddress(), webSocket.port()).syncUninterruptibly().channel());
+                logger.info("Browser WebSocket listener ready at {}:{}{} (TLS may terminate at a trusted proxy).",
+                        webSocket.bindAddress(), webSocket.port(), webSocket.path());
+            }
+        } catch (Exception failure) {
+            listeners.forEach(channel -> channel.close().syncUninterruptibly());
+            loopGroup.shutdownGracefully().syncUninterruptibly();
+            throw new IllegalStateException("Unable to bind Luna's configured network listeners.", failure);
+        }
     }
 
     /**

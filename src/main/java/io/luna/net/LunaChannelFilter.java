@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
+import io.luna.net.client.Client;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.login.LoginResponse;
 import io.luna.net.msg.login.LoginResponseMessage;
@@ -38,6 +39,8 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      */
     public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
 
+    private static final AttributeKey<String> ADMITTED_IP = AttributeKey.valueOf("LunaChannelFilter.admittedIp");
+
     /**
      * An immutable set containing whitelisted (filter bypassing) addresses.
      */
@@ -61,35 +64,39 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
 
     @Override
     protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
-        String address = ipAddress(remoteAddress);
-
-        if (WHITELIST.contains(address)) {
-            // Bypass filter for whitelisted addresses.
-            return true;
+        LoginResponse rejection = admit(ctx.channel(), ipAddress(remoteAddress));
+        if (rejection != null) {
+            response(ctx, rejection);
         }
-        if (connections.count(address) >= Luna.settings().game().connectionLimit()) {
-            // Reject if more than CONNECTION_LIMIT active connections.
-            response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
-            return false;
-        }
-        if (blacklist.contains(address)) {
-            // Reject if blacklisted (IP banned).
-            response(ctx, LoginResponse.ACCOUNT_BANNED);
-            return false;
-        }
-        return true;
+        return rejection == null;
     }
 
-    @Override
-    protected void channelAccepted(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
-        String address = ipAddress(remoteAddress);
-
-        // Increment connection count by 1.
+    /**
+     * Applies the shared admission policy without writing transport-specific rejection bytes.
+     *
+     * @param channel The TCP or upgraded WebSocket connection.
+     * @param verifiedIp The verified numeric address used for both limits and account metadata.
+     * @return The rejection response, or {@code null} when the connection was admitted.
+     */
+    public synchronized LoginResponse admit(Channel channel, String verifiedIp) {
+        Client.setIpAddress(channel, verifiedIp);
+        String address = Client.getIpAddress(channel);
+        channel.attr(KEY).setIfAbsent(this);
+        if (channel.attr(ADMITTED_IP).get() != null) {
+            return null;
+        }
+        if (!WHITELIST.contains(address)) {
+            if (connections.count(address) >= Luna.settings().game().connectionLimit()) {
+                return LoginResponse.LOGIN_LIMIT_EXCEEDED;
+            }
+            if (blacklist.contains(address)) {
+                return LoginResponse.ACCOUNT_BANNED;
+            }
+        }
+        channel.attr(ADMITTED_IP).set(address);
         connections.add(address);
-
-        // Remove address once disconnected.
-        ChannelFuture future = ctx.channel().closeFuture();
-        future.addListener(it -> connections.remove(address));
+        channel.closeFuture().addListener(it -> connections.remove(address));
+        return null;
     }
 
     @Override

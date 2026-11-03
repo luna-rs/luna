@@ -15,6 +15,22 @@
     "serializer": "JsonGameSerializer",
     // The network port the game server listens on.
     "port": 43594,
+    // Optional native browser transport. Desktop clients continue using port above.
+    "websocket": {
+      "enabled": false,
+      "bind_address": "127.0.0.1",
+      "port": 43595,
+      "path": "/game",
+      // Exact website origins, without a trailing slash or project path.
+      "allowed_origins": ["http://127.0.0.1:8095", "http://localhost:8095", "https://luna-rs.github.io"],
+      // Leave empty for direct connections. Add only the exact IP of your TLS proxy.
+      "trusted_proxy_addresses": [],
+      "forwarded_ip_header": "CF-Connecting-IP",
+      "max_http_content_length": 8192,
+      "max_frame_payload_length": 1048576,
+      "max_pending_outbound_bytes": 8388608,
+      "handshake_timeout_millis": 10000
+    },
     // The maximum number of simultaneous connections allowed from one source.
     "connection_limit": 2,
     // The password-strength policy used when validating new or changed passwords.
