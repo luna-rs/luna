@@ -171,6 +171,11 @@ public class Player extends Mob {
     private boolean lowMemory;
 
     /**
+     * Whether this session explicitly enabled developer collision bypass for the currently loaded region.
+     */
+    private transient boolean debugNoclipEnabled;
+
+    /**
      * The last region position used for region-change detection.
      */
     private Position lastRegion;
@@ -369,6 +374,7 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        resetDebugNoclip();
         passwordRevision++;
         if (dynamicMap != null) dynamicMap.remove(this);
         pendingPlacement = true;
@@ -769,6 +775,7 @@ public class Player extends Mob {
             music.updatePosition();
         }
         if (lastRegion == null || needsRegionUpdate()) {
+            resetDebugNoclip();
             regionChanged = true;
             lastRegion = position;
             if (!isBot()) {
@@ -979,12 +986,53 @@ public class Player extends Mob {
     }
 
     /**
+     * Returns whether this session may bypass collision after explicitly enabling the native client's debug command.
+     * Runtime mode and current rights are checked again so the stored session flag cannot authorize production play.
+     *
+     * @return Whether development collision bypass is enabled for an administrator or developer.
+     */
+    public boolean isDebugNoclipEnabled() {
+        return debugNoclipEnabled && Luna.settings().game().betaMode() &&
+                rights.compareTo(PlayerRights.ADMINISTRATOR) >= 0;
+    }
+
+    /**
+     * Enables collision bypass for the current loaded region when this development session has administrator rights.
+     * Repeated requests keep the mode enabled; the native client cannot restore its cleared collision without reloading.
+     *
+     * @return Whether the request is authorized and collision bypass is enabled.
+     */
+    public boolean enableDebugNoclip() {
+        if (!Luna.settings().game().betaMode() || rights.compareTo(PlayerRights.ADMINISTRATOR) < 0) {
+            return false;
+        }
+        if (!debugNoclipEnabled) {
+            walking.clear();
+            debugNoclipEnabled = true;
+        }
+        return true;
+    }
+
+    /**
+     * Discards collision-bypassing steps when the client reloads collision or this session loses debug authorization.
+     */
+    private void resetDebugNoclip() {
+        if (debugNoclipEnabled) {
+            debugNoclipEnabled = false;
+            walking.clear();
+        }
+    }
+
+    /**
      * Sets this player's rights.
      *
      * @param rights The new rights.
      */
     public void setRights(PlayerRights rights) {
         this.rights = rights;
+        if (rights.compareTo(PlayerRights.ADMINISTRATOR) < 0) {
+            resetDebugNoclip();
+        }
     }
 
     /**

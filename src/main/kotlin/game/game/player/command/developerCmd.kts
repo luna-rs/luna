@@ -53,6 +53,17 @@ import java.lang.Boolean.parseBoolean
 // todo each command in its own file
 
 /**
+ * Enables the native client's collision debug mode for this development session and loaded region.
+ */
+cmd("noclip", RIGHTS_ADMIN) {
+    if (plr.enableDebugNoclip()) {
+        plr.sendMessage("Debug noclip enabled until the next region load or logout.")
+    } else {
+        plr.sendMessage("Debug noclip is available to administrators in development mode.")
+    }
+}
+
+/**
  * A command that sends a client config.
  */
 cmd("config", RIGHTS_DEV) {

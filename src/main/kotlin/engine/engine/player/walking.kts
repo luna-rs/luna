@@ -1,7 +1,6 @@
 package engine.player
 
 import api.predef.*
-import io.luna.Luna
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.WalkingEvent
 
@@ -10,7 +9,7 @@ import io.luna.game.event.impl.WalkingEvent
  */
 on(WalkingEvent::class, EventPriority.HIGH) {
     plr.walking.clear()
-    if (Luna.settings().game().betaMode()) {
+    if (plr.isDebugNoclipEnabled) {
         plr.walking.replaceForcedPath(steps)
     } else {
         plr.walking.replacePath(steps)
