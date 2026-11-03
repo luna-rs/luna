@@ -13,6 +13,8 @@ import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.OpenContainerBotScript
 import game.bot.scripts.ToggleLightBotScript
+import game.bot.scripts.RepairAxeBotScript
+import game.content.randomEvents.WoodcuttingRandomEvents
 import game.skill.firemaking.lightSource.LightSource
 import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
@@ -33,6 +35,7 @@ import kotlin.time.Duration.Companion.minutes
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
  * Owned oysters and fishing caskets share a native container-opening activity; oysters also require an owned chisel.
  * Explicit wanted lit or unlit stock can light or extinguish owned sources without assembling or buying new lights.
+ * Detached axe parts are rejoined and owned broken axes are repaired by Bob when the native fee is affordable.
  * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Low-combat accounts can occasionally deliver essence to a funded skiller Runecrafter for rune payments.
@@ -105,6 +108,9 @@ object GeneralActivityCoordinator : BotCoordinator {
             }
         }
         lightPreparation.randomOrNull()?.let { return it }
+        WoodcuttingRandomEvents.Parts.entries.flatMap { parts ->
+            listOf(false, true).map { RepairAxeBotScript(bot, parts, it, duration) }
+        }.filter { it.isEligible() }.randomOrNull()?.let { return it }
         val filling = buildList {
             for (source in Source.entries) {
                 for (empty in source.emptyIds) {

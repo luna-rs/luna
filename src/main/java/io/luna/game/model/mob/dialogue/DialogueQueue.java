@@ -24,6 +24,11 @@ public final class DialogueQueue {
     private final Queue<DialogueInterface> dialogues;
 
     /**
+     * The exact page most recently displayed by this queue, or {@code null} after exhaustion.
+     */
+    private DialogueInterface current;
+
+    /**
      * Creates a new {@link DialogueQueue}.
      *
      * @param player The player.
@@ -39,6 +44,7 @@ public final class DialogueQueue {
      */
     public void advance() {
         DialogueInterface nextDialogue = dialogues.poll();
+        current = nextDialogue;
         if (nextDialogue != null) {
             player.getOverlays().open(nextDialogue);
         } else {
@@ -48,5 +54,16 @@ public final class DialogueQueue {
                 overlays.closeWindows();
             }
         }
+    }
+
+    /**
+     * Determines if a page was actually displayed by this queue. A different window opened over a
+     * stale queue does not gain ownership merely by repeating the same speaker or option text.
+     *
+     * @param page The currently displayed page to verify.
+     * @return {@code true} if this queue owns the exact non-null page.
+     */
+    public boolean owns(DialogueInterface page) {
+        return page != null && current == page;
     }
 }

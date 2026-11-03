@@ -89,6 +89,7 @@ abstract class SkillingBotScript<E : Entity>(
             return false
         }
 
+        recoverMissingTool()
         tool = resolveTool()
         reviewToolUpgrade()
         if (skill.level < requiredLevel) return false
@@ -192,6 +193,7 @@ abstract class SkillingBotScript<E : Entity>(
         if (tools().isEmpty()) return true
         val selected = tool
         if (selected == null || skill.level < selected.skillLevel || !hasCarriedItem(selected.id)) {
+            recoverMissingTool()
             tool = resolveTool()
         }
         val usable = tool
@@ -205,6 +207,11 @@ abstract class SkillingBotScript<E : Entity>(
         }
         return true
     }
+
+    /**
+     * Allows a skill to recover its real detached tool before replacement selection, shopping or emergency fallback.
+     */
+    protected open suspend fun recoverMissingTool() {}
 
     /**
      * Returns the minimum skill level required to run this skilling script.

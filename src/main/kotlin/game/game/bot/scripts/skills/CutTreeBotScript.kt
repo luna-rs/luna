@@ -3,6 +3,7 @@ package game.bot.scripts.skills
 import api.bot.Suspendable.naturalMicroDelay
 import api.bot.Suspendable.waitFor
 import api.bot.webwalk.plan.BankAccess
+import api.bot.action.BotGatheringTools
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -16,6 +17,7 @@ import engine.bot.coordinator.skill.FletchingScriptFactory
 import engine.bot.coordinator.skill.SkillingCoordinator.Companion.profitMode
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.woodcutting.cutTree.Axe
+import game.content.randomEvents.WoodcuttingRandomEvents
 import game.skill.woodcutting.cutTree.CutTreeAction
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.TreeStump
@@ -256,6 +258,11 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
 
 
     override fun emergencyTool(): SkillingTool = SkillingTool(Axe.BRONZE.id, Axe.BRONZE.level)
+
+    override suspend fun recoverMissingTool() {
+        BotGatheringTools.recoverHead(bot, WoodcuttingRandomEvents.HANDLE,
+            WoodcuttingRandomEvents.Parts.entries.associate { it.head to it.axe.id }, trees.mapTo(mutableSetOf()) { it.logId })
+    }
 
     override fun levelRequired(): Int = trees.maxOfOrNull { it.level } ?: 0
 
