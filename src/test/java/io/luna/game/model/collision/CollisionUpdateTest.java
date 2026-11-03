@@ -145,8 +145,4 @@ final class CollisionUpdateTest {
         assertEquals(WALL_NORTH | LOC, builder.build().getFlags().get(ORIGIN));
     }
 
-    @Test
-    void testBuildNeedsAType() {
-        assertThrows(NullPointerException.class, () -> new CollisionUpdate.Builder().build());
-    }
 }

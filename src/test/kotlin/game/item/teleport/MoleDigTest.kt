@@ -1,4 +1,4 @@
-package game.content.barrows
+package game.item.teleport
 
 import api.bot.script.InventoryProductionFixtures
 import api.event.Matcher
@@ -7,7 +7,6 @@ import api.predef.scriptMatchers
 import api.predef.world as scriptWorld
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.Multimap
-import game.item.teleport.SpadeDigSpot
 import io.luna.LunaContext
 import io.luna.game.action.Action
 import io.luna.game.action.ActionQueue
@@ -20,13 +19,9 @@ import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
 import io.luna.game.model.EntityType
 import io.luna.game.model.Position
-import io.luna.game.model.def.VarpDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.varp.PersistentVarp
-import io.luna.game.model.mob.varp.PersistentVarpManager
-import io.luna.game.model.mob.varp.Varp
 import io.luna.game.task.Task
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
@@ -35,20 +30,15 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 
 /**
- * Exercises the shared spade script so Barrows initialization does not affect other digging destinations.
+ * Exercises the shared spade script's delayed Mole descent with and without a carried light source.
  *
  * @author lare96
  */
-class BarrowsDigTest {
+class MoleDigTest {
     companion object {
         @JvmStatic
         @BeforeAll
-        fun initialize() {
-            InventoryProductionFixtures.initialize()
-            for (id in listOf(452, 453)) {
-                if (VarpDefinition.ALL.get(id).isEmpty) VarpDefinition.ALL.storeDefinition(VarpDefinition(id, 0))
-            }
-        }
+        fun initialize() = InventoryProductionFixtures.initialize()
     }
 
     private val context = mock(LunaContext::class.java, RETURNS_DEEP_STUBS)
@@ -56,7 +46,6 @@ class BarrowsDigTest {
     private val player = mock(Player::class.java, RETURNS_DEEP_STUBS)
     private val inventory = player.inventory
     private val actions = ActionQueue(player)
-    private val manager = PersistentVarpManager(player)
     private val tasks = mutableListOf<Task>()
     private val carried = mutableListOf(Item(952))
     private var position = Position(2984, 3387)
@@ -66,8 +55,6 @@ class BarrowsDigTest {
     @BeforeEach
     fun setup() {
         `when`(player.world).thenReturn(world)
-        `when`(player.varpManager).thenReturn(manager)
-        `when`(player.cachedVarps).thenReturn(HashMap())
         `when`(player.isAlive).thenReturn(true)
         `when`(player.state).thenReturn(EntityState.ACTIVE)
         `when`(player.type).thenReturn(EntityType.PLAYER)
@@ -84,31 +71,23 @@ class BarrowsDigTest {
         `when`(player.equipment[Equipment.HEAD]).thenReturn(null)
         doAnswer { tasks += it.getArgument<Task>(0); null }.`when`(world).schedule(any(Task::class.java))
 
-        // Load the real script, then remove only its added matcher so this fixture cannot duplicate live handlers.
         val first = scriptMatchers.size
         script = Class.forName("game.item.teleport.SpadeDig").getConstructor(Array<String>::class.java)
             .newInstance(emptyArray<String>() as Any)
         val added = scriptMatchers.drop(first)
         val matcher = Matcher.get<ItemFirstClickEvent, Int>()
         @Suppress("UNCHECKED_CAST")
-        val actions = Matcher::class.java.getDeclaredField("actions").let {
+        val registered = Matcher::class.java.getDeclaredField("actions").let {
             it.isAccessible = true
             it.get(matcher) as Multimap<Int, EventMatcherListener<ItemFirstClickEvent>>
         }
-        added.forEach { actions.remove(952, it) }
+        added.forEach { registered.remove(952, it) }
         scriptMatchers.subList(first, scriptMatchers.size).clear()
     }
 
-    private fun dig(spot: SpadeDigSpot?) {
+    private fun dig() {
         script.javaClass.getMethod("digWithSpade", Player::class.java, SpadeDigSpot::class.java)
-            .invoke(script, player, spot)
-    }
-
-    private fun land() {
-        val task = tasks.single()
-        assertEquals(2, task.delay)
-        task.javaClass.getDeclaredMethod("execute").apply { isAccessible = true }.invoke(task)
-        tasks.clear()
+            .invoke(script, player, SpadeDigSpot.FALADOR_MOLE_HILLS)
     }
 
     private fun withMoleLanding(block: () -> Unit) {
@@ -150,66 +129,22 @@ class BarrowsDigTest {
     }
 
     @Test
-    fun allSixCryptDigsInitializeOnlyWhenTheLivingPlayerLands() {
-        for (brother in BarrowsBrother.entries) {
-            manager.setValue(PersistentVarp.BARROWS, 0)
-            manager.setValue(PersistentVarp.BARROWS_KILLS, 123)
-            clearInvocations(player)
-            dig(brother.digSpot)
-            assertEquals(0, BarrowsRun.state(player))
-            assertEquals(123, manager.getValue(PersistentVarp.BARROWS_KILLS))
-            verify(player, never()).move(any(Position::class.java))
-            verify(player, never()).sendMessage("You've broken into a crypt!")
-            land()
-            assertNotEquals(0, BarrowsRun.state(player))
-            assertNotNull(BarrowsRun.chamber(player))
-            assertNotNull(BarrowsRun.tunnelBrother(player))
-            assertEquals(0, manager.getValue(PersistentVarp.BARROWS_KILLS))
-            verify(player).sendMessage("You've broken into a crypt!")
-            verify(player).move(brother.digSpot.landing)
-            verify(player).unlock()
-        }
-    }
-
-    @Test
-    fun moleDigWithoutLightEntersAfterTheDelayWithoutTouchingBarrowsProgress() = withMoleLanding {
-        dig(SpadeDigSpot.FALADOR_MOLE_HILLS)
+    fun moleDigWithoutLightEntersAfterTheDelay() = withMoleLanding {
+        dig()
         assertTrue(tasks.isEmpty())
         verify(player, never()).sendMessage("It's going to be dark down there, I should bring a light source.")
         landMole()
         verify(player).move(SpadeDigSpot.FALADOR_MOLE_HILLS.landing)
         verify(player).sendMessage("You seem to have dropped down into a network of mole tunnels.")
         verify(player).unlock()
-        verify(player, never()).sendVarp(any(Varp::class.java))
-        verify(player, never()).sendMessage("You've broken into a crypt!")
-        assertEquals(0, BarrowsRun.state(player))
     }
 
     @Test
-    fun litMoleDigKeepsItsOwnArrivalMessageAndPreservesALootedBarrowsRun() = withMoleLanding {
+    fun litMoleDigKeepsItsOwnArrivalMessage() = withMoleLanding {
         carried += Item(33)
-        val savedRun = BarrowsRun.COLLAPSING_MASK or 64
-        manager.setValue(PersistentVarp.BARROWS, savedRun)
-        manager.setValue(PersistentVarp.BARROWS_KILLS, 123)
-        dig(SpadeDigSpot.FALADOR_MOLE_HILLS)
+        dig()
         landMole()
         verify(player).move(SpadeDigSpot.FALADOR_MOLE_HILLS.landing)
         verify(player).sendMessage("You seem to have dropped down into a network of mole tunnels.")
-        verify(player, never()).sendMessage("You've broken into a crypt!")
-        verify(player, never()).sendVarp(any(Varp::class.java))
-        assertEquals(savedRun, BarrowsRun.state(player))
-        assertEquals(123, manager.getValue(PersistentVarp.BARROWS_KILLS))
-    }
-
-    @Test
-    fun dyingDuringTheDigDelayDoesNotStartARunOrMoveThePlayer() {
-        dig(SpadeDigSpot.AHRIM_MOUND)
-        `when`(player.isAlive).thenReturn(false)
-        land()
-        verify(player).unlock()
-        verify(player, never()).move(any(Position::class.java))
-        verify(player, never()).sendMessage("You've broken into a crypt!")
-        verify(player, never()).sendVarp(any(Varp::class.java))
-        assertEquals(0, BarrowsRun.state(player))
     }
 }

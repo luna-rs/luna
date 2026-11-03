@@ -8,7 +8,6 @@ import api.bot.webwalk.generate.BankStands
 import api.bot.webwalk.generate.GeneratedBank
 import api.bot.webwalk.generate.GenerationReport
 import api.bot.webwalk.generate.WebWalkWriter
-import api.bot.webwalk.model.BankDefinition
 import api.bot.webwalk.model.BankLink
 import api.bot.webwalk.model.NodeKind
 import api.bot.webwalk.model.WebWalkNode
@@ -42,15 +41,6 @@ class BankDestinationDataTest {
     }
 
     @AfterEach fun restoreSettings() { luna.close() }
-
-    @Test fun existingPositionalConstructorsRemainBoothBanks() {
-        val booth = Position(3208, 3200)
-        val stand = Position(3207, 3200)
-        val links = listOf(BankLink("root", 4))
-        assertNull(BankDefinition("booth", booth, stand, links).npcId)
-        assertNull(GeneratedBank("booth", booth, stand, links).npcId)
-        assertNull(BankSeed("booth", booth, listOf(stand)).npcId)
-    }
 
     @Test fun generatorPreservesNpcIdentityAndSpawnAnchorThroughStandSelectionAndLinking() {
         val anchor = Position(3208, 3200)

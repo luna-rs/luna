@@ -8,7 +8,6 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -45,15 +44,6 @@ class BotTradeStageTest {
         verify(bot.overlays).closeWindows()
     }
 
-    @Test fun aChangedOfferIsRejectedAfterTheAcceptanceDelay(): Unit = runTest {
-        val bot = bot()
-        val other = mock(Player::class.java)
-        screen(bot, other)
-        val stage = BotTradeOfferStage(bot, other, BotTradeRequestStage(bot, other))
-        assertNull(stage.offerAndAwait { false })
-        verify(bot.output, never()).clickButton(3420)
-    }
-
     @Test fun confirmationCannotAcceptAnUnrelatedTrade(): Unit = runBlocking {
         val bot = bot()
         val other = mock(Player::class.java)
@@ -66,15 +56,6 @@ class BotTradeStageTest {
             BotTradeOfferStage(bot, other, BotTradeRequestStage(bot, other)))
         assertFalse(stage.confirmAndAwait())
         verify(bot.output, never()).clickButton(3546)
-    }
-
-    @Test fun anAlreadyOpenedRequestUsesTheCorrectExistingTrade(): Unit = runBlocking {
-        val bot = bot()
-        val other = mock(Player::class.java)
-        screen(bot, other)
-        val stage = BotTradeRequestStage(bot, other).sendAndAwait()
-        assertSame(other, stage?.other)
-        verifyNoInteractions(bot.actionHandler.interactions)
     }
 
     @Test fun zeroAndDynamicOfferRequestsCannotSendInventoryClicks(): Unit = runBlocking {

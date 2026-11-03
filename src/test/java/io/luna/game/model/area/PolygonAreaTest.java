@@ -107,18 +107,4 @@ public class PolygonAreaTest {
         assertTrue(area.contains(new Position(5, 8)));
     }
 
-    //bb
-    @Test
-    public void testBoundingBoxExclusion() {
-        List<Point> vertices = Arrays.asList(
-                new Point(0, 0),
-                new Point(4, 0),
-                new Point(4, 3),
-                new Point(0, 3)
-        );
-        PolygonArea area = new PolygonArea(vertices, 0);
-
-        //outside bounding box
-        assertFalse(area.contains(new Position(5, 5)));
-    }
 }

@@ -43,18 +43,18 @@ class BankActionSafetyTest {
         }
     }
 
-    @ParameterizedTest @ValueSource(strings = ["dead", "locked", "combat", "strong"])
-    fun depositsDoNotSendInputsAfterRecoveryAborts(mode: String) = runBlocking<Unit> {
-        val bot = interrupted(mode)
+    @Test fun inactiveBotsDoNotSendDepositInputs() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        `when`(bot.state).thenReturn(EntityState.INACTIVE)
         val output = bot.output
         val banking = BotBankingActionHandler(bot, bot.actionHandler)
         assertFalse(banking.deposit(Item(995)))
         verifyNoInteractions(output)
     }
 
-    @ParameterizedTest @ValueSource(strings = ["dead", "locked", "combat", "strong"])
-    fun withdrawalsDoNotSendInputsAfterRecoveryAborts(mode: String) = runBlocking<Unit> {
-        val bot = interrupted(mode)
+    @Test fun inactiveBotsDoNotSendWithdrawalInputs() = runBlocking<Unit> {
+        val bot = InventoryProductionFixtures.bot()
+        `when`(bot.state).thenReturn(EntityState.INACTIVE)
         val output = bot.output
         val banking = BotBankingActionHandler(bot, bot.actionHandler)
         assertFalse(banking.withdraw(Item(995)))

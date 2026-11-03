@@ -1,7 +1,5 @@
 package io.luna.game.model.mob.combat.attack;
 
-import game.content.barrows.BarrowsBrother;
-import game.content.barrows.BarrowsCombat;
 import io.luna.game.model.LocalSound;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
@@ -21,7 +19,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
-import kotlin.random.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -247,26 +244,6 @@ class NpcAttackSoundTest {
             attack.apply();
             sounds.verifyNoInteractions();
             verify(f.victim, never()).queue(any());
-        }
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void ahrimUsesHisDedicatedCastSoundWithASpellSoundFallback(boolean configured) {
-        api.bot.script.InventoryProductionFixtures.INSTANCE.initializeCombat();
-        Fixture f = new Fixture();
-        when(f.npc.combatDef().getAttackSound()).thenReturn(configured ? 1070 : -1);
-        Random random = mock(Random.class);
-        when(random.nextInt(16)).thenReturn(3);
-        CombatAttack<Npc> attack = spy(BarrowsCombat.INSTANCE.attack(f.npc, f.victim, BarrowsBrother.AHRIM, random));
-        doReturn(f.damage).when(attack).calculateDamage(f.victim);
-        doNothing().when(attack).attack();
-        int expected = configured ? 1070 : CombatSpell.FIRE_WAVE.getDef().getStartSound().getId();
-        try (var sounds = f.sounds()) {
-            attack.apply();
-            f.verifyPrivateSound(expected);
-            verify(attack).attack();
-            sounds.verifyNoInteractions();
         }
     }
 

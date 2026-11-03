@@ -1,4 +1,4 @@
-package game.content.barrows
+package api.combat
 
 import api.combat.magic.CombatSpellHandler
 import engine.controllers.MultiCombatAreaListener

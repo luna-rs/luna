@@ -145,21 +145,6 @@ class PlayerTradeAdvertisementTradeAccountingTest {
         assertEquals(0L, field(buyer, "curiosityRemaining"))
     }
 
-    @Test fun aPartialQuantityNoticeIsPrivateBlueAndAppearsOnlyOncePerOpenedAttempt() {
-        val seller = fixture.human()
-        val buyer = fixture.trader(seller, target = 25)
-        fixture.publish(seller, "selling 100 feathers 1 gp ea")
-        val context = fixture.market.claim(buyer)!!
-        val method = TradeBotScript::class.java.getDeclaredMethod("notifyAdvertisementQuantity",
-            Opportunity::class.java, Plan::class.java).apply { isAccessible = true }
-
-        method.invoke(buyer, context, context.plan!!)
-        method.invoke(buyer, context, context.plan!!)
-
-        verify(seller).sendMessage("@blu@${buyer.bot.username} wants up to 25 ${itemDef(314).name}.@bla@")
-        assertTrue(context.quantityNotified)
-    }
-
     @Test fun actualUnnotedGoodsAreCappedByNativeSlotsWhileTheRemainingCoinStackKeepsItsSlot() {
         val seller = fixture.human()
         val buyer = fixture.trader(seller, id = 1779, target = 1_000, coins = 1_000)

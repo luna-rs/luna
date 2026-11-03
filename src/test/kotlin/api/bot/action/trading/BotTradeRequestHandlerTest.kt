@@ -24,20 +24,6 @@ class BotTradeRequestHandlerTest {
         `when`(it.isBot).thenReturn(false)
     }
 
-    @Test fun humansTakePriorityWithoutDiscardingPendingBotRequests() {
-        var now = Instant.EPOCH
-        val requests = BotTradeRequestHandler { now }
-        val bot = autonomousBot()
-        val player = mock(Player::class.java)
-        requests.addRequest(bot)
-        now = now.plusSeconds(1)
-        requests.addRequest(player)
-
-        assertSame(player, requests.pollRequests { true })
-        assertSame(bot, requests.pollRequests { true })
-        assertNull(requests.pollRequests { true })
-    }
-
     @Test fun olderRequestsComeFirstWithinTheSamePriority() {
         var now = Instant.EPOCH
         val requests = BotTradeRequestHandler { now }

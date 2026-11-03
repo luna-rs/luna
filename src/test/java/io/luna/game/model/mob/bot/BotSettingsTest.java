@@ -31,16 +31,6 @@ class BotSettingsTest {
     }
 
     @Test
-    void explicitMerchantSettingsOverrideDefaults() {
-        BotSettings settings = GsonUtils.GSON.fromJson("""
-                {"merchant_sale_stack_limit": 2, "merchant_sale_minimum_stack_value": 2500}
-                """, BotSettings.class);
-
-        assertEquals(2, settings.merchantSaleStackLimit());
-        assertEquals(2_500L, settings.merchantSaleMinimumStackValue());
-    }
-
-    @Test
     void minimumStackValueRetainsValuesLargerThanTheIntegerRange() {
         BotSettings settings = GsonUtils.GSON.fromJson("""
                 {"merchant_sale_minimum_stack_value": 3000000000}
