@@ -26,5 +26,8 @@ enum class AgilityCourse(val level: Int, val bonus: Double, val obstacles: List<
     // The pyramid's 300 is paid at the doorway out of the top, not for checkpoints: falls send players back down a
     // level, so its obstacles are taken in no fixed count.
     AGILITY_PYRAMID(30, 0.0, listOf(PYRAMID_LOW_WALL, PYRAMID_LEDGE, PYRAMID_PLANK, PYRAMID_CROSS_GAP,
-        PYRAMID_JUMP_GAP, PYRAMID_TOP_ROCKS))
+        PYRAMID_JUMP_GAP, PYRAMID_TOP_ROCKS)),
+
+    // The Yanille Agility Dungeon has no laps: each obstacle pays its own XP, and 40 is its first obstacle's level.
+    YANILLE_DUNGEON(40, 0.0, listOf(YANILLE_LEDGE, YANILLE_PIPE, YANILLE_MONKEY_BARS, YANILLE_RUBBLE_UP))
 }
