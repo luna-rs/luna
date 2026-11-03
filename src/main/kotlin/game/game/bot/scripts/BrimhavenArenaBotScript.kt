@@ -3,6 +3,7 @@ package game.bot.scripts
 import api.bot.script.BotScript
 import api.bot.script.BotScriptData
 import api.bot.webwalk.plan.BankAccess
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import api.predef.*
 import com.google.gson.JsonObject
 import engine.controllers.Controllers.inWilderness
@@ -28,7 +29,8 @@ import java.util.concurrent.CompletableFuture
 /**
  * Pays for one bounded arena visit and follows moving pillars through native clicks and walking traps.
  * Food and the fee come from owned supplies. Failed crossings use real recovery ropes; native handlers own
- * tickets, damage, experience and rewards. Pauses retain admission and finish native actions, then leave on resume.
+ * tickets, damage, experience and rewards. Owned banked tickets can join new earnings for the native larger XP
+ * bundles or explicit wanted herb/hook supplies. Pauses retain admission and finish native actions, then leave on resume.
  *
  * @author lare96
  */
@@ -49,11 +51,43 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
          */
         private fun coins(bot: Bot): Int = (if (bot.paid) 0 else 200) + Sailing.FARE
 
+        /**
+         * Chooses the largest affordable native experience bundle, including saved tickets from earlier visits.
+         */
         internal fun reward(tickets: Int): BrimhavenArena.Reward? = when {
+            tickets >= 1000 -> BrimhavenArena.Reward.XP_THOUSAND
+            tickets >= 100 -> BrimhavenArena.Reward.XP_HUNDRED
+            tickets >= 25 -> BrimhavenArena.Reward.XP_TWENTY_FIVE
             tickets >= 10 -> BrimhavenArena.Reward.XP_TEN
             tickets > 0 -> BrimhavenArena.Reward.XP_ONE
             else -> null
         }
+
+        /**
+         * Explicit wanted-stock targets can turn owned tickets into herbs or the native pirate hook. No supply goal
+         * is invented, and full inventories fall back to an experience reward that requires no free output slot.
+         */
+        internal fun reward(bot: Bot, tickets: Int): BrimhavenArena.Reward? =
+            BrimhavenArena.Reward.entries.filter { option ->
+                option.item >= 0 && option.cost <= tickets &&
+                    (bot.preferences.getWantedItem(option.item)?.target() ?: 0) > bot.itemTracker.count(option.item) &&
+                    (bot.inventory.hasSpaceFor(Item(option.item)) ||
+                        bot.inventory.computeAmountForId(BrimhavenArena.TICKET) == option.cost)
+            }.maxByOrNull { it.cost } ?: reward(tickets)
+
+        /**
+         * A visit can save toward an owned-ticket reward instead of immediately exhausting every small batch.
+         * Capable bots prefer the source's best XP-per-ticket bundle; other personalities retain shorter goals.
+         */
+        private fun rewardGoal(bot: Bot): BrimhavenArena.Reward =
+            BrimhavenArena.Reward.entries.filter { it.item >= 0 &&
+                (bot.preferences.getWantedItem(it.item)?.target() ?: 0) > bot.itemTracker.count(it.item)
+            }.maxByOrNull { it.cost } ?: when {
+                bot.personality.isIntelligent || bot.personality.isDextrous -> BrimhavenArena.Reward.XP_THOUSAND
+                bot.personality.isDumb -> BrimhavenArena.Reward.XP_ONE
+                else -> listOf(BrimhavenArena.Reward.XP_TEN, BrimhavenArena.Reward.XP_TWENTY_FIVE,
+                    BrimhavenArena.Reward.XP_HUNDRED).random()
+            }
     }
 
     /**
@@ -69,6 +103,7 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         var lastTag = System.currentTimeMillis()
         var failures = 0
         var initialTickets = 0
+        var rewardGoal = ""
         override fun load(data: JsonObject) {
             attempted = data.get("attempted").asBoolean
             entered = data.get("entered").asBoolean
@@ -77,12 +112,14 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
             lastTag = data.get("lastTag").asLong
             failures = data.get("failures").asInt
             initialTickets = data.get("initialTickets").asInt
+            rewardGoal = data.get("rewardGoal")?.asString ?: ""
         }
         override fun save(data: JsonObject) {
             data.addProperty("attempted", attempted); data.addProperty("entered", entered)
             data.addProperty("leaving", leaving); data.addProperty("deadline", deadline)
             data.addProperty("lastTag", lastTag); data.addProperty("failures", failures)
             data.addProperty("initialTickets", initialTickets)
+            data.addProperty("rewardGoal", rewardGoal)
         }
     }
 
@@ -122,11 +159,15 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         if (data.entered && data.leaving && bot.position.isWithinDistance(BrimhavenArena.ENTRANCE, 16)) return false
         if (data.attempted || System.currentTimeMillis() >= data.deadline || !eligible(bot)) return true
         data.attempted = true
+        if (data.rewardGoal.isEmpty()) data.rewardGoal = rewardGoal(bot).name
         return withTimeoutOrNull(data.deadline - System.currentTimeMillis()) {
             if (!handler.banking.travelToBankDepositAll() ||
                 !handler.banking.withdrawAnyFood(12, minimumHeal = 6, retry = false) ||
-                !handler.banking.withdraw(Item(995, coins(bot))) ||
-                !handler.widgets.clickCloseInterface()) return@withTimeoutOrNull true
+                !handler.banking.withdraw(Item(995, coins(bot)))) return@withTimeoutOrNull true
+            val savedTickets = bot.bank.computeAmountForId(BrimhavenArena.TICKET)
+            if (savedTickets > 0 && !handler.banking.withdraw(Item(BrimhavenArena.TICKET, savedTickets)))
+                return@withTimeoutOrNull true
+            if (!handler.widgets.clickCloseInterface()) return@withTimeoutOrNull true
             if (!handler.webWalkTo(BrimhavenArena.ENTRANCE, bank = BankAccess.NONE) || !live() ||
                 System.currentTimeMillis() >= data.deadline) return@withTimeoutOrNull true
             if (!bot.paid) {
@@ -257,12 +298,15 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
     }
 
     /**
-     * Spends only the visit's carried tickets through Jackie's native reward buttons.
+     * Spends genuinely owned carried tickets through Jackie's native reward buttons, verifying the exact deduction.
      */
     private suspend fun redeem(): Boolean {
         if (!data.entered || !data.leaving || BrimhavenArena.session(bot) != null ||
             !bot.position.isWithinDistance(BrimhavenArena.ENTRANCE, 16)) return true
-        val reward = reward(bot.inventory.computeAmountForId(BrimhavenArena.TICKET) - data.initialTickets) ?: return true
+        val tickets = bot.inventory.computeAmountForId(BrimhavenArena.TICKET)
+        val goal = BrimhavenArena.Reward.entries.firstOrNull { it.name == data.rewardGoal }
+        if (goal != null && tickets < goal.cost) return true
+        val reward = reward(bot, tickets) ?: return true
         if (ownedRewards == null || bot.overlays.getOverlay(BrimhavenArena.Rewards::class.java) !== ownedRewards) {
             val trader = world.locator.findNpcs(BrimhavenArena.ENTRANCE, 16) { it.id == 1055 }.firstOrNull() ?: return true
             handler.interactions.interact(1, trader) { live() && settled() && !BrimhavenArena.inside(bot.position) }
@@ -295,5 +339,6 @@ class BrimhavenArenaBotScript(bot: Bot, private val data: ArenaData = ArenaData(
         it.attempted = data.attempted; it.entered = data.entered; it.leaving = data.leaving
         it.deadline = data.deadline; it.lastTag = data.lastTag; it.failures = data.failures
         it.initialTickets = data.initialTickets
+        it.rewardGoal = data.rewardGoal
     }
 }
