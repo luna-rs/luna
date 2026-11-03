@@ -198,6 +198,8 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             }
         }
         if (carried() >= amount) return true
+        if (id == BotTaverleyKeys.DUSTY_KEY && amount == 1 && BotTaverleyKeys.obtain(bot, basket)) return true
+        if (!ActionSafety.NON_COMBAT.allows(bot)) return false
         val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
             .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
                 .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })

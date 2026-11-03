@@ -9,6 +9,7 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.item.teleport.SpadeDigSpot
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.TaverleyJailDoor
+import api.bot.action.BotTaverleyKeys
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import io.luna.game.model.Position
 import io.luna.game.model.area.SimpleBoxArea
@@ -2985,10 +2986,10 @@ enum class SubZone(
 
     /**
      * Determines if a bot can get into the western section of Taverley Dungeon. Every bot carries the dusty key there,
-     * and one without a key buys it for a coin. The web walker still takes the pipe or the strange floor for a bot with
+     * and one without a key can obtain it from Velrak or buy it for a coin. The web walker still takes the pipe or strange floor for a bot with
      * the Agility for them, when that is shorter.
      */
     private fun canEnterTaverleyWest(bot: Bot): Boolean =
         bot.itemTracker.contains(TaverleyJailDoor.DUSTY_KEY_GATE.key) ||
-                bot.inventory.contains(Currency.COINS.id) || bot.bank.contains(Currency.COINS.id)
+                bot.inventory.contains(Currency.COINS.id) || bot.bank.contains(Currency.COINS.id) || BotTaverleyKeys.canAttempt(bot)
 }
