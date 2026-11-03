@@ -2570,6 +2570,15 @@ enum class SubZone(
         parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
 
     /**
+     * Southern ground-floor Brimhaven Dungeon room with four greater demons. This armed combat and Slayer camp
+     * reuses Saniboch's paid entrance and the dungeon's native axe passages, avoiding Entrana's equipment search.
+     */
+    BRIMHAVEN_GREATER_DEMONS(
+        inside = Position(2611, 9423),
+        area = SimpleBoxArea.of(2605, 9416, 2623, 9433),
+        parent = { BRIMHAVEN }, bankZone = { ARDOUGNE }),
+
+    /**
      * Entrana Dungeon's room containing two greater demons; the legacy enum name is retained for saved sessions.
      * Entry is one-way from Entrana, and its magic-door exit leads into deep Wilderness.
      */

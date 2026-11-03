@@ -100,6 +100,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.TAVERLY_HELLHOUND, 85, setOf("Hellhound"), true),
             Camp(SubZone.TAVERLY_BLACK_DEMONS, 110, setOf("Black Demon"), true),
             Camp(SubZone.BRIMHAVEN_DUNGEON_FIRE_GIANTS, 65, setOf("Fire giant"), true),
+            Camp(SubZone.BRIMHAVEN_GREATER_DEMONS, 75, setOf("Greater demon"), true),
             Camp(SubZone.WATERFALL_FIRE_GIANTS_WEST, 65, setOf("Fire giant"), true),
             Camp(SubZone.WATERFALL_FIRE_GIANTS_EAST, 65, setOf("Fire giant"), true),
             Camp(SubZone.BRIMHAVEN_MOSS_GIANTS_SOUTH, 65, setOf("Moss giant"), true),
