@@ -38,6 +38,7 @@ import game.content.gnomeBall.GnomeBall
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.skill.woodcutting.cutTree.Axe
+import game.skill.mining.Pickaxe
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -221,6 +222,22 @@ object RandomEvents {
                 else -> generalKind(random)?.let { startEncounter(player, it) } ?: false
             }
         }
+
+    /**
+     * Resolves mining's contextual tool and rock hazards without losing their native selection slots.
+     * The source gas parameter is available only on the original copper-through-gem rock definitions.
+     */
+    fun offerMining(player: Player, rock: GameObject, pickaxe: Pickaxe): Boolean = offerOutcome(player) {
+        val gas = rock.id in 2090..2111
+        val special = if (gas) 3 else 2
+        val slot = Random.nextInt(6 + special)
+        when {
+            slot >= special -> generalKind { Random.nextInt(it) }?.let { startEncounter(player, it) } ?: false
+            slot == 0 -> MiningRandomEvents.loseHead(player, pickaxe)
+            slot == special - 1 -> startGuardian(player, SkillGuardianRandomEvent.Kind.ROCK_GOLEM)
+            else -> false
+        }
+    }
 
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,

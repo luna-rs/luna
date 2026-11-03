@@ -6,6 +6,7 @@ import api.bot.Suspendable.waitFor
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.skill.SkillingTool
+import api.bot.action.BotGatheringTools
 import api.bot.social.BotConversations
 import api.bot.social.SocialBotScript
 import api.bot.zone.SubZone
@@ -24,6 +25,7 @@ import engine.bot.speech.MiningVoice
 import game.bot.scripts.skills.MiningBehavior.Style
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
+import game.content.randomEvents.MiningRandomEvents
 import game.skill.mining.mineOre.MineOreAction
 import game.content.miningGuild.MiningGuild
 import io.luna.game.model.EntityState
@@ -424,6 +426,12 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
             .mapTo(TreeSet<SkillingTool>()) { SkillingTool(it.id, it.level) }
 
     override fun emergencyTool(): SkillingTool = SkillingTool(Pickaxe.BRONZE.id, Pickaxe.BRONZE.level)
+
+    override suspend fun recoverMissingTool() {
+        BotGatheringTools.recoverHead(bot, MiningRandomEvents.HANDLE,
+            MiningRandomEvents.Parts.entries.associate { it.head to it.pickaxe.id },
+            ores.map { it.item }.filter { it >= 0 }.toSet())
+    }
 
     override fun levelRequired(): Int = ores.maxOfOrNull { it.level } ?: 0
 

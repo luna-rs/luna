@@ -93,9 +93,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
         // Check if rock isn't already mined, unless this player found ore on the same tick as the one who emptied it.
         rockObj.state == EntityState.INACTIVE && emptiedOn[rockObj] != world.currentTick -> false
-        // Lost City's macro_gas parameter is present on these original copper-through-gem rocks.
-        start && RandomEvents.offerActivity(mob, if (rockObj.id in 2090..2111) RandomEvents.Activity.MINING
-            else RandomEvents.Activity.MINING_WITHOUT_GAS) -> false
+        start && RandomEvents.offerMining(mob, rockObj, pick) -> false
         else -> {
             if (!start) {
                 delay = pick.speed
