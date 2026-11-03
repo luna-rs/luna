@@ -152,7 +152,12 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
             zones = {
                 mutableListOf(SubZone.KARAMJA_KARAMBWAN_FISHING)
             }
-        )
+        ),
+
+        /**
+         * Native pond bait.
+         */
+        KARAMBWANJI(setOf(KARAMBWANJI_NET), zones = { mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING) })
     }
 
     /**

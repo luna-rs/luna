@@ -33,7 +33,6 @@ enum class Tool(val id: Int,
               animateFirstRoll = false,
               castMessages = listOf("You cast out your net..."),
               toolMessage = "You need a net to catch these fish."),
-    // TODO Karam/bwan/bwanji fishing and cooking
     KARAMBWANJI_NET(id = 303,
                     level = 5,
                     fish = listOf(KARAMBWANJI, SHRIMP),

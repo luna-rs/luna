@@ -1018,6 +1018,15 @@ enum class SubZone(
         parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
+     * Southern Karamja pond with three small-net karambwanji spots. The northern shore arrival supplies real bait
+     * for northeast Karamja's vessel fishing; shrimp share the native catch table.
+     */
+    KARAMJA_KARAMBWANJI_FISHING(
+        inside = Position(2791, 3020),
+        area = SimpleBoxArea.of(2785, 3005, 2812, 3027),
+        parent = { KARAMJA }, bankZone = { Zone.SHILO_VILLAGE }),
+
+    /**
      * The karambwan spots on northeast Karamja, north of the shipyard.
      */
     KARAMJA_KARAMBWAN_FISHING(

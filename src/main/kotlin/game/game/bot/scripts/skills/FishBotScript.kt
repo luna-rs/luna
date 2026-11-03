@@ -14,6 +14,7 @@ import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.catchFish.Fish
+import game.skill.fishing.catchFish.CatchFishAction
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
 import game.skill.fishing.fishingSpot.FishingSpotHandler
@@ -59,7 +60,12 @@ class FishBotScript(
     val selectedTool: Tool,
 
     duration: Duration,
-    zones: MutableList<SubZone>
+    zones: MutableList<SubZone>,
+
+    /**
+     * A bounded karambwanji-gathering detour which resumes vessel fishing with the remaining session time.
+     */
+    val gatherKarambwanBait: Boolean = false
 ) : SkillingBotScript<Npc>(bot, duration, zones, bot.fishing) {
 
     companion object {
@@ -67,6 +73,11 @@ class FishBotScript(
          * Current Fishing level required by the Fishing Guild entrance in the supplied Lost City source.
          */
         const val FISHING_GUILD_LEVEL = 68
+
+        /**
+         * Bait for several ordinary bank trips, gathered from the native pond rather than supplied for free.
+         */
+        const val KARAMBWAN_BAIT_TARGET = 250
 
         /**
          * How many times a bot clicks its fishing spot without starting to fish before it looks for another spot.
@@ -113,14 +124,18 @@ class FishBotScript(
              */
             var tool = Tool.SMALL_NET
 
+            var gatherKarambwanBait = false
+
             override fun load(data: JsonObject) {
                 super.load(data)
                 tool = Tool.valueOf(data.get("tool").asString)
+                gatherKarambwanBait = data.get("gatherKarambwanBait")?.asBoolean ?: false
             }
 
             override fun save(data: JsonObject) {
                 super.save(data)
                 data.addProperty("tool", tool.name)
+                data.addProperty("gatherKarambwanBait", gatherKarambwanBait)
             }
         }
     }
@@ -128,7 +143,7 @@ class FishBotScript(
     /**
      * Restores a Fishing script from saved script data.
      */
-    constructor(bot: Bot, data: FishData) : this(bot, data.tool, data.duration, data.zones)
+    constructor(bot: Bot, data: FishData) : this(bot, data.tool, data.duration, data.zones, data.gatherKarambwanBait)
 
     /**
      * All NPC ids that can be fished using [selectedTool].
@@ -155,6 +170,8 @@ class FishBotScript(
      * How many times in a row the bot has clicked [clickedSpot] without starting to fish.
      */
     private var spotClicks = 0
+
+    private var continuationQueued = false
 
     /**
      * One ignore decision per live whirlpool. Weak keys do not retain removed fishing NPCs.
@@ -203,14 +220,24 @@ class FishBotScript(
         if (baitId !in bot.itemTracker) {
             bot.log("We do not have the required bait to use this tool.")
             stop()
-            bot.preferences.addWantedItem(baitId, 100_000)
+            if (selectedTool == Tool.KARAMBWAN_VESSEL) {
+                queueBaitGathering()
+                return
+            }
+            bot.preferences.addWantedItem(baitId, 1_000)
             BotTradeIntentions.recordSupplies(bot,
                 listOf(Item(baitId, 28)), stockTarget = 1_000)
             return
         }
 
-        // TODO Only withdraw percentage amount based on intelligence.
-        handler.banking.withdrawAll(baitId)
+        if (!handler.banking.withdraw(Item(baitId, minOf(250, bot.bank.computeAmountForId(baitId)))) ||
+            baitId !in bot.inventory) stop()
+    }
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (baitId != null && baitId !in bot.inventory &&
+            !(selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id in bot.inventory)) forceBanking = true
+        return false
     }
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
@@ -221,6 +248,13 @@ class FishBotScript(
     }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {
+        if (gatherKarambwanBait && selectedTool == Tool.KARAMBWANJI_NET &&
+            bot.itemTracker.count(Fish.KARAMBWANJI.id) >= KARAMBWAN_BAIT_TARGET) {
+            queueVesselFishing()
+            bot.actions.first(CatchFishAction::class.java)?.interrupt()
+            stop()
+            return
+        }
         val bait = baitId
         if (bait != null && bait !in bot.inventory &&
             !(selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id in bot.inventory)) {
@@ -292,10 +326,37 @@ class FishBotScript(
         data.duration = duration
         data.zones = originalZones.toMutableList()
         data.tool = selectedTool
+        data.gatherKarambwanBait = gatherKarambwanBait
         return data
     }
 
+    /**
+     * Reuses net fishing for bait and keeps the original activity's remaining time budget across both legs.
+     */
+    private fun queueBaitGathering() {
+        val remaining = remainingDuration()
+        if (continuationQueued || remaining <= Duration.ZERO) return
+        continuationQueued = true
+        bot.scriptStack.softPushHead(FishBotScript(bot, Tool.KARAMBWANJI_NET, remaining,
+            mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING), gatherKarambwanBait = true))
+    }
+
+    /**
+     * Resumes only after real bait was caught; a failed or empty detour cannot recursively repeat itself.
+     */
+    private fun queueVesselFishing() {
+        val remaining = remainingDuration()
+        if (continuationQueued || remaining <= Duration.ZERO || bot.itemTracker.count(Fish.KARAMBWANJI.id) == 0) return
+        continuationQueued = true
+        bot.scriptStack.softPushHead(FishBotScript(bot, Tool.KARAMBWAN_VESSEL, remaining,
+            mutableListOf(SubZone.KARAMJA_KARAMBWAN_FISHING)))
+    }
+
     override suspend fun completed() {
+        if (gatherKarambwanBait) {
+            queueVesselFishing()
+            return
+        }
         // Chance to queue a fletching script.
         if (rand(bot.personality.intelligence) || bot.personality.isDextrous) {
             val script = CookingScriptFactory.getScript(bot, bot.cooking.staticLevel, mutableListOf(), randBoolean())
