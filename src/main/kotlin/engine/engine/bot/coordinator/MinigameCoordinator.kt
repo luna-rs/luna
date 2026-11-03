@@ -31,6 +31,7 @@ import game.bot.scripts.DuelArenaBotScript
 import game.content.duelArena.DuelArena
 import game.content.gamesRoom.GamesRoom
 import game.bot.scripts.PartyRoomDonations
+import game.bot.scripts.PartyRoomEntertainment
 import game.bot.scripts.LogoutBotScript
 import game.bot.scripts.trading.TradeBotScript
 import game.content.partyRoom.dropParty.DropPartyOption
@@ -52,7 +53,7 @@ object MinigameCoordinator : ProgressiveCoordinator() {
      */
     private var Bot.attendedParty by Attr.long()
     override val activity get() = BotActivity.MINIGAMES
-    override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot)
+    override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot) ?: PartyRoomEntertainment.select(bot)
     override fun nextScript(bot: Bot): BotScript {
         val id = DropPartyOption.currentPartyId
         if (DropPartyOption.isCurrentParty(id) && !bot.inventory.isFull) {

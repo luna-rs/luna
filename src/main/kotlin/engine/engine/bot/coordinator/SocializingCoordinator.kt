@@ -5,6 +5,7 @@ import api.bot.action.trading.BotMarketplace
 import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.PartyRoomDonations
+import game.bot.scripts.PartyRoomEntertainment
 import game.bot.scripts.IdleBotScript
 import game.bot.scripts.scams.TradeScamBotScript
 import game.bot.scripts.scams.PkScamBotScript
@@ -20,7 +21,7 @@ import io.luna.game.model.mob.bot.brain.BotActivity
  */
 object SocializingCoordinator : ProgressiveCoordinator() {
     override val activity get() = BotActivity.SOCIALIZING
-    override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot)
+    override fun firstScript(bot: Bot): BotScript? = PartyRoomDonations.select(bot) ?: PartyRoomEntertainment.select(bot)
     override fun nextScript(bot: Bot): BotScript {
         val destination = if (randBoolean()) SubZone.HOME else BotMarketplace.select(bot).activityZone
         val minutes = if (bot.preferences.likesActivity(BotActivity.SOCIALIZING)) rand(10, 30) else rand(5, 15)

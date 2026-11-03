@@ -84,6 +84,11 @@ object PartyRoom {
      * Sets a new event option to this lever. Takes payment once the option can start, then registers it.
      */
     private fun setLeverOption(plr: Player, newOption: PartyRoomOption, obj: GameObject?) {
+        // Another player may have started a show after this option page opened.
+        if (option != null || locked && plr.rights < RIGHTS_ADMIN) {
+            plr.sendMessage("The party room lever is no longer available.")
+            return
+        }
         val costItem = Item(995, newOption.cost)
         val pays = plr.rights <= RIGHTS_MOD
         if (pays && !plr.inventory.contains(costItem)) {
