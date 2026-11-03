@@ -43,10 +43,11 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
         boolean twoHanded = token.get("two_handed?").getAsBoolean();
         boolean fullBody = token.get("full_body?").getAsBoolean();
         boolean fullHelmet = token.get("full_helmet?").getAsBoolean();
+        boolean beardHidden = token.has("hide_beard?") ? token.get("hide_beard?").getAsBoolean() : fullHelmet;
         Requirement[] requirements = GsonUtils.getAsType(token.get("requirements"), Requirement[].class);
         Arrays.stream(requirements).forEach(Requirement::assignSkillId);
         int[] bonuses = GsonUtils.getAsType(token.get("bonuses"), int[].class);
-        return new EquipmentDefinition(id, index, twoHanded, fullBody, fullHelmet, requirements, bonuses);
+        return new EquipmentDefinition(id, index, twoHanded, fullBody, fullHelmet, beardHidden, requirements, bonuses);
     }
 
     @Override

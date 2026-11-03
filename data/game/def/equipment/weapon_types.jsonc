@@ -589,10 +589,6 @@
     "type": "STAFF"
   },
   {
-    "id": 2425,
-    "type": "KNIFE"
-  },
-  {
     "id": 6522,
     "type": "KNIFE"
   },
@@ -1205,10 +1201,6 @@
     "type": "DAGGER"
   },
   {
-    "id": 6897,
-    "type": "LONGSWORD"
-  },
-  {
     "id": 6908,
     "type": "STAFF"
   },
@@ -1585,28 +1577,8 @@
     "type": "SPEAR"
   },
   {
-    "id": 2997,
-    "type": "CLAWS"
-  },
-  {
-    "id": 5056,
-    "type": "BATTLEAXE"
-  },
-  {
-    "id": 5057,
-    "type": "BATTLEAXE"
-  },
-  {
-    "id": 5058,
-    "type": "BATTLEAXE"
-  },
-  {
     "id": 6082,
     "type": "CROSSBOW"
-  },
-  {
-    "id": 5059,
-    "type": "BATTLEAXE"
   },
   {
     "id": 4037,

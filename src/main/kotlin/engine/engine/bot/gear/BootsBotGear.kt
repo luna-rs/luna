@@ -19,7 +19,7 @@ enum class BootsBotGear(private val priority: Int,
 
     LEATHER_BOOTS(
         0,
-        setOf(1061, 6893),
+        setOf(1061),
         BotGearPurpose.MELEE,
         BotGearPurpose.PKING,
         BotGearPurpose.RANGED,

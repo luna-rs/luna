@@ -3,6 +3,8 @@
 
   Use this file when items equip to the wrong slot, do not fully cover the head/torso when they should, or have
   incorrect bonuses/requirements.
+
+  Set hide_beard? when beard coverage differs from full_helmet?. Otherwise it defaults to full_helmet?.
 */
 [
   // Source pickaxe hazards can leave these zero-bonus tools in the weapon slot.
@@ -183,7 +185,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -198,7 +200,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 78, // Ice arrows
@@ -314,7 +317,7 @@
     "id": 284, // Plague jacket
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -446,7 +449,7 @@
     "id": 540, // Druid's robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -483,14 +486,14 @@
       0,
       0,
       0,
-      5
+      6
     ]
   },
   {
     "id": 544, // Monk's robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -505,12 +508,12 @@
       0,
       0,
       0,
-      6
+      5
     ]
   },
   {
     "id": 546, // Shade robe
-    "index": 7,
+    "index": 4,
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
@@ -532,7 +535,7 @@
   },
   {
     "id": 548, // Shade robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -578,7 +581,7 @@
     "id": 577, // Wizard robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -622,7 +625,7 @@
     "id": 581, // Black robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -798,7 +801,7 @@
     "id": 636, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -820,7 +823,7 @@
     "id": 638, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -842,7 +845,7 @@
     "id": 640, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -864,7 +867,7 @@
     "id": 642, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -886,7 +889,7 @@
     "id": 644, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -1157,12 +1160,12 @@
       0,
       0,
       0,
+      3,
       0,
       0,
       0,
       0,
-      0,
-      0,
+      3,
       0,
       0,
       0
@@ -1176,8 +1179,8 @@
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
+      10,
       5,
-      3,
       -4,
       1,
       0,
@@ -1186,7 +1189,7 @@
       0,
       1,
       0,
-      0,
+      7,
       0
     ]
   },
@@ -1552,7 +1555,7 @@
       0,
       0,
       0,
-      0,
+      3,
       0,
       0,
       0,
@@ -1574,7 +1577,7 @@
       0,
       0,
       0,
-      0,
+      4,
       0,
       0,
       0,
@@ -1601,7 +1604,7 @@
       0,
       0,
       0,
-      0,
+      5,
       0,
       0,
       0,
@@ -1628,7 +1631,7 @@
       0,
       0,
       0,
-      0,
+      8,
       0,
       0,
       0,
@@ -1655,7 +1658,7 @@
       0,
       0,
       0,
-      0,
+      11,
       0,
       0,
       0,
@@ -1682,7 +1685,7 @@
       0,
       0,
       0,
-      0,
+      15,
       0,
       0,
       0,
@@ -1704,7 +1707,7 @@
       0,
       0,
       0,
-      0,
+      3,
       0,
       0,
       0,
@@ -1726,7 +1729,7 @@
       0,
       0,
       0,
-      0,
+      4,
       0,
       0,
       0,
@@ -1753,7 +1756,7 @@
       0,
       0,
       0,
-      0,
+      5,
       0,
       0,
       0,
@@ -1780,7 +1783,7 @@
       0,
       0,
       0,
-      0,
+      8,
       0,
       0,
       0,
@@ -1807,7 +1810,7 @@
       0,
       0,
       0,
-      0,
+      11,
       0,
       0,
       0,
@@ -1834,7 +1837,7 @@
       0,
       0,
       0,
-      0,
+      15,
       0,
       0,
       0,
@@ -1878,7 +1881,7 @@
       0,
       0,
       0,
-      0,
+      5,
       0,
       0,
       0,
@@ -1900,7 +1903,7 @@
       0,
       0,
       0,
-      0,
+      8,
       0,
       0,
       0,
@@ -1927,7 +1930,7 @@
       0,
       0,
       0,
-      0,
+      12,
       0,
       0,
       0,
@@ -1954,7 +1957,7 @@
       0,
       0,
       0,
-      0,
+      17,
       0,
       0,
       0,
@@ -1981,7 +1984,7 @@
       0,
       0,
       0,
-      0,
+      24,
       0,
       0,
       0,
@@ -2008,7 +2011,7 @@
       0,
       0,
       0,
-      0,
+      38,
       0,
       0,
       0,
@@ -2030,7 +2033,7 @@
       0,
       0,
       0,
-      0,
+      5,
       0,
       0,
       0,
@@ -2052,7 +2055,7 @@
       0,
       0,
       0,
-      0,
+      8,
       0,
       0,
       0,
@@ -2079,7 +2082,7 @@
       0,
       0,
       0,
-      0,
+      12,
       0,
       0,
       0,
@@ -2106,7 +2109,7 @@
       0,
       0,
       0,
-      0,
+      17,
       0,
       0,
       0,
@@ -2133,7 +2136,7 @@
       0,
       0,
       0,
-      0,
+      24,
       0,
       0,
       0,
@@ -2160,7 +2163,7 @@
       0,
       0,
       0,
-      0,
+      38,
       0,
       0,
       0,
@@ -2173,7 +2176,7 @@
   {
     "id": 837, // Crossbow
     "index": 3,
-    "two_handed?": true,
+    "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
@@ -3855,7 +3858,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -3877,7 +3880,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -3899,7 +3902,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -4000,9 +4003,9 @@
       0,
       -10,
       8,
-      1,
+      3,
       2,
-      2,
+      4,
       2,
       0,
       0,
@@ -4021,7 +4024,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       11,
       10,
       10,
@@ -4048,7 +4051,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       17,
       16,
       15,
@@ -4075,7 +4078,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       24,
       22,
       20,
@@ -4102,7 +4105,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       33,
       31,
       29,
@@ -4124,7 +4127,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       8,
       7,
       6,
@@ -4151,7 +4154,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       21,
       20,
       19,
@@ -4178,7 +4181,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -4200,7 +4203,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       11,
       10,
       10,
@@ -4227,7 +4230,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       17,
       16,
       15,
@@ -4254,7 +4257,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       24,
       22,
       20,
@@ -4276,7 +4279,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       8,
       7,
       6,
@@ -4303,7 +4306,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       21,
       20,
       19,
@@ -4330,7 +4333,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       33,
       31,
       29,
@@ -4357,7 +4360,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -4434,11 +4437,11 @@
       0,
       -10,
       8,
-      12,
-      15,
-      18,
+      22,
+      16,
+      24,
       8,
-      17,
+      22,
       0,
       0
     ]
@@ -4634,7 +4637,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       21,
       20,
       12,
@@ -4656,7 +4659,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       15,
       14,
       9,
@@ -4683,7 +4686,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       32,
       31,
       24,
@@ -4710,7 +4713,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       46,
       44,
       38,
@@ -4737,7 +4740,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       65,
       63,
       55,
@@ -4764,7 +4767,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       41,
       40,
       30,
@@ -4791,7 +4794,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -4903,11 +4906,11 @@
       0,
       -15,
       15,
-      18,
-      27,
-      24,
+      40,
+      32,
+      45,
       20,
-      35,
+      40,
       0,
       0
     ]
@@ -4924,7 +4927,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       4,
       5,
       3,
@@ -4932,7 +4935,8 @@
       4,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1139, // Bronze med helm
@@ -4946,15 +4950,16 @@
       0,
       0,
       -3,
-      0,
+      -1,
       3,
       4,
       2,
       -1,
-      3,
+      4,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1141, // Steel med helm
@@ -4973,7 +4978,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       7,
       8,
       6,
@@ -4981,7 +4986,8 @@
       7,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1143, // Mithril med helm
@@ -5000,7 +5006,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       10,
       11,
       9,
@@ -5008,7 +5014,8 @@
       10,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1145, // Adamant med helm
@@ -5027,7 +5034,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       14,
       15,
       13,
@@ -5035,7 +5042,8 @@
       14,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1147, // Rune med helm
@@ -5054,7 +5062,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       22,
       23,
       21,
@@ -5062,7 +5070,8 @@
       22,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1149, // Dragon med helm
@@ -5081,7 +5090,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       33,
       35,
       32,
@@ -5089,7 +5098,8 @@
       34,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1151, // Black med helm
@@ -5108,7 +5118,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       9,
       10,
       8,
@@ -5116,7 +5126,8 @@
       9,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1153, // Iron full helm
@@ -5130,7 +5141,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       6,
       7,
       5,
@@ -5152,7 +5163,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       4,
       5,
       3,
@@ -5179,7 +5190,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       9,
       10,
       7,
@@ -5206,7 +5217,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       13,
       14,
       11,
@@ -5233,7 +5244,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       19,
       21,
       16,
@@ -5260,7 +5271,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -5287,7 +5298,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       12,
       13,
       10,
@@ -5302,7 +5313,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -5317,14 +5328,15 @@
       3,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1169, // Coif
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Ranged",
@@ -5344,7 +5356,8 @@
       4,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 1171, // Wooden shield
@@ -5380,7 +5393,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       5,
       6,
       4,
@@ -5402,7 +5415,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       8,
       9,
       7,
@@ -5429,7 +5442,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       12,
       13,
       11,
@@ -5456,7 +5469,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       15,
       16,
       14,
@@ -5483,7 +5496,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       17,
       19,
       15,
@@ -5510,7 +5523,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       24,
       26,
       22,
@@ -5537,7 +5550,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       38,
       40,
       36,
@@ -5564,7 +5577,7 @@
       0,
       0,
       -6,
-      0,
+      -2,
       50,
       52,
       48,
@@ -5586,7 +5599,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       5,
       7,
       6,
@@ -5608,7 +5621,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       8,
       10,
       9,
@@ -5635,7 +5648,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       13,
       15,
       14,
@@ -5662,7 +5675,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -5689,7 +5702,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       18,
       22,
       20,
@@ -5716,7 +5729,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -5743,7 +5756,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -6173,18 +6186,18 @@
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255,
+      255
     ]
   },
   {
@@ -7458,7 +7471,7 @@
       0,
       0,
       0,
-      11,
+      9,
       0
     ]
   },
@@ -7534,7 +7547,7 @@
       0,
       0,
       0,
-      22,
+      19,
       0
     ]
   },
@@ -7561,7 +7574,7 @@
       0,
       0,
       0,
-      27,
+      20,
       0
     ]
   },
@@ -7588,7 +7601,7 @@
       0,
       0,
       0,
-      39,
+      31,
       0
     ]
   },
@@ -7615,7 +7628,7 @@
       0,
       0,
       0,
-      62,
+      48,
       0
     ]
   },
@@ -8142,17 +8155,26 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 30
+      },
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       7,
       -1,
       25,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       32,
       0
@@ -8164,17 +8186,26 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 30
+      },
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       7,
       -1,
       28,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       35,
       0
@@ -8186,17 +8217,26 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 30
+      },
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       7,
       -1,
       28,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       35,
       0
@@ -8208,17 +8248,26 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 30
+      },
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       7,
       -1,
       28,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       35,
       0
@@ -8230,17 +8279,26 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 30
+      },
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       7,
       -1,
       28,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       35,
       0
@@ -8266,12 +8324,12 @@
       10,
       -1,
       40,
-      14,
+      10,
       0,
       2,
       3,
       1,
-      14,
+      10,
       0,
       50,
       0
@@ -8297,12 +8355,12 @@
       10,
       -1,
       40,
-      14,
+      10,
       0,
       2,
       3,
       1,
-      14,
+      10,
       0,
       50,
       0
@@ -8328,12 +8386,12 @@
       10,
       -1,
       40,
-      14,
+      10,
       0,
       2,
       3,
       1,
-      14,
+      10,
       0,
       50,
       0
@@ -8359,12 +8417,12 @@
       10,
       -1,
       40,
-      14,
+      10,
       0,
       2,
       3,
       1,
-      14,
+      10,
       0,
       50,
       0
@@ -8678,7 +8736,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -9491,7 +9549,7 @@
     "id": 1833, // Desert shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -9511,7 +9569,7 @@
   },
   {
     "id": 1835, // Desert robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -9557,7 +9615,7 @@
     "id": 1844, // Slave shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -9577,7 +9635,7 @@
   },
   {
     "id": 1845, // Slave robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -9848,28 +9906,6 @@
     ]
   },
   {
-    "id": 2425, // Orbital knife
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
     "id": 2460, // Flowers
     "index": 3,
     "two_handed?": false,
@@ -10085,9 +10121,9 @@
       0,
       -10,
       9,
-      2,
+      4,
       3,
-      3,
+      5,
       4,
       0,
       0,
@@ -10112,9 +10148,9 @@
       0,
       -10,
       10,
-      3,
+      5,
       4,
-      4,
+      6,
       6,
       0,
       0,
@@ -10139,9 +10175,9 @@
       0,
       -10,
       11,
-      4,
+      6,
       5,
-      5,
+      7,
       8,
       0,
       0,
@@ -10166,11 +10202,11 @@
       0,
       -10,
       11,
-      13,
-      16,
-      20,
+      25,
+      19,
+      27,
       14,
-      20,
+      25,
       0,
       0
     ]
@@ -10193,11 +10229,11 @@
       0,
       -10,
       14,
-      15,
-      18,
+      28,
       22,
-      18,
+      30,
       20,
+      28,
       0,
       0
     ]
@@ -10220,11 +10256,11 @@
       0,
       -10,
       17,
-      18,
-      20,
-      26,
-      23,
-      26,
+      31,
+      25,
+      33,
+      28,
+      31,
       0,
       0
     ]
@@ -10251,11 +10287,11 @@
       0,
       -15,
       20,
-      23,
+      45,
+      37,
+      50,
       30,
-      30,
-      26,
-      40,
+      45,
       0,
       0
     ]
@@ -10282,11 +10318,11 @@
       0,
       -15,
       25,
-      26,
-      34,
-      36,
-      36,
-      45,
+      50,
+      42,
+      55,
+      40,
+      50,
       0,
       0
     ]
@@ -10313,38 +10349,11 @@
       0,
       -15,
       30,
-      30,
-      38,
-      45,
-      45,
+      55,
+      47,
+      60,
       50,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 2513, // Waste disposal
-    "index": 4,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Defence",
-        "level": 60
-      }
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      -15,
-      0,
-      81,
-      93,
-      98,
-      -3,
-      82,
+      55,
       0,
       0
     ]
@@ -10971,7 +10980,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       41,
       40,
       30,
@@ -10998,7 +11007,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       21,
       20,
       19,
@@ -11025,7 +11034,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       12,
       13,
       10,
@@ -11052,7 +11061,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -11079,7 +11088,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       41,
       40,
       30,
@@ -11106,7 +11115,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       21,
       20,
       19,
@@ -11133,7 +11142,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       12,
       13,
       10,
@@ -11160,7 +11169,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -11187,7 +11196,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       65,
       63,
       55,
@@ -11214,7 +11223,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       33,
       31,
       29,
@@ -11241,7 +11250,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -11268,7 +11277,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       19,
       21,
       16,
@@ -11295,7 +11304,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       65,
       63,
       55,
@@ -11322,7 +11331,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       33,
       31,
       29,
@@ -11349,7 +11358,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -11376,7 +11385,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       19,
       21,
       16,
@@ -11403,7 +11412,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -11430,7 +11439,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -11457,7 +11466,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -11511,7 +11520,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -11538,7 +11547,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -11565,7 +11574,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -11861,7 +11870,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -11888,7 +11897,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -11915,7 +11924,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -11969,7 +11978,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -11996,7 +12005,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -12023,7 +12032,7 @@
       0,
       0,
       -30,
-      -15,
+      -10,
       82,
       80,
       72,
@@ -12050,7 +12059,7 @@
       0,
       0,
       -21,
-      -11,
+      -7,
       51,
       49,
       47,
@@ -12077,7 +12086,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -12216,7 +12225,7 @@
     "id": 2896, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -12326,7 +12335,7 @@
     "id": 2906, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -12436,7 +12445,7 @@
     "id": 2916, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -12546,7 +12555,7 @@
     "id": 2926, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -12656,7 +12665,7 @@
     "id": 2936, // Robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -13204,7 +13213,7 @@
   },
   {
     "id": 2997, // Pirate's hook
-    "index": 3,
+    "index": 9,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -13244,12 +13253,12 @@
       7,
       -1,
       28,
-      12,
+      10,
       0,
       2,
       3,
       1,
-      12,
+      10,
       0,
       35,
       0
@@ -13275,12 +13284,12 @@
       10,
       -1,
       40,
-      14,
+      10,
       0,
       2,
       3,
       1,
-      14,
+      10,
       0,
       50,
       0
@@ -13306,13 +13315,14 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": true
   },
   {
     "id": 3058, // Mime top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -13413,7 +13423,7 @@
       0,
       0,
       0,
-      0,
+      7,
       0,
       0,
       0,
@@ -13440,7 +13450,7 @@
       0,
       0,
       0,
-      0,
+      7,
       0,
       0,
       0,
@@ -13534,7 +13544,7 @@
       }
     ],
     "bonuses": [
-      10,
+      19,
       14,
       -4,
       0,
@@ -13698,7 +13708,7 @@
       40,
       42,
       38,
-      0,
+      -2,
       65,
       0,
       0
@@ -13708,7 +13718,7 @@
     "id": 3140, // Dragon chainbody
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -14193,7 +14203,7 @@
     "id": 3387, // Splitbark body
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -14696,7 +14706,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -14716,14 +14726,15 @@
       19,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 3749, // Archer helm
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -14743,14 +14754,15 @@
       6,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 3751, // Berserker helm
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -14770,14 +14782,15 @@
       30,
       3,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 3753, // Warrior helm
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -14797,14 +14810,15 @@
       30,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 3755, // Farseer helm
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -14824,7 +14838,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 3758, // Fremennik shield
@@ -14945,7 +14960,7 @@
     "id": 3767, // Fremennik shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -14967,7 +14982,7 @@
     "id": 3769, // Fremennik shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -14989,7 +15004,7 @@
     "id": 3771, // Fremennik shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -15011,7 +15026,7 @@
     "id": 3773, // Fremennik shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -15033,7 +15048,7 @@
     "id": 3775, // Fremennik shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -15231,7 +15246,7 @@
     "id": 3793, // Fremennik robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -15868,7 +15883,7 @@
   {
     "id": 4037, // Saradomin banner
     "index": 3,
-    "two_handed?": false,
+    "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
@@ -15890,7 +15905,7 @@
   {
     "id": 4039, // Zamorak banner
     "index": 3,
-    "two_handed?": false,
+    "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
@@ -15985,7 +16000,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -15997,7 +16012,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       7,
       8,
       6,
@@ -16005,7 +16020,8 @@
       7,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4072, // Decorative shield
@@ -16024,7 +16040,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       13,
       15,
       14,
@@ -16118,7 +16134,7 @@
     "id": 4091, // Mystic robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -16428,7 +16444,7 @@
     "id": 4111, // Mystic robe top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -16457,7 +16473,7 @@
   },
   {
     "id": 4113, // Mystic robe bottom
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -16764,6 +16780,10 @@
       {
         "name": "Attack",
         "level": 50
+      },
+      {
+        "name": "Strength",
+        "level": 50
       }
     ],
     "bonuses": [
@@ -16822,6 +16842,10 @@
       {
         "name": "Attack",
         "level": 50
+      },
+      {
+        "name": "Slayer",
+        "level": 55
       }
     ],
     "bonuses": [
@@ -16836,28 +16860,6 @@
       0,
       0,
       50,
-      0
-    ]
-  },
-  {
-    "id": 4159, // Leaf-bladed spear
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0
     ]
   },
@@ -16898,7 +16900,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16912,7 +16919,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": true
   },
   {
     "id": 4166, // Earmuffs
@@ -16920,7 +16928,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 15
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16942,7 +16955,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16968,6 +16986,10 @@
       {
         "name": "Magic",
         "level": 50
+      },
+      {
+        "name": "Slayer",
+        "level": 55
       }
     ],
     "bonuses": [
@@ -17058,60 +17080,6 @@
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 4178, // Olive stuffer
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Attack",
-        "level": 70
-      }
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 4180, // Coconut bunch
-    "index": 7,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Defence",
-        "level": 60
-      }
-    ],
     "bonuses": [
       0,
       0,
@@ -17841,7 +17809,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -17856,7 +17824,8 @@
       1,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4304, // Ham cloak
@@ -19029,7 +18998,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -19044,7 +19013,8 @@
       9,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4503, // Decorative sword
@@ -19078,7 +19048,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -19090,7 +19060,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       10,
       11,
       9,
@@ -19098,7 +19068,8 @@
       10,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4507, // Decorative shield
@@ -19117,7 +19088,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       18,
       22,
       20,
@@ -19159,7 +19130,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -19171,7 +19142,7 @@
       0,
       0,
       -3,
-      0,
+      -1,
       14,
       15,
       13,
@@ -19179,7 +19150,8 @@
       14,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4512, // Decorative shield
@@ -19198,7 +19170,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -19213,7 +19185,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -19228,7 +19200,8 @@
       1,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4514, // Castlewars cloak
@@ -19257,7 +19230,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -19272,7 +19245,8 @@
       1,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4516, // Castlewars cloak
@@ -19301,7 +19275,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -19328,7 +19302,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -19348,7 +19322,8 @@
       10,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4580, // Black spear
@@ -19565,7 +19540,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -19589,7 +19564,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4710, // Ahrims staff
@@ -19709,7 +19685,8 @@
       51,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4718, // Dharoks greataxe
@@ -20216,7 +20193,7 @@
     "id": 4757, // Veracs brassard
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -20477,7 +20454,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -20501,14 +20478,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4857, // Ahrims hood 75
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -20532,14 +20510,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4858, // Ahrims hood 50
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -20563,14 +20542,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4859, // Ahrims hood 25
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -20594,14 +20574,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4860, // Ahrims hood 0
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -20616,7 +20597,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4862, // Ahrims staff 100
@@ -21061,7 +21043,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21081,14 +21063,15 @@
       51,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4881, // Dharoks helm 75
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21108,14 +21091,15 @@
       51,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4882, // Dharoks helm 50
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21135,14 +21119,15 @@
       51,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4883, // Dharoks helm 25
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21162,7 +21147,8 @@
       51,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4884, // Dharoks helm 0
@@ -21184,7 +21170,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 4886, // Dharoks axe 100
@@ -21597,7 +21584,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21624,7 +21611,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21651,7 +21638,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -21678,7 +21665,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22117,7 +22104,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22148,7 +22135,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22179,7 +22166,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22210,7 +22197,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22685,7 +22672,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22712,7 +22699,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22739,7 +22726,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -22766,7 +22753,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -23221,7 +23208,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -23248,7 +23235,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -23275,7 +23262,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -23302,7 +23289,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -23480,7 +23467,7 @@
     "id": 4988, // Veracs top 100
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -23507,7 +23494,7 @@
     "id": 4989, // Veracs top 75
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -23534,7 +23521,7 @@
     "id": 4990, // Veracs top 50
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -23561,7 +23548,7 @@
     "id": 4991, // Veracs top 25
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -23588,7 +23575,7 @@
     "id": 4992, // Veracs top 0
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -23806,7 +23793,7 @@
     "id": 5024, // Woven top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -23828,7 +23815,7 @@
     "id": 5026, // Woven top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -23850,117 +23837,7 @@
     "id": 5028, // Woven top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 5056, // Dwarven battleaxe
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 5057, // Dwarven battleaxe
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 5058, // Dwarven battleaxe
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 5059, // Dwarven battleaxe
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 5064, // Exquisite boots
-    "index": 10,
-    "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -24423,7 +24300,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -26791,7 +26668,7 @@
     "id": 6065, // Mourner top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -26945,7 +26822,7 @@
     "id": 6107, // Ghostly robe
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -26990,7 +26867,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -27005,7 +26882,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6110, // Ghostly gloves
@@ -27056,7 +26934,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -27076,7 +26954,8 @@
       30,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6130, // Rock-shell legs
@@ -27110,7 +26989,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -27134,13 +27013,14 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6133, // Spined body
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -27203,7 +27083,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -27227,13 +27107,14 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6139, // Skeletal top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -27436,7 +27317,7 @@
     "id": 6180, // Lederhosen top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -27525,7 +27406,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -28481,7 +28362,7 @@
     "id": 6322, // Snakeskin body
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -28544,7 +28425,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -28568,7 +28449,8 @@
       2,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6328, // Snakeskin boots
@@ -28671,7 +28553,7 @@
     "id": 6341, // Tribal top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -28691,7 +28573,7 @@
   },
   {
     "id": 6343, // Villager robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -28781,7 +28663,7 @@
     "id": 6351, // Tribal top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -28801,7 +28683,7 @@
   },
   {
     "id": 6353, // Villager robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -28891,7 +28773,7 @@
     "id": 6361, // Tribal top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -28911,7 +28793,7 @@
   },
   {
     "id": 6363, // Villager robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29001,7 +28883,7 @@
     "id": 6371, // Tribal top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -29021,7 +28903,7 @@
   },
   {
     "id": 6373, // Villager robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29133,7 +29015,7 @@
     "id": 6384, // Desert top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -29153,7 +29035,7 @@
   },
   {
     "id": 6386, // Desert robes
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29177,7 +29059,7 @@
     "id": 6388, // Desert top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -29221,7 +29103,7 @@
     "id": 6394, // Menaphite top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -29241,7 +29123,7 @@
   },
   {
     "id": 6396, // Menaphite robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29265,7 +29147,7 @@
     "id": 6402, // Menaphite top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -29285,7 +29167,7 @@
   },
   {
     "id": 6404, // Menaphite robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -29330,7 +29212,7 @@
   {
     "id": 6522, // Toktz-xil-ul
     "index": 3,
-    "two_handed?": true,
+    "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
@@ -29469,7 +29351,7 @@
   {
     "id": 6527, // Tzhaar-ket-em
     "index": 3,
-    "two_handed?": true,
+    "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
@@ -30290,7 +30172,8 @@
       9,
       0,
       1
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6623, // White full helm
@@ -30458,7 +30341,7 @@
     "id": 6654, // Camo top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -30570,7 +30453,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 42
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30624,12 +30512,12 @@
       0,
       0,
       0,
-      6,
+      4,
       0,
       0,
       0,
       0,
-      6,
+      4,
       0,
       0,
       0
@@ -30776,7 +30664,7 @@
     "id": 6750, // Black desert shirt
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -30796,7 +30684,7 @@
   },
   {
     "id": 6752, // Black desert robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -30883,50 +30771,6 @@
     ]
   },
   {
-    "id": 6788, // Torn robe
-    "index": 4,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 6789, // Torn robe
-    "index": 4,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
     "id": 6809, // Granite legs
     "index": 7,
     "two_handed?": false,
@@ -30960,7 +30804,7 @@
   {
     "id": 6818, // Bow-sword
     "index": 3,
-    "two_handed?": false,
+    "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
@@ -31072,7 +30916,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31087,14 +30931,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6886, // Progress hat
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31109,14 +30954,15 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6887, // Progress hat
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31131,7 +30977,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 6889, // Mage's book
@@ -31155,109 +31002,6 @@
       0,
       0,
       15,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 6893, // Leather boots
-    "index": 10,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [],
-    "bonuses": [
-      0,
-      0,
-      0,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 6894, // Adamant kiteshield
-    "index": 5,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Defence",
-        "level": 30
-      }
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      -8,
-      -2,
-      21,
-      31,
-      29,
-      -1,
-      29,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 6895, // Adamant med helm
-    "index": 0,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": true,
-    "requirements": [
-      {
-        "name": "Defence",
-        "level": 30
-      }
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      -3,
-      -1,
-      14,
-      15,
-      13,
-      -1,
-      14,
-      0,
-      0
-    ]
-  },
-  {
-    "id": 6897, // Rune longsword
-    "index": 3,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Attack",
-        "level": 40
-      }
-    ],
-    "bonuses": [
-      38,
-      47,
-      -2,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       0,
       0
@@ -31326,7 +31070,7 @@
     "requirements": [
       {
         "name": "Magic",
-        "level": 50
+        "level": 55
       }
     ],
     "bonuses": [
@@ -31549,38 +31293,11 @@
     ]
   },
   {
-    "id": 6967, // Waste disposal
-    "index": 0,
-    "two_handed?": false,
-    "full_body?": false,
-    "full_helmet?": false,
-    "requirements": [
-      {
-        "name": "Defence",
-        "level": 60
-      }
-    ],
-    "bonuses": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
-  },
-  {
     "id": 7003, // Camel mask
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31595,7 +31312,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7051, // Unlit bug lantern
@@ -31603,7 +31321,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 33
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -31625,7 +31348,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 33
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -31668,7 +31396,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31683,7 +31411,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7114, // Pirate boots
@@ -31756,7 +31485,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31771,7 +31500,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7126, // Pirate leggings
@@ -31822,7 +31552,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31837,7 +31567,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7132, // Pirate leggings
@@ -31888,7 +31619,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -31903,7 +31634,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7138, // Pirate leggings
@@ -31960,7 +31692,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Slayer",
+        "level": 37
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -32103,7 +31840,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -32130,7 +31867,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -32157,7 +31894,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -32184,7 +31921,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -32211,7 +31948,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -32238,7 +31975,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -32265,7 +32002,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -32292,7 +32029,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -32319,7 +32056,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -32346,7 +32083,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -32373,7 +32110,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -32400,7 +32137,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -32427,7 +32164,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       17,
       19,
       18,
@@ -32454,7 +32191,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       27,
       31,
       29,
@@ -32481,7 +32218,7 @@
       0,
       0,
       -8,
-      -3,
+      -2,
       44,
       48,
       46,
@@ -32973,7 +32710,7 @@
   },
   {
     "id": 7398, // Enchanted robe
-    "index": 4,
+    "index": 7,
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
@@ -33006,7 +32743,7 @@
     "id": 7399, // Enchanted top
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [
       {
@@ -33038,7 +32775,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [
       {
         "name": "Defence",
@@ -33062,7 +32799,8 @@
       0,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7447, // Kitchen knife
@@ -33316,7 +33054,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -33338,7 +33076,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -33353,7 +33091,8 @@
       4,
       0,
       0
-    ]
+    ],
+    "hide_beard?": false
   },
   {
     "id": 7592, // Zombie shirt
@@ -33404,7 +33143,7 @@
     "index": 0,
     "two_handed?": false,
     "full_body?": false,
-    "full_helmet?": false,
+    "full_helmet?": true,
     "requirements": [],
     "bonuses": [
       0,
@@ -33605,7 +33344,7 @@
   {
     "id": 7804, // Zaros mjolnir
     "index": 3,
-    "two_handed?": false,
+    "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [],
@@ -33778,7 +33517,7 @@
       0,
       0,
       -6,
-      -3,
+      -2,
       30,
       32,
       27,
@@ -33868,7 +33607,7 @@
     "id": 6184, // Prince tunic
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -33890,7 +33629,7 @@
     "id": 6186, // Princess blouse
     "index": 4,
     "two_handed?": false,
-    "full_body?": false,
+    "full_body?": true,
     "full_helmet?": false,
     "requirements": [],
     "bonuses": [
@@ -33914,7 +33653,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       9,
       14,
@@ -34068,7 +33812,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       9,
       14,
@@ -34090,7 +33839,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       9,
       14,
@@ -34112,7 +33866,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       14,
       9,
@@ -34125,6 +33884,2419 @@
       1,
       0,
       12,
+      0
+    ]
+  },
+  {
+    "id": 75, // Khazard armour
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      9,
+      11,
+      10,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 278, // Cattleprod
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      4,
+      2,
+      -4,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 426, // Priest gown
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ]
+  },
+  {
+    "id": 428, // Priest gown
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ]
+  },
+  {
+    "id": 430, // Doctors' gown
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 616, // Beads of the dead
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "id": 732, // Holy water
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 975, // Machete
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      6,
+      -2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      5,
+      0
+    ]
+  },
+  {
+    "id": 1575, // Cat training medal
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 2405, // Carnillean armour
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      20,
+      14,
+      8,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 2406, // Hazeel's mark
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3327, // Myre snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3329, // Blood'n'tar snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3331, // Ochre snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3333, // Bruise blue snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3335, // Broken bark snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3337, // Myre snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3339, // Blood'n'tar snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3341, // Ochre snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 3343, // Bruise blue snelm
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -3,
+      -1,
+      7,
+      8,
+      6,
+      -1,
+      7,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4023, // Monkey talisman
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4069, // Decorative armour
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -30,
+      -10,
+      32,
+      31,
+      24,
+      -6,
+      31,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4070, // Decorative armour
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -21,
+      -7,
+      17,
+      16,
+      15,
+      -4,
+      16,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4086, // Trollweiss
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -100,
+      -100,
+      -50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -10,
+      0
+    ]
+  },
+  {
+    "id": 4181, // Mouth grip
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4284, // Bedsheet
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4285, // Bedsheet
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4306, // H.a.m logo
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4504, // Decorative armour
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -30,
+      -10,
+      46,
+      44,
+      38,
+      -6,
+      44,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4505, // Decorative armour
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -21,
+      -7,
+      24,
+      22,
+      20,
+      -4,
+      22,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4509, // Decorative armour
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -30,
+      -10,
+      65,
+      63,
+      55,
+      -6,
+      63,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4510, // Decorative armour
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -21,
+      -7,
+      33,
+      31,
+      29,
+      -4,
+      31,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 4599, // Oak-blackjack
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "id": 4600, // Willow-blackjack
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      0
+    ]
+  },
+  {
+    "id": 4611, // Desert disguise
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5030, // Shirt
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5032, // Shirt
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5034, // Shirt
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5036, // Trousers
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5038, // Trousers
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5040, // Trousers
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5042, // Shorts
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5044, // Shorts
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5046, // Shorts
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5048, // Skirt
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5050, // Skirt
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5052, // Skirt
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5525, // Tiara
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5607, // Grain
+    "index": 1,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5608, // Fox
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 5609, // Chicken
+    "index": 5,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6330, // Snakeskin v'brace
+    "index": 9,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      },
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      -5,
+      6,
+      2,
+      2,
+      2,
+      1,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6392, // Menap headgear
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "hide_beard?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6398, // Menap action kilt
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6400, // Menap headgear
+    "index": 0,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": true,
+    "hide_beard?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6406, // Menap action kilt
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6408, // Oak blackjack(a)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      },
+      {
+        "name": "Thieving",
+        "level": 10
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0
+    ]
+  },
+  {
+    "id": 6410, // Oak blackjack(d)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      },
+      {
+        "name": "Thieving",
+        "level": 10
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      4,
+      0
+    ]
+  },
+  {
+    "id": 6412, // Willow blackjack(a)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      },
+      {
+        "name": "Thieving",
+        "level": 20
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      8,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      0
+    ]
+  },
+  {
+    "id": 6414, // Willow blackjack(d)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      },
+      {
+        "name": "Thieving",
+        "level": 20
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      8,
+      0,
+      0,
+      8,
+      0
+    ]
+  },
+  {
+    "id": 6416, // Maple blackjack
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Thieving",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      20,
+      0
+    ]
+  },
+  {
+    "id": 6418, // Maple blackjack(a)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      },
+      {
+        "name": "Thieving",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      24,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      20,
+      0
+    ]
+  },
+  {
+    "id": 6420, // Maple blackjack(d)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      },
+      {
+        "name": "Thieving",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      24,
+      0,
+      0,
+      20,
+      0
+    ]
+  },
+  {
+    "id": 6666, // Flippers
+    "index": 10,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -2,
+      -2,
+      -2,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6773, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6774, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6775, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6776, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6777, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6778, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6779, // Rat pole
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 6786, // Robe of elidinis
+    "index": 4,
+    "two_handed?": false,
+    "full_body?": true,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6787, // Robe of elidinis
+    "index": 7,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6790, // Shoes
+    "index": 10,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6857, // Bobble scarf
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6859, // Jester scarf
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6861, // Tri-jester scarf
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6863, // Woolly scarf
+    "index": 2,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 6864, // Marionette handle
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 7170, // Mud pie
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -100,
+      -100,
+      -50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -10,
+      0
+    ]
+  },
+  {
+    "id": 7409, // Magic secateurs
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      7,
+      9,
+      -5,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "id": 7414, // Paddle
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 7433, // Wooden spoon
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      4,
+      5,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      0,
+      0,
+      7,
+      0
+    ]
+  },
+  {
+    "id": 7435, // Egg whisk
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      5,
+      3,
+      -4,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      4,
+      0
+    ]
+  },
+  {
+    "id": 7437, // Spork
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
+    "bonuses": [
+      11,
+      8,
+      -2,
+      0,
+      0,
+      0,
+      2,
+      1,
+      0,
+      0,
+      12,
+      0
+    ]
+  },
+  {
+    "id": 7439, // Spatula
+    "index": 3,
+    "two_handed?": true,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
+    "bonuses": [
+      -4,
+      27,
+      21,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      26,
+      0
+    ]
+  },
+  {
+    "id": 7441, // Frying pan
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
+    "bonuses": [
+      -4,
+      -4,
+      25,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      20,
+      0
+    ]
+  },
+  {
+    "id": 7443, // Skewer
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
+    "bonuses": [
+      20,
+      29,
+      -2,
+      0,
+      0,
+      0,
+      3,
+      2,
+      0,
+      0,
+      31,
+      0
+    ]
+  },
+  {
+    "id": 7445, // Rolling pin
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
+    "bonuses": [
+      20,
+      -2,
+      39,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      36,
+      4
+    ]
+  },
+  {
+    "id": 7449, // Meat tenderiser
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      -4,
+      -4,
+      53,
+      -4,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      48,
+      0
+    ]
+  },
+  {
+    "id": 7451, // Cleaver
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      7,
+      45,
+      -2,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      44,
+      0
+    ]
+  },
+  {
+    "id": 7535, // Diving apparatus
+    "index": 1,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 7537, // Crab claw
+    "index": 9,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      4,
+      2,
+      0,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "id": 7639, // Rod of ivandis(10)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7640, // Rod of ivandis(9)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7641, // Rod of ivandis(8)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7642, // Rod of ivandis(7)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7643, // Rod of ivandis(6)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7644, // Rod of ivandis(5)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7645, // Rod of ivandis(4)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7646, // Rod of ivandis(3)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7647, // Rod of ivandis(2)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7648, // Rod of ivandis(1)
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      -1,
+      7,
+      4,
+      0,
+      2,
+      3,
+      1,
+      4,
+      0,
+      3,
+      0
+    ]
+  },
+  {
+    "id": 7918, // Bonesack
+    "index": 1,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      4,
+      4,
+      4,
+      4,
+      0,
       0
     ]
   }

@@ -184,8 +184,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.putShort(0x100 + appearance[PlayerAppearance.BOOTS]);
         }
 
-        // Beard model (hidden for females and when wearing a full helmet).
-        if (gender == PlayerAppearance.GENDER_FEMALE || isFullHelmet) {
+        // Beard model (hidden for females and equipment covering the jaw).
+        if (gender == PlayerAppearance.GENDER_FEMALE || headItem != null && headItem.getEquipDef().isBeardHidden()) {
             buf.put(0);
         } else {
             buf.putShort(0x100 + appearance[PlayerAppearance.BEARD]);

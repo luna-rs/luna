@@ -77,8 +77,7 @@ enum class ShieldBotGear(private val priority: Int,
         6,
         setOf(
             1183, // Adamant sq shield
-            1199, // Adamant kiteshield
-            6894  // Adamant kiteshield
+            1199  // Adamant kiteshield
         ),
         BotGearPurpose.MELEE
     ),

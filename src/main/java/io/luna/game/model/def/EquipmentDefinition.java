@@ -164,9 +164,14 @@ public final class EquipmentDefinition implements Definition {
     private final boolean fullBody;
 
     /**
-     * Whether the item covers the head/face (affects appearance model hiding rules).
+     * Whether the item hides the base head model.
      */
     private final boolean fullHelmet;
+
+    /**
+     * Whether the item hides the beard model independently of the base head model.
+     */
+    private final boolean beardHidden;
 
     /**
      * Skill requirements for equipping this item.
@@ -196,11 +201,29 @@ public final class EquipmentDefinition implements Definition {
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
                                Requirement[] requirements, int[] bonuses) {
+        this(id, index, twoHanded, fullBody, fullHelmet, fullHelmet, requirements, bonuses);
+    }
+
+    /**
+     * Creates equipment metadata with separate head and beard model coverage.
+     *
+     * @param id The item id.
+     * @param index The equipment slot index.
+     * @param twoHanded Whether the item is two-handed.
+     * @param fullBody Whether the item hides the arms model.
+     * @param fullHelmet Whether the item hides the base head model.
+     * @param beardHidden Whether the item hides the beard model.
+     * @param requirements Equipment requirements.
+     * @param bonuses Equipment bonuses.
+     */
+    public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
+                               boolean beardHidden, Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
+        this.beardHidden = beardHidden;
         this.requirements = ImmutableList.copyOf(requirements);
         this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
     }
@@ -265,12 +288,21 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * Returns whether this item covers the head/face.
+     * Returns whether this item hides the base head model.
      *
      * @return {@code true} if full helmet.
      */
     public boolean isFullHelmet() {
         return fullHelmet;
+    }
+
+    /**
+     * Returns whether this item hides the beard model.
+     *
+     * @return {@code true} if the beard model is hidden.
+     */
+    public boolean isBeardHidden() {
+        return beardHidden;
     }
 
     /**

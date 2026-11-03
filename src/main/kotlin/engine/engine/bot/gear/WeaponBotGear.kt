@@ -100,7 +100,7 @@ enum class WeaponBotGear(private val priority: Int,
         setOf(
             1213, 1229, 5678, 5696, // Rune daggers
             1247, 1261, 3175, 5714, 5728, // Rune spears
-            1289, 1303, 6897, 1319, 1333, // Rune swords
+            1289, 1303, 1319, 1333, // Rune swords
             1347, 1373, 1432, 3202 // Rune heavy weapons
         ),
         BotGearPurpose.MELEE,
