@@ -116,6 +116,11 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
     open val allowsCombatResponse: Boolean = true
 
     /**
+     * The active skill for opportunistic carried potion use between native actions, or no skilling boost.
+     */
+    open val potionSkillId: Int? = null
+
+    /**
      * Whether this script has been permanently terminated.
      *
      * Paused scripts may be started again by [start]. Terminated scripts cannot be restarted, even if
@@ -225,6 +230,10 @@ abstract class BotScript(bot: Bot) : AbstractBotScript(bot) {
                     while (bot.state == EntityState.ACTIVE && isActive) {
                         yield()
                         if (bot.state != EntityState.ACTIVE || !awaitActionSafety()) break
+                        if (actionSafety == ActionSafety.NON_COMBAT && handler.potions.drinkSupport(potionSkillId)) {
+                            bot.naturalMicroDelay()
+                            continue
+                        }
                         val completed = run()
                         if (completed) {
                             terminated = true

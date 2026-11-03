@@ -47,6 +47,8 @@ abstract class SkillingBotScript<E : Entity>(
     val skill: Skill
 ) : TargetingZonedBotScript<E>(bot, duration, zones) {
 
+    override val potionSkillId: Int get() = skill.id
+
     companion object {
 
         /**

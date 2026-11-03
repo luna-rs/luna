@@ -1,12 +1,15 @@
 package api.bot.action
 
 import api.predef.*
+import api.bot.script.BotScript.ActionSafety
 import game.player.item.consume.potion.Potion
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.brain.BotEmotion.EmotionType
+import io.luna.game.model.mob.combat.Weapon
 import java.util.EnumMap
 
 /**
@@ -30,7 +33,10 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
     enum class Need(val defensive: Boolean) {
         ANTIPOISON(true),
         ANTIFIRE(true),
+        HEAL(true),
+        RESTORE(true),
         PRAYER(true),
+        ENERGY(false),
         BOOST(false)
     }
 
@@ -58,6 +64,12 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
             SKILL_RANGED to listOf(Potion.RANGING_POTION to false),
             SKILL_MAGIC to listOf(Potion.MAGIC_POTION to false)
         )
+
+        /**
+         * Native three-level boosts for gathering and obstacle work.
+         */
+        private val SKILL_BOOSTS = mapOf(SKILL_AGILITY to Potion.AGILITY_POTION,
+                                        SKILL_FISHING to Potion.FISHING_POTION)
 
         /**
          * The three-tick potion delay, during which another drink would be ignored.
@@ -117,18 +129,27 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
      * @return `true` if a dose was drunk.
      */
     fun drink(fighting: Boolean, dragons: Boolean, prayerBelow: Int? = null): Boolean {
-        if (System.currentTimeMillis() - lastDrinkAt < DRINK_DELAY_MS) return false
+        if (!canDrink()) return false
         if (bot.status.isPoisoned() && !bot.status.isAntiPoison() && drinkFor(Need.ANTIPOISON, ANTIPOISONS)) {
             return true
         }
         if (dragons && !bot.status.isAntiFire() && drinkFor(Need.ANTIFIRE, listOf(Potion.ANTI_FIRE_POTION))) {
             return true
         }
+        val heal = 2 + bot.hitpoints.staticLevel * 15 / 100
+        if (fighting && bot.hitpoints.staticLevel - bot.health >= heal &&
+            (carries(Potion.SUPER_RESTORE) || bot.health <= bot.hitpoints.staticLevel / 3) &&
+            drinkFor(Need.HEAL, listOf(Potion.SARADOMIN_BREW))) return true
+        if (fighting && BOOSTS.keys.any { bot.skill(it).level < bot.skill(it).staticLevel } &&
+            drinkFor(Need.RESTORE, listOf(Potion.SUPER_RESTORE))) return true
         val prayer = bot.prayer
         if (prayerBelow != null && prayer.level < prayerBelow && prayerDoseFits(prayer.level, prayer.staticLevel) &&
             drinkFor(Need.PRAYER, listOf(Potion.PRAYER_POTION))) {
             return true
         }
+        if (prayerBelow != null && prayer.level < prayerBelow &&
+            prayer.staticLevel - prayer.level >= 8 + prayer.staticLevel / 4 &&
+            drinkFor(Need.PRAYER, listOf(Potion.SUPER_RESTORE))) return true
         if (fighting) {
             val share = refreshShare ?: boostRefreshShare(bot.personality.intelligence,
                                                          bot.emotions.isFeeling(EmotionType.GREEDY))
@@ -144,9 +165,46 @@ class BotPotionActionHandler(private val bot: Bot, private val handler: BotActio
                     return true
                 }
             }
+            // A brew is a fallback melee boost. Its health and defence costs require a healthy bot and a restore.
+            val melee = bot.combat.weapon.typeDef.type != Weapon.STAFF &&
+                bot.combat.weapon.styleDef.exp.any { it == SKILL_ATTACK || it == SKILL_STRENGTH } &&
+                !bot.combat.magic.isAutocasting && bot.combat.magic.selectedSpell == CombatSpellDefinition.NONE
+            if (melee && bot.health >= bot.hitpoints.staticLevel * 0.8 &&
+                bot.defence.level >= bot.defence.staticLevel && carries(Potion.SUPER_RESTORE) &&
+                bot.attack.level <= bot.attack.staticLevel && bot.strength.level <= bot.strength.staticLevel &&
+                drinkFor(Need.BOOST, listOf(Potion.ZAMORAK_BREW))) return true
         }
         return false
     }
+
+    /**
+     * Uses carried support doses between ordinary actions, preserving native production, dialogue and strong actions.
+     * Skilling boosts are restricted to the active skill; energy is useful only while an actual running path exists.
+     * Supplies are never created or withdrawn by this opportunistic check.
+     */
+    fun drinkSupport(skillId: Int? = null): Boolean {
+        if (!ActionSafety.NON_COMBAT.allows(bot) || bot.actions.size() > 0 || !canDrink()) return false
+        if (bot.status.isPoisoned() && !bot.status.isAntiPoison() && drinkFor(Need.ANTIPOISON, ANTIPOISONS)) return true
+        if (skillId != null) {
+            val skill = bot.skill(skillId)
+            if (skill.level < skill.staticLevel && drinkFor(Need.RESTORE, listOf(Potion.SUPER_RESTORE))) return true
+            val potion = SKILL_BOOSTS[skillId]
+            if (potion != null && boostWornDown(skill.level, skill.staticLevel, 3,
+                    boostRefreshShare(bot.personality.intelligence, bot.emotions.isFeeling(EmotionType.GREEDY))) &&
+                drinkFor(Need.BOOST, listOf(potion))) return true
+        }
+        val energyThreshold = 10 + bot.personality.intelligence * 30
+        if (bot.walking.isRunning && !bot.walking.isEmpty && bot.runEnergy <= energyThreshold) {
+            return drinkFor(Need.ENERGY, listOf(Potion.SUPER_ENERGY, Potion.ENERGY_POTION))
+        }
+        return false
+    }
+
+    /**
+     * Respects death, strong actions, interface ownership and the native shared three-tick drink throttle.
+     */
+    private fun canDrink(): Boolean = ActionSafety.COMBAT.allows(bot) && !bot.overlays.hasWindow() &&
+        System.currentTimeMillis() - lastDrinkAt >= DRINK_DELAY_MS
 
     /**
      * Withdraws one antifire dose for a dragon trip, if the bot has none on it and one is banked.

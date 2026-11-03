@@ -50,6 +50,8 @@ import kotlin.time.Duration.Companion.seconds
 class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duration) :
     ZonedBotScript(bot, duration, mutableListOf(course.zone)) {
 
+    override val potionSkillId: Int get() = SKILL_AGILITY
+
     companion object {
         /**
          * Ninja greegrees accepted by the native Ape Atoll course; other monkey forms cannot enter its obstacles.
