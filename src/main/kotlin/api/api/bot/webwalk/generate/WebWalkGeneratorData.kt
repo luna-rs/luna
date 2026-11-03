@@ -38,6 +38,7 @@ data class PlacedWall(val objectId: Int, val position: Position, val direction: 
  * @property reverseRequirements What a bot needs to cross it from [to] to [from], or `null` for the same as [requirements].
  * @property bidirectional If it can be crossed back, or `null` for the usual for its [type].
  * @property npcId The NPC id for a crossing that uses an NPC instead of an object.
+ * @property itemId The inventory item for a contextual crossing without an NPC or object click.
  *
  * @author Hydrozoa
  */
@@ -52,7 +53,8 @@ data class GeneratedObstacle(val type: EdgeType,
                              val requirements: Requirements = Requirements.NONE,
                              val reverseRequirements: Requirements? = null,
                              val bidirectional: Boolean? = null,
-                             val npcId: Int? = null)
+                             val npcId: Int? = null,
+                             val itemId: Int? = null)
 
 /**
  * A waypoint of `walk_graph.jsonc` made by the generator.
@@ -444,7 +446,8 @@ object WebWalkWriter {
             val bidirectional = entry.bidirectional?.let { ", \"bidirectional\": $it" } ?: ""
             val requirements = if (entry.requirements.isEmpty) "" else ", \"requirements\": ${requirements(entry.requirements)}"
             val reverse = entry.reverseRequirements?.let { ", \"reverseRequirements\": ${requirements(it)}" } ?: ""
-            val target = entry.npcId?.let { "\"npc\": $it" } ?: "\"object\": ${entry.objectId}"
+            val target = entry.itemId?.let { "\"item\": $it" } ?: entry.npcId?.let { "\"npc\": $it" }
+                ?: "\"object\": ${entry.objectId}"
             "{ \"type\": \"${entry.type}\"$handler, $target, \"pos\": ${position(entry.pos)}, " +
                     "\"from\": ${position(entry.from)}, \"to\": ${position(entry.to)}$option$cost$bidirectional" +
                     "$requirements$reverse }"

@@ -1,5 +1,7 @@
 package api.bot.webwalk.generate
 
+import api.bot.webwalk.model.SpecialTeleport
+
 import api.bot.webwalk.data.WebWalkDataException
 import api.bot.webwalk.data.WebWalkLoader
 import api.bot.webwalk.model.EdgeType
@@ -258,6 +260,7 @@ object WebWalkLiveGenerator {
         climbs += BrimhavenRouteGenerator.gather(report)
         climbs += KillerwattRouteGenerator.gather(report)
         climbs += GliderRouteGenerator.gather(report)
+        climbs += ContextualItemRouteGenerator.gather(report)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
@@ -409,6 +412,9 @@ object WebWalkLiveGenerator {
                 add("jewellery_${jewellery.name.lowercase()}_${index + 1}", TeleportKind.JEWELLERY, jewellery.name,
                     index + 1, destination.centre, JEWELLERY_TICKS, jewellery.maxWildernessLevel)
             }
+        }
+        for (special in SpecialTeleport.entries) {
+            add("item_${special.name.lowercase()}", TeleportKind.SPECIAL, special.name, null, special.destination, 10, 20)
         }
         add("home", TeleportKind.HOME, null, null, Luna.settings().game().startingPosition(), HOME_TICKS)
         report.count("teleports", teleports.size)

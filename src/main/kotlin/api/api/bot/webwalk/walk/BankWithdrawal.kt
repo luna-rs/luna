@@ -2,6 +2,7 @@ package api.bot.webwalk.walk
 
 import api.bot.action.BotActionHandler
 import api.bot.webwalk.model.BankDefinition
+import api.bot.webwalk.model.SpecialTeleport
 import api.bot.webwalk.plan.BankAccess
 import api.bot.webwalk.plan.BankItems
 import api.bot.webwalk.plan.CapabilitySnapshot
@@ -60,7 +61,9 @@ object BankWithdrawal {
     fun view(bot: Bot, banked: BankItems = BankItems.of(bot)): BankView {
         val bank = banked.amounts
         val worn = TeleportJewellery.entries.filter { jewellery -> jewellery.items.any { bot.equipment.contains(it) } }
-            .map { it.name }.toSet()
+            .map { it.name }.toSet() + SpecialTeleport.entries.filter { special ->
+                special.pieces.keys.any { bot.equipment.contains(it) }
+            }.map { it.chargeKey }
         return BankView(count(bot.inventory), bot.inventory.computeRemainingSize(), bank,
                         bank.keys.filter { bot.inventory.stackable(it) }.toSet(), worn)
     }
@@ -116,14 +119,14 @@ object BankWithdrawal {
 
         // Takes pieces of jewellery, the most charges first, until they have at least a number of charges.
         fun takeCharges(name: String, charges: Int, required: Boolean): Boolean {
-            val jewellery = TeleportJewellery.named(name) ?: return !required
+            val pieces = chargePieces(name) ?: return !required
             var left = charges
-            for (id in jewellery.items) {
+            for ((id, count) in pieces) {
                 while (left > 0 && (bankLeft[id] ?: 0) > 0) {
                     if (!take(id, 1)) {
                         return !required
                     }
-                    left -= jewellery.charges(id)
+                    left -= count
                 }
             }
             return left <= 0 || !required
@@ -150,14 +153,21 @@ object BankWithdrawal {
             }
         }
         for ((name, charges) in wanted.charges) {
-            val jewellery = TeleportJewellery.named(name) ?: continue
-            val taken = jewellery.items.sumOf { (chosen[it] ?: 0) * jewellery.charges(it) }
+            val pieces = chargePieces(name) ?: continue
+            val taken = pieces.entries.sumOf { (id, amount) -> (chosen[id] ?: 0) * amount }
             if (charges > taken) {
                 takeCharges(name, charges - taken, false)
             }
         }
         return chosen.map { (id, amount) -> Item(id, amount) }
     }
+
+    /**
+     * Physical charge stages used for both ordinary jewellery and single-destination item withdrawals.
+     * Camulet's personal live charge budget is separately capped by SpecialTeleport before a trip is planned.
+     */
+    private fun chargePieces(name: String): Map<Int, Int>? = SpecialTeleport.named(name)?.pieces ?:
+        TeleportJewellery.named(name)?.let { jewellery -> jewellery.items.associateWith(jewellery::charges) }
 
     /**
      * Withdraws items from the open bank of a bot, never as notes, and checks that each arrived in the inventory, since the

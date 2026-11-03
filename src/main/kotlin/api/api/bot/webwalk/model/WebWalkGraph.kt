@@ -149,6 +149,7 @@ data class WebWalkNode(val id: String,
  * @property handler The name of the crossing handler that crosses the edge, for [EdgeType.CROSSING].
  * @property key The name of the [game.content.sailing.ShipRoute] of the edge, for [EdgeType.SHIP].
  * @property npcId The NPC to interact with for a crossing, instead of an object. [objectPosition] is its search anchor.
+ * @property itemId A carried item activated by a contextual crossing, instead of an object or NPC.
  *
  * @author Hydrozoa
  */
@@ -157,7 +158,8 @@ data class EdgeAction(val objectId: Int? = null,
                       val option: String? = null,
                       val handler: String? = null,
                       val key: String? = null,
-                      val npcId: Int? = null)
+                      val npcId: Int? = null,
+                      val itemId: Int? = null)
 
 /**
  * A directed connection between two nodes. Data that is travelled both ways is loaded as two edges.
@@ -200,6 +202,11 @@ enum class TeleportKind {
      * A menu option of teleport jewellery.
      */
     JEWELLERY,
+
+    /**
+     * A charged native item with a single destination.
+     */
+    SPECIAL,
 
     /**
      * The home teleport.

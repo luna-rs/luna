@@ -487,7 +487,39 @@ enum class SubZone(
         area = SimpleBoxArea.ofRadius(3038, 3285, 3, 4),
         parent = { FALADOR }),
 
-    /** The Edgeville monastery, used for low-level to mid-level combat training. */
+    /**
+     * The ground-floor Ectofuntus atrium north of Port Phasmatys contains one four-by-four Ectofuntus (5282).
+     * Its northern approach refills empty Ectophials through native item-on-object interactions outside the town wall.
+     */
+    ECTOFUNTUS_ATRIUM(
+        inside = Position(3660, 3522),
+        area = SimpleBoxArea.ofRadius(3654, 3514, 12, 12),
+        parent = { PORT_PHASMATYS }
+    ),
+
+    /**
+     * The narrow headland southwest of Rellekka contains one Strange altar (4141) above Fossegrimen's water.
+     * Its north-side approach supports native fish offerings to recharge owned lyres; the surrounding sea is blocked.
+     */
+    RELLEKKA_STRANGE_ALTAR(
+        inside = Position(2626, 3599),
+        area = SimpleBoxArea.ofRadius(2623, 3595, 7, 7),
+        parent = { RELLEKKA }
+    ),
+
+    /**
+     * Eluned's clearing west of Lletya contains one native Eluned (1679), wandering five tiles around (2289,3145).
+     * The walkable east bank of the stream supports paid re-enchanting of owned tiny elf crystals.
+     */
+    ELUNED_CLEARING(
+        inside = Position(2289, 3144),
+        area = SimpleBoxArea.ofRadius(2282, 3138, 15, 15),
+        parent = { TIRANNWN }
+    ),
+
+    /**
+     * The monastery north of Edgeville.
+     */
     EDGEVILLE_MONASTERY(
         inside = Position(3051, 3482),
         area = SimpleBoxArea.of(3041, 3480, 3062, 3509),

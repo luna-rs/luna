@@ -8,6 +8,8 @@ import game.bot.scripts.UseLampBotScript
 import game.item.experienceLamp.ExperienceLampInterface.InterfaceSkill
 import game.bot.scripts.FillWaterBotScript
 import game.bot.scripts.RechargeGloryBotScript
+import game.bot.scripts.RechargeTeleportSuppliesBotScript
+import api.bot.webwalk.model.SpecialTeleport
 import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
@@ -99,6 +101,8 @@ object GeneralActivityCoordinator : BotCoordinator {
             return SearchNestBotScript(bot, it, duration)
         }
         RechargeGloryBotScript(bot, duration).let { if (it.isEligible()) return it }
+        SpecialTeleport.entries.map { RechargeTeleportSuppliesBotScript(bot, it, duration) }
+            .filter { it.isEligible() }.randomOrNull()?.let { return it }
         val lightPreparation = LightSource.entries.flatMap { source ->
             listOf(true, false).mapNotNull { lighting ->
                 val output = if (lighting) source.lit else source.unlit

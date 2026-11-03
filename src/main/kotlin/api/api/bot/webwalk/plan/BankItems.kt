@@ -1,6 +1,7 @@
 package api.bot.webwalk.plan
 
 import game.item.degradable.jewellery.TeleportJewellery
+import api.bot.webwalk.model.SpecialTeleport
 import game.obj.webs.Web
 import game.skill.magic.CombinationRune
 import game.skill.magic.ItemRequirement
@@ -34,6 +35,7 @@ class BankItems(val items: List<Item>) {
             Rune.entries.forEach { add(it.id) }
             CombinationRune.entries.forEach { add(it.id) }
             TeleportJewellery.entries.forEach { addAll(it.items) }
+            SpecialTeleport.entries.forEach { addAll(it.pieces.keys) }
             TeleportSpell.entries.forEach { spell -> spell.requirements.filterIsInstance<ItemRequirement>().forEach { add(it.id) } }
             add(Web.KNIFE)
         }

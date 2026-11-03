@@ -11,6 +11,7 @@ import game.bot.scripts.skills.MakeCompostBotScript.Companion.CompostData
 
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
+import game.bot.scripts.RechargeTeleportSuppliesBotScript.Companion.RechargeData
 import game.bot.scripts.TradeMolePartsBotScript.Companion.MolePartsData
 import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
 import game.bot.scripts.RangingGuildBotScript.ArcheryData
@@ -158,6 +159,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<RechargeData>(RechargeTeleportSuppliesBotScript::class) { bot, data -> RechargeTeleportSuppliesBotScript(bot, data) }
     scriptManager.addScript<TeleOtherData>(TeleOtherBotScript::class) { bot, data -> TeleOtherBotScript(bot, data) }
     scriptManager.addScript<BarrowsData>(BarrowsBotScript::class) { bot, data -> BarrowsBotScript(bot, data) }
     scriptManager.addScript<CompostData>(MakeCompostBotScript::class) { bot, data -> MakeCompostBotScript(bot, data) }

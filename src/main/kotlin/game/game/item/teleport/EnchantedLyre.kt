@@ -27,6 +27,11 @@ object EnchantedLyre {
     const val LYRE = 3689
 
     /**
+     * Worthy native fish offerings and the charged lyre each grants at the Strange altar.
+     */
+    val OFFERINGS = mapOf(383 to 6125, 389 to 6126, 395 to 6127)
+
+    /**
      * Each enchanted lyre, from (4) down to (1), mapped to the lyre it becomes once a charge is used.
      */
     val NEXT_CHARGE = mapOf(6127 to 6126, 6126 to 6125, 6125 to 3691, 3691 to LYRE)

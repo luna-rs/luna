@@ -7,7 +7,7 @@ import io.luna.game.model.mob.Player
 /**
  * The Grail bell item id.
  */
-val GRAIL_BELL = 17
+val GRAIL_BELL = ContextualTravelItems.BELL
 
 /**
  * The Grail Maiden npc id.
@@ -22,17 +22,17 @@ val GRAIL_BELL_MAIDEN_EXPRESSION = 577
 /**
  * The dismantled bricks that fill the breach in the Grail castle's north wall, in the dilapidated Fisher Realm.
  */
-val GRAIL_BELL_BRICKS = listOf(Position(2761, 4693), Position(2762, 4693))
+val GRAIL_BELL_BRICKS = ContextualTravelItems.BELL_BRICKS
 
 /**
  * How many tiles from the bricks the bell can be rung.
  */
-val GRAIL_BELL_RANGE = 4
+val GRAIL_BELL_RANGE = ContextualTravelItems.BELL_RANGE
 
 /**
  * Where the bell puts the player, inside the castle just south of the bricks.
  */
-val GRAIL_BELL_LANDING = Position(2761, 4692)
+val GRAIL_BELL_LANDING = ContextualTravelItems.BELL_LANDING
 
 /**
  * Rings the Grail bell. Once the player continues, a Grail Maiden lets them into the castle if they rang it on the

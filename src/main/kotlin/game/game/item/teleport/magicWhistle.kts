@@ -8,29 +8,29 @@ import io.luna.game.model.mob.Player
 /**
  * The Magic whistle item id.
  */
-val MAGIC_WHISTLE = 16
+val MAGIC_WHISTLE = ContextualTravelItems.WHISTLE
 
 /**
  * The square under the watchtower north-west of Brimhaven where the whistle leads into the Fisher Realm. Ground
  * floor only.
  */
-val MAGIC_WHISTLE_KARAMJA_SPOT = Area.of(2740, 3234, 2743, 3237)
+val MAGIC_WHISTLE_KARAMJA_SPOT = ContextualTravelItems.WHISTLE_MAINLAND
 
 /**
  * The Fisher Realm, from which the whistle leads back to Karamja. Planes 0 to 2, so the Grail castle's upper floors
  * count.
  */
-val MAGIC_WHISTLE_FISHER_REALM = Area.of(2624, 4672, 2815, 4735)
+val MAGIC_WHISTLE_FISHER_REALM = ContextualTravelItems.WHISTLE_REALM
 
 /**
  * Where the whistle puts the player in the Fisher Realm. One tile west of 2678,4715, which an oak covers in this map.
  */
-val MAGIC_WHISTLE_REALM_LANDING = Position(2677, 4715)
+val MAGIC_WHISTLE_REALM_LANDING = ContextualTravelItems.REALM_LANDING
 
 /**
  * Where the whistle puts the player back on Karamja.
  */
-val MAGIC_WHISTLE_KARAMJA_LANDING = Position(2741, 3235)
+val MAGIC_WHISTLE_KARAMJA_LANDING = ContextualTravelItems.MAINLAND_LANDING
 
 /**
  * Blows the Magic whistle. On the Karamja spot or in the Fisher Realm it moves the player across at once; anywhere

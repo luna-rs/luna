@@ -222,7 +222,8 @@ object WebWalkLoader {
                            var requirements: Requirements,
                            var reverseRequirements: Requirements?,
                            var disabled: Boolean = false,
-                           val npcId: Int? = null)
+                           val npcId: Int? = null,
+                           val itemId: Int? = null)
 
     /**
      * One load of the files.
@@ -409,7 +410,7 @@ object WebWalkLoader {
             val seen = HashSet<List<Any?>>()
             for (entry in entries(OBSTACLES) + entries(CLIMBS) + entries(CROSSINGS)) {
                 val obstacle = readObstacle(entry) ?: continue
-                val key = listOf(obstacle.type, obstacle.objectId, obstacle.npcId, obstacle.pos, obstacle.from, obstacle.to)
+                val key = listOf(obstacle.type, obstacle.objectId, obstacle.npcId, obstacle.itemId, obstacle.pos, obstacle.from, obstacle.to)
                 if (!seen.add(key)) {
                     errors.add(entry.where, "duplicate of an earlier obstacle")
                     continue
@@ -426,7 +427,8 @@ object WebWalkLoader {
                 val to = obstacleNode(obstacle.to)
                 pending += PendingEdge(obstacle.where, from, to, obstacle.type, obstacle.cost, obstacle.bidirectional,
                                        obstacle.requirements,
-                                       EdgeAction(obstacle.objectId, obstacle.pos, obstacle.option, obstacle.handler, npcId = obstacle.npcId),
+                                       EdgeAction(obstacle.objectId, obstacle.pos, obstacle.option, obstacle.handler,
+                                           npcId = obstacle.npcId, itemId = obstacle.itemId),
                                        obstacle.reverseRequirements)
             }
         }
@@ -438,6 +440,7 @@ object WebWalkLoader {
             val typeName = entry.string("type")
             val objectId = entry.int("object", required = false, min = 0)
             val npcId = entry.int("npc", required = false, min = 0)
+            val itemId = entry.int("item", required = false, min = 0)
             val pos = entry.position("pos")
             val from = entry.position("from")
             val to = entry.position("to")
@@ -445,7 +448,10 @@ object WebWalkLoader {
             val bidirectional = entry.bool("bidirectional")
             val option = entry.string("option", required = false)
             val handler = entry.string("handler", required = false)
-            val requirements = readRequirements(entry)
+            val requirements = readRequirements(entry).let { parsed ->
+                if (itemId != null && parsed.items.none { it.id == itemId })
+                    parsed.copy(items = parsed.items + ItemRequirement(itemId)) else parsed
+            }
             val reverseRequirements = if (entry.has("reverseRequirements")) readRequirements(entry, "reverseRequirements") else null
             entry.finish()
 
@@ -457,8 +463,9 @@ object WebWalkLoader {
                             "but was '$typeName'")
                 }
             }
-            if ((objectId == null) == (npcId == null) || (npcId != null && type != EdgeType.CROSSING)) {
-                entry.reject("object", "requires exactly one object or NPC; NPCs are only supported by CROSSING handlers")
+            if (listOf(objectId, npcId, itemId).count { it != null } != 1 ||
+                ((npcId != null || itemId != null) && type != EdgeType.CROSSING)) {
+                entry.reject("object", "requires exactly one object or NPC or inventory item; NPCs and items need CROSSING handlers")
                 return null
             }
             if (type == null || pos == null || from == null || to == null) {
@@ -483,7 +490,7 @@ object WebWalkLoader {
             }
             return Obstacle(entry.where, type, objectId, pos, from, to, cost,
                             bidirectional ?: type.bidirectionalByDefault, option, handler, requirements,
-                            reverseRequirements, npcId = npcId)
+                            reverseRequirements, npcId = npcId, itemId = itemId)
         }
 
         /**

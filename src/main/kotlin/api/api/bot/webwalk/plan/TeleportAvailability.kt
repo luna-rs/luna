@@ -2,6 +2,7 @@ package api.bot.webwalk.plan
 
 import api.bot.webwalk.model.TeleportDefinition
 import api.bot.webwalk.model.TeleportKind
+import api.bot.webwalk.model.SpecialTeleport
 import api.predef.*
 import api.predef.ext.*
 import game.item.degradable.jewellery.TeleportJewellery
@@ -51,6 +52,10 @@ object TeleportAvailability {
             val can = when (teleport.kind) {
                 TeleportKind.SPELL -> canCast(bot, teleport.key, bank)
                 TeleportKind.JEWELLERY -> (charges[teleport.key] ?: 0) > 0
+                TeleportKind.SPECIAL -> SpecialTeleport.named(teleport.key)?.let { special ->
+                    (charges[special.chargeKey] ?: 0) > 0 && (bot.inventory.computeRemainingSize() > 0 ||
+                        special.pieces.keys.any { bot.inventory.contains(it) })
+                } == true
                 TeleportKind.HOME -> true
             }
             if (can) {
@@ -106,6 +111,7 @@ object TeleportAvailability {
         }
 
         TeleportKind.JEWELLERY -> teleport.key?.let { Spend(charges = mapOf(it to 1)) } ?: Spend.NONE
+        TeleportKind.SPECIAL -> SpecialTeleport.named(teleport.key)?.let { Spend(charges = mapOf(it.chargeKey to 1)) } ?: Spend.NONE
         TeleportKind.HOME -> Spend.NONE
     }
 
@@ -129,6 +135,10 @@ object TeleportAvailability {
             if (total > 0) {
                 charges[jewellery.name] = total
             }
+        }
+        for (special in SpecialTeleport.entries) {
+            val total = special.charges(bot, bank)
+            if (total > 0) charges[special.chargeKey] = total
         }
         return charges
     }

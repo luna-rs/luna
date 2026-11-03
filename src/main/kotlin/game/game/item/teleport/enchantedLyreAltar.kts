@@ -45,7 +45,7 @@ val FOSSEGRIMEN_HAPPY = 567
  * The worthy offerings, mapped to the enchanted lyre each one gives: raw shark (2), raw manta ray (3) and raw sea
  * turtle (4).
  */
-val OFFERINGS = mapOf(383 to 6125, 389 to 6126, 395 to 6127)
+val OFFERINGS = EnchantedLyre.OFFERINGS
 
 /**
  * The raw bass, which Fossegrimen only takes from a player wearing a [RING_OF_CHAROS_A].

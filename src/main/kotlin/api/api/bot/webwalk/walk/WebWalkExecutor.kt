@@ -1,5 +1,7 @@
 package api.bot.webwalk.walk
 
+import api.bot.webwalk.model.SpecialTeleport
+
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
 import api.bot.webwalk.model.EdgeType
@@ -320,6 +322,22 @@ class WebWalkExecutor(private val bot: Bot,
             }
 
             TeleportKind.HOME -> bot.output.sendCommand("home")
+            TeleportKind.SPECIAL -> {
+                val special = SpecialTeleport.named(teleport.key) ?: return "unknown native teleport item"
+                if (special.charges(bot) <= 0) return "no carried ${special.name.lowercase()} charge"
+                var id = special.pieces.keys.firstOrNull { bot.inventory.contains(it) }
+                if (id == null) {
+                    val worn = special.pieces.keys.firstOrNull { bot.equipment.contains(it) }
+                        ?: return "the planned native teleport item is not carried"
+                    val slot = bot.equipment.computeIndexForId(worn)
+                    if (slot < 0 || bot.inventory.computeRemainingSize() == 0 ||
+                        !handler.equipment.unequip(slot) || !bot.inventory.contains(worn))
+                        return "the native teleport item could not be taken off without a bank detour"
+                    id = worn
+                }
+                if (special.charges(bot) <= 0 || !handler.inventory.clickItem(special.option, id))
+                    return "the native teleport item could not be activated"
+            }
             TeleportKind.JEWELLERY -> {
                 val failure = useJewellery(teleport.key, teleport.option)
                 if (failure != null) {
