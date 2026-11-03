@@ -227,15 +227,21 @@ object RandomEvents {
      * Resolves mining's contextual tool and rock hazards without losing their native selection slots.
      * The source gas parameter is available only on the original copper-through-gem rock definitions.
      */
-    fun offerMining(player: Player, rock: GameObject, pickaxe: Pickaxe): Boolean = offerOutcome(player) {
-        val gas = rock.id in 2090..2111
+    fun offerMining(player: Player, rock: GameObject, pickaxe: Pickaxe): Boolean =
+        offerMining(player, rock, pickaxe) { Random.nextInt(it) }
+
+    /**
+     * Keeps the source's independent general roll after the contextual mining pool.
+     */
+    internal fun offerMining(player: Player, rock: GameObject, pickaxe: Pickaxe, random: (Int) -> Int): Boolean = offerOutcome(player) {
+        val gas = rock.id in MiningRandomEvents.GAS_ROCKS
         val special = if (gas) 3 else 2
-        val slot = Random.nextInt(6 + special)
+        val slot = random(6 + special)
         when {
-            slot >= special -> generalKind { Random.nextInt(it) }?.let { startEncounter(player, it) } ?: false
+            slot >= special -> generalKind(random)?.let { startEncounter(player, it) } ?: false
             slot == 0 -> MiningRandomEvents.loseHead(player, pickaxe)
             slot == special - 1 -> startGuardian(player, SkillGuardianRandomEvent.Kind.ROCK_GOLEM)
-            else -> false
+            else -> MiningRandomEvents.startGas(player, rock)
         }
     }
 

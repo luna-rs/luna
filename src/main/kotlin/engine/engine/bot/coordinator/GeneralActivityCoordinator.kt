@@ -15,8 +15,7 @@ import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.OpenContainerBotScript
 import game.bot.scripts.ToggleLightBotScript
-import game.bot.scripts.RepairAxeBotScript
-import game.content.randomEvents.WoodcuttingRandomEvents
+import game.bot.scripts.RepairGatheringToolBotScript
 import game.skill.firemaking.lightSource.LightSource
 import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
@@ -112,8 +111,8 @@ object GeneralActivityCoordinator : BotCoordinator {
             }
         }
         lightPreparation.randomOrNull()?.let { return it }
-        WoodcuttingRandomEvents.Parts.entries.flatMap { parts ->
-            listOf(false, true).map { RepairAxeBotScript(bot, parts, it, duration) }
+        RepairGatheringToolBotScript.TOOLS.flatMap { tool ->
+            listOf(false, true).map { RepairGatheringToolBotScript(bot, tool, it, duration) }
         }.filter { it.isEligible() }.randomOrNull()?.let { return it }
         val filling = buildList {
             for (source in Source.entries) {

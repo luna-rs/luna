@@ -5,6 +5,61 @@
   incorrect bonuses/requirements.
 */
 [
+  // Source pickaxe hazards can leave these zero-bonus tools in the weapon slot.
+  {
+    "id": 468, // Broken bronze pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 470, // Broken iron pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 472, // Broken steel pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 474, // Broken mithril pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 476, // Broken adamant pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "id": 478, // Broken rune pickaxe
+    "index": 3,
+    "two_handed?": false,
+    "full_body?": false,
+    "full_helmet?": false,
+    "requirements": [],
+    "bonuses": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
   // Source axe hazards can leave these zero-bonus tools in the weapon slot.
   {
     "id": 492, // Axe handle

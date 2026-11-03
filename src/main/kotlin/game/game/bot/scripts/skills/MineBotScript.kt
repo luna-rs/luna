@@ -26,6 +26,7 @@ import game.bot.scripts.skills.MiningBehavior.Style
 import game.skill.mining.Ore
 import game.skill.mining.Pickaxe
 import game.content.randomEvents.MiningRandomEvents
+import game.bot.scripts.RandomEventReflexScript
 import game.skill.mining.mineOre.MineOreAction
 import game.content.miningGuild.MiningGuild
 import io.luna.game.model.EntityState
@@ -92,6 +93,13 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     private var dropFailures = 0
     private var attemptedRock: GameObject? = null
     private var attemptExperience = 0.0
+
+    /**
+     * A visible transformation receives one shared intelligence/dexterity decision. Noticing it interrupts the
+     * hazardous continuation once, then ordinary local search can choose another rock in the same mine.
+     */
+    private var observedGas: GameObject? = null
+    private var ignoresGas = false
 
     internal val miningZone: SubZone? get() = activeZone
 
@@ -287,6 +295,18 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
     override suspend fun refocus(): Boolean = bot.actions.first(MineOreAction::class.java) == null
 
     override suspend fun beforeZoneWork(): Boolean {
+        val continuation = MiningRandomEvents.continuation(bot)
+        val gas = continuation ?: (attemptedRock ?: focus)?.position?.let { MiningRandomEvents.hazardAt(it) }
+        if (gas != null && observedGas !== gas) {
+            observedGas = gas
+            ignoresGas = kotlin.random.Random.nextDouble() < RandomEventReflexScript.ignoreChance(
+                bot.personality.intelligence, bot.personality.dexterity)
+            if (!ignoresGas) {
+                MiningRandomEvents.cancelContinuation(bot, gas)
+                return true
+            }
+        }
+        if (ignoresGas && continuation != null && continuation === observedGas) return true
         BotConversations.tick(bot)
         if (bot.actions.first(MineOreAction::class.java) != null) return true
         finishMiningAttempt()
@@ -359,11 +379,12 @@ class MineBotScript(bot: Bot, val ores: Set<Ore>, duration: Duration, zones: Mut
         if (clicked) {
             waitFor(3.seconds) {
                 bot.actions.first(MineOreAction::class.java)?.rockObj === target ||
+                        MiningRandomEvents.continuation(bot, target) != null ||
                         bot.mining.experience > experience || target.state != EntityState.ACTIVE || !isActionSafe()
             }
         }
         val started = clicked && (bot.actions.first(MineOreAction::class.java)?.rockObj === target ||
-                bot.mining.experience > experience)
+                MiningRandomEvents.continuation(bot, target) != null || bot.mining.experience > experience)
         if (started) {
             cluster = target.position
             behavior.settle()
