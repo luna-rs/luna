@@ -99,7 +99,7 @@ class PkBotScript(bot: Bot, val duration: Duration,
         internal fun patrolGroups(bot: Bot): List<List<Position>> {
             val groups = when (bot.preferences.pk?.purpose()) {
                 Purpose.SKILL -> listOf(PkArea.LOW_LEVEL.anchors.filter { it.regionId == EDGEVILLE_PK_REGION })
-                Purpose.VALUE -> listOf(PkArea.EDGEVILLE_DUNGEON.anchors,
+                Purpose.VALUE -> listOf(PkArea.EDGEVILLE_DUNGEON.anchors, PkArea.ABYSS_ENTRY_MAGE.anchors,
                     PkArea.GREEN_DRAGONS.anchors, PkArea.CHAOS_TEMPLE_LVL_10.anchors,
                     PkArea.CHAOS_TEMPLE_LVL_40.anchors, Obelisk.ALL.map { it.anchor },
                     listOfNotNull(SubZone.KBD_LAIR.entrance(bot)))
@@ -120,18 +120,19 @@ class PkBotScript(bot: Bot, val duration: Duration,
         }
 
         /**
-         * Resource camps attract PKers below combat level 70. Stronger PKers favour dragons, greater demons,
+         * Abyss runecrafters attract solo PKers at every combat level. Other resource camps attract PKers below
+         * combat level 70. Stronger PKers favour dragons, greater demons,
          * deep Wilderness and the agility course approach. Recreational SKILL sessions retain low Edgeville.
          * Clan outings retain their existing minimum hunting depth of Wilderness level 30.
          */
         internal fun hotspotGroups(bot: Bot): List<List<Position>> {
             if (bot.preferences.pk?.purpose() == Purpose.SKILL) return emptyList()
             val groups = if (bot.combatLevel < 70) {
-                listOf(PkArea.EDGEVILLE_DUNGEON.anchors,
+                listOf(PkArea.ABYSS_ENTRY_MAGE.anchors, PkArea.EDGEVILLE_DUNGEON.anchors,
                     listOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE.inside),
                     listOf(SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE.inside))
             } else {
-                listOf(listOfNotNull(SubZone.KBD_LAIR.entrance(bot)),
+                listOf(PkArea.ABYSS_ENTRY_MAGE.anchors, listOfNotNull(SubZone.KBD_LAIR.entrance(bot)),
                     PkArea.GREEN_DRAGONS.anchors, PkArea.GREEN_DRAGONS_WEST.anchors,
                     PkArea.GREEN_DRAGONS_NORTH.anchors, PkArea.GREEN_DRAGONS_EAST.anchors,
                     PkArea.RED_DRAGONS.anchors, PkArea.DEMONIC_RUINS.anchors, PkArea.LAVA_MAZE.anchors,
@@ -212,6 +213,12 @@ class PkBotScript(bot: Bot, val duration: Duration,
      * @property anchors Known walkable anchor points inside or near this PK area.
      */
     enum class PkArea(val regions: Set<Int>, val anchors: List<Position>) {
+
+        /**
+         * Runecrafters approaching the Wilderness Mage of Zamorak for native Abyss entry.
+         */
+        ABYSS_ENTRY_MAGE(regions = setOf(SubZone.ABYSS_ENTRY_MAGE.inside.regionId),
+                         anchors = listOf(SubZone.ABYSS_ENTRY_MAGE.inside)),
 
         /**
          * Chaos-druid herb hunters in the Wilderness section of Edgeville Dungeon.
@@ -652,8 +659,9 @@ class PkBotScript(bot: Bot, val duration: Duration,
     }
 
     /**
-     * SKILL stays in low Edgeville. Other purposes favour resource camps below combat level 70 and the dragon,
-     * demon and deep Wilderness hotspots from level 70 onward. Travel is delegated to the shared walker.
+     * SKILL stays in low Edgeville. Solo hunters visit the Abyss mage at every combat level, alongside resource
+     * camps below combat level 70 and dragon, demon and deep Wilderness hotspots from level 70 onward.
+     * Travel is delegated to the shared walker.
      */
     internal fun patrolAnchors(): List<Position> {
         return patrolGroups(bot).random()
