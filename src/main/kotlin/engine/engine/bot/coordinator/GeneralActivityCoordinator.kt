@@ -12,6 +12,8 @@ import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
 import game.bot.scripts.OpenContainerBotScript
+import game.bot.scripts.ToggleLightBotScript
+import game.skill.firemaking.lightSource.LightSource
 import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
 import game.skill.woodcutting.searchNest.Nest
@@ -30,6 +32,7 @@ import kotlin.time.Duration.Companion.minutes
  * in a preferred supported skill. Depleted glories can be recharged at the native Fountain of Heroes.
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
  * Owned oysters and fishing caskets share a native container-opening activity; oysters also require an owned chisel.
+ * Explicit wanted lit or unlit stock can light or extinguish owned sources without assembling or buying new lights.
  * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Low-combat accounts can occasionally deliver essence to a funded skiller Runecrafter for rune payments.
@@ -92,6 +95,15 @@ object GeneralActivityCoordinator : BotCoordinator {
             return SearchNestBotScript(bot, it, duration)
         }
         RechargeGloryBotScript(bot, duration).let { if (it.isEligible()) return it }
+        val lightPreparation = LightSource.entries.flatMap { source ->
+            listOf(true, false).mapNotNull { lighting ->
+                val output = if (lighting) source.lit else source.unlit
+                val desired = bot.preferences.getWantedItem(output)?.target()?.takeIf { it > 0 }?.coerceAtMost(1_000)
+                    ?: return@mapNotNull null
+                ToggleLightBotScript(bot, source, lighting, desired, duration).takeIf { it.isEligible() }
+            }
+        }
+        lightPreparation.randomOrNull()?.let { return it }
         val filling = buildList {
             for (source in Source.entries) {
                 for (empty in source.emptyIds) {

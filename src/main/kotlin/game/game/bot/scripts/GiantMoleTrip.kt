@@ -1,15 +1,10 @@
 package game.bot.scripts
 
-import api.bot.Suspendable.waitFor
-import api.predef.firemaking
+import api.bot.action.BotLightSources
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.player.item.consume.food.Food
-import game.skill.firemaking.lightSource.LightSource
-import game.skill.firemaking.Firemaking
-import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Owned supplies for a Giant Mole outing. Sealed lit lights survive the mole's mud; the native light-source table
@@ -28,36 +23,19 @@ internal object GiantMoleTrip {
     const val MINIMUM_HEAL = 16
 
     /**
-     * Mud-safe lights that provide real illumination. Bug lanterns provide no brightness.
-     */
-    private val lights = LightSource.entries.filter { !it.naked && it.brightness > 0 }
-
-    /**
-     * Prefers already lit stock, then brightness. Unlit stock needs the current native lighting level and an owned
-     * tinderbox; a lit source needs no lighting level just to carry it.
-     */
-    private fun light(bot: Bot): LightSource? = lights.filter {
-        bot.itemTracker.contains(it.lit) || (bot.firemaking.level >= it.level && bot.itemTracker.contains(it.unlit) &&
-            bot.itemTracker.contains(Firemaking.TINDERBOX))
-    }.sortedWith(compareByDescending<LightSource> { bot.itemTracker.contains(it.lit) }
-        .thenByDescending { it.brightness }).firstOrNull()
-
-    /**
      * Tools and a real lit source are required independently of food remaining after an interrupted fight.
      */
-    fun suppliesOwned(bot: Bot): Boolean = bot.itemTracker.contains(SPADE) && light(bot) != null
+    fun suppliesOwned(bot: Bot): Boolean = bot.itemTracker.contains(SPADE) && lightOwned(bot)
 
     /**
      * Shares owned sealed-light admission with ordinary dark-cave assignments.
      */
-    fun lightOwned(bot: Bot): Boolean = light(bot) != null
+    fun lightOwned(bot: Bot): Boolean = BotLightSources.owned(bot, sealed = true) != null
 
     /**
      * Verifies real illumination without requiring a digging tool outside the Mole's lair.
      */
-    fun lightCarried(bot: Bot): Boolean = lights.any {
-        bot.inventory.contains(it.lit) || bot.equipment[Equipment.HEAD]?.id == it.lit
-    }
+    fun lightCarried(bot: Bot): Boolean = BotLightSources.carried(bot, sealed = true)
 
     /**
      * Admission requires enough owned food of a usable healing strength for the shared boss banking policy.
@@ -83,18 +61,7 @@ internal object GiantMoleTrip {
     /**
      * Withdraws an owned enclosed light and, when needed, its tinderbox through ordinary banking.
      */
-    suspend fun collectLight(bot: Bot): Boolean {
-        val source = light(bot) ?: return false
-        if (lightCarried(bot)) return true
-        val items = if (bot.itemTracker.contains(source.lit)) listOf(source.lit)
-            else listOf(source.unlit, Firemaking.TINDERBOX)
-        for (id in items) {
-            if (!bot.inventory.contains(id) && (!bot.actionHandler.banking.withdraw(Item(id)) ||
-                        !bot.inventory.contains(id))) return false
-        }
-        return lightCarried(bot) || (bot.firemaking.level >= source.level && bot.inventory.contains(source.unlit) &&
-            bot.inventory.contains(Firemaking.TINDERBOX))
-    }
+    suspend fun collectLight(bot: Bot): Boolean = BotLightSources.collect(bot, sealed = true)
 
     /**
      * Lights a collected source after the bank is closed, verifying the actual item transformation before travel.
@@ -107,12 +74,5 @@ internal object GiantMoleTrip {
     /**
      * Uses the existing light-source item transformation after closing the bank.
      */
-    suspend fun ensureLight(bot: Bot): Boolean {
-        if (lightCarried(bot)) return true
-        if (!bot.inventory.contains(Firemaking.TINDERBOX)) return false
-        val source = lights.filter { bot.firemaking.level >= it.level && bot.inventory.contains(it.unlit) }
-            .maxByOrNull { it.brightness } ?: return false
-        if (!bot.actionHandler.inventory.useItem(Firemaking.TINDERBOX).onItem(source.unlit)) return false
-        return lightCarried(bot) || waitFor(3.seconds) { lightCarried(bot) }
-    }
+    suspend fun ensureLight(bot: Bot): Boolean = BotLightSources.ensureLit(bot, sealed = true)
 }
