@@ -103,7 +103,7 @@ class CombatBotScript @JvmOverloads constructor(bot: Bot, private var focus: Mob
         }
         if (usesPkSwitching) {
             return when (pkSwitcher.prepare(focus as Player)) {
-                PkCombatSwitcher.Result.READY -> true
+                PkCombatSwitcher.Result.READY -> pkSwitcher.prepareSpell(focus as Player)
                 PkCombatSwitcher.Result.WAITING -> false
                 PkCombatSwitcher.Result.UNAVAILABLE -> {
                     handler.combat.fleeCombat()

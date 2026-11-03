@@ -3,6 +3,7 @@ package game.bot.scripts
 import api.bot.action.trading.BotTradeIntentions
 import api.bot.action.CombatLoadout
 import api.bot.action.BotCombatActionHandler
+import api.bot.action.BotCombatMagic
 import api.bot.action.PvmTactics
 import api.bot.action.BotPotionActionHandler
 import api.bot.Suspendable.delay
@@ -29,6 +30,7 @@ import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.combat.npcHooks.giantMole.GiantMole
 import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
+import game.combat.spells.IbanStaff
 import game.combat.npcHooks.zygomite.Zygomites
 import game.combat.npcHooks.shades.MorttonShades
 import game.combat.npcHooks.wallBeast.WallBeasts
@@ -76,6 +78,7 @@ import kotlinx.coroutines.isActive
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Fights configured NPCs using owned melee, ranged or combat-magic supplies.
@@ -480,6 +483,9 @@ open class NpcCombatScript(bot: Bot,
     /** Style selection happens after gear is equipped, and is retained until the next bank visit. */
     private var combatConfigured = false
 
+    private val magicTactics = BotCombatMagic(bot, handler)
+    private var ibanRechargeQueued = false
+
     /**
      * Temporary positioning state is rebuilt after banking or restoration and never persisted as a trusted spot.
      */
@@ -752,6 +758,13 @@ open class NpcCombatScript(bot: Bot,
                 bot.preferences.addWantedItem(id, 1000)
                 stop()
                 return
+            }
+        }
+        if (purpose == BotGearPurpose.MAGIC) {
+            for ((id, amount) in BotCombatMagic.optionalRuneStock(bot, selected.gear[Equipment.WEAPON], selected.gear)) {
+                if (id !in bot.inventory && bot.inventory.computeRemainingSize() <= 20) continue
+                val missing = amount - bot.inventory.computeAmountForId(id)
+                if (missing > 0 && id in bot.bank) handler.banking.withdraw(Item(id, missing))
             }
         }
         if (dragonTrip && !handler.potions.withdrawAntifire() &&
@@ -1038,8 +1051,14 @@ open class NpcCombatScript(bot: Bot,
 
     override suspend fun interactionOption(target: Npc): Int? {
         attend()
-        return if (prepareCombat() && acceptsAssignment(target))
-            if (target.id in Zygomites.FORMS) 1 else 3 else null
+        if (!prepareCombat() || !acceptsAssignment(target)) return null
+        if (target.id in Zygomites.FORMS) return 1
+        if (purpose == BotGearPurpose.MAGIC && !needsFinishingReach(target)) {
+            val selected = loadout?.spell ?: return null
+            if (!magicTactics.prepare(target, selected,
+                    tactical = slayerTask !in setOf(SlayerTaskType.TUROTH, SlayerTaskType.KURASK))) return null
+        }
+        return 3
     }
 
     override fun targetApproachPolicy(target: Npc): InteractionPolicy =
@@ -1294,6 +1313,16 @@ open class NpcCombatScript(bot: Bot,
      * Validates actual equipment, dragon protection and one attack's supplies before permitting attack clicks.
      */
     internal fun prepareCombat(): Boolean {
+        if (purpose == BotGearPurpose.MAGIC && loadout?.spell?.spell == CombatSpell.IBAN_BLAST &&
+            IbanStaff.remaining(bot) == 0) {
+            clearMagic()
+            if (!ibanRechargeQueued) {
+                ibanRechargeQueued = true
+                bot.scriptStack.softPushHead(RechargeIbanBotScript(bot, 10.minutes))
+            }
+            stop()
+            return false
+        }
         if (!assignmentActive()) {
             bot.combat.target = null
             clearMagic()
@@ -1382,6 +1411,12 @@ open class NpcCombatScript(bot: Bot,
                 clearMagic()
                 forceBanking = true
                 return false
+            }
+            if (definition.button == -1) {
+                bot.combat.magic.isAutocasting = false
+                bot.combat.magic.autocastSpell = CombatSpellDefinition.NONE
+                combatConfigured = true
+                return true
             }
             if (!combatConfigured || !bot.combat.magic.isAutocasting || bot.combat.magic.autocastSpell != definition) {
                 combatConfigured = handler.combat.setAutocastSpell(definition)

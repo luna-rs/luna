@@ -379,6 +379,7 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
             !canUseSpellbook(bot, spell.spellbook) || !mayGainExperience(bot, SKILL_MAGIC)) {
             return false
         }
+        if (!bot.combat.magic.canAutocast(spell)) return false
 
         val weaponId = bot.equipment.weapon?.id ?: return false
         if (bot.combat.weapon.type != Weapon.STAFF) {

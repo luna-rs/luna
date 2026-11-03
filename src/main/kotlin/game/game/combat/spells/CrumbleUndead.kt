@@ -36,10 +36,15 @@ object CrumbleUndead {
      * A failed target does not alter the player's configured autocast spell.
      */
     fun canCast(player: Player, target: Mob): Boolean {
-        if (target is Npc && target.id !in undead) {
+        if (!eligibleTarget(target)) {
             player.sendMessage("This spell only affects skeletons, zombies, ghosts and shades.")
             return false
         }
         return true
     }
+
+    /**
+     * Uses the same source identities for planning without displaying a failed-cast message.
+     */
+    fun eligibleTarget(target: Mob): Boolean = target !is Npc || target.id in undead
 }

@@ -8,10 +8,13 @@ import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.magic.RuneRequirement
 import game.skill.magic.EquipmentRequirement
 import game.skill.magic.Staff
+import game.content.mageArena.MageArena
 import io.luna.game.model.def.AmmoDefinition
 import io.luna.game.model.def.CombatSpellDefinition
+import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.WeaponDefinition
 import io.luna.game.model.item.Equipment
+import io.luna.game.model.item.Equipment.EquipmentBonus
 import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.combat.CombatSpell
@@ -19,11 +22,12 @@ import io.luna.game.model.mob.combat.Weapon
 
 /**
  * An owned combat outfit and its consumables, shared by NPC preparation and carried PK switches.
- * Elemental and ancient damage spells retain their native rune and staff requirements. Explicit Magic Dart
- * selection also retains its native Slayer staff requirement; other special spells require separate preparation.
+ * Elemental and ancient damage spells retain their native rune and staff requirements. Explicit Magic Dart uses
+ * its native Slayer staff. Owned Iban and unlocked god staves retain personal charges and Arena cast progression;
+ * target-specific Crumble Undead is chosen only by the live combat policy after encountering an eligible target.
  *
  * @property gear Equipment slots to pass to the existing gear locator.
- * @property spell Optional combat autocast spell or explicitly requested Magic Dart.
+ * @property spell The supplied damage spell; native button metadata distinguishes manual casts from autocasts.
  * @author lare96
  */
 internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellDefinition? = null) {
@@ -87,14 +91,18 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                     (if (carriedOnly) carried(bot, id) == 0 else !bot.itemTracker.contains(id)) ||
                         equipDef(id).index != slot || !equipDef(id).meetsAllRequirements(bot)
                 }) return null
-            fun spellFor(weapon: Int): CombatSpellDefinition? = CombatSpellDefinition.getSpells().values
+            val spellChoices = HashMap<Int, CombatSpellDefinition?>()
+            fun spellFor(weapon: Int): CombatSpellDefinition? = spellChoices.getOrPut(weapon) { CombatSpellDefinition.getSpells().values
                 .filter { definition ->
                     definition.spellbook == spellbook && definition.level <= bot.magic.level && definition.maxHit <= maximumSpellHit &&
                         ((definition.spell.name.substringAfterLast('_') in setOf("STRIKE", "BOLT", "BLAST", "WAVE") &&
                             definition.spell.name.substringBefore('_') in setOf("WIND", "WATER", "EARTH", "FIRE")) ||
                             (definition.spellbook == Spellbook.ANCIENT && definition.maxHit > 0 &&
                                 weapon in Staff.AUTOCAST_ANCIENTS) ||
-                            (requested == CombatSpell.MAGIC_DART && definition.spell == requested)) &&
+                            (requested == CombatSpell.MAGIC_DART && definition.spell == requested) ||
+                            definition.spell in setOf(CombatSpell.IBAN_BLAST, CombatSpell.SARADOMIN_STRIKE,
+                                CombatSpell.CLAWS_OF_GUTHIX, CombatSpell.FLAMES_OF_ZAMORAK) &&
+                                BotCombatMagic.supportedDamage(bot, definition.spell)) &&
                         (requested == null || definition.spell == requested) &&
                         definition.required.all { it is RuneRequirement ||
                             (it is EquipmentRequirement && it.id == weapon &&
@@ -103,7 +111,21 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                             (if (carriedOnly) bot.inventory.computeAmountForId(id) else bot.itemTracker.count(id)).toLong() >=
                                 amount.toLong() * minimumCasts
                         }
-                }.maxByOrNull { it.maxHit }
+                }.maxByOrNull { it.maxHit } }
+            val preferredStaff = if (purpose == BotGearPurpose.MAGIC) {
+                val stock = bot.inventory.filterNotNull() + bot.equipment.filterNotNull() +
+                    if (carriedOnly) emptyList() else bot.bank.filterNotNull()
+                stock.map { it.id }.distinct().filter { id ->
+                    id !in excludingWeapons && (allowedWeapons.isEmpty() || id in allowedWeapons) &&
+                        requiredEquipment[Equipment.WEAPON]?.let { it == id } != false &&
+                        WeaponDefinition.ALL.get(id).orElse(null)?.type == Weapon.STAFF &&
+                        EquipmentDefinition.ALL.get(id).orElse(null)?.let { definition ->
+                            definition.meetsAllRequirements(bot) &&
+                                (Equipment.SHIELD !in requiredEquipment || !definition.isTwoHanded)
+                        } == true && spellFor(id) != null
+                }.maxWithOrNull(compareBy<Int> { spellFor(it)!!.maxHit }
+                    .thenBy { equipDef(it).getBonus(EquipmentBonus.MAGIC_ATTACK.index) })
+            } else null
             val selected = BotGearSelector.find(bot, setOf(purpose)) reject@{ item ->
                 if (carriedOnly && carried(bot, item.id) == 0) true
                 else if (requiredEquipment[item.index]?.let { it != item.id } == true) true
@@ -118,7 +140,8 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                     when (purpose) {
                         BotGearPurpose.RANGED -> if (type in thrown) requiredAmmo != null || item.id !in AmmoDefinition.NO_AMMO_WEAPONS
                             else type !in bows || ammunition(bot, item.id, carriedOnly, requiredAmmo) == null
-                        BotGearPurpose.MAGIC -> type != Weapon.STAFF || spellFor(item.id) == null
+                        BotGearPurpose.MAGIC -> type != Weapon.STAFF || spellFor(item.id) == null ||
+                            preferredStaff != null && item.id != preferredStaff
                         else -> type in bows || type in thrown
                     }
                 }
@@ -134,6 +157,10 @@ internal data class CombatLoadout(val gear: Array<Int?>, val spell: CombatSpellD
                 selected.equipment[Equipment.AMMUNITION] = ammunition(bot, weapon, carriedOnly, requiredAmmo) ?: return null
             }
             val spell = if (purpose == BotGearPurpose.MAGIC) spellFor(weapon!!) ?: return null else null
+            MageArena.God.entries.firstOrNull { it.spell == spell?.spell }?.let { god ->
+                if ((if (carriedOnly) carried(bot, god.cape) > 0 else bot.itemTracker.contains(god.cape)) &&
+                    equipDef(god.cape).meetsAllRequirements(bot)) selected.equipment[Equipment.CAPE] = god.cape
+            }
             // Compatible ammo is already selected, so buildLocator cannot enter its legacy free-ammo fallback.
             if (carriedOnly && weapon != null && equipDef(weapon).isTwoHanded) selected.equipment[Equipment.SHIELD] = null
             return CombatLoadout(if (carriedOnly) selected.equipment else selected.buildLocator().equipment, spell)

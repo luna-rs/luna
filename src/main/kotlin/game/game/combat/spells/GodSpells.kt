@@ -27,10 +27,13 @@ import io.luna.game.model.mob.combat.CombatSpell
  */
 object GodSpells {
 
+    const val CHARGE_LEVEL = 80
+    const val CHARGE_BUTTON = 1193
+
     /**
      * Charge costs three fire, blood, and air runes, with the normal staff and combination-rune substitutions.
      */
-    private val chargeRunes = listOf(RuneRequirement(Rune.FIRE, 3), RuneRequirement(Rune.BLOOD, 3),
+    val CHARGE_RUNES = listOf(RuneRequirement(Rune.FIRE, 3), RuneRequirement(Rune.BLOOD, 3),
                                    RuneRequirement(Rune.AIR, 3))
 
     /**
@@ -44,7 +47,7 @@ object GodSpells {
             player.sendMessage("This spell can only be learnt in the Mage Arena.")
             return false
         }
-        val runes = Magic.checkRequirements(player, 80, chargeRunes) ?: return false
+        val runes = Magic.checkRequirements(player, CHARGE_LEVEL, CHARGE_RUNES) ?: return false
         if (!player.inventory.containsAll(runes)) return false
         player.inventory.removeAll(runes)
         player.overlays.closeWindows()

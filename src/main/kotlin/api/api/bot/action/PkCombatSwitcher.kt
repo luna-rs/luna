@@ -37,6 +37,14 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
     private val failed = mutableSetOf<BotGearPurpose>()
     private var active: Pair<BotGearPurpose, CombatLoadout>? = null
     private var nextDecision: Long? = null
+    private val magicTactics = BotCombatMagic(bot, handler)
+
+    /**
+     * Uses tactical Magic only during the currently selected, permanently permitted Magic discipline.
+     */
+    suspend fun prepareSpell(target: Player): Boolean = active?.let { (purpose, selected) ->
+        purpose != BotGearPurpose.MAGIC || selected.spell?.let { magicTactics.prepare(target, it) } == true
+    } ?: false
 
     /**
      * Clears only switch-owned timing and spell state when the owning combat script ends.
@@ -105,9 +113,11 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             val spell = selected.spell ?: return false
             return BotCombatActionHandler.canUseSpellbook(bot, spell.spellbook) &&
                 bot.spellbook == spell.spellbook && bot.magic.level >= spell.level &&
-                bot.combat.magic.selectedSpell == CombatSpellDefinition.NONE &&
+                (bot.combat.magic.selectedSpell == CombatSpellDefinition.NONE ||
+                    spell.button == -1 && bot.combat.magic.selectedSpell == spell) &&
                 selected.runes.all { (id, amount) -> bot.inventory.computeAmountForId(id) >= amount } &&
-                bot.combat.magic.isAutocasting && bot.combat.magic.autocastSpell == spell
+                (if (spell.button == -1) !bot.combat.magic.isAutocasting else
+                    bot.combat.magic.isAutocasting && bot.combat.magic.autocastSpell == spell)
         }
         if (bot.combat.magic.isAutocasting || bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE) return false
         if (purpose == BotGearPurpose.RANGED) {
@@ -137,7 +147,10 @@ internal class PkCombatSwitcher(private val bot: Bot, private val handler: BotAc
             }
         }
         if (purpose == BotGearPurpose.MAGIC) {
-            if (!combat.setAutocastSpell(selected.spell ?: return false)) return false
+            val spell = selected.spell ?: return false
+            if (spell.button == -1) {
+                if (!combat.selectAndUseSpell(spell.spell)) return false
+            } else if (!combat.setAutocastSpell(spell)) return false
         } else {
             val styles = BotCombatActionHandler.allowedStyles(bot, bot.combat.weapon.typeDef.styles).filter {
                 if (purpose == BotGearPurpose.RANGED) Skill.RANGED in it.exp else Skill.RANGED !in it.exp

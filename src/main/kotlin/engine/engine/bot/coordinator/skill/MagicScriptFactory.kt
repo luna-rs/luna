@@ -5,6 +5,8 @@ import api.bot.zone.SubZone
 import api.predef.*
 import engine.bot.coordinator.CombatCoordinator
 import game.bot.scripts.skills.AlchemyBotScript
+import game.bot.scripts.RechargeIbanBotScript
+import game.combat.spells.IbanStaff
 import game.bot.scripts.skills.ChargeOrbBotScript
 import game.bot.scripts.skills.EnchantJewelleryBotScript
 import game.bot.scripts.skills.SplashBotScript
@@ -43,6 +45,7 @@ import io.luna.game.model.mob.bot.Bot
 object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
 
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        getIbanRechargeScript(bot)?.let { return it }
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, true, getDuration(bot))?.let { return it }
         if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
         if (rand(0.1)) {
@@ -65,6 +68,7 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
     }
 
     override fun getProfitScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
+        getIbanRechargeScript(bot)?.let { return it }
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, false, getDuration(bot))?.let { return it }
         val telegrab = TelegrabBotScript(bot, TelegrabBotScript.WINE, true, getDuration(bot), TelegrabBotScript.wineZones(bot, profit = true))
         if (telegrab.isEligible()) return telegrab
@@ -85,6 +89,12 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
         }
         return SplashBotScript(bot, getDuration(bot))
     }
+
+    /**
+     * Restocks a nearly exhausted owned staff through the native well, without starting or completing a quest.
+     */
+    private fun getIbanRechargeScript(bot: Bot): RechargeIbanBotScript? =
+        RechargeIbanBotScript(bot, getDuration(bot)).takeIf { IbanStaff.remaining(bot) < 20 && it.isEligible() }
 
     /**
      * Selects an eligible native food-conversion spell with the normal level/personality policy. Existing stock

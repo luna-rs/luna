@@ -5,6 +5,7 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import game.skill.magic.RuneRequirement
 import game.skill.magic.Staff
+import game.combat.spells.IbanStaff
 import io.luna.Luna
 import io.luna.game.model.def.AmmoDefinition
 import io.luna.game.model.def.CombatSpellDefinition
@@ -128,7 +129,25 @@ internal class PkLoadoutSelection(private val bot: Bot) {
         gear[Equipment.AMMUNITION] = if (purpose == BotGearPurpose.RANGED && weapon !in AmmoDefinition.NO_AMMO_WEAPONS)
             ammunition(weapon) else null
         if (EquipmentDefinition.ALL.retrieve(weapon).isTwoHanded) gear[Equipment.SHIELD] = null
-        val selected = CombatLoadout(gear, spell)
+        var selected = CombatLoadout(gear, spell)
+        if (purpose == BotGearPurpose.MAGIC) {
+            val specialist = CombatLoadout.find(bot, purpose, carriedOnly = carriedOnly, spellbook = spellbook,
+                minimumCasts = if (carriedOnly) 1 else MIN_CASTS)?.takeIf {
+                it.spell?.spell in setOf(io.luna.game.model.mob.combat.CombatSpell.IBAN_BLAST,
+                    io.luna.game.model.mob.combat.CombatSpell.SARADOMIN_STRIKE,
+                    io.luna.game.model.mob.combat.CombatSpell.CLAWS_OF_GUTHIX,
+                    io.luna.game.model.mob.combat.CombatSpell.FLAMES_OF_ZAMORAK) &&
+                    it.spell!!.maxHit >= (spell?.maxHit ?: 0) &&
+                    it.gear[Equipment.WEAPON]?.let(::affordable) == true &&
+                    (it.spell.spell != io.luna.game.model.mob.combat.CombatSpell.IBAN_BLAST ||
+                        IbanStaff.remaining(bot) >= if (carriedOnly) 2 else MIN_CASTS * 2)
+            }
+            if (specialist != null) {
+                gear[Equipment.WEAPON] = specialist.gear[Equipment.WEAPON]
+                specialist.gear[Equipment.CAPE]?.let { gear[Equipment.CAPE] = it }
+                selected = CombatLoadout(gear, specialist.spell)
+            }
+        }
         if (!desired && selected.runes.any { (id, amount) ->
                 (if (carriedOnly) bot.inventory.computeAmountForId(id) else owned(id)) < amount }) return null
         return selected

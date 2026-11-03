@@ -2577,6 +2577,15 @@ enum class SubZone(
         parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
+     * Underground Pass chamber containing the native Iban-staff well. An owned staff is used from the walkable
+     * western edge to restore its player's saved charge balance; no quest progress or reward is created.
+     */
+    UNDERGROUND_PASS_IBAN_WELL(
+        inside = Position(2372, 9718),
+        area = SimpleBoxArea.of(2368, 9713, 2379, 9725),
+        parent = { TIRANNWN }),
+
+    /**
      * Deep-Wilderness ground west of Rogues' Castle containing the native Chaos Elemental spawn. The footprint
      * includes its local roam and Confusion landings; supplied profit outings retain ordinary Wilderness risk.
      */

@@ -12,6 +12,7 @@ import game.bot.scripts.skills.MakeCompostBotScript.Companion.CompostData
 import game.bot.scripts.GnomeBallBotScript.GnomeBallData
 import game.bot.scripts.RechargeGloryBotScript.Companion.GloryData
 import game.bot.scripts.RechargeTeleportSuppliesBotScript.Companion.RechargeData
+import game.bot.scripts.RechargeIbanBotScript.Companion.IbanRechargeData
 import game.bot.scripts.TradeMolePartsBotScript.Companion.MolePartsData
 import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
 import game.bot.scripts.RangingGuildBotScript.ArcheryData
@@ -165,6 +166,7 @@ on(ServerLaunchEvent::class) {
     scriptManager.addScript<CompostData>(MakeCompostBotScript::class) { bot, data -> MakeCompostBotScript(bot, data) }
     scriptManager.addScript<SaplingData>(PrepareSaplingBotScript::class) { bot, data -> PrepareSaplingBotScript(bot, data) }
     scriptManager.addScript<GloryData>(RechargeGloryBotScript::class) { bot, data -> RechargeGloryBotScript(bot, data) }
+    scriptManager.addScript<IbanRechargeData>(RechargeIbanBotScript::class) { bot, data -> RechargeIbanBotScript(bot, data) }
     scriptManager.addScript<GnomeBallData>(GnomeBallBotScript::class) { bot, data -> GnomeBallBotScript(bot, data) }
     scriptManager.addScript<ArenaData>(BrimhavenArenaBotScript::class) { bot, data -> BrimhavenArenaBotScript(bot, data) }
     scriptManager.addScript<ArcheryData>(RangingGuildBotScript::class) { bot, data -> RangingGuildBotScript(bot, data) }

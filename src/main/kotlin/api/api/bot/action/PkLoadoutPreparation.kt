@@ -211,6 +211,12 @@ internal class PkLoadoutPreparation(private val bot: Bot, private val handler: B
                 costs.forEach { (id, cost) -> quantities[id] = cost * low }
             }
             ammunition?.let { extend(mapOf(it to 1), 500) }
+            magic?.let { outfit ->
+                for ((id, amount) in BotCombatMagic.optionalRuneStock(bot, outfit.gear[Equipment.WEAPON], outfit.gear)) {
+                    val missing = amount - (quantities[id] ?: 0)
+                    if (missing > 0) add(id, missing)
+                }
+            }
             magic?.let { extend(it.runes, 500) }
             return snapshot(layout(purposes.first()))
         }
