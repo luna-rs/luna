@@ -1018,6 +1018,15 @@ enum class SubZone(
         parent = { PISCATORIS_FISHING_COLONY }),
 
     /**
+     * Paid Tai Bwo Wannai enclosure containing nine teak and four mahogany placements. The western gate charges
+     * 100 trading sticks per entry; Gabooty's native gem trade supplies currency and the gate permits free exits.
+     */
+    TAI_BWO_WANNAI_HARDWOOD_GROVE(
+        inside = Position(2818, 3083),
+        area = SimpleBoxArea.of(2818, 3077, 2830, 3091),
+        parent = { KARAMJA }, bankZone = { Zone.SHILO_VILLAGE }),
+
+    /**
      * Southern Karamja pond with three small-net karambwanji spots. The northern shore arrival supplies real bait
      * for northeast Karamja's vessel fishing; shrimp share the native catch table.
      */

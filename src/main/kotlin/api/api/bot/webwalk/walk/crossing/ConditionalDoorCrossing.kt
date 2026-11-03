@@ -8,6 +8,7 @@ import game.content.miningGuild.MiningGuild
 import game.content.fishingGuild.FishingGuild
 import game.content.craftingGuild.CraftingGuild
 import game.content.gnomeBall.GnomeBall
+import game.content.hardwoodGrove.HardwoodGrove
 import game.obj.doors.BrassKeyDoor
 import game.obj.doors.Doors
 import game.obj.doors.GnomeStrongholdGate
@@ -31,10 +32,12 @@ object ConditionalDoorCrossing : CrossingHandler {
         val action = leg.action ?: return "the leg has no object"
         val id = action.objectId ?: return "the leg has no object id"
         val position = action.objectPosition ?: return "the leg has no object position"
+        val hardwood = id == 9038 || id == 9039
         if (id != YanilleDoorAction.DOOR && id != ChaosDruidTowerDoorAction.DOOR && id != MiningGuild.DOOR &&
             id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
-            id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && TrollArenaGates.GATES.none { it.id == id }) {
+            id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && !hardwood &&
+            TrollArenaGates.GATES.none { it.id == id }) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot
@@ -47,6 +50,16 @@ object ConditionalDoorCrossing : CrossingHandler {
                 return "door $id at $position did not close"
             }
             val door = context.find(position, id) ?: return@repeat
+            if (hardwood) {
+                val west = position.translate(-1, 0)
+                if (!HardwoodGrove.nativeDoor(door) ||
+                    !(leg.from == west && leg.to == position || leg.from == position && leg.to == west)) {
+                    return "unsupported hardwood grove gate direction"
+                }
+                if (leg.from == west && bot.inventory.computeAmountForId(HardwoodGrove.STICKS) < HardwoodGrove.FEE) {
+                    return "the hardwood grove requires 100 carried trading sticks for each entry"
+                }
+            }
             val yanillePick = id == YanilleDoorAction.DOOR &&
                     YanilleDoorAction.isLocked(position, door.direction, bot.position)
             if (yanillePick && (bot.thieving.level < YanilleDoorAction.REQUIRED_LEVEL ||
@@ -83,7 +96,7 @@ object ConditionalDoorCrossing : CrossingHandler {
                     return "the door requires a carried brass key"
                 }
                 bot.output.useItemOnObject(key, BrassKeyDoor.KEY, door)
-            } else if (!context.handler.interactions.interactOnLeg(if (picking) 2 else 1, door)) {
+            } else if (!context.handler.interactions.interactOnLeg(if (picking || hardwood) 2 else 1, door)) {
                 return "could not reach door $id at $position"
             }
             if (context.awaitArrival(leg, 0, 4.seconds)) {

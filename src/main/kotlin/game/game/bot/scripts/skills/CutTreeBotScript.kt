@@ -1,6 +1,8 @@
 package game.bot.scripts.skills
 
 import api.bot.Suspendable.naturalMicroDelay
+import api.bot.Suspendable.waitFor
+import api.bot.webwalk.plan.BankAccess
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
@@ -18,6 +20,9 @@ import game.skill.woodcutting.cutTree.CutTreeAction
 import game.skill.woodcutting.cutTree.Tree
 import game.skill.woodcutting.cutTree.TreeStump
 import game.skill.woodcutting.searchNest.Nest
+import game.content.hardwoodGrove.HardwoodGrove
+import io.luna.game.model.item.Item
+import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import java.util.*
@@ -48,6 +53,22 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
     override val targetSearchTimeout: Duration = 180.seconds
 
     companion object {
+
+        /**
+         * Native cooperative gems, with a twelve-gem ceiling per currency visit. Existing trading sticks cover up
+         * to three entries; ordinary shop sales determine the actual proceeds and stop once one entry is funded.
+         */
+        private val GROVE_GEMS = listOf(1625, 1609, 1627, 1611, 1629, 1613)
+        private const val GROVE_GEM_LIMIT = 12
+        private const val GROVE_STOCK_TARGET = HardwoodGrove.FEE * 3
+
+        /**
+         * Requires owned currency or a bounded real gem trade. Merchant accounts retain the existing prohibition
+         * on NPC-shop sales and can use the grove when they already own its entry fee.
+         */
+        internal fun groveSuppliesOwned(bot: Bot): Boolean =
+            bot.itemTracker.count(HardwoodGrove.STICKS) >= HardwoodGrove.FEE ||
+                !bot.preferences.isMerchant && GROVE_GEMS.any { bot.itemTracker.contains(it) }
 
         /**
          * Serializable data used to save and restore a [CutTreeBotScript].
@@ -118,8 +139,86 @@ class CutTreeBotScript(bot: Bot, val trees: Set<Tree>, duration: Duration, zones
      */
     private var firemakingQueued = false
 
+    private val hardwood = trees.any { it == Tree.TEAK || it == Tree.MAHOGANY }
+
     override fun requirements(): Boolean {
-        return treeIds.isNotEmpty()
+        return treeIds.isNotEmpty() && (!hardwood || groveSuppliesOwned(bot) ||
+            SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE.area.contains(bot.position))
+    }
+
+    override suspend fun onBankOpenSkilling(initial: Boolean) {
+        if (!hardwood) return
+        val sticks = minOf(GROVE_STOCK_TARGET, bot.bank.computeAmountForId(HardwoodGrove.STICKS))
+        if (sticks > 0 && !handler.banking.withdraw(Item(HardwoodGrove.STICKS, sticks))) {
+            stop()
+            return
+        }
+        if (bot.inventory.computeAmountForId(HardwoodGrove.STICKS) >= HardwoodGrove.FEE) return
+        var remaining = GROVE_GEM_LIMIT
+        if (!bot.preferences.isMerchant) for (id in GROVE_GEMS) {
+            val amount = minOf(remaining, bot.bank.computeAmountForId(id))
+            if (amount > 0 && handler.banking.withdraw(Item(id, amount))) {
+                remaining -= amount
+            }
+        }
+        if (GROVE_GEMS.none { it in bot.inventory }) missingGroveFee()
+    }
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (hardwood && !SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE.area.contains(bot.position) &&
+            bot.inventory.computeAmountForId(HardwoodGrove.STICKS) < HardwoodGrove.FEE &&
+            GROVE_GEMS.none { it in bot.inventory }) {
+            if (groveSuppliesOwned(bot)) forceBanking = true else missingGroveFee()
+        }
+        return false
+    }
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
+        if (zone != SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE) return super.travelToWorkZone(zone, bank)
+        if (zone.area.contains(bot.position)) return true
+        if (!prepareGroveFee()) return false
+        // Recovery can reach the public gate's outside; the final crossing must pay through the real native gate.
+        if (!handler.webWalkTo(HardwoodGrove.MURCAILY, bank = bank)) return false
+        return handler.webWalkTo(zone.inside, radius = 0, bank = BankAccess.NONE, fallback = false) &&
+            zone.area.contains(bot.position)
+    }
+
+    /**
+     * Funds the next entry with ordinary sales to Gabooty's real cooperative, never with generated sticks or logs.
+     * Each sale checks the open shop and actual inventory proceeds; interruption leaves the owned items intact.
+     */
+    private suspend fun prepareGroveFee(): Boolean {
+        if (bot.inventory.computeAmountForId(HardwoodGrove.STICKS) >= HardwoodGrove.FEE) return true
+        if (bot.preferences.isMerchant || GROVE_GEMS.none { it in bot.inventory }) return false
+        if (!handler.webWalkTo(HardwoodGrove.GABOOTY)) return false
+        val gabooty = world.locator.findNpcs(HardwoodGrove.GABOOTY, 8) { it.id in 2519..2521 }.firstOrNull()
+            ?: return false
+        if (!handler.interactions.interact(4, gabooty)) return false
+        if (!waitFor(5.seconds) { bot.overlays.getOverlay(ShopInterface::class.java)?.shop?.name == HardwoodGrove.COOPERATIVE })
+            return false
+        val shop = bot.overlays.getOverlay(ShopInterface::class.java) ?: return false
+        try {
+            repeat(GROVE_GEM_LIMIT) {
+                if (!isActionSafe() || bot.overlays.getOverlay(ShopInterface::class.java) !== shop)
+                    return false
+                if (bot.inventory.computeAmountForId(HardwoodGrove.STICKS) >= HardwoodGrove.FEE) return true
+                val id = GROVE_GEMS.firstOrNull { it in bot.inventory } ?: return false
+                val before = bot.inventory.computeAmountForId(HardwoodGrove.STICKS)
+                if (!handler.shop.sell1(id).await() || bot.inventory.computeAmountForId(HardwoodGrove.STICKS) <= before)
+                    return false
+            }
+            return bot.inventory.computeAmountForId(HardwoodGrove.STICKS) >= HardwoodGrove.FEE
+        } finally {
+            if (bot.overlays.getOverlay(ShopInterface::class.java) === shop) bot.overlays.closeWindows()
+        }
+    }
+
+    /**
+     * Keeps admission requests bounded and lets another activity run when no owned fee source remains.
+     */
+    private fun missingGroveFee() {
+        bot.preferences.addWantedItem(HardwoodGrove.STICKS, GROVE_STOCK_TARGET)
+        stop()
     }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {

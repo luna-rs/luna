@@ -2,6 +2,7 @@ package api.bot.webwalk.generate
 
 import api.bot.webwalk.model.EdgeType
 import game.content.gnomeBall.GnomeBall
+import game.content.hardwoodGrove.HardwoodGrove
 import api.bot.webwalk.model.ItemRequirement
 import api.bot.webwalk.model.Requirements
 import api.bot.webwalk.walk.crossing.ConditionalDoorCrossing
@@ -76,6 +77,17 @@ data class CrossingSpec(val handler: String,
  * @author Hydrozoa
  */
 object SpecialCrossings {
+
+    /**
+     * Both native Tai Bwo Wannai grove leaves charge 100 carried trading sticks on entry and allow a free exit.
+     * Explicit directions retain the native west-facing wall convention instead of treating the fee as a toll.
+     */
+    val HARDWOOD_GROVE = CrossingSpec(ConditionalDoorCrossing.ID, setOf(9038, 9039),
+        requirements = Requirements(items = listOf(ItemRequirement(HardwoodGrove.STICKS, HardwoodGrove.FEE))),
+        reverseRequirements = Requirements.NONE, cost = 5,
+        placements = listOf(
+            CrossingPlacement(9038, Position(2817, 3083), Position(2816, 3083), Position(2817, 3083)),
+            CrossingPlacement(9039, Position(2817, 3084), Position(2816, 3084), Position(2817, 3084))))
 
     /**
      * The toll gate between Lumbridge and Al Kharid, which costs the same to pass either way. It takes the time to walk to
@@ -259,7 +271,7 @@ object SpecialCrossings {
     /**
      * Every spec.
      */
-    val ALL = listOf(BORDER_GATE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
+    val ALL = listOf(BORDER_GATE, HARDWOOD_GROVE, HAM_TRAPDOOR, MINING_GUILD, YANILLE_DOOR, CHAOS_DRUID_TOWER_DOOR, CRAFTING_GUILD,
                      JEWELLERS_DOOR, BRASS_KEY_DOOR, WEBS, DUSTY_KEY_GATE, TAVERLEY_PIPE, TAVERLEY_STRANGE_FLOOR,
         GNOME_BALL_GATE, GNOME_STRONGHOLD_GATE, WILDERNESS_RIDGE_IN, WILDERNESS_RIDGE_OUT, FISHING_GUILD, BARBARIAN_PIPE,
         ARDOUGNE_STILES, ZanarisCrossingSpec.ENTRY, ZanarisCrossingSpec.EXIT, ShiloVillageCrossingSpec.TRAVEL,

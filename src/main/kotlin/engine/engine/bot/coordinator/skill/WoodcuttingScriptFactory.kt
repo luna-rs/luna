@@ -18,8 +18,8 @@ import kotlin.time.Duration
  */
 object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
     /**
-     * Dedicated native routes for each supported resource. Teak and mahogany remain excluded until the hardwood
-     * grove's admission is supported; ordinary chopping never bypasses that entry requirement.
+     * Dedicated native routes for each supported resource. Hardwood sessions retain the grove's paid admission
+     * and only select it with owned trading sticks or gems accepted by Gabooty.
      */
     private val routes = mapOf(
         NORMAL to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,
@@ -27,6 +27,8 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         OAK to setOf(SubZone.WEST_VARROCK_TREES, SubZone.EAST_EDGEVILLE_TREES, SubZone.NORTH_CATHERBY_TREES,
             SubZone.LUMBRIDGE_WOODLAND),
         ACHEY to setOf(SubZone.FELDIP_ACHEY_TREES),
+        TEAK to setOf(SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE),
+        MAHOGANY to setOf(SubZone.TAI_BWO_WANNAI_HARDWOOD_GROVE),
         WILLOW to setOf(SubZone.DRAYNOR_MAIN, SubZone.WEST_DRAYNOR_WILLOWS, SubZone.CATHERBY_BEACH_WILLOWS,
             SubZone.SOUTH_ARDOUGNE_WILLOWS, SubZone.NORTH_ARDOUGNE_WILLOWS,
             SubZone.EAST_ARDOUGNE_WILLOWS, SubZone.SOUTH_YANILLE_WILLOWS,
@@ -59,7 +61,8 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
     fun getFiremakingScript(bot: Bot, firemakingLevel: Int, duration: Duration,
                             zones: MutableList<SubZone>): CutTreeBotScript {
         val options = routes.filterKeys { tree ->
-            Log.ID_TO_LOG[tree.logId]?.let { it.level <= firemakingLevel } == true
+            Log.ID_TO_LOG[tree.logId]?.let { it.level <= firemakingLevel } == true &&
+                (tree !in setOf(TEAK, MAHOGANY) || CutTreeBotScript.groveSuppliesOwned(bot))
         }.map { (tree, locations) -> BotSkillingActivity(setOf(tree), locations) }
         val activity = getBestSkillingActivity(bot, bot.woodcutting.staticLevel, { it.level }, options)
             ?: error("No Firemaking log gathering activity is available.")
@@ -75,6 +78,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         val trees = if (training) trainingTrees(bot, level) else profitTrees(bot, level)
         val activities = ArrayList<BotSkillingActivity<Tree>>()
         for (tree in trees) {
+            if (tree in setOf(TEAK, MAHOGANY) && !CutTreeBotScript.groveSuppliesOwned(bot)) continue
             activities.add(BotSkillingActivity(tokens = setOf(tree), zones = routes.getValue(tree)))
         }
         val activity = getBestSkillingActivity(bot, level, { it.level }, activities)
@@ -95,7 +99,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
             return setOf(WILLOW)
         }
         if (!bot.personality.isDumb) {
-            return setOf(WILLOW, MAPLE)
+            return setOf(WILLOW, TEAK, MAPLE, MAHOGANY)
         }
         return routes.keys
     }
@@ -109,7 +113,7 @@ object WoodcuttingScriptFactory : SkillingScriptFactory(SKILL_WOODCUTTING) {
         }
         val trees = linkedSetOf<Tree>()
         if (level < YEW.level) {
-            trees.addAll(setOf(WILLOW, MAPLE))
+            trees.addAll(setOf(WILLOW, TEAK, MAPLE, MAHOGANY))
             if (bot.personality.isDumb) {
                 trees.add(OAK)
             }
