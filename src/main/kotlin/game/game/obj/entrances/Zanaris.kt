@@ -1,5 +1,6 @@
 package game.obj.entrances
 
+import game.content.lostCity.LostCity
 import game.obj.doors.DoorPassageAction
 import game.obj.doors.DoorType
 import game.skill.magic.teleportSpells.TeleportAction
@@ -67,7 +68,6 @@ object Zanaris {
 
         override fun onPassage(entering: Boolean) {
             if (!entering && mob.equipment[Equipment.WEAPON]?.id == STAFF) {
-                // TODO Complete Lost City here once its staff-making stage and quest rewards are implemented.
                 mob.submitAction(ShedTeleport(mob))
             }
         }
@@ -90,6 +90,10 @@ object Zanaris {
             // The queued door step runs before this action's first tick.
             if (executions == 0) mob.walking.clear()
             return super.run()
+        }
+
+        override fun onLand() {
+            LostCity.complete(mob)
         }
     }
 }

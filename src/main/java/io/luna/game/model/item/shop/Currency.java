@@ -32,7 +32,12 @@ public enum Currency {
     /**
      * Agility Arena ticket currency.
      */
-    AGILITY_ARENA_TICKETS(2996);
+    AGILITY_ARENA_TICKETS(2996),
+
+    /**
+     * Tai Bwo Wannai trading sticks.
+     */
+    TRADING_STICKS(6306);
 
     /**
      * An immutable set of all currency item identifiers.

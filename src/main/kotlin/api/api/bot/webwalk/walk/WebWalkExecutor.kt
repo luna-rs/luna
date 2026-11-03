@@ -252,6 +252,9 @@ class WebWalkExecutor(private val bot: Bot,
         if (!handler.interactions.interactOnLeg(option, obj)) {
             return "could not reach the object $id at $position"
         }
+        if (EntranaCaveWarning.handles(id, position, name)) {
+            return EntranaCaveWarning.enter(context, leg)
+        }
         if (leg.type == EdgeType.ENTRANCE) {
             // An entrance's "Climb" doesn't ask which way, and some only move the bot a few tiles.
             return if (context.awaitArrival(leg, context.landingSlack(leg))) null else
