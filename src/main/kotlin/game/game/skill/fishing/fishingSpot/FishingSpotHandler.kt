@@ -26,17 +26,27 @@
  */
 package game.skill.fishing.fishingSpot
 
+import api.predef.ext.scheduleOnce
+import api.predef.ext.addItem
+
 import api.predef.*
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
+import game.content.randomEvents.RandomEventDelay
 import game.player.Sound
 import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
 import io.luna.game.model.EntityState
+import io.luna.game.model.LocalGraphic
+import io.luna.game.model.LocalProjectile
+import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.PlayerAppearance
+import io.luna.game.model.path.route.LineOfSight
 import io.luna.game.task.Task
 
 /**
@@ -98,6 +108,80 @@ object FishingSpotHandler : Task(false, 1) {
         npc.transform(hazardId)
         player.playSound(Sound.WHIRLPOOL)
         return true
+    }
+
+    /**
+     * Lost City's Big Fish briefly transforms the existing spot, knocks the selected carried tool onto reachable
+     * ground and then restores the ordinary spot. Its guessed source sounds and unresolved disappearance animation
+     * remain source limitations; no later-revision behavior is substituted. The recovered tool stays genuinely owned.
+     */
+    fun startBigFish(player: Player, npc: Npc, spot: FishingSpot, tool: Tool): Boolean {
+        if (npc.state != EntityState.ACTIVE || npc.id !in spot.npcs || npc in whirlpools ||
+            !player.inventory.contains(tool.id)) return false
+        val delay = RandomEventDelay.start(player, 10) ?: return false
+        val state = Whirlpool(npc.id, 390, npc.isWandering, world.currentTick + 5)
+        try {
+            whirlpools[npc] = state
+            npc.walking.clear()
+            npc.navigator.cancel()
+            npc.isWandering = false
+            npc.transform(390)
+            player.playSound(Sound.WATERSPLASH)
+            delay.after(1) {
+                if (npc.state != EntityState.ACTIVE || whirlpools[npc] !== state) {
+                    delay.close()
+                    return@after
+                }
+                npc.animation(Animation(3))
+                if (player.state == EntityState.ACTIVE && player.isAlive) {
+                    player.animation(Animation(424))
+                    val hits = if (player.appearance[PlayerAppearance.GENDER] == PlayerAppearance.GENDER_MALE)
+                        listOf(Sound.HUMAN_HIT2, Sound.HUMAN_HIT3, Sound.HUMAN_HIT4)
+                    else listOf(Sound.FEMALE_HIT, Sound.FEMALE_HIT2)
+                    player.playSound(hits.random())
+                }
+            }
+            delay.after(4) {
+                if (npc.state != EntityState.ACTIVE || whirlpools[npc] !== state) {
+                    delay.close()
+                    return@after
+                }
+                npc.animation(Animation(5))
+            }
+            delay.after(5) {
+                val ownedForm = whirlpools[npc] === state ||
+                    world.currentTick >= state.expiresAt && npc.id == state.originalId
+                if (!ownedForm || npc.state != EntityState.ACTIVE || player.state != EntityState.ACTIVE ||
+                    !player.isAlive || !player.inventory.contains(tool.id)) {
+                    delay.close()
+                    return@after
+                }
+                val from = player.position
+                val candidates = (-7..7).flatMap { x -> (-7..7).map { y -> from.translate(x, y) } }.filter {
+                    it != from && from.isWithinDistance(it, 7) && !world.collisionManager.isBlocked(it, false) &&
+                        LineOfSight.hasLineOfWalk(world.collisionManager.view(false), it.z,
+                            from.x, from.y, it.x, it.y, 1, 1, 1, 1, 0)
+                }
+                val landing = candidates.randomOrNull() ?: from
+                val cycles = 15 + from.computeLongestDistance(landing) * 10
+                player.playSound(Sound.WATERSTRIKE_HIT)
+                LocalProjectile.followPath(player.context).setSourcePosition(from).setTargetPosition(landing)
+                    .setId(94).setStartHeight(0).setEndHeight(0).setTiming(20, cycles)
+                    .setInitialSlope(16).setLaunchOffset(64).build().display()
+                delay.after(RandomEventDelay.projectileTicks(cycles, 30)) {
+                    if (player.inventory.remove(Item(tool.id))) {
+                        val dropped = world.addItem(tool.id, 1, landing, player)
+                        world.scheduleOnce(100) { world.items.expire(dropped) }
+                        LocalGraphic(player.context, 85, 94, 30, npc.position, ChunkUpdatableView.globalView()).display()
+                    }
+                    delay.after(1) { delay.close() }
+                }
+            }
+            return true
+        } catch (failure: Throwable) {
+            delay.close()
+            throw failure
+        }
     }
 
     /**
@@ -163,7 +247,7 @@ object FishingSpotHandler : Task(false, 1) {
             loaded = true
         }
         for (spot in movingSpots) {
-            if (spot.npc.state != EntityState.ACTIVE || isWhirlpool(spot.npc)) continue
+            if (spot.npc.state != EntityState.ACTIVE || spot.npc in whirlpools || isWhirlpool(spot.npc)) continue
             if (--spot.countdown <= 0) {
                 move(spot)
                 spot.countdown = MOVE_INTERVAL.random()

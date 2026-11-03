@@ -36,6 +36,7 @@ import game.content.duelArena.DuelArena
 import game.content.fishingTrawler.FishingTrawler
 import game.content.gnomeBall.GnomeBall
 import game.skill.fishing.catchFish.FishingSpot
+import game.skill.fishing.catchFish.Tool
 import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.mining.Pickaxe
@@ -248,21 +249,33 @@ object RandomEvents {
     /**
      * Offers the source fishing pool with its live spot. A whirlpool transforms that shared NPC,
      * rather than owning a personal visitor slot. River trolls use their owner-bound combat lifecycle;
-     * the big fish outcome remains unimplemented.
+     * Big Fish transforms that spot and knocks the actual selected tool onto nearby ground.
      * Existing whirlpools do not consume another readiness flag when a player clicks them again.
      */
     fun offerFishing(player: Player, npc: Npc, spot: FishingSpot): Boolean =
         offerFishing(player, npc, spot) { Random.nextInt(it) }
 
     /**
+     * Retains the chosen option's actual tool, including two different tools on the same fishing spot.
+     */
+    fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, tool: Tool): Boolean =
+        offerFishing(player, npc, spot, tool) { Random.nextInt(it) }
+
+    /**
      * Resolves one fishing outcome after shared eligibility, preserving both source random rolls.
      * Unavailable and unimplemented outcomes consume readiness without a replacement roll.
      */
-    internal fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, random: (Int) -> Int): Boolean {
+    internal fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, random: (Int) -> Int): Boolean =
+        offerFishing(player, npc, spot, spot.firstOption, random)
+
+    /**
+     * Resolves the contextual tool through the source's three fishing hazard slots.
+     */
+    internal fun offerFishing(player: Player, npc: Npc, spot: FishingSpot, tool: Tool?, random: (Int) -> Int): Boolean {
         if (npc.state != EntityState.ACTIVE || npc.id !in spot.npcs || spot.whirlpoolId == null) return false
         return offerOutcome(player) {
             when (random(9)) {
-                0 -> false
+                0 -> tool != null && FishingSpotHandler.startBigFish(player, npc, spot, tool)
                 1 -> startRiverTroll(player)
                 2 -> FishingSpotHandler.startWhirlpool(player, npc, spot)
                 else -> {

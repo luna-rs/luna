@@ -81,7 +81,7 @@ class CatchFishAction(plr: Player,
     private var nextRoll = tool.firstRoll
 
     override fun onSubmit() {
-        if (canFish() && !(target is Npc && RandomEvents.offerFishing(mob, target, spot))) {
+        if (canFish() && !(target is Npc && RandomEvents.offerFishing(mob, target, spot, tool))) {
             mob.walking.clear()
             mob.interact(target)
         } else {
