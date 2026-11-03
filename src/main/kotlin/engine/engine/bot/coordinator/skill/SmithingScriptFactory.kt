@@ -19,6 +19,7 @@ import io.luna.game.model.mob.bot.Bot
  * Other training sessions prefer level-appropriate equipment, then smelting. Other profit sessions prefer
  * higher-value smithable items, then smelting. Cannonball selection requires permanent level 35 and owned
  * supplies; the script rechecks current level and inventory requirements before each player interaction.
+ * Nails, steel studs, and lantern frames join fresh training and profit choices through the same native anvil script.
  *
  * @author lare96
  */
@@ -38,6 +39,9 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         SmithingTable.PLATELEGS,
         SmithingTable.PLATEBODY,
         SmithingTable.ARROWTIPS,
+        SmithingTable.NAILS,
+        SmithingTable.STUDS,
+        SmithingTable.LANTERN_FRAME,
         SmithingTable.KITESHIELD,
         SmithingTable.AXE
     ).flatMap { it.items }
@@ -57,6 +61,9 @@ object SmithingScriptFactory : SkillingScriptFactory(SKILL_SMITHING) {
         SmithingTable.MACE,
         SmithingTable.SWORD,
         SmithingTable.DART_TIP,
+        SmithingTable.NAILS,
+        SmithingTable.STUDS,
+        SmithingTable.LANTERN_FRAME,
         SmithingTable.SCIMITAR,
         SmithingTable.ARROWTIPS,
         SmithingTable.LONGSWORD,
