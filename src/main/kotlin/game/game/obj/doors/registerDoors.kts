@@ -7,6 +7,8 @@ import io.luna.game.model.`object`.*
 import java.nio.file.Paths
 
 // Load the door files on server launch. Handlers are registered once each file has been parsed, on the game thread.
+// TODO Restore Mourning's Ends quest, disguise and New key checks for 8786..8789 when those quests exist.
+// The temporary ordinary doors grant no quest state; disguise-triggered hostility is also deferred to the quests.
 on(ServerLaunchEvent::class) {
     val files = mapOf(Doors.Kind.SINGLE to "doors.json",
                       Doors.Kind.DOUBLE to "double_doors.json",

@@ -8,8 +8,8 @@ import io.luna.game.model.mob.Player
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Activates a real carried spade at a legal native Mole hill. Existing spade and darkness handlers alone
- * perform the fall, so losing the light/tool or another native dig result cannot fabricate lair admission.
+ * Activates a real carried spade at a legal native Mole hill through the ordinary digging handler.
+ * Bots prepare a working light for the lair; players may enter without one and face its darkness effects.
  *
  * @author lare96
  */
@@ -19,7 +19,7 @@ object MoleCrossing : CrossingHandler {
     const val LIGHT_READY = "mole_light_ready"
 
     /**
-     * Matches native darkness admission; a carried or worn light must actually emit brightness.
+     * Keeps bot travel prepared for darkness with a carried or worn light that actually emits brightness.
      */
     fun lightReady(player: Player): Boolean = LightSource.brightness(player) > 0
 

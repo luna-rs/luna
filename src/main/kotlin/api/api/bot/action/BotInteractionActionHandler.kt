@@ -3,6 +3,8 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import engine.bank.Banking
 import game.skill.runecrafting.enterAltar.Altar
+import game.obj.entrances.PortPhasmatysBarrier
+import game.obj.doors.ArdougneWallDoors
 import io.luna.game.model.mob.bot.Bot
 import api.predef.*
 import io.luna.game.model.Entity
@@ -66,6 +68,8 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
     internal fun interactionPolicy(option: Int, target: Entity): InteractionPolicy = when {
         target is GroundItem && option == 1 -> InteractionPolicy.GROUND_ITEM_PICKUP_BIF.apply(bot, target)
         target is GameObject && option == 1 && target.id == Altar.WATER.portal -> Altar.WATER.portalPolicy
+        target is GameObject && option == 1 && target.id == PortPhasmatysBarrier.ID -> PortPhasmatysBarrier.POLICY
+        target is GameObject && option == 1 && target.id in ArdougneWallDoors.IDS -> ArdougneWallDoors.POLICY
         combatClick(option, target) -> bot.combat.getDefaultAttack(target as Npc)?.interactionPolicy
             ?: InteractionPolicy.STANDARD_SIZE
         target is Npc && option in 1..2 && target.id in Banking.bankingNpcs -> Banking.BANKER_POLICY

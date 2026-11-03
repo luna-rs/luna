@@ -36,6 +36,10 @@ fun Player.digWithSpade(spot: SpadeDigSpot?) {
         sendMessage("Nothing interesting happens.")
         return
     }
+    if (spot == SpadeDigSpot.FALADOR_MOLE_HILLS) {
+        MoleEntrance.enter(this)
+        return
+    }
     if (spot.dark && LightSource.brightness(this) == 0) {
         sendMessage("It's going to be dark down there, I should bring a light source.")
         return

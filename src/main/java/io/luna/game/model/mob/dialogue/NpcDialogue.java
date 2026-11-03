@@ -6,6 +6,8 @@ import io.luna.net.msg.out.WidgetAnimationMessageWriter;
 import io.luna.net.msg.out.WidgetMobModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
+import java.util.List;
+
 /**
  * A {@link DialogueInterface} that opens a dialogue with text and an NPC head model.
  *
@@ -78,6 +80,15 @@ public final class NpcDialogue extends DialogueInterface {
      */
     public int getNpcId() {
         return npcId;
+    }
+
+    /**
+     * Returns the displayed lines so dialogue consumers can verify the conversation before advancing it.
+     *
+     * @return An immutable view of the dialogue text.
+     */
+    public List<String> getText() {
+        return List.of(text);
     }
 
     @Override

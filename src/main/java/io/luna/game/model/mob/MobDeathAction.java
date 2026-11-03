@@ -4,6 +4,7 @@ import api.combat.death.DeathHookHandler;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
+import io.luna.game.action.DeathInterruptible;
 import io.luna.game.model.World;
 import io.luna.game.task.Task;
 import org.apache.logging.log4j.LogManager;
@@ -86,6 +87,8 @@ public final class MobDeathAction extends Action<Mob> {
     @Override
     public void onSubmit() {
         victim.getActions().getAll(TeleportAction.class).forEach(Action::interrupt);
+        victim.getActions().getAll(Action.class).stream()
+                .filter(action -> action instanceof DeathInterruptible).forEach(Action::interrupt);
         victim.getWalking().clear();
         victim.interact(null);
     }

@@ -55,6 +55,11 @@ public final class BotReflex {
     private boolean disableCombatReflex;
 
     /**
+     * Whether a running interaction owns dialogue continuation instead of the automatic reflex.
+     */
+    private boolean disableDialogueReflex;
+
+    /**
      * Processes this bot's reflex layer for one tick.
      * <p>
      * Active custom reflex scripts take priority. If one is already running, all other reflex checks are skipped until it
@@ -100,8 +105,8 @@ public final class BotReflex {
         }
 
         // Automatically progress dialogue interfaces.
-        if (bot.getOverlays().has(NpcDialogue.class) || bot.getOverlays().has(PlayerDialogue.class) ||
-                bot.getOverlays().has(TextDialogue.class)) {
+        if (!disableDialogueReflex && (bot.getOverlays().has(NpcDialogue.class) ||
+                bot.getOverlays().has(PlayerDialogue.class) || bot.getOverlays().has(TextDialogue.class))) {
             bot.getOutput().sendContinueDialogue();
             bot.log("Reflex [continue dialogue] triggered.");
             return false;
@@ -176,6 +181,21 @@ public final class BotReflex {
      */
     public void setDisableCombatReflex(boolean disableCombatReflex) {
         this.disableCombatReflex = disableCombatReflex;
+    }
+
+    /**
+     * @return Whether an interaction currently owns dialogue continuation.
+     */
+    public boolean isDisableDialogueReflex() {
+        return disableDialogueReflex;
+    }
+
+    /**
+     * Temporarily delegates dialogue continuation to an interaction that validates its own pages.
+     * Callers must restore the previous setting when the interaction finishes or is cancelled.
+     */
+    public void setDisableDialogueReflex(boolean disableDialogueReflex) {
+        this.disableDialogueReflex = disableDialogueReflex;
     }
 
     /**

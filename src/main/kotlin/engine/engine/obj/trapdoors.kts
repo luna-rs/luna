@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import engine.obj.TrapdoorLanding.Companion.BELOW
 import engine.obj.TrapdoorLanding.Companion.floorsDown
+import game.obj.entrances.MournerBasement
 import game.player.Sound
 import game.skill.Skills
 import io.luna.game.action.impl.LockedAction
@@ -363,11 +364,11 @@ object1(5055) {
 }
 
 // West Ardougne, the Mourner Headquarters' basement (Mourning's End Part I). It swings open as it's used.
-object1(8783) {
+object1(MournerBasement.CLOSED) {
     plr.animation(BEND_DOWN)
     plr.playSound(Sound.DOOR_OPEN)
-    change(gameObject, 8784, 5)
-    climbDown(plr, Position(2044, 4649), message = null, bend = false, delay = 2)
+    change(gameObject, MournerBasement.OPEN, 5)
+    climbDown(plr, MournerBasement.LANDING, message = null, bend = false, delay = 2)
 }
 
 // Tree Gnome Stronghold, the trapdoors into the Grand Tree's tunnels (The Grand Tree). They swing open as they're used.

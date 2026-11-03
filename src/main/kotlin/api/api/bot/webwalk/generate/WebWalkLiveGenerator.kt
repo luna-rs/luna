@@ -262,6 +262,8 @@ object WebWalkLiveGenerator {
         climbs += GliderRouteGenerator.gather(report)
         climbs += ContextualItemRouteGenerator.gather(report)
         climbs += MoleRouteGenerator.gather(report)
+        climbs += MournerBasementRouteGenerator.gather(report)
+        climbs += NativeVoyageRouteGenerator.gather(report, ::standableNear)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)
@@ -489,7 +491,7 @@ object WebWalkLiveGenerator {
 
         val crossings = ArrayList<Pair<Position, Position>>()
         var unstandable: Position? = null
-        val stands = if (entrance.useFrom.isEmpty()) climbingTiles(obj) else entrance.useFrom.filter { from ->
+        val stands = if (entrance.useFrom.isEmpty()) EntranceStands.of(obj).sortedWith(LANDING_ORDER) else entrance.useFrom.filter { from ->
             LadderDestination.canLand(from) &&
                 world.collisionManager.reached(from, obj, InteractionPolicy.STANDARD_SIZE)
         }

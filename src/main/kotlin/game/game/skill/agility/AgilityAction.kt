@@ -76,7 +76,7 @@ data class AgilitySound(val sound: Sound, val tick: Int = 0, val loops: Int = 1,
  *
  * @author lare96
  */
-class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
+open class AgilityAction(plr: Player, private val steps: List<AgilityStep>,
                     internal val message: String?,
                     private val start: () -> Unit = {},
                     private val endMessage: String? = null,

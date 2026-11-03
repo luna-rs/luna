@@ -3,6 +3,8 @@ package io.luna.game.model.mob.dialogue;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
+import java.util.List;
+
 /**
  * A {@link DialogueInterface} that opens a dialogue with text and no head model.
  *
@@ -23,6 +25,15 @@ public final class TextDialogue extends DialogueInterface {
     public TextDialogue(String... text) {
         super(DialogueUtils.textDialogue(text.length));
         this.text = text;
+    }
+
+    /**
+     * Returns the displayed lines so dialogue consumers can verify a pending confirmation.
+     *
+     * @return An immutable view of the dialogue text.
+     */
+    public List<String> getText() {
+        return List.of(text);
     }
 
     @Override

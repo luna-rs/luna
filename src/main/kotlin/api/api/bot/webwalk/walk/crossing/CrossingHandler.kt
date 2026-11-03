@@ -62,7 +62,9 @@ object CrossingHandlers {
                                                                PaterdomusGateCrossing.ID to PaterdomusGateCrossing,
                                                                TrollClimbingCrossing.ID to TrollClimbingCrossing,
                                                                KharaziJungleCrossing.ID to KharaziJungleCrossing,
-                                                               MoleCrossing.ID to MoleCrossing)
+                                                               MoleCrossing.ID to MoleCrossing,
+                                                               NativeVoyageCrossing.ID to NativeVoyageCrossing,
+                                                               NativeAccessCrossing.ID to NativeAccessCrossing)
 
     /**
      * The names of every handler.

@@ -278,7 +278,8 @@ object SpecialCrossings {
         PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
         ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES) +
         ProductionAccessCrossingSpec.ALL + SubzoneEntranceSpec.ALL + LighthouseBridgeSpec.ALL +
-        PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC + KharaziJungleCrossingSpec.SPEC
+        PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC +
+        KharaziJungleCrossingSpec.SPEC + NativeAccessCrossingSpec.ALL
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].

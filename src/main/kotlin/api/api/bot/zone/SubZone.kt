@@ -1829,8 +1829,8 @@ enum class SubZone(
         parent = { GNOME_STRONGHOLD }),
 
     /**
-     * Eight willows line the lake in northern Gnome Stronghold. The nearby woodland provides the normal
-     * chopping stands.
+     * Eight willows occupy the sealed northern Stronghold forest. This enum remains for saved sessions,
+     * but the revision377 area has no accessible entrance and is excluded from bot activities.
      */
     GNOME_STRONGHOLD_NORTH_WILLOWS(
         inside = Position(2478, 3538),
@@ -3008,6 +3008,8 @@ enum class SubZone(
      * @return Why [bot] can't get in, or `null` if nothing stops it.
      */
     fun entryBlocker(bot: Bot): String? = when (this) {
+        GNOME_STRONGHOLD_NORTH_WILLOWS -> "the northern Stronghold willow forest has no accessible entrance"
+
         CHAOS_DRUID_TOWER, CHAOS_DRUID_TOWER_DUNGEON ->
             if (bot.thieving.level < ChaosDruidTowerDoorAction.REQUIRED_LEVEL &&
                 CHAOS_DRUID_TOWER !in bot.subZones && CHAOS_DRUID_TOWER_DUNGEON !in bot.subZones

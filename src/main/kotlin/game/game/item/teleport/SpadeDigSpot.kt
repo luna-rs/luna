@@ -25,7 +25,7 @@ enum class SpadeDigSpot(val landing: Position, private vararg val areas: Area, v
     // Every mole hill comes out at the same spot, under the hole in the lair's roof.
     FALADOR_MOLE_HILLS(Position(1752, 5237), tile(2984, 3387), tile(2987, 3387), tile(2989, 3378),
                        tile(2996, 3377), tile(2999, 3375), tile(3005, 3376),
-                       arrival = "You seem to have dropped down into a network of mole tunnels.", dark = true);
+                       arrival = "You seem to have dropped down into a network of mole tunnels.");
 
     /**
      * Native legal surface tiles for read-only route generation. Activation still rechecks [forPosition].
