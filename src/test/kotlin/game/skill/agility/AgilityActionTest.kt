@@ -51,7 +51,7 @@ class AgilityActionTest {
         doAnswer {
             paths += it.getArgument<Deque<Position>>(0).toList()
             null
-        }.`when`(walking).replacePath(any())
+        }.`when`(walking).replaceForcedPath(any())
     }
 
     private fun tick() {
