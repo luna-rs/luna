@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import io.luna.Luna;
 import io.luna.util.StringUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -22,8 +23,8 @@ public enum PlayerRights {
 
     /**
      * Resolves the existing connected-player login policy before constructing the final player entity.
-     * Saved rights take precedence over new-account beta and whitelist defaults. The existing owner
-     * account rule applies to both new and saved accounts.
+     * Saved rights take precedence over new-account beta and whitelist defaults. Configured developer
+     * accounts receive developer rights for both new and saved accounts.
      *
      * @param username The normalized account name.
      * @param savedRights Saved rights, or null for a new account.
@@ -32,7 +33,8 @@ public enum PlayerRights {
      * @return The effective rights for this human login.
      */
     public static PlayerRights forLogin(String username, PlayerRights savedRights, boolean betaMode, boolean whitelisted) {
-        if ("lare96".equals(username)) return DEVELOPER;
+        if (Luna.settings().game().developerUsernames().stream()
+                .anyMatch(name -> name != null && name.equalsIgnoreCase(username))) return DEVELOPER;
         if (savedRights != null) return savedRights;
         return betaMode || whitelisted ? DEVELOPER : PLAYER;
     }

@@ -6,6 +6,8 @@ import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.GroundItem;
 import io.netty.util.ResourceLeakDetector.Level;
 
+import java.util.List;
+
 /**
  * Settings parsed from the {@code "game"} section of {@code ./data/luna.json}.
  * <p>
@@ -82,6 +84,11 @@ public final class GameSettings {
     private final LunaRuntime runtimeMode;
 
     /**
+     * Account names that always receive developer rights at login.
+     */
+    private final List<String> developerUsernames;
+
+    /**
      * TCP port the server binds to.
      */
     private final int port;
@@ -120,6 +127,13 @@ public final class GameSettings {
      * How frequent the auto-save script should run. <= 0 means it will not run.
      */
     private final int autosaveMinutes;
+
+    /**
+     * Returns the account names granted developer rights, matched without regard to case.
+     */
+    public List<String> developerUsernames() {
+        return developerUsernames == null ? List.of() : developerUsernames;
+    }
 
     /**
      * Returns the TCP port that the server will bind on.
@@ -233,11 +247,12 @@ public final class GameSettings {
     /**
      * Private constructor for JSON deserialization.
      */
-    private GameSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
-                         double experienceMultiplier, String serializer, PasswordStrength passwordStrength,
+    private GameSettings(LunaRuntime runtimeMode, List<String> developerUsernames, int port, int connectionLimit,
+                         Position startingPosition, double experienceMultiplier, String serializer, PasswordStrength passwordStrength,
                          boolean mergeStackableGroundItems, int autosaveMinutes) {
         // Will never be called directly.
         this.runtimeMode = runtimeMode;
+        this.developerUsernames = developerUsernames;
         this.port = port;
         this.connectionLimit = connectionLimit;
         this.startingPosition = startingPosition;
