@@ -1036,6 +1036,24 @@ enum class SubZone(
         parent = { CANIFIS }, bankZone = { PORT_PHASMATYS }),
 
     /**
+     * Western Lumbridge Swamp Cave pool with one bait-fishing spot for slimy and cave eels. Cave trips require
+     * an owned enclosed light and the entrance's personal rope state or a carried rope.
+     */
+    LUMBRIDGE_WEST_CAVE_EEL_FISHING(
+        inside = Position(3155, 9544),
+        area = SimpleBoxArea.of(3147, 9539, 3161, 9552),
+        parent = { LUMBRIDGE }),
+
+    /**
+     * Eastern Lumbridge Swamp Cave pool, containing the second native bait-fishing spot for cave and slimy eels.
+     * The west-bank arrival avoids the pool; the same enclosed-light admission applies as at the western pool.
+     */
+    LUMBRIDGE_EAST_CAVE_EEL_FISHING(
+        inside = Position(3244, 9570),
+        area = SimpleBoxArea.of(3238, 9564, 3253, 9577),
+        parent = { LUMBRIDGE }),
+
+    /**
      * The karambwan spots on northeast Karamja, north of the shipyard.
      */
     KARAMJA_KARAMBWAN_FISHING(

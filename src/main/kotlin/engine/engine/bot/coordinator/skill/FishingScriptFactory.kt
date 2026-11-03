@@ -5,6 +5,9 @@ import api.bot.zone.SubZone
 import api.predef.*
 import game.bot.scripts.skills.FishBotScript
 import game.skill.fishing.catchFish.Tool
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
+import game.bot.scripts.GiantMoleTrip
+import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import game.skill.fishing.catchFish.Tool.*
 import io.luna.game.model.mob.bot.Bot
 
@@ -155,10 +158,12 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         ),
 
         /**
-         * Native pond bait and swamp eels.
+         * Native pond bait, swamp eels and lit-cave eels.
          */
         KARAMBWANJI(setOf(KARAMBWANJI_NET), zones = { mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING) }),
-        SLIMY_EEL(setOf(SLIMY_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.MORT_MYRE_SLIMY_EEL_FISHING) })
+        SLIMY_EEL(setOf(SLIMY_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.MORT_MYRE_SLIMY_EEL_FISHING) }),
+        CAVE_EEL(setOf(CAVE_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.LUMBRIDGE_WEST_CAVE_EEL_FISHING,
+            SubZone.LUMBRIDGE_EAST_CAVE_EEL_FISHING) })
     }
 
     /**
@@ -179,7 +184,13 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         level: Int,
         zones: MutableList<SubZone>
     ): BotScript {
-        val activities = BOT_TOOLS.map { tool ->
+        val activities = BOT_TOOLS.filter { tool ->
+            when (tool) {
+                CAVE_EEL_FISHING_ROD -> GiantMoleTrip.lightOwned(bot) &&
+                    (bot.swampCavesRoped || bot.itemTracker.contains(954))
+                else -> true
+            }
+        }.map { tool ->
             BotSkillingActivity(tokens = setOf(tool), zones = getZones(bot, tool).toSet())
         }
         val activity = getBestSkillingActivity(bot, level, { it.level }, activities)

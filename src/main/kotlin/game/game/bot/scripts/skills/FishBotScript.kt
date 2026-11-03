@@ -12,6 +12,7 @@ import api.predef.*
 import com.google.common.collect.ImmutableSetMultimap
 import com.google.gson.JsonObject
 import engine.bot.coordinator.skill.CookingScriptFactory
+import game.bot.scripts.GiantMoleTrip
 import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.fishing.catchFish.Fish
 import game.skill.fishing.catchFish.CatchFishAction
@@ -19,6 +20,7 @@ import game.skill.fishing.catchFish.FishingSpot
 import game.skill.fishing.catchFish.Tool
 import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.content.sailing.Entrana
+import game.obj.entrances.SwampCaveEntrance.swampCavesRoped
 import game.bot.scripts.RandomEventReflexScript
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
@@ -173,6 +175,8 @@ class FishBotScript(
 
     private var continuationQueued = false
 
+    private val caveFishing = selectedTool == Tool.CAVE_EEL_FISHING_ROD
+
     /**
      * One ignore decision per live whirlpool. Weak keys do not retain removed fishing NPCs.
      * A later transformation of the same NPC receives a new decision through its expiry token.
@@ -211,10 +215,17 @@ class FishBotScript(
     }
 
     override fun requirements(): Boolean {
-        return fishingSpotIds.value.isNotEmpty()
+        return fishingSpotIds.value.isNotEmpty() && (!caveFishing || GiantMoleTrip.lightOwned(bot))
     }
 
     override suspend fun onBankOpenSkilling(initial: Boolean) {
+        if (caveFishing) {
+            if (!GiantMoleTrip.collectLight(bot) || !bot.swampCavesRoped &&
+                (!handler.banking.withdraw(Item(954)) || 954 !in bot.inventory)) {
+                stop()
+                return
+            }
+        }
         val baitId = baitId ?: return
 
         if (baitId !in bot.itemTracker) {
@@ -235,6 +246,8 @@ class FishBotScript(
     }
 
     override suspend fun beforeZoneWork(): Boolean {
+        if (caveFishing && !GiantMoleTrip.lightCarried(bot) && !GiantMoleTrip.ensureLight(bot)) forceBanking = true
+        if (caveFishing && !bot.swampCavesRoped && 954 !in bot.inventory) forceBanking = true
         if (baitId != null && baitId !in bot.inventory &&
             !(selectedTool == Tool.KARAMBWAN_VESSEL && selectedTool.id in bot.inventory)) forceBanking = true
         return false
@@ -242,6 +255,7 @@ class FishBotScript(
 
     override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean {
         if (zone == SubZone.FISHING_GUILD && bot.fishing.level < FISHING_GUILD_LEVEL) return false
+        if (caveFishing && (!GiantMoleTrip.ensureLight(bot) || !bot.swampCavesRoped && 954 !in bot.inventory)) return false
         if (zone in setOf(SubZone.ENTRANA_SEA_FISHING, SubZone.ENTRANA_RIVER_SOUTH_FISHING,
                 SubZone.ENTRANA_RIVER_NORTH_FISHING) && Entrana.isCarryingForbidden(bot)) return false
         return super.travelToWorkZone(zone, bank)
