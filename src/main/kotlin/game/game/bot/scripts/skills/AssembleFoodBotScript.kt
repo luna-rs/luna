@@ -22,15 +22,17 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Assembles validated food recipes using owned input pairs and the existing player make dialogue.
+ * Assembles validated food recipes using owned ingredients and the existing player make dialogue.
  *
  * Supports plain-pizza assembly and toppings, chocolate cakes, milky nettle tea, pie shells, and all implemented
  * pie assembly stages, initial stew and nettle-water preparation, tea pouring, both stew completion paths,
  * and curry preparation. Cooking
  * requirements range from level 1 to 95. Meat, anchovy, and pineapple toppings award 26, 39, and 45 Cooking XP
  * respectively; chocolate cakes award 30 XP at level 50, while plain-pizza and pie assembly award none.
- * Chocolate bars and chocolate dust are interchangeable secondary inputs. Each step uses two inputs and creates
- * a product, plus an empty container when water or milk is used. Milky nettle tea requires level 20 and combines
+ * Chocolate bars and chocolate dust are interchangeable secondary inputs. Most steps use two inputs and create
+ * a product, plus an empty container when water or milk is used. Raw cakes use a cake tin, egg, milk, and flour;
+ * the native action returns an empty bucket and pot while retaining the tin in the raw cake.
+ * Milky nettle tea requires level 20 and combines
  * an existing bowl of tea with one bucket of milk, returning the bucket and awarding no XP.
  * [PrepareFoodActionItem] owns ordinary conversions and returns. Wine uses [MakeWineActionItem], which
  * combines grapes and a jug of water at level 35. Fourteen pairs produce fourteen dynamic unfermented wines;
@@ -48,7 +50,7 @@ import kotlin.time.Duration.Companion.seconds
  * Alternative meat, compost, and water inputs are selected explicitly. No recipe expands its inventory footprint.
  *
  * [InventoryBotScript] handles banking, travel, session expiry, and weak-action gating. Each bank batch contains
- * up to fourteen balanced pairs, or seven stews and twenty-one curry leaves. Missing startup ingredients request
+ * up to fourteen balanced pairs, seven complete cake sets, or seven stews and twenty-one curry leaves. Missing startup ingredients request
  * total stock targets of 1,000. Three failed
  * interactions or unresolved bank requests stop the script; snapshots preserve the recipe and retry budgets.
  * Missing water can queue the reusable filling prerequisite from owned containers. Non-training Cooking selects
@@ -72,11 +74,13 @@ class AssembleFoodBotScript(
     override val verifiedProductionWithdrawals = true
 
     companion object {
-        /** Validated two-input recipes whose outputs fit within their input inventory footprint. */
+        /**
+         * Validated recipes whose outputs fit within their input inventory footprint.
+         */
         val RECIPES = setOf(
             IncompleteFood.INCOMPLETE_PIZZA, IncompleteFood.UNCOOKED_PLAIN_PIZZA,
             IncompleteFood.MEAT_PIZZA, IncompleteFood.ANCHOVY_PIZZA, IncompleteFood.PINEAPPLE_PIZZA,
-            IncompleteFood.CHOCOLATE_CAKE, IncompleteFood.UNFERMENTED_WINE,
+            IncompleteFood.UNCOOKED_CAKE, IncompleteFood.CHOCOLATE_CAKE, IncompleteFood.UNFERMENTED_WINE,
             IncompleteFood.MILKY_NETTLE_TEA,
             IncompleteFood.CUP_OF_NETTLE_TEA,
             IncompleteFood.CUP_OF_MILKY_NETTLE_TEA,
@@ -128,8 +132,15 @@ class AssembleFoodBotScript(
     val requiredLevel = food.lvl
     /** Secondary quantity consumed by the player action: three curry leaves, or one of any other ingredient. */
     val secondaryAmount = if (food == IncompleteFood.UNCOOKED_CURRY && secondary == 5970) 3 else 1
-    /** Minimum supplies for one conversion, including the player action's three-leaf curry requirement. */
-    private val materials = listOf(Item(food.baseIngredient), Item(secondary, secondaryAmount))
+    /**
+     * Minimum complete recipe, including all cake ingredients and the native three-leaf curry requirement.
+     * The selected cake secondary only opens the dialogue; the native action consumes all four ingredients.
+     */
+    private val materials = if (food == IncompleteFood.UNCOOKED_CAKE) {
+        (listOf(food.baseIngredient) + food.otherIngredients).map { Item(it) }
+    } else {
+        listOf(Item(food.baseIngredient), Item(secondary, secondaryAmount))
+    }
     /** Filled water ingredient, whether the recipe uses it as its base or secondary input. */
     private val waterIngredient = materials.firstOrNull { it.id in WaterResource.FILLED_IDS }?.id
 
@@ -146,7 +157,7 @@ class AssembleFoodBotScript(
     }
 
     /**
-     * Checks permanent level eligibility and one complete input pair across inventory and bank.
+     * Checks permanent level eligibility and one complete recipe across inventory and bank.
      * Temporary current-level, combat, lock, and strong-action restrictions are checked by lifecycle hooks.
      */
     fun isEligible(): Boolean = bot.skill(SKILL_COOKING).staticLevel >= requiredLevel &&

@@ -41,6 +41,7 @@ import api.predef.rand
  * Owned bowls of nettle tea and empty cups can be processed at level 20 for the existing recipe's 52 XP,
  * with the empty bowl returned. This recipe is eligible for training and non-training selection.
  * Milk can be added to owned cups of nettle tea at level 20 as a non-training step, returning the empty bucket.
+ * Raw cakes require all four owned ingredients and use the native preparation level and experience.
  * Grapes and jugs of water can be mixed into wine at level 35 for training or non-training selection.
  * Wine experience is awarded later by the existing fermentation task. Non-training preparation can first
  * fill owned empty jugs when grapes are available; training requires already-filled jugs.
@@ -105,6 +106,11 @@ object CookingScriptFactory : SkillingScriptFactory(SKILL_COOKING) {
     internal fun getAssemblyScript(bot: Bot, level: Int, training: Boolean = false): AssembleFoodBotScript? =
         getBestActivity(bot, level, { it.requiredLevel },
             AssembleFoodBotScript.RECIPES.filter { !training || it.exp > 0.0 }.flatMap { food ->
-                food.otherIngredients.map { AssembleFoodBotScript(bot, food, getDuration(bot), secondary = it) }
+                val alternatives = if (food == IncompleteFood.UNCOOKED_CAKE) {
+                    listOf(food.otherIngredients.first())
+                } else {
+                    food.otherIngredients
+                }
+                alternatives.map { AssembleFoodBotScript(bot, food, getDuration(bot), secondary = it) }
             }.filter { it.isEligible() || (!training && it.canPrepareWater()) })
 }
