@@ -257,6 +257,7 @@ object WebWalkLiveGenerator {
         climbs += PiscatorisRouteGenerator.gather(report, ::standableNear)
         climbs += BrimhavenRouteGenerator.gather(report)
         climbs += KillerwattRouteGenerator.gather(report)
+        climbs += GliderRouteGenerator.gather(report)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)

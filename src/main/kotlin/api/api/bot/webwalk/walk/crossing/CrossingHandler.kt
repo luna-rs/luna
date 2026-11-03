@@ -34,6 +34,7 @@ object CrossingHandlers {
      * reports when the web is loaded.
      */
     private val handlers: Map<String, CrossingHandler> = mapOf(AltarCrossing.ID to AltarCrossing,
+                                                               GliderCrossing.ID to GliderCrossing,
                                                                JarvaldCrossing.ID to JarvaldCrossing,
                                                                WaterbirthCrossing.ID to WaterbirthCrossing,
                                                                WaterbirthPartyCrossing.ID to WaterbirthPartyCrossing,
