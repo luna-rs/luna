@@ -1,5 +1,7 @@
 package game.item.teleport
 
+import game.skill.agility.roguesDen.RoguesDen
+import game.skill.agility.roguesDen.RoguesDen.denRun
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.item.Item
@@ -48,7 +50,7 @@ object MysticJewel {
      * Invoked when the player activates the jewel. Brian offers to let the player out if they are in the maze.
      */
     fun activate(plr: Player) {
-        if (!inMaze(plr.position)) {
+        if (!inMaze(plr.position) && plr.denRun == null) {
             plr.newDialogue()
                 .npc(BRIAN, "You don't really need my help do you? You're not", "even in the maze yet!")
                 .open()
@@ -71,11 +73,14 @@ object MysticJewel {
     }
 
     /**
-     * Takes every jewel the player holds and moves them out to [START]. The maze has no progress to reward, so Brian
-     * gives the result for not getting past the first pendulum.
+     * Ends the player's run through the maze, paying for how far they got. A player in the maze without a run gives up
+     * every jewel they hold and is moved out to [START] with Brian's result for not getting past the first pendulum.
      */
     private fun leave(plr: Player) {
-        // TODO Rogues' Den maze: once the maze exists, give the result, XP and stat restore for how far the player got.
+        if (plr.denRun != null) {
+            RoguesDen.leave(plr, RoguesDen.Exit.JEWEL)
+            return
+        }
         val jewels = plr.inventory.computeAmountForId(ID)
         if (jewels == 0 || !inMaze(plr.position)) {
             return

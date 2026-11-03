@@ -107,8 +107,8 @@ fun handleIndex(id: Int, index: Int, name: String) {
 
 on(ServerLaunchEvent::class) {
     for (def in GameObjectDefinition.ALL) {
-        // The cave monk and Castle Wars plugins own their ladder admission and travel.
-        if (def.id() in setOf(2408, 4911, 4912, 6280, 6281)) continue
+        // The cave monk, Castle Wars and Rogues' Den plugins own their ladder admission and travel.
+        if (def.id() in setOf(2408, 4911, 4912, 6280, 6281, 7221)) continue
         if (def.name == "Ladder" || def.id() == PHASMATYS_BREWERY_LADDER) {
             def.actions.forEachIndexed { index, name -> handleIndex(def.id(), index, name) }
         }
