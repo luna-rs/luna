@@ -65,6 +65,7 @@ object CrossingHandlers {
                                                                MoleCrossing.ID to MoleCrossing,
                                                                NativeVoyageCrossing.ID to NativeVoyageCrossing,
                                                                NativeAccessCrossing.ID to NativeAccessCrossing,
+                                                               PyramidRockSlideCrossing.ID to PyramidRockSlideCrossing,
                                                                KaramjaLogCrossing.ID to KaramjaLogCrossing)
 
     /**

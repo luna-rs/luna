@@ -24,6 +24,7 @@ import api.bot.webwalk.walk.crossing.KharaziJungleCrossing
 import api.bot.webwalk.walk.crossing.MoleCrossing
 import api.bot.webwalk.walk.crossing.TrollClimbingCrossing
 import api.bot.webwalk.walk.crossing.NativeAccessCrossing
+import api.bot.webwalk.walk.crossing.PyramidRockSlideCrossing
 import game.skill.agility.GnomeStrongholdRocks
 import game.obj.entrances.BrimhavenDungeonAccess
 import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
@@ -94,6 +95,7 @@ object BotConditions {
                       TrollClimbingCrossing.READY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= TrollClimbingRocks.LEVEL },
                       TrollClimbingCrossing.BOOTS_WORN to { bot: Bot -> TrollClimbingRocks.hasBoots(bot) },
                       NativeAccessCrossing.ROCKS_READY to { bot: Bot -> GnomeStrongholdRocks.canTraverse(bot) },
+                      PyramidRockSlideCrossing.ENTRY_READY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= 30 },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null },
                       KharaziJungleCrossing.READY to { bot: Bot -> KharaziJungleCrossing.ready(bot) },
                       MoleCrossing.LIGHT_READY to { bot: Bot -> MoleCrossing.lightReady(bot) },
