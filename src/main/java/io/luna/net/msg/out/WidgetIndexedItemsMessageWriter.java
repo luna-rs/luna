@@ -68,7 +68,7 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
             if (index <= 127) {
                 msg.put(index);
             } else {
-                msg.putShort(index);
+                msg.putShort(index + 32768);
             }
 
             msg.putShort(item.getId() + 1);
