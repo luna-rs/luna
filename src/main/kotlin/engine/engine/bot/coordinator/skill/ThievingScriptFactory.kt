@@ -19,6 +19,7 @@ import io.luna.game.model.mob.bot.Bot
  * the same level/personality policy. Existing pickpocket scripts own food, stun handling, loot and banking;
  * higher-level profit targets describe gathering choices rather than guaranteeing a market return.
  * Confident bots can pickpocket the two outdoor Wilderness rogues, subject to their normal death-loss budget.
+ * Native crafting, magic and scimitar stalls join the same level/personality selection as other stalls.
  *
  * @author lare96
  */
@@ -76,6 +77,9 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
             SubZone.MISCELLANIA_MARKET_STALLS, SubZone.ETCETERIA_MARKET_STALLS))
         stalls.add(stall(setOf(ThievingStallType.FUR),
             SubZone.ARDOUGNE_SQUARE_THIEVING, SubZone.RELLEKKA_MARKET_STALLS))
+        stalls.add(stall(setOf(ThievingStallType.CRAFTING),
+            SubZone.KELDAGRIM_CRAFTING_STALL, SubZone.APE_ATOLL_MARKET_STALLS))
+        stalls.add(stall(setOf(ThievingStallType.MAGIC, ThievingStallType.SCIMITAR), SubZone.APE_ATOLL_MARKET_STALLS))
         val activity = getBestSkillingActivity(bot, level, { it.level }, stalls)
         if (activity == null) {
             return createPickpocketScript(bot, level, zones, training)

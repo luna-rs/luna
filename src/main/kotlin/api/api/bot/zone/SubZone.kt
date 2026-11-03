@@ -2228,6 +2228,24 @@ enum class SubZone(
         parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
 
     /**
+     * Marim's ground-floor market streets, containing one crafting stall, one magic stall and one scimitar stall.
+     * The arrival and all three stall approaches share the same walkable street component in the revision-377 map.
+     */
+    APE_ATOLL_MARKET_STALLS(
+        inside = Position(2758, 2773),
+        area = SimpleBoxArea.of(2753, 2765, 2785, 2798),
+        parent = { APE_ATOLL }),
+
+    /**
+     * Keldagrim's underground canal-side market room, containing one crafting stall.
+     * Rellekka remains the mainland travel and banking parent for this underground activity.
+     */
+    KELDAGRIM_CRAFTING_STALL(
+        inside = Position(2885, 10206),
+        area = SimpleBoxArea.of(2882, 10202, 2891, 10211),
+        parent = { RELLEKKA }),
+
+    /**
      * Rellekka's market square, containing three fish stalls and two fur stalls.
      */
     RELLEKKA_MARKET_STALLS(
