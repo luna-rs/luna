@@ -1,7 +1,7 @@
 {
   "game": {
     // Controls whether the server runs in development, testing, or production-style mode.
-    "runtime_mode": "DEVELOPMENT",
+    "runtime_mode": "PRODUCTION",
     // Account names that always receive developer rights at login (case-insensitive).
     "developer_usernames": ["lare96", "hydrozoa", "the lining"],
     // The default position new players are placed at when no saved position exists.

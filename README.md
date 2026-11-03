@@ -1,42 +1,36 @@
 # Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
-Luna is a modular, high-performance #377 RuneScape game server currently under active development. The first stable release will be **v0.5.0**.
+Luna is a high-performance #377 RuneScape game server built around a world that feels alive. Autonomous player bots 
+train, trade, fight, and progress alongside you.
 
+<!-- Big play public beta now button picture here instead of .gif image -->
 ![](https://i.imgur.com/WycrAB7.png)
 
-# Goals 
+# Meet the bots
 
-The primary goal of Luna is to provide the RSPS community with a fully-featured, modular, and high-performing #377 RuneScape game server.
-
-But what is a massive RuneScape world without players?
-
-Which is why the long-term goal of Luna is to create a **self-sustaining, living world** populated by autonomous player bots.
-
-### Autonomous player bots
-
-- **Fully autonomous**: Bots play independently, without requiring interaction with real players.
 - **Real progression**: Bots train skills, acquire gear, build wealth, and progress from level 3 to 126.
 - **Dynamic behavior**: Bots make their own decisions based on their personalities, goals, resources, and experiences.
-- **Player-like activities**: Bots skill, PvM, PK, trade, socialize, loot, and participate in the economy.
-- **Unique personalities**: No two bots are exactly alike, and their decisions can lead them down completely different paths.
-- **A living world**: Whether you're online or not, bots continue playing, interacting, and shaping the world around them.
+- **Player-like activities**: Bots skill, PvM, PK, trade, socialize, loot, and scam each other!
 
-![Demo GIF](./data/resources/2RZMhkE[1].gif)
+![Bots in action](./data/resources/2RZMhkE[1].gif)
 
+# Join our world
 
+Play Luna’s [public alpha](https://github.com/luna-rs/luna-client/releases/tag/v0.5.0-alpha), meet the bots, and help us iron out bugs!
+- 5× XP
+- No character wipes
 
-# Getting started
+# Create your own world
 
-To get started, you'll need: 
+To get started, visit the [wiki](https://github.com/luna-rs/luna/wiki) and follow the setup instructions.
 
-- **Java:** 21
-- **Client and cache:** [here](https://github.com/luna-rs/luna-client)
-- **Setup instructions:** visit the [wiki](https://github.com/luna-rs/luna/wiki) for a streamlined guide to building, configuring, and running Luna
-
-# Useful links
+# Follow our development
 
 - [Benchmarks](https://github.com/luna-rs/luna/tree/master/data/benchmarks) 
-- [Request help, contribute, chat with devs (Discord)](https://discord.gg/bqkGY7cmVX)
+- [Follow updates, get help, or contribute (Discord)](https://discord.gg/bqkGY7cmVX)
 
+<!--# Support us
+
+[donation link here]-->
 
 # Thanks
 - blakeman8192 
@@ -44,4 +38,4 @@ To get started, you'll need:
 - [Apollo](https://github.com/apollo-rsps/apollo) development team
 - [Lost City RS](https://github.com/LostCityRS/Content/tree/377-wip) development team
 - [RS Mod](https://github.com/rsmod/rsmod) development team, whose routefinder our pathfinding is based on
-- All [contributors](https://github.com/luna-rs/luna/graphs/contributors) and supporters of the project (especially [Hydrozoa](https://github.com/hydrozoa-yt) and [TheLining](https://github.com/TheLining))
+- All [developers](https://github.com/orgs/luna-rs/people), [contributors](https://github.com/luna-rs/luna/graphs/contributors) and supporters of the project. 
