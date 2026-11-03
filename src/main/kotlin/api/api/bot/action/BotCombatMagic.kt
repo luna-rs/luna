@@ -85,6 +85,7 @@ internal class BotCombatMagic(private val bot: Bot, private val handler: BotActi
      */
     suspend fun prepare(target: Mob, selected: CombatSpellDefinition, tactical: Boolean = true): Boolean {
         if (!target.isAlive || !BotCombatActionHandler.mayGainExperience(bot, SKILL_MAGIC)) return false
+        if (bot.combat.target === target && bot.combat.magic.selectedSpell != CombatSpellDefinition.NONE) return true
         val now = bot.world.currentTick
         val god = MageArena.God.entries.firstOrNull { it.spell == selected.spell }
         if (god != null && bot.magic.level >= GodSpells.CHARGE_LEVEL &&
