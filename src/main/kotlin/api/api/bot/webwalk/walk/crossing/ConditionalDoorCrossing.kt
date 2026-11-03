@@ -15,6 +15,7 @@ import game.obj.doors.GnomeStrongholdGate
 import game.obj.doors.JewellersDoor
 import game.obj.doors.TaverleyJailDoor
 import game.obj.doors.TrollArenaGates
+import game.obj.doors.TenzingDoors
 import game.skill.thieving.lockedDoor.ChaosDruidTowerDoorAction
 import game.skill.thieving.lockedDoor.YanilleDoorAction
 import kotlin.time.Duration.Companion.seconds
@@ -37,7 +38,7 @@ object ConditionalDoorCrossing : CrossingHandler {
             id != CraftingGuild.DOOR && id != JewellersDoor.DOOR && id != BrassKeyDoor.DOOR &&
             id != TaverleyJailDoor.DUSTY_KEY_GATE.closed && id != GnomeBall.GATE &&
             id != GnomeStrongholdGate.GATE && id != FishingGuild.DOOR && !hardwood &&
-            TrollArenaGates.GATES.none { it.id == id }) {
+            TrollArenaGates.GATES.none { it.id == id } && id !in TenzingDoors.IDS) {
             return "unsupported conditional door $id"
         }
         val bot = context.bot

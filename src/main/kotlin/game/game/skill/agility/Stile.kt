@@ -1,5 +1,7 @@
 package game.skill.agility
 
+import io.luna.game.action.DeathInterruptible
+import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
@@ -28,7 +30,8 @@ object Stile {
      */
     fun action(plr: Player, stile: GameObject): AgilityAction? {
         val position = stile.position
-        if (plr.isLocked || plr.z != position.z || !plr.position.isWithinDistance(position, 2)) {
+        if (plr.state != EntityState.ACTIVE || !plr.isAlive || plr.isLocked || plr.z != position.z ||
+            !plr.position.isWithinDistance(position, 2)) {
             return null
         }
         val (low, high) = sides(position, stile.direction)
@@ -39,10 +42,10 @@ object Stile {
         val start = if (returning) position.translate(dx, dy) else position
         val end = if (returning) position else position.translate(dx, dy)
         val destination = if (returning) low else high
-        return AgilityAction(plr, listOf(
+        return object : AgilityAction(plr, listOf(
             AgilityStep(start, 1),
             AgilityStep(end, 4, animation = 839, moveStart = 30, moveEnd = 94, animationTick = 1),
             AgilityStep(destination, 1)
-        ), null)
+        ), null, valid = { plr.state == EntityState.ACTIVE && plr.isAlive }), DeathInterruptible {}
     }
 }

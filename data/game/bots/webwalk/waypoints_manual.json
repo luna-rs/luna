@@ -32,6 +32,7 @@
     { "id": "taverley_dungeon_blue_dragon_passage", "pos": [2894, 9792, 0] },
     { "id": "varrock_sewers_manhole_corridor", "pos": [3243, 9874, 0] },
     { "id": "edgeville_dungeon_gate_corridor", "pos": [3117, 9911, 0] },
-    { "id": "mage_training_arena_south_corridor", "pos": [3335, 3263, 0] }
+    { "id": "mage_training_arena_south_corridor", "pos": [3335, 3263, 0] },
+    { "id": "death_plateau_north_of_stile", "pos": [2817, 3580, 0] }
   ]
 }
