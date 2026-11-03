@@ -86,7 +86,7 @@ object FishingCasket {
      *
      * @author lare96
      */
-    private class RewardDialogue(private val reward: Item) : DialogueInterface(306) {
+    internal class RewardDialogue(private val reward: Item) : DialogueInterface(306) {
         override fun init(player: Player): Boolean {
             val contents = when (reward.id) {
                 995 -> "some coins"

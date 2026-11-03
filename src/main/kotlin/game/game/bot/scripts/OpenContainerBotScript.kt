@@ -7,16 +7,18 @@ import api.bot.script.ownsProductionSupplies
 import api.bot.script.productionBatch
 import api.bot.zone.SubZone
 import com.google.gson.JsonObject
+import game.item.fishingCasket.FishingCasket
 import game.skill.fletching.openOyster.Oyster
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.overlay.OverlayType
 import kotlin.time.Duration
 
 /**
  * Opens owned reward containers through their native first inventory option.
  *
- * Owned oysters require an owned chisel. The native handler replaces one container with one reward,
- * so balanced bank batches need only reserve the reusable tool slot.
+ * Oysters require an owned chisel, while fishing caskets require no tool. Both native handlers replace
+ * one container with one reward, so balanced bank batches need only reserve reusable tool slots.
  * The shared inventory lifecycle handles banking, travel, interaction failures and saved sessions.
  * Containers and tools are never acquired for this activity; native handlers own all rewards.
  * Treasure Trail caskets and bird nests retain their existing scripts and reward rules.
@@ -43,7 +45,8 @@ class OpenContainerBotScript(
      * @author lare96
      */
     enum class Container(val id: Int, val tools: Set<Int> = emptySet()) {
-        OYSTER(Oyster.ID, setOf(Oyster.CHISEL))
+        OYSTER(Oyster.ID, setOf(Oyster.CHISEL)),
+        FISHING_CASKET(FishingCasket.CASKET)
     }
 
     companion object {
@@ -74,6 +77,13 @@ class OpenContainerBotScript(
      * One owned container is consumed per successful native opening.
      */
     private val materials = listOf(Item(container.id))
+
+    /**
+     * An in-flight fishing-casket click owns only its newly created native reward page, never an existing window.
+     */
+    private var previousReward: FishingCasket.RewardDialogue? = null
+    private var beforeCaskets = 0
+    private var openingCasket = false
 
     /**
      * Restores the selected container and inherited session state without resetting retry budgets.
@@ -109,9 +119,38 @@ class OpenContainerBotScript(
 
     override suspend fun onExecuteInZone(): Boolean {
         if (!productionReady(hasMaterials())) return true
-        attemptProduction(container.id) { handler.inventory.clickItem(1, container.id) }
+        try {
+            attemptProduction(container.id) {
+                if (container == Container.FISHING_CASKET) {
+                    previousReward = bot.overlays.getOverlay(FishingCasket.RewardDialogue::class.java)
+                    beforeCaskets = bot.inventory.computeAmountForId(container.id)
+                    openingCasket = true
+                }
+                handler.inventory.clickItem(1, container.id)
+            }
+        } finally {
+            closeOwnedReward()
+        }
         return true
     }
+
+    /**
+     * Clears only a reward produced by this click. A replacement window or unrelated input remains untouched.
+     */
+    private fun closeOwnedReward() {
+        val reward = bot.overlays.getOverlay(FishingCasket.RewardDialogue::class.java)
+        if (openingCasket && reward != null && reward !== previousReward &&
+            bot.inventory.computeAmountForId(container.id) < beforeCaskets &&
+            !bot.overlays.containsType(OverlayType.INPUT)) {
+            bot.overlays.closeWindows(false)
+        }
+        openingCasket = false
+        previousReward = null
+    }
+
+    override fun onPaused() { closeOwnedReward() }
+
+    override suspend fun finish() { closeOwnedReward() }
 
     override fun snapshot(): ContainerData = ContainerData().also {
         it.container = container.name
