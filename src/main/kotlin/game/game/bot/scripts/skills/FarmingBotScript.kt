@@ -18,6 +18,7 @@ import game.skill.farming.bush.BushPatchLocation
 import game.skill.farming.flower.FlowerPatch
 import game.skill.farming.flower.FlowerPatchLocation
 import game.skill.farming.flower.FlowerSeed
+import game.skill.farming.flower.FlowerProtection
 import game.skill.farming.herb.HerbPatchLocation
 import game.skill.farming.hops.HopsPatchLocation
 import game.skill.farming.patch.CompostType
@@ -50,7 +51,8 @@ import kotlin.time.Duration
  *
  * The inherited lifecycle supplies travel, verified banking and persistent failure budgets. Harvesting resumes
  * after banking a full inventory. Saved visits retain a patch key and seed choice, then re-read native patch state
- * and stock. Scarecrows and flowers protecting a growing allotment are preserved. Entrana visits require the
+ * and stock. Owned scarecrows are placed for growing sweetcorn, preserved while needed and recovered afterwards.
+ * Flowers protecting a growing allotment are preserved. Entrana visits require the
  * native equipment restriction. Trees use native pruning, one-time health checks, chopping and stump digging.
  * Fruit is picked before considering replacement; profit visits preserve healthy trees for produce regrowth.
  * Training can replace mature trees only with an owned, plantable sapling and usable tools. Raw seeds must first
@@ -205,14 +207,28 @@ class FarmingBotScript(
     }
 
     /**
+     * Uses the native protection table to find growing allotments that benefit from a scarecrow at this flower plot.
+     * Existing flowers are never cleared early merely to install one.
+     */
+    private fun needsScarecrow(): Boolean = patch is FlowerPatch &&
+        AllotmentPatchLocation.entries.filter { it.flowerPatch == location }.any {
+            val allotment = Farming.patches(bot).getValue(it)
+            allotment.isGrowing() && FlowerProtection.SCARECROW in
+                ((allotment.crop as? AllotmentSeed)?.flowerProtection ?: emptySet())
+        }
+
+    /**
      * Chooses the next useful action. Healthy growing crops need only optional compost or water; unavailable
      * cures leave living crops intact. Empty plots without plantable stock are not raked just for weed experience.
      */
     private fun nextWork(): Work? {
         val patch = patch
         val crop = plantingCrop()
+        val placeScarecrow = needsScarecrow() && owns(Item(Farming.SCARECROW))
         return when {
-            patch is FlowerPatch && patch.scarecrow -> null
+            patch is FlowerPatch && patch.scarecrow -> if (needsScarecrow()) null else
+                Work(Item(Farming.SPADE), output = Item(Farming.SCARECROW),
+                    progressCondition = { !patch.scarecrow })
             patch.dead -> Work(Item(Farming.SPADE), progressCondition = { !patch.dead && !patch.isOccupied() })
             patch.diseased -> if (patch is AbstractTreePatch || patch is BushPatch) {
                 listOf(Farming.MAGIC_SECATEURS, Farming.SECATEURS).firstOrNull { owns(Item(it)) }
@@ -229,7 +245,10 @@ class FarmingBotScript(
                 val amount = (planted as? FlowerSeed)?.amount(bot.farming.level) ?: planted.produce.amount
                 Work(null, patch.harvestTool, Item(planted.produce.id, amount))
             }
-            patch.needsRaking() -> if (crop != null) Work(Item(Farming.RAKE), output = Item(Farming.WEEDS)) else null
+            patch.needsRaking() -> if (crop != null || placeScarecrow)
+                Work(Item(Farming.RAKE), output = Item(Farming.WEEDS)) else null
+            !patch.isOccupied() && placeScarecrow -> Work(Item(Farming.SCARECROW),
+                progressCondition = { (patch as FlowerPatch).scarecrow })
             patch.canApplyCompost() && (patch.hasPlant() || crop != null) -> {
                 val compost = listOf(CompostType.SUPERCOMPOST, CompostType.COMPOST).firstOrNull { owns(Item(it.itemId)) }
                 if (compost != null) Work(Item(compost.itemId)) else plantingOrWatering(crop)
