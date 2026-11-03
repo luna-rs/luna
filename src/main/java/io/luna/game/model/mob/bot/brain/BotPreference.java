@@ -547,8 +547,9 @@ public final class BotPreference {
     /**
      * Serializes this preference profile into JSON.
      * <p>
-     * Saves activity weights, preferred skills and gear, wanted-item definitions with their
-     * priority and tags, and player feelings. The associated bot is not serialized.
+     * Saves activity weights, preferred skills and gear, custom wanted-item definitions and overrides,
+     * and player feelings. Unchanged wanted-item defaults are restored during construction.
+     * The associated bot is not serialized.
      *
      * @return The JSON representation of this preference profile.
      */
@@ -570,9 +571,13 @@ public final class BotPreference {
         skills.forEach(skillsJson::add);
         preferences.add("skills", skillsJson);
 
-        // Serialize wanted items.
+        // Serialize only custom wanted items and changes to the shared defaults.
         JsonArray wantedItemsJson = new JsonArray();
         wantedItems.values().forEach(it -> {
+            WantedItemDefinition defaultItem = WantedItemDefinition.DEFAULT.get(it.id()).orElse(null);
+            if (defaultItem != null && hasSameWantedItemSettings(it, defaultItem)) {
+                return;
+            }
             JsonObject itemJson = new JsonObject();
             itemJson.addProperty("id", it.id());
             itemJson.addProperty("min", it.min());
@@ -606,10 +611,25 @@ public final class BotPreference {
     }
 
     /**
+     * Compares all persisted wanted-item fields. Definition equality only compares item IDs.
+     *
+     * @param first The first definition.
+     * @param second The second definition.
+     * @return Whether every persisted field matches.
+     */
+    private static boolean hasSameWantedItemSettings(WantedItemDefinition first, WantedItemDefinition second) {
+        return first == second || first.id() == second.id() &&
+                first.min() == second.min() && first.target() == second.target() &&
+                first.skill() == second.skill() && first.maxLevel() == second.maxLevel() &&
+                first.priority() == second.priority() && first.tags().equals(second.tags());
+    }
+
+    /**
      * Loads saved preferences into the existing collections.
      * <p>
      * Saved entries are merged without clearing current values. Wanted items lacking a minimum
-     * field are skipped; missing priority or tags use their respective default values.
+     * field are skipped; missing priority or tags use their respective default values. Unchanged
+     * definitions in legacy saves reuse the shared defaults.
      *
      * @param object The JSON object containing saved preferences.
      */
@@ -642,7 +662,9 @@ public final class BotPreference {
                         WantedItemPriority.valueOf(itemJson.get("priority").getAsString());
                 ImmutableSet<WantedItemTag> tags = !itemJson.has("tags") ? DEFAULT_TAGS :
                         ImmutableSet.copyOf(GsonUtils.getAsType(itemJson.get("tags"), WantedItemTag[].class));
-                wantedItems.put(id, new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags));
+                WantedItemDefinition item = new WantedItemDefinition(id, min, target, skill, maxLevel, priority, tags);
+                WantedItemDefinition defaultItem = WantedItemDefinition.DEFAULT.get(id).orElse(null);
+                wantedItems.put(id, defaultItem != null && hasSameWantedItemSettings(item, defaultItem) ? defaultItem : item);
             }
         });
         object.getAsJsonArray("gear").forEach(it -> gear.add(BotGearSet.valueOf(it.getAsString())));
