@@ -12,6 +12,9 @@ import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotGearSet
 import game.skill.thieving.searchForTraps.ThievingChest
+import game.content.randomEvents.ChestGasRandomEvent
+import game.bot.scripts.RandomEventReflexScript
+import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.`object`.GameObject
 import kotlin.time.Duration
@@ -26,6 +29,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Bots with higher intelligence or dexterity are more likely to use the correct "Search for traps" option. Less
  * intelligent or less dextrous bots can accidentally click the first option, making chest thieving less robotic.
+ * The shared intelligence/dexterity event policy determines whether a bot notices its own chest gas. Bots that
+ * notice step out of the damaging row and leave this visit; an ignored hazard retains all native consequences.
  *
  * @property chests The chest definitions this script is allowed to target.
  *
@@ -86,6 +91,31 @@ class SearchBotScript(
 
     // Move on if chests stay unavailable or unreachable, rather than waiting until the entire script expires.
     override val targetSearchTimeout: Duration = 180.seconds
+
+    /**
+     * One personality decision belongs to each actual gas object, including after later transformations.
+     */
+    private var observedGas: GameObject? = null
+    private var ignoresGas = false
+
+    override suspend fun beforeZoneWork(): Boolean {
+        val gas = ChestGasRandomEvent.hazard(bot) ?: return false
+        if (observedGas !== gas) {
+            observedGas = gas
+            ignoresGas = kotlin.random.Random.nextDouble() < RandomEventReflexScript.ignoreChance(
+                bot.personality.intelligence, bot.personality.dexterity)
+        }
+        if (ignoresGas) return false
+        bot.actions.interruptWeak()
+        bot.navigator.cancel()
+        bot.walking.clear()
+        if (bot.position.y == gas.position.y && bot.position.isWithinDistance(gas.position, 1)) {
+            Direction.ALL_EXCEPT_NONE.filter { bot.position.translate(1, it).y != gas.position.y }
+                .any { bot.navigator.step(it) }
+        }
+        stop()
+        return true
+    }
 
     override suspend fun onExecuteSkilling(searching: Boolean) {
         if (bot.emotions.isNervousAboutHp && !handler.inventory.eatAnyFood()) {

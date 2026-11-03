@@ -22,8 +22,8 @@ fun openTrap(plr: Player, event: ObjectClickEvent) {
 fun searchForTraps(plr: Player, event: ObjectClickEvent) {
     val thievable = ThievingChest.CHESTS[event.id]
     // The source steel-arrowtip chest uses the separate locked-chest procedure without this hook.
-    if (thievable != null && (thievable == ThievingChest.STEEL_ARROWTIPS ||
-            !RandomEvents.offerActivity(plr, RandomEvents.Activity.THIEVING_CHEST))) {
+    if (thievable != null && (plr.thieving.level < thievable.level || thievable == ThievingChest.STEEL_ARROWTIPS ||
+            !RandomEvents.offerChest(plr, event.gameObject, thievable))) {
         plr.submitAction(SearchForTrapsAction(plr, event.gameObject, thievable))
     }
 }

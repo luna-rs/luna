@@ -40,6 +40,7 @@ import game.skill.fishing.catchFish.Tool
 import game.skill.fishing.fishingSpot.FishingSpotHandler
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.mining.Pickaxe
+import game.skill.thieving.searchForTraps.ThievingChest
 import io.luna.Luna
 import io.luna.game.action.ActionType
 import io.luna.game.model.Direction
@@ -243,6 +244,18 @@ object RandomEvents {
             slot == 0 -> MiningRandomEvents.loseHead(player, pickaxe)
             slot == special - 1 -> startGuardian(player, SkillGuardianRandomEvent.Kind.ROCK_GOLEM)
             else -> MiningRandomEvents.startGas(player, rock)
+        }
+    }
+
+    /**
+     * Trap-search selection retains its contextual chest for the source poison-gas outcome.
+     * The steel-arrowtip locked chest has a separate native procedure and does not call this dispatcher.
+     */
+    fun offerChest(player: Player, chest: GameObject, type: ThievingChest): Boolean = offerOutcome(player) {
+        when (Random.nextInt(8)) {
+            0 -> ChestGasRandomEvent.start(player, chest, type)
+            1 -> startGuardian(player, SkillGuardianRandomEvent.Kind.WATCHMAN)
+            else -> generalKind { Random.nextInt(it) }?.let { startEncounter(player, it) } ?: false
         }
     }
 
