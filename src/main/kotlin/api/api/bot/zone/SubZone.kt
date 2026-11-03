@@ -2219,6 +2219,15 @@ enum class SubZone(
         parent = { VARROCK }),
 
     /**
+     * Open ground south of the deep Wilderness pirate hut, containing two ground-floor rogues for level-32
+     * pickpocketing. The camp avoids the separate Rogue Castle's stairs; Edgeville supplies banking.
+     */
+    WILDERNESS_ROGUE_CAMP(
+        inside = Position(3077, 3913),
+        area = SimpleBoxArea.of(3070, 3903, 3086, 3922),
+        parent = { WILDERNESS }, bankZone = { EDGEVILLE }),
+
+    /**
      * Rellekka's market square, containing three fish stalls and two fur stalls.
      */
     RELLEKKA_MARKET_STALLS(

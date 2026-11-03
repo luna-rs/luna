@@ -18,6 +18,7 @@ import io.luna.game.model.mob.bot.Bot
  * Watchmen at 65, Gnomes at 75 and Heroes at 80 extend both training and profit pickpocket selection through
  * the same level/personality policy. Existing pickpocket scripts own food, stun handling, loot and banking;
  * higher-level profit targets describe gathering choices rather than guaranteeing a market return.
+ * Confident bots can pickpocket the two outdoor Wilderness rogues, subject to their normal death-loss budget.
  *
  * @author lare96
  */
@@ -95,7 +96,8 @@ object ThievingScriptFactory : SkillingScriptFactory(SKILL_THIEVING) {
         zones: MutableList<SubZone>,
         training: Boolean
     ): PickpocketBotScript {
-        val options = pickpockets(bot, level, training) + listOf(
+        val options = pickpockets(bot, level, training) + listOfNotNull(
+            npc(setOf(ROGUE), SubZone.WILDERNESS_ROGUE_CAMP).takeIf { bot.personality.confidence >= 0.5 },
             npc(setOf(WATCHMAN), SubZone.YANILLE_WATCHMEN),
             npc(setOf(GNOME), SubZone.GNOME_STRONGHOLD_THIEVING),
             npc(setOf(HERO), SubZone.ARDOUGNE_SQUARE_THIEVING)

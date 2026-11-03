@@ -5,6 +5,7 @@ import api.bot.script.BotScriptData
 import api.bot.script.ZonedBotScript.Companion.ZonedBotScriptData
 import api.bot.skill.SkillingBotScript
 import api.bot.zone.SubZone
+import api.bot.webwalk.plan.BankAccess
 import api.predef.*
 import api.predef.ext.allSuitableFood
 import com.google.gson.JsonObject
@@ -12,6 +13,7 @@ import engine.bot.gear.BotGearLocator
 import engine.bot.gear.BotGearPurpose
 import engine.bot.gear.BotGearSelector
 import engine.bot.gear.BotGearSet
+import engine.controllers.Controllers.inWilderness
 import game.skill.thieving.pickpocketNpc.ThievingNpcType
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -29,6 +31,8 @@ import kotlin.time.Duration.Companion.seconds
  * The script also performs basic food management. If the bot becomes nervous about its current hitpoints, it will
  * attempt to eat food from its inventory. If no food is available, the script forces a banking trip and withdraws
  * more food before continuing.
+ * Outdoor Wilderness rogue visits check the existing death-loss budget before travel and leave if their loot
+ * exceeds that budget. Shared targeting still approaches each selected NPC with the movement navigator.
  *
  * @property bot The bot running this script.
  * @property npcs The thieving NPC types this script is allowed to pickpocket.
@@ -123,6 +127,19 @@ class PickpocketBotScript(
     }
 
     override suspend fun interactionOption(target: Npc): Int = 2
+
+    override suspend fun travelToWorkZone(zone: SubZone, bank: BankAccess): Boolean =
+        (zone != SubZone.WILDERNESS_ROGUE_CAMP || handler.combat.pkRiskBudget().withinBudget) &&
+            super.travelToWorkZone(zone, bank)
+
+    override suspend fun beforeZoneWork(): Boolean {
+        if (ThievingNpcType.ROGUE in npcs && bot.inWilderness() && !handler.combat.pkRiskBudget().withinBudget) {
+            handler.combat.fleeWilderness()
+            stop()
+            return true
+        }
+        return false
+    }
 
     override fun snapshot(): BotScriptData {
         val data = PickpocketData()
