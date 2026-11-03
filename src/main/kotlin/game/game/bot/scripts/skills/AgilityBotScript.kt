@@ -12,11 +12,19 @@ import game.skill.agility.AgilityObstacle
 import game.skill.agility.AgilityObstacle.*
 import io.luna.game.model.`object`.GameObject
 import com.google.gson.JsonObject
+import engine.bot.gear.BotItemTracker.Companion.itemTracker
 import game.skill.agility.Agility.courseProgress
+import game.skill.agility.pyramid.AgilityPyramid
+import game.skill.agility.pyramid.AgilityPyramid.pyramidTopTaken
+import game.item.greegree.Greegree
 import io.luna.game.action.ActionType
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.item.Equipment
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.interact.InteractionPolicy
+import io.luna.game.model.mob.interact.InteractionType
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -44,6 +52,28 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     companion object {
         /**
+         * Ninja greegrees accepted by the native Ape Atoll course; other monkey forms cannot enter its obstacles.
+         */
+        private val NINJA_GREEGREES = setOf(4024, 4025)
+
+        /**
+         * The Werewolf course's private lap item and the trainer who accepts it through the normal first option.
+         */
+        private const val WEREWOLF_STICK = 4179
+        private const val STICK_TRAINER = 1664
+
+        /**
+         * Checks owned admission equipment and whether a fully healed bot can survive the course's largest fall.
+         * The native handlers retain their level, quest and individual obstacle checks.
+         */
+        fun canTrain(bot: Bot, course: AgilityBotCourse): Boolean = when (course) {
+            AgilityBotCourse.APE_ATOLL -> NINJA_GREEGREES.any { bot.itemTracker.count(it) > 0 }
+            AgilityBotCourse.WEREWOLF -> bot.hitpoints.staticLevel > 45
+            AgilityBotCourse.AGILITY_PYRAMID -> bot.hitpoints.staticLevel > 10
+            else -> true
+        }
+
+        /**
          * Persistent partial-lap checkpoint; live objects and navigation are resolved again on resume.
          *
          * @author lare96
@@ -66,6 +96,10 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
              */
             var landing: Position? = null
             var recovering = false
+            /**
+             * A completed lap still needs its ordinary trainer hand-in or pyramid-top sale.
+             */
+            var rewardPending = false
 
             override fun load(data: JsonObject) {
                 super.load(data)
@@ -73,6 +107,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
                 step = data.get("step").asInt
                 failures = data.get("failures").asInt
                 recovering = data.get("recovering")?.asBoolean ?: false
+                rewardPending = data.get("rewardPending")?.asBoolean ?: false
                 landing = data.getAsJsonObject("landing")?.let {
                     Position(it.get("x").asInt, it.get("y").asInt, it.get("z").asInt)
                 }
@@ -84,6 +119,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
                 data.addProperty("step", step)
                 data.addProperty("failures", failures)
                 data.addProperty("recovering", recovering)
+                data.addProperty("rewardPending", rewardPending)
                 landing?.let { position ->
                     data.add("landing", JsonObject().also {
                         it.addProperty("x", position.x)
@@ -115,6 +151,17 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         private set
 
     /**
+     * Retains the native reward hand-in between the final landing and the next lap, including across pauses.
+     */
+    internal var rewardPending = false
+        private set
+
+    /**
+     * Saved checkpoints take precedence over inferring an entry for a newly selected course visit.
+     */
+    private var restored = false
+
+    /**
      * Restores a saved course without retaining live object references or a navigation request.
      */
     constructor(bot: Bot, data: AgilityData) : this(bot, AgilityBotCourse.valueOf(data.course), data.duration) {
@@ -122,19 +169,29 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         failures = data.failures
         landing = data.landing
         recovering = data.recovering
+        rewardPending = data.rewardPending
+        restored = true
     }
 
     override suspend fun onInit(resumed: Boolean): Boolean {
-        if (step !in course.steps.indices || failures !in 0..2 || bot.skill(SKILL_AGILITY).level < course.course.level) {
+        if (step !in course.steps.indices || failures !in 0..2 || bot.skill(SKILL_AGILITY).level < course.course.level ||
+            !canTrain(bot, course)) {
             return false
         }
-        val recoveredStep = course.recoveryStep(bot.position)
+        val recoveredStep = if (landing == null && !rewardPending) course.recoveryStep(bot.position) else null
         if (recoveredStep != null) {
             step = recoveredStep
             recovering = true
             landing = null
-        } else if (!recovering && landing == null && bot.position !in course.zone.area && bot.position.z == 0) {
+        } else if (!recovering && landing == null && !insideCourse() && bot.position.z == 0) {
             step = 0
+        } else if (!restored && step == 0 && landing == null && !rewardPending && insideCourse()) {
+            physicalCheckpoint()?.let { checkpoint ->
+                step = checkpoint
+                rewardPending = step == 0 && (course == AgilityBotCourse.WEREWOLF &&
+                    bot.inventory.contains(WEREWOLF_STICK) || course == AgilityBotCourse.AGILITY_PYRAMID &&
+                    bot.inventory.contains(AgilityPyramid.PYRAMID_TOP))
+            }
         }
         // A saved movement index is not proof of successful native obstacles, especially after a fall.
         // Retain live native progress on pause; a fresh login earns its next bonus on a complete lap.
@@ -143,13 +200,39 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
 
     override suspend fun equipment() = null
 
-    override suspend fun onBankRequested(initial: Boolean) =
-        initial && course != AgilityBotCourse.GNOME_STRONGHOLD && !recovering &&
-            bot.position.z == 0 && bot.position !in course.zone.area && !handler.inventory.hasAnyFood()
+    override suspend fun onBankRequested(initial: Boolean): Boolean {
+        if (!initial || recovering || landing != null || rewardPending || bot.position.z != 0) return false
+        val requested = when (course) {
+            AgilityBotCourse.GNOME_STRONGHOLD -> false
+            AgilityBotCourse.APE_ATOLL -> !NINJA_GREEGREES.any {
+                bot.inventory.contains(it) || bot.equipment.contains(it)
+            } || !handler.inventory.hasAnyFood()
+            AgilityBotCourse.WEREWOLF -> bot.equipment[Equipment.HEAD] != null || !handler.inventory.hasAnyFood()
+            else -> !handler.inventory.hasAnyFood()
+        }
+        if (requested && course == AgilityBotCourse.APE_ATOLL && bot.equipment.weapon?.id in NINJA_GREEGREES &&
+            !handler.equipment.unequip(Equipment.WEAPON)) {
+            stop()
+            return false
+        }
+        return requested
+    }
 
     override suspend fun onBankOpen(initial: Boolean) {
+        if (course == AgilityBotCourse.APE_ATOLL && bot.equipment.weapon?.id !in NINJA_GREEGREES) {
+            val greegree = NINJA_GREEGREES.firstOrNull { bot.inventory.contains(it) || bot.bank.contains(it) }
+            // Holding a greegree outside Ape Atoll or the zoo is rejected by the native equipment handler.
+            if (greegree == null || (!bot.inventory.contains(greegree) && !handler.banking.withdraw(Item(greegree)))) {
+                stop()
+                return
+            }
+        }
+        if (course == AgilityBotCourse.WEREWOLF && !handler.equipment.unequip(Equipment.HEAD)) {
+            stop()
+            return
+        }
         if (!handler.banking.withdrawAnyFood(8)) {
-            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 750) }
+            bot.preferences.allSuitableFood().forEach { bot.preferences.addWantedItem(it.id, 24) }
             stop()
         }
     }
@@ -160,10 +243,20 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             if (!reconcileLanding()) stop()
             return true
         }
+        if (rewardPending) {
+            if (!handInReward() && !failedAttempt()) stop()
+            return true
+        }
         if (recovering) {
             if (!recover()) {
                 if (!failedAttempt()) stop()
             }
+            return true
+        }
+        // The two upper Pyramid floors are on a separate native map copy. Finish those local steps before the
+        // generic zoned lifecycle considers a return journey to the course's ground-floor arrival.
+        if (course == AgilityBotCourse.AGILITY_PYRAMID && AgilityPyramid.levelAt(bot.position) >= 4) {
+            if (!executeInZone()) stop()
             return true
         }
         return false
@@ -174,8 +267,15 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         // Native Agility actions own the player lock and strong queue until traversal finishes.
         if (!isSettled()) return true
         if (landing != null) return reconcileLanding()
+        if (bot.overlays.hasWindow() && !handler.widgets.clickCloseInterface()) return failedAttempt()
+        val next = course.steps[step]
+        val maximumHit = when {
+            course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_ZIP_LINE -> 45
+            course == AgilityBotCourse.AGILITY_PYRAMID -> 10
+            else -> 5
+        }
         if (course != AgilityBotCourse.GNOME_STRONGHOLD &&
-            (bot.healthPercent <= 50 || bot.health <= 5)) {
+            (bot.healthPercent <= 50 || bot.health <= maximumHit)) {
             val health = bot.health
             if (!handler.inventory.eatAnyFood() || bot.health <= health) {
                 bot.log("Agility supplies exhausted; ending the session before another damaging obstacle.")
@@ -183,32 +283,96 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
             }
             return true
         }
-        val next = course.steps[step]
+        if (course == AgilityBotCourse.APE_ATOLL && bot.equipment.weapon?.id !in NINJA_GREEGREES) {
+            val greegree = NINJA_GREEGREES.firstOrNull { bot.inventory.contains(it) } ?: return false
+            if (!Greegree.worksAt(bot.position) || !handler.equipment.equip(greegree)) return false
+            return true
+        }
+        if (course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_ZIP_LINE &&
+            !handler.equipment.unequip(Equipment.HEAD)) return failedAttempt()
+        if (course == AgilityBotCourse.WEREWOLF && next.obstacle == WEREWOLF_SKULL_SLOPE &&
+            !fetchStick()) return failedAttempt()
+        if (next.obstacle == PYRAMID_TOP_ROCKS && bot.pyramidTopTaken) {
+            landing = bot.position
+            return reconcileLanding()
+        }
         if (bot.position.z != next.plane) return failedAttempt()
-        val obj = world.locator.findObjects(course.zone.area.centerPosition.setZ(next.plane), course.zone.area.tileRadius) {
-            it.state == EntityState.ACTIVE && it.id in next.objectIds &&
-                it.position.z == next.plane && it.position in course.zone.area && next.matches(it)
-        }.minByOrNull { it.position.computeLongestDistance(bot.position) } ?: return failedAttempt()
+        val obj = findObstacle(next) ?: return failedAttempt()
         val entry = next.approach(obj)
-        if (entry != null && !walkTo(entry)) return failedAttempt()
+        if (bot.position != entry) {
+            for (waypoint in next.waypoints) {
+                if (!walkTo(waypoint)) return reconcileDisplacement()
+            }
+        }
+        if (entry != null && !walkTo(entry)) return reconcileDisplacement()
         // Walking can suspend; never interrupt a native action which began while approaching.
         if (!isSettled()) return true
         if (bot.skill(SKILL_AGILITY).level < course.course.level) return false
         if (obj.state != EntityState.ACTIVE || bot.position.z != next.plane ||
             (entry != null && bot.position != entry)) return failedAttempt()
-        landing = next.destination(obj, bot.position)
-        if (!handler.interactions.interact(1, obj)) {
+        landing = next.destination(obj, bot.position) ?: return failedAttempt()
+        val dispatchedAt = world.currentTick
+        val dispatched = if (next.policy == null) handler.interactions.interact(1, obj)
+            else handler.interactions.interact(1, obj, next.policy) { isActionSafe() }
+        if (!dispatched) {
             // Navigation may have failed after the packet was sent. Preserve an active traversal.
             if (isSettled() && !hasLanded()) return failedAttempt()
         }
-        waitFor(30.seconds) { hasLanded() || (isSettled() && course.recoveryStep(bot.position) != null) }
+        waitFor(30.seconds) { hasLanded() || (world.currentTick > dispatchedAt && isSettled() &&
+            course.recoveryStep(bot.position) != null) }
         return if (isSettled()) reconcileLanding() else true
     }
 
     /**
      * Requires both the expected landing and completion of the native lock, action and walking queue.
      */
-    internal fun hasLanded(): Boolean = landing != null && bot.position == landing && isSettled()
+    internal fun hasLanded(): Boolean = landing != null && bot.position == landing && isSettled() &&
+        (course.steps[step].obstacle != PYRAMID_TOP_ROCKS || bot.pyramidTopTaken)
+
+    /**
+     * The Pyramid's upper copy is a separate activity footprint, rather than the desert between both map squares.
+     */
+    private fun workingArea() = if (course == AgilityBotCourse.AGILITY_PYRAMID &&
+        bot.position in SubZone.AGILITY_PYRAMID_UPPER.area) SubZone.AGILITY_PYRAMID_UPPER.area else course.zone.area
+
+    /**
+     * Recognizes both parts of the Pyramid when a saved session already stands on an upper floor.
+     */
+    private fun insideCourse() = bot.position in course.zone.area ||
+        course == AgilityBotCourse.AGILITY_PYRAMID && bot.position in SubZone.AGILITY_PYRAMID_UPPER.area
+
+    /**
+     * A long obstacle can have clickable parts at both ends. Prefer the part reachable from the declared forward
+     * entry before distance, so an earlier walking checkpoint cannot select its backward-facing end.
+     */
+    private fun findObstacle(next: AgilityStep): GameObject? {
+        val area = workingArea()
+        return world.locator.findObjects(area.centerPosition.setZ(next.plane), area.tileRadius) {
+            it.state == EntityState.ACTIVE && it.id in next.objectIds && it.position.z == next.plane &&
+                it.position in area && next.matches(it)
+        }.minWithOrNull(compareBy<GameObject> {
+            if (world.collisionManager.reached(next.approach(it) ?: bot.position, it,
+                    next.policy ?: InteractionPolicy.STANDARD_SIZE)) 0 else 1
+        }.thenBy { it.position.computeLongestDistance(bot.position) })
+    }
+
+    /**
+     * A new visit may follow an aborted one on an upper platform. Exact native entries and landings identify its
+     * next physical step; this never reconstructs native obstacle credit, rewards or experience.
+     */
+    private fun physicalCheckpoint(): Int? {
+        for ((index, next) in course.steps.withIndex()) {
+            if (next.plane != bot.position.z) continue
+            val obj = findObstacle(next) ?: continue
+            if (next.approach(obj) == bot.position) return index
+        }
+        for ((index, previous) in course.steps.withIndex()) {
+            val obj = findObstacle(previous) ?: continue
+            val entry = previous.approach(obj) ?: continue
+            if (previous.destination(obj, entry) == bot.position) return (index + 1) % course.steps.size
+        }
+        return null
+    }
 
     /**
      * Distinguishes normal course animation locks from an idle bot ready for its next obstacle.
@@ -227,6 +391,8 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
                 step = recovery
                 recovering = true
                 failures = 0
+                if (course == AgilityBotCourse.WEREWOLF && bot.inventory.contains(WEREWOLF_STICK))
+                    rewardPending = true
                 return true
             }
             return failedAttempt()
@@ -234,7 +400,89 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         landing = null
         failures = 0
         step = (step + 1) % course.steps.size
-        if (step == 0) bot.courseProgress.remove(course.course)
+        if (step == 0) {
+            bot.courseProgress.remove(course.course)
+            rewardPending = course == AgilityBotCourse.WEREWOLF || course == AgilityBotCourse.AGILITY_PYRAMID
+        }
+        return true
+    }
+
+    /**
+     * A rolling or sliding block may interrupt an ordinary approach as well as an explicit obstacle click.
+     */
+    private fun reconcileDisplacement(): Boolean {
+        if (!isSettled()) {
+            // A live Pyramid block can abort navigation before its fall reaches the lower floor.
+            landing = null
+            recovering = true
+            return true
+        }
+        val recovery = course.recoveryStep(bot.position)
+        if (recovery != null) {
+            step = recovery
+            landing = null
+            recovering = true
+            failures = 0
+            return true
+        }
+        return failedAttempt()
+    }
+
+    /**
+     * Collects only this bot's visible native stick. An expired throw loses the bonus, so the lap still finishes.
+     */
+    private suspend fun fetchStick(): Boolean {
+        if (bot.inventory.contains(WEREWOLF_STICK)) return true
+        val stick = world.locator.findItems(Position(3541, 9911), 5) {
+            it.id == WEREWOLF_STICK && it.state == EntityState.ACTIVE && it.isVisibleTo(bot)
+        }.firstOrNull() ?: return true
+        return handler.loot.pickup(stick) { isActionSafe() && bot.position in course.zone.area }
+    }
+
+    /**
+     * Uses the ordinary trainer option or item-on-Simon handler and confirms the actual native container change.
+     */
+    private suspend fun handInReward(): Boolean {
+        val id = if (course == AgilityBotCourse.WEREWOLF) WEREWOLF_STICK else AgilityPyramid.PYRAMID_TOP
+        if (!bot.inventory.contains(id)) {
+            rewardPending = false
+            failures = 0
+            return true
+        }
+        val npcId = if (course == AgilityBotCourse.WEREWOLF) STICK_TRAINER else AgilityPyramid.SIMON
+        val base = if (course == AgilityBotCourse.WEREWOLF) Position(3528, 9865) else AgilityPyramid.EXIT
+        val npc = world.locator.findNpcs(base, 35) { it.id == npcId && it.state == EntityState.ACTIVE }.firstOrNull()
+            ?: return false
+        val expectedCoins = bot.inventory.computeAmountForId(AgilityPyramid.COINS).toLong() +
+            bot.inventory.computeAmountForId(id).toLong() * AgilityPyramid.TOP_PRICE
+        val dispatched = if (course == AgilityBotCourse.WEREWOLF) handler.interactions.interact(1, npc)
+            else handler.inventory.useItem(id).onNpc(npc)
+        if (!dispatched || !waitFor(5.seconds) { !bot.inventory.contains(id) &&
+            (course == AgilityBotCourse.WEREWOLF ||
+                bot.inventory.computeAmountForId(AgilityPyramid.COINS).toLong() >= expectedCoins) }) return false
+        handler.widgets.clickCloseInterface()
+        rewardPending = false
+        failures = 0
+        return true
+    }
+
+    override suspend fun beforeLeavingZone(): Boolean {
+        if (!isSettled()) return false
+        if (landing != null) return !reconcileLanding()
+        if (rewardPending) {
+            if (!handInReward()) return !failedAttempt()
+            return false
+        }
+        // Expiry finishes the current lap through native actions. A fresh future session must not inherit an
+        // upper-floor position with a ground-floor step zero. Missing supplies or the common failure budget still end it.
+        if (insideCourse() && (recovering || step != 0)) {
+            if (recovering) {
+                if (!recover()) return !failedAttempt()
+            } else if (!executeInZone()) return true
+            return false
+        }
+        if (course == AgilityBotCourse.APE_ATOLL && bot.equipment.weapon?.id in NINJA_GREEGREES &&
+            !handler.equipment.unequip(Equipment.WEAPON)) return !failedAttempt()
         return true
     }
 
@@ -249,23 +497,25 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
     /**
      * Reaches an exact obstacle entry through the web without accepting adjacency as arrival.
      */
-    private suspend fun walkTo(tile: Position): Boolean = withTimeoutOrNull(30.seconds) {
-        handler.webWalkTo(tile, bank = BankAccess.NONE) && bot.position == tile && bot.walking.isEmpty
-    } == true
+    private suspend fun walkTo(tile: Position): Boolean {
+        if (bot.position == tile && bot.walking.isEmpty) return true
+        return withTimeoutOrNull(30.seconds) {
+            handler.webWalkTo(tile, bank = BankAccess.NONE) && bot.position == tile && bot.walking.isEmpty
+        } == true
+    }
 
     /**
      * Climbs out through the real pit ladder, then approaches the next reachable obstacle.
      * Skipping a failed obstacle never awards a checkpoint or lap bonus.
      */
     private suspend fun recover(): Boolean {
+        course.recoveryStep(bot.position)?.let { step = it }
         val ladder = course.pitLadder(bot.position)
         if (ladder != null) {
             if (!AgilityCourseTravel.climbOut(bot, ladder)) return false
         }
         val next = course.steps[step]
-        val obj = world.locator.findObjects(course.zone.area.centerPosition.setZ(next.plane), course.zone.area.tileRadius) {
-            it.state == EntityState.ACTIVE && it.id in next.objectIds && it.position.z == next.plane && next.matches(it)
-        }.minByOrNull { it.position.computeLongestDistance(bot.position) } ?: return false
+        val obj = findObstacle(next) ?: return false
         val entry = next.approach(obj) ?: return false
         if (!walkTo(entry)) return false
         recovering = false
@@ -282,6 +532,7 @@ class AgilityBotScript(bot: Bot, val course: AgilityBotCourse, duration: Duratio
         it.failures = failures
         it.landing = landing
         it.recovering = recovering
+        it.rewardPending = rewardPending
     }
 }
 
@@ -349,7 +600,23 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
             approach = { Position(3002, 3945) }, destination = { _, _ -> Position(2994, 3945) }),
         AgilityStep(WILDERNESS_ROCKS, 0, setOf(2328),
             approach = { it.position.translate(0, 1) }, destination = { obj, _ -> obj.position.translate(0, -3) })
-    ));
+    )),
+    APE_ATOLL(AgilityCourse.APE_ATOLL, SubZone.APE_ATOLL_AGILITY, listOf(
+        AgilityStep(APE_STEPPING_STONE, 0, setOf(12568),
+            approach = { Position(2755, 2742) }, destination = { _, _ -> Position(2753, 2742) }),
+        AgilityStep(APE_TROPICAL_TREE, 0, setOf(12570),
+            approach = { Position(2753, 2742) }, destination = { _, _ -> Position(2752, 2741, 2) }),
+        AgilityStep(APE_MONKEY_BARS, 2, setOf(12573),
+            approach = { Position(2752, 2741, 2) }, destination = { _, _ -> Position(2747, 2741) }),
+        AgilityStep(APE_SKULL_SLOPE, 0, setOf(12576),
+            approach = { Position(2747, 2741) }, destination = { _, _ -> Position(2744, 2741) }),
+        AgilityStep(APE_ROPE, 0, setOf(12578),
+            approach = { Position(2751, 2731) }, destination = { _, _ -> Position(2756, 2731) }),
+        AgilityStep(APE_ZIP_VINE, 0, setOf(12618),
+            approach = { Position(2757, 2733) }, destination = { _, _ -> Position(2770, 2747) })
+    )),
+    WEREWOLF(AgilityCourse.WEREWOLF, SubZone.WEREWOLF_AGILITY, werewolfBotSteps()),
+    AGILITY_PYRAMID(AgilityCourse.AGILITY_PYRAMID, SubZone.AGILITY_PYRAMID, pyramidBotSteps());
 
     /**
      * Course failure landing regions, including saved bots already walking toward a pit ladder.
@@ -374,7 +641,113 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
             else -> null
         }
         WILDERNESS -> if (pitLadder(position) != null || position == Position(3002, 3963)) 2 else null
+        APE_ATOLL -> when (position) {
+            Position(2757, 2747) -> 0
+            Position(2747, 2741) -> 3
+            Position(2752, 2741) -> 1
+            Position(2758, 2734) -> 5
+            else -> null
+        }
+        WEREWOLF -> if (position in setOf(Position(3526, 9895), Position(3530, 9890), Position(3530, 9886))) 0 else null
+        AGILITY_PYRAMID -> pyramidBotRecovery(position)
     }
+}
+
+/**
+ * Each Werewolf stone and hurdle is a native checkpoint interaction. The stick is collected beyond the pipes
+ * before the slope; the trainer and reward handling remain in the common script lifecycle.
+ */
+private fun werewolfBotSteps(): List<AgilityStep> {
+    val stones = listOf(Position(3538, 9873), Position(3538, 9875), Position(3538, 9877),
+        Position(3540, 9877), Position(3540, 9879), Position(3540, 9881))
+    return stones.zipWithNext().map { (from, to) ->
+        AgilityStep(WEREWOLF_STEPPING_STONE, 0, setOf(5138), approach = { from },
+            matches = { it.position == to }, destination = { _, _ -> to },
+            policy = InteractionPolicy(InteractionType.DISTANCE, 2))
+    } + listOf(9893, 9896, 9899).map { y ->
+        AgilityStep(WEREWOLF_HURDLE, 0, setOf(5133), approach = { Position(3539, y - 1) },
+            matches = { it.position == Position(3539, y) }, destination = { _, _ -> Position(3539, y + 1) })
+    } + listOf(
+        AgilityStep(WEREWOLF_PIPE, 0, setOf(5152), approach = { Position(3538, 9904) },
+            matches = { it.position == Position(3538, 9905) }, destination = { _, _ -> Position(3538, 9910) }),
+        AgilityStep(WEREWOLF_SKULL_SLOPE, 0, setOf(5136), approach = { Position(3533, 9910) },
+            matches = { it.position == Position(3532, 9910) }, destination = { _, _ -> Position(3530, 9910) }),
+        AgilityStep(WEREWOLF_ZIP_LINE, 0, setOf(5139), approach = { Position(3528, 9910) },
+            matches = { it.position == Position(3528, 9911) }, destination = { _, _ -> Position(3528, 9871) })
+    )
+}
+
+/**
+ * Builds the Pyramid's clockwise route from native crossing metadata. Gold is collected on the western top
+ * platform before the final jump separates it from the southern exit platform. Intermediate walking tiles
+ * preserve the forward direction through rolling blocks and the two live sliding-block lanes.
+ */
+private fun pyramidBotSteps(): List<AgilityStep> {
+    val stairs = listOf(Position(3354, 2831), Position(3356, 2833, 1), Position(3358, 2835, 2),
+        Position(3360, 2837, 3), Position(3042, 4695, 2))
+    val forward = mapOf(
+        0 to listOf(Position(3354, 2840, 1), Position(3354, 2843, 1)),
+        2 to listOf(Position(3375, 2849, 1), Position(3375, 2846, 1)),
+        3 to listOf(Position(3375, 2837, 1), Position(3375, 2834, 1)),
+        8 to listOf(Position(3367, 2849, 2), Position(3370, 2849, 2)),
+        13 to listOf(Position(3365, 2847, 3), Position(3368, 2847, 3)),
+        16 to listOf(Position(3048, 4701, 2), Position(3048, 4698, 2)),
+        18 to listOf(Position(3043, 4699, 3), Position(3046, 4699, 3)))
+    return buildList {
+        for (level in 1..5) {
+            val stairsPosition = stairs[level - 1]
+            add(AgilityStep(null, stairsPosition.z, setOf(10857),
+                approach = { obj ->
+                    val desired = obj.position.translate(0, -1)
+                    engine.obj.LadderDestination.climbingTiles(obj).filter { engine.obj.LadderDestination.canLand(it) }
+                        .minByOrNull { it.computeLongestDistance(desired) }
+                }, matches = { it.position == stairsPosition },
+                destination = { obj, from -> engine.obj.StairDestination.destination(obj, from, true) }))
+            if (level == 5) {
+                add(AgilityStep(PYRAMID_TOP_ROCKS, 3, setOf(AgilityPyramid.TOP_ROCKS),
+                    approach = { Position(3043, 4698, 3) },
+                    matches = { it.position == Position(3043, 4698, 3) }, destination = { _, from -> from }))
+            }
+            for ((index, crossing) in AgilityPyramid.CROSSINGS.withIndex().filter { it.value.level == level }) {
+                val ids = when (crossing.obstacle) {
+                    PYRAMID_LOW_WALL -> setOf(AgilityPyramid.LOW_WALL)
+                    PYRAMID_LEDGE -> AgilityPyramid.LEDGES.toSet()
+                    PYRAMID_PLANK -> AgilityPyramid.PLANKS.toSet()
+                    PYRAMID_CROSS_GAP -> AgilityPyramid.CROSS_GAPS.toSet()
+                    else -> setOf(AgilityPyramid.JUMP_GAP)
+                }
+                add(AgilityStep(crossing.obstacle, crossing.starts.first().z, ids,
+                    approach = { crossing.starts.first() }, matches = { it.position in crossing.locs },
+                    destination = { _, from -> crossing.endFor(from) }, waypoints = forward[index].orEmpty()))
+            }
+        }
+        add(AgilityStep(null, 3, setOf(10856), approach = { Position(3044, 4696, 3) },
+            matches = { it.position == Position(3044, 4696, 3) }, destination = { _, _ -> AgilityPyramid.EXIT }))
+    }
+}
+
+/**
+ * Maps native failure landings onto the next forward route segment of the lower level. Every named landing
+ * was checked against its cache walking component; replaying an earlier segment could cross a rolling block
+ * backwards. This maps route position only and never supplies native obstacle or lap completion credit.
+ */
+private fun pyramidBotRecovery(position: Position): Int? = when (position) {
+    Position(3352, 2846), Position(3365, 2853), Position(3377, 2843), Position(3370, 2830),
+    Position(3362, 2830), Position(3377, 2835), Position(3377, 2847) -> 0
+    Position(3355, 2839, 1), Position(3354, 2847, 1) -> 1
+    Position(3362, 2851, 1) -> 2
+    Position(3368, 2852, 1) -> 3
+    Position(3374, 2839, 1), Position(3372, 2832, 1) -> 4
+    Position(3364, 2831, 1) -> 5
+    Position(3356, 2841, 2), Position(3357, 2845, 2) -> 8
+    Position(3373, 2841, 2), Position(3366, 2850, 2) -> 10
+    Position(3367, 2833, 2) -> 12
+    Position(3358, 2841, 3) -> 15
+    Position(3371, 2844, 3) -> 16
+    Position(3371, 2839, 3) -> 17
+    Position(3365, 2835, 3) -> 18
+    Position(3049, 4697, 2), Position(3044, 4702, 2) -> 20
+    else -> null
 }
 
 /**
@@ -383,14 +756,18 @@ enum class AgilityBotCourse(val course: AgilityCourse, val zone: SubZone, val st
  * Nets calculate their landing relative to the player's entry, matching the existing handlers.
  * Exact approaches prevent a generic interaction from stopping on the wrong side of a log, net or pipe.
  *
- * @property obstacle Native obstacle represented by this movement step.
+ * @property obstacle Native obstacle represented by this step, or `null` for a native staircase or exit doorway.
  * @property plane Plane containing this obstacle's clickable object.
  * @property objectIds Loaded native objects accepted for this step.
  * @property approach Optional entry tile that must be reached before clicking.
  * @property destination Expected landing calculated from the object and actual entry tile.
+ * @property waypoints Forward walking checkpoints between Pyramid hazards, omitted once recovery reaches the entry.
+ * @property policy An explicit native reach policy for obstacles such as the Werewolf course's two-tile stones.
  * @author lare96
  */
-data class AgilityStep(val obstacle: AgilityObstacle, val plane: Int, val objectIds: Set<Int>,
+data class AgilityStep(val obstacle: AgilityObstacle?, val plane: Int, val objectIds: Set<Int>,
                        val approach: (GameObject) -> Position? = { null },
                        val matches: (GameObject) -> Boolean = { true },
-                       val destination: (GameObject, Position) -> Position)
+                       val destination: (GameObject, Position) -> Position?,
+                       val waypoints: List<Position> = emptyList(),
+                       val policy: InteractionPolicy? = null)

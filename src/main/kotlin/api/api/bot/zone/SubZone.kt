@@ -344,6 +344,44 @@ enum class SubZone(
         area = SimpleBoxArea.of(2990, 3933, 3008, 3968),
         parent = { WILDERNESS }),
 
+    /**
+     * Ape Atoll's six-obstacle ninja-monkey course, including its river failure banks and the monkey bars on
+     * plane two. The native handlers require a wielded ninja greegree before any obstacle can succeed.
+     */
+    APE_ATOLL_AGILITY(
+        inside = Position(2755, 2742),
+        area = SimpleBoxArea.of(2743, 2728, 2772, 2749, -1),
+        parent = { APE_ATOLL }),
+
+    /**
+     * The western Werewolf course below Canifis: five stepping stones, three hurdle rows, three pipe lanes,
+     * a skull slope and the deathslide. The footprint includes every fall landing and the stick trainer.
+     */
+    WEREWOLF_AGILITY(
+        inside = Position(3538, 9873),
+        entrance = { Position(3543, 3462) },
+        area = SimpleBoxArea.of(3524, 9864, 3551, 9914),
+        parent = { CANIFIS }),
+
+    /**
+     * The Agility Pyramid yard, Simon Templeton and the first three raised obstacle levels. The western rock
+     * slide supplies native access from the desert; ordinary food resupply retains Al Kharid banking.
+     */
+    AGILITY_PYRAMID(
+        inside = Position(3353, 2831),
+        entrance = { Position(3343, 2844) },
+        area = SimpleBoxArea.of(3342, 2827, 3379, 2856, -1),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
+    /**
+     * The native map copy containing Pyramid levels four and five on planes two and three. Its separate
+     * rectangle avoids treating the intervening world as course space; the level-three stairs lead here.
+     */
+    AGILITY_PYRAMID_UPPER(
+        inside = Position(3040, 4696, 2),
+        area = SimpleBoxArea.of(3040, 4693, 3049, 4702, -1),
+        parent = { KHARIDIAN_DESERT }, bankZone = { AL_KHARID }),
+
     /** Water-obelisk activity area, with Catherby banking and shared travel fallback. */
     WATER_OBELISK(
         inside = Position(2844, 3425),
