@@ -85,7 +85,7 @@ class VisitorRandomEvent(
     private val address get() = if (player.appearance.isMale) "master" else "mistress"
 
     init {
-        require(kind != Kind.SWARM && kind != Kind.STRANGE_PLANT) { "Swarms use their hostile encounter lifecycle." }
+        require(kind !in setOf(Kind.SWARM, Kind.STRANGE_PLANT, Kind.CANDLELIGHT)) { "This encounter has its own lifecycle." }
         npc.interact(player)
         npc.navigator.follow(player)
         if (kind != Kind.DRUNKEN_DWARF) smoke(npc.position)
@@ -203,7 +203,7 @@ class VisitorRandomEvent(
                     Kind.GENIE -> "Have a nice day, $address."
                     Kind.MYSTERIOUS_OLD_MAN -> "Goodbye."
                     Kind.DRUNKEN_DWARF -> "'Ave a good 'un buddy!"
-                    Kind.SWARM, Kind.STRANGE_PLANT -> error("Swarms cannot be gift visitors.")
+                    Kind.SWARM, Kind.STRANGE_PLANT, Kind.CANDLELIGHT -> error("This encounter is not a gift visitor.")
                 }).open()
             return
         }

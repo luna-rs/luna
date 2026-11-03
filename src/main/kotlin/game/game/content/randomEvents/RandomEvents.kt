@@ -75,7 +75,8 @@ object RandomEvents {
         GENIE(409, 1),
         MYSTERIOUS_OLD_MAN(410, 3),
         DRUNKEN_DWARF(956, 2, false),
-        STRANGE_PLANT(407, 4, false);
+        CANDLELIGHT(3206, 4),
+        STRANGE_PLANT(407, 5, false);
 
         /**
          * Chooses gifts from the source members reward tables. The old man's 150 equally likely
@@ -83,7 +84,7 @@ object RandomEvents {
          * always gives both a kebab and a beer, without a reward roll.
          */
         fun rewards(random: (Int) -> Int = { Random.nextInt(it) }): List<Item> = when (this) {
-            SWARM, STRANGE_PLANT -> emptyList()
+            SWARM, STRANGE_PLANT, CANDLELIGHT -> emptyList()
             GENIE -> listOf(Item(2528))
             DRUNKEN_DWARF -> listOf(Item(1971), Item(1917))
             MYSTERIOUS_OLD_MAN -> listOf(when (random(150)) {
@@ -334,13 +335,15 @@ object RandomEvents {
      * Genie save identifiers remain unchanged as the catalogue grows.
      */
     fun startEncounter(player: Player, kind: Kind): Boolean =
-        spawnEncounter(player, kind.npcId, kind.followsLogout) { npc ->
-            when (kind) {
-                Kind.SWARM -> SwarmRandomEvent(player, npc)
-                Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
-                else -> VisitorRandomEvent(player, npc, kind)
+        if (kind == Kind.CANDLELIGHT && !CandlelightRandomEvent.available()) false else
+            spawnEncounter(player, kind.npcId, kind.followsLogout) { npc ->
+                when (kind) {
+                    Kind.SWARM -> SwarmRandomEvent(player, npc)
+                    Kind.STRANGE_PLANT -> StrangePlantRandomEvent(player, npc)
+                    Kind.CANDLELIGHT -> CandlelightRandomEvent(player, npc)
+                    else -> VisitorRandomEvent(player, npc, kind)
+                }
             }
-        }
 
     /**
      * Starts the source fishing attacker at the owner's current combat bracket. It is absent from

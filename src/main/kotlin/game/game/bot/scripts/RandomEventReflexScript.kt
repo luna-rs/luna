@@ -1,11 +1,13 @@
 package game.bot.scripts
 
 import api.bot.Suspendable.waitFor
+import api.bot.Suspendable.delay
 import api.bot.script.BotScript.ActionSafety
 import api.bot.script.ReflexBotScript
 import api.predef.world
 import game.content.randomEvents.RandomEvents
 import game.content.randomEvents.RandomEventEncounter
+import game.content.randomEvents.CandlelightRandomEvent
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.bot.Bot
 import kotlinx.coroutines.withTimeoutOrNull
@@ -19,6 +21,8 @@ import kotlin.time.Duration.Companion.seconds
  * always intend to respond; danger, locks and unreachable visitors can still prevent success.
  * Reaction time passes while normal work continues, then the reflex briefly pauses that work.
  * Ignored visitors keep their native warnings and consequences.
+ * Candlelight always pauses ordinary work in its forced church. An ignored puzzle remains unfinished there;
+ * responding bots use the native lighter panel until Pete returns them, without a recovery-teleport escape.
  *
  * @author lare96
  */
@@ -67,11 +71,17 @@ class RandomEventReflexScript @JvmOverloads constructor(
             val maximumDelay = (9 - 4 * dexterity - 2 * intelligence).roundToInt().coerceIn(2, 9)
             respondAt = world.currentTick + random.nextInt(2, maximumDelay + 1)
         }
-        return !ignoring && world.currentTick >= respondAt && canRespond(encounter)
+        return (encounter is CandlelightRandomEvent || !ignoring && world.currentTick >= respondAt) && canRespond(encounter)
     }
 
     override suspend fun run(): Boolean {
         val encounter = observed ?: return true
+        if (encounter is CandlelightRandomEvent) {
+            if (!canRespond(encounter)) return true
+            if (ignoring || world.currentTick < respondAt) delay(1.seconds)
+            else CandlelightBotSupport.step(bot, encounter, random)
+            return !canRespond(encounter)
+        }
         if (ignoring || !canRespond(encounter)) return true
         respondAt = world.currentTick + 3
         withTimeoutOrNull(6.seconds) {
@@ -95,5 +105,5 @@ class RandomEventReflexScript @JvmOverloads constructor(
     private fun canRespond(encounter: RandomEventEncounter): Boolean =
         bot.state == EntityState.ACTIVE && RandomEvents.encounter(bot) === encounter &&
             encounter.awaitingResponse && encounter.npc.state == EntityState.ACTIVE &&
-            ActionSafety.NON_COMBAT.allows(bot) && !bot.emotions.isNervousAboutHp
+            ActionSafety.NON_COMBAT.allows(bot) && (encounter is CandlelightRandomEvent || !bot.emotions.isNervousAboutHp)
 }

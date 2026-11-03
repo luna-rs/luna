@@ -190,6 +190,7 @@ cmd("random_event", RIGHTS_ADMIN) {
         "genie" -> Kind.GENIE
         "old_man" -> Kind.MYSTERIOUS_OLD_MAN
         "dwarf" -> Kind.DRUNKEN_DWARF
+        "candlelight" -> Kind.CANDLELIGHT
         else -> null
     }
     val guardian = when (name) {
@@ -202,7 +203,7 @@ cmd("random_event", RIGHTS_ADMIN) {
         else -> null
     }
     if (kind == null && guardian == null) {
-        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|river_troll|tree_spirit|shade|zombie|watchman|rock_golem")
+        plr.sendMessage("Usage: ::random_event genie|old_man|dwarf|swarm|plant|candlelight|river_troll|tree_spirit|shade|zombie|watchman|rock_golem")
     } else if (!(if (guardian != null) randomEvents.startGuardian(plr, guardian) else randomEvents.startEncounter(plr, kind!!))) {
         plr.sendMessage("A random event cannot start here right now.")
     }
