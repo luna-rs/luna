@@ -139,6 +139,12 @@ public abstract class Mob extends Entity {
     private boolean locked;
 
     /**
+     * The revision of this session's effective action-lock ownership. Hard lock requests, acquired or extended timed
+     * locks, explicit unlocks and timed expiry advance it; a timed request ignored by a hard lock does not.
+     */
+    private transient long actionLockRevision;
+
+    /**
      * {@code true} if this mob must be re-placed on the client this tick (i.e., encode a placement/teleport-style
      * movement update instead of normal walking/running).
      */
@@ -496,6 +502,7 @@ public abstract class Mob extends Entity {
     public final void lock(int ticks, Runnable onUnlock) {
         checkArgument(ticks > 0, "Ticks must be positive.");
         if (lockTask != null && lockTask.getState() == TaskState.RUNNING) {
+            actionLockRevision++;
             lockTicks = Math.max(lockTicks, ticks);
             Runnable earlier = unlockCallback;
             unlockCallback = () -> {
@@ -503,6 +510,7 @@ public abstract class Mob extends Entity {
                 onUnlock.run();
             };
         } else if (!locked) {
+            actionLockRevision++;
             locked = true;
             lockTicks = ticks;
             unlockCallback = onUnlock;
@@ -513,6 +521,7 @@ public abstract class Mob extends Entity {
                         // Cancelled first, so a callback that locks again starts a new lock.
                         cancel();
                         locked = false;
+                        actionLockRevision++;
                         unlockCallback.run();
                     }
                 }
@@ -530,6 +539,7 @@ public abstract class Mob extends Entity {
      * </p>
      */
     public final void lock() {
+        actionLockRevision++;
         if (lockTask != null) {
             // Cancel timed lock so it does not interfere with hard lock semantics.
             lockTask.cancel();
@@ -544,6 +554,7 @@ public abstract class Mob extends Entity {
      * </p>
      */
     public final void unlock() {
+        actionLockRevision++;
         if (lockTask != null) {
             lockTask.cancel();
         }
@@ -965,6 +976,17 @@ public abstract class Mob extends Entity {
      */
     public boolean isActionLocked() {
         return locked;
+    }
+
+    /**
+     * Returns the revision of effective action-lock ownership. An action can capture this after locking and compare
+     * it before cleanup to avoid unlocking a later owner's lock. This is observational metadata and does not change
+     * lock behavior; timed requests ignored while a hard lock is active leave the revision unchanged.
+     *
+     * @return The current session's action-lock revision.
+     */
+    public final long getActionLockRevision() {
+        return actionLockRevision;
     }
 
     /**

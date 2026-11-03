@@ -16,6 +16,8 @@ import game.bot.scripts.BrimhavenArenaBotScript.ArenaData
 import game.bot.scripts.RangingGuildBotScript.ArcheryData
 
 import game.bot.scripts.skills.TeleportTrainingBotScript
+import game.bot.scripts.skills.TeleOtherBotScript
+import game.bot.scripts.skills.TeleOtherBotScript.Companion.TeleOtherData
 import game.bot.scripts.DuelArenaBotScript.DuelData
 import game.bot.scripts.skills.TeleportTrainingBotScript.Companion.TeleportTrainingData
 
@@ -155,6 +157,7 @@ on(ServerLaunchEvent::class) {
     BotConversationPool.load()
     BotScamSpeechPool.load()
     val scriptManager = world.botManager.scriptManager
+    scriptManager.addScript<TeleOtherData>(TeleOtherBotScript::class) { bot, data -> TeleOtherBotScript(bot, data) }
     scriptManager.addScript<BarrowsData>(BarrowsBotScript::class) { bot, data -> BarrowsBotScript(bot, data) }
     scriptManager.addScript<CompostData>(MakeCompostBotScript::class) { bot, data -> MakeCompostBotScript(bot, data) }
     scriptManager.addScript<SaplingData>(PrepareSaplingBotScript::class) { bot, data -> PrepareSaplingBotScript(bot, data) }

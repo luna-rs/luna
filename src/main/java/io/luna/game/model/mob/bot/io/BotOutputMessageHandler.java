@@ -28,6 +28,7 @@ import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.MagicOnItemMessageReader;
 import io.luna.net.msg.in.MagicOnObjectMessageReader;
 import io.luna.net.msg.in.MagicOnGroundItemMessageReader;
+import io.luna.net.msg.in.MagicOnPlayerMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
 import io.luna.net.msg.in.NumberInputMessageReader;
 import io.luna.net.msg.in.ObjectClickMessageReader;
@@ -229,6 +230,26 @@ public final class BotOutputMessageHandler {
         msg.putShort(spellId, ByteOrder.LITTLE);
         msg.putShort(targetItem.getPosition().getX(), ByteOrder.LITTLE, ValueType.ADD);
         client.queueSimulated(new GameMessage(83, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Queues the native magic-on-player packet for a live visible player. Native spell handlers retain consent,
+     * rune costs, levels and combat legality; this method confirms only that the input was queued.
+     *
+     * @param spellId The spell widget identifier.
+     * @param target The player receiving the spell request.
+     * @return Whether a packet was queued.
+     */
+    public boolean useSpellOnPlayer(int spellId, Player target) {
+        if (target == null || target == bot || !target.isAlive() ||
+                target.getState() != io.luna.game.model.EntityState.ACTIVE || !target.isViewableFrom(bot)) {
+            return false;
+        }
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(target.getIndex());
+        msg.putShort(spellId, ByteOrder.LITTLE);
+        client.queueSimulated(new GameMessage(31, MessageType.FIXED, msg));
         return true;
     }
 

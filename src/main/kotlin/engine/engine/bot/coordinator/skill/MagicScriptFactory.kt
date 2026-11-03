@@ -11,6 +11,8 @@ import game.bot.scripts.skills.SplashBotScript
 import game.bot.scripts.skills.SuperheatItemBotScript
 import game.bot.scripts.skills.BonesToFoodBotScript
 import game.bot.scripts.skills.TeleportTrainingBotScript
+import game.bot.scripts.skills.TeleOtherBotScript
+import game.skill.magic.teleOther.TeleOtherType
 import game.bot.scripts.skills.TelegrabBotScript
 import game.skill.magic.bonesToItems.BonesToItemsType
 import game.skill.magic.chargeOrb.ChargeOrbType
@@ -43,6 +45,11 @@ object MagicScriptFactory : SkillingScriptFactory(SKILL_MAGIC) {
     override fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>): BotScript {
         if (rand(0.95)) CombatCoordinator.ancientMagicScript(bot, true, getDuration(bot))?.let { return it }
         if (rand(0.25)) getTeleportScript(bot, level)?.let { return it }
+        if (rand(0.1)) {
+            val choices = TeleOtherType.entries.map { TeleOtherBotScript(bot, it, getDuration(bot)) }
+                .filter { it.isEligible() }
+            getBestActivity(bot, level, { it.type.level }, choices)?.let { return it }
+        }
         return getProductionScript(bot, level)
     }
 

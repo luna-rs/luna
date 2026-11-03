@@ -6,6 +6,7 @@ import engine.bot.speech.BotReactions;
 import game.bot.scripts.combat.CombatBotScript;
 import game.bot.scripts.combat.CombatBotScript.InitialState;
 import game.bot.scripts.combat.PkBotScript;
+import game.bot.scripts.skills.TeleOtherBotScript;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -85,6 +86,10 @@ public final class BotReflex {
                     return false;
                 }
             }
+        }
+
+        if (TeleOtherBotScript.respond(bot)) {
+            return false;
         }
 
         // Handle automatic character design if the interface is open.
