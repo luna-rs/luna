@@ -40,6 +40,11 @@ enum class AgilityWalk(val walk: Int, private val ready: Int, private val turn: 
     MONKEY_BARS(744, 745),
 
     /**
+     * HUMAN_SWIM with HUMAN_SWIM_READY for the native Karamja river-log failure.
+     */
+    SWIM(772, 773, 773),
+
+    /**
      * The ninja monkey swimming on its back down the Ape Atoll river, floating still when it stops.
      */
     MONKEY_SWIM(3491, 3490);

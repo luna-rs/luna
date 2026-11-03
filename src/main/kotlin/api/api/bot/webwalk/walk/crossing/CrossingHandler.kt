@@ -64,7 +64,8 @@ object CrossingHandlers {
                                                                KharaziJungleCrossing.ID to KharaziJungleCrossing,
                                                                MoleCrossing.ID to MoleCrossing,
                                                                NativeVoyageCrossing.ID to NativeVoyageCrossing,
-                                                               NativeAccessCrossing.ID to NativeAccessCrossing)
+                                                               NativeAccessCrossing.ID to NativeAccessCrossing,
+                                                               KaramjaLogCrossing.ID to KaramjaLogCrossing)
 
     /**
      * The names of every handler.
