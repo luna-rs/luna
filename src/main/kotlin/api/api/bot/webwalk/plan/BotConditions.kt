@@ -20,6 +20,8 @@ import game.obj.webs.Web
 import game.skill.agility.IsafdarForest
 import game.skill.agility.IsafdarLogs
 import game.skill.agility.TrollClimbingRocks
+import api.bot.webwalk.walk.crossing.KharaziJungleCrossing
+import api.bot.webwalk.walk.crossing.MoleCrossing
 import api.bot.webwalk.walk.crossing.TrollClimbingCrossing
 import game.obj.entrances.BrimhavenDungeonAccess
 import game.skill.thieving.lockedDoor.ArdougneHouseDoorAction
@@ -90,6 +92,8 @@ object BotConditions {
                       TrollClimbingCrossing.READY to { bot: Bot -> bot.skill(Skill.AGILITY).level >= TrollClimbingRocks.LEVEL },
                       TrollClimbingCrossing.BOOTS_WORN to { bot: Bot -> TrollClimbingRocks.hasBoots(bot) },
                       SLASH_WEB to { bot: Bot -> Web.blade(bot) != null },
+                      KharaziJungleCrossing.READY to { bot: Bot -> KharaziJungleCrossing.ready(bot) },
+                      MoleCrossing.LIGHT_READY to { bot: Bot -> MoleCrossing.lightReady(bot) },
                       BrimhavenCrossing.PREPAID to { bot: Bot -> BrimhavenDungeonAccess.hasPaid(bot) },
                       SubzoneEntranceCrossing.SWAMP_READY to { bot: Bot -> SubzoneEntranceCrossing.canEnterSwamp(bot) },
                       SubzoneEntranceCrossing.WATERFALL_AMULET to { bot: Bot -> SubzoneEntranceCrossing.canEnterWaterfall(bot) },

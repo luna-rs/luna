@@ -261,6 +261,7 @@ object WebWalkLiveGenerator {
         climbs += KillerwattRouteGenerator.gather(report)
         climbs += GliderRouteGenerator.gather(report)
         climbs += ContextualItemRouteGenerator.gather(report)
+        climbs += MoleRouteGenerator.gather(report)
         jarvald(climbs, report)
         waterbirthParty(climbs, report)
         report.count("climbs", climbs.size)

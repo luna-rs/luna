@@ -278,7 +278,7 @@ object SpecialCrossings {
         PiscatorisHoleCrossingSpec.SPEC, ShantayPassCrossingSpec.SPEC, ArandarCrossingSpec.GATE, ArandarCrossingSpec.FOREST,
         ArandarCrossingSpec.LOGS, ArandarCrossingSpec.TRIPWIRES) +
         ProductionAccessCrossingSpec.ALL + SubzoneEntranceSpec.ALL + LighthouseBridgeSpec.ALL +
-        PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC
+        PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC + KharaziJungleCrossingSpec.SPEC
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
@@ -320,7 +320,9 @@ object WebWalkCrossingGenerator {
         val report = GenerationReport()
         val crossings = ArrayList<GeneratedObstacle>()
         for (spec in specs) {
-            val (placed, placedReport) = if (spec.placements.isEmpty())
+            val (placed, placedReport) = if (spec.handler == KharaziJungleCrossingSpec.SPEC.handler)
+                place(table, spec.copy(placements = KharaziJungleCrossingSpec.placements(table)))
+            else if (spec.placements.isEmpty())
                 WebWalkDoorGenerator.generate(table, spec.closedObjectIds.associateWith { EdgeType.CROSSING })
             else place(table, spec)
             placedReport.skipped.forEach { report.skipped += it }
@@ -351,8 +353,10 @@ object WebWalkCrossingGenerator {
                       spec: CrossingSpec): Pair<List<GeneratedObstacle>, GenerationReport> {
         val report = GenerationReport()
         val placed = ArrayList<GeneratedObstacle>()
+        val mapObjects = table.objectSet.asSequence().filter { it.objectId in spec.closedObjectIds }
+            .associateBy { it.objectId to it.position }
         for (placement in spec.placements) {
-            val mapObject = table.objectSet.firstOrNull { it.objectId == placement.objectId && it.position == placement.pos }
+            val mapObject = mapObjects[placement.objectId to placement.pos]
             if (mapObject == null) {
                 report.skipped += "CROSSING ${placement.objectId} at ${DoorObstacles.describe(placement.pos)}: not in the map"
                 continue

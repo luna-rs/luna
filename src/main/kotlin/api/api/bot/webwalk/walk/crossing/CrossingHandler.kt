@@ -60,7 +60,9 @@ object CrossingHandlers {
                                                                SubzoneEntranceCrossing.ID to SubzoneEntranceCrossing,
                                                                LighthouseBridgeCrossing.ID to LighthouseBridgeCrossing,
                                                                PaterdomusGateCrossing.ID to PaterdomusGateCrossing,
-                                                               TrollClimbingCrossing.ID to TrollClimbingCrossing)
+                                                               TrollClimbingCrossing.ID to TrollClimbingCrossing,
+                                                               KharaziJungleCrossing.ID to KharaziJungleCrossing,
+                                                               MoleCrossing.ID to MoleCrossing)
 
     /**
      * The names of every handler.

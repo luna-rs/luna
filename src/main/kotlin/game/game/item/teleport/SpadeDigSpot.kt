@@ -27,6 +27,11 @@ enum class SpadeDigSpot(val landing: Position, private vararg val areas: Area, v
                        tile(2996, 3377), tile(2999, 3375), tile(3005, 3376),
                        arrival = "You seem to have dropped down into a network of mole tunnels.", dark = true);
 
+    /**
+     * Native legal surface tiles for read-only route generation. Activation still rechecks [forPosition].
+     */
+    val entryPositions: List<Position> get() = areas.flatMap { it.positions }.distinct()
+
     companion object {
 
         /**
