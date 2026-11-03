@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
+import api.bot.Suspendable.delay
 import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.action.trading.BotTradeIntentions
@@ -11,6 +12,12 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.EntityState
+import io.luna.game.model.mob.dialogue.DialogueInterface
+import io.luna.game.model.mob.dialogue.DialogueQueue
+import io.luna.game.model.mob.dialogue.NpcDialogue
+import io.luna.game.model.mob.dialogue.OptionDialogue
+import io.luna.game.model.mob.dialogue.PlayerDialogue
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
@@ -194,7 +201,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         val shops = world.shops.values().filter { id in it.itemIds && it.botAccess.apply(bot) }
             .sortedWith(compareBy<io.luna.game.model.item.shop.Shop> { it.currency.id != 995 }
                 .thenBy { it.computeBuyValue(id, 1).orElse(Int.MAX_VALUE) })
-        if (shops.isEmpty()) return false
+        if (shops.isEmpty()) return id == 1793 && acquireWoadLeaves(amount, basket)
         bot.actions.interruptWeak()
         bot.overlays.closeWindows()
         for (shop in shops) {
@@ -245,6 +252,92 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             }
             if (carried() >= amount) return true
         }
-        return false
+        return id == 1793 && acquireWoadLeaves(amount, basket)
+    }
+
+    /**
+     * Fulfils real woad demand through Wyson's native twenty-coin offer for two leaves. Only owned coins are
+     * withdrawn, other requested basket items remain carried, and every purchase verifies actual leaf progress.
+     * The caller's shared acquisition deadline includes banking, webwalking and all dialogue attempts.
+     */
+    private suspend fun acquireWoadLeaves(amount: Int, basket: Set<Int>): Boolean {
+        val leaf = 1793
+        val coins = 995
+        val response = "Yes please, I need woad leaves."
+        val offer = "How about 20 coins?"
+        fun carried() = bot.inventory.computeAmountForId(leaf)
+        while (carried() < amount) {
+            if (!ActionSafety.NON_COMBAT.await(bot)) return false
+            val funds = bot.inventory.computeAmountForId(coins).toLong() + bot.bank.computeAmountForId(coins)
+            if (funds < 20) return false
+            if (bot.inventory.computeAmountForId(coins) < 20 || !bot.inventory.hasSpaceFor(Item(leaf, 2))) {
+                if (!handler.banking.travelToBankOpen()) return false
+                handler.banking.clickBankingMode(false)
+                if (!bot.inventory.hasSpaceForAll(listOf(Item(leaf, 2), Item(coins))) &&
+                    !handler.banking.depositInventory(basket + coins)) return false
+                val needed = (amount.toLong() - carried()).coerceAtLeast(0)
+                if (needed == 0L) return true
+                val wallet = minOf(funds, ((needed + 1) / 2) * 20, Int.MAX_VALUE.toLong())
+                val missing = (wallet - bot.inventory.computeAmountForId(coins)).coerceAtLeast(0).toInt()
+                if (missing > 0 && !handler.banking.withdraw(Item(coins, missing))) return false
+            }
+            if (!bot.inventory.hasSpaceFor(Item(leaf, 2)) || bot.inventory.computeAmountForId(coins) < 20) return false
+            bot.overlays.closeWindows()
+            if (!handler.webWalkTo(SubZone.FALADOR_EAST_BANK)) return false
+            val npc = world.locator.findNearestNpc(SubZone.FALADOR_EAST_BANK.inside, 80) {
+                it.id == 36 && it.state == EntityState.ACTIVE
+            } ?: return false
+            if (!handler.interactions.approach(npc, timeout = 60.seconds,
+                    canContinue = { ActionSafety.NON_COMBAT.allows(bot) })) return false
+            if (!bot.inventory.hasSpaceFor(Item(leaf, 2)) || bot.inventory.computeAmountForId(coins) < 20) return false
+            val before = carried()
+            var queue: DialogueQueue? = null
+            var pageOwned: DialogueInterface? = null
+            var optionSelected: OptionDialogue? = null
+            var step = 0
+            var replacementExpected = false
+            val previous = bot.dialogues
+            try {
+                if (!handler.interactions.interact(1, npc) { ActionSafety.NON_COMBAT.allows(bot) }) return false
+                while (ActionSafety.NON_COMBAT.allows(bot) && carried() == before) {
+                    val page = bot.overlays.getOverlay(DialogueInterface::class.java)
+                    val expected = when (page) {
+                        is NpcDialogue -> page.npcId == 36
+                        is PlayerDialogue -> page.lines == listOf(if (step >= 2) offer else response)
+                        is OptionDialogue -> page === optionSelected || (if (step == 0) response else offer) in page.options
+                        else -> false
+                    }
+                    val current = bot.dialogues
+                    if (queue == null) {
+                        if (expected && current != null && current !== previous) queue = current
+                    } else if (current !== queue) {
+                        if (!replacementExpected || !expected || current == null) return false
+                        queue = current
+                        replacementExpected = false
+                    }
+                    if (queue != null && page != null) {
+                        if (!expected) return false
+                        pageOwned = page
+                        if (page is OptionDialogue && page !== optionSelected) {
+                            if (step >= 2 || !handler.widgets.clickDialogueOption(if (step == 0) response else offer))
+                                return false
+                            optionSelected = page
+                            step++
+                            replacementExpected = true
+                        }
+                    }
+                    delay(1.seconds)
+                }
+                if (carried() <= before) return false
+            } finally {
+                // Close only the exact service page this attempt observed; do not advance a reward callback.
+                if (queue != null && bot.dialogues === queue &&
+                    bot.overlays.getOverlay(DialogueInterface::class.java) === pageOwned) {
+                    bot.overlays.closeWindows()
+                    bot.resetDialogues()
+                }
+            }
+        }
+        return true
     }
 }
