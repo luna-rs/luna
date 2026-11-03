@@ -113,6 +113,7 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
             Camp(SubZone.GREEN_DRAGONS, 75, setOf("Green dragon"), true),
             Camp(SubZone.KBD_LAIR, 100, setOf("King black dragon"), true),
             Camp(SubZone.GIANT_MOLE_LAIR, 110, setOf("Giant Mole"), true),
+            Camp(SubZone.CHAOS_ELEMENTAL_WILDERNESS, 110, setOf("Chaos Elemental"), true),
             Camp(SubZone.KALPHITE_QUEEN, 110, setOf("Kalphite Queen"), true)
         )
 
@@ -149,14 +150,16 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                                    moleReady: Boolean = false): List<Camp> {
             val eligible = camps.filter { it.minimum <= level &&
                 (!training || it.zone !in setOf(SubZone.LVL_12_WILDERNESS_CHAOS_TEMPLE,
-                    SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE)) &&
+                    SubZone.LVL_40_WILDERNESS_CHAOS_TEMPLE,
+                    SubZone.CHAOS_ELEMENTAL_WILDERNESS)) &&
                 (!training || (it.zone !in setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR) &&
                     it.zone !in NpcCombatScript.DRAGON_ZONES)) &&
                 canUseCamp(it.zone, purpose, hasDragonShield, queenReady, moleReady) }
             val preferred = if (training) eligible else eligible.filter { it.profit }.ifEmpty { eligible }
             // Keep several adjacent tiers available so sessions distribute across camps instead of one top-level zone.
             // Optional boss outings and advanced camps retain the ordinary mid-game alternatives.
-            val bosses = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
+            val bosses = setOf(SubZone.KBD_LAIR, SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
+                SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val ordinary = preferred.filter { it.zone !in bosses }.ifEmpty { preferred }
             // Advanced alternatives supplement the established mid-game camps rather than displacing them.
             val threshold = minOf(75, ordinary.maxOfOrNull { it.minimum } ?: 3) - 25
@@ -195,7 +198,8 @@ class CombatCoordinator(private val training: Boolean) : BotCoordinator {
                 return RockCrabBotScript(bot, duration, purpose, loadout.spell?.spell,
                     zones = candidates.filter { it.zone in RockCrabBotScript.CAMPS }.map { it.zone }.toMutableList())
             }
-            val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR)
+            val dedicated = setOf(SubZone.KALPHITE_QUEEN, SubZone.GIANT_MOLE_LAIR,
+                SubZone.CHAOS_ELEMENTAL_WILDERNESS)
             val selected = if (candidates.firstOrNull()?.zone in dedicated) candidates.take(1)
                 else candidates.filter { it.zone !in dedicated && it.zone !in RockCrabBotScript.CAMPS }.take(4)
             if (selected.isEmpty()) return null

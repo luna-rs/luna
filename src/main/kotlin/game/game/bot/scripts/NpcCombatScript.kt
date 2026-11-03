@@ -28,6 +28,7 @@ import game.skill.slayer.SlayerMaster
 import game.skill.slayer.SlayerTaskType
 import game.bot.scripts.combat.NpcSafespotCombat
 import game.combat.npcHooks.giantMole.GiantMole
+import game.combat.npcHooks.chaosElemental.ChaosElementalAttack
 import game.combat.npcHooks.zygomite.Zygomites
 import game.combat.npcHooks.shades.MorttonShades
 import game.combat.npcHooks.wallBeast.WallBeasts
@@ -176,6 +177,7 @@ open class NpcCombatScript(bot: Bot,
          * Source-native entry and high-damage supplies are checked without inspecting camp occupancy.
          */
         internal fun campSuppliesOwned(bot: Bot, zone: SubZone): Boolean {
+            if (zone == SubZone.CHAOS_ELEMENTAL_WILDERNESS && !ChaosElementalTrip.ready(bot)) return false
             if (zone in WATERFALL_ZONES && !bot.itemTracker.contains(295)) return false
             if (zone == SubZone.TROLLHEIM_MOUNTAIN_TROLLS && !bot.itemTracker.contains(3105)) return false
             if (zone == SubZone.BRIMHAVEN_METAL && !bot.status.isAntiFire() &&
@@ -519,12 +521,20 @@ open class NpcCombatScript(bot: Bot,
      */
     private val darkCaveTrip: Boolean get() = SubZone.LUMBRIDGE_SWAMP_CAVES in originalZones
 
+    private val chaosTrip: Boolean get() = SubZone.CHAOS_ELEMENTAL_WILDERNESS in originalZones
+
+    /**
+     * A native Madness disarm is observed before scheduling the same one-to-six-tick personality reaction as PK
+     * switches. Only the session's actual inventory gear can be restored; missing supplies retain ordinary banking.
+     */
+    private var chaosGearReactionAt: Long? = null
+
     /**
      * Optional cannon supplies are selected once at each bank visit and never manufactured by this session.
      */
     private var cannonPrepared = false
 
-    private val socialCamp: Boolean get() = !queenTrip && activeZone != null && activeZone !in DRAGON_ZONES
+    private val socialCamp: Boolean get() = !queenTrip && !chaosTrip && activeZone != null && activeZone !in DRAGON_ZONES
 
     internal val campBehavior = CombatCampBehavior(this) { canAttack(it) }
 
@@ -577,6 +587,7 @@ open class NpcCombatScript(bot: Bot,
         if (moleTrip && (originalZones.size != 1 || !GiantMoleTrip.suppliesOwned(bot) ||
                 (!resumed && !GiantMoleTrip.ready(bot)))) return false
         if (darkCaveTrip && !GiantMoleTrip.lightOwned(bot)) return false
+        if (chaosTrip && (originalZones.size != 1 || !resumed && !ChaosElementalTrip.ready(bot))) return false
         if (SubZone.KBD_LAIR in originalZones && bot.combatLevel < 100) return false
         if (dragonTrip) {
             val weapon = loadout!!.gear[Equipment.WEAPON] ?: return false
@@ -661,6 +672,15 @@ open class NpcCombatScript(bot: Bot,
             return
         }
         val selected = loadout ?: return
+        if (chaosTrip) for (slot in selected.gear.indices) {
+            val id = selected.gear[slot] ?: continue
+            if (bot.equipment[slot]?.id != id && id !in bot.inventory &&
+                (!handler.banking.withdraw(Item(id)) || id !in bot.inventory)) {
+                bot.preferences.addWantedItem(id, 3)
+                stop()
+                return
+            }
+        }
         BotTradeIntentions.recordSupplies(bot,
             selected.runes.map { (id, amount) -> Item(id, amount * 28) }, stockTarget = 1_000)
         if (slayerTask == SlayerTaskType.ZYGOMITE && !collectFungicide()) {
@@ -748,7 +768,7 @@ open class NpcCombatScript(bot: Bot,
                 }
             }
         } else {
-            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip ||
+            val strongFood = SubZone.KBD_LAIR in originalZones || moleTrip || chaosTrip ||
                 originalZones.any { it in STRONG_FOOD_ZONES }
             if (strongFood) {
                 val carried = strongFoodCount()
@@ -1113,6 +1133,7 @@ open class NpcCombatScript(bot: Bot,
     // todo static set of valid npcs
     private fun canAttack(npc: Npc): Boolean {
         if (!acceptsAssignment(npc)) return false
+        if (chaosTrip) return npc.id == ChaosElementalAttack.CHAOS_ELEMENTAL
         if (slayerTask == SlayerTaskType.MOGRE && Mogres.liveMogre(bot) !== npc) return false
         if (npc.id in Zygomites.FORMS) return slayerTask == SlayerTaskType.ZYGOMITE
         if (queenTrip) return npc.id in setOf(1158, 1160) && KalphiteQueenTrip.canContinue(bot)
@@ -1202,6 +1223,7 @@ open class NpcCombatScript(bot: Bot,
             stop()
             return true
         }
+        if (chaosTrip && !forceBanking && !restoreChaosGear()) return true
         if (!queenTrip) {
             campBehavior.tick(activeZone, focus)
             if (campBehavior.holdingConversation && duration < 60.seconds) duration = 60.seconds
@@ -1224,6 +1246,33 @@ open class NpcCombatScript(bot: Bot,
         }
         if (inChamber) bot.combat.prayers.activateIfOff(CombatPrayer.PROTECT_FROM_MAGIC)
         return inChamber && waitingForQueen()
+    }
+
+    /**
+     * Re-equips only the selected owned outfit after a real disarm. Confusion displacement retains the existing
+     * focused-target web approach; recovery never teleports back onto the boss or adds replacement equipment.
+     */
+    private suspend fun restoreChaosGear(): Boolean {
+        val gear = loadout?.gear ?: return true
+        val missing = gear.indices.filter { slot -> gear[slot]?.let { bot.equipment[slot]?.id != it } == true }
+        if (missing.isEmpty()) {
+            chaosGearReactionAt = null
+            return true
+        }
+        if (missing.any { slot -> gear[slot]?.let { it !in bot.inventory } == true }) {
+            forceBanking = true
+            return false
+        }
+        val now = bot.world.currentTick
+        val reaction = chaosGearReactionAt ?: (now + handler.combat.pkSwitchDelay().inWholeMilliseconds / 600)
+            .also { chaosGearReactionAt = it }
+        if (now < reaction) return false
+        for (slot in missing) {
+            val id = gear[slot] ?: continue
+            if (!isActionSafe() || !handler.equipment.equip(id) || bot.equipment[slot]?.id != id) return false
+        }
+        chaosGearReactionAt = null
+        return true
     }
 
     /**
@@ -1310,6 +1359,7 @@ open class NpcCombatScript(bot: Bot,
         if (weapon != null && bot.equipment.weapon?.id != weapon) {
             combatConfigured = false
             clearMagic()
+            if (chaosTrip && weapon in bot.inventory) return false
             forceBanking = true
             return false
         }

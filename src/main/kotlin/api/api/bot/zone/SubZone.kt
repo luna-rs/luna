@@ -2545,6 +2545,15 @@ enum class SubZone(
         parent = { KARAMJA }, bankZone = { DRAYNOR }),
 
     /**
+     * Deep-Wilderness ground west of Rogues' Castle containing the native Chaos Elemental spawn. The footprint
+     * includes its local roam and Confusion landings; supplied profit outings retain ordinary Wilderness risk.
+     */
+    CHAOS_ELEMENTAL_WILDERNESS(
+        inside = Position(3260, 3924),
+        area = SimpleBoxArea.of(3243, 3908, 3280, 3946),
+        parent = { EDGEVILLE }),
+
+    /**
      * The icy chamber beneath Asgarnia, containing 14 ice warriors and ice giants for their respective
      * assignments.
      */
