@@ -1027,6 +1027,15 @@ enum class SubZone(
         parent = { KARAMJA }, bankZone = { Zone.SHILO_VILLAGE }),
 
     /**
+     * Western Mort Myre pools south of Canifis, containing six bait-fishing spots for slimy eels. Arrival stays
+     * on the walkable bank beside the western pool rather than on a water-bound NPC anchor.
+     */
+    MORT_MYRE_SLIMY_EEL_FISHING(
+        inside = Position(3424, 3410),
+        area = SimpleBoxArea.of(3418, 3401, 3446, 3422),
+        parent = { CANIFIS }, bankZone = { PORT_PHASMATYS }),
+
+    /**
      * The karambwan spots on northeast Karamja, north of the shipyard.
      */
     KARAMJA_KARAMBWAN_FISHING(

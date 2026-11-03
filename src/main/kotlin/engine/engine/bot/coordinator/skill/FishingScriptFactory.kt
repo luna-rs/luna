@@ -155,9 +155,10 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         ),
 
         /**
-         * Native pond bait.
+         * Native pond bait and swamp eels.
          */
-        KARAMBWANJI(setOf(KARAMBWANJI_NET), zones = { mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING) })
+        KARAMBWANJI(setOf(KARAMBWANJI_NET), zones = { mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING) }),
+        SLIMY_EEL(setOf(SLIMY_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.MORT_MYRE_SLIMY_EEL_FISHING) })
     }
 
     /**
