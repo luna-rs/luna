@@ -135,8 +135,10 @@ class TradeBotScript(bot: Bot,
     /** Players temporarily excluded after failed attempts, or for persistent negative feelings. */
     private val blacklist = HashMap<String, Instant>()
 
-    /** Throttles outgoing requests independently of incoming request processing. */
-    private val searchTimer = Stopwatch.createUnstarted()
+    /**
+     * Retains only candidate order across bounded search passes, independently of incoming requests.
+     */
+    private var partnerSearch: BotTradePartnerSearch<Player>? = null
 
     /** Throttles advertisements for the current intentions. */
     private val messageTimer = Stopwatch.createUnstarted()
@@ -252,6 +254,7 @@ class TradeBotScript(bot: Bot,
         get() = purpose == BotTradePurpose.MERCHANT_SELL || purpose == BotTradePurpose.SELL && bot.preferences.isMerchant
 
     override suspend fun onInit(resumed: Boolean): Boolean {
+        partnerSearch = null
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
@@ -273,6 +276,7 @@ class TradeBotScript(bot: Bot,
     override suspend fun equipment(): BotGearLocator? = null
 
     override suspend fun onBankOpen(initial: Boolean) {
+        partnerSearch = null
         prepared = false
         if (!computeOfferAndExpected()) return
         handler.banking.clickBankingMode(true)
@@ -326,6 +330,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun finish() {
+        partnerSearch = null
         BotSocialInteractions.cancel(bot)
         BotConversations.cancel(bot)
         prepared = false
@@ -363,13 +368,18 @@ class TradeBotScript(bot: Bot,
         }
         if (!tryPlayerTrade()) {
             val incoming = bot.tradeRequests.pollBotRequests { canAcceptRequest(it) }
-            val other = incoming ?: if (!searchTimer.isRunning || searchTimer.elapsed().seconds >= 8) {
-                searchTimer.reset().start()
+            val search = partnerSearch ?: BotTradePartnerSearch<Player>(world.currentTick).also { partnerSearch = it }
+            val other = incoming ?: search.find(world.currentTick, candidates = {
                 blacklist.entries.removeIf { !it.value.isAfter(Instant.now()) }
                 world.locator.findPlayers(bot, Position.VIEWING_DISTANCE * 2) {
-                    it.isRealBot() && bot.isViewableFrom(it) && canTradeWith(it)
-                }.shuffled().firstOrNull()
-            } else null
+                    it.isRealBot() && bot.isViewableFrom(it)
+                }.toList()
+            }, eligible = {
+                it.isRealBot() && bot.isViewableFrom(it) && eligibleTradePartner(it)
+            }, matches = {
+                // Eligibility and planning run together on the game thread without suspending.
+                botExchange((it as Bot).scriptStack.current() as TradeBotScript) != null
+            })
             if (other != null) {
                 attemptTrade(other)
                 if (prepared && !forceBanking) tryPlayerTrade()
@@ -1336,22 +1346,35 @@ class TradeBotScript(bot: Bot,
         return confirm.confirmAndAwait()
     }
 
-    /** Matches complementary purposes by normalized item ids, ignoring price-wrapper object identity. */
-    private fun canTradeWith(other: Player): Boolean {
+    /**
+     * Rejects unavailable and same-purpose partners before calculating any trade quantities or prices.
+     */
+    private fun eligibleTradePartner(other: Player): Boolean {
         if (other === bot || other.state != EntityState.ACTIVE || checkBlacklisted(other.username)) return false
         val existing = other.overlays[OfferTradeInterface::class]
         if (other.overlays.hasWindow() && existing?.other !== bot) return false
         if (!other.isRealBot()) return true
         val script = other.scriptStack.current() as? TradeBotScript ?: return false
         if (script.negotiating && other.tradingWith != bot.index && existing?.other !== bot) return false
-        return prepared && script.prepared && botExchange(script) != null
+        if (other.tradingWith != -1 && other.tradingWith != bot.index && existing?.other !== bot) return false
+        return prepared && script.prepared && !forceBanking && !script.forceBanking && buying != script.buying
+    }
+
+    /**
+     * Matches complementary purposes using fresh quantities and the existing exchange calculation.
+     */
+    private fun canTradeWith(other: Player): Boolean {
+        if (!eligibleTradePartner(other)) return false
+        if (!other.isRealBot()) return true
+        return botExchange(other.scriptStack.current() as TradeBotScript) != null
     }
 
     /**
      * Accepts only requests still addressed to this bot, including a reciprocal request that just opened a trade.
      */
-    private fun canAcceptRequest(other: Player): Boolean = canTradeWith(other) &&
-        (other.tradingWith == bot.index || other.overlays[OfferTradeInterface::class]?.other === bot)
+    private fun canAcceptRequest(other: Player): Boolean =
+        (other.tradingWith == bot.index || other.overlays[OfferTradeInterface::class]?.other === bot) &&
+            canTradeWith(other)
 
     /**
      * Lets a waiting bot request yield to a live player request without consuming that player's place in the queue.
@@ -1362,6 +1385,7 @@ class TradeBotScript(bot: Bot,
     fun resolveScrutiny(other: Player): BotTradeScrutiny = BotTradeScrutiny.resolveScrutinyFor(bot, other)
 
     override fun onPaused() {
+        partnerSearch = null
         cancelAdvertisementTrade()
         prepared = false
         marketplace.releaseTradingSpot(this)
@@ -1371,6 +1395,7 @@ class TradeBotScript(bot: Bot,
     }
 
     override suspend fun onBankRequested(initial: Boolean): Boolean {
+        partnerSearch = null
         if (!initial) {
             marketplace.releaseTradingSpot(this)
             homeOverflow = null
@@ -1394,6 +1419,7 @@ class TradeBotScript(bot: Bot,
 
     /** Finishes through the normal zoned-script lifecycle so shop fallback remains available. */
     private fun endSession(reason: String) {
+        partnerSearch = null
         prepared = false
         marketplace.releaseTradingSpot(this)
         homeOverflow = null
