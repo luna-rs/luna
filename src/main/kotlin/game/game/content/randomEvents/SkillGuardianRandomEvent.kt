@@ -67,6 +67,8 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
                     val defendSound: Sound? = null) {
         RIVER_TROLL(391..396, 3, "Fishies be mine, leave dem fishies!", Sound.WATERSPLASH),
         TREE_SPIRIT(438..443, 2, "Leave these woods and never return!", Sound.DRYAD_APPEAR, 180),
+        ROCK_GOLEM(413..418, 3, "Rrrraaarrrrggghhhh, flee human!", Sound.ROCK_SPIRIT_APPEAR,
+                   defendSound = Sound.GOLEM_HIT),
         SHADE(425..430, 4, "Leave this place mortal!", sound = null, appearanceGraphic = 78, appearanceHeight = 0,
               defendSound = Sound.GHOST_HIT),
         ZOMBIE(419..424, 4, "Brainsssss...", Sound.ZOMBIE_MOAN, appearanceGraphic = 78, appearanceHeight = 0,
@@ -168,6 +170,36 @@ class SkillGuardianRandomEvent(override val player: Player, override val npc: Np
  */
 private fun DropTable.weighted(mob: Mob?, source: Entity?, chance: Double): DropTableItemList =
     computeTable(mob, source).map { DropTableItem(it.id, it.amount, it.chance * chance) }
+
+/**
+ * Lost City's low- and high-tier Rock Golem single-reward tables. The two highest combat forms use the
+ * 128-slot table and its two-slot random-jewel subroll; the other four retain the separate 78-slot table.
+ * Combat remains melee-only because the source explicitly dates its ranged attack after revision 377.
+ *
+ * @property high Whether this table belongs to one of the two highest golem forms.
+ * @author lare96
+ */
+internal class RockGolemDropTable(private val high: Boolean) : DropTable() {
+    override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
+        val direct = if (high) listOf(
+            Triple(1265, 1, 4), Triple(1271, 1, 1), Triple(1275, 1, 1), Triple(557, 5, 30),
+            Triple(557, 42, 4), Triple(562, 2, 4), Triple(453, 1, 25), Triple(447, 1, 10),
+            Triple(2349, 1, 7), Triple(440, 1, 4), Triple(2351, 1, 3), Triple(438, 1, 3), Triple(436, 1, 3),
+            Triple(449, 1, 3), Triple(451, 1, 1), Triple(1913, 1, 13), Triple(2347, 1, 10)
+        ) else listOf(
+            Triple(557, 5, 30), Triple(557, 42, 4), Triple(562, 2, 4), Triple(2349, 1, 7),
+            Triple(440, 1, 4), Triple(438, 1, 3), Triple(436, 1, 3), Triple(1913, 1, 13), Triple(2347, 1, 10)
+        )
+        val slots = if (high) 128.0 else 78.0
+        return buildList {
+            direct.forEach { (id, quantity, weight) -> add(DropTableItem(id, quantity, weight / slots)) }
+            if (high) addAll(GuardianJewelDropTable.weighted(mob, source, 2.0 / 128))
+        }
+    }
+
+    override fun computePossibleItems(): DropTableItemList = computeTable(null, null).filterNot { it.isNothing() } +
+        if (high) listOf(DropTableItem(1452, 1, 2.0 / 128 * 4 / 128)) else emptyList()
+}
 
 /**
  * Source members Tree spirit loot, including conditional random-herb and random-jewel rolls.

@@ -190,6 +190,8 @@ object RandomEvents {
         if (slot >= activity.specialSlots) {
             generalKind(random)?.let { startEncounter(player, it) } ?: false
         } else when (activity) {
+            Activity.MINING -> slot == 2 && startGuardian(player, SkillGuardianRandomEvent.Kind.ROCK_GOLEM)
+            Activity.MINING_WITHOUT_GAS -> slot == 1 && startGuardian(player, SkillGuardianRandomEvent.Kind.ROCK_GOLEM)
             Activity.WOODCUTTING -> slot == 0 && startGuardian(player, SkillGuardianRandomEvent.Kind.TREE_SPIRIT)
             Activity.THIEVING -> startGuardian(player, SkillGuardianRandomEvent.Kind.WATCHMAN)
             Activity.THIEVING_CHEST -> slot == 1 && startGuardian(player, SkillGuardianRandomEvent.Kind.WATCHMAN)

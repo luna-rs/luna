@@ -7693,13 +7693,13 @@
   {
     "id": 413, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 25,
     "maximum_hit": 2,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7710,11 +7710,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      9,
+      9,
+      9,
+      8,
+      1
     ],
     "bonuses": [
       0,
@@ -7727,13 +7727,13 @@
   {
     "id": 414, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 40,
     "maximum_hit": 3,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7744,11 +7744,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      22,
+      22,
+      22,
+      20,
+      1
     ],
     "bonuses": [
       0,
@@ -7761,13 +7761,13 @@
   {
     "id": 415, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 60,
     "maximum_hit": 5,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7778,11 +7778,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      38,
+      38,
+      38,
+      35,
+      1
     ],
     "bonuses": [
       0,
@@ -7795,13 +7795,13 @@
   {
     "id": 416, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
+    "hitpoints": 85,
     "maximum_hit": 7,
-    "attack_speed": 7,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7812,11 +7812,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      65,
+      65,
+      65,
+      70,
+      1
     ],
     "bonuses": [
       0,
@@ -7829,13 +7829,13 @@
   {
     "id": 417, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 9,
-    "attack_speed": 7,
+    "hitpoints": 120,
+    "maximum_hit": 11,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7846,11 +7846,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      100,
+      100,
+      100,
+      75,
+      1
     ],
     "bonuses": [
       0,
@@ -7863,13 +7863,13 @@
   {
     "id": 418, // Rock Golem
     "movement": { "max_range": 5, "attack_range": 0, "retreat_hitpoints": -1 },
-    "respawn_ticks": 9,
+    "respawn_ticks": -1,
     "aggression": null,
     "poisonous": false,
     "immune_poison": false,
-    "hitpoints": 10,
-    "maximum_hit": 11,
-    "attack_speed": 7,
+    "hitpoints": 170,
+    "maximum_hit": 14,
+    "attack_speed": 4,
     "attack_animation": 153,
     "defence_animation": 154,
     "death_animation": 156,
@@ -7880,11 +7880,11 @@
     "magic_bonus": 0,
     "ranged_bonus": 0,
     "skills": [
-      0,
-      0,
-      0,
-      0,
-      0
+      130,
+      130,
+      130,
+      80,
+      1
     ],
     "bonuses": [
       0,
