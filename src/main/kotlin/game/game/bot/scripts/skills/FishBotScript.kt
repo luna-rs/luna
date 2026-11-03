@@ -215,7 +215,8 @@ class FishBotScript(
     }
 
     override fun requirements(): Boolean {
-        return fishingSpotIds.value.isNotEmpty() && (!caveFishing || GiantMoleTrip.lightOwned(bot))
+        return fishingSpotIds.value.isNotEmpty() && (!caveFishing || GiantMoleTrip.lightOwned(bot)) &&
+            (selectedTool != Tool.LAVA_EEL_FISHING_ROD || bot.itemTracker.contains(toolId))
     }
 
     override suspend fun onBankOpenSkilling(initial: Boolean) {
@@ -288,8 +289,8 @@ class FishBotScript(
         return sortedSetOf(SkillingTool(toolId, selectedTool.level))
     }
 
-    override fun emergencyTool(): SkillingTool {
-        return SkillingTool(toolId, selectedTool.level)
+    override fun emergencyTool(): SkillingTool? {
+        return if (selectedTool == Tool.LAVA_EEL_FISHING_ROD) null else SkillingTool(toolId, selectedTool.level)
     }
 
     override suspend fun interactionOption(target: Npc): Int? {

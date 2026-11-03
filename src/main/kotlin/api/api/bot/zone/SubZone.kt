@@ -1054,6 +1054,15 @@ enum class SubZone(
         parent = { LUMBRIDGE }),
 
     /**
+     * Taverley Dungeon lava shore with three lava-eel bait spots. Fishing requires an owned oily rod and bait;
+     * the arrival is on the northern shore, outside the lava tiles occupied by the spots.
+     */
+    TAVERLY_LAVA_EEL_FISHING(
+        inside = Position(2890, 9767),
+        area = SimpleBoxArea.of(2883, 9760, 2897, 9774),
+        parent = { TAVERLY }),
+
+    /**
      * The karambwan spots on northeast Karamja, north of the shipyard.
      */
     KARAMJA_KARAMBWAN_FISHING(

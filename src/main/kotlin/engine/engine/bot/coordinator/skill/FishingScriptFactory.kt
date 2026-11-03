@@ -158,12 +158,13 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
         ),
 
         /**
-         * Native pond bait, swamp eels and lit-cave eels.
+         * Native pond bait, swamp eels, lit-cave eels and oily-rod lava eels.
          */
         KARAMBWANJI(setOf(KARAMBWANJI_NET), zones = { mutableListOf(SubZone.KARAMJA_KARAMBWANJI_FISHING) }),
         SLIMY_EEL(setOf(SLIMY_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.MORT_MYRE_SLIMY_EEL_FISHING) }),
         CAVE_EEL(setOf(CAVE_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.LUMBRIDGE_WEST_CAVE_EEL_FISHING,
-            SubZone.LUMBRIDGE_EAST_CAVE_EEL_FISHING) })
+            SubZone.LUMBRIDGE_EAST_CAVE_EEL_FISHING) }),
+        LAVA_EEL(setOf(LAVA_EEL_FISHING_ROD), zones = { mutableListOf(SubZone.TAVERLY_LAVA_EEL_FISHING) })
     }
 
     /**
@@ -186,6 +187,7 @@ object FishingScriptFactory : SkillingScriptFactory(SKILL_FISHING) {
     ): BotScript {
         val activities = BOT_TOOLS.filter { tool ->
             when (tool) {
+                LAVA_EEL_FISHING_ROD -> bot.itemTracker.contains(tool.id)
                 CAVE_EEL_FISHING_ROD -> GiantMoleTrip.lightOwned(bot) &&
                     (bot.swampCavesRoped || bot.itemTracker.contains(954))
                 else -> true

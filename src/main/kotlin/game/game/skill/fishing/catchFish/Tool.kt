@@ -193,7 +193,7 @@ enum class Tool(val id: Int,
         const val EMPTY_KARAMBWAN_VESSEL = 3157
 
         /**
-         * The tool items bots start with. Bots don't fish lava eels, and start with an empty Karambwan vessel.
+         * Starter tools exclude the specialist oily rod. Bots start with an empty Karambwan vessel.
          */
         val ALL_IDS: Set<Int> = (entries - LAVA_EEL_FISHING_ROD - KARAMBWAN_VESSEL).map { it.id }.toSet() +
                 EMPTY_KARAMBWAN_VESSEL
