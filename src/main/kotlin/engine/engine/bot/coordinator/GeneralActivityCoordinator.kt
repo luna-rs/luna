@@ -11,6 +11,7 @@ import game.bot.scripts.RechargeGloryBotScript
 import game.bot.scripts.FillWaterBotScript.Source
 import game.bot.scripts.MakeCrystalKeyBotScript
 import game.bot.scripts.OpenCrystalChestBotScript
+import game.bot.scripts.OpenContainerBotScript
 import game.bot.scripts.SearchNestBotScript
 import game.bot.scripts.TradeMolePartsBotScript
 import game.skill.woodcutting.searchNest.Nest
@@ -28,6 +29,7 @@ import kotlin.time.Duration.Companion.minutes
  * Owned unsearched bird nests can also be opened and their contents banked. Owned experience lamps are redeemed
  * in a preferred supported skill. Depleted glories can be recharged at the native Fountain of Heroes.
  * Owned mole claws and skins can be exchanged with Wyson before the resulting nests enter ordinary nest searching.
+ * Owned oysters can be opened through the native container activity when an owned chisel is available.
  * These tasks do not depend on a Crafting or combat preference.
  * Owned clue scrolls and caskets across all three tiers enable bounded Treasure Trails with an owned spade.
  * Low-combat accounts can occasionally deliver essence to a funded skiller Runecrafter for rune payments.
@@ -84,6 +86,8 @@ object GeneralActivityCoordinator : BotCoordinator {
         }
         MakeCrystalKeyBotScript(bot, duration).let { if (it.isEligible()) return it }
         TradeMolePartsBotScript(bot, duration).let { if (it.isEligible()) return it }
+        OpenContainerBotScript.Container.entries.map { OpenContainerBotScript(bot, it, duration) }
+            .filter { it.isEligible() }.randomOrNull()?.let { return it }
         Nest.VALUES.filter { owned(bot, it.id) > 0 }.randomOrNull()?.let {
             return SearchNestBotScript(bot, it, duration)
         }
