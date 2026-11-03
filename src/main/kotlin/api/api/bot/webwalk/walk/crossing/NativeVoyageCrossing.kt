@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Takes the Miscellania and Braindeath voyages through their ordinary Talk-to conversations.
+ * Takes the shore, island and Ape Atoll crew journeys through their ordinary Talk-to conversations.
  * Only the native confirmation option is selected; quick travel and direct movement are never used.
  *
  * @author lare96

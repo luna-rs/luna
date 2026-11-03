@@ -7,6 +7,8 @@ import engine.obj.LadderDestination
 import game.content.nativeTravel.NativeVoyages
 import io.luna.game.model.Position
 import io.luna.game.model.World
+import io.luna.game.model.Direction
+import io.luna.game.model.mob.interact.InteractionPolicy
 
 /**
  * Generates each free native NPC voyage as its own directed Talk-to crossing.
@@ -23,7 +25,12 @@ object NativeVoyageRouteGenerator {
                canLand: (Position) -> Boolean = LadderDestination::canLand): List<GeneratedObstacle> =
         NativeVoyages.Route.entries.mapNotNull { route ->
             val npc = gameWorld.locator.findNpcs(route.departure, 10) { NativeVoyages.route(it) == route }.firstOrNull()
-            val from = standableNear(route.departure)
+            val from = if (npc == null) null else {
+                (listOf(route.departure, npc.position) + Direction.NESW.map { npc.position.translate(1, it) })
+                    .mapNotNull(standableNear).distinct().firstOrNull {
+                        canLand(it) && gameWorld.collisionManager.reached(it, npc, InteractionPolicy.STANDARD_SIZE)
+                    }
+            }
             if (npc == null || from == null || !canLand(from) || !canLand(route.destination)) {
                 report.skipped += "Native voyage ${route.name}: missing crew or legal shore landing"
                 null

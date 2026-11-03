@@ -117,7 +117,7 @@ enum class TeleportSpell(val level: Int,
               xp = 74.0,
               button = 18470,
               displayName = "Ape Atoll",
-              destination = Position(2797, 2798),
+              destination = Position(2797, 2798, 1),
               style = TeleportStyle.REGULAR,
               requirements = listOf(
                   RuneRequirement(Rune.WATER, 2),

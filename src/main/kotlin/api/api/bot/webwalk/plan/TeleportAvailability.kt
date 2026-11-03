@@ -6,6 +6,7 @@ import api.bot.webwalk.model.SpecialTeleport
 import api.predef.*
 import api.predef.ext.*
 import game.item.degradable.jewellery.TeleportJewellery
+import game.item.greegree.GreegreeController
 import game.skill.magic.Magic
 import game.skill.magic.SpellCost
 import game.skill.magic.teleportSpells.TeleportSpell
@@ -70,7 +71,8 @@ object TeleportAvailability {
      */
     private fun canCast(bot: Bot, key: String?, bank: BankItems?): Boolean {
         val spell = TeleportSpell.named(key) ?: return false
-        return bot.spellbook == spell.style.spellbook && cost(bot, spell, bank) is SpellCost.Castable
+        return bot.controllers.primary !is GreegreeController && bot.spellbook == spell.style.spellbook &&
+            cost(bot, spell, bank) is SpellCost.Castable
     }
 
     /**

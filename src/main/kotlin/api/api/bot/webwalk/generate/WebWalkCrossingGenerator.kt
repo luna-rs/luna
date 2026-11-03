@@ -281,7 +281,7 @@ object SpecialCrossings {
         PaterdomusCrossingSpec.GATES + TrollClimbingCrossingSpec.ALL + TrollArenaGateSpec.SPEC +
         KharaziJungleCrossingSpec.SPEC + NativeAccessCrossingSpec.ALL + PyramidRockSlideCrossingSpec.SPEC +
         KaramjaLogCrossingSpec.SPEC + TenzingCrossingSpec.DOORS + TenzingCrossingSpec.STILE +
-        TrollSlopeCrossingSpec.SPEC
+        TrollSlopeCrossingSpec.SPEC + HangarExitCrossingSpec.POWERED_HANGAR + ApeGateCrossingSpec.GATE
 
     /**
      * Places a web at [x],[y], crossed from [fromX],[fromY] to [toX],[toY].
