@@ -23,7 +23,8 @@ import io.luna.game.model.mob.bot.Bot
  * When no plot needs a supplied visit, owned tree seeds or seedlings can be prepared up to one sapling per mapped
  * matching tree plot. Watered seedlings already count toward this reserve; native growth never blocks selection.
  * Compost visits recover ready fertilizer and finish existing batches before starting another reserve with owned
- * weeds, roots or farm produce. Closed bins are ignored until their native rot deadline; herbs are not composted.
+ * weeds, roots or farm produce. Owned tomatoes can supply one bin of rotten tomatoes. Closed bins are ignored
+ * until their native rot deadline; herbs are not composted.
  *
  * @author lare96
  */
@@ -49,8 +50,9 @@ object FarmingScriptFactory : SkillingScriptFactory(SKILL_FARMING) {
         val urgent = candidates.filter { it.patch.dead || it.patch.diseased || it.patch.harvestReady() }.ifEmpty { candidates }
         val preferred = if (profit) urgent.filter { it.location is HerbPatchLocation }.ifEmpty { urgent } else urgent
         val compost = MakeCompostBotScript.SITES.keys.flatMap { location ->
-            listOf(CompostBinType.COMPOST, CompostBinType.SUPERCOMPOST).map {
-                MakeCompostBotScript(bot, location, it, duration)
+            CompostBinType.entries.map {
+                MakeCompostBotScript(bot, location, it, duration,
+                    target = if (it == CompostBinType.TOMATOES) 15 else 30)
             }
         }.filter { it.isEligible() }.shuffled().maxByOrNull {
             val stage = when {

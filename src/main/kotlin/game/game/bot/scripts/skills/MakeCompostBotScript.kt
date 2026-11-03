@@ -23,17 +23,18 @@ import kotlin.time.Duration
  * Visits a native compost bin to fill, close, open or empty it through ordinary player interactions.
  * Only owned weeds, tree roots and compostable farm produce are used; herbs and seeds are preserved. Inputs must
  * match the bin's existing type, and a new batch requires enough owned material to finish the whole bin. No native
- * contents are discarded or mixed down to ordinary compost. Existing tomato bins are left alone.
+ * contents are discarded or mixed down to ordinary compost. Owned tomatoes can form a separate rotten-tomato batch.
  *
  * Finished products and pending bin contents count toward a small fertilizer reserve. Full and partly filled bins
  * are completed even when that reserve is already met. Closed bins are left to rot while the bot does other work;
- * later visits collect finished compost with owned buckets. Native handlers alone exchange items, set timers and
+ * later visits collect finished compost with owned buckets, or rotten tomatoes through the bin's first option.
+ * Native handlers alone exchange items, set timers and
  * award experience. Shared inventory lifecycle handles banking, travel, safety, retries and saved sessions.
  * Stored buckets are retrieved through native leprechaun exchanges; stored fertilizer counts toward the reserve.
  *
  * @param bot The gardener.
  * @property location Native persistent compost-bin identity.
- * @property type Fertilizer type to prepare, retained when a session is saved.
+ * @property type Native bin recipe to prepare, retained when a session is saved.
  * @param duration Maximum visit duration, including banking and travel.
  * @property target Desired reserve of this fertilizer across carried/banked stock and pending native bins.
  * @author lare96
@@ -65,7 +66,7 @@ class MakeCompostBotScript(
          */
         private val MATERIALS: List<Int> = (listOf(Farming.WEEDS) + TreeSapling.entries.map { it.roots } +
             Farming.LOCATIONS.flatMap { it.createPatch().crops }.filterNot { it is HerbSeed }.map { it.produce.id })
-            .distinct().filter { CompostBinType.lookup(it) in listOf(CompostBinType.COMPOST, CompostBinType.SUPERCOMPOST) }
+            .distinct().filter { CompostBinType.lookup(it) != null }
 
         /**
          * Saves only visit policy and shared session/retry state. Native bin contents and rot timers remain in Farming.
@@ -78,7 +79,7 @@ class MakeCompostBotScript(
              */
             var location = CompostBinLocation.FALADOR
             /**
-             * Fertilizer type; never a rotten-tomato recipe.
+             * Native fertilizer or rotten-tomato recipe.
              */
             var type = CompostBinType.COMPOST
             /**
@@ -101,7 +102,7 @@ class MakeCompostBotScript(
     }
 
     init {
-        require(type != CompostBinType.TOMATOES && target > 0)
+        require(target > 0)
     }
 
     /**
@@ -136,6 +137,7 @@ class MakeCompostBotScript(
         if (bin.type != null && bin.type != type) return null
         if (bin.closed && !bin.isRotted(System.currentTimeMillis())) return null
         if (bin.open || bin.closed) {
+            if (type == CompostBinType.TOMATOES) return emptyList()
             val buckets = minOf(bin.amount.toLong(), stock(Farming.BUCKET), bot.inventory.capacity().toLong()).toInt()
             return if (buckets > 0) listOf(Item(Farming.BUCKET, buckets)) else null
         }
@@ -173,13 +175,19 @@ class MakeCompostBotScript(
 
     override suspend fun onInventoryBankRequested(): Boolean =
         if (bin.closed && !bin.isRotted(System.currentTimeMillis())) false
-        else requestProductionBank(supplies { bot.inventory.computeAmountForId(it).toLong() } != null)
+        else requestProductionBank(supplies { bot.inventory.computeAmountForId(it).toLong() } != null && canCollect())
+
+    /**
+     * Tomato collection adds an item without consuming a bucket, so a full inventory must bank first.
+     */
+    private fun canCollect(): Boolean = type != CompostBinType.TOMATOES || !bin.open ||
+        bot.inventory.hasSpaceFor(Item(type.product))
 
     override suspend fun onExecuteInZone(): Boolean {
         Farming.update(bot)
         if (bin.closed && !bin.isRotted(System.currentTimeMillis())) return false
         val supplies = supplies { bot.inventory.computeAmountForId(it).toLong() }
-        if (!productionReady(supplies != null)) return true
+        if (!productionReady(supplies != null && canCollect())) return true
         val input = if (bin.closed || bin.canClose()) null else supplies?.firstOrNull()?.id
         val before = bin.amount
         val wasClosed = bin.closed
