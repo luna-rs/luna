@@ -20,7 +20,7 @@ internal object DeveloperAutomation {
     fun skill(bot: Bot, id: Int): BotScript {
         val factory = requireNotNull(SkillingCoordinator.factories[id]) { "Use Combat for this skill." }
         bot.profitMode = false
-        return factory.getTrainingScript(bot, bot.skill(id).staticLevel, ArrayList())
+        return factory.getScript(bot, bot.skill(id).staticLevel, ArrayList(), training = true)
     }
 
     fun combat(bot: Bot): BotScript = object : DynamicBotScript(bot) {

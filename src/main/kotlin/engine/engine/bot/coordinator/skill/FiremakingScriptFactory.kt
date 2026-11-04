@@ -1,5 +1,6 @@
 package engine.bot.coordinator.skill
 
+import api.bot.action.BotCombatActionHandler
 import api.bot.script.BotScript
 import api.bot.script.VoidBotScript
 import api.bot.zone.SubZone
@@ -43,7 +44,7 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      * Continues an existing Firemaking session without restarting its time budget or gathering unusable logs.
      */
     fun getTrainingScript(bot: Bot, level: Int, zones: MutableList<SubZone>, duration: Duration): BotScript {
-        if (duration <= Duration.ZERO) return VoidBotScript(bot)
+        if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
         getBurnScript(bot, level, zones, duration)?.let { return it }
         if (Log.entries.any { it.level <= level && bot.itemTracker.count(it.id) > 0 }) return VoidBotScript(bot)
         return WoodcuttingScriptFactory.getFiremakingScript(bot, level, duration, zones)
@@ -59,13 +60,13 @@ object FiremakingScriptFactory : SkillingScriptFactory(SKILL_FIREMAKING) {
      * @param bot The bot that will run the script.
      * @param level The bot's current Firemaking level.
      * @param zones The mutable zone list to populate with firemaking spots.
-     * @return The script, or `null` if the bot doesn't have any logs it can burn.
+     * @return The script, or `null` if the training goal is complete or the bot doesn't have any logs it can burn.
      */
     fun getBurnScript(bot: Bot,
                       level: Int = bot.firemaking.staticLevel,
                       zones: MutableList<SubZone> = ArrayList(),
                       duration: Duration = getDuration(bot)): FiremakingBotScript? {
-        if (duration <= Duration.ZERO) return null
+        if (duration <= Duration.ZERO || !BotCombatActionHandler.wantsToTrain(bot, skillId)) return null
         val owned = Log.entries.filter { bot.itemTracker.count(it.id) > 0 }
         val log = getBestActivity(bot, level, { it.level }, owned) ?: return null
         zones.clear()

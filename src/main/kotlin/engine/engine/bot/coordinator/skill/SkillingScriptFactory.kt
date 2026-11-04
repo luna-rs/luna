@@ -1,7 +1,9 @@
 package engine.bot.coordinator.skill
 
+import api.bot.action.BotCombatActionHandler
 import io.luna.game.model.mob.bot.Bot
 import api.bot.script.BotScript
+import api.bot.script.VoidBotScript
 import api.bot.script.recentEscape
 import api.bot.zone.SubZone
 import api.predef.*
@@ -81,14 +83,16 @@ abstract class SkillingScriptFactory(val skillId: Int) {
 
     /**
      * Creates either a training or profit script for [bot].
+     * Completed training goals return an empty script, including requests queued by another skilling script.
      *
      * @param bot The bot that will run the script.
      * @param level The bot's current level in this factory's skill.
      * @param zones The mutable zone list to populate with valid skilling areas.
      * @param training If `true`, creates a training script. Otherwise, creates a profit script.
-     * @return A skilling script matching the requested mode.
+     * @return A skilling script matching the requested mode, or an empty script if the training goal is complete.
      */
     fun getScript(bot: Bot, level: Int, zones: MutableList<SubZone>, training: Boolean): BotScript {
+        if (training && !BotCombatActionHandler.wantsToTrain(bot, skillId)) return VoidBotScript(bot)
         return if (training) {
             getTrainingScript(bot, level, zones)
         } else {

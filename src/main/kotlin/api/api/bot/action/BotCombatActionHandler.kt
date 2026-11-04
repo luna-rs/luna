@@ -79,12 +79,17 @@ class BotCombatActionHandler(private val bot: Bot, private val handler: BotActio
 
         /**
          * Determines whether training [skill] still advances this bot's permanent account build.
-         * Non-combat skills are unrestricted; skiller templates reject every combat skill.
+         * Non-combat training stops at 99, except skiller templates pursue the maximum experience in those skills.
+         * Skiller templates reject every combat skill.
          * Static levels avoid temporary boosts or drains changing the decision.
          */
         @JvmStatic
         fun wantsToTrain(bot: Bot, skill: Int): Boolean {
-            if (!Skill.isCombatSkill(skill)) return true
+            if (!Skill.isCombatSkill(skill)) {
+                val current = bot.skill(skill)
+                return current.staticLevel < 99 ||
+                    (bot.preferences.isSkiller && current.experience < SkillSet.MAXIMUM_EXPERIENCE)
+            }
             if (bot.preferences.isSkiller || bot.preferences.scavenging.isIntroductory) return false
             val target = bot.preferences.pk?.build()?.targetLevel(skill) ?: 99
             return bot.skill(skill).staticLevel < target
