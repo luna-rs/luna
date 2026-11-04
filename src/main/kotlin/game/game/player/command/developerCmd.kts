@@ -56,6 +56,7 @@ import io.luna.util.CacheDumpUtils
 import io.luna.util.NumberUtils
 import io.luna.util.RandomUtils
 import java.lang.Boolean.parseBoolean
+import java.util.EnumSet
 import kotlin.time.Duration.Companion.hours
 
 // todo each command in its own file
@@ -449,7 +450,8 @@ cmd("findfight") {
     }
     plr.move(choices.random())
 }
-cmd("findbot") {
+cmd("findbot", RIGHTS_DEV) {
+    val subzones = EnumSet.noneOf(SubZone::class.java)
     val choices = ArrayList<Bot>()
     for (next in world.players) {
         if (next.isRealBot() && !next.isViewableFrom(plr)) {
@@ -464,8 +466,12 @@ cmd("findbot") {
         } else {
             if (choices.isNotEmpty()) {
                 val nextBot = choices.removeAt(rand().nextInt(choices.size))
+                if(subzones.any { zone -> zone in nextBot.subZones }) {
+                    return@schedule
+                }
                 plr.sendMessage("Moving to bot #${count++}: ${nextBot.username}.")
                 plr.move(nextBot.position)
+                subzones.addAll(nextBot.subZones)
             } else {
                 plr.sendMessage("Viewable bot list has been exhausted.")
                 it.cancel()
