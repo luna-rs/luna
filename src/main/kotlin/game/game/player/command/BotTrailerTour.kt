@@ -2,7 +2,6 @@ package game.player.command
 
 import api.bot.isRealBot
 import api.bot.zone.SubZone
-import engine.player.idleTimer
 import game.skill.magic.teleportSpells.TeleportAction
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
@@ -199,7 +198,6 @@ object BotTrailerTour {
                     finish(false)
                     return
                 }
-                plr.idleTimer.reset()
                 ++ticks
                 if (waiting) {
                     if (ticks >= 25) {

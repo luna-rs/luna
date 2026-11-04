@@ -18,6 +18,10 @@ val Player.idleTimer by Attr.timer()
  * Logs the player out after some inactivity.
  */
 on(PlayerTimeoutEvent::class, EventPriority.HIGH) {
+    if (plr.controllers.primary.isSpectator) {
+        plr.idleTimer.reset()
+        return@on
+    }
     if(plr.actions.size() > 0) {
         plr.idleTimer.reset()
     }
