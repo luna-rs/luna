@@ -146889,68 +146889,20 @@
   {
     "id": 190,
     "position": {
-      "x": 2946,
+      "x": 2949,
+      "y": 3823,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2952,
       "y": 3822,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2945,
-      "y": 3824,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2946,
-      "y": 3817,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2952,
-      "y": 3825,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2947,
-      "y": 3816,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2952,
-      "y": 3826,
       "z": 0
     },
     "wander": {
@@ -146962,6 +146914,66 @@
     "id": 190,
     "position": {
       "x": 2949,
+      "y": 3818,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2952,
+      "y": 3819,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2952,
+      "y": 3827,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2957,
+      "y": 3826,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2959,
+      "y": 3818,
+      "z": 0
+    },
+    "wander": {
+      "radius": 0,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 190,
+    "position": {
+      "x": 2957,
       "y": 3815,
       "z": 0
     },
@@ -146973,20 +146985,8 @@
   {
     "id": 190,
     "position": {
-      "x": 2943,
-      "y": 3820,
-      "z": 0
-    },
-    "wander": {
-      "radius": 0,
-      "frequency": "NORMAL"
-    }
-  },
-  {
-    "id": 190,
-    "position": {
-      "x": 2943,
-      "y": 3822,
+      "x": 2952,
+      "y": 3814,
       "z": 0
     },
     "wander": {
