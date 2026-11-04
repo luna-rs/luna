@@ -16,6 +16,7 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.combat.CombatAction;
 import io.luna.game.model.mob.combat.PursuitAction;
 import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.interact.InteractionAction;
 import io.luna.game.model.mob.interact.InteractionActionListener;
 import io.luna.game.model.mob.interact.InteractionPolicy;
@@ -99,6 +100,9 @@ final class CollisionManagerTest {
 
     private static Entity mob(EntityType type, int size, Position[] position) {
         Entity entity = type == EntityType.NPC ? Mockito.mock(Npc.class) : Mockito.mock(Player.class);
+        if (entity instanceof Player player) {
+            Mockito.when(player.getControllers()).thenReturn(new ControllerManager(player));
+        }
         Mockito.when(entity.getType()).thenReturn(type);
         Mockito.when(entity.size()).thenReturn(size);
         Mockito.when(entity.sizeX()).thenReturn(size);

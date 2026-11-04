@@ -19,6 +19,7 @@ import io.luna.game.model.mob.combat.attack.MagicCombatAttack
 import io.luna.game.model.mob.combat.damage.CombatDamage
 import io.luna.game.model.mob.combat.damage.CombatDamageAction
 import io.luna.game.model.mob.combat.state.NpcCombatContext
+import io.luna.game.model.mob.controller.ControllerManager
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
@@ -31,8 +32,8 @@ import org.mockito.Mockito.*
 class CombatRestrictionTest {
     @Test
     fun unrestrictedMobsAreUnchangedAndOwnershipAppliesInBothDirections() {
-        val owner = mock(Player::class.java)
-        val stranger = mock(Player::class.java)
+        val owner = player()
+        val stranger = player()
         MobReferenceFixtures.register(owner, 1)
         MobReferenceFixtures.register(stranger, 2)
         val npc = mock(Npc::class.java, withSettings().extraInterfaces(CombatRestriction::class.java)
@@ -62,7 +63,7 @@ class CombatRestrictionTest {
 
     @Test
     fun ownershipIsRecheckedBeforeDelayedDamageAndRetaliation() {
-        val owner = mock(Player::class.java)
+        val owner = player()
         val npc = mock(Npc::class.java, withSettings().extraInterfaces(CombatRestriction::class.java))
         `when`(npc.isAlive).thenReturn(true)
         val restriction = npc as CombatRestriction
@@ -80,7 +81,7 @@ class CombatRestrictionTest {
 
     @Test
     fun ownerDamageStillAppliesDefensiveHooksAndRetaliation() {
-        val owner = mock(Player::class.java)
+        val owner = player()
         `when`(owner.isAlive).thenReturn(true)
         `when`(owner.state).thenReturn(EntityState.ACTIVE)
         val npc = mock(Npc::class.java, withSettings().extraInterfaces(CombatRestriction::class.java)
@@ -135,6 +136,12 @@ class CombatRestrictionTest {
         verify(attack, never()).calculateDamage(primary)
         verify(attack).calculateDamage(owned)
         verify(attack).calculateDamage(ordinary)
+    }
+
+    private fun player(): Player {
+        val player = mock(Player::class.java)
+        `when`(player.controllers).thenReturn(ControllerManager(player))
+        return player
     }
 
     private fun areaNpc(position: Position, restricted: Boolean = false): Npc {
