@@ -1,6 +1,7 @@
 package io.luna.game.model.collision;
 
 import io.luna.game.model.Position;
+import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 
@@ -72,9 +73,13 @@ public final class CollisionView {
         int chunkX = x >> 3;
         int chunkY = y >> 3;
         long key = ((long) chunkX << 32) | chunkY;
-        int slot = (chunkX * 31 + chunkY) & (CACHE_SIZE - 1);
+        // Spread aligned 4x4 chunk neighborhoods across all 16 slots, while preserving rows and columns.
+        int slotY = chunkY & (CACHE_SIZE - 1);
+        int highY = slotY >>> 2;
+        int slot = (chunkX ^ (slotY << 2) ^ highY ^ (highY << 1)) & (CACHE_SIZE - 1);
         if (keys[slot] != key) {
-            ChunkRepository repository = chunks.load(new Position(x, y, level));
+            // Match Position.getChunk()'s view-origin coordinates.
+            ChunkRepository repository = chunks.load(new Chunk(chunkX - 6, chunkY - 6));
             matrices[slot] = safe ? repository.getSnapshot() : repository.getMatrices();
             keys[slot] = key;
         }
