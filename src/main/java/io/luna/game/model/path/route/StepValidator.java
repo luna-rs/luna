@@ -38,7 +38,13 @@ public final class StepValidator {
      */
     public static boolean canTravel(CollisionView view, int level, int x, int y, int offsetX, int offsetY, int size,
                                     int extraFlag, RouteStrategy strategy) {
-        Walker walker = new Walker(view, level, extraFlag, strategy);
+        return canTravel(new Walker(view, level, extraFlag, strategy), x, y, offsetX, offsetY, size);
+    }
+
+    /**
+     * Checks a candidate step using the collision context already owned by its route search.
+     */
+    static boolean canTravel(Walker walker, int x, int y, int offsetX, int offsetY, int size) {
         boolean blocked;
         if (offsetX == 0 && offsetY == -1) {
             blocked = walker.south(x, y, size);
@@ -63,9 +69,9 @@ public final class StepValidator {
     }
 
     /**
-     * The inputs shared by every check of one step.
+     * The immutable inputs shared by every candidate step within one route search.
      */
-    private static final class Walker {
+    static final class Walker {
 
         private final CollisionView view;
         private final int level;
