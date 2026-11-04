@@ -657,6 +657,10 @@ public final class GameService extends AbstractScheduledService {
                     result.complete(s.get());
                 } catch (Exception e) {
                     result.completeExceptionally(e);
+                } catch (Error e) {
+                    // Release waiting workers before preserving the existing fatal-error propagation.
+                    result.completeExceptionally(e);
+                    throw e;
                 }
             });
         } catch (RejectedExecutionException e) {

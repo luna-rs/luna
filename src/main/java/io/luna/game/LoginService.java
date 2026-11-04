@@ -269,6 +269,9 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             });
         } catch (RuntimeException error) {
             result.completeExceptionally(error);
+        } catch (Error error) {
+            result.completeExceptionally(error);
+            throw error;
         }
     }
 
