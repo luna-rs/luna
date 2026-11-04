@@ -1,4 +1,0 @@
-.local/
-__pycache__/
-*.pyc
-*_test.py
